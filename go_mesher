@@ -8,12 +8,12 @@
 set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 34- `
 set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 34- `
 
-# compute total number of nodes needed
+# compute total number of processors needed
 set NPROC_XI = `grep NPROC_XI DATA/Par_file | cut -c 34- `
 set NPROC_ETA = `grep NPROC_ETA DATA/Par_file | cut -c 34- `
 
-# total number of nodes is the product of the values read
-@ numnodes = $NPROC_XI * $NPROC_ETA
+# total number of processors is the product of the values read
+@ numprocessors = $NPROC_XI * $NPROC_ETA
 
 rm -r -f OUTPUT_FILES
 mkdir OUTPUT_FILES
@@ -39,7 +39,7 @@ endif
 echo NPROC_XI = $NPROC_XI
 echo NPROC_ETA = $NPROC_ETA
 echo " "
-echo starting MPI mesher on $numnodes nodes
+echo starting MPI mesher on $numprocessors processors
 echo " "
 echo starting run in current directory $PWD
 echo " "
@@ -48,11 +48,11 @@ echo " "
 
 #### use this on Beowulf
 set MPIRUN="mpirun"
-$MPIRUN -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xmeshfem3D
+$MPIRUN -nolocal -machinefile $list_of_machines -np $numprocessors $PWD/xmeshfem3D
 
 #### use this on SGI
-# mpirun -np $numnodes xmeshfem3D
+# mpirun -np $numprocessors xmeshfem3D
 
 #### use this on Compaq Dec Alpha
-# dmpirun -np $numnodes xmeshfem3D
+# dmpirun -np $numprocessors xmeshfem3D
 
