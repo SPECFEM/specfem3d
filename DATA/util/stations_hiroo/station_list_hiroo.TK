@@ -1,0 +1,205 @@
+gsc  WWSS  35.30176 -116.80572   954.     GOLDSTONE, CALIFORNIA, USA
+isa  CIT   35.66278 -118.47403   817.     ISABELLA, CALIFORNIA, USA 
+pas  CIT   34.14844 -118.17113   257.     PASADENA, CALTECH
+pfo  IDA   33.61151 -116.45935  1245.     PINON FLAT, CALIFORNIA
+sbc  TERR  34.44076 -119.71492    61.     Santa Barbara
+svd  TERR  34.10675 -117.09825   574.     Seven Oaks Dam
+cala TERR  34.14010 -118.62839   276.     Calabasas
+calb TERR  34.14010 -118.62839   276.     Calabasas
+smtc TERR  32.94892 -115.72031     3.     Superstition Moumtain 
+bar  CIT   32.68005 -116.67215   496.     Barrett
+mla  TERR  37.63014 -118.83611  2134.     Mammoth Lakes
+mlac TERR  37.63014 -118.83611  2134.     Mammoth Lakes
+sncc TERR  33.24800 -119.52400   227.     San Nikolas Is.
+usc  TERR  34.01916 -118.28597    17.     U. S. California
+nee  TERR  34.82482 -114.59942   139.     Needles
+vtv  TERR  34.56058 -117.32961   812.     Victorville
+rpv  TERR  33.74329 -118.40426    64.     Rancho Palos Verdes
+dgr  TERR  33.64996 -117.00948   609.     Domenigoni Valley
+cwc  TERR  36.43998 -118.08016  1553.     Cottonwood Creek
+hvo  TERR  19.4228  -155.2907   1240.     Hawaii  
+gla  TERR  33.05107 -114.82770   514.     Glamis
+osi  TERR  34.61450 -118.72350   706.     Osito Canyon
+gpo  TERR  35.6494  -117.6619    735.     China Lake
+sot  TRI   34.4165  -118.4493    439.     L. A. county
+lkl  TRI   34.61600 -117.82440   814.     Lancaster
+mwc  TRI   34.22368 -118.05287  1696.     Mt. Wilson
+sho  TRI   35.8995  -116.2757    373.     Shoshone
+sbpx TRI   34.23217 -117.23483  1875.     Strawberry Peak
+mtp  TRI   35.4848  -115.5533   1582.     Mountain Pass
+fur  TRI   36.46720 -116.8635    -24.     Furnace Creek
+bkr  TRI   35.2693  -116.0703    305.     Baker
+coo  TRI   33.89604 -118.21639    -1.     Compton
+rvr  TRI   33.9935  -117.3755    232.     Riverside
+jrc  TRI   35.9823  -117.8076   1482.     Joshua Ridge
+pls  TRI   33.7953  -117.60906  1181.     Pleasant Microwave
+tin  TRI   37.05422 -118.23009  1164.     Tinemaha
+cpp  TRI   34.0602  -117.809     235.     Cal state Pomona
+edw  TRI   34.88303 -117.99106   762.     Edwards
+tab  TRI   34.38245 -117.68191  2250.     Table Mtn.
+ta2  TRI   34.38245 -117.68191  2250.     Table Mtn.
+fpc  TRI   35.0820  -117.5827    883.     Boron Federal Prison Camp
+plm  TRI   33.3537  -116.8627   1660.     Palomar
+sms  TRI   34.01467 -118.45617    53.     Santa Monica Fire Station
+ciu  TRI   33.44577 -118.4830    233.     Catalina Is.
+phl  UCSC  35.4077  -120.54562   360.     Parkhill (UCSC Station)
+hec  TRI   34.8294  -116.3350    959.     Hector
+sws  TRI   32.94080 -115.79580   134.     Sam Stuart
+bc3  TRI   33.65484 -115.45309  1080.     Big Chuckwalla Mt.
+btp  TRI   34.68333 -118.57500  1600.     Burnt pk.
+vcs  TRI   34.48330 -118.11675   991.     Vincent 
+tov  TERR  34.156   -118.82021   332.     Thousand Oaks
+sci  TRI   32.98000 -118.54670   219.     San Clemente Is.
+clc  TRI   35.8158  -117.5975    735.     China Lake
+lug  TRI   34.3661  -117.3658   1140.     Lugo
+dev  TRI   33.9350  -116.5770    332.     Devers 
+mls  TRI   34.0046  -117.5609    229.     Mira Loma Substation
+gr2  TRI   34.1183  -118.2994    346.     Griffith Park
+rus  TRI   34.0505  -118.0799     67.     Rush
+lrl  TRI   35.4794  -117.6821   1315.     Laurel Mountain
+mpm  TRI   36.0580  -117.4890   1853.     Manuel Prospect Mine 
+cia  TRI   33.4018  -118.4137    425.     Catalina Is. Airport 
+jcs  TRI   33.0875  -116.5965   1259.     Julian, Camp Stevens
+dan  TRI   34.6371  -115.3805    398.     Danby
+drc  TRI   32.8054  -115.44654    15.     Desert Research Center
+djj  TRI   34.1058  -118.4538    245.     Donna Jones Jenkins
+thx  TRI   33.63481 -116.16402   -14.     Thermal Airport
+chf  TRI   34.3334  -118.0259   1567.     Chilao Flats 
+sla  TRI   35.89082 -117.28335  1190.     Slate Mountain 
+scz  TRI   33.99550 -119.63531   413.     Santa Cruz Is.
+btc  TRI   33.01255 -115.21993    37.     Brunts Corner 
+sdd  TRI   33.55307 -117.66177    91.     Saddleback College
+mtl  TRI   34.2688  -118.2374    471.     Mount Lukens
+sts  TRI   33.7902  -118.1985      3.     State St.
+sal  TRI   33.27989 -115.98617    12.     Salton City 
+plc  TRI   33.82434 -116.51209   126.     Palm Springs City Hall 
+lgu  TRI   34.10819 -119.06587   381.     Laguna Peak 
+bak  TRI   35.34413 -119.10430   113.     Cal State Bakersfield 
+gor  TRI   33.16    -117.23       76.     Green Oak Ranch 
+mis  TRI   33.740   -118.335              Mira Catalina School 
+msj  TRI   33.8084  -116.9680    500.     Mt. San Jacinto campus
+wns  TRI   34.115   -118.380     278.     Wonderland Avenue School 
+mop  TRI   34.28085 -118.9049    142.     Moorpark SCE Station
+pde  TRI   34.44209 -118.58228   328.     Pardee SCE Station
+spg  TRI   36.1356  -118.8112    309.     Springville 
+alp  TRI   34.68708 -118.29946   754.     Antelope 
+rct  TRI   36.30523 -119.24384   107.     Rector 
+mge  TRI   33.81841 -116.36874    67.     Mirage
+laf  TRI   33.86930 -118.33106    12.     La Fresa
+pdu  TRI   34.12084 -117.63793   440.     Padua
+chn  TRI   33.99879 -117.68044   208.     Chino
+ves  TRI   35.84089 -119.08469   153.     Vestal
+rio  TRI   34.10473 -117.97956   109.     Live Oak, Irwindale
+clt  TRI   34.09316 -117.31671   327.     Calectric
+stc  TRI   34.30275 -119.18696   182.     Santa Clara
+srn  TRI   33.82843 -117.78938   211.     Serrano
+oli  TRI   33.94551 -117.92368    78.     Olinda 
+ldf  TRI   35.13083 -115.18417  1239.     Landfair
+rin  TRI   34.28200 -118.47924   305.     Rinaldi Receiving Station
+lcg  TRI   34.00033 -118.37794   103.     La Cienega
+aga  TRI   33.63838 -116.40110   811.     Agave Hill
+err  TRI   33.1168  -115.8227    -57.     Elmore's Ranch
+stg  TRI   33.6640  -117.76856    52.     Santiago
+lfp  TRI   34.3050  -118.4879    367.     Los Angeles Aqueduct Filtration Plant
+wlt  TRI   34.00970 -117.95077    98.     Walnut
+lls  TRI   33.68474 -117.94286     6.     Ellis
+smm  TRI   35.3142  -119.99581   631.     Simmler
+bre  TRI   33.8100  -117.9817     26.     Barre Substation
+lgb  TRI   33.97559 -118.14915    36.     Laguna Bell
+dla  TRI   33.84822 -118.09624    15.     Del Amo
+wtt  TRI   33.94895 -118.25529    33.     Watts
+hll  TRI   34.17639 -118.35980   193.     North Hollywood
+cap  TRI   33.38852 -117.19054   298.     Capra Ranch
+bla  TRI   34.0697  -116.3889   1244.     Blackrock Canyon Campground 
+ctc  TRI   33.6546  -115.9899    533.     Cactus City 
+bbr  TRI   34.2623  -116.92075  2067.     Big Bear
+bor  TRI   33.2682  -116.4172    257.     Borrego Springs
+gsa  TRI   34.13677 -118.1283    195.     Geological Survey, Pasadena 
+ltp  TRI   33.8811  -118.17568    18.     Lighthipe, Long Beach
+ado  TRI   34.55046 -117.43391   908.     Adelanto Receiving Station
+bcc  TRI   33.57508 -117.26119   393.     Bear Creek Country Club
+fmp  TRI   33.71264 -118.29381    82.     Fort MacArthur Park 
+bbs  TRI   33.92139 -116.98085   783.     Beaumont Base 
+eml  TRI   32.89131 -116.84599   172.     El Monte County Park, San Diego 
+dpp  TRI   32.99862 -116.94153   470.     Dos Picos County Park 
+spf  TRI   34.05933 -118.64614   464.     Saddle Peak Fire Camp 
+wss  TRI   34.17170 -118.64971   314.     Westside station, Woodland Hills
+lth  LI    46.4340  -119.4496    161.     LIGO Hanford Observatory
+rrx  TRI   34.87533 -116.99684   672.     Barstow Service Center  Edison
+ltl  LI    30.5374  -90.7660      21.     LIGO Livingston Observatory, Louisian
+nss  TRI   33.556   -115.9465     16.     North Shore Salton Sea
+qug  TRI   34.39589 -118.49851   514.     Quigley station
+wes  TRI   32.7590  -115.7315     -7.     Westside Elementary School, El Centro
+mct  TRI   34.22641 -116.04082   653.     Marine Combat Center, 29 Palms
+mag  TRI   35.36165 -118.92282   140.     SCE Magundon Plant
+ses  TRI   34.43667 -119.13818   480.     Summit Elementary School
+fig  TRI   34.7321  -119.9841   1180.     Figueroa Mt.
+pdr  TRI   33.96273 -118.43702    38.     Gulana, Pala Del Rey
+bel  TRI   34.0006  -115.9982   1394.     Belle Mountain, Joshua Tree National Park
+jva  TRI   34.36622 -116.61266   903.     Johnson Valley 
+sdr  TRI   32.7356  -116.9424     81.     Spring Valley Road Dept.
+mik  TRI   34.137   -118.126              Millikan Library
+teh  TRI   35.2910  -118.4209    854.     Tehachapi
+gra  TRI   36.98326 -117.35915   652.     Grapevine Ranger Station, Death Valley National Park
+syp  TRI   34.5278  -119.9783   1253.     Santa Ynez Airport
+dvt  TRI   32.65910 -116.10059   900.     Desert View Tower
+olp  TRI   32.60774 -116.93039   184.     Otay Lakes Park
+ccc  TRI   35.52473 -117.36458            China Lake Naval Weapons Center
+bfs  TRI   34.2370  -117.6582   1296.     Mt. Baldy Forest Station
+wgr  TRI   34.51085 -119.27407   557.     Wheeler Gorge Ranger Station
+smb  TRI   34.9006  -120.4442     74.     Santa Maria Base
+pdm  TRI   34.30336 -114.14152   145.     Parker Dam
+sdg  TRI   32.7840  -117.13805    99.     San Diego Mission Control
+tft  TRI   35.14621 -119.41897   233.     S. Cal. Gas, Taft, Ca.
+dnr  TRI   33.5667  -116.63051  1274.     Dunn Ranch, Anza Valley
+lbw1 TRI   33.79800 -118.08837    13.72   Long Beach Water Reclamation Plant 1
+lbw2 TRI   33.79800 -118.08837    13.72   Long Beach Water Reclamation Plant 2
+wbs  TRI   34.53664 -118.14035  1892.0    Bird Springs Pass, S. of Walker Pass
+lcp  TRI   34.73537 -120.27973   200.     Los Alamos County Park
+njq  TRI   34.5341  -120.1774    216.     Nojoqui County Park
+irm  TRI   34.15738 -115.14513   562.     Iron Mountain Pumping Station, SB
+dec  TRI   34.25353 -118.33383   520.     Green-Verdugo Microwave Site 
+mpi  TRI   34.810   -119.150     000.     Mount Pinos 
+mpp  TRI   34.88844 -119.81356  1741.     McPherson Peak
+sdp  TRI   34.56547 -120.50137   631.     Sudden Peak,  Lompoc
+rss  TRI   33.97327 -117.32674   328.     UC Riverside
+slr  TRI   33.83359 -116.79737  1568.     Banning, California
+nbs  TRI   34.78035 -116.55798   590.     Newberry Springs,  California
+cgo  TRI   36.55002 -117.80293  2804.     Keeler Pk., near Lone Pine
+wer  TRI   35.06053 -119.02711   129.     Wheeler Ridge
+ldr  TRI   34.99060 -118.34156            Tehachapi, Willow Springs Rd. Mojave
+smb  TRI   34.90222 -120.44706            Santa Maria Base
+tuq  TRI   35.43583 -115.92391  1259.     Turquiose Mt.
+dre  TRI   32.80532 -115.44679  -15.      Desert Research Extension Center
+cfs  TRI   34.1052  -117.2798   313.      Central Fire Station, San Bernardino
+crp  TRI   34.13624 -118.12705  323.      Robinson Bldg. Caltech
+coo        33.89604 -118.21639    -1.     Compton                 
+crn        33.87574 -117.56106   165.     Corona                  
+fon        34.09957 -117.43876   479.     Fontana                 
+ful        33.87170 -117.92251   -49.     Fullerton               
+hln        34.12128 -117.21897   266.     Highland                
+kik        34.15037 -118.10156   198.     Kinemetrics             
+pak        34.14844 -118.17113   257.     Kresge                  
+lev        34.61462 -118.29104   963.     Leona Valley
+not        34.22869 -118.55829   224.     Northridge
+ogc        33.78816 -117.84400    28.     Orange                  
+rrs        33.88217 -117.36646   420.     Riverside               
+sju        33.48725 -117.68114    82.     San Juan Capistrano     
+san        33.70432 -117.88578   -12.     Santa Ana               
+sio        34.29300 -119.16460   -24.     Ventura County
+ago        34.14647 -118.76699   289.     Agoura
+smv        34.27128 -118.74427   188.     Simi Valley
+fll        34.39727 -118.91807   133.     Filmore
+bvh        34.07618 -118.39590    69.     Beverly Hills
+cab        34.15573 -118.64093   289.     Calabasa
+okv        34.39681 -119.29923   156.     Oakview/Ventura
+usb        34.41300 -119.84270    12.     UC Santa Barbara 
+bba        34.19551 -118.3534    212.     Burbank Airport
+bbb        33.353   -115.732     -66.     Bombay Beach
+elc        32.7814  -115.5356    -11.     El Centro Array
+grf        34.11922 -118.3004    341.     Griffith Park
+jfp        34.3087  -118.5026      0.     Jensen  Filtration
+lax        33.94382 -118.4139     34.     Sepulveda
+ltr        34.5211  -117.9903    885.     Littlerock
+ssw        33.17661 -115.6024    168.     Salton Sea
+tcf        34.08377 -118.599       0.     Topanga
