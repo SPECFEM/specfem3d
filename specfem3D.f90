@@ -1830,7 +1830,8 @@
 
     enddo
 
-    if(mod(it,NMOVIE) == 0) then
+! save shakemap only at the end of the simulation
+    if(it == NSTEP) then
 
 ! gather info on master proc
     if(USE_HIGHRES_FOR_MOVIES) then
