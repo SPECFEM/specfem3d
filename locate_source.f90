@@ -450,6 +450,8 @@
   enddo
   final_distance_source(isource) = distmin
 
+  if(SHOW_DETAILS_LOCATE_SOURCE) then
+
     write(IMAIN,*)
     write(IMAIN,*) '*************************************'
     write(IMAIN,*) ' locating source ',isource
@@ -505,6 +507,8 @@
       write(IMAIN,*) '*****************************************************'
       write(IMAIN,*) '*****************************************************'
     endif
+
+  endif  ! end of detailed output to locate source
 
   if(PRINT_SOURCE_TIME_FUNCTION) then
 

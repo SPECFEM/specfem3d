@@ -504,6 +504,9 @@
     enddo
   enddo
 
+! initialize in case we do not remove any point (NREMOVE = 0)
+  field_max = 0.
+
   do iremove = 1,NREMOVE
 
     field_max = -1.

@@ -95,6 +95,9 @@
 ! flag to print the source time function and spectrum
   logical, parameter :: PRINT_SOURCE_TIME_FUNCTION = .false.
 
+! flag to print the details of source location
+  logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
+
 !----------- do not modify anything below -------------
 
 ! some useful constants
@@ -295,4 +298,7 @@
   integer, parameter :: ITYPE_UNUSUAL_1p = 2
   integer, parameter :: ITYPE_UNUSUAL_4  = 3
   integer, parameter :: ITYPE_UNUSUAL_4p = 4
+
+! number of data values per line in sac2000 alpha file
+  integer, parameter :: NVALUES_SAC2000_LINE = 5
 

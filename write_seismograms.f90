@@ -139,7 +139,12 @@
 ! subtract half duration of the source to make sure travel time is correct
       do isample = 1,min(it,NSTEP)
         if(irecord == 1) then
-          write(IOUT,*) sngl(dble(isample-1)*DT - hdur),' ',seismograms(iorientation,irec_local,isample)
+! distinguish whether single or double precision for reals
+          if(CUSTOM_REAL == SIZE_REAL) then
+            write(IOUT,*) sngl(dble(isample-1)*DT - hdur),' ',seismograms(iorientation,irec_local,isample)
+          else
+            write(IOUT,*) dble(isample-1)*DT - hdur,' ',seismograms(iorientation,irec_local,isample)
+          endif
         else
           call exit_MPI(myrank,'incorrect record label')
         endif
