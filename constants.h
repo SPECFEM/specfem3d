@@ -92,6 +92,9 @@
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
 
+! flag to print the source time function and spectrum
+  logical, parameter :: PRINT_SOURCE_TIME_FUNCTION = .false.
+
 !----------- do not modify anything below -------------
 
 ! some useful constants
@@ -165,7 +168,7 @@
   double precision, parameter :: GAUSSALPHA = 0.d0,GAUSSBETA = 0.d0
 
 ! number of iterations to solve the system for xi and eta
-  integer, parameter :: NUM_ITER = 4
+  integer, parameter :: NUM_ITER = 3
 
 ! size of topography and bathymetry file for Southern California
   integer, parameter :: NX_TOPO = 1401,NY_TOPO = 1001

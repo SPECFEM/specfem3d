@@ -465,6 +465,8 @@
   write(IMAIN,*)
   write(IMAIN,*) 'half-duration of the source: ',hdur,' s'
 
+  if(PRINT_SOURCE_TIME_FUNCTION) then
+
   write(IMAIN,*)
   write(IMAIN,*) 'printing the source-time function'
 
@@ -485,6 +487,8 @@
     write(27,*) sngl(time_source),sngl(comp_source_time_function(time_source,hdur))
   enddo
   close(27)
+
+  endif
 
 ! elapsed time since beginning of mesh generation
   tCPU = MPI_WTIME() - time_start
