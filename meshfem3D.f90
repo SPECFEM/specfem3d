@@ -587,7 +587,7 @@
   call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
-                     z_top, &
+!! DK DK UGLY modif Manu removed                     z_top, &
                      Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
 
 !   fill the volume

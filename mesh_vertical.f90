@@ -18,7 +18,7 @@
   subroutine mesh_vertical(myrank,rn,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
                            NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
-                           z_top, &
+!! DK DK UGLY modif Manu removed                           z_top, &
                            Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
 
 ! create the vertical mesh, honoring the major discontinuities in the basin
@@ -34,7 +34,7 @@
   double precision rn(0:2*NER)
 
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
-  double precision z_top
+!! DK DK UGLY modif Manu removed  double precision z_top
 
   integer npr,ir
 
@@ -96,7 +96,7 @@
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY suppressed Manu's modif and put old code back because better mesh
 !! DK DK UGLY investigate this in detail one day
-  rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
+!! DK DK UGLY modif Manu removed  rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
 !! DK DK UGLY modif Manu removed 
   rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
 
