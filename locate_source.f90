@@ -153,12 +153,6 @@
 ! loop on all the sources
   do isource = 1,NSOURCES
 
-  if(isource == 1) then
-    if(t_cmt(isource) /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
-  else
-    if(t_cmt(isource) < 0.) call exit_MPI(myrank,'t_cmt should not be less than zero')
-  endif
-
 ! check that the current source is inside the basin model
   if(lat(isource) <= LAT_MIN .or. lat(isource) >= LAT_MAX .or. long(isource) <= LONG_MIN .or. long(isource) >= LONG_MAX) &
     call exit_MPI(myrank,'the current source is outside the model')
