@@ -60,11 +60,11 @@
 !   on boundary 1: xmin
     ispecb1=ispecb1+1
 
-!   check for ovelap with other boundaries
+! this is useful even if it is constant because it can be zero inside the slices
     njmin(1,ispecb1)=1
-    if(iboun(3,ispecg)) njmin(1,ispecb1)=2
     njmax(1,ispecb1)=NGLLY
-    if(iboun(4,ispecg)) njmax(1,ispecb1)=NGLLY-1
+
+!   check for ovelap with other boundaries
     nkmin_xi(1,ispecb1)=1
     if(iboun(5,ispecg)) nkmin_xi(1,ispecb1)=2
   endif
@@ -74,11 +74,11 @@
 !   on boundary 2: xmax
     ispecb2=ispecb2+1
 
-!   check for ovelap with other boundaries
+! this is useful even if it is constant because it can be zero inside the slices
     njmin(2,ispecb2)=1
-    if(iboun(3,ispecg)) njmin(2,ispecb2)=2
     njmax(2,ispecb2)=NGLLY
-    if(iboun(4,ispecg)) njmax(2,ispecb2)=NGLLY-1
+
+!   check for ovelap with other boundaries
     nkmin_xi(2,ispecb2)=1
     if(iboun(5,ispecg)) nkmin_xi(2,ispecb2)=2
   endif
