@@ -1,0 +1,38 @@
+   ALHF     Alhambra           34.070 118.150   
+   ARL      Arleta             34.236 118.439   
+   BLD      LA - Baldwin Hills 34.009 118.361   
+   CAS      Castaic            34.564 118.642   
+   ECC      ????????           34.259 118.336   
+   ENR      Encino             34.15  118.51    
+   GRF      Griffith Park      34.118 118.299   
+   HYSB     Los Angeles        34.090 118.339   
+   JFP      Granada Hills      34.312 118.496   
+   MNG      Monte Nido         34.078 118.693   
+   MOR      Moorpark           34.288 118.881   
+   NHL      Newhall            34.387 118.530   
+   NH20     North Hollywood    34.138 118.359   
+   PARD     Santa Clarita      34.435 118.582   
+   PDM      Pacoima Dam        34.334 118.396   
+   PIRU     Lake Piru          34.460 118.753   
+   PKC      Pacoima            34.288 118.375   
+   PTMG     Point Mugu         34.109 119.065   
+   RRS      Sylmar             34.281 118.479   
+   RSE      San Fernando       34.17  118,36    
+   SCC      Sepulvada Canyon   34.097 118.478   
+   SCR      Stone Canyon       34.106 118.454   
+   SCS      Sylmar             34.312 118.481   
+   SHR      Sherman Oaks       34.154 118.465   
+   SMC      Santa Monica       34.011 118.490   
+   SSU      Santa Susanna      34.230 118.713   
+   SVA      Supulveda          34.312 118.475   
+   SYL      Sylmar             34.326 118.444   
+   TPG      Topanga            34.084 118.600   
+   U03      Canoga Park        34.209 118.517   
+   U53      Canoga Park        34.212 118.506   
+   U55      Santa Susana       34.264 118.666   
+   U56      Newhall            34.391 118.622   
+   U57      Mint Canyon        34.419 118.426   
+   VNY      Van Nuys           34.221 118.471   
+   VSQZ     Vasquez Rocks Park 34.490 118.320   
+   WOOD     Wood Ranch Dam     34.240 118.820   
+   WVA      Wadsworth          34.052 118.451   
