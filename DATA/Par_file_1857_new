@@ -46,7 +46,6 @@ ATTENUATION              = .true.
 USE_OLSEN_ATTENUATION    = .true.
 OCEANS                   = .true.
 STACEY_ABS_CONDITIONS    = .true.
-MULTIPLY_MU_TSURF        = .true.
 
 ! number of elements for full Earth
 NER_SEDIM                = 1
@@ -74,4 +73,13 @@ SAVE_DISPLACEMENT        = .false.
 USE_HIGHRES_FOR_MOVIES   = .false.
 NMOVIE                   = 200
 HDUR_MIN_MOVIES          = 1.9d0
+
+! interval at which we output time step info and max of norm of displacement
+ITAFF_TIME_STEPS         = 100
+
+! save AVS or OpenDX mesh files
+SAVE_AVS_DX_MESH_FILES   = .false.
+
+! print source time function
+PRINT_SOURCE_TIME_FUNCT  = .false.
 

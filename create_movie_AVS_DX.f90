@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -80,7 +80,7 @@
   integer NSOURCES
 
   logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE
+  integer NMOVIE,ITAFF_TIME_STEPS
   double precision HDUR_MIN_MOVIES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
@@ -89,8 +89,8 @@
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
-  logical ANISOTROPY
+          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
   double precision zscaling
 
   character(len=150) LOCAL_PATH
@@ -123,8 +123,10 @@
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
+        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &

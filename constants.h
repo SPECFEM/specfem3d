@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -39,10 +39,6 @@
 ! by using a small initial field instead of zero
   logical, parameter :: FIX_UNDERFLOW_PROBLEM = .true.
 
-! save AVS or OpenDX files in mesher or not
-! do not use if you do not plan to use AVS or OpenDX to visualize the mesh
-  logical, parameter :: SAVE_AVS_DX_MESH_FILES = .true.
-
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
@@ -70,9 +66,6 @@
 ! to suppress UTM projection for SCEC benchmarks
   logical, parameter :: SUPPRESS_UTM_PROJECTION = .false.
 
-! interval at which we output time step info and max of norm of displacement
-  integer, parameter :: ITAFF_TIME_STEPS = 100
-
 ! number of GLL points in each direction of an element (degree plus one)
   integer, parameter :: NGLLX = 5
   integer, parameter :: NGLLY = NGLLX
@@ -91,9 +84,6 @@
   integer, parameter :: IMAIN = 42
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
-
-! flag to print the source time function and spectrum
-  logical, parameter :: PRINT_SOURCE_TIME_FUNCTION = .false.
 
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
@@ -215,7 +205,6 @@
 !
 
 ! size of the medium-resolution Gocad voxet
-
   integer, parameter :: NX_GOCAD_MR = 194, NY_GOCAD_MR = 196, NZ_GOCAD_MR = 100
 
   double precision, parameter :: ORIG_X_GOCAD_MR = 283000.
@@ -231,7 +220,6 @@
   double precision, parameter :: END_Y_GOCAD_MR = ORIG_Y_GOCAD_MR + SPACING_Y_GOCAD_MR * (NY_GOCAD_MR - 1)
 
 ! size of the high-resolution Gocad voxet
-
   integer, parameter :: NX_GOCAD_HR = 185, NY_GOCAD_HR = 196, NZ_GOCAD_HR = 100
 
   double precision, parameter :: ORIG_X_GOCAD_HR = 371052.25

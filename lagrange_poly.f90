@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.

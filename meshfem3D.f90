@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 !
 !=====================================================================
 !
-! Copyright October 2002, by the California Institute of Technology.
+! Copyright July 2004, by the California Institute of Technology.
 ! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 !
 ! Any commercial use must be negotiated with the Office of Technology
@@ -59,7 +59,7 @@
 !=====================================================================!
 !
 ! If you use this code for your own research, please send an email
-! to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite:
+! to Jeroen Tromp <jtromp@caltech.edu> for information, and cite:
 !
 ! @article{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
@@ -106,6 +106,7 @@
 ! Evolution of the code:
 ! ---------------------
 !
+! MPI v. 1.2 Qinya Liu and Min Chen, Caltech, July 2004: full anisotropy
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
@@ -173,11 +174,11 @@
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
-  logical ANISOTROPY
+          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
 
   logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE
+  integer NMOVIE,ITAFF_TIME_STEPS
   double precision HDUR_MIN_MOVIES
 
   character(len=150) LOCAL_PATH
@@ -242,8 +243,10 @@
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
+        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -647,7 +650,7 @@
          HAUKSSON_REGIONAL_MODEL,OCEANS, &
          VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
          IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
-         ANISOTROPY)
+         ANISOTROPY,SAVE_AVS_DX_MESH_FILES)
 
 ! print min and max of topography included
   if(TOPOGRAPHY) then

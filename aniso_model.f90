@@ -1,10 +1,27 @@
 !=====================================================================
+!
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          --------------------------------------------------
+!
+!                 Dimitri Komatitsch and Jeroen Tromp
+!    Seismological Laboratory - California Institute of Technology
+!         (c) California Institute of Technology July 2004
+!
+!    A signed non-commercial agreement is required to use this program.
+!   Please check http://www.gps.caltech.edu/research/jtromp for details.
+!           Free for non-commercial academic research ONLY.
+!      This program is distributed WITHOUT ANY WARRANTY whatsoever.
+!      Do not redistribute this program without written permission.
+!
+!=====================================================================
+
+!=====================================================================
 ! 07/09/04 Last changed by Min Chen
-! For users: You need to modify this subroutine to implement your own
+! Users need to modify this subroutine to implement their own
 ! anisotropic models.
 !=====================================================================
 
-  subroutine aniso_model(idoubling,zmesh,rho,vp,vs,c11,c12,c13,c14,c15,c16,&
+  subroutine aniso_model(idoubling,zmesh,rho,vp,vs,c11,c12,c13,c14,c15,c16, &
                c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
   implicit none
@@ -12,7 +29,7 @@
   include "constants.h"
 
 !------------------------------------------------------------------------------
-! For those anisotropy simulations in halfspace model
+! for anisotropy simulations in a halfspace model
 
 ! only related to body waves
 ! one-zeta term
@@ -22,12 +39,10 @@
 ! three-zeta term
   double precision,parameter :: FACTOR_CS3_L = 0.0d0
 
-
 ! Relative to Love wave
 ! four-zeta term
   double precision,parameter :: FACTOR_N = 0.d0
   double precision,parameter :: FACTOR_E_N = 0.d0
-
 
 ! Relative to Rayleigh wave
 ! two-zeta term
@@ -41,9 +56,11 @@
 ! two-zeta term
   double precision,parameter :: FACTOR_L = 0.d0
   double precision,parameter :: FACTOR_G_L = 0.d0
+
 !------------------------------------------------------------------------------
 
   integer idoubling
+
   double precision zmesh
   double precision rho,vp,vs
   double precision vpv,vph,vsv,vsh,eta_aniso
@@ -56,45 +73,44 @@
 
 ! implement the background model
   if(idoubling == IFLAG_HALFSPACE_MOHO) then
-        vp=7.8d0
-        vs=4.5d0
-        rho=3.0d0
-        vph = vp
+    vp=7.8d0
+    vs=4.5d0
+    rho=3.0d0
+    vph = vp
     vpv = vp
     vsh = vs
     vsv = vs
-        eta_aniso = 1.0d0
-
+    eta_aniso = 1.0d0
 
   else if(idoubling == IFLAG_MOHO_16km) then
-        vp=7.8d0
-        vs=4.5d0
-        rho=3.0d0
+    vp=7.8d0
+    vs=4.5d0
+    rho=3.0d0
     vph = vp
     vpv = vp
     vsh = vs
     vsv = vs
-        eta_aniso = 1.0d0
+    eta_aniso = 1.0d0
 
   else if(zmesh >= DEPTH_5p5km_SOCAL) then
-        vp=7.8d0
-        vs=4.5d0
-        rho=3.0d0
+    vp=7.8d0
+    vs=4.5d0
+    rho=3.0d0
     vph = vp
     vpv = vp
     vsh = vs
     vsv = vs
-        eta_aniso = 1.0d0
+    eta_aniso = 1.0d0
 
   else
-        vp=7.8d0
-        vs=4.5d0
-        rho=3.0d0
+    vp=7.8d0
+    vs=4.5d0
+    rho=3.0d0
     vph = vp
     vpv = vp
     vsh = vs
     vsv = vs
-        eta_aniso = 1.0d0
+    eta_aniso = 1.0d0
 
   endif
 
@@ -162,7 +178,9 @@
   d55 = AL + Gc
   d56 = S3 - S1sh
   d66 = AN - Ec
-! The mapping to the global Cartesian coordinate system used in the basin code (1---East; 2---North; 3---up)
+
+! The mapping to the global Cartesian coordinate system used in the basin code
+! (1---East; 2---North; 3---up)
   c11 = d22
   c12 = d12
   c13 = d23

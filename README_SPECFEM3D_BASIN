@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 !
 !=====================================================================
 !
-! Copyright October 2002, by the California Institute of Technology.
+! Copyright July 2004, by the California Institute of Technology.
 ! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 !
 ! Any commercial use must be negotiated with the Office of Technology
@@ -41,23 +41,22 @@
 ! modifications.
 !
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-+++++++++ NOTES ON USING THE SPECFEM3D BASIN version 1.1 PACKAGE +++++++++++
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Dimitri Komatitsch and Jeroen Tromp, October 2002
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++ NOTES ON USING THE SPECFEM3D BASIN PACKAGE +++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 If you use this code for your own research, please send an email
-to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite
+to Jeroen Tromp <jtromp@caltech.edu> for information, and cite
 
 @article{KoLiTrSuStSh04,
- author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss and Christiane Stidham and John H. Shaw},
- year=2004,
- title={Simulations of Strong Ground Motion in the {L}os {A}ngeles {B}asin Based upon the Spectral-Element Method},
- journal={Bull. Seism. Soc. Am.},
- note="in press"}
+author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
+  and Christiane Stidham and John H. Shaw},
+year=2004,
+title={Simulations of Ground Motion in the {L}os {A}ngeles {B}asin
+  based upon the Spectral-Element Method},
+journal={Bull. Seism. Soc. Am.},
+volume=94,
+pages={187-206}}
 
 @article{KoTr99,
  author={D. Komatitsch and J. Tromp},

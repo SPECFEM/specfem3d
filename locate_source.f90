@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -26,7 +26,7 @@
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore,MULTIPLY_MU_TSURF)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCT)
 
   implicit none
 
@@ -39,7 +39,7 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical TOPOGRAPHY,MULTIPLY_MU_TSURF
+  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCT
 
   double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK
 
@@ -128,13 +128,6 @@
 ! number of points to plot the source time function
   integer, parameter :: NSAMP_PLOT_SOURCE = 1000
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: mustore
-
-! for magnitude calculation for tsurf source
-  double precision seismic_moment_read,seismic_moment_total,muvalue_local
-  double precision, dimension(NSOURCES) :: seismic_moment
-  double precision, dimension(NSOURCES,0:NPROC-1) :: seismic_moment_all
-
 ! **************
 
 ! read all the sources
@@ -145,10 +138,6 @@
 
 ! get MPI starting time
   time_start = MPI_WTIME()
-
-! for tsurf source, open seismic moment file
-  if(MULTIPLY_MU_TSURF) &
-    open(unit=14,file='DATA/seismic_moment_calculation.dat',status='old')
 
 ! loop on all the sources
   do isource = 1,NSOURCES
@@ -255,25 +244,6 @@
 ! end of loop on all the elements in current slice
   enddo
 
-! for tsurf source, multiply moment by mu = rho cs^2
-! also store mu for magnitude calculation if Gocad
-  if(MULTIPLY_MU_TSURF) then
-    muvalue_local = mustore(ix_initial_guess_source, &
-      iy_initial_guess_source,iz_initial_guess_source, &
-      ispec_selected_source(isource))
-
-    Mzz(isource) = Mzz(isource) * muvalue_local
-    Mxx(isource) = Mxx(isource) * muvalue_local
-    Myy(isource) = Myy(isource) * muvalue_local
-    Mxz(isource) = Mxz(isource) * muvalue_local
-    Myz(isource) = Myz(isource) * muvalue_local
-    Mxy(isource) = Mxy(isource) * muvalue_local
-
-    read(14,*) seismic_moment_read
-    seismic_moment(isource) = seismic_moment_read * muvalue_local
-
-  endif
-
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source
 ! *******************************************
@@ -375,36 +345,6 @@
 
 ! end of loop on all the sources
   enddo
-
-! for tsurf source, close seismic moment file
-! then gather information from all the nodes
-  if(MULTIPLY_MU_TSURF) then
-    close(14)
-    call MPI_GATHER(seismic_moment,NSOURCES,MPI_DOUBLE_PRECISION,seismic_moment_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-
-! Mw, the moment magnitude,
-! is based on the seismic moment, M0 = mu A u (Aki, 1966), where A is the area
-! of the earthquake rupture surface, u is the average fault displacement,
-! and mu is the shear modulus of the crustal volume containing the fault.
-! Hanks and Kanamori (1979) took advantage of the nearly identical relations
-! between M0 and both ML and Ms to define
-! Mw = (2/3)*(log10(Mo in dyne-cm) - 16.0)
-
-! this is executed by main process only
-  if(myrank == 0) then
-
-! sum local seismic moments from all the sources
-! local seismic moment from file is already in the right units (dyne-cm)
-    seismic_moment_total = 0.d0
-    do isource = 1,NSOURCES
-      seismic_moment_total = seismic_moment_total + seismic_moment_all(isource,islice_selected_source(isource))
-    enddo
-    write(IMAIN,*)
-    write(IMAIN,*) 'Magnitude Mw of Gocad tsurf source = ',2.d0*(dlog10(seismic_moment_total)-16.d0)/3.d0
-    write(IMAIN,*)
-  endif
-
-  endif
 
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
 
@@ -510,7 +450,7 @@
 
   endif  ! end of detailed output to locate source
 
-  if(PRINT_SOURCE_TIME_FUNCTION) then
+  if(PRINT_SOURCE_TIME_FUNCT) then
 
   write(IMAIN,*)
   write(IMAIN,*) 'printing the source-time function'

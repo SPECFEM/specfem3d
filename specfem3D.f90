@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 !
 !=====================================================================
 !
-! Copyright October 2002, by the California Institute of Technology.
+! Copyright July 2004, by the California Institute of Technology.
 ! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 !
 ! Any commercial use must be negotiated with the Office of Technology
@@ -62,7 +62,7 @@
 !=======================================================================!
 !
 ! If you use this code for your own research, please send an email
-! to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite:
+! to Jeroen Tromp <jtromp@caltech.edu> for information, and cite:
 !
 ! @article{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
@@ -109,6 +109,7 @@
 ! Evolution of the code:
 ! ---------------------
 !
+! MPI v. 1.2 Qinya Liu and Min Chen, Caltech, July 2004: full anisotropy
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
@@ -308,11 +309,11 @@
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
-  logical ANISOTROPY
+          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
 
   logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE
+  integer NMOVIE,ITAFF_TIME_STEPS
   double precision HDUR_MIN_MOVIES
 
   character(len=150) LOCAL_PATH,prname
@@ -365,8 +366,10 @@
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
+        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -473,7 +476,6 @@
 ! start reading the databases
 
 ! read arrays created by the mesher
-
   call read_arrays_solver(myrank,xstore,ystore,zstore, &
             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
             flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs, &
@@ -484,7 +486,6 @@
             kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
 
 ! check that the number of points in this slice is correct
-
   if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal nglob in crust and mantle')
 
@@ -528,7 +529,7 @@
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
           LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore,MULTIPLY_MU_TSURF)
+          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCT)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
@@ -737,11 +738,7 @@
     call exit_MPI(myrank,'something is wrong with the receiver slice number')
 
 ! write info about that receiver
-  if(myrank == islice_selected_rec(irec)) then
-
-    nrec_local = nrec_local + 1
-
-  endif
+  if(myrank == islice_selected_rec(irec)) nrec_local = nrec_local + 1
 
   enddo
 
@@ -1268,8 +1265,7 @@
     kappal = kappastore(i,j,k,ispec)
     mul = mustore(i,j,k,ispec)
 
-
-! For full anisotropic case
+! For fully anisotropic case
     if(ANISOTROPY) then
        c11 = c11store(i,j,k,ispec)
        c12 = c12store(i,j,k,ispec)
@@ -1630,7 +1626,6 @@
         enddo
       enddo
     enddo
-
 
 !   bottom (zmin)
     do ispec2D=1,NSPEC2D_BOTTOM

@@ -1,11 +1,11 @@
 #=====================================================================
 #
-#          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+#          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 #          --------------------------------------------------
 #
 #                 Dimitri Komatitsch and Jeroen Tromp
 #    Seismological Laboratory - California Institute of Technology
-#         (c) California Institute of Technology October 2002
+#         (c) California Institute of Technology July 2004
 #
 #    A signed non-commercial agreement is required to use this program.
 #   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 #
 #=====================================================================
 #
-# Copyright October 2002, by the California Institute of Technology.
+# Copyright July 2004, by the California Institute of Technology.
 # ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 #
 # Any commercial use must be negotiated with the Office of Technology
@@ -40,10 +40,6 @@
 # obligations to provide maintenance, support, updates, enhancements or
 # modifications.
 #
-#
-# Makefile for SPECFEM3D BASIN version 1.1 - October 2002
-# Dimitri Komatitsch, MPI version
-#
 
 O = obj
 
@@ -65,7 +61,8 @@ MPI_FLAGS =
 #
 # Caltech cluster
 #
-#FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds
+#FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checkin
+g -warn unused -warn declarations -std95 -check nobounds
 #
 # more recent machines
 #
@@ -137,10 +134,7 @@ MPI_FLAGS =
 #MPI_FLAGS = 
 
 baksave:
-	cp *f90 *h README_SPECFEM3D_BASIN_v1.1 DATA/Par_file* Makefile go_mesher go_solver runall mymachines bak
-
-backup:
-	tar cvf v11basinsourcecode.tar *f90 *h README_SPECFEM3D_BASIN_v1.1 DATA/Par_file Makefile go_mesher go_solver runall mymachines
+	cp *f90 *h README_SPECFEM3D_BASIN_v1.2 DATA/Par_file* Makefile go_mesher go_solver runall mymachines bak
 
 meshfem3D: constants.h \
        $O/meshfem3D.o \

@@ -9,7 +9,7 @@
 #
 
 ! number of elements along edge at surface (8 * multiple of NPROC below)
-NEX_XI                   = 288 
+NEX_XI                   = 288
 NEX_ETA                  = 288
 
 ! number of MPI processors along xi and eta (can be different)
@@ -20,7 +20,7 @@ NPROC_ETA                = 12
 DT                       = 0.011
 
 ! total number of time steps
-NSTEP                    = 11000 
+NSTEP                    = 11000
 
 ! coordinates of mesh block in latitude/longitude and depth in km
 LAT_MIN                  = 32.2d0
@@ -30,7 +30,7 @@ LONG_MAX                 = -114.7d0
 DEPTH_BLOCK_KM           = 60.d0
 UTM_PROJECTION_ZONE      = 11
 
-! parameters describing the basin model,>MC add the flag of ANISOTROPY <MC
+! parameters describing the basin model
 TOPOGRAPHY               = .false.
 BASEMENT_MAP             = .false.
 MOHO_MAP_LUPEI           = .false.
@@ -47,12 +47,11 @@ ATTENUATION              = .false.
 USE_OLSEN_ATTENUATION    = .false.
 OCEANS                   = .false.
 STACEY_ABS_CONDITIONS    = .true.
-MULTIPLY_MU_TSURF        = .false.
 
 ! number of elements for full Earth
 NER_SEDIM                = 1
 NER_BASEMENT_SEDIM       = 2
-NER_16_BASEMENT          = 2 
+NER_16_BASEMENT          = 2
 NER_MOHO_16              = 2
 NER_BOTTOM_MOHO          = 5
 
@@ -75,4 +74,13 @@ SAVE_DISPLACEMENT        = .false.
 USE_HIGHRES_FOR_MOVIES   = .false.
 NMOVIE                   = 200
 HDUR_MIN_MOVIES          = 2.4d0
+
+! interval at which we output time step info and max of norm of displacement
+ITAFF_TIME_STEPS         = 100
+
+! save AVS or OpenDX mesh files
+SAVE_AVS_DX_MESH_FILES   = .false.
+
+! print source time function
+PRINT_SOURCE_TIME_FUNCT  = .false.
 

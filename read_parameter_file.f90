@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology October 2002
+!         (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -22,8 +22,10 @@
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
+        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
 
   implicit none
 
@@ -31,7 +33,7 @@
 
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
             NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
-  integer NSOURCES,NMOVIE
+  integer NSOURCES,NMOVIE,ITAFF_TIME_STEPS
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,DT
@@ -40,9 +42,9 @@
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
+          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
   logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  logical ANISOTROPY
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
 
   character(len=150) LOCAL_PATH
 
@@ -111,7 +113,6 @@
   read(IIN,3) junk,USE_OLSEN_ATTENUATION
   read(IIN,3) junk,OCEANS
   read(IIN,3) junk,STACEY_ABS_CONDITIONS
-  read(IIN,3) junk,MULTIPLY_MU_TSURF
 
 ! check that Poisson's ratio is positive
   if(VP_VS_RATIO_GOCAD_TOP <= sqrt(2.) .or. VP_VS_RATIO_GOCAD_BOTTOM <= sqrt(2.)) &
@@ -155,6 +156,18 @@
   read(IIN,3) junk,USE_HIGHRES_FOR_MOVIES
   read(IIN,1) junk,NMOVIE
   read(IIN,2) junk,HDUR_MIN_MOVIES
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,1) junk,ITAFF_TIME_STEPS
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,3) junk,SAVE_AVS_DX_MESH_FILES
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,3) junk,PRINT_SOURCE_TIME_FUNCT
 
 ! close parameter file
   close(IIN)
