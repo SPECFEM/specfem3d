@@ -842,9 +842,6 @@
     deallocate(display)
   endif
 
-
-
-
   end program create_movie_AVS_DX
 
 !
