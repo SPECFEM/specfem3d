@@ -190,8 +190,9 @@
 
 ! print some information about stations
       if(myrank == 0) &
-        write(IMAIN,"('Station #',i5,':  ',a5,'.',a2,'      horizontal distance:  ',f10.3,' km')") &
-          irec,station_name(irec),network_name(irec),horiz_dist(irec)
+        write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
+                       '.',network_name(irec)(1:len_trim(network_name(irec))), &
+                       '    horizontal distance:  ',horiz_dist(irec),' km'
 
 !     get the Cartesian components of n in the model: nu
 
