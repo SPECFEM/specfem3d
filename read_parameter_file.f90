@@ -245,9 +245,9 @@
     enddo
 
 ! read half duration and compute minimum
-  read(1,"(a)") dummystring
-  read(dummystring(15:len_trim(dummystring)),*) hdur
-  minval_hdur = min(minval_hdur,hdur)
+    read(1,"(a)") dummystring
+    read(dummystring(15:len_trim(dummystring)),*) hdur
+    minval_hdur = min(minval_hdur,hdur)
 
 ! skip other information
     do idummy = 1,9
