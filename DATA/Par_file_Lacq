@@ -16,21 +16,21 @@ LATITUDE_MIN                    = 111000.d0
 LATITUDE_MAX                    = 149000.d0
 LONGITUDE_MIN                   = 338000.d0
 LONGITUDE_MAX                   = 382000.d0
-DEPTH_BLOCK_KM                  = 60.d0
+DEPTH_BLOCK_KM                  = 14.d0
 UTM_PROJECTION_ZONE             = 99999
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below)
-NEX_XI                          = 64
-NEX_ETA                         = 64
+NEX_XI                          = 256
+NEX_ETA                         = 256
 
 # number of MPI processors along xi and eta (can be different)
 NPROC_XI                        = 2
 NPROC_ETA                       = 2
 
 # model (SoCal, Harvard_LA, Min_Chen_anisotropy, Lacq_gas_field_France)
-MODEL                           = SoCal
+MODEL                           = Lacq_gas_field_France
 
 # parameters describing the model
 OCEANS                          = .false.
@@ -56,8 +56,7 @@ USE_HIGHRES_FOR_MOVIES          = .false.
 SAVE_AVS_DX_MESH_FILES          = .true.
 
 # path to store the local database file on each node
-# /scratch/DATABASES_MPI_DIMITRI
-LOCAL_PATH                      = DATABASES_MPI_DIMITRI
+LOCAL_PATH                      = /scratch/DATABASES_MPI_DIMITRI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 100

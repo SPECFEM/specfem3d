@@ -18,15 +18,15 @@
 !
 ! solver in single or double precision depending on the machine (4 or 8 bytes)
 !
-!  ALSO CHANGE FILE  precision.h ACCORDINGLY
+! ALSO CHANGE FILE precision.h ACCORDINGLY
 !
   integer, parameter :: SIZE_REAL = 4
   integer, parameter :: SIZE_DOUBLE = 8
 
 ! uncomment this to run in single precision
- integer, parameter :: CUSTOM_REAL = SIZE_REAL
+  integer, parameter :: CUSTOM_REAL = SIZE_REAL
 ! uncomment this to run in double precision (increases memory size by 2)
-!  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
+! integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
 
 !----------- parameters that can be changed by the user -----------
 
@@ -41,9 +41,6 @@
 
 ! apply heuristic rule to modify doubling regions to balance angles
   logical, parameter :: APPLY_HEURISTIC_RULE = .true.
-
-! to suppress UTM projection for SCEC benchmarks
-  logical, parameter :: SUPPRESS_UTM_PROJECTION = .false.
 
 ! number of GLL points in each direction of an element (degree plus one)
   integer, parameter :: NGLLX = 5
@@ -196,10 +193,15 @@
   integer, parameter :: NUM_ITER = 4
 
 ! size of topography and bathymetry file for Southern California
-  integer, parameter :: NX_TOPO = 1401,NY_TOPO = 1001
-  double precision, parameter :: ORIG_LAT_TOPO = 32.d0
-  double precision, parameter :: ORIG_LONG_TOPO = -121.d0
-  double precision, parameter :: DEGREES_PER_CELL_TOPO = 5.d0 / 1000.d0
+!! DK DK UGLY LACQ  integer, parameter :: NX_TOPO = 1401,NY_TOPO = 1001
+!! DK DK UGLY LACQ  double precision, parameter :: ORIG_LAT_TOPO = 32.d0
+!! DK DK UGLY LACQ  double precision, parameter :: ORIG_LONG_TOPO = -121.d0
+!! DK DK UGLY LACQ  double precision, parameter :: DEGREES_PER_CELL_TOPO = 5.d0 / 1000.d0
+
+  integer, parameter :: NX_TOPO = 499,NY_TOPO = 401
+  double precision, parameter :: ORIG_LAT_TOPO = 100000.d0
+  double precision, parameter :: ORIG_LONG_TOPO = 340400.d0
+  double precision, parameter :: DEGREES_PER_CELL_TOPO = 100.d0
 
 ! size of Lupei Zhu's Moho map file for Southern California
   integer, parameter :: NX_MOHO = 71,NY_MOHO = 51
@@ -283,6 +285,10 @@
   double precision, parameter :: DEPTH_5p5km_SOCAL = -5500.d0
   double precision, parameter :: DEPTH_16km_SOCAL = -16000.d0
   double precision, parameter :: DEPTH_MOHO_SOCAL = -35000.d0
+
+
+!! DK DK UGLY LACQ
+  double precision, parameter :: DEPTH_INTERFACE_LACQ = -9000.d0
 
 ! reference surface of the model before adding topography
   double precision, parameter :: Z_SURFACE = 0.d0

@@ -181,7 +181,7 @@
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH
+  character(len=150) LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -246,7 +246,7 @@
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -377,6 +377,13 @@
   endif
 
   write(IMAIN,*)
+  if(SUPPRESS_UTM_PROJECTION) then
+    write(IMAIN,*) 'suppressing UTM projection'
+  else
+    write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
+  endif
+
+  write(IMAIN,*)
   if(HARVARD_3D_GOCAD_MODEL) then
     write(IMAIN,*) 'incorporating 3-D lateral variations'
   else
@@ -386,6 +393,11 @@
   write(IMAIN,*)
   if(ATTENUATION) then
     write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+    if(USE_OLSEN_ATTENUATION) then
+      write(IMAIN,*) 'using Olsen''s attenuation'
+    else
+      write(IMAIN,*) 'not using Olsen''s attenuation'
+    endif
   else
     write(IMAIN,*) 'no attenuation'
   endif
@@ -585,6 +597,10 @@
 
   else
     Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
+
+!! DK DK UGLY LACQ
+    if(MODEL == 'Lacq_gas_field_France') Z_DEPTH_MOHO = DEPTH_INTERFACE_LACQ
+
   endif
 
 ! define vertical spacing of the mesh
@@ -592,7 +608,7 @@
                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed                     z_top, &
-                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
+                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI,MODEL)
 
 !   fill the volume
     do ir=0,2*NER
@@ -781,7 +797,8 @@
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
     if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
-      write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
+      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
+              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
   enddo
 
   close(IIN)

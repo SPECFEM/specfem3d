@@ -30,7 +30,8 @@
 
   itopo_bathy_basin(:,:) = 0
 
-  open(unit=13,file='DATA/la_topography/topo_bathy_final.dat',status='old')
+!! DK DK UGLY LACQ  open(unit=13,file='DATA/la_topography/topo_bathy_final.dat',status='old')
+  open(unit=13,file='DATA/lacq_thomas/mnt_Lacq_Lambert_final_dimitri.dat',status='old')
   do iy=1,NY_TOPO
     do ix=1,NX_TOPO
       read(13,*) itopo_bathy_basin(ix,iy)

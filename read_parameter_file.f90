@@ -25,7 +25,7 @@
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
 
   implicit none
 
@@ -87,10 +87,32 @@
 
   NEX_MAX = max(NEX_XI,NEX_ETA)
 
-! standard mesh for SAF 1857 on Caltech cluster
-  if (NEX_MAX <= 288) then
+  call read_value_string(MODEL)
+  call read_value_logical(OCEANS)
+  call read_value_logical(TOPOGRAPHY)
+  call read_value_logical(ATTENUATION)
+  call read_value_logical(USE_OLSEN_ATTENUATION)
 
-   ! time step in seconds
+!! DK DK UGLY LACQ  added case of Lacq_gas_field_France
+  if(MODEL == 'Lacq_gas_field_France') then
+
+! time step in seconds
+    DT                 = 0.011d0
+
+! number of elements in the vertical direction
+    NER_SEDIM          = 1
+    NER_BASEMENT_SEDIM = 2
+    NER_16_BASEMENT    = 2
+    NER_MOHO_16        = 2
+    NER_BOTTOM_MOHO    = 1
+!! DK DK UGLY LACQ  end of new section
+
+
+
+! standard mesh for SAF 1857 on Caltech cluster
+  else if (NEX_MAX <= 288) then
+
+! time step in seconds
     DT                 = 0.011d0
 
 ! number of elements in the vertical direction
@@ -122,13 +144,7 @@
   NER_MOHO_16 = NER_MOHO_16 * 2
   NER_BOTTOM_MOHO = NER_BOTTOM_MOHO * 4
 
-  call read_value_string(MODEL)
-  call read_value_logical(OCEANS)
-  call read_value_logical(TOPOGRAPHY)
-  call read_value_logical(ATTENUATION)
-  call read_value_logical(USE_OLSEN_ATTENUATION)
-
-  if(MODEL == 'SoCal') then
+  if(MODEL == 'SoCal' .or. MODEL == 'Lacq_gas_field_France') then
 
     BASEMENT_MAP             = .false.
     MOHO_MAP_LUPEI           = .false.

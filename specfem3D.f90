@@ -316,7 +316,7 @@
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname
+  character(len=150) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -376,7 +376,7 @@
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -806,6 +806,13 @@
   endif
 
   write(IMAIN,*)
+  if(SUPPRESS_UTM_PROJECTION) then
+    write(IMAIN,*) 'suppressing UTM projection'
+  else
+    write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
+  endif
+
+  write(IMAIN,*)
   if(HARVARD_3D_GOCAD_MODEL) then
     write(IMAIN,*) 'incorporating 3-D lateral variations'
   else
@@ -815,6 +822,11 @@
   write(IMAIN,*)
   if(ATTENUATION) then
     write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+    if(USE_OLSEN_ATTENUATION) then
+      write(IMAIN,*) 'using Olsen''s attenuation'
+    else
+      write(IMAIN,*) 'not using Olsen''s attenuation'
+    endif
   else
     write(IMAIN,*) 'no attenuation'
   endif
