@@ -43,6 +43,7 @@ VP_MIN_GOCAD             = 750.d0
 VP_VS_RATIO_GOCAD_TOP    = 2.0d0
 VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
 ATTENUATION              = .true.
+USE_OLSEN_ATTENUATION    = .true.
 OCEANS                   = .true.
 STACEY_ABS_CONDITIONS    = .true.
 MULTIPLY_MU_TSURF        = .false.
@@ -68,7 +69,7 @@ NSOURCES                 = 196
 
 ! for the movies
 SAVE_AVS_DX_MOVIE        = .false.
-SAVE_AVS_DX_SHAKEMAP     = .true.
+SAVE_AVS_DX_SHAKEMAP     = .false.
 SAVE_DISPLACEMENT        = .false.
 USE_HIGHRES_FOR_MOVIES   = .false.
 NMOVIE                   = 200
