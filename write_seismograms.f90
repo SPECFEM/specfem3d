@@ -64,7 +64,7 @@
       length_network_name = len_trim(network_name(irec))
 
 ! check that length conforms to standard
-      if(length_station_name < 1 .or. length_station_name > 5 .or. &
+      if(length_station_name < 1 .or. length_station_name > 8 .or. &
          length_network_name < 1 .or. length_network_name > 2) &
            call exit_MPI(myrank,'wrong length of station or network name')
 
@@ -78,8 +78,14 @@
         write(sisname,"(a3,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
       else if(length_station_name == 4) then
         write(sisname,"(a4,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
-      else
+      else if(length_station_name == 5) then
         write(sisname,"(a5,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+      else if(length_station_name == 6) then
+        write(sisname,"(a6,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+      else if(length_station_name == 7) then
+        write(sisname,"(a7,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+      else
+        write(sisname,"(a8,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
       endif
 
     else
@@ -92,8 +98,14 @@
         write(sisname,"(a3,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
       else if(length_station_name == 4) then
         write(sisname,"(a4,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
-      else
+      else if(length_station_name == 5) then
         write(sisname,"(a5,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+      else if(length_station_name == 6) then
+        write(sisname,"(a6,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+      else if(length_station_name == 7) then
+        write(sisname,"(a7,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+      else
+        write(sisname,"(a8,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
       endif
 
     endif
