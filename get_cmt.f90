@@ -28,7 +28,6 @@
   double precision DT
 
   integer mo,da,julian_day,isource
-  double precision scaleM
   character(len=5) datasource
   character(len=150) string
 
@@ -100,10 +99,14 @@
   close(1)
 
 !
-! scale the moment-tensor (dimensions dyn-cm)
+! scale the moment tensor
+! CMTSOLUTION file values are in dyne.cm
+! 1 dyne is 1 gram * 1 cm / (1 second)^2
+! 1 Newton is 1 kg * 1 m / (1 second)^2
+! thus 1 Newton = 100,000 dynes
+! therefore 1 dyne.cm = 1e-7 Newton.m
 !
-  scaleM = 1.d7
-  moment_tensor(:,:) = moment_tensor(:,:) / scaleM
+  moment_tensor(:,:) = moment_tensor(:,:) * 1.d-7
 
   end subroutine get_cmt
 

@@ -10,7 +10,8 @@
 ! constants provided by the user
 
 ! average slip length at each center (in meters)
-  double precision, parameter :: average_slip_length = 4.5d0
+!! DK DK mean value for SAF 1857 from Sieh (1978) is 4.90 m
+  double precision, parameter :: AVERAGE_SLIP_LENGTH = 4.90d0
 
 ! fictitious constant value of mu = 1
 ! varies along the fault plane, therefore will be added later in the solver
@@ -23,7 +24,10 @@
   double precision, parameter :: DEPTH_REMOVED_TOPO = 20.d0
 
 ! length of normal vectors for DX display
- double precision, parameter :: length_normal_display_DX = +20000.d0
+  double precision, parameter :: length_normal_display_DX = +20000.d0
+
+! number of points in data file with Sieh (1978) slip distribution for 1857
+  integer, parameter :: NPOIN_SIEH_1978 = 2637
 
  integer npoin    ! number of VRTX in GoCad file
  integer nspec    ! number of TRGL in GoCad file
@@ -51,7 +55,7 @@
  double precision xmin,xmax,ymin,ymax
 
 ! slip vector Cartesian components
- double precision ex,ey,ez
+ double precision ex,ey,ez,real_slip_length
 
  double precision, external :: area_triangle
 
@@ -63,6 +67,11 @@
   integer icornerlat,icornerlong
   double precision elevation,long_corner,lat_corner,ratio_xi,ratio_eta
   integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+
+! slip distribution from Sieh (1978) for San Andreas 1857
+  integer index_min_dist
+  double precision dist_sieh,min_dist
+  double precision, dimension(NPOIN_SIEH_1978) :: xslip_sieh_1978,yslip_sieh_1978
 
   integer SIGN_NORMAL,event_number
   character(len=40) tsurf_file
@@ -391,6 +400,21 @@
 
 !----
 
+! read slip distribution from Sieh (1978) if San Andreas 1857
+! convert horizontal distance from km to m
+  if(event_number == 1) then
+    print *,'reading slip ditribution from Sieh (1978)'
+    open(unit=11,file='DATA/slip_sieh_1857_extracted.txt',status='old')
+    do ipoin = 1,NPOIN_SIEH_1978
+      read(11,*) xslip_sieh_1978(ipoin),yslip_sieh_1978(ipoin)
+      xslip_sieh_1978(ipoin) = xslip_sieh_1978(ipoin) * 1000.d0
+    enddo
+    close(11)
+  endif
+
+
+!----
+
   time_shift_min = + 10000000000.d0
   time_shift_max = - 10000000000.d0
   isourceshiftmin = -1
@@ -487,11 +511,35 @@
 ! make sure slip is horizontal (for strike-slip)
   ez = 0.
 
+! determine slip length (from Sieh (1978) if SAF 1857, constant otherwise)
+  if(event_number /= 1) then
+
+    real_slip_length = AVERAGE_SLIP_LENGTH
+
+  else
+
+    min_dist = + 1000000000.d0
+    index_min_dist = -1
+! distance to origin of segment that ruptured
+    horiz_dist_fault = dsqrt((x_center_triangle-x_begin)**2 + (y_center_triangle-y_begin)**2)
+! loop on all the points to find the closest
+    do ipoin = 1,NPOIN_SIEH_1978
+! distance to current point in Sieh (1978) scanned curved
+      dist_sieh = dabs(xslip_sieh_1978(ipoin) - horiz_dist_fault)
+      if(dist_sieh < min_dist) then
+        min_dist = dist_sieh
+        index_min_dist = ipoin
+      endif
+    enddo
+    real_slip_length = yslip_sieh_1978(index_min_dist)
+
+  endif
+
 ! normalize slip vector and convert to real slip in meters
   norm = dsqrt(ex**2 + ey**2 + ez**2)
-  ex = average_slip_length * ex / norm
-  ey = average_slip_length * ey / norm
-  ez = average_slip_length * ez / norm
+  ex = real_slip_length * ex / norm
+  ey = real_slip_length * ey / norm
+  ez = real_slip_length * ez / norm
 
 ! compute moment tensor
   Mxx = mu * area_current * (ex*nx + nx*ex)
