@@ -5,17 +5,22 @@
 
  implicit none
 
+  include "constants.h"
+
 ! constants provided by the user
 
 ! average slip length at each center (in meters)
- double precision, parameter :: average_slip_length = 4.5d0
+  double precision, parameter :: average_slip_length = 4.5d0
 
 ! fictitious constant value of mu = 1
 ! varies along the fault plane, therefore will be added later in the solver
- double precision, parameter :: mu = 1.d0
+  double precision, parameter :: mu = 1.d0
 
 ! rupture velocity in m/s
- double precision, parameter :: rupture_velocity = 2800.d0
+  double precision, parameter :: rupture_velocity = 2800.d0
+
+! depth above which we suppress source elements that reach the surface
+  double precision, parameter :: DEPTH_REMOVED_TOPO = 20.d0
 
 ! length of normal vectors for DX display
  double precision, parameter :: length_normal_display_DX = +20000.d0
@@ -31,6 +36,9 @@
 
  integer ipoin,ispec,isource,NSOURCES,isourceshiftmin,isource_current
  integer iglob1_store,iglob2_store,iglob3_store,iglob_dummy
+
+ logical exclude_source
+
  double precision x1,y1,z1,x2,y2,z2,x3,y3,z3,horizdistval,TOLERANCE
  double precision area_current,area_min,area_max,area_sum
  double precision nx,ny,nz,norm
@@ -47,11 +55,17 @@
 
  double precision, external :: area_triangle
 
- character(len=40) tsurf_file
-
 ! for parameter file
   integer NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,UTM_PROJECTION_ZONE,NSTEP
   double precision DEPTH_BLOCK_KM,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,DT
+
+! use integer array to store topography values
+  integer icornerlat,icornerlong
+  double precision elevation,long_corner,lat_corner,ratio_xi,ratio_eta
+  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+
+  integer SIGN_NORMAL,event_number
+  character(len=40) tsurf_file
 
 ! first 27 characters of each line in parameter file are a comment
   character(len=27) junk
@@ -97,7 +111,31 @@
 ! exclude typically 5 % of size of model
  TOLERANCE = dabs(LAT_MAX-LAT_MIN)*5.d0/100.d0
 
- tsurf_file = 'ASCII_1857_rupture_remeshed.dat'
+! ask user to select event
+ print *,'select event:'
+ print *
+ print *,'  1 = 1857'
+ print *,'  2 = Whittier'
+ print *,'  3 = Southern San Andreas'
+ print *
+
+ read(5,*) event_number
+
+ if(event_number == 1) then
+  SIGN_NORMAL = +1
+  tsurf_file = 'ASCII_1857_rupture_remeshed.dat'
+
+ else if(event_number == 2) then
+   SIGN_NORMAL = -1
+   tsurf_file = 'ASCII_whittier_remeshed.dat'
+
+ else if(event_number == 3) then
+   SIGN_NORMAL = -1
+   tsurf_file = 'ASCII_southern_san_andreas_remeshed.dat'
+
+ else
+   stop 'incorrect event selected'
+ endif
 
  print *
  print *,'tsurf file name is ',tsurf_file
@@ -136,7 +174,17 @@
 
 !----
 
-! remove sources that are outside the model
+! read basin topography and bathymetry file
+  write(*,*)
+  write(*,*) 'reading topography file'
+  call read_basin_topo_bathy_file(itopo_bathy_basin)
+  write(*,*) 'regional topography file read ranges in m from ', &
+        minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
+  write(*,*)
+
+!----
+
+! remove sources that are outside or above the model
 
   isource = 0
 
@@ -163,10 +211,53 @@
 ! convert location of source
   call utm_geo(long,lat,x_center_triangle,y_center_triangle,UTM_PROJECTION_ZONE)
 
-! check that the current source is inside the basin model, otherwise exclude it
-  if(.not.(lat <= LAT_MIN + TOLERANCE .or. lat >= LAT_MAX - TOLERANCE .or. &
-           long <= LONG_MIN + TOLERANCE .or. long >= LONG_MAX - TOLERANCE .or. &
-           z_center_triangle <= - dabs(DEPTH_BLOCK_KM*1000.d0))) then
+! determine if we need to exclude this source
+  exclude_source = .false.
+
+! exclude if horizontal coordinates are outside the block
+  if(lat <= LAT_MIN + TOLERANCE .or. lat >= LAT_MAX - TOLERANCE .or. &
+     long <= LONG_MIN + TOLERANCE .or. long >= LONG_MAX - TOLERANCE .or. &
+     z_center_triangle <= - dabs(DEPTH_BLOCK_KM*1000.d0)) &
+             exclude_source = .true.
+
+! exclude if source is above topography
+
+! get coordinate of corner in bathy/topo model
+    icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+    icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+
+! avoid edge effects and extend with identical point if outside model
+    if(icornerlong < 1) icornerlong = 1
+    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+    if(icornerlat < 1) icornerlat = 1
+    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+
+! compute coordinates of corner
+    long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
+    lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
+
+! compute ratio for interpolation
+    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
+    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+
+! avoid edge effects
+    if(ratio_xi < 0.) ratio_xi = 0.
+    if(ratio_xi > 1.) ratio_xi = 1.
+    if(ratio_eta < 0.) ratio_eta = 0.
+    if(ratio_eta > 1.) ratio_eta = 1.
+
+! interpolate elevation at current point
+    elevation = &
+      itopo_bathy_basin(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+      itopo_bathy_basin(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+      itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+      itopo_bathy_basin(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+
+  if(z_center_triangle > elevation - DEPTH_REMOVED_TOPO) &
+    exclude_source = .true.
+
+! store current point if source is kept
+  if(.not. exclude_source) then
     isource = isource + 1
     iglob1_copy(isource) = iglob1(isource_current)
     iglob2_copy(isource) = iglob2(isource_current)
@@ -180,7 +271,7 @@
 
   print *
   print *,'keeping ',NSOURCES,' sources inside the model out of ',nspec
-  print *,'excluding ',nspec-NSOURCES,' sources outside the model (', &
+  print *,'excluding ',nspec-NSOURCES,' sources outside or above the model (', &
              sngl(100.d0*dble(nspec-NSOURCES)/dble(nspec)),' %)'
   print *
 
@@ -338,9 +429,18 @@
 
 ! normalize normal vector
   norm = dsqrt(nx**2 + ny**2 + nz**2)
-  nx = nx / norm
-  ny = ny / norm
-  nz = nz / norm
+!! DK DK invert normal or not
+  nx = SIGN_NORMAL * nx / norm
+  ny = SIGN_NORMAL * ny / norm
+  nz = SIGN_NORMAL * nz / norm
+!! DK DK fix problem of different normals for Southern San Andreas
+  if(event_number == 3) then
+    if(ny < 0.) then
+      nx = - nx
+      ny = - ny
+      nz = - nz
+    endif
+  endif
 
 ! compute min, max and total area
   area_min = dmin1(area_min,area_current)
@@ -382,7 +482,7 @@
 
 ! test of slip vector orientation for right-lateral strike-slip
 !! DK DK UGLY check this, could be the other way around
-  if(ex > 0. .or. ey < 0.) stop 'wrong orientation of slip vector'
+!! DK DK UGLY fix this tomorrow  if(ex > 0. .or. ey < 0.) stop 'wrong orientation of slip vector'
 
 ! make sure slip is horizontal (for strike-slip)
   ez = 0.
@@ -533,9 +633,18 @@
 
 ! normalize normal vector
   norm = dsqrt(nx**2 + ny**2 + nz**2)
-  nx = nx / norm
-  ny = ny / norm
-  nz = nz / norm
+!! DK DK invert normal or not
+  nx = SIGN_NORMAL * nx / norm
+  ny = SIGN_NORMAL * ny / norm
+  nz = SIGN_NORMAL * nz / norm
+!! DK DK fix problem of different normals for Southern San Andreas
+  if(event_number == 3) then
+    if(ny < 0.) then
+      nx = - nx
+      ny = - ny
+      nz = - nz
+    endif
+  endif
 
 ! compute min, max and total area
   area_min = dmin1(area_min,area_current)
@@ -636,6 +745,9 @@
   area_triangle = 0.5d0*length2*height
 
   end function area_triangle
+
+!! DK DK include routine to read topography
+ include "read_basin_topo_bathy_file.f90"
 
 !=====================================================================
 !
