@@ -43,9 +43,6 @@
 ! do not use if you do not plan to use AVS or OpenDX to visualize the mesh
   logical, parameter :: SAVE_AVS_DX_MESH_FILES = .true.
 
-!! DK DK UGLY use Olsen attenuation, or constant attenuation of Q = 90
-  logical, parameter :: USE_OLSEN_ATTENUATION = .false.
-
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0

@@ -297,7 +297,7 @@
   double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
-  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION, &
+  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
 
@@ -352,7 +352,7 @@
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
         NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
-        ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
@@ -867,11 +867,11 @@
 ! distinguish attenuation factors
    if(flag_sediments(i,j,k,ispec)) then
 
-!! DK DK UGLY use constant attenuation of Q = 90
-!! DK DK UGLY or use scaling rule similar to Olsen et al. (2003)
+! use constant attenuation of Q = 90
+! or use scaling rule similar to Olsen et al. (2003)
      if(USE_OLSEN_ATTENUATION) then
        vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-!! DK DK use rule Q_mu = 0.05 * v_s
+! use rule Q_mu = 0.05 * v_s
        Q_mu = 0.05 * vs_val
        int_Q_mu = 10 * nint(Q_mu / 10.)
        if(int_Q_mu < 40) int_Q_mu = 40
@@ -1194,11 +1194,11 @@
 ! distinguish attenuation factors
     if(flag_sediments(i,j,k,ispec)) then
 
-!! DK DK UGLY use constant attenuation of Q = 90
-!! DK DK UGLY or use scaling rule similar to Olsen et al. (2003)
+! use constant attenuation of Q = 90
+! or use scaling rule similar to Olsen et al. (2003)
      if(USE_OLSEN_ATTENUATION) then
        vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-!! DK DK use rule Q_mu = 0.05 * v_s
+! use rule Q_mu = 0.05 * v_s
        Q_mu = 0.05 * vs_val
        int_Q_mu = 10 * nint(Q_mu / 10.)
        if(int_Q_mu < 40) int_Q_mu = 40

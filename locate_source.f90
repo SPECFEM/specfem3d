@@ -130,7 +130,7 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: mustore
 
-!! DK DK UGLY for magnitude calculation for tsurf source
+! for magnitude calculation for tsurf source
   double precision seismic_moment_read,seismic_moment_total,muvalue_local
   double precision, dimension(NSOURCES) :: seismic_moment
   double precision, dimension(NSOURCES,0:NPROC-1) :: seismic_moment_all
