@@ -73,11 +73,17 @@
 ! other regions above stop one point below
   do ir=0,2*(NER_BASEMENT_SEDIM+NER_SEDIM) - 0
     npr=npr+1
+!! DK DK UGLY Manu Chaljub suggests that z_top should be used here instead of Z_SURFACE
+!! DK DK UGLY to take into account topography/bathymetry
+!! DK DK UGLY In the case of L.A. both options are ok
     rn(npr)=(Z_BASEMENT_SURFACE-Z_DEPTH_BLOCK) + &
       (Z_SURFACE-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
   enddo
 
 ! normalize depths
+!! DK DK UGLY Manu Chaljub suggests that z_top should be used here instead of Z_SURFACE
+!! DK DK UGLY to take into account topography/bathymetry
+!! DK DK UGLY In the case of L.A. both options are ok
   rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
 
 ! check that the mesh that has been generated is correct
