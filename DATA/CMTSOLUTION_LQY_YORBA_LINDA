@@ -1,0 +1,13 @@
+PDE 2002  9  3  7  8 51.00  33.9190 -117.7640   7.0 4.3 4.3 Yorba Linda (JASCHA)   SPECTRAL-ELEMENT CMT
+event name:     9818433
+time shift:      0.0000
+half duration:   1.0000
+latitude:       33.9190
+longitude:    -117.7640
+depth:           7.0000
+Mrr:      -0.605724E+22
+Mtt:      -0.244995E+23
+Mpp:       0.305567E+23
+Mrt:      -0.580618E+22
+Mrp:      -0.615309E+22
+Mtp:      -0.144154E+23
