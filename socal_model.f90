@@ -15,14 +15,13 @@
 !
 !=====================================================================
 
-  subroutine socal_model(idoubling,zmesh,rho,vp,vs)
+  subroutine socal_model(idoubling,rho,vp,vs)
 
   implicit none
 
   include "constants.h"
 
   integer idoubling
-  double precision zmesh
   double precision rho,vp,vs
 
   if(idoubling == IFLAG_HALFSPACE_MOHO) then

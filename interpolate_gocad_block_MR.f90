@@ -119,7 +119,7 @@
     if(HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
-      call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
+      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
     gamma_interp_x = (utm_x_eval - ORIG_X_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
     vp_final = vp_ref_hauksson * (1. - gamma_interp_x) + vp_final * gamma_interp_x
@@ -132,7 +132,7 @@
     if(HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
-      call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
+      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
     gamma_interp_x = (utm_x_eval - (END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR)) / THICKNESS_TAPER_BLOCK_MR
     vp_final = vp_ref_hauksson * gamma_interp_x + vp_final * (1. - gamma_interp_x)
@@ -145,7 +145,7 @@
     if(HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
-      call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
+      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
     gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
     vp_final = vp_ref_hauksson * (1. - gamma_interp_y) + vp_final * gamma_interp_y
@@ -158,7 +158,7 @@
     if(HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
-      call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
+      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
     gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR)) / THICKNESS_TAPER_BLOCK_MR
     vp_final = vp_ref_hauksson * gamma_interp_y + vp_final * (1. - gamma_interp_y)

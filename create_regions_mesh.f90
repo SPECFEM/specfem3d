@@ -601,15 +601,15 @@
 ! get the regional model parameters
           if(HAUKSSON_REGIONAL_MODEL) then
 ! get density from socal model
-             call socal_model(doubling_index,zmesh,rho,vp,vs)
+             call socal_model(doubling_index,rho,vp,vs)
 ! get vp and vs from Hauksson
              call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp,vs,MOHO_MAP_LUPEI)
 ! if Moho map is used, then assume homogeneous medium below the Moho
 ! and use bottom layer of Hauksson's model in the halfspace
              if(MOHO_MAP_LUPEI .and. doubling_index == IFLAG_HALFSPACE_MOHO) &
-                  call socal_model(IFLAG_HALFSPACE_MOHO,zmesh,rho,vp,vs)
+                  call socal_model(IFLAG_HALFSPACE_MOHO,rho,vp,vs)
           else
-             call socal_model(doubling_index,zmesh,rho,vp,vs)
+             call socal_model(doubling_index,rho,vp,vs)
 ! include attenuation in first SoCal layer if needed
 ! uncomment line below to include attenuation in the 1D case
 !        if(zmesh >= DEPTH_5p5km_SOCAL) point_is_in_sediments = .true.
