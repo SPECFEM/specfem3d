@@ -106,7 +106,7 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! MPI v. 1.2 Qinya Liu and Min Chen, Caltech, July 2004: full anisotropy
+! MPI v. 1.2 Min Chen, Caltech, July 2004: full anisotropy
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
