@@ -20,6 +20,10 @@
   subroutine read_arrays_solver(myrank,xstore,ystore,zstore, &
                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs, &
+	       ANISOTROPY, &
+	       c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+               c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
+               c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
                kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
 
   implicit none
@@ -39,6 +43,29 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+
+  logical ANISOTROPY
+  real(kind=CUSTOM_REAL) c11store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c12store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c13store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c14store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c15store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c16store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c22store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c23store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c24store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c25store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c26store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c33store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c34store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c35store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c36store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c44store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c45store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c46store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c55store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c56store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) c66store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
 
 ! material properties
   real(kind=CUSTOM_REAL) kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
@@ -186,6 +213,115 @@
   open(unit=IIN,file=prname(1:len_trim(prname))//'mu.bin',status='old',form='unformatted')
   read(IIN) mustore
   close(IIN)
+
+  if(ANISOTROPY) then
+
+! c11
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c11.bin',status='old',form='unformatted')
+     read(IIN) c11store
+     close(IIN)
+
+! c12
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c12.bin',status='old',form='unformatted')
+     read(IIN) c12store
+     close(IIN)
+
+! c13
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c13.bin',status='old',form='unformatted')
+     read(IIN) c13store
+     close(IIN)
+
+! c14
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c14.bin',status='old',form='unformatted')
+     read(IIN) c14store
+     close(IIN)
+
+! c15
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c15.bin',status='old',form='unformatted')
+     read(IIN) c15store
+     close(IIN)
+
+! c16
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c16.bin',status='old',form='unformatted')
+     read(IIN) c16store
+     close(IIN)
+
+! c22
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c22.bin',status='old',form='unformatted')
+     read(IIN) c22store
+     close(IIN)
+
+! c23
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c23.bin',status='old',form='unformatted')
+     read(IIN) c23store
+     close(IIN)
+
+! c24
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c24.bin',status='old',form='unformatted')
+     read(IIN) c24store
+     close(IIN)
+
+! c25
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c25.bin',status='old',form='unformatted')
+     read(IIN) c25store
+     close(IIN)
+
+! c26
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c26.bin',status='old',form='unformatted')
+     read(IIN) c26store
+     close(IIN)
+
+! c33
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c33.bin',status='old',form='unformatted')
+     read(IIN) c33store
+     close(IIN)
+
+! c34
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c34.bin',status='old',form='unformatted')
+     read(IIN) c34store
+     close(IIN)
+
+! c35
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c35.bin',status='old',form='unformatted')
+     read(IIN) c35store
+     close(IIN)
+
+! c36
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c36.bin',status='old',form='unformatted')
+     read(IIN) c36store
+     close(IIN)
+
+! c44
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c44.bin',status='old',form='unformatted')
+     read(IIN) c44store
+     close(IIN)
+
+! c45
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c45.bin',status='old',form='unformatted')
+     read(IIN) c45store
+     close(IIN)
+
+! c46
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c46.bin',status='old',form='unformatted')
+     read(IIN) c46store
+     close(IIN)
+
+! c55
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c55.bin',status='old',form='unformatted')
+     read(IIN) c55store
+     close(IIN)
+
+! c56
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c56.bin',status='old',form='unformatted')
+     read(IIN) c56store
+     close(IIN)
+
+! c66
+     open(unit=IIN,file=prname(1:len_trim(prname))//'c66.bin',status='old',form='unformatted')
+     read(IIN) c66store
+     close(IIN)
+
+  endif
 
   end subroutine read_arrays_solver
 

@@ -24,9 +24,9 @@
   integer, parameter :: SIZE_DOUBLE = 8
 
 ! uncomment this to run in single precision
-! integer, parameter :: CUSTOM_REAL = SIZE_REAL
+ integer, parameter :: CUSTOM_REAL = SIZE_REAL
 ! uncomment this to run in double precision (increases memory size by 2)
-  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
+!  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
 
 !----------- parameters that can be changed by the user -----------
 

@@ -158,6 +158,10 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         kappastore,mustore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+        c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+        c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
+        c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
 ! flag for sediments
   logical not_fully_in_bedrock(NSPEC_AB)
@@ -193,6 +197,8 @@
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
   real(kind=CUSTOM_REAL) fac1,fac2,fac3
   real(kind=CUSTOM_REAL) lambdal,kappal,mul,lambdalplus2mul
+  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
+      c44,c45,c46,c55,c56,c66
 
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
@@ -303,6 +309,7 @@
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
+  logical ANISOTROPY
 
   logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   integer NMOVIE
@@ -357,7 +364,7 @@
         NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
+        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
         SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
 
@@ -470,6 +477,10 @@
   call read_arrays_solver(myrank,xstore,ystore,zstore, &
             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
             flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs, &
+            ANISOTROPY, &
+            c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+            c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
+            c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
             kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
 
 ! check that the number of points in this slice is correct
@@ -875,6 +886,8 @@
 
 ! use constant attenuation of Q = 90
 ! or use scaling rule similar to Olsen et al. (2003)
+! We might need to fix the attenuation part for the anisotropy case
+! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
      if(USE_OLSEN_ATTENUATION) then
        vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
 ! use rule Q_mu = constant * v_s
@@ -1255,24 +1268,81 @@
     kappal = kappastore(i,j,k,ispec)
     mul = mustore(i,j,k,ispec)
 
-! use unrelaxed parameters if attenuation
-    if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
 
-          lambdalplus2mul = kappal + FOUR_THIRDS * mul
-          lambdal = lambdalplus2mul - 2.*mul
+! For full anisotropic case
+    if(ANISOTROPY) then
+       c11 = c11store(i,j,k,ispec)
+       c12 = c12store(i,j,k,ispec)
+       c13 = c13store(i,j,k,ispec)
+       c14 = c14store(i,j,k,ispec)
+       c15 = c15store(i,j,k,ispec)
+       c16 = c16store(i,j,k,ispec)
+       c22 = c22store(i,j,k,ispec)
+       c23 = c23store(i,j,k,ispec)
+       c24 = c24store(i,j,k,ispec)
+       c25 = c25store(i,j,k,ispec)
+       c26 = c26store(i,j,k,ispec)
+       c33 = c33store(i,j,k,ispec)
+       c34 = c34store(i,j,k,ispec)
+       c35 = c35store(i,j,k,ispec)
+       c36 = c36store(i,j,k,ispec)
+       c44 = c44store(i,j,k,ispec)
+       c45 = c45store(i,j,k,ispec)
+       c46 = c46store(i,j,k,ispec)
+       c55 = c55store(i,j,k,ispec)
+       c56 = c56store(i,j,k,ispec)
+       c66 = c66store(i,j,k,ispec)
+       !if(ATTENUATION_VAL.and. not_fully_in_bedrock(ispec)) then
+       !   mul = c44
+       !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
+       !   c12 = c12 - TWO_THIRDS * minus_sum_beta * mul
+       !   c13 = c13 - TWO_THIRDS * minus_sum_beta * mul
+       !   c22 = c22 + FOUR_THIRDS * minus_sum_beta * mul
+       !   c23 = c23 - TWO_THIRDS * minus_sum_beta * mul
+       !   c33 = c33 + FOUR_THIRDS * minus_sum_beta * mul
+       !   c44 = c44 + minus_sum_beta * mul
+       !   c55 = c55 + minus_sum_beta * mul
+       !   c66 = c66 + minus_sum_beta * mul
+       !endif
+       
+       sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
+            c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
+       
+       sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
+            c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
+       
+       sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
+            c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
+       
+       sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
+            c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
+       
+       sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
+            c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
+       
+       sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
+            c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
+    else
+! For isotropic case
+! use unrelaxed parameters if attenuation
+       if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
+
+       lambdalplus2mul = kappal + FOUR_THIRDS * mul
+       lambdal = lambdalplus2mul - 2.*mul
 
 ! compute stress sigma
-          sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-          sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-          sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
-
-          sigma_xy = mul*duxdyl_plus_duydxl
-          sigma_xz = mul*duzdxl_plus_duxdzl
-          sigma_yz = mul*duzdyl_plus_duydzl
+       sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+       sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+       sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+       
+       sigma_xy = mul*duxdyl_plus_duydxl
+       sigma_xz = mul*duzdxl_plus_duxdzl
+       sigma_yz = mul*duzdyl_plus_duydzl
+    endif
 
 ! subtract memory variables if attenuation
-  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-    do i_sls = 1,N_SLS
+      if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+         do i_sls = 1,N_SLS
       R_xx_val = R_xx(i,j,k,ispec,i_sls)
       R_yy_val = R_yy(i,j,k,ispec,i_sls)
       sigma_xx = sigma_xx - R_xx_val

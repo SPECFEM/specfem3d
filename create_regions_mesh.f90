@@ -27,7 +27,9 @@
            myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,UTM_PROJECTION_ZONE, &
            HAUKSSON_REGIONAL_MODEL,OCEANS, &
            VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-           IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI)
+           IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
+           ANISOTROPY)
+
 
 ! create the different regions of the mesh
 
@@ -52,6 +54,7 @@
   logical HARVARD_3D_GOCAD_MODEL,HAUKSSON_REGIONAL_MODEL
   logical OCEANS,IMPOSE_MINIMUM_VP_GOCAD
   logical MOHO_MAP_LUPEI
+  logical ANISOTROPY
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
@@ -112,6 +115,9 @@
 
 ! for model density
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: c11store,c12store,c13store,c14store,c15store,c16store,&
+    c22store,c23store,c24store,c25store,c26store,c33store,c34store,c35store,c36store,c44store,c45store,c46store,&
+    c55store,c56store,c66store
 
 ! the jacobian
   real(kind=CUSTOM_REAL) jacobianl
@@ -174,6 +180,7 @@
   integer iproc_xi,iproc_eta
 
   double precision rho,vp,vs
+  double precision c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
 ! for the Harvard 3-D basin model
   double precision vp_block_gocad_MR(0:NX_GOCAD_MR-1,0:NY_GOCAD_MR-1,0:NZ_GOCAD_MR-1)
@@ -227,6 +234,29 @@
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec))
+
+! array with anisotropy
+  allocate(c11store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c12store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c13store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c14store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c15store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c16store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c22store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c23store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c24store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c25store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c26store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c33store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c34store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c35store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c36store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c44store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c45store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c46store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c55store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c56store(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(c66store(NGLLX,NGLLY,NGLLZ,nspec))
 
 ! Stacey
   allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec))
@@ -558,81 +588,148 @@
 ! initialize flag indicating whether point is in the sediments
        point_is_in_sediments = .false.
 
+       if(ANISOTROPY) then
+          call aniso_model(doubling_index,zmesh,rho,vp,vs,c11,c12,c13,c14,c15,c16,&
+               c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
+       else
 ! get the regional model parameters
-       if(HAUKSSON_REGIONAL_MODEL) then
+          if(HAUKSSON_REGIONAL_MODEL) then
 ! get density from socal model
-         call socal_model(doubling_index,zmesh,rho,vp,vs)
+             call socal_model(doubling_index,zmesh,rho,vp,vs)
 ! get vp and vs from Hauksson
-         call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp,vs,MOHO_MAP_LUPEI)
+             call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp,vs,MOHO_MAP_LUPEI)
 ! if Moho map is used, then assume homogeneous medium below the Moho
 ! and use bottom layer of Hauksson's model in the halfspace
-         if(MOHO_MAP_LUPEI .and. doubling_index == IFLAG_HALFSPACE_MOHO) &
-           call socal_model(IFLAG_HALFSPACE_MOHO,zmesh,rho,vp,vs)
-       else
-         call socal_model(doubling_index,zmesh,rho,vp,vs)
+             if(MOHO_MAP_LUPEI .and. doubling_index == IFLAG_HALFSPACE_MOHO) &
+                  call socal_model(IFLAG_HALFSPACE_MOHO,zmesh,rho,vp,vs)
+          else
+             call socal_model(doubling_index,zmesh,rho,vp,vs)
 ! include attenuation in first SoCal layer if needed
 ! uncomment line below to include attenuation in the 1D case
 !        if(zmesh >= DEPTH_5p5km_SOCAL) point_is_in_sediments = .true.
-       endif
+          endif
 
 ! get the Harvard 3-D basin model
-       if(HARVARD_3D_GOCAD_MODEL .and. &
-            (doubling_index == IFLAG_ONE_LAYER_TOPOGRAPHY &
-        .or. doubling_index == IFLAG_BASEMENT_TOPO) &
-       .and. xmesh >= ORIG_X_GOCAD_MR &
-       .and. xmesh <= END_X_GOCAD_MR &
-       .and. ymesh >= ORIG_Y_GOCAD_MR &
-       .and. ymesh <= END_Y_GOCAD_MR) then
+          if(HARVARD_3D_GOCAD_MODEL .and. &
+               (doubling_index == IFLAG_ONE_LAYER_TOPOGRAPHY &
+               .or. doubling_index == IFLAG_BASEMENT_TOPO) &
+               .and. xmesh >= ORIG_X_GOCAD_MR &
+               .and. xmesh <= END_X_GOCAD_MR &
+               .and. ymesh >= ORIG_Y_GOCAD_MR &
+               .and. ymesh <= END_Y_GOCAD_MR) then
 
 ! use medium-resolution model first
-         call interpolate_gocad_block_MR(vp_block_gocad_MR, &
-              xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
-              VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_MR, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,&
-              MOHO_MAP_LUPEI)
+             call interpolate_gocad_block_MR(vp_block_gocad_MR, &
+                  xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
+                  VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+                  IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_MR, &
+                  vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,&
+                  MOHO_MAP_LUPEI)
 
 ! then superimpose high-resolution model
-         if(xmesh >= ORIG_X_GOCAD_HR &
-      .and. xmesh <= END_X_GOCAD_HR &
-      .and. ymesh >= ORIG_Y_GOCAD_HR &
-      .and. ymesh <= END_Y_GOCAD_HR) &
-           call interpolate_gocad_block_HR(vp_block_gocad_HR,vp_block_gocad_MR,&
-              xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
-              VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, &
-              MOHO_MAP_LUPEI)
-
-    endif
-
+             if(xmesh >= ORIG_X_GOCAD_HR &
+                  .and. xmesh <= END_X_GOCAD_HR &
+                  .and. ymesh >= ORIG_Y_GOCAD_HR &
+                  .and. ymesh <= END_Y_GOCAD_HR) &
+                  call interpolate_gocad_block_HR(vp_block_gocad_HR,vp_block_gocad_MR,&
+                  xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
+                  VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+                  IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
+                  vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, &
+                  MOHO_MAP_LUPEI)
+             
+          endif
+       endif
 ! store flag indicating whether point is in the sediments
   flag_sediments(i,j,k,ispec) = point_is_in_sediments
   if(point_is_in_sediments) not_fully_in_bedrock(ispec) = .true.
 
 ! define elastic parameters in the model
 ! distinguish whether single or double precision for reals
+  if(ANISOTROPY) then
+     
        if(CUSTOM_REAL == SIZE_REAL) then
          rhostore(i,j,k,ispec) = sngl(rho)
          kappastore(i,j,k,ispec) = sngl(rho*(vp*vp - 4.d0*vs*vs/3.d0))
          mustore(i,j,k,ispec) = sngl(rho*vs*vs)
-
+         c11store(i,j,k,ispec) = sngl(c11)
+         c12store(i,j,k,ispec) = sngl(c12)
+         c13store(i,j,k,ispec) = sngl(c13)
+         c14store(i,j,k,ispec) = sngl(c14)
+         c15store(i,j,k,ispec) = sngl(c15)
+         c16store(i,j,k,ispec) = sngl(c16)
+         c22store(i,j,k,ispec) = sngl(c22)
+         c23store(i,j,k,ispec) = sngl(c23)
+         c24store(i,j,k,ispec) = sngl(c24)
+         c25store(i,j,k,ispec) = sngl(c25)
+         c26store(i,j,k,ispec) = sngl(c26)
+         c33store(i,j,k,ispec) = sngl(c33)
+         c34store(i,j,k,ispec) = sngl(c34)
+         c35store(i,j,k,ispec) = sngl(c35)
+         c36store(i,j,k,ispec) = sngl(c36)
+         c44store(i,j,k,ispec) = sngl(c44)
+         c45store(i,j,k,ispec) = sngl(c45)
+         c46store(i,j,k,ispec) = sngl(c46)
+         c55store(i,j,k,ispec) = sngl(c55)
+         c56store(i,j,k,ispec) = sngl(c56)
+         c66store(i,j,k,ispec) = sngl(c66)
 ! Stacey
          rho_vp(i,j,k,ispec) = sngl(rho*vp)
          rho_vs(i,j,k,ispec) = sngl(rho*vs)
-       else
+      else
          rhostore(i,j,k,ispec) = rho
          kappastore(i,j,k,ispec) = rho*(vp*vp - 4.d0*vs*vs/3.d0)
          mustore(i,j,k,ispec) = rho*vs*vs
-
+         c11store(i,j,k,ispec) = c11
+         c12store(i,j,k,ispec) = c12
+         c13store(i,j,k,ispec) = c13
+         c14store(i,j,k,ispec) = c14
+         c15store(i,j,k,ispec) = c15
+         c16store(i,j,k,ispec) = c16
+         c22store(i,j,k,ispec) = c22
+         c23store(i,j,k,ispec) = c23
+         c24store(i,j,k,ispec) = c24
+         c25store(i,j,k,ispec) = c25
+         c26store(i,j,k,ispec) = c26
+         c33store(i,j,k,ispec) = c33
+         c34store(i,j,k,ispec) = c34
+         c35store(i,j,k,ispec) = c35
+         c36store(i,j,k,ispec) = c36
+         c44store(i,j,k,ispec) = c44
+         c45store(i,j,k,ispec) = c45
+         c46store(i,j,k,ispec) = c46
+         c55store(i,j,k,ispec) = c55
+         c56store(i,j,k,ispec) = c56
+         c66store(i,j,k,ispec) = c66
 ! Stacey
          rho_vp(i,j,k,ispec) = rho*vp
          rho_vs(i,j,k,ispec) = rho*vs
-       endif
+      endif
 
-     enddo
-   enddo
- enddo
+
+   else
+      if(CUSTOM_REAL == SIZE_REAL) then
+         rhostore(i,j,k,ispec) = sngl(rho)
+         kappastore(i,j,k,ispec) = sngl(rho*(vp*vp - 4.d0*vs*vs/3.d0))
+         mustore(i,j,k,ispec) = sngl(rho*vs*vs)
+        
+! Stacey
+         rho_vp(i,j,k,ispec) = sngl(rho*vp)
+         rho_vs(i,j,k,ispec) = sngl(rho*vs)
+      else
+         rhostore(i,j,k,ispec) = rho
+         kappastore(i,j,k,ispec) = rho*(vp*vp - 4.d0*vs*vs/3.d0)
+         mustore(i,j,k,ispec) = rho*vs*vs
+        
+! Stacey
+         rho_vp(i,j,k,ispec) = rho*vp
+         rho_vs(i,j,k,ispec) = rho*vs
+      endif
+   endif
+
+enddo
+enddo
+enddo
 
 ! detect mesh boundaries
   call get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,doubling_index, &
@@ -748,6 +845,7 @@
 ! create AVS or DX mesh data for the slice, edges and faces
   if(SAVE_AVS_DX_MESH_FILES) then
     call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+! It might be not necessary to save the ansotropic perturbation mesh data (c11store ...), so I just keep as it was
     call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
                    kappastore,mustore,rhostore)
     call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
@@ -858,6 +956,10 @@
             etaxstore,etaystore,etazstore, &
             gammaxstore,gammaystore,gammazstore,jacobianstore, &
             xstore,ystore,zstore,kappastore,mustore, &
+            ANISOTROPY, &
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store,c34store,c35store,c36store, &
+            c44store,c45store,c46store,c55store,c56store,c66store, &
             ibool,idoubling,rmass,rmass_ocean_load,nglob_oceans, &
             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
             nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &

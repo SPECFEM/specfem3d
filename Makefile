@@ -169,6 +169,7 @@ meshfem3D: constants.h \
        $O/interpolate_gocad_block_MR.o \
        $O/interpolate_gocad_block_HR.o \
        $O/socal_model.o \
+       $O/aniso_model.o \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
        $O/save_arrays.o \
@@ -207,6 +208,7 @@ meshfem3D: constants.h \
        $O/interpolate_gocad_block_MR.o \
        $O/interpolate_gocad_block_HR.o \
        $O/socal_model.o \
+       $O/aniso_model.o \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
        $O/save_arrays.o \
@@ -443,6 +445,9 @@ $O/interpolate_gocad_block_HR.o: constants.h interpolate_gocad_block_HR.f90
 
 $O/socal_model.o: constants.h socal_model.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/socal_model.o socal_model.f90
+
+$O/aniso_model.o: constants.h aniso_model.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/aniso_model.o aniso_model.f90
 
 $O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/compute_rho_estimate.o compute_rho_estimate.f90
