@@ -1,0 +1,763 @@
+!=====================================================================
+!
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          --------------------------------------------------
+!
+!                 Dimitri Komatitsch and Jeroen Tromp
+!    Seismological Laboratory - California Institute of Technology
+!         (c) California Institute of Technology October 2002
+!
+!    A signed non-commercial agreement is required to use this program.
+!   Please check http://www.gps.caltech.edu/research/jtromp for details.
+!           Free for non-commercial academic research ONLY.
+!      This program is distributed WITHOUT ANY WARRANTY whatsoever.
+!      Do not redistribute this program without written permission.
+!
+!=====================================================================
+!
+! Copyright October 2002, by the California Institute of Technology.
+! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
+!
+! Any commercial use must be negotiated with the Office of Technology
+! Transfer at the California Institute of Technology. This software may be
+! subject to U.S. export control laws and regulations. By accepting
+! this software, the user agrees to comply with all applicable U.S. export laws
+! and regulations, including the International Traffic and Arms Regulations,
+! 22 C.F.R. 120-130 and the Export Administration Regulations,
+! 15 C.F.R. 730-744. User has the responsibility to obtain export licenses,
+! or other export authority as may be required before exporting such
+! information to foreign countries or providing access to foreign nationals.
+! In no event shall the California Institute of Technology be liable to any
+! party for direct, indirect, special, incidental or consequential damages,
+! including lost profits, arising out of the use of this software and its
+! documentation, even if the California Institute of Technology has been
+! advised of the possibility of such damage.
+!
+! The California Institute of Technology specifically disclaims any
+! warranties, including the implied warranties or merchantability and fitness
+! for a particular purpose. The software and documentation provided hereunder
+! is on an "as is" basis, and the California Institute of Technology has no
+! obligations to provide maintenance, support, updates, enhancements or
+! modifications.
+!
+
+  program meshfem3D
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+!=====================================================================!
+!                                                                     !
+!  meshfem3D produces a spectral element grid for a basin.            !
+!  the mesher uses the UTM projection                                 !
+!                                                                     !
+!=====================================================================!
+!
+! If you use this code for your own research, please send an email
+! to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite:
+!
+! @article{KoTr99,
+! author={D. Komatitsch and J. Tromp},
+! year=1999,
+! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
+! journal={Geophys. J. Int.},
+! volume=139,
+! pages={806-822}}
+!
+! Evolution of the code:
+! ---------------------
+!
+! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
+!  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
+! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
+!                        based on global code
+
+! number of spectral elements in each block
+  integer nspec,npointot
+
+! meshing parameters
+  double precision, dimension(:), allocatable :: rns
+
+! auxiliary variables to generate the mesh
+  integer ix,iy,ir
+
+  double precision xin,etan,rn
+  double precision x_current,y_current,z_top,z_bot
+
+  double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
+
+! parameters needed to store the radii of the grid points
+  integer, dimension(:), allocatable :: idoubling
+  integer, dimension(:,:,:,:), allocatable :: ibool
+
+! arrays with the mesh in double precision
+  double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
+
+! proc numbers for MPI
+  integer myrank,sizeprocs,ier
+
+! check area and volume of the final mesh
+  double precision area_local_bottom,area_total_bottom
+  double precision area_local_top,area_total_top
+  double precision volume_local,volume_total
+
+  integer iprocnum,npx,npy
+
+! for loop on all the slices
+  integer iproc_xi,iproc_eta
+
+! use integer array to store topography values
+  integer icornerlat,icornerlong
+  double precision lat,long,elevation
+  double precision long_corner,lat_corner,ratio_xi,ratio_eta
+  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+
+! use integer array to store Moho depth
+  integer imoho_depth(NX_MOHO,NY_MOHO)
+
+! timer MPI
+  double precision time_start,tCPU
+
+! addressing for all the slices
+  integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
+
+! parameters read from parameter file
+  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
+             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
+             NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
+  integer NSOURCES
+
+  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
+  double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
+  double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
+  double precision THICKNESS_TAPER_BLOCKS,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
+
+  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION, &
+          OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
+          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
+
+  character(len=150) LOCAL_PATH
+
+! parameters deduced from parameters read from file
+  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
+  integer NER
+
+! this for all the regions
+  integer NSPEC_AB,NGLOB_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
+
+  double precision min_elevation,max_elevation
+  double precision min_elevation_all,max_elevation_all
+
+! for tapered basement map
+  integer icorner_x,icorner_y
+  integer iz_basement
+  double precision x_corner,y_corner
+  double precision z_basement(NX_BASEMENT,NY_BASEMENT)
+
+! to filter list of stations
+  integer irec,nrec,nrec_filtered
+  double precision stlat,stlon,stele,stbur
+  character(len=8) station_name,network_name
+
+! ************** PROGRAM STARTS HERE **************
+
+! initialize the MPI communicator and start the NPROC MPI processes.
+! sizeprocs returns number of processes started (should be equal to NPROC).
+! myrank is the rank of each process, between 0 and NPROC-1.
+! as usual in MPI, process 0 is in charge of coordinating everything
+! and also takes care of the main output
+  call MPI_INIT(ier)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+
+! open main output file, only written to by process 0
+  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file='OUTPUT_FILES/output_mesher.txt',status='unknown')
+
+! get MPI starting time
+  time_start = MPI_WTIME()
+
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '******************************************'
+    write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
+    write(IMAIN,*) '******************************************'
+    write(IMAIN,*)
+  endif
+
+! read the parameter file
+  call read_parameter_file(LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX, &
+        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
+        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        THICKNESS_TAPER_BLOCKS,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
+        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS)
+
+! compute other parameters based upon values read
+  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB)
+
+! check that the code is running with the requested nb of processes
+  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+
+! dynamic allocation of mesh arrays
+  allocate(rns(0:2*NER))
+
+  allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
+  allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
+  allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
+
+  allocate(iproc_xi_slice(0:NPROC-1))
+  allocate(iproc_eta_slice(0:NPROC-1))
+
+! clear arrays
+  xgrid(:,:,:) = 0.
+  ygrid(:,:,:) = 0.
+  zgrid(:,:,:) = 0.
+
+  iproc_xi_slice(:) = 0
+  iproc_eta_slice(:) = 0
+
+! create global slice addressing for solver
+  if(myrank == 0) then
+    open(unit=IOUT,file='OUTPUT_FILES/addressing.txt',status='unknown')
+    write(IMAIN,*) 'creating global slice addressing'
+    write(IMAIN,*)
+  endif
+    do iproc_eta=0,NPROC_ETA-1
+      do iproc_xi=0,NPROC_XI-1
+        iprocnum = iproc_eta * NPROC_XI + iproc_xi
+        iproc_xi_slice(iprocnum) = iproc_xi
+        iproc_eta_slice(iprocnum) = iproc_eta
+        if(myrank == 0) write(IOUT,*) iprocnum,iproc_xi,iproc_eta
+      enddo
+    enddo
+  if(myrank == 0) close(IOUT)
+
+  if(myrank == 0) then
+    write(IMAIN,*) 'This is process ',myrank
+    write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
+    write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
+    write(IMAIN,*)
+    write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
+    write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
+    write(IMAIN,*)
+    write(IMAIN,*) 'There are ',NPROC_XI,' slices along xi'
+    write(IMAIN,*) 'There are ',NPROC_ETA,' slices along eta'
+    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
+    write(IMAIN,*)
+    write(IMAIN,*) 'NGLLX = ',NGLLX
+    write(IMAIN,*) 'NGLLY = ',NGLLY
+    write(IMAIN,*) 'NGLLZ = ',NGLLZ
+
+    write(IMAIN,*)
+    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
+    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
+    write(IMAIN,*)
+  endif
+
+! check that reals are either 4 or 8 bytes
+  if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
+
+  if(NGNOD /= 8) call exit_MPI(myrank,'number of control nodes must be 8')
+  if(NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 points should have NGNOD2D = 4')
+
+! for the number of standard linear solids for attenuation
+  if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
+
+! check that Poisson's ratio in Gocad block is fine
+  if(VP_VS_RATIO_GOCAD_TOP < sqrt(2.) .or. VP_VS_RATIO_GOCAD_BOTTOM < sqrt(2.))&
+    call exit_MPI(myrank,'vp/vs ratio in Gocad block is too small')
+
+! check that number of slices is at least 1 in each direction
+  if(NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
+  if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
+
+! check that size can be coarsened in depth twice (block size multiple of 8)
+  if(mod(NEX_XI/8,NPROC_XI) /= 0) &
+    call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI')
+
+  if(mod(NEX_ETA/8,NPROC_ETA) /= 0) &
+    call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA')
+
+  if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
+
+  if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
+
+  if(myrank == 0) then
+
+  write(IMAIN,*) 'region selected:'
+  write(IMAIN,*)
+  write(IMAIN,*) 'latitude min = ',LAT_MIN
+  write(IMAIN,*) 'latitude max = ',LAT_MAX
+  write(IMAIN,*)
+  write(IMAIN,*) 'longitude min = ',LONG_MIN
+  write(IMAIN,*) 'longitude max = ',LONG_MAX
+  write(IMAIN,*)
+  write(IMAIN,*) 'this is mapped to UTM in region ',UTM_PROJECTION_ZONE
+  write(IMAIN,*)
+  write(IMAIN,*) 'UTM X min = ',UTM_X_MIN
+  write(IMAIN,*) 'UTM X max = ',UTM_X_MAX
+  write(IMAIN,*)
+  write(IMAIN,*) 'UTM Y min = ',UTM_Y_MIN
+  write(IMAIN,*) 'UTM Y max = ',UTM_Y_MAX
+  write(IMAIN,*)
+  write(IMAIN,*) 'UTM size of model along X is ',(UTM_X_MAX-UTM_X_MIN)/1000.,' km'
+  write(IMAIN,*) 'UTM size of model along Y is ',(UTM_Y_MAX-UTM_Y_MIN)/1000.,' km'
+  write(IMAIN,*)
+  write(IMAIN,*) 'Bottom of the mesh is at a depth of ',dabs(Z_DEPTH_BLOCK)/1000.,' km'
+  write(IMAIN,*)
+
+
+  write(IMAIN,*)
+  if(TOPOGRAPHY) then
+    write(IMAIN,*) 'incorporating surface topography'
+  else
+    write(IMAIN,*) 'no surface topography'
+  endif
+
+  write(IMAIN,*)
+  if(HARVARD_3D_GOCAD_MODEL) then
+    write(IMAIN,*) 'incorporating 3-D lateral variations'
+  else
+    write(IMAIN,*) 'no 3-D lateral variations'
+  endif
+
+  write(IMAIN,*)
+  if(ATTENUATION) then
+    write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+  else
+    write(IMAIN,*) 'no attenuation'
+  endif
+
+  write(IMAIN,*)
+  if(OCEANS) then
+    write(IMAIN,*) 'incorporating the oceans using equivalent load'
+  else
+    write(IMAIN,*) 'no oceans'
+  endif
+
+  write(IMAIN,*)
+
+  endif
+
+! read basin topography and bathymetry file
+  if(TOPOGRAPHY .or. OCEANS) then
+    call read_basin_topo_bathy_file(itopo_bathy_basin)
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'regional topography file read ranges in m from ', &
+        minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
+      write(IMAIN,*)
+    endif
+  endif
+
+! read Moho map
+  if(MOHO_MAP_LUPEI) then
+    call read_moho_map(imoho_depth)
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'regional Moho depth read ranges in m from ', &
+        minval(imoho_depth),' to ',maxval(imoho_depth)
+      write(IMAIN,*)
+    endif
+  endif
+
+! read basement map
+  if(BASEMENT_MAP) then
+    open(unit=55,file='DATA/la_basement/reggridbase2_filtered_ascii.dat',status='old')
+    do ix=1,NX_BASEMENT
+      do iy=1,NY_BASEMENT
+        read(55,*) iz_basement
+        z_basement(ix,iy) = dble(iz_basement)
+      enddo
+    enddo
+    close(55)
+  endif
+
+! get addressing for this process
+  iproc_xi = iproc_xi_slice(myrank)
+  iproc_eta = iproc_eta_slice(myrank)
+
+! number of elements in each slice
+  npx = 2*NEX_PER_PROC_XI
+  npy = 2*NEX_PER_PROC_ETA
+
+  min_elevation = +HUGEVAL
+  max_elevation = -HUGEVAL
+
+! fill the region between the cutoff depth and the free surface
+  do iy=0,npy
+  do ix=0,npx
+
+!   define the mesh points on the top and the bottom
+
+    xin=dble(ix)/dble(npx)
+    x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
+
+    etan=dble(iy)/dble(npy)
+    y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
+
+! define basin between topography surface and fictitious bottom
+    if(TOPOGRAPHY) then
+
+! project x and y in UTM back to long/lat since topo file is in long/lat
+  call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
+
+! get coordinate of corner in bathy/topo model
+    icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+    icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+
+! avoid edge effects and extend with identical point if outside model
+    if(icornerlong < 1) icornerlong = 1
+    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+    if(icornerlat < 1) icornerlat = 1
+    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+
+! compute coordinates of corner
+    long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
+    lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
+
+! compute ratio for interpolation
+    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
+    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+
+! avoid edge effects
+    if(ratio_xi < 0.) ratio_xi = 0.
+    if(ratio_xi > 1.) ratio_xi = 1.
+    if(ratio_eta < 0.) ratio_eta = 0.
+    if(ratio_eta > 1.) ratio_eta = 1.
+
+! interpolate elevation at current point
+    elevation = &
+      itopo_bathy_basin(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+      itopo_bathy_basin(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+      itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+      itopo_bathy_basin(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+
+    else
+
+      elevation = 0.d0
+
+    endif
+
+    z_top = Z_SURFACE + elevation
+    z_bot = - dabs(Z_DEPTH_BLOCK)
+
+! compute global min and max of elevation
+  min_elevation = dmin1(min_elevation,elevation)
+  max_elevation = dmax1(max_elevation,elevation)
+
+! create vertical point distribution at current horizontal point
+  if(BASEMENT_MAP) then
+
+! get coordinate of corner in bathy/topo model
+    icorner_x = int((x_current - ORIG_X_BASEMENT) / SPACING_X_BASEMENT) + 1
+    icorner_y = int((y_current - ORIG_Y_BASEMENT) / SPACING_Y_BASEMENT) + 1
+
+! avoid edge effects and extend with identical point if outside model
+    if(icorner_x < 1) icorner_x = 1
+    if(icorner_x > NX_BASEMENT-1) icorner_x = NX_BASEMENT-1
+    if(icorner_y < 1) icorner_y = 1
+    if(icorner_y > NY_BASEMENT-1) icorner_y = NY_BASEMENT-1
+
+! compute coordinates of corner
+    x_corner = ORIG_X_BASEMENT + (icorner_x-1)*SPACING_X_BASEMENT
+    y_corner = ORIG_Y_BASEMENT + (icorner_y-1)*SPACING_Y_BASEMENT
+
+! compute ratio for interpolation
+    ratio_xi = (x_current - x_corner) / SPACING_X_BASEMENT
+    ratio_eta = (y_current - y_corner) / SPACING_Y_BASEMENT
+
+! avoid edge effects
+    if(ratio_xi < 0.) ratio_xi = 0.
+    if(ratio_xi > 1.) ratio_xi = 1.
+    if(ratio_eta < 0.) ratio_eta = 0.
+    if(ratio_eta > 1.) ratio_eta = 1.
+
+! interpolate basement surface at current point
+    Z_BASEMENT_SURFACE = &
+      z_basement(icorner_x,icorner_y)*(1.-ratio_xi)*(1.-ratio_eta) + &
+      z_basement(icorner_x+1,icorner_y)*ratio_xi*(1.-ratio_eta) + &
+      z_basement(icorner_x+1,icorner_y+1)*ratio_xi*ratio_eta + &
+      z_basement(icorner_x,icorner_y+1)*(1.-ratio_xi)*ratio_eta
+
+  else
+    Z_BASEMENT_SURFACE = DEPTH_5p5km_SOCAL
+  endif
+
+! honor Lupei Zhu's Moho map
+  if(MOHO_MAP_LUPEI) then
+
+! project x and y in UTM back to long/lat since topo file is in long/lat
+    call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
+
+! get coordinate of corner in Moho map
+    icornerlong = int((long - ORIG_LONG_MOHO) / DEGREES_PER_CELL_MOHO) + 1
+    icornerlat = int((lat - ORIG_LAT_MOHO) / DEGREES_PER_CELL_MOHO) + 1
+
+! avoid edge effects and extend with identical point if outside model
+    if(icornerlong < 1) icornerlong = 1
+    if(icornerlong > NX_MOHO-1) icornerlong = NX_MOHO-1
+    if(icornerlat < 1) icornerlat = 1
+    if(icornerlat > NY_MOHO-1) icornerlat = NY_MOHO-1
+
+! compute coordinates of corner
+    long_corner = ORIG_LONG_MOHO + (icornerlong-1)*DEGREES_PER_CELL_MOHO
+    lat_corner = ORIG_LAT_MOHO + (icornerlat-1)*DEGREES_PER_CELL_MOHO
+
+! compute ratio for interpolation
+    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_MOHO
+    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_MOHO
+
+! avoid edge effects
+    if(ratio_xi < 0.) ratio_xi = 0.
+    if(ratio_xi > 1.) ratio_xi = 1.
+    if(ratio_eta < 0.) ratio_eta = 0.
+    if(ratio_eta > 1.) ratio_eta = 1.
+
+! interpolate Moho depth at current point
+    Z_DEPTH_MOHO = &
+     - (imoho_depth(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+        imoho_depth(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+        imoho_depth(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+        imoho_depth(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta)
+
+  else
+    Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
+  endif
+
+! define vertical spacing of the mesh
+  call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
+                     NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
+
+!   fill the volume
+    do ir=0,2*NER
+      rn=rns(ir)
+      xgrid(ir,ix,iy) = x_current
+      ygrid(ir,ix,iy) = y_current
+      zgrid(ir,ix,iy) = z_bot*(ONE-rn) + z_top*rn
+    enddo
+
+  enddo
+  enddo
+
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '**************************'
+    write(IMAIN,*) 'creating mesh in the basin'
+    write(IMAIN,*) '**************************'
+    write(IMAIN,*)
+  endif
+
+! volume of bottom and top area of the slice
+  volume_local = ZERO
+  area_local_bottom = ZERO
+  area_local_top = ZERO
+
+! assign theoretical number of elements
+  nspec = NSPEC_AB
+
+! compute maximum number of points
+  npointot = nspec * NGLLCUBE
+
+! make sure everybody is synchronized
+  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+
+! use dynamic allocation to allocate memory for arrays
+  allocate(idoubling(nspec))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec))
+
+! create all the regions of the mesh
+  call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
+         xstore,ystore,zstore,npx,npy, &
+         iproc_xi,iproc_eta,nspec, &
+         volume_local,area_local_bottom,area_local_top, &
+         NGLOB_AB,npointot, &
+         NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
+         NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+         NSPEC2DMAX_XMIN_XMAX, &
+         NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+         HARVARD_3D_GOCAD_MODEL,NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+         NSPEC2D_A_ETA,NSPEC2D_B_ETA,myrank,LOCAL_PATH, &
+         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,UTM_PROJECTION_ZONE, &
+         HAUKSSON_REGIONAL_MODEL,OCEANS, &
+         VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+         IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS,MOHO_MAP_LUPEI)
+
+! print min and max of topography included
+  if(TOPOGRAPHY) then
+
+! compute the maximum of the maxima for all the slices using an MPI reduction
+      call MPI_REDUCE(min_elevation,min_elevation_all,1,MPI_DOUBLE_PRECISION, &
+                          MPI_MIN,0,MPI_COMM_WORLD,ier)
+      call MPI_REDUCE(max_elevation,max_elevation_all,1,MPI_DOUBLE_PRECISION, &
+                          MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
+      write(IMAIN,*)
+    endif
+  endif
+
+
+! use MPI reduction to compute total area and volume
+  area_total_bottom   = ZERO
+  area_total_top   = ZERO
+  call MPI_REDUCE(area_local_bottom,area_total_bottom,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
+                          MPI_COMM_WORLD,ier)
+  call MPI_REDUCE(area_local_top,area_total_top,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
+                          MPI_COMM_WORLD,ier)
+  call MPI_REDUCE(volume_local,volume_total,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
+                          MPI_COMM_WORLD,ier)
+
+  if(myrank == 0) then
+
+!   check volume, and bottom and top area
+
+      write(IMAIN,*)
+      write(IMAIN,*) '   calculated top area: ',area_total_top
+
+! compare to exact theoretical value
+    if(.not. TOPOGRAPHY) &
+          write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
+
+      write(IMAIN,*)
+      write(IMAIN,*) 'calculated bottom area: ',area_total_bottom
+
+! compare to exact theoretical value (bottom is always flat)
+      write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
+
+  endif
+
+! make sure everybody is synchronized
+  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+
+  if(myrank == 0) then
+! check volume
+      write(IMAIN,*)
+      write(IMAIN,*) 'calculated volume: ',volume_total
+! take the central cube into account
+   if(.not. TOPOGRAPHY) &
+      write(IMAIN,*) '     exact volume: ', &
+        (UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)*dabs(Z_DEPTH_BLOCK)
+
+  endif
+
+!--- print number of points and elements in the mesh for each region
+
+  if(myrank == 0) then
+
+  write(IMAIN,*)
+  write(IMAIN,*) 'Repartition of elements:'
+  write(IMAIN,*) '-----------------------'
+  write(IMAIN,*)
+  write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
+  write(IMAIN,*)
+  write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
+
+  write(IMAIN,*)
+  write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
+  write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
+  write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
+  write(IMAIN,*)
+
+! write information about precision used for floating-point operations
+  if(CUSTOM_REAL == SIZE_REAL) then
+    write(IMAIN,*) 'using single precision for the calculations'
+  else
+    write(IMAIN,*) 'using double precision for the calculations'
+  endif
+  write(IMAIN,*)
+  write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
+  write(IMAIN,*)
+
+! copy number of elements and points in an include file for the solver
+  call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION)
+
+! filter list of stations, only retain stations that are in the basin model
+
+  nrec_filtered = 0
+  open(unit=IIN,file='DATA/STATIONS',status='old')
+  read(IIN,*) nrec
+  do irec = 1,nrec
+    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+
+! check that station is not buried, burial is not implemented in current code
+    if(dabs(stbur) > 0.1d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
+
+    if(stlat > LAT_MIN .and. stlat < LAT_MAX .and. stlon > LONG_MIN .and. stlon < LONG_MAX) &
+      nrec_filtered = nrec_filtered + 1
+  enddo
+  close(IIN)
+
+  write(IMAIN,*)
+  write(IMAIN,*) 'there are ',nrec,' stations in file DATA/STATIONS'
+  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file DATA/STATIONS_FILTERED'
+  write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
+  write(IMAIN,*)
+
+  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the basin model')
+
+  open(unit=IIN,file='DATA/STATIONS',status='old')
+  open(unit=IOUT,file='DATA/STATIONS_FILTERED',status='unknown')
+
+  read(IIN,*) nrec
+  write(IOUT,*) nrec_filtered
+
+  do irec = 1,nrec
+    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+    if(stlat > LAT_MIN .and. stlat < LAT_MAX .and. stlon > LONG_MIN .and. stlon < LONG_MAX) &
+      write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon),' 0.  0.'
+  enddo
+
+  close(IIN)
+  close(IOUT)
+
+  endif   ! end of section executed by main process only
+
+! elapsed time since beginning of mesh generation
+  if(myrank == 0) then
+    tCPU = MPI_WTIME() - time_start
+    write(IMAIN,*)
+    write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
+    write(IMAIN,*) 'End of mesh generation'
+    write(IMAIN,*)
+  endif
+
+! close main output file
+  if(myrank == 0) then
+    write(IMAIN,*) 'done'
+    write(IMAIN,*)
+    close(IMAIN)
+  endif
+
+! synchronize all the processes to make sure everybody has finished
+  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+
+! stop all the MPI processes, and exit
+  call MPI_FINALIZE(ier)
+
+  end program meshfem3D
+

@@ -1,0 +1,57 @@
+#!/bin/csh
+
+# script to run the mesher
+
+# name of the file that contains the list of machines
+set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 27- `
+set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 27- `
+
+# read DATA/Par_file to get total number of nodes needed
+
+set NPROC_XI = `grep NPROC_XI DATA/Par_file | cut -c 27- `
+set NPROC_ETA = `grep NPROC_ETA DATA/Par_file | cut -c 27- `
+
+# total number of nodes is the product of the values read
+
+@ numnodes = $NPROC_XI * $NPROC_ETA
+
+rm -r -f OUTPUT_FILES
+mkdir OUTPUT_FILES
+
+rm -f sources timestamp* PI* error_message* starttimeloop*
+
+if ( ! -d $my_local_path ) mkdir $my_local_path
+
+if ( -f $list_of_machines ) then
+  echo " "
+  echo using machine file \"$list_of_machines\"
+  echo " "
+  echo list of active machines:
+  echo " "
+  cat $list_of_machines
+  echo " "
+# this only used on a cluster if specifying list of machines in MACHINE_FILE
+# assumes the name of the machines is n001, n002 etc...
+# if name is different then change the  tr -d 'n' below
+  grep -v '#' $list_of_machines | tr -d ' ' | tr -d 'n' > OUTPUT_FILES/filtered_machines.txt
+endif
+
+echo NPROC_XI = $NPROC_XI
+echo NPROC_ETA = $NPROC_ETA
+echo " "
+echo starting MPI mesher on $numnodes nodes
+echo " "
+echo starting run in current directory $PWD
+echo " "
+echo mesh files will be saved in directory $my_local_path
+echo " "
+
+#### use this on Beowulf
+  mpirun -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xmeshfem3D
+
+#### use this on SGI
+# mpirun -np $numnodes xmeshfem3D
+
+#### use this on Compaq Dec Alpha
+# dmpirun -np $numnodes xmeshfem3D
+

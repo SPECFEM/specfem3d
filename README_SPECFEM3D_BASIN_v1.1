@@ -1,0 +1,231 @@
+!=====================================================================
+!
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 1
+!          --------------------------------------------------
+!
+!                 Dimitri Komatitsch and Jeroen Tromp
+!    Seismological Laboratory - California Institute of Technology
+!         (c) California Institute of Technology October 2002
+!
+!    A signed non-commercial agreement is required to use this program.
+!   Please check http://www.gps.caltech.edu/research/jtromp for details.
+!           Free for non-commercial academic research ONLY.
+!      This program is distributed WITHOUT ANY WARRANTY whatsoever.
+!      Do not redistribute this program without written permission.
+!
+!=====================================================================
+!
+! Copyright October 2002, by the California Institute of Technology.
+! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
+!
+! Any commercial use must be negotiated with the Office of Technology
+! Transfer at the California Institute of Technology. This software may be
+! subject to U.S. export control laws and regulations. By accepting
+! this software, the user agrees to comply with all applicable U.S. export laws
+! and regulations, including the International Traffic and Arms Regulations,
+! 22 C.F.R. 120-130 and the Export Administration Regulations,
+! 15 C.F.R. 730-744. User has the responsibility to obtain export licenses,
+! or other export authority as may be required before exporting such
+! information to foreign countries or providing access to foreign nationals.
+! In no event shall the California Institute of Technology be liable to any
+! party for direct, indirect, special, incidental or consequential damages,
+! including lost profits, arising out of the use of this software and its
+! documentation, even if the California Institute of Technology has been
+! advised of the possibility of such damage.
+!
+! The California Institute of Technology specifically disclaims any
+! warranties, including the implied warranties or merchantability and fitness
+! for a particular purpose. The software and documentation provided hereunder
+! is on an "as is" basis, and the California Institute of Technology has no
+! obligations to provide maintenance, support, updates, enhancements or
+! modifications.
+!
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++ NOTES ON USING THE SPECFEM3D BASIN version 1.1 PACKAGE +++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Dimitri Komatitsch and Jeroen Tromp, October 2002
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+If you use this code for your own research, please send an email
+to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite
+
+@article{KoTr99,
+ author={D. Komatitsch and J. Tromp},
+ year=1999,
+ title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
+ journal={Geophys. J. Int.},
+ volume=139,
+ pages={806-822}}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PARAMETERS TO CHANGE ON DIFFERENT MACHINES:
+
+- Use the appropriate compiler flags in the Makefile.
+  Set F90, MPIF90, FLAGS_NO_CHECK, FLAGS_CHECK and MPI_FLAGS
+- In constants.h set USE_LOCAL_PATH_BEOWULF flag.
+  On clusters (e.g., Beowulfs), use this option in almost all cases.
+- In constants.h set FIX_UNDERFLOW_PROBLEM flag
+  (need to fix underflow trapping on some machines, e.g., Pentium processors)
+- In constants.h set SAVE_AVS_DX_MESH_FILES flag (for AVS users, www.avs.com,
+    or OpenDX users, www.opendx.org). Do not use if you do not have AVS
+    or OpenDX, because this option creates large files.
+- In Par_file set LOCAL_PATH (this is where databases are written and read)
+- In precision.h choose single versus double precision (double precision
+  doubles the memory requirements for the solver but may be faster)
+- Also, in constants.h choose the CUSTOM_REAL size depending on
+  single or double precision
+- When running on an SGI, add "setenv TRAP_FPE OFF" to your .cshrc file
+   before compiling, in order to turn underflow trapping off
+
+DIRECTORIES:
+
+- make subdirectories obj and OUTPUT_FILES in the directory
+  with the source code (also done automatically by the go_mesher script below)
+
+SCRIPTS:
+
+- go_mesher runs the mesher
+  (need to set the correct mpirun command at the end of the script)
+- go_solver runs the solver
+  (need to set the correct mpirun command at the end of the script)
+- runall compiles and runs both mesher and solver
+
+MESHER (meshfem3D):
+
+- The mesher meshfem3D needs NPROC_XI * NPROC_ETA processors. NPROC_XI and
+  NPROC_ETA do not need to be equal.
+- Note that NPROC_XI = 1 or NPROC_ETA = 1 is valid (in case you have a
+  machine with a small number of processors). Therefore the code can
+  if needed run serially on one processor only (in such a case,
+  still link with MPI, and use "mpirun -np 1")
+- NEX_XI and NEX_ETA need to be 8 * multiple of NPROC_XI and NPROC_ETA,
+  respectively.
+- In the Par_file define the size of the mesh. The mesher and the solver
+  use UTM coordinates internally, therefore you also need to define
+  the zone number for the UTM projection (e.g., zone 11 for Los Angeles).
+  Note that the mesh cannot cross a UTM zone boundary, it must fit entirely
+  in only one zone. Use decimal values for latitude and longitude
+  (no minutes/seconds). These values are approximate, the mesher will
+  round them off to define a square mesh in UTM coordinates.
+
+  LAT_MIN               ! minimum latitude in the block  (negative for South)
+  LAT_MAX               ! maximum latitude in the block
+  LONG_MIN              ! minimum longitude in the block (negative for West)
+  LONG_MAX              ! maximum longitude in the block
+  DEPTH_BLOCK_KM        ! depth of bottom of mesh in km
+  IZONE_UTM_PROJECTION  ! zone of the UTM projection (e.g. 11 for Los Angeles)
+
+- In the Par_file set the following flags:
+
+  TOPOGRAPHY            ! to add topography and bathymetry of the region
+  THREE_D               ! to add 3-D basin model
+  ATTENUATION           ! to include attenuation (fairly expensive in solver)
+
+- Compile the mesher ("make meshfem3D") and run it with the go_mesher script
+- Mesher output is provided in the OUTPUT_FILES directory in output_mesher.txt
+    (output can be directed to the screen instead by uncommenting two lines
+     in constants.h:
+       ! uncomment this to write messages to the screen
+       ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT )
+- For a given model and set of processors, one only needs to run the mesher
+  once and for all
+- The mesher filters the list of stations in file DATA/STATIONS to exclude
+  the stations that are not located within the region given in the Par_file
+  (between LAT_MIN and LAT_MAX, and between LONG_MIN and LONG_MAX).
+  The filtered file is called DATA/STATIONS_FILTERED
+- When running benchmarks on rectangular models, one can turn the UTM projection
+  off by using flag SUPPRESS_UTM_PROJECTION, in which case all "longitude"
+  parameters simply refer to the X axis, and all "latitude" parameters
+  simply refer to the Y axis.
+
+CHECKING THE MPI BUFFERS (optional, after running the mesher):
+
+- Use the serial code check_buffers_2D to check all the MPI buffers
+  generated by the mesher ("make check_buffers_2D" and then "xcheck_buffers_2D")
+
+CHECKING THE MESH (optional, after running the mesher):
+
+- Use the serial code check_mesh_quality_AVS_DX
+    ("make check_mesh_quality_AVS_DX" and then "xcheck_mesh_quality_AVS_DX")
+    to generate an AVS output file ("AVSmeshquality.inp" in AVS UCD format)
+    or an OpenDX output file ("DXmeshquality.dx")
+    that can be used to investigate mesh quality, e.g., skewness of elements,
+    and a Gnuplot histogram ("mesh_quality_histogram.txt") that can
+    be plotted with gnuplot ("gnuplot plot_mesh_quality_histogram.gnu")
+
+- Use the serial code combine_AVS_DX
+    ("make combine_AVS_DX" and then "xcombine_AVS_DX")
+    to generate AVS output files (in AVS UCD format) or OpenDX output files
+    showing the mesh, the MPI partition (slices), the source and receiver
+    location etc. Use the AVS UCD file AVS_coastline_freeways_LA.inp
+    or the OpenDX file DX_coastline_freeways_LA.dx for reference
+    in the Los Angeles area.
+
+SOLVER (specfem3D):
+
+- For reasons of speed, the solver uses static memory allocation. Therefore it
+  needs to be recompiled every time one reruns the mesher. The mesher uses
+  dynamic allocation only, and does not need to be recompiled.
+- The solver needs NPROC_XI * NPROC_ETA processors (same as the mesher)
+- The solver needs the DATA/CMTSOLUTION file for the source and the
+  DATA/STATIONS file for the list of stations
+- Set the "time shift" in the CMTSOLUTION file to 0.0
+    (the solver will not run otherwise)
+- To simulate a delta source-time function, set "half duration" in
+  the CMTSOLUTION file to 0.0. If "half duration" is not zero,
+  the code will use a Gaussian (not too different from triangular)
+  source-time function with half-width "half duration". We prefer to run
+  the solver with "half duration" set to zero and convolve after the fact,
+  because this way it's easy to use a variety of source-time functions.
+  Use the serial code convolve_source_timefunction.f90 and the script
+  convolve_source_timefunction.csh for this purpose. (Set the parameter "hdur"
+  in convolve_source_timefunction.csh to the desired half-duration.)
+  (type "make convolve_source_timefunction" to compile the code).
+- Solver output is provided in the OUTPUT_FILES directory in output_solver.txt
+    (output can be directed to the screen instead by uncommenting two lines
+     in constants.h:
+       ! uncomment this to write messages to the screen
+       ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT )
+- If you have a very fast machine, set ITAFF_NORM_DISPL and
+  ITAFF_TIME_STEPS to a relatively high value (e.g. 100)
+  to avoid writing to the output text files too often
+- On clusters (e.g., Beowulfs) the seismogram files are distributed on the
+    local disks (option USE_LOCAL_PATH_BEOWULF selected) and need to be
+    gathered at the end of the simulation
+- For the same model, rerun the solver for different events by changing the
+  CMTSOLUTION file, or for different stations by changing the STATIONS file.
+  There is no need to rerun the mesher. It is best to include as many stations
+  as possible, since this does not add to the cost of the simulation.
+
+MOVIE OF THE RESULTS:
+
+- Use create_movie_AVS_DX.f90 ("make create_movie_AVS_DX") to create
+    a movie of surface displacement (vertical component). The movie can
+    be saved in OpenDX, AVS or GMT format. Set parameters SAVE_AVS_DX_MOVIE,
+    SAVE_DISPLACEMENT, NMOVIE and HDUR_MIN_MOVIES in constants.h .
+    Remember to use a DATA/CMTSOLUTION source file
+    with a half-duration hdur > 0, otherwise you will get a movie
+    corresponding to a Heaviside source, with a lot of high-frequency noise
+    (parameter HDUR_MIN_MOVIES precisely takes care of this).
+
+
+Note: The Gauss-Lobatto subroutines in gll_library.f90 are based in part on
+      software libraries from M.I.T., Department of Mechanical Engineering.
+
+Note: The non-structured global numbering software was provided by Paul F. Fischer.
+
+Note: Subroutines from "Numerical Recipes: The Art of Scientific Computing"
+      by W. H. Press et al., Cambridge University Press, are used in
+      numerical_recipes.f90. The user must acquire an official
+      Numerical Recipes license to run them.
+
+Note: Subroutine utm_geo.f90 contains UTM (Universal Transverse Mercator)
+      projection software from the USGS.
+
+Note: AVS is a trademark of Advanced Visualization Systems, www.avs.com
+      OpenDX is based on IBM Data Explorer, www.opendx.org
+
