@@ -65,10 +65,11 @@
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
 !   and Christiane Stidham and John H. Shaw},
 ! year=2004,
-! title={Simulations of Strong Ground Motion in the {L}os {A}ngeles {B}asin
-!   Based upon the Spectral-Element Method},
+! title={Simulations of Ground Motion in the {L}os {A}ngeles {B}asin
+!   based upon the Spectral-Element Method},
 ! journal={Bull. Seism. Soc. Am.},
-! note="in press"}
+! volume=94,
+! pages={187-206}}
 !
 ! @article{KoTr99,
 ! author={D. Komatitsch and J. Tromp},
@@ -584,6 +585,8 @@
 ! define vertical spacing of the mesh
   call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+!! DK DK UGLY modif z_top by Emmanuel Chaljub here
+                     z_top, &
                      Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
 
 !   fill the volume

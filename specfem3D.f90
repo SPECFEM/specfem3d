@@ -68,10 +68,11 @@
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
 !   and Christiane Stidham and John H. Shaw},
 ! year=2004,
-! title={Simulations of Strong Ground Motion in the {L}os {A}ngeles {B}asin
-!   Based upon the Spectral-Element Method},
+! title={Simulations of Ground Motion in the {L}os {A}ngeles {B}asin
+!   based upon the Spectral-Element Method},
 ! journal={Bull. Seism. Soc. Am.},
-! note="in press"}
+! volume=94,
+! pages={187-206}}
 !
 ! @article{KoTr99,
 ! author={D. Komatitsch and J. Tromp},
