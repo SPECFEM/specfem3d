@@ -159,9 +159,9 @@
 
 ! formats
 
- 1 format(a,i8)
- 2 format(a,f12.5)
- 3 format(a,l8)
+ 1 format(a,i)
+ 2 format(a,f20.8)
+ 3 format(a,l)
  4 format(a,a)
 
   end subroutine read_parameter_file
