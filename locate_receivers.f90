@@ -192,7 +192,7 @@
       if(myrank == 0) &
         write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
                        '.',network_name(irec)(1:len_trim(network_name(irec))), &
-                       '    horizontal distance:  ',horiz_dist(irec),' km'
+                       '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
 
 !     get the Cartesian components of n in the model: nu
 
