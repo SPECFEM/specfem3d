@@ -424,8 +424,8 @@
       xgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
          xgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + horiz_size * MAGIC_RATIO
 
-      vert_size = zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) &
-                 - zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
+      vert_size = zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) &
+                 - zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
       zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
 
@@ -435,8 +435,8 @@
       xgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
          xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + horiz_size * MAGIC_RATIO
 
-      vert_size = zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) &
-                 - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
+      vert_size = zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) &
+                 - zgrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3))
       zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
          zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + vert_size * MAGIC_RATIO / 0.50
 
@@ -464,6 +464,7 @@
                  - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
       zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
          zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + vert_size * MAGIC_RATIO / 0.50
+
 
 !----
     else if(itype_element == ITYPE_UNUSUAL_4) then
@@ -499,8 +500,8 @@
       ygrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
          ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + horiz_size * MAGIC_RATIO
 
-      vert_size = zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) &
-                 - zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
+      vert_size = zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) &
+                 - zgrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3))
       zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
          zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + vert_size * MAGIC_RATIO / 0.50
 
@@ -510,8 +511,8 @@
       ygrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
          ygrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + horiz_size * MAGIC_RATIO
 
-      vert_size = zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) &
-                 - zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
+      vert_size = zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) &
+                 - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
       zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
 
