@@ -92,7 +92,8 @@
 !----------- do not modify anything below -------------
 
 ! some useful constants
-  double precision, parameter :: PI = 3.141592653589793d0,TWO_PI = 2.d0 * PI
+  double precision, parameter :: PI = 3.141592653589793d0
+  double precision, parameter :: TWO_PI = 2.d0 * PI
 
 ! 3-D simulation
   integer, parameter :: NDIM = 3
