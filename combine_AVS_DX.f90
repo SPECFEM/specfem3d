@@ -48,10 +48,10 @@
   double precision x_source_quad2,y_source_quad2,z_source_quad2
   double precision x_source_quad3,y_source_quad3,z_source_quad3
   double precision x_source_quad4,y_source_quad4,z_source_quad4
-  double precision sec,t_cmt,hdur
-  double precision lat,long,depth
-  double precision moment_tensor(6)
-  character(len=150) cmt_file
+  double precision sec
+
+  double precision, dimension(:), allocatable :: hdur,t_cmt,lat,long,depth
+  double precision, dimension(:,:), allocatable :: moment_tensor
 
   logical USE_OPENDX
 
@@ -111,7 +111,31 @@
   print *,'Recombining all AVS or DX files for slices'
   print *
 
+  print *
+  print *,'reading parameter file'
+  print *
+
+! read the parameter file
+  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
+        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
+        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
+
   if(.not. SAVE_AVS_DX_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
+
+  allocate(hdur(NSOURCES))
+  allocate(t_cmt(NSOURCES))
+  allocate(lat(NSOURCES))
+  allocate(long(NSOURCES))
+  allocate(depth(NSOURCES))
+  allocate(moment_tensor(6,NSOURCES))
 
   print *,'1 = create files in OpenDX format'
   print *,'2 = create files in AVS UCD format'
@@ -164,23 +188,6 @@
   print *,'enter value:'
   read(5,*) imaterial
   if(imaterial < 1 .or. imaterial > 2) stop 'exiting...'
-
-  print *
-  print *,'reading parameter file'
-  print *
-
-! read the parameter file
-  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
-        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -334,8 +341,7 @@ endif
 
 ! get source information for frequency for number of points per lambda
   print *,'reading source duration from the CMTSOLUTION file'
-  cmt_file='DATA/CMTSOLUTION'
-  call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT)
+  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
 
 ! set global element and point offsets to zero
   iglobpointoffset = 0
@@ -561,8 +567,7 @@ endif
 
 !   get source information
     print *,'reading position of the source from the CMTSOLUTION file'
-    cmt_file='DATA/CMTSOLUTION'
-    call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT)
+    call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
 
 !   the point for the source is put at the surface for clarity (depth ignored)
 !   even slightly above to superimpose to real surface
