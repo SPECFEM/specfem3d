@@ -26,9 +26,6 @@
 ! length of normal vectors for DX display
   double precision, parameter :: length_normal_display_DX = +20000.d0
 
-! number of points in data file with Sieh (1978) slip distribution for 1857
-  integer, parameter :: NPOIN_SIEH_1978 = 2637
-
  integer npoin    ! number of VRTX in GoCad file
  integer nspec    ! number of TRGL in GoCad file
 
@@ -69,9 +66,10 @@
   integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
 
 ! slip distribution from Sieh (1978) for San Andreas 1857
+  integer, parameter :: NPOIN_SIEH_1978 = 2637
+  double precision, dimension(NPOIN_SIEH_1978) :: xslip_sieh_1978,yslip_sieh_1978
   integer index_min_dist
   double precision dist_sieh,min_dist
-  double precision, dimension(NPOIN_SIEH_1978) :: xslip_sieh_1978,yslip_sieh_1978
 
   integer SIGN_NORMAL,event_number
   character(len=40) tsurf_file
@@ -422,6 +420,9 @@
 ! write result to CMTSOLUTION file
   open(unit=11,file='DATA/CMTSOLUTION',status='unknown')
 
+!! DK DK this for seismic moment file
+  open(unit=14,file='DATA/seismic_moment_calculation.dat',status='unknown')
+
   do isource = 1,NSOURCES
 
 ! get coordinates of corners of this triangle
@@ -602,9 +603,16 @@
   write(11,"('Mrp:  ',e)") moment_tensor(5) * 1.d7
   write(11,"('Mtp:  ',e)") moment_tensor(6) * 1.d7
 
+!! DK DK write seismic moment for computation of total magnitude in solver
+!! DK DK again, mu will be added in solver, because it depends on location
+  write(14,*) mu * area_current * real_slip_length * 1.d7
+
   enddo  ! end of loop on all the sources
 
   close(11)
+
+!! DK DK for file with seismic moment
+  close(14)
 
   print *
   print *,'area of smallest triangle (m^2) = ',area_min

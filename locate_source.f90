@@ -130,9 +130,10 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: mustore
 
-! receiver information
-! timing information for the stations
-! station information for writing the seismograms
+!! DK DK UGLY for magnitude calculation for tsurf source
+  double precision seismic_moment_read,seismic_moment_total,muvalue_local
+  double precision, dimension(NSOURCES) :: seismic_moment
+  double precision, dimension(NSOURCES,0:NPROC-1) :: seismic_moment_all
 
 ! **************
 
@@ -144,6 +145,10 @@
 
 ! get MPI starting time
   time_start = MPI_WTIME()
+
+!! DK DK UGLY for tsurf source, open seismic moment file
+  if(MULTIPLY_MU_TSURF) &
+    open(unit=14,file='DATA/seismic_moment_calculation.dat',status='old')
 
 ! loop on all the sources
   do isource = 1,NSOURCES
@@ -257,25 +262,22 @@
   enddo
 
 !! DK DK UGLY for tsurf source, multiply moment by mu = rho cs^2
+!! DK DK UGLY also store mu for magnitude calculation if Gocad
   if(MULTIPLY_MU_TSURF) then
-    Mzz(isource) = Mzz(isource) * mustore(ix_initial_guess_source, &
+    muvalue_local = mustore(ix_initial_guess_source, &
       iy_initial_guess_source,iz_initial_guess_source, &
       ispec_selected_source(isource))
-    Mxx(isource) = Mxx(isource) * mustore(ix_initial_guess_source, &
-      iy_initial_guess_source,iz_initial_guess_source, &
-      ispec_selected_source(isource))
-    Myy(isource) = Myy(isource) * mustore(ix_initial_guess_source, &
-      iy_initial_guess_source,iz_initial_guess_source, &
-      ispec_selected_source(isource))
-    Mxz(isource) = Mxz(isource) * mustore(ix_initial_guess_source, &
-      iy_initial_guess_source,iz_initial_guess_source, &
-      ispec_selected_source(isource))
-    Myz(isource) = Myz(isource) * mustore(ix_initial_guess_source, &
-      iy_initial_guess_source,iz_initial_guess_source, &
-      ispec_selected_source(isource))
-    Mxy(isource) = Mxy(isource) * mustore(ix_initial_guess_source, &
-      iy_initial_guess_source,iz_initial_guess_source, &
-      ispec_selected_source(isource))
+
+    Mzz(isource) = Mzz(isource) * muvalue_local
+    Mxx(isource) = Mxx(isource) * muvalue_local
+    Myy(isource) = Myy(isource) * muvalue_local
+    Mxz(isource) = Mxz(isource) * muvalue_local
+    Myz(isource) = Myz(isource) * muvalue_local
+    Mxy(isource) = Mxy(isource) * muvalue_local
+
+    read(14,*) seismic_moment_read
+    seismic_moment(isource) = seismic_moment_read * muvalue_local
+
   endif
 
 ! *******************************************
@@ -380,6 +382,35 @@
 ! end of loop on all the sources
   enddo
 
+!! DK DK UGLY for tsurf source, close seismic moment file
+!! DK DK UGLY then gather information from all the nodes
+  if(MULTIPLY_MU_TSURF) then
+    close(14)
+    call MPI_GATHER(seismic_moment,NSOURCES,MPI_DOUBLE_PRECISION,seismic_moment_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+
+! Mw, the moment magnitude,
+! is based on the seismic moment, M0 = mu A u (Aki, 1966), where A is the area
+! of the earthquake rupture surface, u is the average fault displacement,
+! and mu is the shear modulus of the crustal volume containing the fault.
+! Hanks and Kanamori (1979) took advantage of the nearly identical relations
+! between M0 and both ML and Ms to define
+! Mw = (2/3)*(log10(Mo in dyne-cm) - 16.0)
+
+! this is executed by main process only
+  if(myrank == 0) then
+
+! sum local seismic moments from all the sources
+! local seismic moment from file is already in the right units (dyne-cm)
+    seismic_moment_total = 0.d0
+    do isource = 1,NSOURCES
+      seismic_moment_total = seismic_moment_total + seismic_moment_all(isource,islice_selected_source(isource))
+    enddo
+    write(IMAIN,*)
+    write(IMAIN,*) 'Magnitude Mw of Gocad tsurf source = ',2.d0*(dlog10(seismic_moment_total)-16.d0)/3.d0
+    write(IMAIN,*)
+  endif
+
+  endif
 
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
 
