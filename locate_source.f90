@@ -19,14 +19,14 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(ibool,isource,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
+  subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
                  xigll,yigll,zigll,NPROC, &
                  sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                  NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore)
 
   implicit none
 
@@ -49,21 +49,22 @@
   integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
 
-  integer myrank,isource
+  integer myrank
 
 ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
   integer yr,jda,ho,mi
 
-  double precision sec,t_cmt
+  double precision t_cmt(NSOURCES)
+  double precision sec
 
   integer iprocloop
 
-  integer i,j,k,ispec,iglob
+  integer i,j,k,ispec,iglob,isource
   integer ier
 
-  double precision utm_x_source,utm_y_source
+  double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
   double precision dist
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta
 
@@ -88,33 +89,33 @@
   double precision gammax,gammay,gammaz
   double precision dgamma
 
-  double precision final_distance_source
+  double precision final_distance_source(NSOURCES)
 
   double precision x_target_source,y_target_source,z_target_source
 
-  integer islice_selected_source
+  integer islice_selected_source(NSOURCES)
 
 ! timer MPI
   double precision time_start,tCPU
 
-  integer ispec_selected_source
+  integer ispec_selected_source(NSOURCES)
 
-  integer, dimension(0:NPROC-1) :: ispec_selected_source_all
-  double precision, dimension(0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all, &
+  integer, dimension(NSOURCES,0:NPROC-1) :: ispec_selected_source_all
+  double precision, dimension(NSOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all, &
      final_distance_source_all,x_found_source_all,y_found_source_all,z_found_source_all
 
-  double precision hdur
+  double precision hdur(NSOURCES)
 
-  double precision Mxx,Myy,Mzz,Mxy,Mxz,Myz
-  double precision xi_source,eta_source,gamma_source
+  double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
 
   integer icornerlong,icornerlat
-  double precision lat,long,depth,elevation
-  double precision moment_tensor(6)
+  double precision, dimension(NSOURCES) :: lat,long,depth,elevation
+  double precision moment_tensor(6,NSOURCES)
 
-  character(len=150) cmt_file,plot_file
+  character(len=150) plot_file
 
-  double precision x_found_source,y_found_source,z_found_source
+  double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision distmin
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
@@ -127,56 +128,38 @@
 ! number of points to plot the source time function
   integer, parameter :: NSAMP_PLOT_SOURCE = 1000
 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: mustore
+
 ! receiver information
 ! timing information for the stations
 ! station information for writing the seismograms
 
 ! **************
 
-! get MPI starting time
-  time_start = MPI_WTIME()
-
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) '*****************'
-    write(IMAIN,*) ' locating source ',isource
-    write(IMAIN,*) '*****************'
-    write(IMAIN,*)
-  endif
+! read all the sources
+  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
 
 ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
-! get source information
-! get source information
-  if(NSOURCES == 1) then
-    cmt_file='DATA/CMTSOLUTION'
-  else
-    if(isource < 10) then
-      write(cmt_file,"('DATA/CMTSOLUTION',i1)") isource
-    elseif(isource < 100) then
-      write(cmt_file,"('DATA/CMTSOLUTION',i2)") isource
-    elseif(isource < 1000) then
-      write(cmt_file,"('DATA/CMTSOLUTION',i3)") isource
-    else
-      call exit_MPI(myrank,'too many sources')
-    endif
-  endif
+! get MPI starting time
+  time_start = MPI_WTIME()
 
-  call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT)
+! loop on all the sources
+  do isource = 1,NSOURCES
 
   if(isource == 1) then
-    if(t_cmt /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
+    if(t_cmt(isource) /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
   else
-    if(t_cmt < 0.) call exit_MPI(myrank,'t_cmt should not be less than zero')
+    if(t_cmt(isource) < 0.) call exit_MPI(myrank,'t_cmt should not be less than zero')
   endif
 
-! check that the source is inside the basin model
-  if(lat <= LAT_MIN .or. lat >= LAT_MAX .or. long <= LONG_MIN .or. long >= LONG_MAX) &
-    call exit_MPI(myrank,'the source is outside the model')
+! check that the current source is inside the basin model
+  if(lat(isource) <= LAT_MIN .or. lat(isource) >= LAT_MAX .or. long(isource) <= LONG_MIN .or. long(isource) >= LONG_MAX) &
+    call exit_MPI(myrank,'the current source is outside the model')
 
-  if(depth >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
-    call exit_MPI(myrank,'the source is below the bottom of the model')
+  if(depth(isource) >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
+    call exit_MPI(myrank,'the current source is below the bottom of the model')
 
 !
 ! r -> z, theta -> -y, phi -> x
@@ -189,21 +172,21 @@
 !  Mtp = -Mxy
 
 ! get the moment tensor
-  Mzz = + moment_tensor(1)
-  Mxx = + moment_tensor(3)
-  Myy = + moment_tensor(2)
-  Mxz = + moment_tensor(5)
-  Myz = - moment_tensor(4)
-  Mxy = - moment_tensor(6)
+  Mzz(isource) = + moment_tensor(1,isource)
+  Mxx(isource) = + moment_tensor(3,isource)
+  Myy(isource) = + moment_tensor(2,isource)
+  Mxz(isource) = + moment_tensor(5,isource)
+  Myz(isource) = - moment_tensor(4,isource)
+  Mxy(isource) = - moment_tensor(6,isource)
 
-  call utm_geo(long,lat,utm_x_source,utm_y_source,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+  call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource),UTM_PROJECTION_ZONE,ILONGLAT2UTM)
 
 ! compute elevation of topography at the epicenter
   if(TOPOGRAPHY) then
 
 ! get coordinate of corner in bathy/topo model
-    icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-    icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+    icornerlong = int((long(isource) - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+    icornerlat = int((lat(isource) - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 
 ! avoid edge effects and extend with identical point if outside model
     if(icornerlong < 1) icornerlong = 1
@@ -216,8 +199,8 @@
     lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
 
 ! compute ratio for interpolation
-    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
-    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+    ratio_xi = (long(isource) - long_corner) / DEGREES_PER_CELL_TOPO
+    ratio_eta = (lat(isource) - lat_corner) / DEGREES_PER_CELL_TOPO
 
 ! avoid edge effects
     if(ratio_xi < 0.) ratio_xi = 0.
@@ -226,7 +209,7 @@
     if(ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
-    elevation = &
+    elevation(isource) = &
       itopo_bathy_basin(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
       itopo_bathy_basin(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
       itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
@@ -238,9 +221,9 @@
 
 ! compute the Cartesian position of the source
 ! take elevation of the surface into account
-  x_target_source = utm_x_source
-  y_target_source = utm_y_source
-  z_target_source = - depth*1000.0d0 + elevation
+  x_target_source = utm_x_source(isource)
+  y_target_source = utm_y_source(isource)
+  z_target_source = - depth(isource)*1000.0d0 + elevation(isource)
 
 ! set distance to huge initial value
   distmin = HUGEVAL
@@ -260,7 +243,7 @@
                   +(z_target_source-dble(zstore(iglob)))**2)
         if(dist < distmin) then
           distmin=dist
-          ispec_selected_source=ispec
+          ispec_selected_source(isource)=ispec
           ix_initial_guess_source = i
           iy_initial_guess_source = j
           iz_initial_guess_source = k
@@ -272,6 +255,28 @@
 
 ! end of loop on all the elements in current slice
   enddo
+
+!! DK DK UGLY for tsurf source, multiply moment by mu = rho cs^2
+  if(MULTIPLY_MU_TSURF) then
+    Mzz(isource) = Mzz(isource) * mustore(ix_initial_guess_source, &
+      iy_initial_guess_source,iz_initial_guess_source, &
+      ispec_selected_source(isource))
+    Mxx(isource) = Mxx(isource) * mustore(ix_initial_guess_source, &
+      iy_initial_guess_source,iz_initial_guess_source, &
+      ispec_selected_source(isource))
+    Myy(isource) = Myy(isource) * mustore(ix_initial_guess_source, &
+      iy_initial_guess_source,iz_initial_guess_source, &
+      ispec_selected_source(isource))
+    Mxz(isource) = Mxz(isource) * mustore(ix_initial_guess_source, &
+      iy_initial_guess_source,iz_initial_guess_source, &
+      ispec_selected_source(isource))
+    Myz(isource) = Myz(isource) * mustore(ix_initial_guess_source, &
+      iy_initial_guess_source,iz_initial_guess_source, &
+      ispec_selected_source(isource))
+    Mxy(isource) = Mxy(isource) * mustore(ix_initial_guess_source, &
+      iy_initial_guess_source,iz_initial_guess_source, &
+      ispec_selected_source(isource))
+  endif
 
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source
@@ -316,7 +321,7 @@
       call exit_MPI(myrank,'incorrect value of iaddz')
     endif
 
-    iglob = ibool(iax,iay,iaz,ispec_selected_source)
+    iglob = ibool(iax,iay,iaz,ispec_selected_source(isource))
     xelm(ia) = dble(xstore(iglob))
     yelm(ia) = dble(ystore(iglob))
     zelm(ia) = dble(zstore(iglob))
@@ -361,99 +366,113 @@
          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
 ! store xi,eta,gamma and x,y,z of point found
-  xi_source = xi
-  eta_source = eta
-  gamma_source = gamma
-  x_found_source = x
-  y_found_source = y
-  z_found_source = z
+  xi_source(isource) = xi
+  eta_source(isource) = eta
+  gamma_source(isource) = gamma
+  x_found_source(isource) = x
+  y_found_source(isource) = y
+  z_found_source(isource) = z
 
 ! compute final distance between asked and found (converted to km)
-  final_distance_source = dsqrt((x_target_source-x_found_source)**2 + &
-    (y_target_source-y_found_source)**2 + (z_target_source-z_found_source)**2)
+  final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
+    (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
 
-! synchronize all the processes to make sure all the estimates are available
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+! end of loop on all the sources
+  enddo
 
-! for MPI version, now gather information from all the nodes
-  ispec_selected_source_all(:) = -1
-  call MPI_GATHER(ispec_selected_source,1,MPI_INTEGER,ispec_selected_source_all,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 
-  call MPI_GATHER(xi_source,1,MPI_DOUBLE_PRECISION,xi_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(eta_source,1,MPI_DOUBLE_PRECISION,eta_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(gamma_source,1,MPI_DOUBLE_PRECISION,gamma_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(final_distance_source,1,MPI_DOUBLE_PRECISION, &
-    final_distance_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(x_found_source,1,MPI_DOUBLE_PRECISION, &
-    x_found_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(y_found_source,1,MPI_DOUBLE_PRECISION, &
-    y_found_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(z_found_source,1,MPI_DOUBLE_PRECISION, &
-    z_found_source_all,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
 
-! MPI this is executed by main process only
+! now gather information from all the nodes
+  ispec_selected_source_all(:,:) = -1
+  call MPI_GATHER(ispec_selected_source,NSOURCES,MPI_INTEGER,ispec_selected_source_all,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+
+  call MPI_GATHER(xi_source,NSOURCES,MPI_DOUBLE_PRECISION,xi_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(eta_source,NSOURCES,MPI_DOUBLE_PRECISION,eta_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(gamma_source,NSOURCES,MPI_DOUBLE_PRECISION,gamma_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(final_distance_source,NSOURCES,MPI_DOUBLE_PRECISION, &
+    final_distance_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(x_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
+    x_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(y_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
+    y_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(z_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
+    z_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+
+! this is executed by main process only
   if(myrank == 0) then
 
 ! check that the gather operation went well
-  if(any(ispec_selected_source_all(:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
+  if(any(ispec_selected_source_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
 
-! MPI loop on all the results to determine the best slice
+! loop on all the sources
+  do isource = 1,NSOURCES
+
+! loop on all the results to determine the best slice
   distmin = HUGEVAL
   do iprocloop = 0,NPROC-1
-    if(final_distance_source_all(iprocloop) < distmin) then
-      distmin = final_distance_source_all(iprocloop)
-      islice_selected_source = iprocloop
-      ispec_selected_source = ispec_selected_source_all(iprocloop)
-      xi_source = xi_source_all(iprocloop)
-      eta_source = eta_source_all(iprocloop)
-      gamma_source = gamma_source_all(iprocloop)
-      x_found_source = x_found_source_all(iprocloop)
-      y_found_source = y_found_source_all(iprocloop)
-      z_found_source = z_found_source_all(iprocloop)
+    if(final_distance_source_all(isource,iprocloop) < distmin) then
+      distmin = final_distance_source_all(isource,iprocloop)
+      islice_selected_source(isource) = iprocloop
+      ispec_selected_source(isource) = ispec_selected_source_all(isource,iprocloop)
+      xi_source(isource) = xi_source_all(isource,iprocloop)
+      eta_source(isource) = eta_source_all(isource,iprocloop)
+      gamma_source(isource) = gamma_source_all(isource,iprocloop)
+      x_found_source(isource) = x_found_source_all(isource,iprocloop)
+      y_found_source(isource) = y_found_source_all(isource,iprocloop)
+      z_found_source(isource) = z_found_source_all(isource,iprocloop)
     endif
   enddo
-  final_distance_source = distmin
+  final_distance_source(isource) = distmin
 
     write(IMAIN,*)
-    write(IMAIN,*) 'source located in slice ',islice_selected_source
-    write(IMAIN,*) '               in element ',ispec_selected_source
+    write(IMAIN,*) '*************************************'
+    write(IMAIN,*) ' locating source ',isource
+    write(IMAIN,*) '*************************************'
     write(IMAIN,*)
-    write(IMAIN,*) '   xi coordinate of source in that element: ',xi_source
-    write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source
-    write(IMAIN,*) 'gamma coordinate of source in that element: ',gamma_source
+    write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
+    write(IMAIN,*) '               in element ',ispec_selected_source(isource)
+    write(IMAIN,*)
+    write(IMAIN,*) '   xi coordinate of source in that element: ',xi_source(isource)
+    write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
+    write(IMAIN,*) 'gamma coordinate of source in that element: ',gamma_source(isource)
 
 ! add message if source is a Heaviside
-    if(hdur < 6.*DT) then
+    if(hdur(isource) < 5.*DT) then
       write(IMAIN,*)
       write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
       write(IMAIN,*)
     endif
 
     write(IMAIN,*)
+    write(IMAIN,*) ' half duration: ',hdur(isource),' seconds'
+    write(IMAIN,*) '    time shift: ',t_cmt(isource),' seconds'
+
+    write(IMAIN,*)
     write(IMAIN,*) 'original (requested) position of the source:'
     write(IMAIN,*)
-    write(IMAIN,*) '      latitude: ',lat
-    write(IMAIN,*) '     longitude: ',long
+    write(IMAIN,*) '      latitude: ',lat(isource)
+    write(IMAIN,*) '     longitude: ',long(isource)
     write(IMAIN,*)
-    write(IMAIN,*) '         UTM x: ',utm_x_source
-    write(IMAIN,*) '         UTM y: ',utm_y_source
-    write(IMAIN,*) '         depth: ',depth,' km'
-    if(TOPOGRAPHY) write(IMAIN,*) 'topo elevation: ',elevation,' m'
+    write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
+    write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
+    write(IMAIN,*) '         depth: ',depth(isource),' km'
+    if(TOPOGRAPHY) write(IMAIN,*) 'topo elevation: ',elevation(isource),' m'
 
     write(IMAIN,*)
     write(IMAIN,*) 'position of the source that will be used:'
     write(IMAIN,*)
-    write(IMAIN,*) '         UTM x: ',x_found_source
-    write(IMAIN,*) '         UTM y: ',y_found_source
-    write(IMAIN,*) '         depth: ',dabs(z_found_source - elevation)/1000.,' km'
+    write(IMAIN,*) '         UTM x: ',x_found_source(isource)
+    write(IMAIN,*) '         UTM y: ',y_found_source(isource)
+    write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
     write(IMAIN,*)
 
 ! display error in location estimate
-    write(IMAIN,*) 'error in location of the source: ',sngl(final_distance_source),' m'
+    write(IMAIN,*) 'error in location of the source: ',sngl(final_distance_source(isource)),' m'
 
 ! add warning if estimate is poor
 ! (usually means source outside the mesh given by the user)
-    if(final_distance_source > 3000.d0) then
+    if(final_distance_source(isource) > 3000.d0) then
       write(IMAIN,*)
       write(IMAIN,*) '*****************************************************'
       write(IMAIN,*) '*****************************************************'
@@ -461,9 +480,6 @@
       write(IMAIN,*) '*****************************************************'
       write(IMAIN,*) '*****************************************************'
     endif
-
-  write(IMAIN,*)
-  write(IMAIN,*) 'half-duration of the source: ',hdur,' s'
 
   if(PRINT_SOURCE_TIME_FUNCTION) then
 
@@ -484,31 +500,38 @@
 
   do it=1,NSTEP
     time_source = dble(it-1)*DT
-    write(27,*) sngl(time_source),sngl(comp_source_time_function(time_source,hdur))
+    write(27,*) sngl(time_source),sngl(comp_source_time_function(time_source,hdur(isource)))
   enddo
   close(27)
 
   endif
 
-! elapsed time since beginning of mesh generation
-  tCPU = MPI_WTIME() - time_start
-  write(IMAIN,*)
-  write(IMAIN,*) 'Elapsed time for source detection in seconds = ',tCPU
-  write(IMAIN,*)
-  write(IMAIN,*) 'End of source detection - done'
-  write(IMAIN,*)
+! end of loop on all the sources
+  enddo
+
+! display maximum error in location estimate
+    write(IMAIN,*)
+    write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance_source)),' m'
+    write(IMAIN,*)
 
   endif     ! end of section executed by main process only
 
 ! main process broadcasts the results to all the slices
-  call MPI_BCAST(islice_selected_source,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(ispec_selected_source,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(xi_source,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(eta_source,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(gamma_source,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(islice_selected_source,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(ispec_selected_source,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(xi_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(eta_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_BCAST(gamma_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 
-! synchronize all the processes to make sure everybody has finished
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+! elapsed time since beginning of source detection
+  if(myrank == 0) then
+    tCPU = MPI_WTIME() - time_start
+    write(IMAIN,*)
+    write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
+    write(IMAIN,*)
+    write(IMAIN,*) 'End of source detection - done'
+    write(IMAIN,*)
+  endif
 
   end subroutine locate_source
 

@@ -15,20 +15,19 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(cmt_file,yr,jda,ho,mi,sec, &
-                      t_cmt,hdur,elat,elon,depth,moment_tensor,DT)
+  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,elat,elon,depth,moment_tensor,DT,NSOURCES)
 
   implicit none
 
   include "constants.h"
 
-  integer yr,jda,ho,mi
-  double precision sec,t_cmt,hdur,elat,elon,depth
-  double precision moment_tensor(6)
+  integer yr,jda,ho,mi,NSOURCES
+  double precision sec
+  double precision, dimension(NSOURCES) :: t_cmt,hdur,elat,elon,depth
+  double precision moment_tensor(6,NSOURCES)
   double precision DT
-  character(len=150) cmt_file
 
-  integer ios,lstr,mo,da,julian_day
+  integer mo,da,julian_day,isource
   double precision scaleM
   character(len=5) datasource
   character(len=150) string
@@ -36,61 +35,75 @@
 !
 !---- read hypocenter info
 !
-  open(unit=1,file=cmt_file,iostat=ios,status='old')
-  if(ios /= 0) stop 'error opening CMT file '
+  open(unit=1,file='DATA/CMTSOLUTION',status='old')
 
+! read source number isource
+  do isource=1,NSOURCES
+
+! read header with event information
   read(1,"(a4,i5,i3,i3,i3,i3,f6.2)") datasource,yr,mo,da,ho,mi,sec
-
   jda=julian_day(yr,mo,da)
-  t_cmt = 0.
 
-  ios=0
-  do while(ios == 0)
-    read(1,"(a)",iostat=ios) string
+! ignore line with event name
+  read(1,"(a)") string
 
-    if(ios == 0) then
-      lstr=len_trim(string)
-      if(string(1:10) == 'time shift') then
-        read(string(12:lstr),*) t_cmt
-      else if(string(1:13) == 'half duration') then
-        read(string(15:lstr),*) hdur
-      else if(string(1:8) == 'latitude') then
-        read(string(10:lstr),*) elat
-      else if(string(1:9) == 'longitude') then
-        read(string(11:lstr),*) elon
-      else if(string(1:5) == 'depth') then
-        read(string(7:lstr),*) depth
-      else if(string(1:3) == 'Mrr') then
-        read(string(5:lstr),*) moment_tensor(1)
-      else if(string(1:3) == 'Mtt') then
-        read(string(5:lstr),*) moment_tensor(2)
-      else if(string(1:3) == 'Mpp') then
-        read(string(5:lstr),*) moment_tensor(3)
-      else if(string(1:3) == 'Mrt') then
-        read(string(5:lstr),*) moment_tensor(4)
-      else if(string(1:3) == 'Mrp') then
-        read(string(5:lstr),*) moment_tensor(5)
-      else if(string(1:3) == 'Mtp') then
-        read(string(5:lstr),*) moment_tensor(6)
-      endif
-    endif
-  enddo
+! read time shift
+  read(1,"(a)") string
+  read(string(12:len_trim(string)),*) t_cmt(isource)
 
-  close(1)
+! read half duration
+  read(1,"(a)") string
+  read(string(15:len_trim(string)),*) hdur(isource)
 
-! time shift not used in our code, but kept for compatibility of file format
-  if(dabs(t_cmt) > DT) stop 't_cmt not implemented in current code'
-  t_cmt = 0.
+! read latitude
+  read(1,"(a)") string
+  read(string(10:len_trim(string)),*) elat(isource)
+
+! read longitude
+  read(1,"(a)") string
+  read(string(11:len_trim(string)),*) elon(isource)
+
+! read depth
+  read(1,"(a)") string
+  read(string(7:len_trim(string)),*) depth(isource)
+
+! read Mrr
+  read(1,"(a)") string
+  read(string(5:len_trim(string)),*) moment_tensor(1,isource)
+
+! read Mtt
+  read(1,"(a)") string
+  read(string(5:len_trim(string)),*) moment_tensor(2,isource)
+
+! read Mpp
+  read(1,"(a)") string
+  read(string(5:len_trim(string)),*) moment_tensor(3,isource)
+
+! read Mrt
+  read(1,"(a)") string
+  read(string(5:len_trim(string)),*) moment_tensor(4,isource)
+
+! read Mrp
+  read(1,"(a)") string
+  read(string(5:len_trim(string)),*) moment_tensor(5,isource)
+
+! read Mtp
+  read(1,"(a)") string
+  read(string(5:len_trim(string)),*) moment_tensor(6,isource)
 
 ! null half-duration indicates a Heaviside
 ! replace with very short error function
-  if(hdur < DT) hdur = 5. * DT
+  if(hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
+
+  enddo
+
+  close(1)
 
 !
 ! scale the moment-tensor (dimensions dyn-cm)
 !
   scaleM = 1.d7
-  moment_tensor(:) = moment_tensor(:) / scaleM
+  moment_tensor(:,:) = moment_tensor(:,:) / scaleM
 
   end subroutine get_cmt
 

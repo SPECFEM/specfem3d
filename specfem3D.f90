@@ -384,8 +384,8 @@
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
 
-! check that we have more than 0 and less than 1000 sources
-  if(NSOURCES < 0 .or. NSOURCES > 999) call exit_MPI(myrank,'invalid number of sources')
+! check that we have at least one source
+  if(NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
 
 ! dynamic allocation of arrays
 
@@ -471,16 +471,14 @@
   allocate(utm_y_source(NSOURCES))
 
 ! locate sources in the mesh
-  do isource = 1,NSOURCES
-    call locate_source(ibool,isource,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
-            xigll,yigll,zigll,NPROC, &
-            sec,t_cmt(isource),yr,jda,ho,mi,utm_x_source(isource),utm_y_source(isource), &
-            NSTEP,DT,hdur(isource),Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
-            islice_selected_source(isource),ispec_selected_source(isource), &
-            xi_source(isource),eta_source(isource),gamma_source(isource), &
-            LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE)
-  enddo
+  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
+          xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
+          sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+          islice_selected_source,ispec_selected_source, &
+          xi_source,eta_source,gamma_source, &
+          LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
+          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore)
 
   if(t_cmt(1) /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
   do isource = 2,NSOURCES
