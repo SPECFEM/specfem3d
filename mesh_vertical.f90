@@ -97,7 +97,7 @@
 !! DK DK UGLY suppressed Manu's modif and put old code back because better mesh
 !! DK DK UGLY investigate this in detail one day
 !! DK DK UGLY modif Manu removed  rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
-!! DK DK UGLY modif Manu removed 
+!! DK DK UGLY modif Manu removed
   rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
 
 ! check that the mesh that has been generated is correct

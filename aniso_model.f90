@@ -1,6 +1,6 @@
 !=====================================================================
 ! 07/09/04 Last changed by Min Chen
-! For users: You need to modify this subroutine to implement your own 
+! For users: You need to modify this subroutine to implement your own
 ! anisotropic models.
 !=====================================================================
 
@@ -20,7 +20,7 @@
   double precision,parameter :: FACTOR_CS1sv_A = 0.0d0
   double precision,parameter :: FACTOR_CS1sh_N = 0.d0
 ! three-zeta term
-  double precision,parameter :: FACTOR_CS3_L = 0.0d0 
+  double precision,parameter :: FACTOR_CS3_L = 0.0d0
 
 
 ! Relative to Love wave
@@ -46,9 +46,9 @@
   integer idoubling
   double precision zmesh
   double precision rho,vp,vs
-  double precision vpv,vph,vsv,vsh,eta_aniso 
+  double precision vpv,vph,vsv,vsh,eta_aniso
   double precision aa,cc,nn,ll,ff
-  double precision A,C,F,AL,AN,Bc,Bs,Gc,Gs,Hc,Hs,Ec,Es,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3 
+  double precision A,C,F,AL,AN,Bc,Bs,Gc,Gs,Hc,Hs,Ec,Es,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3
   double precision c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
                    c44,c45,c46,c55,c56,c66
   double precision d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
@@ -60,40 +60,40 @@
         vs=4.5d0
         rho=3.0d0
         vph = vp
-  	vpv = vp
-  	vsh = vs
-  	vsv = vs
+    vpv = vp
+    vsh = vs
+    vsv = vs
         eta_aniso = 1.0d0
-       
+
 
   else if(idoubling == IFLAG_MOHO_16km) then
         vp=7.8d0
         vs=4.5d0
         rho=3.0d0
-  	vph = vp
-  	vpv = vp
-  	vsh = vs
-  	vsv = vs
+    vph = vp
+    vpv = vp
+    vsh = vs
+    vsv = vs
         eta_aniso = 1.0d0
 
   else if(zmesh >= DEPTH_5p5km_SOCAL) then
         vp=7.8d0
         vs=4.5d0
         rho=3.0d0
-  	vph = vp
-  	vpv = vp
-  	vsh = vs
-  	vsv = vs
+    vph = vp
+    vpv = vp
+    vsh = vs
+    vsv = vs
         eta_aniso = 1.0d0
 
   else
         vp=7.8d0
         vs=4.5d0
         rho=3.0d0
-  	vph = vp
-  	vpv = vp
-  	vsh = vs
-  	vsv = vs
+    vph = vp
+    vpv = vp
+    vsh = vs
+    vsv = vs
         eta_aniso = 1.0d0
 
   endif
@@ -114,14 +114,14 @@
   ff = eta_aniso*(aa - 2.*ll)
 
 ! Add anisotropic perturbation in the whole halfspace
-! You can also add different perturbations to different layers 
-  A = aa*(1.0d0 + FACTOR_A) 
+! You can also add different perturbations to different layers
+  A = aa*(1.0d0 + FACTOR_A)
   C = cc*(1.0d0 + FACTOR_C)
   AN = nn*(1.0d0 + FACTOR_N)
   AL = ll*(1.0d0 + FACTOR_L)
   F = ff*(1.0d0 + FACTOR_F)
   C1p = FACTOR_CS1p_A*aa
-  S1p = 0.d0 
+  S1p = 0.d0
   C1sv = FACTOR_CS1sv_A*aa
   S1sv = 0.d0
   C1sh = FACTOR_CS1sh_N*nn
@@ -137,10 +137,10 @@
   Ec = FACTOR_E_N*nn
   Es = 0.d0
 
-! The mapping from the elastic coefficients to the elastic tensor elements 
-! in the local Cartesian coordinate system (conventional geographic) used in the 
+! The mapping from the elastic coefficients to the elastic tensor elements
+! in the local Cartesian coordinate system (conventional geographic) used in the
 ! global code (1---South; 2---East; 3---up)
-! Always keep the following part when you modify this subroutine 
+! Always keep the following part when you modify this subroutine
   d11 = A + Ec + Bc
   d12 = A - 2.*AN - Ec
   d13 = F + Hc

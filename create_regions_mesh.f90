@@ -637,7 +637,7 @@
                   IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
                   vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, &
                   MOHO_MAP_LUPEI)
-             
+
           endif
        endif
 ! store flag indicating whether point is in the sediments
@@ -647,7 +647,7 @@
 ! define elastic parameters in the model
 ! distinguish whether single or double precision for reals
   if(ANISOTROPY) then
-     
+
        if(CUSTOM_REAL == SIZE_REAL) then
          rhostore(i,j,k,ispec) = sngl(rho)
          kappastore(i,j,k,ispec) = sngl(rho*(vp*vp - 4.d0*vs*vs/3.d0))
@@ -712,7 +712,7 @@
          rhostore(i,j,k,ispec) = sngl(rho)
          kappastore(i,j,k,ispec) = sngl(rho*(vp*vp - 4.d0*vs*vs/3.d0))
          mustore(i,j,k,ispec) = sngl(rho*vs*vs)
-        
+
 ! Stacey
          rho_vp(i,j,k,ispec) = sngl(rho*vp)
          rho_vs(i,j,k,ispec) = sngl(rho*vs)
@@ -720,7 +720,7 @@
          rhostore(i,j,k,ispec) = rho
          kappastore(i,j,k,ispec) = rho*(vp*vp - 4.d0*vs*vs/3.d0)
          mustore(i,j,k,ispec) = rho*vs*vs
-        
+
 ! Stacey
          rho_vp(i,j,k,ispec) = rho*vp
          rho_vs(i,j,k,ispec) = rho*vs

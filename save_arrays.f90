@@ -233,67 +233,67 @@
      open(unit=27,file=prname(1:len_trim(prname))//'c11.bin',status='unknown',form='unformatted')
      write(27) c11store
      close(27)
-     
+
      ! c12
      open(unit=27,file=prname(1:len_trim(prname))//'c12.bin',status='unknown',form='unformatted')
      write(27) c12store
      close(27)
-     
+
      ! c13
      open(unit=27,file=prname(1:len_trim(prname))//'c13.bin',status='unknown',form='unformatted')
      write(27) c13store
      close(27)
-     
+
      ! c14
      open(unit=27,file=prname(1:len_trim(prname))//'c14.bin',status='unknown',form='unformatted')
      write(27) c14store
      close(27)
-     
+
      ! c15
      open(unit=27,file=prname(1:len_trim(prname))//'c15.bin',status='unknown',form='unformatted')
      write(27) c15store
      close(27)
-     
+
      ! c16
      open(unit=27,file=prname(1:len_trim(prname))//'c16.bin',status='unknown',form='unformatted')
      write(27) c16store
      close(27)
-     
+
      ! c22
      open(unit=27,file=prname(1:len_trim(prname))//'c22.bin',status='unknown',form='unformatted')
      write(27) c22store
      close(27)
-     
+
      ! c23
      open(unit=27,file=prname(1:len_trim(prname))//'c23.bin',status='unknown',form='unformatted')
      write(27) c23store
      close(27)
-     
+
      ! c24
      open(unit=27,file=prname(1:len_trim(prname))//'c24.bin',status='unknown',form='unformatted')
      write(27) c24store
      close(27)
-     
+
      ! c25
      open(unit=27,file=prname(1:len_trim(prname))//'c25.bin',status='unknown',form='unformatted')
      write(27) c25store
      close(27)
-     
+
      ! c26
      open(unit=27,file=prname(1:len_trim(prname))//'c26.bin',status='unknown',form='unformatted')
      write(27) c26store
      close(27)
-     
+
      ! c33
      open(unit=27,file=prname(1:len_trim(prname))//'c33.bin',status='unknown',form='unformatted')
      write(27) c33store
      close(27)
-     
+
      ! c34
      open(unit=27,file=prname(1:len_trim(prname))//'c34.bin',status='unknown',form='unformatted')
      write(27) c34store
      close(27)
-     
+
      ! c35
      open(unit=27,file=prname(1:len_trim(prname))//'c35.bin',status='unknown',form='unformatted')
      write(27) c35store
@@ -303,22 +303,22 @@
      open(unit=27,file=prname(1:len_trim(prname))//'c36.bin',status='unknown',form='unformatted')
      write(27) c36store
      close(27)
-     
+
      ! c44
      open(unit=27,file=prname(1:len_trim(prname))//'c44.bin',status='unknown',form='unformatted')
      write(27) c44store
      close(27)
-     
+
      ! c45
      open(unit=27,file=prname(1:len_trim(prname))//'c45.bin',status='unknown',form='unformatted')
      write(27) c45store
      close(27)
-     
+
      ! c46
      open(unit=27,file=prname(1:len_trim(prname))//'c46.bin',status='unknown',form='unformatted')
      write(27) c46store
      close(27)
-     
+
      ! c55
      open(unit=27,file=prname(1:len_trim(prname))//'c55.bin',status='unknown',form='unformatted')
      write(27) c55store
@@ -328,12 +328,12 @@
      open(unit=27,file=prname(1:len_trim(prname))//'c56.bin',status='unknown',form='unformatted')
      write(27) c56store
      close(27)
-     
+
      ! c66
      open(unit=27,file=prname(1:len_trim(prname))//'c66.bin',status='unknown',form='unformatted')
      write(27) c66store
      close(27)
-     
+
   endif
 
 ! additional ocean load mass matrix if oceans

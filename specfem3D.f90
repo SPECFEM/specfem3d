@@ -1304,22 +1304,22 @@
        !   c55 = c55 + minus_sum_beta * mul
        !   c66 = c66 + minus_sum_beta * mul
        !endif
-       
+
        sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
             c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
-       
+
        sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
             c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
-       
+
        sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
             c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
-       
+
        sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
             c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
-       
+
        sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
             c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
-       
+
        sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
             c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
     else
@@ -1334,7 +1334,7 @@
        sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
        sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
        sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
-       
+
        sigma_xy = mul*duxdyl_plus_duydxl
        sigma_xz = mul*duzdxl_plus_duxdzl
        sigma_yz = mul*duzdyl_plus_duydzl
