@@ -781,7 +781,7 @@
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
     if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
-      write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon),' 0.  0.'
+      write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
   enddo
 
   close(IIN)
