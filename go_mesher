@@ -46,8 +46,9 @@ echo " "
 echo mesh files will be saved in directory $my_local_path
 echo " "
 
+set MPIRUN="/home/local/mpich/bin/mpirun"
 #### use this on Beowulf
-  mpirun -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xmeshfem3D
+  $MPIRUN -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xmeshfem3D
 
 #### use this on SGI
 # mpirun -np $numnodes xmeshfem3D

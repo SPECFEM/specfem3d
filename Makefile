@@ -51,7 +51,7 @@ O = obj
 #
 # Beowulf Portland pgf90
 F90 = pgf90
-MPIF90 = mpif90
+MPIF90 = /home/local/mpich/bin/mpif90
 FLAGS_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Mstandard -Knoieee
 FLAGS_NO_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Munroll=c:6 -Mstandard -Knoieee
 MPI_FLAGS = 
