@@ -96,8 +96,9 @@
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY suppressed Manu's modif and put old code back because better mesh
 !! DK DK UGLY investigate this in detail one day
+  rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
+!! DK DK UGLY modif Manu removed 
   rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
-!! DK DK UGLY modif Manu removed     rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
 
 ! check that the mesh that has been generated is correct
   if(npr /= 2*NER) call exit_MPI(myrank,'incorrect intervals for basin')
