@@ -505,15 +505,6 @@
     endwhere
   endif
 
-! apply non linear scaling to normalized field if needed
-  if(NONLINEAR_SCALING) then
-    where(field_display(:) >= 0.)
-      field_display = field_display ** POWER_SCALING
-    elsewhere
-      field_display = - abs(field_display) ** POWER_SCALING
-    endwhere
-  endif
-
 ! map back to [0,1]
   field_display(:) = (field_display(:) + 1.) / 2.
 
