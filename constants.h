@@ -98,6 +98,10 @@
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
 
+! maximum length of station and network name for receivers
+  integer, parameter :: MAX_LENGTH_STATION_NAME = 32
+  integer, parameter :: MAX_LENGTH_NETWORK_NAME = 8
+
 !----------- do not modify anything below -------------
 
 ! some useful constants
