@@ -100,7 +100,7 @@
 
 !     save the derivatives and the jacobian
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
         xixstore(i,j,k,ispec) = sngl(xix)
         xiystore(i,j,k,ispec) = sngl(xiy)

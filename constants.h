@@ -39,6 +39,25 @@
 ! by using a small initial field instead of zero
   logical, parameter :: FIX_UNDERFLOW_PROBLEM = .true.
 
+! apply heuristic rule to modify doubling regions to balance angles
+  logical, parameter :: APPLY_HEURISTIC_RULE = .true.
+
+! to suppress UTM projection for SCEC benchmarks
+  logical, parameter :: SUPPRESS_UTM_PROJECTION = .false.
+
+! number of GLL points in each direction of an element (degree plus one)
+  integer, parameter :: NGLLX = 5
+  integer, parameter :: NGLLY = NGLLX
+  integer, parameter :: NGLLZ = NGLLX
+
+! input, output and main MPI I/O files
+  integer, parameter :: ISTANDARD_OUTPUT = 6
+  integer, parameter :: IIN = 40,IOUT = 41
+! uncomment this to write messages to a text file
+  integer, parameter :: IMAIN = 42
+! uncomment this to write messages to the screen
+! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
+
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
@@ -60,37 +79,15 @@
 ! depth at which we start to honor the basement interface
   double precision, parameter :: Z_THRESHOLD_HONOR_BASEMENT = -4700.d0
 
-! apply heuristic rule to modify doubling regions to balance angles
-  logical, parameter :: APPLY_HEURISTIC_RULE = .true.
-
-! to suppress UTM projection for SCEC benchmarks
-  logical, parameter :: SUPPRESS_UTM_PROJECTION = .false.
-
-! number of GLL points in each direction of an element (degree plus one)
-  integer, parameter :: NGLLX = 5
-  integer, parameter :: NGLLY = NGLLX
-  integer, parameter :: NGLLZ = NGLLX
-
-! number of points per surface element
-  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
-
-! number of points per spectral element
-  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
-
-! input, output and main MPI I/O files
-  integer, parameter :: ISTANDARD_OUTPUT = 6
-  integer, parameter :: IIN = 40,IOUT = 41
-! uncomment this to write messages to a text file
-  integer, parameter :: IMAIN = 42
-! uncomment this to write messages to the screen
-! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
-
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
 
 ! maximum length of station and network name for receivers
   integer, parameter :: MAX_LENGTH_STATION_NAME = 32
   integer, parameter :: MAX_LENGTH_NETWORK_NAME = 8
+
+! source decay rate
+  double precision, parameter :: SOURCE_DECAY_RATE = 2.628d0
 
 !----------- do not modify anything below -------------
 
@@ -107,17 +104,20 @@
 ! we use 8-node mesh bricks, which are more stable than 27-node elements
   integer, parameter :: NGNOD = 8, NGNOD2D = 4
 
+! a few useful constants
   double precision, parameter :: ZERO = 0.d0,ONE = 1.d0,TWO = 2.d0,HALF = 0.5d0
 
   real(kind=CUSTOM_REAL), parameter :: &
     ONE_THIRD   = 1._CUSTOM_REAL/3._CUSTOM_REAL, &
     FOUR_THIRDS = 4._CUSTOM_REAL/3._CUSTOM_REAL
 
+! very large and very small values
   double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
 
-! declare real value independently of the machine
+! very large real value declared independently of the machine
   real(kind=CUSTOM_REAL), parameter :: HUGEVAL_SNGL = 1.e+30_CUSTOM_REAL
 
+! very large integer value
   integer, parameter :: HUGEINT = 100000000
 
 ! define flag for elements
@@ -157,6 +157,16 @@
   integer, parameter :: ETA_MAX = 4
   integer, parameter :: BOTTOM = 5
 
+! number of points per surface element
+  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
+
+! number of points per spectral element
+  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
+
+! for vectorization of loops
+  integer, parameter :: NGLLSQUARE_NDIM = NGLLSQUARE * NDIM
+  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
+
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
 
@@ -177,6 +187,9 @@
 
 ! for the Gauss-Lobatto-Legendre points and weights
   double precision, parameter :: GAUSSALPHA = 0.d0,GAUSSBETA = 0.d0
+
+! number of lines per source in CMTSOLUTION file
+  integer, parameter :: NLINES_PER_CMTSOLUTION_SOURCE = 13
 
 ! number of iterations to solve the system for xi and eta
   integer, parameter :: NUM_ITER = 4
@@ -272,10 +285,6 @@
 
 ! reference surface of the model before adding topography
   double precision, parameter :: Z_SURFACE = 0.d0
-
-! for vectorization of loops
-  integer, parameter :: NGLLSQUARE_NDIM = NGLLSQUARE * NDIM
-  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
 
 ! number of points in each AVS or OpenDX quadrangular cell for movies
   integer, parameter :: NGNOD2D_AVS_DX = 4

@@ -15,76 +15,75 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file(LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX, &
+  subroutine read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
 
   implicit none
 
   include "constants.h"
 
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-            NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
-  integer NSOURCES,NMOVIE,ITAFF_TIME_STEPS
+            NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+  integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-  double precision LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,DT
+  double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,DT
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
-  double precision HDUR_MIN_MOVIES
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
-  logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  character(len=150) LOCAL_PATH
+  character(len=150) LOCAL_PATH,MODEL
 
-  integer i
-  double precision DEPTH_BLOCK_KM
+! first 34 characters of each line in the file are a comment
+  character(len=34) junk
 
-! first 27 characters of each line in the file are a comment
-  character(len=27) junk
+! local variables
+  integer ios,icounter,isource,idummy,NEX_MAX
+
+  double precision DEPTH_BLOCK_KM,RECORD_LENGTH_IN_SECONDS,hdur,minval_hdur
+
+  character(len=150) dummystring
 
   open(unit=IIN,file='DATA/Par_file',status='old')
 
 ! ignore header
-  do i=1,11
+  do idummy=1,11
     read(IIN,*)
   enddo
 
+  read(IIN,2) junk,LATITUDE_MIN
+  read(IIN,2) junk,LATITUDE_MAX
+  read(IIN,2) junk,LONGITUDE_MIN
+  read(IIN,2) junk,LONGITUDE_MAX
+  read(IIN,2) junk,DEPTH_BLOCK_KM
+  read(IIN,1) junk,UTM_PROJECTION_ZONE
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,*)
   read(IIN,1) junk,NEX_XI
   read(IIN,1) junk,NEX_ETA
   read(IIN,*)
   read(IIN,*)
   read(IIN,1) junk,NPROC_XI
   read(IIN,1) junk,NPROC_ETA
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,2) junk,DT
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,NSTEP
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,2) junk,LAT_MIN
-  read(IIN,2) junk,LAT_MAX
-  read(IIN,2) junk,LONG_MIN
-  read(IIN,2) junk,LONG_MAX
-  read(IIN,2) junk,DEPTH_BLOCK_KM
-  read(IIN,1) junk,UTM_PROJECTION_ZONE
 
 ! convert basin size to UTM coordinates and depth of mesh to meters
-  call utm_geo(LONG_MIN,LAT_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
-  call utm_geo(LONG_MAX,LAT_MAX,UTM_X_MAX,UTM_Y_MAX,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+  call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+  call utm_geo(LONGITUDE_MAX,LATITUDE_MAX,UTM_X_MAX,UTM_Y_MAX,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
 
   Z_DEPTH_BLOCK = - dabs(DEPTH_BLOCK_KM) * 1000.d0
 
@@ -95,45 +94,168 @@
   if(UTM_X_MIN >= UTM_X_MAX) stop 'horizontal dimension of UTM block incorrect'
   if(UTM_Y_MIN >= UTM_Y_MAX) stop 'vertical dimension of UTM block incorrect'
 
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,TOPOGRAPHY
-  read(IIN,3) junk,BASEMENT_MAP
-  read(IIN,3) junk,MOHO_MAP_LUPEI
-  read(IIN,3) junk,HAUKSSON_REGIONAL_MODEL
-  read(IIN,3) junk,HARVARD_3D_GOCAD_MODEL
-  read(IIN,3) junk,ANISOTROPY
-  read(IIN,2) junk,THICKNESS_TAPER_BLOCK_HR
-  read(IIN,2) junk,THICKNESS_TAPER_BLOCK_MR
-  read(IIN,3) junk,IMPOSE_MINIMUM_VP_GOCAD
-  read(IIN,2) junk,VP_MIN_GOCAD
-  read(IIN,2) junk,VP_VS_RATIO_GOCAD_TOP
-  read(IIN,2) junk,VP_VS_RATIO_GOCAD_BOTTOM
-  read(IIN,3) junk,ATTENUATION
-  read(IIN,3) junk,USE_OLSEN_ATTENUATION
-  read(IIN,3) junk,OCEANS
-  read(IIN,3) junk,STACEY_ABS_CONDITIONS
+! set time step and radial distribution of elements
+! right distribution is determined based upon maximum value of NEX
 
-! check that Poisson's ratio is positive
-  if(VP_VS_RATIO_GOCAD_TOP <= sqrt(2.) .or. VP_VS_RATIO_GOCAD_BOTTOM <= sqrt(2.)) &
-      stop 'wrong value of Poisson''s ratio for Gocad Vs block'
+  NEX_MAX = max(NEX_XI,NEX_ETA)
 
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,NER_SEDIM
-  read(IIN,1) junk,NER_BASEMENT_SEDIM
-  read(IIN,1) junk,NER_16_BASEMENT
-  read(IIN,1) junk,NER_MOHO_16
-  read(IIN,1) junk,NER_BOTTOM_MOHO
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,4) junk,LOCAL_PATH
+! standard mesh for SAF 1857 on Caltech cluster
+  if(NEX_MAX == 456) then
+
+! time step in seconds
+    DT                 = 0.009d0
+
+! number of elements in the vertical direction
+    NER_SEDIM          = 1
+    NER_BASEMENT_SEDIM = 2
+    NER_16_BASEMENT    = 3
+    NER_MOHO_16        = 4
+    NER_BOTTOM_MOHO    = 7
+
+  else
+    stop 'this value of NEX_MAX is not in the database, edit read_parameter_file.f90 and recompile'
+  endif
 
 ! multiply parameters read by mesh scaling factor
   NER_BASEMENT_SEDIM = NER_BASEMENT_SEDIM * 2
   NER_16_BASEMENT = NER_16_BASEMENT * 2
   NER_MOHO_16 = NER_MOHO_16 * 2
   NER_BOTTOM_MOHO = NER_BOTTOM_MOHO * 4
+
+! define the velocity model
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,4) junk,MODEL
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,3) junk,OCEANS
+  read(IIN,3) junk,TOPOGRAPHY
+  read(IIN,3) junk,ATTENUATION
+  read(IIN,3) junk,USE_OLSEN_ATTENUATION
+
+  if(MODEL == 'SoCal') then
+
+    BASEMENT_MAP             = .false.
+    MOHO_MAP_LUPEI           = .false.
+    HAUKSSON_REGIONAL_MODEL  = .false.
+    HARVARD_3D_GOCAD_MODEL   = .false.
+    THICKNESS_TAPER_BLOCK_HR = 1.d0
+    THICKNESS_TAPER_BLOCK_MR = 1.d0
+    IMPOSE_MINIMUM_VP_GOCAD  = .false.
+    VP_MIN_GOCAD             = 1.d0
+    VP_VS_RATIO_GOCAD_TOP    = 2.0d0
+    VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
+
+    ANISOTROPY               = .false.
+
+  else if(MODEL == 'Harvard_LA') then
+
+    BASEMENT_MAP             = .true.
+    MOHO_MAP_LUPEI           = .true.
+    HAUKSSON_REGIONAL_MODEL  = .true.
+    HARVARD_3D_GOCAD_MODEL   = .true.
+    THICKNESS_TAPER_BLOCK_HR = 3000.d0
+    THICKNESS_TAPER_BLOCK_MR = 15000.d0
+    IMPOSE_MINIMUM_VP_GOCAD  = .true.
+    VP_MIN_GOCAD             = 750.d0
+    VP_VS_RATIO_GOCAD_TOP    = 2.0d0
+    VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
+
+    ANISOTROPY               = .false.
+
+  else if(MODEL == 'Min_Chen_anisotropy') then
+
+    BASEMENT_MAP             = .false.
+    MOHO_MAP_LUPEI           = .false.
+    HAUKSSON_REGIONAL_MODEL  = .false.
+    HARVARD_3D_GOCAD_MODEL   = .false.
+    THICKNESS_TAPER_BLOCK_HR = 1.d0
+    THICKNESS_TAPER_BLOCK_MR = 1.d0
+    IMPOSE_MINIMUM_VP_GOCAD  = .false.
+    VP_MIN_GOCAD             = 1.d0
+    VP_VS_RATIO_GOCAD_TOP    = 2.0d0
+    VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
+
+    ANISOTROPY               = .true.
+
+  else
+    stop 'model not implemented, edit read_parameter_file.f90 and recompile'
+  endif
+
+! check that Poisson's ratio is positive
+  if(VP_VS_RATIO_GOCAD_TOP <= sqrt(2.d0) .or. VP_VS_RATIO_GOCAD_BOTTOM <= sqrt(2.d0)) &
+      stop 'wrong value of Poisson''s ratio for Gocad Vs block'
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,3) junk,ABSORBING_CONDITIONS
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,2) junk,RECORD_LENGTH_IN_SECONDS
+
+! compute total number of time steps, rounded to next multiple of 100
+  NSTEP = 100 * (int(RECORD_LENGTH_IN_SECONDS / (100.d0*DT)) + 1)
+
+! compute the total number of sources in the CMTSOLUTION file
+! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
+  open(unit=1,file='DATA/CMTSOLUTION',iostat=ios,status='old')
+  if(ios /= 0) stop 'error opening CMTSOLUTION file'
+  icounter = 0
+  do while(ios == 0)
+    read(1,"(a)",iostat=ios) dummystring
+    if(ios == 0) icounter = icounter + 1
+  enddo
+  close(1)
+  if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+    stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+  NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
+  if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,3) junk,MOVIE_SURFACE
+  read(IIN,3) junk,MOVIE_VOLUME
+  read(IIN,1) junk,NTSTEP_BETWEEN_FRAMES
+  read(IIN,3) junk,CREATE_SHAKEMAP
+  read(IIN,3) junk,SAVE_DISPLACEMENT
+  read(IIN,3) junk,USE_HIGHRES_FOR_MOVIES
+
+! compute the minimum value of hdur in CMTSOLUTION file
+  open(unit=1,file='DATA/CMTSOLUTION',status='old')
+  minval_hdur = HUGEVAL
+  do isource = 1,NSOURCES
+
+! skip other information
+    do idummy = 1,3
+      read(1,"(a)") dummystring
+    enddo
+
+! read half duration and compute minimum
+  read(1,"(a)") dummystring
+  read(dummystring(15:len_trim(dummystring)),*) hdur
+  minval_hdur = min(minval_hdur,hdur)
+
+! skip other information
+    do idummy = 1,9
+      read(1,"(a)") dummystring
+    enddo
+
+  enddo
+  close(1)
+
+! one cannot use a Heaviside source for the movies
+  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. minval_hdur < TINYVAL) &
+    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,3) junk,SAVE_AVS_DX_MESH_FILES
+
+  read(IIN,*)
+  read(IIN,*)
+  read(IIN,4) junk,LOCAL_PATH
 
 ! ignore name of machine file (used by scripts but not by mesher nor solver)
   read(IIN,*)
@@ -142,38 +264,20 @@
 
   read(IIN,*)
   read(IIN,*)
-  read(IIN,1) junk,NSEIS
+  read(IIN,1) junk,NTSTEP_BETWEEN_OUTPUT_INFO
 
   read(IIN,*)
   read(IIN,*)
-  read(IIN,1) junk,NSOURCES
+  read(IIN,1) junk,NTSTEP_BETWEEN_OUTPUT_SEISMOS
 
   read(IIN,*)
   read(IIN,*)
-  read(IIN,3) junk,SAVE_AVS_DX_MOVIE
-  read(IIN,3) junk,SAVE_AVS_DX_SHAKEMAP
-  read(IIN,3) junk,SAVE_DISPLACEMENT
-  read(IIN,3) junk,USE_HIGHRES_FOR_MOVIES
-  read(IIN,1) junk,NMOVIE
-  read(IIN,2) junk,HDUR_MIN_MOVIES
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,ITAFF_TIME_STEPS
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,SAVE_AVS_DX_MESH_FILES
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,PRINT_SOURCE_TIME_FUNCT
+  read(IIN,3) junk,PRINT_SOURCE_TIME_FUNCTION
 
 ! close parameter file
   close(IIN)
 
 ! formats
-
  1 format(a,i20)
  2 format(a,f20.8)
  3 format(a,l20)

@@ -54,7 +54,7 @@
   if(mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
   if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
 
 ! calculate derivatives of the Lagrange polynomials

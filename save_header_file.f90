@@ -17,7 +17,8 @@
 
 ! save header file OUTPUT_FILES/values_from_mesher.h
 
-  subroutine save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION)
+  subroutine save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
+             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
 
   implicit none
 
@@ -26,7 +27,7 @@
   integer NSPEC_AB,NGLOB_AB
   integer NEX_XI,NEX_ETA,NPROC
 
-  logical ATTENUATION
+  logical ATTENUATION,ANISOTROPY
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
 
@@ -93,6 +94,13 @@
   else
     write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = 1'
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .false.'
+  endif
+
+! anisotropy
+  if(ANISOTROPY) then
+    write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .true.'
+  else
+    write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .false.'
   endif
 
   write(IOUT,*)

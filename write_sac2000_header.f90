@@ -1,4 +1,12 @@
 
+!! DK DK this is an attempt at writing sac2000 alpha format files
+!! DK DK for seismograms instead of simple ASCII
+
+!! DK DK program under development, not finished, not tested
+
+  program write_sac2000_header_program
+
+  implicit none
 
      write(outputname,"('/scratch/DATABASES_MPI_DIMITRI/shaking_data',i8.8,'.sac')") ipoin
 
@@ -41,7 +49,7 @@
     enddo
 
 
-  end program specfem3D
+  end program write_sac2000_header_program
 
 
 

@@ -106,7 +106,8 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! MPI v. 1.2 Min Chen, Caltech, July 2004: full anisotropy
+! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
+!  full anisotropy, volume movie
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
@@ -164,22 +165,21 @@
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
-             NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
+             NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
   double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
-  double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
+  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
-  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE,ITAFF_TIME_STEPS
-  double precision HDUR_MIN_MOVIES
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   character(len=150) LOCAL_PATH
 
@@ -236,17 +236,17 @@
   endif
 
 ! read the parameter file
-  call read_parameter_file(LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX, &
+  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -348,11 +348,11 @@
 
   write(IMAIN,*) 'region selected:'
   write(IMAIN,*)
-  write(IMAIN,*) 'latitude min = ',LAT_MIN
-  write(IMAIN,*) 'latitude max = ',LAT_MAX
+  write(IMAIN,*) 'latitude min = ',LATITUDE_MIN
+  write(IMAIN,*) 'latitude max = ',LATITUDE_MAX
   write(IMAIN,*)
-  write(IMAIN,*) 'longitude min = ',LONG_MIN
-  write(IMAIN,*) 'longitude max = ',LONG_MAX
+  write(IMAIN,*) 'longitude min = ',LONGITUDE_MIN
+  write(IMAIN,*) 'longitude max = ',LONGITUDE_MAX
   write(IMAIN,*)
   write(IMAIN,*) 'this is mapped to UTM in region ',UTM_PROJECTION_ZONE
   write(IMAIN,*)
@@ -741,7 +741,8 @@
   write(IMAIN,*)
 
 ! copy number of elements and points in an include file for the solver
-  call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION)
+  call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
+             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
 
 ! filter list of stations, only retain stations that are in the basin model
 
@@ -754,7 +755,7 @@
 ! check that station is not buried, burial is not implemented in current code
     if(dabs(stbur) > 0.1d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
 
-    if(stlat > LAT_MIN .and. stlat < LAT_MAX .and. stlon > LONG_MIN .and. stlon < LONG_MAX) &
+    if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
       nrec_filtered = nrec_filtered + 1
   enddo
   close(IIN)
@@ -775,7 +776,7 @@
 
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-    if(stlat > LAT_MIN .and. stlat < LAT_MAX .and. stlon > LONG_MIN .and. stlon < LONG_MAX) &
+    if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
       write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon),' 0.  0.'
   enddo
 

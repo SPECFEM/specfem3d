@@ -36,7 +36,7 @@
 
 !! DK DK UGLY filter points that have non realistic amplitude
 !! DK DK UGLY simply set to 0 if you do not want to remove any point
-!! DK DK   integer, parameter :: NREMOVE = 40
+!! DK DK UGLY  integer, parameter :: NREMOVE = 40
   integer, parameter :: NREMOVE = 0
   integer iremove,iglobval,iglobval_max
   double precision field_max
@@ -76,21 +76,20 @@
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
-             NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
+             NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES
 
-  logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE,ITAFF_TIME_STEPS
-  double precision HDUR_MIN_MOVIES
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-  double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
+  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
-  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   double precision zscaling
 
   character(len=150) LOCAL_PATH
@@ -116,17 +115,17 @@
   print *
 
 ! read the parameter file
-  call read_parameter_file(LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX, &
+  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -199,7 +198,7 @@
     zscaling = 0.
   endif
 
-  print *,'movie frames have been saved every ',NMOVIE,' time steps'
+  print *,'movie frames have been saved every ',NTSTEP_BETWEEN_FRAMES,' time steps'
   print *
 
   plot_shaking_map = .false.
@@ -222,12 +221,12 @@
   if(inumber<1 .or. inumber>2) stop 'exiting...'
 
   print *
-  print *,'looping from ',it1,' to ',it2,' every ',NMOVIE,' time steps'
+  print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
 
 ! count number of movie frames
   nframes = 0
   do it = it1,it2
-    if(mod(it,NMOVIE) == 0) nframes = nframes + 1
+    if(mod(it,NTSTEP_BETWEEN_FRAMES) == 0) nframes = nframes + 1
   enddo
   print *
   print *,'total number of frames will be ',nframes
@@ -303,7 +302,7 @@
   do it = it1,it2
 
 ! check if time step corresponds to a movie frame
-  if(mod(it,NMOVIE) == 0 .or. plot_shaking_map) then
+  if(mod(it,NTSTEP_BETWEEN_FRAMES) == 0 .or. plot_shaking_map) then
 
   iframe = iframe + 1
 

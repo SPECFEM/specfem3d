@@ -1,7 +1,23 @@
+!=====================================================================
+!
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          --------------------------------------------------
+!
+!                 Dimitri Komatitsch and Jeroen Tromp
+!    Seismological Laboratory - California Institute of Technology
+!         (c) California Institute of Technology July 2004
+!
+!    A signed non-commercial agreement is required to use this program.
+!   Please check http://www.gps.caltech.edu/research/jtromp for details.
+!           Free for non-commercial academic research ONLY.
+!      This program is distributed WITHOUT ANY WARRANTY whatsoever.
+!      Do not redistribute this program without written permission.
+!
+!=====================================================================
 
   program make_cmts
 
-! JT July 2001
+! Jeroen Tromp, July 2001
 
   implicit none
 
@@ -183,7 +199,7 @@
 
   integer mon(12)
   integer lpyr
-  data mon/0,31,59,90,120,151,181,212,243,273,304,334/
+  data mon /0,31,59,90,120,151,181,212,243,273,304,334/
 
   julian_day=da+mon(mo)
   if(mo>2) julian_day=julian_day+lpyr(yr)
@@ -208,3 +224,4 @@
   endif
 
   end function lpyr
+

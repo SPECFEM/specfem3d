@@ -42,7 +42,7 @@
   integer ia
 
 ! for 8-node element
-  double precision, parameter :: ONE_EIGHTH = 0.125
+  double precision, parameter :: ONE_EIGHTH = 0.125d0
 
 ! for checking the 3D shape functions
   double precision sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
@@ -137,6 +137,7 @@
   zxi=ZERO
   zeta=ZERO
   zgamma=ZERO
+
   do ia=1,NGNOD
     x=x+shape3D(ia)*xelm(ia)
     y=y+shape3D(ia)*yelm(ia)
@@ -151,10 +152,9 @@
     zxi=zxi+dershape3D(1,ia)*zelm(ia)
     zeta=zeta+dershape3D(2,ia)*zelm(ia)
     zgamma=zgamma+dershape3D(3,ia)*zelm(ia)
-
   enddo
 
-  jacobian=xxi*(yeta*zgamma-ygamma*zeta)- xeta*(yxi*zgamma-ygamma*zxi)+ &
+  jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + &
              xgamma*(yxi*zeta-yeta*zxi)
 
   if(jacobian <= ZERO) stop '3D Jacobian undefined'

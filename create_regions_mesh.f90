@@ -129,7 +129,7 @@
 
 ! mass matrix and bathymetry for ocean load
   integer ix_oceans,iy_oceans,iz_oceans,ispec_oceans
-  integer ispec2D_top_crust
+  integer ispec2D_ocean_bottom
   integer nglob_oceans
   double precision xval,yval
   double precision height_oceans
@@ -643,7 +643,7 @@
   if(point_is_in_sediments) not_fully_in_bedrock(ispec) = .true.
 
 ! define elastic parameters in the model
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
   if(ANISOTROPY) then
 
        if(CUSTOM_REAL == SIZE_REAL) then
@@ -800,7 +800,7 @@ enddo
 
         jacobianl=jacobianstore(i,j,k,ispec)
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
     if(CUSTOM_REAL == SIZE_REAL) then
       rmass(iglobnum) = rmass(iglobnum) + &
              sngl(dble(rhostore(i,j,k,ispec)) * dble(jacobianl) * weight)
@@ -855,18 +855,17 @@ enddo
 ! create ocean load mass matrix
   if(OCEANS) then
 
-! adding ocean load mass matrix at the top of the crust for oceans
+! adding ocean load mass matrix at ocean bottom
   nglob_oceans = nglob
   allocate(rmass_ocean_load(nglob_oceans))
 
 ! create ocean load mass matrix for degrees of freedom at ocean bottom
   rmass_ocean_load(:) = 0._CUSTOM_REAL
 
-! add contribution of the oceans
-! for surface elements exactly at the top of the crust (ocean bottom)
-    do ispec2D_top_crust = 1,NSPEC2D_TOP
+! add contribution of the oceans for surface elements exactly at ocean bottom
+    do ispec2D_ocean_bottom = 1,NSPEC2D_TOP
 
-      ispec_oceans = ibelm_top(ispec2D_top_crust)
+      ispec_oceans = ibelm_top(ispec2D_ocean_bottom)
 
       iz_oceans = NGLLZ
 
@@ -923,10 +922,10 @@ enddo
     endif
 
 ! take into account inertia of water column
-        weight = wxgll(ix_oceans)*wygll(iy_oceans)*dble(jacobian2D_top(ix_oceans,iy_oceans,ispec2D_top_crust)) &
+        weight = wxgll(ix_oceans)*wygll(iy_oceans)*dble(jacobian2D_top(ix_oceans,iy_oceans,ispec2D_ocean_bottom)) &
                    * dble(RHO_OCEANS) * height_oceans
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
         if(CUSTOM_REAL == SIZE_REAL) then
           rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + sngl(weight)
         else

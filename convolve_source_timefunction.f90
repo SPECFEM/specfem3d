@@ -1,3 +1,19 @@
+!=====================================================================
+!
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          --------------------------------------------------
+!
+!                 Dimitri Komatitsch and Jeroen Tromp
+!    Seismological Laboratory - California Institute of Technology
+!         (c) California Institute of Technology July 2004
+!
+!    A signed non-commercial agreement is required to use this program.
+!   Please check http://www.gps.caltech.edu/research/jtromp for details.
+!           Free for non-commercial academic research ONLY.
+!      This program is distributed WITHOUT ANY WARRANTY whatsoever.
+!      Do not redistribute this program without written permission.
+!
+!=====================================================================
 
   program convolve_source_time_function
 
@@ -7,9 +23,7 @@
 
   implicit none
 
-  double precision, parameter :: DECAY_RATE=2.628d0
-
-  double precision, parameter :: PI=3.141592653589793d0
+  include "constants.h"
 
   integer i,j,N_j
   integer number_remove
@@ -38,7 +52,7 @@
     read(5,*) time(i),sem(i)
   enddo
 
-  alpha=DECAY_RATE/hdur
+  alpha=SOURCE_DECAY_RATE/hdur
   dt=time(2)-time(1)
   N_j=int(hdur/dt)
   do i=1,nlines

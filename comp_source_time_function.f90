@@ -19,15 +19,14 @@
 
   implicit none
 
-! source decay rate (also change in source spectrum if needed)
-  double precision, parameter :: decay_rate = 2.628d0
+  include "constants.h"
 
   double precision t,hdur
 
   double precision, external :: erf
 
 ! Gaussian moment-rate tensor
-  comp_source_time_function = 0.5d0*(1.0d0+erf(decay_rate*t/hdur))
+  comp_source_time_function = 0.5d0*(1.0d0+erf(SOURCE_DECAY_RATE*t/hdur))
 
   end function comp_source_time_function
 

@@ -25,8 +25,8 @@
                  NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
-                 LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCT)
+                 LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION)
 
   implicit none
 
@@ -39,9 +39,9 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCT
+  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION
 
-  double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK
+  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
@@ -143,7 +143,7 @@
   do isource = 1,NSOURCES
 
 ! check that the current source is inside the basin model
-  if(lat(isource) <= LAT_MIN .or. lat(isource) >= LAT_MAX .or. long(isource) <= LONG_MIN .or. long(isource) >= LONG_MAX) &
+  if(lat(isource) <= LATITUDE_MIN .or. lat(isource) >= LATITUDE_MAX .or. long(isource) <= LONGITUDE_MIN .or. long(isource) >= LONGITUDE_MAX) &
     call exit_MPI(myrank,'the current source is outside the model')
 
   if(depth(isource) >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
@@ -450,7 +450,7 @@
 
   endif  ! end of detailed output to locate source
 
-  if(PRINT_SOURCE_TIME_FUNCT) then
+  if(PRINT_SOURCE_TIME_FUNCTION) then
 
   write(IMAIN,*)
   write(IMAIN,*) 'printing the source-time function'

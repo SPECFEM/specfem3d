@@ -109,7 +109,8 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! MPI v. 1.2 Min Chen, Caltech, July 2004: full anisotropy
+! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
+!  full anisotropy, volume movie
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
@@ -300,23 +301,22 @@
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
-             NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
+             NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-  double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
+  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
-  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE,ITAFF_TIME_STEPS
-  double precision HDUR_MIN_MOVIES
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,prname
+  character(len=150) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -346,6 +346,13 @@
       store_val_x_all,store_val_y_all,store_val_z_all, &
       store_val_ux_all,store_val_uy_all,store_val_uz_all
 
+! to save full 3D snapshot of velocity
+  integer itotal_poin
+  real(kind=CUSTOM_REAL) div,curl_x,curl_y,curl_z
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
+  integer, dimension(:), allocatable :: indirect_poin
+  logical, dimension(:), allocatable :: mask_poin
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! initialize the MPI communicator and start the NPROC MPI processes.
@@ -359,17 +366,17 @@
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
 ! read the parameter file
-  call read_parameter_file(LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX, &
+  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
-        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCT,ITAFF_TIME_STEPS)
+        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -436,9 +443,6 @@
 ! dynamic allocation of arrays
 
 ! 2-D addressing and buffers for summation between slices, and point codes
-! use number of elements found in the mantle since it is the largest region
-
-! crust and mantle
   allocate(iboolleft_xi(NPOIN2DMAX_XMIN_XMAX))
   allocate(iboolright_xi(NPOIN2DMAX_XMIN_XMAX))
   allocate(iboolleft_eta(NPOIN2DMAX_YMIN_YMAX))
@@ -478,8 +482,7 @@
 ! read arrays created by the mesher
   call read_arrays_solver(myrank,xstore,ystore,zstore, &
             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-            flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs, &
-            ANISOTROPY, &
+            flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,ANISOTROPY, &
             c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
             c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
             c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
@@ -487,7 +490,7 @@
 
 ! check that the number of points in this slice is correct
   if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
-      call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal nglob in crust and mantle')
+      call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -528,14 +531,10 @@
           NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCT)
+          LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
+          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
-
-! for the movies, we do not use a Heaviside source
-  if((SAVE_AVS_DX_MOVIE .or. SAVE_AVS_DX_SHAKEMAP) .and. minval(hdur) < HDUR_MIN_MOVIES) &
-    call exit_MPI(myrank,'hdur too small for movie or shakemap creation')
 
   open(unit=IIN,file='DATA/STATIONS_FILTERED',status='old')
   read(IIN,*) nrec
@@ -558,7 +557,7 @@
   allocate(network_name(nrec))
   allocate(nu(NDIM,NDIM,nrec))
 
-! locate receivers in the crust in the mesh
+! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,idoubling, &
             xstore,ystore,zstore,xigll,yigll, &
             nrec,islice_selected_rec,ispec_selected_rec, &
@@ -676,7 +675,7 @@
 ! Stacey put back
 ! read arrays for Stacey conditions
 
-  if(STACEY_ABS_CONDITIONS) then
+  if(ABSORBING_CONDITIONS) then
       open(unit=27,file=prname(1:len_trim(prname))//'nimin.bin',status='unknown',form='unformatted')
       read(27) nimin
       close(27)
@@ -854,7 +853,7 @@
       call get_attenuation_model(myrank,iattenuation,tau_mu_dble, &
         tau_sigma_dble,beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
         tau_mu(iattenuation,:) = sngl(tau_mu_dble(:))
         tau_sigma(iattenuation,:) = sngl(tau_sigma_dble(:))
@@ -953,7 +952,7 @@
   if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
 ! allocate files to save movies and shaking map
-  if(SAVE_AVS_DX_MOVIE .or. SAVE_AVS_DX_SHAKEMAP) then
+  if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
 
 ! save all points for high resolution, or only four corners for low resolution
     if(USE_HIGHRES_FOR_MOVIES) then
@@ -1010,7 +1009,7 @@
     write(IMAIN,*)
   endif
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
     deltat = sngl(DT)
   else
@@ -1072,7 +1071,7 @@
 ! compute the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
 ! and output timestamp file to check that simulation is running fine
-  if(mod(it,ITAFF_TIME_STEPS) == 0 .or. it == 5) then
+  if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5) then
 
 ! compute maximum of norm of displacement in each slice
     Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
@@ -1116,11 +1115,11 @@
   endif
 
 ! update displacement using finite difference time scheme
- do i=1,NGLOB_AB
-   displ(:,i) = displ(:,i) + deltat*veloc(:,i) + deltatsqover2*accel(:,i)
-   veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
-   accel(:,i) = 0._CUSTOM_REAL
- enddo
+  do i=1,NGLOB_AB
+    displ(:,i) = displ(:,i) + deltat*veloc(:,i) + deltatsqover2*accel(:,i)
+    veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
+    accel(:,i) = 0._CUSTOM_REAL
+  enddo
 
   do ispec = 1,NSPEC_AB
 
@@ -1266,7 +1265,7 @@
     mul = mustore(i,j,k,ispec)
 
 ! For fully anisotropic case
-    if(ANISOTROPY) then
+    if(ANISOTROPY_VAL) then
        c11 = c11store(i,j,k,ispec)
        c12 = c12store(i,j,k,ispec)
        c13 = c13store(i,j,k,ispec)
@@ -1478,7 +1477,7 @@
 
 ! add Stacey conditions
 
-  if(STACEY_ABS_CONDITIONS) then
+  if(ABSORBING_CONDITIONS) then
 
 !   xmin
     do ispec2D=1,nspec2D_xmin
@@ -1671,7 +1670,7 @@
 
       stf = comp_source_time_function(dble(it-1)*DT-hdur(isource)-t_cmt(isource),hdur(isource))
 
-!     distinguish whether single or double precision for reals
+!     distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
         stf_used = sngl(stf)
       else
@@ -1780,7 +1779,7 @@
         do j = 1,NGLLY
           do i = 1,NGLLX
 
-! receivers are always located at the surface in the crustal region of the mesh
+! receivers are always located at the surface of the mesh
             iglob = ibool(i,j,NGLLZ,ispec_selected_rec(irec))
 
             hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)
@@ -1805,7 +1804,7 @@
 
 ! store North, East and Vertical components
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
         seismograms_d(:,irec_local,it) = sngl((nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd))
         seismograms_v(:,irec_local,it) = sngl((nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd))
@@ -1819,7 +1818,7 @@
   enddo
 
 ! write the current seismograms
-  if(mod(it,NSEIS) == 0) then
+  if(mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0) then
     call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
         network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
     call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
@@ -1829,7 +1828,7 @@
   endif
 
 ! save movie frame
-  if(SAVE_AVS_DX_MOVIE .and. mod(it,NMOVIE) == 0) then
+  if(MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 
 ! get coordinates of surface mesh and surface displacement
     ipoin = 0
@@ -1966,8 +1965,163 @@
 
   endif
 
+! save movie in full 3D mesh
+  if(MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+
+! save velocity here to avoid static offset on displacement for movies
+
+! save full snapshot data to local disk
+
+! suppress white spaces if any
+    clean_LOCAL_PATH = adjustl(LOCAL_PATH)
+
+! create full final local path
+    final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+
+    write(outputname,"('snapshot_full_model_proc',i4.4,'_it',i6.6,'.dat')") myrank,it
+    open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//outputname,status='unknown')
+
+    allocate(mask_poin(NGLOB_AB))
+    allocate(indirect_poin(NGLOB_AB))
+
+! count total number of points and define indirect addressing
+    itotal_poin = 0
+    mask_poin(:) = .false.
+    indirect_poin(:) = 0
+    do ispec=1,NSPEC_AB
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            ipoin = ibool(i,j,k,ispec)
+            if(.not. mask_poin(ipoin)) then
+              itotal_poin = itotal_poin + 1
+              indirect_poin(ipoin) = itotal_poin
+              mask_poin(ipoin) = .true.
+            endif
+          enddo
+        enddo
+      enddo
+    enddo
+
+! write number of elements and points
+    write(IOUT,*) itotal_poin
+    write(IOUT,*) NSPEC_AB
+
+! write coordinates of points, and velocity at these points
+    mask_poin(:) = .false.
+    do ispec=1,NSPEC_AB
+
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+
+          tempx1l = 0._CUSTOM_REAL
+          tempx2l = 0._CUSTOM_REAL
+          tempx3l = 0._CUSTOM_REAL
+
+          tempy1l = 0._CUSTOM_REAL
+          tempy2l = 0._CUSTOM_REAL
+          tempy3l = 0._CUSTOM_REAL
+
+          tempz1l = 0._CUSTOM_REAL
+          tempz2l = 0._CUSTOM_REAL
+          tempz3l = 0._CUSTOM_REAL
+
+          do l=1,NGLLX
+            hp1 = hprime_xx(l,i)
+            iglob = ibool(l,j,k,ispec)
+            tempx1l = tempx1l + veloc(1,iglob)*hp1
+            tempy1l = tempy1l + veloc(2,iglob)*hp1
+            tempz1l = tempz1l + veloc(3,iglob)*hp1
+          enddo
+
+          do l=1,NGLLY
+            hp2 = hprime_yy(l,j)
+            iglob = ibool(i,l,k,ispec)
+            tempx2l = tempx2l + veloc(1,iglob)*hp2
+            tempy2l = tempy2l + veloc(2,iglob)*hp2
+            tempz2l = tempz2l + veloc(3,iglob)*hp2
+          enddo
+
+          do l=1,NGLLZ
+            hp3 = hprime_zz(l,k)
+            iglob = ibool(i,j,l,ispec)
+            tempx3l = tempx3l + veloc(1,iglob)*hp3
+            tempy3l = tempy3l + veloc(2,iglob)*hp3
+            tempz3l = tempz3l + veloc(3,iglob)*hp3
+          enddo
+
+!         get derivatives of ux, uy and uz with respect to x, y and z
+
+          xixl = xix(i,j,k,ispec)
+          xiyl = xiy(i,j,k,ispec)
+          xizl = xiz(i,j,k,ispec)
+          etaxl = etax(i,j,k,ispec)
+          etayl = etay(i,j,k,ispec)
+          etazl = etaz(i,j,k,ispec)
+          gammaxl = gammax(i,j,k,ispec)
+          gammayl = gammay(i,j,k,ispec)
+          gammazl = gammaz(i,j,k,ispec)
+
+          dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+          dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+          dvxdzl(i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+          dvydxl(i,j,k) = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+          dvydyl(i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+          dvydzl(i,j,k) = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+          dvzdxl(i,j,k) = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+          dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+          dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
+        enddo
+      enddo
+    enddo
+
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            ipoin = ibool(i,j,k,ispec)
+            if(.not. mask_poin(ipoin)) then
+! compute div and curl of velocity
+              div = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
+              curl_x = dvzdyl(i,j,k) - dvydzl(i,j,k)
+              curl_y = dvxdzl(i,j,k) - dvzdxl(i,j,k)
+              curl_z = dvydxl(i,j,k) - dvxdyl(i,j,k)
+              write(IOUT,200) xstore(ipoin),ystore(ipoin),zstore(ipoin), &
+                              veloc(1,ipoin),veloc(2,ipoin),veloc(3,ipoin), &
+                              div,curl_x,curl_y,curl_z
+              mask_poin(ipoin) = .true.
+            endif
+          enddo
+        enddo
+      enddo
+    enddo
+
+! write topology of elements
+    do ispec=1,NSPEC_AB
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            write(IOUT,210) indirect_poin(ibool(i,j,k,ispec))
+          enddo
+        enddo
+      enddo
+    enddo
+
+    close(IOUT)
+
+    deallocate(mask_poin)
+    deallocate(indirect_poin)
+
+ 200 format(e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6)
+ 210 format(i10)
+
+  endif
+
 ! compute shaking intensity map
-  if(SAVE_AVS_DX_SHAKEMAP) then
+  if(CREATE_SHAKEMAP) then
 
 ! get coordinates of surface mesh and surface displacement
     ipoin = 0

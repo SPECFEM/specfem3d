@@ -100,9 +100,6 @@ PARAMETERS TO CHANGE ON DIFFERENT MACHINES:
   On clusters (e.g., Beowulfs), use this option in almost all cases.
 - In constants.h set FIX_UNDERFLOW_PROBLEM flag
   (need to fix underflow trapping on some machines, e.g., Pentium processors)
-- In constants.h set SAVE_AVS_DX_MESH_FILES flag (for AVS users, www.avs.com,
-    or OpenDX users, www.opendx.org). Do not use if you do not have AVS
-    or OpenDX, because this option creates large files.
 - In Par_file set LOCAL_PATH (this is where databases are written and read)
 - In precision.h choose single versus double precision (double precision
   doubles the memory requirements for the solver but may be faster)
@@ -134,26 +131,34 @@ MESHER (meshfem3D):
   still link with MPI, and use "mpirun -np 1")
 - NEX_XI and NEX_ETA need to be 8 * multiple of NPROC_XI and NPROC_ETA,
   respectively.
-- In the Par_file define the size of the mesh. The mesher and the solver
+- In the Par_file, define the size of the mesh. The mesher and the solver
   use UTM coordinates internally, therefore you also need to define
   the zone number for the UTM projection (e.g., zone 11 for Los Angeles).
-  Note that the mesh cannot cross a UTM zone boundary, it must fit entirely
-  in only one zone. Use decimal values for latitude and longitude
-  (no minutes/seconds). These values are approximate, the mesher will
-  round them off to define a square mesh in UTM coordinates.
+  Use decimal values for latitude and longitude (no minutes/seconds).
+  These values are approximate, the mesher will round them off to define
+  a square mesh in UTM coordinates.
 
-  LAT_MIN               ! minimum latitude in the block  (negative for South)
-  LAT_MAX               ! maximum latitude in the block
-  LONG_MIN              ! minimum longitude in the block (negative for West)
-  LONG_MAX              ! maximum longitude in the block
-  DEPTH_BLOCK_KM        ! depth of bottom of mesh in km
-  IZONE_UTM_PROJECTION  ! zone of the UTM projection (e.g. 11 for Los Angeles)
+  LATITUDE_MIN           ! minimum latitude in the block  (negative for South)
+  LATITUDE_MAX           ! maximum latitude in the block
+  LONGITUDE_MIN          ! minimum longitude in the block (negative for West)
+  LONGITUDE_MAX          ! maximum longitude in the block
+  DEPTH_BLOCK_KM         ! depth of bottom of mesh in km
+  IZONE_UTM_PROJECTION   ! zone of the UTM projection (e.g. 11 for Los Angeles)
 
-- In the Par_file set the following flags:
+- set all the parameters in DATA/Par_file, in particular the following:
 
-  TOPOGRAPHY            ! to add topography and bathymetry of the region
-  THREE_D               ! to add 3-D basin model
-  ATTENUATION           ! to include attenuation (fairly expensive in solver)
+  MODEL                  ! Earth model to use
+
+  OCEANS                 ! to incorporate the effects of the oceans (cheap)
+  TOPOGRAPHY             ! to add topography and bathymetry (no cost)
+  ATTENUATION            ! to include attenuation (fairly expensive)
+  USE_OLSEN_ATTENUATION  ! to use Kim Olsen's scaling instead of constant Q
+
+  ABSORBING_CONDITIONS   ! absorbing boundary conditions (cheap)
+
+  SAVE_AVS_DX_MESH_FILES ! save mesh files for AVS users, www.avs.com,
+    or OpenDX users, www.opendx.org). Do not use if you do not have AVS
+    or OpenDX, because this option creates large files.
 
 - Compile the mesher ("make meshfem3D") and run it with the go_mesher script
 - Mesher output is provided in the OUTPUT_FILES directory in output_mesher.txt
@@ -165,7 +170,7 @@ MESHER (meshfem3D):
   once and for all
 - The mesher filters the list of stations in file DATA/STATIONS to exclude
   the stations that are not located within the region given in the Par_file
-  (between LAT_MIN and LAT_MAX, and between LONG_MIN and LONG_MAX).
+  (between LATITUDE_MIN and LATITUDE_MAX, and between LONGITUDE_MIN and LONGITUDE_MAX).
   The filtered file is called DATA/STATIONS_FILTERED
 - When running benchmarks on rectangular models, one can turn the UTM projection
   off by using flag SUPPRESS_UTM_PROJECTION, in which case all "longitude"
@@ -221,16 +226,17 @@ SOLVER (specfem3D):
     to a single CMTSOLUTION file). At least one entry should have a zero "time shift",
     and all the other entries should have non-negative "time shift". Each event
     can have its own half duration, latitude, longitude, depth and moment tensor.
-    This feature can also be used to mimick the directivity associated with a
+    This feature can also be used to mimic the directivity associated with a
     finite source.
 - Solver output is provided in the OUTPUT_FILES directory in output_solver.txt
     (output can be directed to the screen instead by uncommenting two lines
      in constants.h:
        ! uncomment this to write messages to the screen
        ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT )
-- If you have a very fast machine, set ITAFF_NORM_DISPL and
-  ITAFF_TIME_STEPS to a relatively high value (e.g. 100)
-  to avoid writing to the output text files too often
+- If you have a fast machine, set NTSTEP_BETWEEN_OUTPUT_INFO
+    to a relatively high value (e.g. at least 100, or even 1000 or more)
+    to avoid writing to the output text files too often. Same thing
+    with NTSTEP_BETWEEN_OUTPUT_SEISMOS.
 - On clusters (e.g., Beowulfs) the seismogram files are distributed on the
     local disks (option USE_LOCAL_PATH_BEOWULF selected) and need to be
     gathered at the end of the simulation
@@ -242,14 +248,15 @@ SOLVER (specfem3D):
 MOVIE OF THE RESULTS:
 
 - Use create_movie_AVS_DX.f90 ("make create_movie_AVS_DX") to create
-    a movie of surface displacement (vertical component). The movie can
-    be saved in OpenDX, AVS or GMT format. Set parameters SAVE_AVS_DX_MOVIE,
-    SAVE_DISPLACEMENT, NMOVIE and HDUR_MIN_MOVIES in constants.h .
-    Remember to use a DATA/CMTSOLUTION source file
+    a movie of surface displacement (vertical component) or of the entire
+    3D wave field. The movie can be saved in OpenDX, AVS or GMT format.
+    Set parameters MOVIE_SURFACE, MOVIE_VOLUME, and NTSTEP_BETWEEN_FRAMES
+    in the Par_file. Remember to use a DATA/CMTSOLUTION source file
     with a half-duration hdur > 0, otherwise you will get a movie
-    corresponding to a Heaviside source, with a lot of high-frequency noise
-    (parameter HDUR_MIN_MOVIES precisely takes care of this).
-
+    corresponding to a Heaviside source, with a lot of high-frequency noise.
+    Note that this option creates large files!
+    Also set CREATE_SHAKEMAP is you want to create a ShakeMap at the end
+    of the simulation.
 
 Note: The Gauss-Lobatto subroutines in gll_library.f90 are based in part on
       software libraries from M.I.T., Department of Mechanical Engineering.

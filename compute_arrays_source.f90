@@ -138,7 +138,7 @@
     enddo
   enddo
 
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
     sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
   else

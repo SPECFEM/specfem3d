@@ -19,9 +19,8 @@
 
   subroutine read_arrays_solver(myrank,xstore,ystore,zstore, &
                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-               flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs, &
-         ANISOTROPY, &
-         c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+               flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,ANISOTROPY, &
+               c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
                c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
                c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
                kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)

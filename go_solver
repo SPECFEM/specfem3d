@@ -2,16 +2,17 @@
 
 # script to run the solver
 
+# read DATA/Par_file to get information about the run
+
 # name of the file that contains the list of machines
-set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 27- `
-set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 27- `
+set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 34- `
+set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 34- `
 
-# read DATA/Par_file to get total number of nodes needed
+# compute total number of nodes needed
+set NPROC_XI = `grep NPROC_XI DATA/Par_file | cut -c 34- `
+set NPROC_ETA = `grep NPROC_ETA DATA/Par_file | cut -c 34- `
 
-set NPROC_XI = `grep NPROC_XI DATA/Par_file | cut -c 27- `
-set NPROC_ETA = `grep NPROC_ETA DATA/Par_file | cut -c 27- `
-
-# total number of nodes is product of values read
+# total number of nodes is the product of the values read
 @ numnodes = $NPROC_XI * $NPROC_ETA
 
 rm -f sources error*txt starttimeloop* timestamp* PI* RECORDHEADERS

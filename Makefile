@@ -61,8 +61,7 @@ MPI_FLAGS =
 #
 # Caltech cluster
 #
-#FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checkin
-g -warn unused -warn declarations -std95 -check nobounds
+#FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds
 #
 # more recent machines
 #

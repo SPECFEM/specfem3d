@@ -397,7 +397,7 @@
       do j = 1,NGLLY
         do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
           if(CUSTOM_REAL == SIZE_REAL) then
             rmass(iglob) = sngl(xstore(i,j,k,ispec))
           else
@@ -418,7 +418,7 @@
       do j = 1,NGLLY
         do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
           if(CUSTOM_REAL == SIZE_REAL) then
             rmass(iglob) = sngl(ystore(i,j,k,ispec))
           else
@@ -439,7 +439,7 @@
       do j = 1,NGLLY
         do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
-! distinguish whether single or double precision for reals
+! distinguish between single and double precision for reals
           if(CUSTOM_REAL == SIZE_REAL) then
             rmass(iglob) = sngl(zstore(i,j,k,ispec))
           else

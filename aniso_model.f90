@@ -33,29 +33,29 @@
 
 ! only related to body waves
 ! one-zeta term
-  double precision,parameter :: FACTOR_CS1p_A = 0.01d0
-  double precision,parameter :: FACTOR_CS1sv_A = 0.0d0
-  double precision,parameter :: FACTOR_CS1sh_N = 0.d0
+  double precision, parameter :: FACTOR_CS1p_A = 0.01d0
+  double precision, parameter :: FACTOR_CS1sv_A = 0.0d0
+  double precision, parameter :: FACTOR_CS1sh_N = 0.d0
 ! three-zeta term
-  double precision,parameter :: FACTOR_CS3_L = 0.0d0
+  double precision, parameter :: FACTOR_CS3_L = 0.0d0
 
 ! Relative to Love wave
 ! four-zeta term
-  double precision,parameter :: FACTOR_N = 0.d0
-  double precision,parameter :: FACTOR_E_N = 0.d0
+  double precision, parameter :: FACTOR_N = 0.d0
+  double precision, parameter :: FACTOR_E_N = 0.d0
 
 ! Relative to Rayleigh wave
 ! two-zeta term
-  double precision,parameter :: FACTOR_A = 0.d0
-  double precision,parameter :: FACTOR_C = 0.d0
-  double precision,parameter :: FACTOR_F = 0.d0
-  double precision,parameter :: FACTOR_H_F = 0.d0
-  double precision,parameter :: FACTOR_B_A = 0.d0
+  double precision, parameter :: FACTOR_A = 0.d0
+  double precision, parameter :: FACTOR_C = 0.d0
+  double precision, parameter :: FACTOR_F = 0.d0
+  double precision, parameter :: FACTOR_H_F = 0.d0
+  double precision, parameter :: FACTOR_B_A = 0.d0
 
 ! Relative to both Love wave and Rayleigh wave
 ! two-zeta term
-  double precision,parameter :: FACTOR_L = 0.d0
-  double precision,parameter :: FACTOR_G_L = 0.d0
+  double precision, parameter :: FACTOR_L = 0.d0
+  double precision, parameter :: FACTOR_G_L = 0.d0
 
 !------------------------------------------------------------------------------
 
@@ -154,7 +154,7 @@
   Es = 0.d0
 
 ! The mapping from the elastic coefficients to the elastic tensor elements
-! in the local Cartesian coordinate system (conventional geographic) used in the
+! in the local Cartesian coordinate system (classical geographic) used in the
 ! global code (1---South; 2---East; 3---up)
 ! Always keep the following part when you modify this subroutine
   d11 = A + Ec + Bc
