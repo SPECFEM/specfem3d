@@ -3,7 +3,7 @@
 
   implicit none
 
-  integer, parameter :: N_STATIONS = 395
+  integer, parameter :: N_STATIONS = 394
 
   integer i,idummy
   double precision lat,long
