@@ -49,7 +49,7 @@
   double precision x_source_quad3,y_source_quad3,z_source_quad3
   double precision x_source_quad4,y_source_quad4,z_source_quad4
   double precision sec,t_cmt,hdur
-  double precision elat,elon,depth
+  double precision lat,long,depth
   double precision moment_tensor(6)
   character(len=150) cmt_file
 
@@ -335,7 +335,7 @@ endif
 ! get source information for frequency for number of points per lambda
   print *,'reading source duration from the CMTSOLUTION file'
   cmt_file='DATA/CMTSOLUTION'
-  call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,elat,elon,depth,moment_tensor,DT)
+  call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT)
 
 ! set global element and point offsets to zero
   iglobpointoffset = 0
@@ -562,7 +562,7 @@ endif
 !   get source information
     print *,'reading position of the source from the CMTSOLUTION file'
     cmt_file='DATA/CMTSOLUTION'
-    call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,elat,elon,depth,moment_tensor,DT)
+    call get_cmt(cmt_file,yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT)
 
 !   the point for the source is put at the surface for clarity (depth ignored)
 !   even slightly above to superimpose to real surface
@@ -574,7 +574,7 @@ endif
     z_source_quad3 = 2000.
     z_source_quad4 = 2000.
 
-    call utm_geo(elon,elat,x_target_source,y_target_source,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+    call utm_geo(long,lat,x_target_source,y_target_source,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
 
     x_source_quad1 = x_target_source
     y_source_quad1 = y_target_source

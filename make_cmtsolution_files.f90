@@ -24,13 +24,13 @@
   include "cmt.h"
 
   integer yr,jda,ho,mi
-  double precision sec,t_cmt,hdur,elat,elon,depth
+  double precision sec,t_cmt,hdur,lat,long,depth
   double precision moment_tensor(6)
   character(len=150) cmt_file
 
   integer iu,i,ios,lstr,mo,da,julian_day
   double precision mb,ms
-  double precision elatp,elonp
+  double precision latp,longp
   character(len=24) reg
   character(len=5) datasource
   character(len=150) string
@@ -49,11 +49,11 @@
   open(unit=10,file='CMTSOLUTION_Mtp',iostat=ios,status='unknown')
 
   read(1,"(a4,i5,i3,i3,i3,i3,f6.2,f9.4,f10.4,f6.1,f4.1,f4.1,1x,a)") &
-           datasource,yr,mo,da,ho,mi,sec,elat,elon,depth,mb,ms,reg
+           datasource,yr,mo,da,ho,mi,sec,lat,long,depth,mb,ms,reg
 
   do iu=2,10
     write(iu,"(a3,i5,i3,i3,i3,i3,f6.2,f9.4,f10.4,f6.1,f4.1,f4.1,1x,a)") &
-             datasource,yr,mo,da,ho,mi,sec,elat,elon,depth,mb,ms,reg
+             datasource,yr,mo,da,ho,mi,sec,lat,long,depth,mb,ms,reg
   enddo
 
   jda=julian_day(yr,mo,da)
@@ -82,19 +82,19 @@
           write(iu,"(a)") string(1:lstr)
         enddo
       else if(string(1:8) == 'latitude') then
-        read(string(10:lstr),*) elat
-        elatp = elat + DDELTA
-        if(elatp > 90.0) elatp = 180.0 - elatp
-        write(2,"(a9,5x,f9.4)") string(1:9),elatp
+        read(string(10:lstr),*) lat
+        latp = lat + DDELTA
+        if(latp > 90.0) latp = 180.0 - latp
+        write(2,"(a9,5x,f9.4)") string(1:9),latp
         do iu=3,10
           write(iu,"(a)") string(1:lstr)
         enddo
       else if(string(1:9) == 'longitude') then
-        read(string(11:lstr),*) elon
+        read(string(11:lstr),*) long
         write(2,"(a)") string(1:lstr)
-        elonp = elon + DDELTA
-        if(elonp > 180.0) elonp = elonp - 360.0
-        write(3,"(a10,4x,f9.4)") string(1:10),elonp
+        longp = long + DDELTA
+        if(longp > 180.0) longp = longp - 360.0
+        write(3,"(a10,4x,f9.4)") string(1:10),longp
         do iu=4,10
           write(iu,"(a)") string(1:lstr)
         enddo

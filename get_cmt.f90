@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,elat,elon,depth,moment_tensor,DT,NSOURCES)
+  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
 
   implicit none
 
@@ -23,7 +23,7 @@
 
   integer yr,jda,ho,mi,NSOURCES
   double precision sec
-  double precision, dimension(NSOURCES) :: t_cmt,hdur,elat,elon,depth
+  double precision, dimension(NSOURCES) :: t_cmt,hdur,lat,long,depth
   double precision moment_tensor(6,NSOURCES)
   double precision DT
 
@@ -56,11 +56,11 @@
 
 ! read latitude
   read(1,"(a)") string
-  read(string(10:len_trim(string)),*) elat(isource)
+  read(string(10:len_trim(string)),*) lat(isource)
 
 ! read longitude
   read(1,"(a)") string
-  read(string(11:len_trim(string)),*) elon(isource)
+  read(string(11:len_trim(string)),*) long(isource)
 
 ! read depth
   read(1,"(a)") string
