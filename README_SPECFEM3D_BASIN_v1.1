@@ -216,6 +216,14 @@ SOLVER (specfem3D):
   convolve_source_timefunction.csh for this purpose. (Set the parameter "hdur"
   in convolve_source_timefunction.csh to the desired half-duration.)
   (type "make convolve_source_timefunction" to compile the code).
+- To simulate multiple events, set the parameter NSOURCES in the DATA/Par_file
+    to the desired number. Provide a CMTSOLUTION file that has NSOURCES entries,
+    one for each CMT solution (i.e., concatenate NSOURCES CMTSOLUTION files
+    to a single CMTSOLUTION file). At least one entry should have a zero "time shift",
+    and all the other entries should have non-negative "time shift". Each event
+    can have its own half duration, latitude, longitude, depth and moment tensor.
+    This feature can also be used to mimick the directivity associated with a
+    finite source.
 - Solver output is provided in the OUTPUT_FILES directory in output_solver.txt
     (output can be directed to the screen instead by uncommenting two lines
      in constants.h:
