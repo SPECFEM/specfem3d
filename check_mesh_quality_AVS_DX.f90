@@ -102,8 +102,6 @@
   print *,'Recombining all mesh quality files for slices'
   print *
 
-  if(.not. SAVE_AVS_DX_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
-
   print *,'1 = create files in AVS UCD format'
   print *,'2 = create files in OpenDX format'
   print *,'any other value = exit'
@@ -143,6 +141,8 @@
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
         SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
+
+  if(.not. SAVE_AVS_DX_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
