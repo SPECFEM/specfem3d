@@ -1748,13 +1748,14 @@
   enddo
 
 ! write the current seismograms
-  if(mod(it,NSEIS) == 0) &
-      call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
-      call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,2)
-      call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,3)
+  if(mod(it,NSEIS) == 0) then
+    call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
+        network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+    call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
+        network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,2)
+    call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
+        network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,3)
+  endif
 
 ! save movie frame
   if(SAVE_AVS_DX_MOVIE .and. mod(it,NMOVIE) == 0) then
