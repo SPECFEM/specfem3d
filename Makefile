@@ -64,7 +64,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = $(FLAGS_NO_CHECK)
 #MPI_FLAGS = -Vaxlib
 
-# AbsSoft
+# AbSoft
 #F90 = f90
 #MPIF90 = mpif90
 #FLAGS_CHECK = -s -O2 -cpu:p7 -Rb -Rc -Rp -v -YDEALLOC=ALL
