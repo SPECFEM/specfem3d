@@ -787,6 +787,13 @@
   seismograms_v(:,:,:) = 0._CUSTOM_REAL
   seismograms_a(:,:,:) = 0._CUSTOM_REAL
 
+! initialize memory variables for attenuation
+  epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
+  epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
+  epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
+  epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
+  epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
+
   if(myrank == 0) then
 
   if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
