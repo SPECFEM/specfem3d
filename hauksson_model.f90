@@ -152,7 +152,7 @@
     vp_lower = vp_interp(5)
     vs_lower = vs_interp(5)
     z_lower = Z_HAUKSSON_LAYER_5
- 
+
  else if(z_eval >= Z_HAUKSSON_LAYER_6) then
     vp_upper = vp_interp(5)
     vs_upper = vs_interp(5)

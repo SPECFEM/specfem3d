@@ -333,20 +333,20 @@
 
         do j = 1,NGLLY
           do i = 1,NGLLX
- 
+
             ipoin = ipoin + 1
 
             xcoord = store_val_x(ipoin,iproc)
             ycoord = store_val_y(ipoin,iproc)
             zcoord = store_val_z(ipoin,iproc)
- 
+
 ! amplify topography, otherwise too flat to see anything
             zcoord = zcoord * zscaling
- 
+
             vectorx = store_val_ux(ipoin,iproc)
             vectory = store_val_uy(ipoin,iproc)
             vectorz = store_val_uz(ipoin,iproc)
- 
+
             x(i,j) = xcoord
             y(i,j) = ycoord
             z(i,j) = zcoord
