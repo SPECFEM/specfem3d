@@ -40,6 +40,7 @@
 
   logical USE_OPENDX,USE_AVS,USE_GMT,UNIQUE_FILE,plot_shaking_map
 
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: x,y,z,display
   real(kind=CUSTOM_REAL) xcoord,ycoord,zcoord
   real(kind=CUSTOM_REAL) vectorx,vectory,vectorz
 
@@ -47,21 +48,16 @@
 
   character(len=150) outputname
 
-  integer iproc,ipoin,npoints
+  integer iproc,ipoin
+
+! GMT
+  double precision lat,long
 
 ! for sorting routine
-  integer npointot,ilocnum,nglob,ieoff,ispecloc
+  integer npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
   integer, dimension(:), allocatable :: iglob,loc,ireorder
   logical, dimension(:), allocatable :: ifseg,mask_point
   double precision, dimension(:), allocatable :: xp,yp,zp,xp_save,yp_save,zp_save,field_display
-
-! for GMT movie
-  integer ix,iy,islice_x,islice_y,ispec_x,ispec_y
-  double precision long_current,lat_current,utm_x_current,utm_y_current,dataval_interp
-  double precision, dimension(:), allocatable :: xval,yval,dataval
-  double precision size_slice_xi,size_slice_eta,size_gmt_long,size_gmt_lat
-  double precision ratio_xi,ratio_eta,ratio_slice_xi,ratio_slice_eta
-  integer, dimension(:,:,:,:), allocatable :: ispecGMT_store
 
 ! movie files stored by solver
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: &
@@ -252,18 +248,18 @@
   endif
 
 ! define the total number of elements at the surface
-  nspectot_AVS_max = NEX_XI * NEX_ETA
+  if(USE_HIGHRES_FOR_MOVIES) then
+    nspectot_AVS_max = NEX_XI * NEX_ETA * (NGLLX-1) * (NGLLY-1)
+  else
+    nspectot_AVS_max = NEX_XI * NEX_ETA
+  endif
 
   print *
-  print *,'there is a total of ',nspectot_AVS_max,' elements at the surface'
+  print *,'there are a total of ',nspectot_AVS_max,' elements at the surface'
   print *
 
 ! maximum theoretical number of points at the surface
-  if(USE_HIGHRES_FOR_MOVIES) then
-    npointot = NGLLSQUARE * nspectot_AVS_max
-  else
-    npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
-  endif
+  npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
 
 ! allocate arrays for sorting routine
   allocate(iglob(npointot),loc(npointot))
@@ -279,21 +275,14 @@
   if(NONLINEAR_SCALING .and. (.not. plot_shaking_map .or. iscaling_shake == 1)) &
     print *,'Will apply a non linear scaling with coef ',POWER_SCALING
 
-! define indirect addressing for GMT
-  ispec = 0
-  allocate(ispecGMT_store(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NPROC_XI,NPROC_ETA))
-  do islice_y = 1,NPROC_ETA
-    do islice_x = 1,NPROC_XI
-      do ispec_y = 1,NEX_PER_PROC_ETA
-        do ispec_x = 1,NEX_PER_PROC_XI
-          ispec = ispec + 1
-          ispecGMT_store(ispec_x,ispec_y,islice_x,islice_y) = ispec
-        enddo
-      enddo
-    enddo
-  enddo
-
 ! --------------------------------------
+
+  if(USE_HIGHRES_FOR_MOVIES) then
+    allocate(x(NGLLX,NGLLY))
+    allocate(y(NGLLX,NGLLY))
+    allocate(z(NGLLX,NGLLY))
+    allocate(display(NGLLX,NGLLY))
+  endif
 
   iframe = 0
 
@@ -331,64 +320,132 @@
 ! clear number of elements kept
   ispec = 0
 
-  if(USE_HIGHRES_FOR_MOVIES) then
-    npoints = NGLLSQUARE
-  else
-    npoints = NGNOD2D_AVS_DX
-  endif
-  allocate(xval(npoints))
-  allocate(yval(npoints))
-  allocate(dataval(npoints))
-
 ! read points for all the slices
   do iproc = 0,NPROC-1
 
 ! reset point number
-  ipoin = 0
+    ipoin = 0
 
-  do ispecloc = 1,NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+    do ispecloc = 1,NEX_PER_PROC_XI*NEX_PER_PROC_ETA
 
-  ispec = ispec + 1
-  ieoff = npoints*(ispec-1)
+      if(USE_HIGHRES_FOR_MOVIES) then
+! assign the OpenDX "elements"
+
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+ 
+            ipoin = ipoin + 1
+
+            xcoord = store_val_x(ipoin,iproc)
+            ycoord = store_val_y(ipoin,iproc)
+            zcoord = store_val_z(ipoin,iproc)
+ 
+! amplify topography, otherwise too flat to see anything
+            zcoord = zcoord * zscaling
+ 
+            vectorx = store_val_ux(ipoin,iproc)
+            vectory = store_val_uy(ipoin,iproc)
+            vectorz = store_val_uz(ipoin,iproc)
+ 
+            x(i,j) = xcoord
+            y(i,j) = ycoord
+            z(i,j) = zcoord
+
+            if(plot_shaking_map) then
+              if(inorm == 1) then
+                display(i,j) = vectorx
+              else if(inorm == 2) then
+                display(i,j) = vectory
+              else
+                display(i,j) = vectorz
+              endif
+            else
+              display(i,j) = vectorz
+            endif
+
+          enddo
+        enddo
+
+! assign the values of the corners of the OpenDX "elements"
+        ispec = ispec + 1
+        ielm = (NGLLX-1)*(NGLLY-1)*(ispec-1)
+
+        do j = 1,NGLLY-1
+          do i = 1,NGLLX-1
+            ieoff = NGNOD2D_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
+            do ilocnum = 1,NGNOD2D_AVS_DX
+
+              if(ilocnum == 1) then
+                xp(ieoff+ilocnum) = dble(x(i,j))
+                yp(ieoff+ilocnum) = dble(y(i,j))
+                zp(ieoff+ilocnum) = dble(z(i,j))
+                field_display(ieoff+ilocnum) = dble(display(i,j))
+              elseif(ilocnum == 2) then
+                xp(ieoff+ilocnum) = dble(x(i+1,j))
+                yp(ieoff+ilocnum) = dble(y(i+1,j))
+                zp(ieoff+ilocnum) = dble(z(i+1,j))
+                field_display(ieoff+ilocnum) = dble(display(i+1,j))
+              elseif(ilocnum == 3) then
+                xp(ieoff+ilocnum) = dble(x(i+1,j+1))
+                yp(ieoff+ilocnum) = dble(y(i+1,j+1))
+                zp(ieoff+ilocnum) = dble(z(i+1,j+1))
+                field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
+              else
+                xp(ieoff+ilocnum) = dble(x(i,j+1))
+                yp(ieoff+ilocnum) = dble(y(i,j+1))
+                zp(ieoff+ilocnum) = dble(z(i,j+1))
+                field_display(ieoff+ilocnum) = dble(display(i,j+1))
+              endif
+
+            enddo
+          enddo
+        enddo
+
+      else
+
+        ispec = ispec + 1
+        ieoff = NGNOD2D_AVS_DX*(ispec-1)
 
 ! four points for each element
-  do ilocnum = 1,npoints
+        do ilocnum = 1,NGNOD2D_AVS_DX
 
-    ipoin = ipoin + 1
+          ipoin = ipoin + 1
 
-    xcoord = store_val_x(ipoin,iproc)
-    ycoord = store_val_y(ipoin,iproc)
-    zcoord = store_val_z(ipoin,iproc)
+          xcoord = store_val_x(ipoin,iproc)
+          ycoord = store_val_y(ipoin,iproc)
+          zcoord = store_val_z(ipoin,iproc)
 
 ! amplify topography, otherwise too flat to see anything
-    zcoord = zcoord * zscaling
+          zcoord = zcoord * zscaling
 
-    vectorx = store_val_ux(ipoin,iproc)
-    vectory = store_val_uy(ipoin,iproc)
-    vectorz = store_val_uz(ipoin,iproc)
+          vectorx = store_val_ux(ipoin,iproc)
+          vectory = store_val_uy(ipoin,iproc)
+          vectorz = store_val_uz(ipoin,iproc)
 
-    xp(ilocnum+ieoff) = dble(xcoord)
-    yp(ilocnum+ieoff) = dble(ycoord)
-    zp(ilocnum+ieoff) = dble(zcoord)
+          xp(ilocnum+ieoff) = dble(xcoord)
+          yp(ilocnum+ieoff) = dble(ycoord)
+          zp(ilocnum+ieoff) = dble(zcoord)
 
 ! show vertical component of displacement or velocity in the movie
 ! or show norm of vector if shaking map
 ! for shaking map, norm of U stored in ux, V in uy and A in uz
-    if(plot_shaking_map) then
-      if(inorm == 1) then
-        field_display(ilocnum+ieoff) = dble(vectorx)
-      else if(inorm == 2) then
-        field_display(ilocnum+ieoff) = dble(vectory)
-      else
-        field_display(ilocnum+ieoff) = dble(vectorz)
+          if(plot_shaking_map) then
+            if(inorm == 1) then
+              field_display(ilocnum+ieoff) = dble(vectorx)
+            else if(inorm == 2) then
+              field_display(ilocnum+ieoff) = dble(vectory)
+            else
+              field_display(ilocnum+ieoff) = dble(vectorz)
+            endif
+          else
+            field_display(ilocnum+ieoff) = dble(vectorz)
+          endif
+
+        enddo
+
       endif
-    else
-      field_display(ilocnum+ieoff) = dble(vectorz)
-    endif
 
-  enddo
-
-  enddo
+    enddo
   enddo
 
 ! copy coordinate arrays since the sorting routine does not preserve them
@@ -398,7 +455,7 @@
 
 !--- sort the list based upon coordinates to get rid of multiples
   print *,'sorting list of points'
-  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npoints,npointot,UTM_X_MIN,UTM_X_MAX)
+  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
 
 !--- print total number of points found
   print *
@@ -490,132 +547,66 @@
 ! create file name and open file
   if(plot_shaking_map) then
 
-  if(USE_OPENDX) then
-    write(outputname,"('OUTPUT_FILES/DX_shaking_map.dx')")
-    open(unit=11,file=outputname,status='unknown')
-    write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
-  else if(USE_AVS) then
-    if(UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
-    write(outputname,"('OUTPUT_FILES/AVS_shaking_map.inp')")
-    open(unit=11,file=outputname,status='unknown')
-    write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
-  else if(USE_GMT) then
-    write(outputname,"('OUTPUT_FILES/gmt_shaking_map.xyz')")
-    open(unit=11,file=outputname,status='unknown')
-  else
-    stop 'wrong output format selected'
-  endif
-
-  else
-
-  if(USE_OPENDX) then
-    write(outputname,"('OUTPUT_FILES/DX_movie_',i6.6,'.dx')") ivalue
-    open(unit=11,file=outputname,status='unknown')
-    write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
-  else if(USE_AVS) then
-    if(UNIQUE_FILE .and. iframe == 1) then
-      open(unit=11,file='OUTPUT_FILES/AVS_movie_all.inp',status='unknown')
-      write(11,*) nframes
-      write(11,*) 'data'
-      write(11,401) 1,1
-      write(11,*) nglob,' ',nspectot_AVS_max
-    else if(.not. UNIQUE_FILE) then
-      write(outputname,"('OUTPUT_FILES/AVS_movie_',i6.6,'.inp')") ivalue
+    if(USE_OPENDX) then
+      write(outputname,"('OUTPUT_FILES/DX_shaking_map.dx')")
+      open(unit=11,file=outputname,status='unknown')
+      write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
+    else if(USE_AVS) then
+      if(UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
+      write(outputname,"('OUTPUT_FILES/AVS_shaking_map.inp')")
       open(unit=11,file=outputname,status='unknown')
       write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
+    else if(USE_GMT) then
+      write(outputname,"('OUTPUT_FILES/gmt_shaking_map.xyz')")
+      open(unit=11,file=outputname,status='unknown')
+    else
+      stop 'wrong output format selected'
     endif
-  else if(USE_GMT) then
-    write(outputname,"('OUTPUT_FILES/gmt_movie_',i6.6,'.xyz')") ivalue
-    open(unit=11,file=outputname,status='unknown')
+
   else
-    stop 'wrong output format selected'
-  endif
+
+    if(USE_OPENDX) then
+      write(outputname,"('OUTPUT_FILES/DX_movie_',i6.6,'.dx')") ivalue
+      open(unit=11,file=outputname,status='unknown')
+      write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
+    else if(USE_AVS) then
+      if(UNIQUE_FILE .and. iframe == 1) then
+        open(unit=11,file='OUTPUT_FILES/AVS_movie_all.inp',status='unknown')
+        write(11,*) nframes
+        write(11,*) 'data'
+        write(11,401) 1,1
+        write(11,*) nglob,' ',nspectot_AVS_max
+      else if(.not. UNIQUE_FILE) then
+        write(outputname,"('OUTPUT_FILES/AVS_movie_',i6.6,'.inp')") ivalue
+        open(unit=11,file=outputname,status='unknown')
+        write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
+      endif
+    else if(USE_GMT) then
+      write(outputname,"('OUTPUT_FILES/gmt_movie_',i6.6,'.xyz')") ivalue
+      open(unit=11,file=outputname,status='unknown')
+    else
+      stop 'wrong output format selected'
+    endif
 
   endif
 
-! if GMT format is used, use regular grid in longitude and latitude
-! and ignore elevation (flat 2D movie seen from the top)
   if(USE_GMT) then
 
-   size_slice_xi = (UTM_X_MAX-UTM_X_MIN) / dble(NPROC_XI)
-   size_slice_eta = (UTM_Y_MAX-UTM_Y_MIN) / dble(NPROC_ETA)
-
-   size_gmt_long = (LONG_MAX-LONG_MIN)/dble(NEX_XI)
-   size_gmt_lat = (LAT_MAX-LAT_MIN)/dble(NEX_ETA)
-
-! interpolate movie on regular grid in longitude and latitude for GMT
-   do iy = 0,NEX_ETA
-     do ix = 0,NEX_XI
-
-       long_current = LONG_MIN + size_gmt_long*dble(ix)
-       lat_current = LAT_MIN + size_gmt_lat*dble(iy)
-       call utm_geo(long_current,lat_current,utm_x_current,utm_y_current,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
-
-       ratio_xi = (utm_x_current - UTM_X_MIN) / size_slice_xi
-       ratio_eta = (utm_y_current - UTM_Y_MIN) / size_slice_eta
-
-       ratio_slice_xi = ratio_xi - int(ratio_xi)
-       ratio_slice_eta = ratio_eta - int(ratio_eta)
-
-       if(ratio_slice_xi < 0.) ratio_slice_xi = 0.
-       if(ratio_slice_xi > 0.999) ratio_slice_xi = 0.999
-
-       if(ratio_slice_eta < 0.) ratio_slice_eta = 0.
-       if(ratio_slice_eta > 0.999) ratio_slice_eta = 0.999
-
-       ratio_slice_xi = ratio_slice_xi * NEX_PER_PROC_XI
-       ratio_slice_eta = ratio_slice_eta * NEX_PER_PROC_ETA
-
-! define slice number
-       islice_x = int(ratio_xi) + 1
-       if(islice_x < 1) islice_x = 1
-       if(islice_x > NPROC_XI) islice_x = NPROC_XI
-
-       islice_y = int(ratio_eta) + 1
-       if(islice_y < 1) islice_y = 1
-       if(islice_y > NPROC_ETA) islice_y = NPROC_ETA
-
-! define element number
-       ispec_x = int(ratio_slice_xi) + 1
-       if(ispec_x < 1) ispec_x = 1
-       if(ispec_x > NEX_PER_PROC_XI) ispec_x = NEX_PER_PROC_XI
-
-       ispec_y = int(ratio_slice_eta) + 1
-       if(ispec_y < 1) ispec_y = 1
-       if(ispec_y > NEX_PER_PROC_ETA) ispec_y = NEX_PER_PROC_ETA
-
-! get corresponding spectral element
-       ispec = ispecGMT_store(ispec_x,ispec_y,islice_x,islice_y)
-       ieoff = npoints*(ispec-1)
-
-! get values at the four corners of the element
-       do ilocnum = 1,npoints
-         xval(ilocnum) = xp_save(ilocnum+ieoff)
-         yval(ilocnum) = yp_save(ilocnum+ieoff)
-         dataval(ilocnum) = field_display(ilocnum+ieoff)
-       enddo
-
-! get interpolation coordinates
-       ratio_xi = (utm_x_current - xval(1)) / (xval(2) - xval(1))
-       ratio_eta = (utm_y_current - yval(1)) / (yval(4) - yval(1))
-
-! avoid edge effects
-       if(ratio_xi < 0.) ratio_xi = 0.
-       if(ratio_xi > 1.) ratio_xi = 1.
-       if(ratio_eta < 0.) ratio_eta = 0.
-       if(ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate data value
-       dataval_interp = dataval(1)*(1.-ratio_xi)*(1.-ratio_eta) + &
-                        dataval(2)*ratio_xi*(1.-ratio_eta) + &
-                        dataval(3)*ratio_xi*ratio_eta + &
-                        dataval(4)*(1.-ratio_xi)*ratio_eta
-
-! write x, y and value to GMT file
-       write(11,*) long_current,lat_current,dataval_interp
-
-     enddo
-   enddo
+! output list of points
+    mask_point = .false.
+    do ispec=1,nspectot_AVS_max
+      ieoff = NGNOD2D_AVS_DX*(ispec-1)
+! four points for each element
+      do ilocnum = 1,NGNOD2D_AVS_DX
+        ibool_number = iglob(ilocnum+ieoff)
+        if(.not. mask_point(ibool_number)) then
+          call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
+                       UTM_PROJECTION_ZONE,IUTM2LONGLAT)
+          write(11,*) long,lat,field_display(ilocnum+ieoff)
+        endif
+        mask_point(ibool_number) = .true.
+      enddo
+    enddo
 
   else
 
@@ -623,47 +614,45 @@
   if(.not. UNIQUE_FILE .or. iframe == 1) then
 
 ! output list of points
-  mask_point = .false.
-  ipoin = 0
-  do ispec=1,nspectot_AVS_max
-  ieoff = npoints*(ispec-1)
+    mask_point = .false.
+    ipoin = 0
+    do ispec=1,nspectot_AVS_max
+      ieoff = NGNOD2D_AVS_DX*(ispec-1)
 ! four points for each element
-  do ilocnum = 1,npoints
-    ibool_number = iglob(ilocnum+ieoff)
-    if(.not. mask_point(ibool_number)) then
-      ipoin = ipoin + 1
-      ireorder(ibool_number) = ipoin
-      if(USE_OPENDX) then
-        write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
-      else if(USE_AVS) then
-        write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
-            sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
-      else if(USE_GMT) then
-        write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
-      endif
-    endif
-    mask_point(ibool_number) = .true.
-  enddo
-  enddo
+      do ilocnum = 1,NGNOD2D_AVS_DX
+        ibool_number = iglob(ilocnum+ieoff)
+        if(.not. mask_point(ibool_number)) then
+          ipoin = ipoin + 1
+          ireorder(ibool_number) = ipoin
+          if(USE_OPENDX) then
+            write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
+          else if(USE_AVS) then
+            write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
+                sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
+          endif
+        endif
+        mask_point(ibool_number) = .true.
+      enddo
+    enddo
 
-  if(USE_OPENDX) &
-    write(11,*) 'object 2 class array type int rank 1 shape 4 items ',nspectot_AVS_max,' data follows'
+    if(USE_OPENDX) &
+      write(11,*) 'object 2 class array type int rank 1 shape 4 items ',nspectot_AVS_max,' data follows'
 
 ! output list of elements
-  do ispec=1,nspectot_AVS_max
-    ieoff = npoints*(ispec-1)
+    do ispec=1,nspectot_AVS_max
+      ieoff = NGNOD2D_AVS_DX*(ispec-1)
 ! four points for each element
-    ibool_number1 = iglob(ieoff + 1)
-    ibool_number2 = iglob(ieoff + 2)
-    ibool_number3 = iglob(ieoff + 3)
-    ibool_number4 = iglob(ieoff + 4)
-    if(USE_OPENDX) then
+      ibool_number1 = iglob(ieoff + 1)
+      ibool_number2 = iglob(ieoff + 2)
+      ibool_number3 = iglob(ieoff + 3)
+      ibool_number4 = iglob(ieoff + 4)
+      if(USE_OPENDX) then
 ! point order in OpenDX is 1,4,2,3 *not* 1,2,3,4 as in AVS
-      write(11,210) ireorder(ibool_number1)-1,ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
-    else
-      write(11,211) ispec,ireorder(ibool_number1),ireorder(ibool_number4),ireorder(ibool_number2),ireorder(ibool_number3)
-    endif
-  enddo
+        write(11,210) ireorder(ibool_number1)-1,ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
+      else
+        write(11,211) ispec,ireorder(ibool_number1),ireorder(ibool_number4),ireorder(ibool_number2),ireorder(ibool_number3)
+      endif
+    enddo
 
  210 format(i10,1x,i10,1x,i10,1x,i10)
  211 format(i10,' 1 quad ',i10,1x,i10,1x,i10,1x,i10)
@@ -705,27 +694,27 @@
 
 ! output point data
   do ispec=1,nspectot_AVS_max
-  ieoff = npoints*(ispec-1)
+    ieoff = NGNOD2D_AVS_DX*(ispec-1)
 ! four points for each element
-  do ilocnum = 1,npoints
-    ibool_number = iglob(ilocnum+ieoff)
-    if(.not. mask_point(ibool_number)) then
-      if(USE_OPENDX) then
-        if(plot_shaking_map) then
-          write(11,*) field_display(ilocnum+ieoff)
+    do ilocnum = 1,NGNOD2D_AVS_DX
+      ibool_number = iglob(ilocnum+ieoff)
+      if(.not. mask_point(ibool_number)) then
+        if(USE_OPENDX) then
+          if(plot_shaking_map) then
+            write(11,*) field_display(ilocnum+ieoff)
+          else
+            write(11,501) field_display(ilocnum+ieoff)
+          endif
         else
-          write(11,501) field_display(ilocnum+ieoff)
-        endif
-      else
-        if(plot_shaking_map) then
-          write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
-        else
-          write(11,502) ireorder(ibool_number),field_display(ilocnum+ieoff)
+          if(plot_shaking_map) then
+            write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
+          else
+            write(11,502) ireorder(ibool_number),field_display(ilocnum+ieoff)
+          endif
         endif
       endif
-    endif
-    mask_point(ibool_number) = .true.
-  enddo
+      mask_point(ibool_number) = .true.
+    enddo
   enddo
 
  501 format(f7.2)
@@ -757,16 +746,35 @@
   print *
   if(USE_OPENDX) print *,'DX files are stored in OUTPUT_FILES/DX_*.dx'
   if(USE_AVS) print *,'AVS files are stored in OUTPUT_FILES/AVS_*.inp'
-  if(USE_GMT) then
-    print *,'GMT files are stored in OUTPUT_FILES/gmt_*.xyz'
-    print *
-    print *,'number of points in longitude in GMT grid = ',NEX_XI+1
-    print *,'number of points in latitude in GMT grid = ',NEX_ETA+1
-    print *,'grid spacing in longitude for GMT = ',size_gmt_long
-    print *,'grid spacing in latitude for GMT = ',size_gmt_lat
-    print *,'for each point, file contains longitude,latitude,Uz'
-  endif
+  if(USE_GMT) print *,'GMT files are stored in OUTPUT_FILES/gmt_*.xyz'
   print *
+
+
+  deallocate(store_val_x)
+  deallocate(store_val_y)
+  deallocate(store_val_z)
+  deallocate(store_val_ux)
+  deallocate(store_val_uy)
+  deallocate(store_val_uz)
+
+! deallocate arrays for sorting routine
+  deallocate(iglob,loc)
+  deallocate(ifseg)
+  deallocate(xp,yp,zp)
+  deallocate(xp_save,yp_save,zp_save)
+  deallocate(field_display)
+  deallocate(mask_point)
+  deallocate(ireorder)
+
+  if(USE_HIGHRES_FOR_MOVIES) then
+    deallocate(x)
+    deallocate(y)
+    deallocate(z)
+    deallocate(display)
+  endif
+
+
+
 
   end program create_movie_AVS_DX
 
@@ -774,7 +782,7 @@
 !=====================================================================
 !
 
-  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npoints,npointot,UTM_X_MIN,UTM_X_MAX)
+  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
@@ -789,7 +797,7 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision SMALLVALTOL
 
-  integer npoints,npointot
+  integer npointot
   integer iglob(npointot),loc(npointot)
   logical ifseg(npointot)
   double precision xp(npointot),yp(npointot),zp(npointot)
@@ -814,8 +822,8 @@
 
 ! establish initial pointers
   do ispec=1,nspec
-    ieoff=npoints*(ispec-1)
-    do ilocnum=1,npoints
+    ieoff=NGNOD2D_AVS_DX*(ispec-1)
+    do ilocnum=1,NGNOD2D_AVS_DX
       loc(ilocnum+ieoff)=ilocnum+ieoff
     enddo
   enddo
