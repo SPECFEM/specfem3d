@@ -3,7 +3,7 @@
       utm_x_eval,utm_y_eval,z_eval,rho_final,vp_final,vs_final,point_is_in_sediments, &
       VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
       IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-      vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+      vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
 
   implicit none
 
@@ -27,7 +27,7 @@
 
 ! for Hauksson's model
   integer doubling_index
-  logical HAUKSSON_REGIONAL_MODEL
+  logical HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI
   double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp_hauksson,vs_hauksson
 
 ! determine spacing and cell for linear interpolation
@@ -105,7 +105,7 @@
               ORIG_X_GOCAD_HR,utm_y_eval,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * (1. - gamma_interp_x) + vp_final * gamma_interp_x
 
 ! x = xmax
@@ -115,7 +115,7 @@
               END_X_GOCAD_HR,utm_y_eval,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * gamma_interp_x + vp_final * (1. - gamma_interp_x)
 
 ! y = ymin
@@ -125,7 +125,7 @@
               utm_x_eval,ORIG_Y_GOCAD_HR,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
 ! y = ymay
@@ -135,7 +135,7 @@
               utm_x_eval,END_Y_GOCAD_HR,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * gamma_interp_y + vp_final * (1. - gamma_interp_y)
 
   endif

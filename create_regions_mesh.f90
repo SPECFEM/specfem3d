@@ -563,7 +563,7 @@
 ! get density from socal model
          call socal_model(doubling_index,zmesh,rho,vp,vs)
 ! get vp and vs from Hauksson
-         call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp,vs)
+         call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp,vs,MOHO_MAP_LUPEI)
 ! if Moho map is used, then assume homogeneous medium below the Moho
 ! and use bottom layer of Hauksson's model in the halfspace
          if(MOHO_MAP_LUPEI .and. doubling_index == IFLAG_HALFSPACE_MOHO) &
@@ -589,7 +589,8 @@
               xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,&
+              MOHO_MAP_LUPEI)
 
 ! then superimpose high-resolution model
          if(xmesh >= ORIG_X_GOCAD_HR &
@@ -600,7 +601,8 @@
               xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+              vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, &
+              MOHO_MAP_LUPEI)
 
     endif
 

@@ -65,9 +65,9 @@ NSEIS                    = 1000
 NSOURCES                 = 1
 
 ! for the movies
-SAVE_AVS_DX_MOVIE        = .false.
-SAVE_DISPLACEMENT        = .false.
+SAVE_AVS_DX_MOVIE        = .true.
+SAVE_DISPLACEMENT        = .true.
 USE_HIGHRES_FOR_MOVIES   = .true.
-NMOVIE                   = 20000
+NMOVIE                   = 200
 HDUR_MIN_MOVIES          = 2.4d0
 

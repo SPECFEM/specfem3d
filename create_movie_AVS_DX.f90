@@ -665,8 +665,8 @@
     endif
   enddo
 
- 210 format(i6,1x,i6,1x,i6,1x,i6)
- 211 format(i6,' 1 quad ',i6,1x,i6,1x,i6,1x,i6)
+ 210 format(i10,1x,i10,1x,i10,1x,i10)
+ 211 format(i10,' 1 quad ',i10,1x,i10,1x,i10,1x,i10)
 
   endif
 
@@ -729,7 +729,7 @@
   enddo
 
  501 format(f7.2)
- 502 format(i6,1x,f7.2)
+ 502 format(i10,1x,f7.2)
 
 ! define OpenDX field
   if(USE_OPENDX) then

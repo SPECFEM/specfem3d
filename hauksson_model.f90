@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-  subroutine hauksson_model(vp,vs,utm_x_eval,utm_y_eval,z_eval,vp_final,vs_final)
+  subroutine hauksson_model(vp,vs,utm_x_eval,utm_y_eval,z_eval,vp_final,vs_final,MOHO_MAP_LUPEI)
 
   implicit none
 
@@ -23,6 +23,7 @@
 
   double precision utm_x_eval,utm_y_eval,z_eval
   double precision vp_final,vs_final
+  logical MOHO_MAP_LUPEI
 
   double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp,vs
   double precision, dimension(NLAYERS_HAUKSSON) :: vp_interp,vs_interp
@@ -151,8 +152,8 @@
     vp_lower = vp_interp(5)
     vs_lower = vs_interp(5)
     z_lower = Z_HAUKSSON_LAYER_5
-
-  else if(z_eval >= Z_HAUKSSON_LAYER_6) then
+ 
+ else if(z_eval >= Z_HAUKSSON_LAYER_6) then
     vp_upper = vp_interp(5)
     vs_upper = vs_interp(5)
     z_upper = Z_HAUKSSON_LAYER_5
@@ -180,13 +181,23 @@
     z_lower = Z_HAUKSSON_LAYER_8
 
   else
-    vp_upper = vp_interp(8)
-    vs_upper = vs_interp(8)
-    z_upper = Z_HAUKSSON_LAYER_8
+    if(.not. MOHO_MAP_LUPEI) then
+      vp_upper = vp_interp(8)
+      vs_upper = vs_interp(8)
+      z_upper = Z_HAUKSSON_LAYER_8
 
-    vp_lower = vp_interp(9)
-    vs_lower = vs_interp(9)
-    z_lower = Z_HAUKSSON_LAYER_9
+      vp_lower = vp_interp(9)
+      vs_lower = vs_interp(9)
+      z_lower = Z_HAUKSSON_LAYER_9
+    else
+      vp_upper = vp_interp(7)
+      vs_upper = vs_interp(7)
+      z_upper = Z_HAUKSSON_LAYER_8
+
+      vp_lower = vp_interp(8)
+      vs_lower = vs_interp(8)
+      z_lower = Z_HAUKSSON_LAYER_9
+    endif
 
   endif
 

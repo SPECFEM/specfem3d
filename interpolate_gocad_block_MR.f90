@@ -3,7 +3,7 @@
       utm_x_eval,utm_y_eval,z_eval,rho_final,vp_final,vs_final,point_is_in_sediments, &
       VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
       IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
-      vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL)
+      vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI)
 
   implicit none
 
@@ -25,7 +25,7 @@
 
 ! for Hauksson's model
   integer doubling_index
-  logical HAUKSSON_REGIONAL_MODEL
+  logical HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI
   double precision vp_ref_hauksson
   double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp_hauksson,vs_hauksson
 
@@ -117,7 +117,7 @@
     ymesh = utm_y_eval
     zmesh = z_eval
     if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy)
+      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
@@ -130,7 +130,7 @@
     ymesh = utm_y_eval
     zmesh = z_eval
     if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy)
+      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
@@ -143,7 +143,7 @@
     ymesh = ORIG_Y_GOCAD_MR
     zmesh = z_eval
     if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy)
+      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
@@ -156,7 +156,7 @@
     ymesh = END_Y_GOCAD_MR
     zmesh = z_eval
     if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy)
+      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,zmesh,rho_dummy,vp_ref_hauksson,vs_dummy)
     endif
