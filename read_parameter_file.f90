@@ -100,7 +100,19 @@
   NEX_MAX = max(NEX_XI,NEX_ETA)
 
 ! standard mesh for SAF 1857 on Caltech cluster
-  if(NEX_MAX == 456) then
+  if (NEX_MAX <= 288) then
+
+   ! time step in seconds
+    DT                 = 0.011d0
+
+! number of elements in the vertical direction
+    NER_SEDIM          = 1
+    NER_BASEMENT_SEDIM = 2
+    NER_16_BASEMENT    = 2
+    NER_MOHO_16        = 2
+    NER_BOTTOM_MOHO    = 5
+
+  else if(NEX_MAX <= 456) then
 
 ! time step in seconds
     DT                 = 0.009d0
