@@ -17,10 +17,10 @@ NPROC_XI                 = 12
 NPROC_ETA                = 12
 
 ! time step in seconds
-DT                       = 0.0075
+DT                       = 0.011
 
 ! total number of time steps
-NSTEP                    = 24000
+NSTEP                    = 16400
 
 ! coordinates of mesh block in latitude/longitude and depth in km
 LAT_MIN                  = 32.2d0
@@ -36,7 +36,8 @@ BASEMENT_MAP             = .true.
 MOHO_MAP_LUPEI           = .true.
 HAUKSSON_REGIONAL_MODEL  = .true.
 HARVARD_3D_GOCAD_MODEL   = .true.
-THICKNESS_TAPER_BLOCKS   = 1500.d0
+THICKNESS_TAPER_BLOCK_HR = 3000.d0
+THICKNESS_TAPER_BLOCK_MR = 15000.d0
 IMPOSE_MINIMUM_VP_GOCAD  = .true.
 VP_MIN_GOCAD             = 600.d0
 VP_VS_RATIO_GOCAD_TOP    = 2.0d0
@@ -44,16 +45,17 @@ VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
 ATTENUATION              = .true.
 OCEANS                   = .true.
 STACEY_ABS_CONDITIONS    = .true.
+MULTIPLY_MU_TSURF        = .false.
 
 ! number of elements for full Earth
 NER_SEDIM                = 1
 NER_BASEMENT_SEDIM       = 2
-NER_16_BASEMENT          = 3
-NER_MOHO_16              = 4
-NER_BOTTOM_MOHO          = 7
+NER_16_BASEMENT          = 2
+NER_MOHO_16              = 2
+NER_BOTTOM_MOHO          = 5
 
 ! path to store the local database files on each node
-LOCAL_PATH               = /scratch/DATABASES_MPI_LQY
+LOCAL_PATH               = /scratch/DATABASES_MPI_DIMITRI
 
 ! machine file for MPI
 MACHINE_FILE             = mymachines
@@ -66,7 +68,7 @@ NSOURCES                 = 1
 
 ! for the movies
 SAVE_AVS_DX_MOVIE        = .false.
-SAVE_DISPLACEMENT        = .true.
+SAVE_DISPLACEMENT        = .false.
 USE_HIGHRES_FOR_MOVIES   = .false.
 NMOVIE                   = 200
 HDUR_MIN_MOVIES          = 2.4d0
