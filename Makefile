@@ -74,6 +74,15 @@ MPI_FLAGS =
 #MPI_FLAGS = -Vaxlib
 
 #
+# g95 (free f95 compiler from http://www.g95.org, still under development, but works)
+#
+#F90 = g95
+#MPIF90 = g95
+#FLAGS_CHECK = -O
+#FLAGS_NO_CHECK = -O
+#MPI_FLAGS =
+
+#
 # AbSoft
 #
 #F90 = f90
