@@ -871,8 +871,8 @@
 ! or use scaling rule similar to Olsen et al. (2003)
      if(USE_OLSEN_ATTENUATION) then
        vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-! use rule Q_mu = 0.05 * v_s
-       Q_mu = 0.05 * vs_val
+! use rule Q_mu = constant * v_s
+       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
        int_Q_mu = 10 * nint(Q_mu / 10.)
        if(int_Q_mu < 40) int_Q_mu = 40
        if(int_Q_mu > 150) int_Q_mu = 150
@@ -1198,8 +1198,8 @@
 ! or use scaling rule similar to Olsen et al. (2003)
      if(USE_OLSEN_ATTENUATION) then
        vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-! use rule Q_mu = 0.05 * v_s
-       Q_mu = 0.05 * vs_val
+! use rule Q_mu = constant * v_s
+       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
        int_Q_mu = 10 * nint(Q_mu / 10.)
        if(int_Q_mu < 40) int_Q_mu = 40
        if(int_Q_mu > 150) int_Q_mu = 150
@@ -1336,7 +1336,7 @@
           fac2 = wgllwgll_xz(i,k)
           fac3 = wgllwgll_xy(i,j)
 
-! sum contributions from each element to the global mesh and add gravity terms
+! sum contributions from each element to the global mesh
 
   iglob = ibool(i,j,k,ispec)
 

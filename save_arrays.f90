@@ -252,7 +252,6 @@
   close(27)
 
 ! mesh arrays used in the solver to locate source and receivers
-! and for anisotropy and gravity, save in single precision
 ! use rmass for temporary storage to perform conversion, since already saved
 
 !--- x coordinate

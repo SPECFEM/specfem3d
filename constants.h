@@ -147,6 +147,9 @@
   integer, parameter :: IATTENUATION_SEDIMENTS_150 = 12
   integer, parameter :: IATTENUATION_BEDROCK = 13
 
+! Olsen's constant for Q_mu = constant * v_s attenuation rule
+  real, parameter :: OLSEN_ATTENUATION_RATIO = 0.05
+
 ! number of standard linear solids in parallel for attenuation
   integer, parameter :: N_SLS = 3
 
