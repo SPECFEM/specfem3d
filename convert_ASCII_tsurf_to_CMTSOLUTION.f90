@@ -511,7 +511,7 @@
 ! make sure slip is horizontal (for strike-slip)
   ez = 0.
 
-! determine slip length (from Sieh (1978) if SAF 1857, constant otherwise)
+! determine slip length from Sieh (1978) if SAF 1857, use constant otherwise
   if(event_number /= 1) then
 
     real_slip_length = AVERAGE_SLIP_LENGTH
@@ -569,8 +569,8 @@
     write(11,"('time shift:  ',e)") time_shift
   endif
 
-!! DK DK UGLY this needs to change
-  write(11,"(a)") 'half duration:   2.5000'
+!! DK DK use reasonable constant value here
+  write(11,"(a)") 'half duration:   2.0000'
 
 ! write location of source
   call utm_geo(long,lat,x_center_triangle,y_center_triangle,UTM_PROJECTION_ZONE)
@@ -588,12 +588,19 @@
   moment_tensor(5) = + Mxz
   moment_tensor(6) = - Mxy
 
-  write(11,"('Mrr:  ',e)") moment_tensor(1)
-  write(11,"('Mtt:  ',e)") moment_tensor(2)
-  write(11,"('Mpp:  ',e)") moment_tensor(3)
-  write(11,"('Mrt:  ',e)") moment_tensor(4)
-  write(11,"('Mrp:  ',e)") moment_tensor(5)
-  write(11,"('Mtp:  ',e)") moment_tensor(6)
+! scale the moment tensor
+! CMTSOLUTION file values are in dyne.cm
+! 1 dyne is 1 gram * 1 cm / (1 second)^2
+! 1 Newton is 1 kg * 1 m / (1 second)^2
+! thus 1 Newton = 100,000 dynes
+! therefore 1 dyne.cm = 1e-7 Newton.m
+
+  write(11,"('Mrr:  ',e)") moment_tensor(1) * 1.d7
+  write(11,"('Mtt:  ',e)") moment_tensor(2) * 1.d7
+  write(11,"('Mpp:  ',e)") moment_tensor(3) * 1.d7
+  write(11,"('Mrt:  ',e)") moment_tensor(4) * 1.d7
+  write(11,"('Mrp:  ',e)") moment_tensor(5) * 1.d7
+  write(11,"('Mtp:  ',e)") moment_tensor(6) * 1.d7
 
   enddo  ! end of loop on all the sources
 
