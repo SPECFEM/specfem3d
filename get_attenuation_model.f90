@@ -193,7 +193,7 @@
     one_minus_sum_beta = one_minus_sum_beta - beta(i)
   enddo
 
-  big_omega = a_val*(sqrt(1.d0 + b_val*b_val/(a_val*a_val))-1.d0);
+  big_omega = a_val*(sqrt(1.d0 + b_val*b_val/(a_val*a_val))-1.d0)
 
 !--- quantity by which to scale mu to get mu_relaxed
   factor_scale_mu = b_val * b_val / (TWO * big_omega)

@@ -155,7 +155,7 @@
 
 ! The mapping from the elastic coefficients to the elastic tensor elements
 ! in the local Cartesian coordinate system (classical geographic) used in the
-! global code (1---South; 2---East; 3---up)
+! global code (1---South, 2---East, 3---up)
 ! Always keep the following part when you modify this subroutine
   d11 = A + Ec + Bc
   d12 = A - 2.*AN - Ec
@@ -180,7 +180,7 @@
   d66 = AN - Ec
 
 ! The mapping to the global Cartesian coordinate system used in the basin code
-! (1---East; 2---North; 3---up)
+! (1---East, 2---North, 3---up)
   c11 = d22
   c12 = d12
   c13 = d23
