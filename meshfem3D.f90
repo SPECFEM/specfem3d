@@ -204,7 +204,8 @@
 ! to filter list of stations
   integer irec,nrec,nrec_filtered
   double precision stlat,stlon,stele,stbur
-  character(len=8) station_name,network_name
+  character(len=MAX_LENGTH_STATION_NAME) station_name
+  character(len=MAX_LENGTH_NETWORK_NAME) network_name
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -586,7 +587,7 @@
   call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
-                     z_top, &
+!! DK DK removed, unstable                     z_top, &
                      Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
 
 !   fill the volume

@@ -58,7 +58,8 @@
 ! for receiver location
   integer irec
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur
-  character(len=8), allocatable, dimension(:) :: station_name,network_name
+  character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
 

@@ -241,7 +241,8 @@
 
 ! timing information for the stations
   double precision, allocatable, dimension(:,:,:) :: nu
-  character(len=8), allocatable, dimension(:) :: station_name,network_name
+  character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 
 ! seismograms
   double precision dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd

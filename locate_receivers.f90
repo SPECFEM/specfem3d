@@ -107,7 +107,8 @@
   integer, dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(nrec) :: xi_receiver,eta_receiver
   double precision, dimension(3,3,nrec) :: nu
-  character(len=8), dimension(nrec) :: station_name,network_name
+  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
 
   integer, allocatable, dimension(:,:) :: ispec_selected_rec_all
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y
@@ -494,7 +495,7 @@
 ! write the list of stations and associated epicentral distance
   open(unit=27,file='OUTPUT_FILES/output_list_stations.txt',status='unknown')
   do irec=1,nrec
-    write(27,"(a5,'.',a2,1x,f8.3,' km horizontal distance')") station_name(irec),network_name(irec),horiz_dist(irec)
+    write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
   enddo
   close(27)
 

@@ -28,9 +28,11 @@
   integer nrec,nrec_local,NSTEP,it,myrank,istore
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(3,nrec_local,NSTEP) :: seismograms
-  character(len=8), dimension(nrec) :: station_name,network_name
   double precision hdur,DT
   character(len=150) LOCAL_PATH
+
+  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
 
   integer irec,irec_local,length_station_name,length_network_name
   integer iorientation,irecord,isample
