@@ -189,13 +189,14 @@
       vp_lower = vp_interp(9)
       vs_lower = vs_interp(9)
       z_lower = Z_HAUKSSON_LAYER_9
+   !!! waiting for better interpolation of Moho maps.
     else
-      vp_upper = vp_interp(7)
-      vs_upper = vs_interp(7)
+      vp_upper = vp_interp(8)
+      vs_upper = vs_interp(8)
       z_upper = Z_HAUKSSON_LAYER_8
 
-      vp_lower = vp_interp(8)
-      vs_lower = vs_interp(8)
+      vp_lower = vp_interp(9)
+      vs_lower = vs_interp(9)
       z_lower = Z_HAUKSSON_LAYER_9
     endif
 
