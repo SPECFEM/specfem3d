@@ -21,6 +21,10 @@
 
   include "constants.h"
 
+!! DK DK UGLY one day, we should clarify the issue of merging Hauksson's Moho
+!! DK DK UGLY with our Lupei Moho. Should not be a big issue because in
+!! DK DK UGLY principle Hauksson used Lupei's map to build his model
+
   double precision utm_x_eval,utm_y_eval,z_eval
   double precision vp_final,vs_final
   logical MOHO_MAP_LUPEI

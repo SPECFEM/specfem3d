@@ -43,6 +43,9 @@
 ! do not use if you do not plan to use AVS or OpenDX to visualize the mesh
   logical, parameter :: SAVE_AVS_DX_MESH_FILES = .true.
 
+!! DK DK UGLY use Olsen attenuation, or constant attenuation of Q = 90
+  logical, parameter :: USE_OLSEN_ATTENUATION = .false.
+
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
@@ -131,10 +134,21 @@
   integer, parameter :: IFLAG_HALFSPACE_MOHO = 5
 
 ! define flag for regions for attenuation
-  integer, parameter :: NUM_REGIONS_ATTENUATION = 2
+  integer, parameter :: NUM_REGIONS_ATTENUATION = 13
 
-  integer, parameter :: IATTENUATION_SEDIMENTS = 1
-  integer, parameter :: IATTENUATION_BEDROCK = 2
+  integer, parameter :: IATTENUATION_SEDIMENTS_40 = 1
+  integer, parameter :: IATTENUATION_SEDIMENTS_50 = 2
+  integer, parameter :: IATTENUATION_SEDIMENTS_60 = 3
+  integer, parameter :: IATTENUATION_SEDIMENTS_70 = 4
+  integer, parameter :: IATTENUATION_SEDIMENTS_80 = 5
+  integer, parameter :: IATTENUATION_SEDIMENTS_90 = 6
+  integer, parameter :: IATTENUATION_SEDIMENTS_100 = 7
+  integer, parameter :: IATTENUATION_SEDIMENTS_110 = 8
+  integer, parameter :: IATTENUATION_SEDIMENTS_120 = 9
+  integer, parameter :: IATTENUATION_SEDIMENTS_130 = 10
+  integer, parameter :: IATTENUATION_SEDIMENTS_140 = 11
+  integer, parameter :: IATTENUATION_SEDIMENTS_150 = 12
+  integer, parameter :: IATTENUATION_BEDROCK = 13
 
 ! number of standard linear solids in parallel for attenuation
   integer, parameter :: N_SLS = 3

@@ -175,8 +175,8 @@
 
   integer l
   integer i_SLS
-  real(kind=CUSTOM_REAL) one_minus_sum_beta_use,minus_sum_beta
-  integer iselected
+  real(kind=CUSTOM_REAL) one_minus_sum_beta_use,minus_sum_beta,vs_val,Q_mu
+  integer iselected,iattenuation_sediments,int_Q_mu
 
 ! --------
 
@@ -480,10 +480,7 @@
           LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
           TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore,MULTIPLY_MU_TSURF)
 
-  if(t_cmt(1) /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
-  do isource = 2,NSOURCES
-    if(t_cmt(isource) < 0.) call exit_MPI(myrank,'t_cmt should not be less than zero')
-  enddo
+  if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
 ! for the movies, we do not use a Heaviside source
   if(SAVE_AVS_DX_MOVIE .and. minval(hdur) < HDUR_MIN_MOVIES) &
@@ -832,7 +829,53 @@
 
 ! distinguish attenuation factors
    if(flag_sediments(i,j,k,ispec)) then
-     scale_factor = factor_scale(IATTENUATION_SEDIMENTS)
+
+!! DK DK UGLY use constant attenuation of Q = 90
+!! DK DK UGLY or use scaling rule similar to Olsen et al. (2003)
+     if(USE_OLSEN_ATTENUATION) then
+       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+!! DK DK use rule Q_mu = 0.05 * v_s
+       Q_mu = 0.05 * vs_val
+       int_Q_mu = 10 * nint(Q_mu / 10.)
+       if(int_Q_mu < 40) int_Q_mu = 40
+       if(int_Q_mu > 150) int_Q_mu = 150
+
+       if(int_Q_mu == 40) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
+       else if(int_Q_mu == 50) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
+       else if(int_Q_mu == 60) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
+       else if(int_Q_mu == 70) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
+       else if(int_Q_mu == 80) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
+       else if(int_Q_mu == 90) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+       else if(int_Q_mu == 100) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
+       else if(int_Q_mu == 110) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
+       else if(int_Q_mu == 120) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
+       else if(int_Q_mu == 130) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
+       else if(int_Q_mu == 140) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
+       else if(int_Q_mu == 150) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
+       else
+         stop 'incorrect attenuation coefficient'
+       endif
+
+!! DK DK to debug
+    print *,'int_Q_mu = ',int_Q_mu
+
+     else
+       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+     endif
+
+     scale_factor = factor_scale(iattenuation_sediments)
    else
      scale_factor = factor_scale(IATTENUATION_BEDROCK)
    endif
@@ -1116,7 +1159,50 @@
 
 ! distinguish attenuation factors
     if(flag_sediments(i,j,k,ispec)) then
-      iselected = IATTENUATION_SEDIMENTS
+
+!! DK DK UGLY use constant attenuation of Q = 90
+!! DK DK UGLY or use scaling rule similar to Olsen et al. (2003)
+     if(USE_OLSEN_ATTENUATION) then
+       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+!! DK DK use rule Q_mu = 0.05 * v_s
+       Q_mu = 0.05 * vs_val
+       int_Q_mu = 10 * nint(Q_mu / 10.)
+       if(int_Q_mu < 40) int_Q_mu = 40
+       if(int_Q_mu > 150) int_Q_mu = 150
+
+       if(int_Q_mu == 40) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
+       else if(int_Q_mu == 50) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
+       else if(int_Q_mu == 60) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
+       else if(int_Q_mu == 70) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
+       else if(int_Q_mu == 80) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
+       else if(int_Q_mu == 90) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+       else if(int_Q_mu == 100) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
+       else if(int_Q_mu == 110) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
+       else if(int_Q_mu == 120) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
+       else if(int_Q_mu == 130) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
+       else if(int_Q_mu == 140) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
+       else if(int_Q_mu == 150) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
+       else
+         stop 'incorrect attenuation coefficient'
+       endif
+
+     else
+       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+     endif
+
+      iselected = iattenuation_sediments
     else
       iselected = IATTENUATION_BEDROCK
     endif
