@@ -36,11 +36,9 @@ echo " "
 echo mesh files will be read from directory $my_local_path
 echo " "
 
-set MPIRUN="/home/local/mpich/bin/mpirun"
-
 #### use this on Beowulf
-# mpirun -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xspecfem3D 
- $MPIRUN -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xspecfem3D 
+set MPIRUN="mpirun"
+$MPIRUN -nolocal -machinefile $list_of_machines -np $numnodes $PWD/xspecfem3D 
 
 #### use this on SGI
 # mpirun -np $numnodes xspecfem3D

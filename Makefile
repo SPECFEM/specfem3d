@@ -65,7 +65,7 @@ MPI_FLAGS =
 #
 # Caltech cluster
 #
-FLAGS_NO_CHECK = -fast -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds
+#FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds
 #
 # more recent machines
 #
@@ -73,7 +73,7 @@ FLAGS_NO_CHECK = -fast -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn
 #
 # debug with range checking
 #
-#FLAGS_NO_CHECK = -O1 -static -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check bounds
+#FLAGS_NO_CHECK = -O0 -static -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check bounds
 #FLAGS_CHECK = $(FLAGS_NO_CHECK)
 #MPI_FLAGS = -Vaxlib
 
