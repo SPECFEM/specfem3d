@@ -19,13 +19,13 @@
 
   subroutine write_seismograms(myrank,seismograms,number_receiver_global, &
                station_name,network_name,nrec,nrec_local, &
-               it,DT,NSTEP,hdur,LOCAL_PATH)
+               it,DT,NSTEP,hdur,LOCAL_PATH,istore)
 
   implicit none
 
   include "constants.h"
 
-  integer nrec,nrec_local,NSTEP,it,myrank
+  integer nrec,nrec_local,NSTEP,it,myrank,istore
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(3,nrec_local,NSTEP) :: seismograms
   character(len=8), dimension(nrec) :: station_name,network_name
@@ -36,7 +36,19 @@
   integer iorientation,irecord,isample
 
   character(len=4) chn
+  character(len=1) component
   character(len=150) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+
+! save displacement, velocity or acceleration
+  if(istore == 1) then
+    component = 'd'
+  else if(istore == 2) then
+    component = 'v'
+  else if(istore == 3) then
+    component = 'a'
+  else
+    call exit_MPI(myrank,'wrong component to save for seismograms')
+  endif
 
   do irec_local = 1,nrec_local
 
@@ -71,41 +83,41 @@
     if(length_network_name == 1) then
 
       if(length_station_name == 1) then
-        write(sisname,"(a1,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a1,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 2) then
-        write(sisname,"(a2,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a2,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 3) then
-        write(sisname,"(a3,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a3,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 4) then
-        write(sisname,"(a4,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a4,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 5) then
-        write(sisname,"(a5,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a5,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 6) then
-        write(sisname,"(a6,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a6,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 7) then
-        write(sisname,"(a7,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a7,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else
-        write(sisname,"(a8,'.',a1,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a8,'.',a1,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       endif
 
     else
 
       if(length_station_name == 1) then
-        write(sisname,"(a1,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a1,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 2) then
-        write(sisname,"(a2,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a2,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 3) then
-        write(sisname,"(a3,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a3,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 4) then
-        write(sisname,"(a4,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a4,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 5) then
-        write(sisname,"(a5,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a5,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 6) then
-        write(sisname,"(a6,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a6,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else if(length_station_name == 7) then
-        write(sisname,"(a7,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a7,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       else
-        write(sisname,"(a8,'.',a2,'.',a3,'.semd')") station_name(irec),network_name(irec),chn
+        write(sisname,"(a8,'.',a2,'.',a3,'.sem',a1)") station_name(irec),network_name(irec),chn,component
       endif
 
     endif

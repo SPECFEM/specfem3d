@@ -210,8 +210,8 @@
   character(len=8), allocatable, dimension(:) :: station_name,network_name
 
 ! seismograms
-  double precision uxd,uyd,uzd
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms
+  double precision dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a
 
   integer i,j,k,ispec,irec,iglob
 
@@ -268,7 +268,7 @@
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF
 
-  logical SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   integer NMOVIE
   double precision HDUR_MIN_MOVIES
 
@@ -323,7 +323,7 @@
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS,MULTIPLY_MU_TSURF, &
-        SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
+        SAVE_AVS_DX_MOVIE,SAVE_AVS_DX_SHAKEMAP,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -483,8 +483,8 @@
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
 ! for the movies, we do not use a Heaviside source
-  if(SAVE_AVS_DX_MOVIE .and. minval(hdur) < HDUR_MIN_MOVIES) &
-    call exit_MPI(myrank,'hdur too small for movie creation')
+  if((SAVE_AVS_DX_MOVIE .or. SAVE_AVS_DX_SHAKEMAP) .and. minval(hdur) < HDUR_MIN_MOVIES) &
+    call exit_MPI(myrank,'hdur too small for movie or shakemap creation')
 
   open(unit=IIN,file='DATA/STATIONS_FILTERED',status='old')
   read(IIN,*) nrec
@@ -696,7 +696,9 @@
   enddo
 
 ! allocate seismogram array
-  allocate(seismograms(NDIM,nrec_local,NSTEP))
+  allocate(seismograms_d(NDIM,nrec_local,NSTEP))
+  allocate(seismograms_v(NDIM,nrec_local,NSTEP))
+  allocate(seismograms_a(NDIM,nrec_local,NSTEP))
 
 ! allocate Lagrange interpolators for receivers
   allocate(hxir_store(nrec_local,NGLLX))
@@ -735,7 +737,9 @@
   endif
 
 ! initialize seismograms
-  seismograms(:,:,:) = 0._CUSTOM_REAL
+  seismograms_d(:,:,:) = 0._CUSTOM_REAL
+  seismograms_v(:,:,:) = 0._CUSTOM_REAL
+  seismograms_a(:,:,:) = 0._CUSTOM_REAL
 
   if(myrank == 0) then
 
@@ -900,7 +904,7 @@
   if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
 ! allocate files to save movies and shaking map
-  if(SAVE_AVS_DX_MOVIE) then
+  if(SAVE_AVS_DX_MOVIE .or. SAVE_AVS_DX_SHAKEMAP) then
 
 ! save all points for high resolution, or only four corners for low resolution
     if(USE_HIGHRES_FOR_MOVIES) then
@@ -1031,7 +1035,7 @@
     if(myrank == 0) then
 
       write(IMAIN,*) 'Time step # ',it
-      write(IMAIN,*) 'Time: ',sngl((it-1)*DT-hdur(1)),' seconds'
+      write(IMAIN,*) 'Time: ',sngl((it-1)*DT-minval(hdur)),' seconds'
 
 ! elapsed time since beginning of the simulation
       tCPU = MPI_WTIME() - time_start
@@ -1049,7 +1053,7 @@
       write(outputname,"('OUTPUT_FILES/timestamp',i6.6)") it
       open(unit=IOUT,file=outputname,status='unknown')
       write(IOUT,*) 'Time step # ',it
-      write(IOUT,*) 'Time: ',sngl((it-1)*DT-hdur(1)),' seconds'
+      write(IOUT,*) 'Time: ',sngl((it-1)*DT-minval(hdur)),' seconds'
       write(IOUT,*) 'Elapsed time in seconds = ',tCPU
       write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
       write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
@@ -1657,9 +1661,17 @@
     irec = number_receiver_global(irec_local)
 
 ! perform the general interpolation using Lagrange polynomials
-        uxd = ZERO
-        uyd = ZERO
-        uzd = ZERO
+        dxd = ZERO
+        dyd = ZERO
+        dzd = ZERO
+
+        vxd = ZERO
+        vyd = ZERO
+        vzd = ZERO
+
+        axd = ZERO
+        ayd = ZERO
+        azd = ZERO
 
         do j = 1,NGLLY
           do i = 1,NGLLX
@@ -1670,9 +1682,19 @@
             hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)
 
 ! save displacement
-            uxd = uxd + dble(displ(1,iglob))*hlagrange
-            uyd = uyd + dble(displ(2,iglob))*hlagrange
-            uzd = uzd + dble(displ(3,iglob))*hlagrange
+            dxd = dxd + dble(displ(1,iglob))*hlagrange
+            dyd = dyd + dble(displ(2,iglob))*hlagrange
+            dzd = dzd + dble(displ(3,iglob))*hlagrange
+
+! save velocity
+            vxd = vxd + dble(veloc(1,iglob))*hlagrange
+            vyd = vyd + dble(veloc(2,iglob))*hlagrange
+            vzd = vzd + dble(veloc(3,iglob))*hlagrange
+
+! save acceleration
+            axd = axd + dble(accel(1,iglob))*hlagrange
+            ayd = ayd + dble(accel(2,iglob))*hlagrange
+            azd = azd + dble(accel(3,iglob))*hlagrange
 
           enddo
         enddo
@@ -1681,17 +1703,25 @@
 
 ! distinguish whether single or double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
-        seismograms(:,irec_local,it) = sngl((nu(:,1,irec)*uxd + nu(:,2,irec)*uyd + nu(:,3,irec)*uzd))
+        seismograms_d(:,irec_local,it) = sngl((nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd))
+        seismograms_v(:,irec_local,it) = sngl((nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd))
+        seismograms_a(:,irec_local,it) = sngl((nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd))
       else
-        seismograms(:,irec_local,it) = (nu(:,1,irec)*uxd + nu(:,2,irec)*uyd + nu(:,3,irec)*uzd)
+        seismograms_d(:,irec_local,it) = (nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd)
+        seismograms_v(:,irec_local,it) = (nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd)
+        seismograms_a(:,irec_local,it) = (nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd)
       endif
 
   enddo
 
 ! write the current seismograms
   if(mod(it,NSEIS) == 0) &
-      call write_seismograms(myrank,seismograms,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,hdur,LOCAL_PATH)
+      call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+      call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,2)
+      call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,3)
 
 ! save movie frame
   if(SAVE_AVS_DX_MOVIE .and. mod(it,NMOVIE) == 0) then
@@ -1832,7 +1862,7 @@
   endif
 
 ! compute shaking intensity map
-  if(SAVE_AVS_DX_MOVIE) then
+  if(SAVE_AVS_DX_SHAKEMAP) then
 
 ! get coordinates of surface mesh and surface displacement
     ipoin = 0
@@ -1951,8 +1981,12 @@
   enddo   ! end of main time loop
 
 ! write the final seismograms
-  call write_seismograms(myrank,seismograms,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,hdur(1),LOCAL_PATH)
+  call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+  call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,2)
+  call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,3)
 
 ! close the main output file
   if(myrank == 0) then
