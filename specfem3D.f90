@@ -134,7 +134,10 @@
   integer NPOIN2DMAX_XY
 
 ! use integer array to store topography values
-  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+  integer NX_TOPO,NY_TOPO
+  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  character(len=100) topo_file
+  integer, dimension(:,:), allocatable :: itopo_bathy_basin
 
   integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax, &
     ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top
@@ -496,13 +499,35 @@
 
 ! read basin topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
-    call read_basin_topo_bathy_file(itopo_bathy_basin)
+
+!! DK DK UGLY LACQ
+    if(MODEL == 'Lacq_gas_field_France') then
+      NX_TOPO = NX_TOPO_LACQ
+      NY_TOPO = NY_TOPO_LACQ
+      ORIG_LAT_TOPO = ORIG_LAT_TOPO_LACQ
+      ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
+      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
+      topo_file = TOPO_FILE_LACQ
+    else
+      NX_TOPO = NX_TOPO_SOCAL
+      NY_TOPO = NY_TOPO_SOCAL
+      ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+      ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+      topo_file = TOPO_FILE_SOCAL
+    endif
+
+    allocate(itopo_bathy_basin(NX_TOPO,NY_TOPO))
+
+    call read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
+
     if(myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'regional topography file read ranges in m from ', &
         minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
       write(IMAIN,*)
     endif
+
   endif
 
 ! allocate arrays for source
@@ -532,7 +557,9 @@
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
           LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION)
+          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
+          PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
+          NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
@@ -563,7 +590,8 @@
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
-            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION)
+            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+            NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

@@ -148,10 +148,11 @@
   integer iproc_xi,iproc_eta
 
 ! use integer array to store topography values
-  integer icornerlat,icornerlong
-  double precision lat,long,elevation
+  integer icornerlat,icornerlong,NX_TOPO,NY_TOPO
+  double precision lat,long,elevation,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
-  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+  character(len=100) topo_file
+  integer, dimension(:,:), allocatable :: itopo_bathy_basin
 
 ! use integer array to store Moho depth
   integer imoho_depth(NX_MOHO,NY_MOHO)
@@ -415,13 +416,35 @@
 
 ! read basin topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
-    call read_basin_topo_bathy_file(itopo_bathy_basin)
+
+!! DK DK UGLY LACQ
+    if(MODEL == 'Lacq_gas_field_France') then
+      NX_TOPO = NX_TOPO_LACQ
+      NY_TOPO = NY_TOPO_LACQ
+      ORIG_LAT_TOPO = ORIG_LAT_TOPO_LACQ
+      ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
+      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
+      topo_file = TOPO_FILE_LACQ
+    else
+      NX_TOPO = NX_TOPO_SOCAL
+      NY_TOPO = NY_TOPO_SOCAL
+      ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+      ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+      topo_file = TOPO_FILE_SOCAL
+    endif
+
+    allocate(itopo_bathy_basin(NX_TOPO,NY_TOPO))
+
+    call read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
+
     if(myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'regional topography file read ranges in m from ', &
         minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
       write(IMAIN,*)
     endif
+
   endif
 
 ! read Moho map
@@ -666,7 +689,8 @@
          HAUKSSON_REGIONAL_MODEL,OCEANS, &
          VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
          IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
-         ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION)
+         ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
+         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO)
 
 ! print min and max of topography included
   if(TOPOGRAPHY) then

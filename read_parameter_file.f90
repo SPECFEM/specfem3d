@@ -97,17 +97,14 @@
   if(MODEL == 'Lacq_gas_field_France') then
 
 ! time step in seconds
-    DT                 = 0.011d0
+    DT                 = 0.003d0
 
 ! number of elements in the vertical direction
-    NER_SEDIM          = 1
-    NER_BASEMENT_SEDIM = 2
-    NER_16_BASEMENT    = 2
-    NER_MOHO_16        = 2
-    NER_BOTTOM_MOHO    = 1
-!! DK DK UGLY LACQ  end of new section
-
-
+    NER_SEDIM          = 2
+    NER_BASEMENT_SEDIM = 6
+    NER_16_BASEMENT    = 3
+    NER_MOHO_16        = 3
+    NER_BOTTOM_MOHO    = 8
 
 ! standard mesh for SAF 1857 on Caltech cluster
   else if (NEX_MAX <= 288) then

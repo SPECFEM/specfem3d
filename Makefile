@@ -142,7 +142,7 @@ MPI_FLAGS =
 #MPI_FLAGS = 
 
 baksave:
-	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver runall mymachines bak
+	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver mymachines bak
 
 meshfem3D: constants.h \
        $O/meshfem3D.o \

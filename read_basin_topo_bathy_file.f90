@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-  subroutine read_basin_topo_bathy_file(itopo_bathy_basin)
+  subroutine read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
 !
 !---- read basin topography and bathymetry file once and for all
 !
@@ -23,15 +23,18 @@
 
   include "constants.h"
 
+  integer NX_TOPO,NY_TOPO
+
 ! use integer array to store topography values
   integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+
+  character(len=100) topo_file
 
   integer ix,iy
 
   itopo_bathy_basin(:,:) = 0
 
-!! DK DK UGLY LACQ  open(unit=13,file='DATA/la_topography/topo_bathy_final.dat',status='old')
-  open(unit=13,file='DATA/lacq_thomas/mnt_Lacq_Lambert_final_dimitri.dat',status='old')
+  open(unit=13,file=topo_file,status='old')
   do iy=1,NY_TOPO
     do ix=1,NX_TOPO
       read(13,*) itopo_bathy_basin(ix,iy)

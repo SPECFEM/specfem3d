@@ -26,7 +26,8 @@
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                 NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   implicit none
 
@@ -36,7 +37,7 @@
   include "constants.h"
   include "precision.h"
 
-  integer NPROC,UTM_PROJECTION_ZONE
+  integer NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
 
   logical TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
 
@@ -46,6 +47,8 @@
   integer idoubling(NSPEC_AB)
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+
+  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
 
 ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore

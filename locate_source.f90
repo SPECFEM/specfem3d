@@ -26,7 +26,9 @@
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
+                 PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
+                 NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   implicit none
 
@@ -37,11 +39,12 @@
   include "precision.h"
 
   integer NPROC,UTM_PROJECTION_ZONE
-  integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES
+  integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES,NX_TOPO,NY_TOPO
 
   logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK
+  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 

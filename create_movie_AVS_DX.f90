@@ -34,13 +34,6 @@
   logical, parameter :: NONLINEAR_SCALING = .true.
   real(kind=CUSTOM_REAL), parameter :: POWER_SCALING = 0.25_CUSTOM_REAL
 
-!! DK DK UGLY filter points that have non realistic amplitude
-!! DK DK UGLY simply set to 0 if you do not want to remove any point
-!! DK DK UGLY  integer, parameter :: NREMOVE = 40
-  integer, parameter :: NREMOVE = 0
-  integer iremove,iglobval,iglobval_max
-  double precision field_max
-
   integer it,it1,it2,ivalue,nspectot_AVS_max,ispec
   integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
   integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
@@ -489,52 +482,7 @@
 
 !-----------------------------------------
 
-!! DK DK UGLY filter points that have non realistic amplitude
   if(plot_shaking_map) then
-
-  print *,'removing ',NREMOVE,' fictitious points with anomalous amplitude'
-  field_display_remove(:) = field_display(:)
-
-! copy array
-  do ispec=1,nspectot_AVS_max
-    ieoff = NGNOD2D_AVS_DX*(ispec-1)
-! four points for each element
-    do ilocnum = 1,NGNOD2D_AVS_DX
-      ibool_number = iglob(ilocnum+ieoff)
-      field_display_remove(ibool_number) = field_display(ilocnum+ieoff)
-    enddo
-  enddo
-
-! initialize in case we do not remove any point (NREMOVE = 0)
-  field_max = 0.
-
-  do iremove = 1,NREMOVE
-
-    field_max = -1.
-
-    do iglobval = 1,nglob
-      if(field_display_remove(iglobval) > field_max) then
-        field_max = field_display_remove(iglobval)
-        iglobval_max = iglobval
-      endif
-    enddo
-
-! replace maximum value with fictitious value
-    field_display_remove(iglobval_max) = -1.
-
-  enddo   ! end of loop to filter anomalous points
-
-! copy filtered array back
-  do ispec=1,nspectot_AVS_max
-    ieoff = NGNOD2D_AVS_DX*(ispec-1)
-! four points for each element
-    do ilocnum = 1,NGNOD2D_AVS_DX
-      ibool_number = iglob(ilocnum+ieoff)
-! replace fictitious value with final maximum found
-      if(field_display_remove(ibool_number) < 0.) field_display_remove(ibool_number) = field_max
-      field_display(ilocnum+ieoff) = field_display_remove(ibool_number)
-    enddo
-  enddo
 
 ! compute min and max of data value to normalize
   min_field_current = minval(field_display(:))

@@ -336,7 +336,7 @@
   print *,'histogram of skewness (0. good - 1. bad):'
   print *
   total_percent = 0.
-  open(unit=14,file='mesh_quality_histogram.txt',status='unknown')
+  open(unit=14,file='OUTPUT_FILES/mesh_quality_histogram.txt',status='unknown')
   do iclass = 0,NCLASS-1
     current_percent = 100.*dble(classes_skewness(iclass))/dble(ntotspec)
     total_percent = total_percent + current_percent
@@ -346,7 +346,7 @@
   close(14)
 
 ! create script for Gnuplot histogram file
-  open(unit=14,file='plot_mesh_quality_histogram.gnu',status='unknown')
+  open(unit=14,file='OUTPUT_FILES/plot_mesh_quality_histogram.gnu',status='unknown')
   write(14,*) 'set term x11'
   write(14,*) 'set xrange [0:1]'
   write(14,*) 'set xtics 0,0.1,1'
