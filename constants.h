@@ -168,7 +168,7 @@
   double precision, parameter :: GAUSSALPHA = 0.d0,GAUSSBETA = 0.d0
 
 ! number of iterations to solve the system for xi and eta
-  integer, parameter :: NUM_ITER = 3
+  integer, parameter :: NUM_ITER = 4
 
 ! size of topography and bathymetry file for Southern California
   integer, parameter :: NX_TOPO = 1401,NY_TOPO = 1001
