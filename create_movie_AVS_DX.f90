@@ -34,6 +34,12 @@
   logical, parameter :: NONLINEAR_SCALING = .true.
   real(kind=CUSTOM_REAL), parameter :: POWER_SCALING = 0.25_CUSTOM_REAL
 
+!! DK DK UGLY filter points that have non realistic amplitude
+!! DK DK UGLY simply set to 0 if you do not want to remove any point
+  integer, parameter :: NREMOVE = 40
+  integer iremove,iglobval,iglobval_max
+  double precision field_max
+
   integer it,it1,it2,ivalue,nspectot_AVS_max,ispec
   integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
   integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
@@ -58,6 +64,8 @@
   integer, dimension(:), allocatable :: iglob,loc,ireorder
   logical, dimension(:), allocatable :: ifseg,mask_point
   double precision, dimension(:), allocatable :: xp,yp,zp,xp_save,yp_save,zp_save,field_display
+!! DK DK for NREMOVE
+  double precision, dimension(:), allocatable :: field_display_remove
 
 ! movie files stored by solver
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: &
@@ -269,6 +277,8 @@
   allocate(field_display(npointot))
   allocate(mask_point(npointot))
   allocate(ireorder(npointot))
+!! DK DK for NREMOVE
+  allocate(field_display_remove(npointot))
 
   print *
   if(APPLY_THRESHOLD .and. .not. plot_shaking_map) print *,'Will apply a threshold to amplitude below ',100.*THRESHOLD,' %'
@@ -474,6 +484,68 @@
   print *,'minimum amplitude in current snapshot = ',min_field_current
   print *,'maximum amplitude in current snapshot = ',max_field_current
   print *
+
+!-----------------------------------------
+
+!! DK DK UGLY filter points that have non realistic amplitude
+  if(plot_shaking_map) then
+
+  print *,'removing ',NREMOVE,' fictitious points with anomalous amplitude'
+  field_display_remove(:) = field_display(:)
+
+! copy array
+  do ispec=1,nspectot_AVS_max
+    ieoff = NGNOD2D_AVS_DX*(ispec-1)
+! four points for each element
+    do ilocnum = 1,NGNOD2D_AVS_DX
+      ibool_number = iglob(ilocnum+ieoff)
+      field_display_remove(ibool_number) = field_display(ilocnum+ieoff)
+    enddo
+  enddo
+
+  do iremove = 1,NREMOVE
+
+    field_max = -1.
+
+    do iglobval = 1,nglob
+      if(field_display_remove(iglobval) > field_max) then
+        field_max = field_display_remove(iglobval)
+        iglobval_max = iglobval
+      endif
+    enddo
+
+! replace maximum value with fictitious value
+    field_display_remove(iglobval_max) = -1.
+
+  enddo   ! end of loop to filter anomalous points
+
+! copy filtered array back
+  do ispec=1,nspectot_AVS_max
+    ieoff = NGNOD2D_AVS_DX*(ispec-1)
+! four points for each element
+    do ilocnum = 1,NGNOD2D_AVS_DX
+      ibool_number = iglob(ilocnum+ieoff)
+! replace fictitious value with final maximum found
+      if(field_display_remove(ibool_number) < 0.) field_display_remove(ibool_number) = field_max
+      field_display(ilocnum+ieoff) = field_display_remove(ibool_number)
+    enddo
+  enddo
+
+! compute min and max of data value to normalize
+  min_field_current = minval(field_display(:))
+  max_field_current = maxval(field_display(:))
+
+! print minimum and maximum amplitude in current snapshot
+  print *
+  print *,'minimum amplitude in current snapshot after removal = ',min_field_current
+  print *,'maximum amplitude in current snapshot after removal = ',max_field_current
+  if(inorm == 3) print *,'maximum corresponds to ',max_field_current/9.81,' g'
+  print *
+
+  endif
+
+!-----------------------------------------
+
 
 ! apply scaling in all cases for movies
   if(.not. plot_shaking_map) then
@@ -692,7 +764,7 @@
       if(.not. mask_point(ibool_number)) then
         if(USE_OPENDX) then
           if(plot_shaking_map) then
-            write(11,*) field_display(ilocnum+ieoff)
+            write(11,*) sngl(field_display(ilocnum+ieoff))
           else
             write(11,501) field_display(ilocnum+ieoff)
           endif
@@ -756,6 +828,8 @@
   deallocate(field_display)
   deallocate(mask_point)
   deallocate(ireorder)
+!! DK DK for NREMOVE
+  deallocate(field_display_remove)
 
   if(USE_HIGHRES_FOR_MOVIES) then
     deallocate(x)
