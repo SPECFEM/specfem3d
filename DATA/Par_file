@@ -20,7 +20,7 @@ NPROC_ETA                = 12
 DT                       = 0.009
 
 ! total number of time steps
-NSTEP                    = 20000
+NSTEP                    = 10000
 
 ! coordinates of mesh block in latitude/longitude and depth in km
 LAT_MIN                  = 32.2d0
@@ -56,7 +56,7 @@ NER_BOTTOM_MOHO          = 7
 LOCAL_PATH               = /scratch/DATABASES_MPI_DIMITRI
 
 ! machine file for MPI
-MACHINE_FILE             = mymachines_gurnis
+MACHINE_FILE             = mymachines
 
 ! interval in time steps for writing of seismograms
 NSEIS                    = 1000
@@ -67,6 +67,7 @@ NSOURCES                 = 1
 ! for the movies
 SAVE_AVS_DX_MOVIE        = .true.
 SAVE_DISPLACEMENT        = .false.
-NMOVIE                   = 200
+USE_HIGHRES_FOR_MOVIES   = .true.
+NMOVIE                   = 20000
 HDUR_MIN_MOVIES          = 2.4d0
 

@@ -268,7 +268,7 @@
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
 
-  logical SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT
+  logical SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   integer NMOVIE
   double precision HDUR_MIN_MOVIES
 
@@ -323,7 +323,7 @@
         THICKNESS_TAPER_BLOCKS,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS, &
-        SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES)
+        SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -863,22 +863,43 @@
 
 ! allocate files to save movies and shaking map
   if(SAVE_AVS_DX_MOVIE) then
-    allocate(store_val_x(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_y(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_z(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_ux(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_uy(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_uz(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_norm_displ(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_norm_veloc(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-    allocate(store_val_norm_accel(NGNOD2D_AVS_DX*NSPEC2D_TOP))
 
-    allocate(store_val_x_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-    allocate(store_val_y_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-    allocate(store_val_z_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-    allocate(store_val_ux_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-    allocate(store_val_uy_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-    allocate(store_val_uz_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+! save all points for high resolution, or only four corners for low resolution
+    if(USE_HIGHRES_FOR_MOVIES) then
+      allocate(store_val_x(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_y(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_z(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_ux(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_uy(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_uz(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_norm_displ(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_norm_veloc(NGLLSQUARE*NSPEC2D_TOP))
+      allocate(store_val_norm_accel(NGLLSQUARE*NSPEC2D_TOP))
+
+      allocate(store_val_x_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_y_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_z_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_ux_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_uy_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_uz_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+    else
+      allocate(store_val_x(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_y(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_z(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_ux(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_uy(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_uz(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_norm_displ(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_norm_veloc(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+      allocate(store_val_norm_accel(NGNOD2D_AVS_DX*NSPEC2D_TOP))
+
+      allocate(store_val_x_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_y_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_z_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_ux_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_uy_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+      allocate(store_val_uz_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+    endif
 
 ! to compute max of norm for shaking map
     store_val_norm_displ(:) = -1.
@@ -1600,6 +1621,31 @@
       ispec = ibelm_top(ispec2D)
       k = NGLLZ
 
+! save all points for high resolution, or only four corners for low resolution
+    if(USE_HIGHRES_FOR_MOVIES) then
+
+! loop on all the points inside the element
+      do j = 1,NGLLY
+      do i = 1,NGLLX
+      ipoin = ipoin + 1
+      iglob = ibool(i,j,k,ispec)
+      store_val_x(ipoin) = xstore(iglob)
+      store_val_y(ipoin) = ystore(iglob)
+      store_val_z(ipoin) = zstore(iglob)
+      if(SAVE_DISPLACEMENT) then
+        store_val_ux(ipoin) = displ(1,iglob)
+        store_val_uy(ipoin) = displ(2,iglob)
+        store_val_uz(ipoin) = displ(3,iglob)
+      else
+        store_val_ux(ipoin) = veloc(1,iglob)
+        store_val_uy(ipoin) = veloc(2,iglob)
+        store_val_uz(ipoin) = veloc(3,iglob)
+      endif
+      enddo
+      enddo
+
+    else
+
 ! first corner
       ipoin = ipoin + 1
       i = 1
@@ -1671,11 +1717,17 @@
         store_val_uy(ipoin) = veloc(2,iglob)
         store_val_uz(ipoin) = veloc(3,iglob)
       endif
+    endif
 
     enddo
 
 ! gather info on master proc
-    ispec = NGNOD2D_AVS_DX*NSPEC2D_TOP
+    if(USE_HIGHRES_FOR_MOVIES) then
+      ispec = NGLLSQUARE*NSPEC2D_TOP
+    else
+      ispec = NGNOD2D_AVS_DX*NSPEC2D_TOP
+    endif
+
     call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
@@ -1707,6 +1759,25 @@
       ispec = ibelm_top(ispec2D)
       k = NGLLZ
 
+! save all points for high resolution, or only four corners for low resolution
+    if(USE_HIGHRES_FOR_MOVIES) then
+
+! loop on all the points inside the element
+      do j = 1,NGLLY
+      do i = 1,NGLLX
+      ipoin = ipoin + 1
+      iglob = ibool(i,j,k,ispec)
+      store_val_x(ipoin) = xstore(iglob)
+      store_val_y(ipoin) = ystore(iglob)
+      store_val_z(ipoin) = zstore(iglob)
+      store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
+      store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
+      store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
+      enddo
+      enddo
+
+    else
+
 ! first corner
       ipoin = ipoin + 1
       i = 1
@@ -1755,12 +1826,19 @@
       store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
       store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
 
+    endif
+
     enddo
 
     if(mod(it,NMOVIE) == 0) then
 
 ! gather info on master proc
-    ispec = NGNOD2D_AVS_DX*NSPEC2D_TOP
+    if(USE_HIGHRES_FOR_MOVIES) then
+      ispec = NGLLSQUARE*NSPEC2D_TOP
+    else
+      ispec = NGNOD2D_AVS_DX*NSPEC2D_TOP
+    endif
+
     call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)

@@ -67,6 +67,7 @@ NSOURCES                 = 1
 ! for the movies
 SAVE_AVS_DX_MOVIE        = .true.
 SAVE_DISPLACEMENT        = .false.
+USE_HIGHRES_FOR_MOVIES   = .false.
 NMOVIE                   = 200
 HDUR_MIN_MOVIES          = 2.4d0
 
