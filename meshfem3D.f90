@@ -712,7 +712,7 @@
 
   endif
 
-!--- print number of points and elements in the mesh for each region
+!--- print number of points and elements in the mesh
 
   if(myrank == 0) then
 
@@ -728,6 +728,10 @@
   write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
   write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
   write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
+  write(IMAIN,*)
+
+  write(IMAIN,*)
+  write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
   write(IMAIN,*)
 
 ! write information about precision used for floating-point operations
