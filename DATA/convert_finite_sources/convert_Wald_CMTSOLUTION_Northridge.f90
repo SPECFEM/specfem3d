@@ -72,6 +72,8 @@
 
   integer ix_time_min,iy_time_min
 
+  integer iglob1,iglob2,iglob3,iglob4
+
   print *
   print *,'creating file DATA/CMTSOLUTION'
 
@@ -147,8 +149,14 @@
 !! loop on all the patches to find minimum time shift
   timeshift_min = + 100000000.
 
-  do iy =1,NX_PATCH
-  do ix =1,NX_PATCH
+! create an OpenDX file to check the slip map
+  open(unit=15,file='DX_check_slip_map.dx',status='unknown')
+
+! write points
+  write(15,*) 'object 1 class array type float rank 1 shape 3 items ',NX_PATCH*NY_PATCH,' data follows'
+
+  do iy = 1,NY_PATCH
+  do ix = 1,NX_PATCH
 
 !! DK DK compute longitude and depth of this point in the fault plane
 !! DK DK use bilinear interpolation from the four corners of the fault
@@ -158,6 +166,9 @@
  xval = (1.-xi)*(1.-eta)*x4 + xi*(1.-eta)*x3 + xi*eta*x2 + (1.-xi)*eta*x1
  yval = (1.-xi)*(1.-eta)*y4 + xi*(1.-eta)*y3 + xi*eta*y2 + (1.-xi)*eta*y1
  zval = (1.-xi)*(1.-eta)*z4 + xi*(1.-eta)*z3 + xi*eta*z2 + (1.-xi)*eta*z1
+
+! write to OpenDX file
+ write(15,*) sngl(xval),sngl(yval),sngl(zval)
 
 !! DK DK convert coordinates of current point back to long/lat
   call utm_geo(longval,latval,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
@@ -180,12 +191,35 @@
   enddo  ! end of loop on all the patches
 
 
+!! write OpenDX elements
+   write(15,*) 'object 2 class array type int rank 1 shape 4 items ',(NY_PATCH-1)*(NX_PATCH-1),' data follows'
+
+   do iy = 1,NY_PATCH-1
+   do ix = 1,NX_PATCH-1
+
+     iglob1 = (iy-1)*NX_PATCH + ix
+     iglob2 = (iy-1)*NX_PATCH + ix+1
+     iglob3 = (iy+1-1)*NX_PATCH + ix+1
+     iglob4 = (iy+1-1)*NX_PATCH + ix
+
+! in the case of OpenDX, node numbers start at zero
+! point order in OpenDX is 1,4,2,3 *not* 1,2,3,4 as in AVS
+     write(15,210) iglob1-1,iglob4-1,iglob2-1,iglob3-1
+   enddo
+   enddo
+
+ 210 format(i6,1x,i6,1x,i6,1x,i6)
+
+   write(15,*) 'attribute "element type" string "quads"'
+   write(15,*) 'attribute "ref" string "positions"'
+   write(15,*) 'object 3 class array type float rank 0 items ',NX_PATCH*NY_PATCH,' data follows'
+
 ! write result to CMTSOLUTION file
   open(unit=11,file='DATA/CMTSOLUTION',status='unknown')
 
 !! loop on all the patches to output CMTSOLUTION value
-  do iy =1,NX_PATCH
-  do ix =1,NX_PATCH
+  do iy = 1,NY_PATCH
+  do ix = 1,NX_PATCH
 
     rake=101.
     scalar_moment_patch = scalar_moment_total * dble(islip(ix,iy))/dble(isum)
@@ -238,17 +272,26 @@
   distance_hypo = dsqrt((xval-x_hypocenter)**2 + (yval-y_hypocenter)**2 + (zval-z_hypocenter)**2)
 
 ! time shift is distance to hypocenter divided by rupture velocity
-!! DK DK need to manually move minimum value to first source in CMTSOLUTION then
- time_shift = distance_hypo / RUPTURE_VELOCITY
+! subtract timeshift_min to make sure origin time is exactly zero
+! even if rounded coordinates of hypocenter are slightly off the fault plane
+ time_shift = distance_hypo / RUPTURE_VELOCITY - timeshift_min
+
+!! write data value to OpenDX file
+!! DK DK to visualize slip map
+  write(15,*) islip(ix,iy)
+!! DK DK to visualize time shift
+!  write(15,*) time_shift
 
 ! fictitious info about event
   write(11,"(a)") 'PDE 2003  7  7 23 59 17.78  34.0745 -118.3792   6.4 4.2 4.2 FICTITIOUS'
   write(11,"(a)") 'event name:     9903873'
 
-  write(11,"('time shift:  ',e)") time_shift
-
-!! DK DK print warning to locate minimum time shift and move it later in file
- if(ix == ix_time_min .and. iy == iy_time_min) write(11,*) 'MINIMUM TIME SHIFT HERE, MOVE TO FIRST'
+! time shift
+  if(ix == ix_time_min .and. iy == iy_time_min) then
+    write(11,"('time shift:   0')")
+  else
+    write(11,"('time shift:  ',e)") time_shift
+  endif
 
   write(11,"(a)") 'half duration:    0.5'
   write(11,"('latitude: ',f)") latval
@@ -267,11 +310,17 @@
 
   close(11)
 
+   write(15,*) 'attribute "dep" string "positions"'
+   write(15,*) 'object "irregular positions irregular connections" class field'
+   write(15,*) 'component "positions" value 1'
+   write(15,*) 'component "connections" value 2'
+   write(15,*) 'component "data" value 3'
+   write(15,*) 'end'
+
+  close(15)
+
  print *
  print *,' must set NSOURCES = ',NX_PATCH*NY_PATCH,' in DATA/Par_file'
- print *
- print *,' must also manually move smallest hdur to first position in CMTSOLUTION'
- print *,' labeled by ''MINIMUM TIME SHIFT HERE, MOVE TO FIRST'' in file'
  print *
 
  end program convert_northridge_CMT
