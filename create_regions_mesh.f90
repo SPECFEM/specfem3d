@@ -534,6 +534,9 @@
         if(ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
         idoubling(ispec) = doubling_index
 
+! initialize flag indicating whether element is in sediments
+  not_fully_in_bedrock(ispec) = .false.
+
 ! create mesh element
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -600,6 +603,7 @@
 
 ! store flag indicating whether point is in the sediments
   flag_sediments(i,j,k,ispec) = point_is_in_sediments
+  if(point_is_in_sediments) not_fully_in_bedrock(ispec) = .true.
 
 ! define elastic parameters in the model
 ! distinguish whether single or double precision for reals
