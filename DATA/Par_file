@@ -36,7 +36,8 @@ BASEMENT_MAP             = .true.
 MOHO_MAP_LUPEI           = .true.
 HAUKSSON_REGIONAL_MODEL  = .true.
 HARVARD_3D_GOCAD_MODEL   = .true.
-THICKNESS_TAPER_BLOCKS   = 1500.d0
+THICKNESS_TAPER_BLOCK_HR = 3000.d0
+THICKNESS_TAPER_BLOCK_MR = 15000.d0
 IMPOSE_MINIMUM_VP_GOCAD  = .true.
 VP_MIN_GOCAD             = 600.d0
 VP_VS_RATIO_GOCAD_TOP    = 2.0d0
@@ -44,6 +45,7 @@ VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
 ATTENUATION              = .true.
 OCEANS                   = .true.
 STACEY_ABS_CONDITIONS    = .true.
+MULTIPLY_MU_TSURF        = .false.
 
 ! number of elements for full Earth
 NER_SEDIM                = 1

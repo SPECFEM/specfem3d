@@ -27,7 +27,7 @@
            myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,UTM_PROJECTION_ZONE, &
            HAUKSSON_REGIONAL_MODEL,OCEANS, &
            VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-           IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS,MOHO_MAP_LUPEI)
+           IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI)
 
 ! create the different regions of the mesh
 
@@ -55,7 +55,7 @@
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
-  double precision horiz_size,vert_size,THICKNESS_TAPER_BLOCKS
+  double precision horiz_size,vert_size,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR
 
   character(len=150) LOCAL_PATH
 
@@ -588,7 +588,7 @@
          call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_MR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,&
               MOHO_MAP_LUPEI)
 
@@ -600,7 +600,7 @@
            call interpolate_gocad_block_HR(vp_block_gocad_HR,vp_block_gocad_MR,&
               xmesh,ymesh,zmesh,rho,vp,vs,point_is_in_sediments, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, &
               MOHO_MAP_LUPEI)
 

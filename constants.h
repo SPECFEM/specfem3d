@@ -30,9 +30,6 @@
 
 !----------- parameters that can be changed by the user -----------
 
-!! DK DK UGLY for tsurf source, multiply moment by mu = rho cs^2
-  logical, parameter :: MULTIPLY_MU_TSURF = .false.
-
 ! set to .true.  if running on a Beowulf-type machine with local disks
 ! set to .false. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90

@@ -26,7 +26,7 @@
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,mustore,MULTIPLY_MU_TSURF)
 
   implicit none
 
@@ -39,7 +39,7 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical TOPOGRAPHY
+  logical TOPOGRAPHY,MULTIPLY_MU_TSURF
 
   double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK
 
@@ -146,7 +146,7 @@
 ! get MPI starting time
   time_start = MPI_WTIME()
 
-!! DK DK UGLY for tsurf source, open seismic moment file
+! for tsurf source, open seismic moment file
   if(MULTIPLY_MU_TSURF) &
     open(unit=14,file='DATA/seismic_moment_calculation.dat',status='old')
 
@@ -261,8 +261,8 @@
 ! end of loop on all the elements in current slice
   enddo
 
-!! DK DK UGLY for tsurf source, multiply moment by mu = rho cs^2
-!! DK DK UGLY also store mu for magnitude calculation if Gocad
+! for tsurf source, multiply moment by mu = rho cs^2
+! also store mu for magnitude calculation if Gocad
   if(MULTIPLY_MU_TSURF) then
     muvalue_local = mustore(ix_initial_guess_source, &
       iy_initial_guess_source,iz_initial_guess_source, &
@@ -382,8 +382,8 @@
 ! end of loop on all the sources
   enddo
 
-!! DK DK UGLY for tsurf source, close seismic moment file
-!! DK DK UGLY then gather information from all the nodes
+! for tsurf source, close seismic moment file
+! then gather information from all the nodes
   if(MULTIPLY_MU_TSURF) then
     close(14)
     call MPI_GATHER(seismic_moment,NSOURCES,MPI_DOUBLE_PRECISION,seismic_moment_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)

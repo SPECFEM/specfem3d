@@ -2,7 +2,7 @@
   subroutine interpolate_gocad_block_HR(vp_block_gocad_HR,vp_block_gocad_MR, &
       utm_x_eval,utm_y_eval,z_eval,rho_final,vp_final,vs_final,point_is_in_sediments, &
       VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-      IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+      IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
       vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
 
   implicit none
@@ -20,7 +20,7 @@
   double precision v1,v2,v3,v4,v5,v6,v7,v8
   double precision vp_final,vs_final,rho_final,vp_vs_ratio
   double precision rho_ref_MR,vp_ref_MR,vs_ref_MR
-  double precision THICKNESS_TAPER_BLOCKS, &
+  double precision THICKNESS_TAPER_BLOCK_HR, &
       VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
   logical point_is_in_sediments,dummy_flag,IMPOSE_MINIMUM_VP_GOCAD
@@ -99,42 +99,42 @@
   if(TAPER_GOCAD_TRANSITIONS) then
 
 ! x = xmin
-  if(utm_x_eval < ORIG_X_GOCAD_HR + THICKNESS_TAPER_BLOCKS) then
-    gamma_interp_x = (utm_x_eval - ORIG_X_GOCAD_HR) / THICKNESS_TAPER_BLOCKS
+  if(utm_x_eval < ORIG_X_GOCAD_HR + THICKNESS_TAPER_BLOCK_HR) then
+    gamma_interp_x = (utm_x_eval - ORIG_X_GOCAD_HR) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               ORIG_X_GOCAD_HR,utm_y_eval,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * (1. - gamma_interp_x) + vp_final * gamma_interp_x
 
 ! x = xmax
-  else if(utm_x_eval > END_X_GOCAD_HR - THICKNESS_TAPER_BLOCKS) then
-    gamma_interp_x = (utm_x_eval - (END_X_GOCAD_HR - THICKNESS_TAPER_BLOCKS)) / THICKNESS_TAPER_BLOCKS
+  else if(utm_x_eval > END_X_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
+    gamma_interp_x = (utm_x_eval - (END_X_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR)) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               END_X_GOCAD_HR,utm_y_eval,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * gamma_interp_x + vp_final * (1. - gamma_interp_x)
 
 ! y = ymin
-  else if(utm_y_eval < ORIG_Y_GOCAD_HR + THICKNESS_TAPER_BLOCKS) then
-    gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_HR) / THICKNESS_TAPER_BLOCKS
+  else if(utm_y_eval < ORIG_Y_GOCAD_HR + THICKNESS_TAPER_BLOCK_HR) then
+    gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_HR) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               utm_x_eval,ORIG_Y_GOCAD_HR,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
 ! y = ymay
-  else if(utm_y_eval > END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCKS) then
-    gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCKS)) / THICKNESS_TAPER_BLOCKS
+  else if(utm_y_eval > END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
+    gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR)) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               utm_x_eval,END_Y_GOCAD_HR,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCKS, &
+              IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * gamma_interp_y + vp_final * (1. - gamma_interp_y)
 
@@ -146,6 +146,11 @@
          vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM + &
            (VP_VS_RATIO_GOCAD_TOP - VP_VS_RATIO_GOCAD_BOTTOM) * &
            (z_eval - (-8500.d0)) / (0.d0 - (-8500.d0))
+
+! make sure ratio remains in interval
+  if(vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
+  if(vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
+
          vs_final = vp_final / vp_vs_ratio
          call compute_rho_estimate(rho_final,vp_final)
 
