@@ -86,21 +86,25 @@
     npr=npr+1
     rn(npr)=(Z_BASEMENT_SURFACE-Z_DEPTH_BLOCK) + &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
-!! DK DK UGLY (Z_SURFACE-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
-      (z_top-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
+!! DK DK UGLY suppressed Manu's modif and put old code back because better mesh
+!! DK DK UGLY investigate this in detail one day
+ (Z_SURFACE-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
+!! DK DK UGLY modif Manu removed     (z_top-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
   enddo
 
 ! normalize depths
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
-!! DK DK UGLY  rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
-  rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
+!! DK DK UGLY suppressed Manu's modif and put old code back because better mesh
+!! DK DK UGLY investigate this in detail one day
+  rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
+!! DK DK UGLY modif Manu removed     rn(:) = rn(:) / (z_top-Z_DEPTH_BLOCK)
 
 ! check that the mesh that has been generated is correct
   if(npr /= 2*NER) call exit_MPI(myrank,'incorrect intervals for basin')
 
 ! check that vertical spacing makes sense
   do ir=0,2*NER-1
-   if(rn(ir+1) < rn(ir)) call exit_MPI(myrank,'incorrect vertical spacing for basin')
+    if(rn(ir+1) < rn(ir)) call exit_MPI(myrank,'incorrect vertical spacing for basin')
   enddo
 
   end subroutine mesh_vertical
