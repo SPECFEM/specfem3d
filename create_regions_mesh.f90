@@ -555,6 +555,9 @@
        ystore_local(i,j,k) = ymesh
        zstore_local(i,j,k) = zmesh
 
+! initialize flag indicating whether point is in the sediments
+       point_is_in_sediments = .false.
+
 ! get the regional model parameters
        if(HAUKSSON_REGIONAL_MODEL) then
 ! get density from socal model
@@ -567,10 +570,10 @@
            call socal_model(IFLAG_HALFSPACE_MOHO,zmesh,rho,vp,vs)
        else
          call socal_model(doubling_index,zmesh,rho,vp,vs)
+! include attenuation in first SoCal layer if needed
+! uncomment line below to include attenuation in the 1D case
+!        if(zmesh >= DEPTH_5p5km_SOCAL) point_is_in_sediments = .true.
        endif
-
-! initialize flag indicating whether point is in the sediments
-       point_is_in_sediments = .false.
 
 ! get the Harvard 3-D basin model
        if(HARVARD_3D_GOCAD_MODEL .and. &
