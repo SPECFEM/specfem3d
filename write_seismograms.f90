@@ -84,7 +84,8 @@
       if(length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
            call exit_MPI(myrank,'wrong length of network name')
 
-      write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),network_name(irec)(1:length_network_name),chn,component
+      write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
+           network_name(irec)(1:length_network_name),chn,component
 
 ! suppress white spaces if any
     clean_LOCAL_PATH = adjustl(LOCAL_PATH)

@@ -143,8 +143,8 @@
   do isource = 1,NSOURCES
 
 ! check that the current source is inside the basin model
-  if(lat(isource) <= LATITUDE_MIN .or. lat(isource) >= LATITUDE_MAX .or. long(isource) <= LONGITUDE_MIN .or. long(isource) >= LONGITUDE_MAX) &
-    call exit_MPI(myrank,'the current source is outside the model')
+  if(lat(isource) <= LATITUDE_MIN .or. lat(isource) >= LATITUDE_MAX .or. long(isource) <= LONGITUDE_MIN &
+       .or. long(isource) >= LONGITUDE_MAX)  call exit_MPI(myrank,'the current source is outside the model')
 
   if(depth(isource) >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
     call exit_MPI(myrank,'the current source is below the bottom of the model')
