@@ -1,9 +1,9 @@
 
 ! convert ASCII data based on tsurf to set of CMTSOLUTION files
 
- program convert_tsurf_to_CMTSOLUTION
+  program convert_tsurf_to_CMTSOLUTION
 
- implicit none
+  implicit none
 
   include "constants.h"
 
@@ -821,6 +821,7 @@
   subroutine utm_geo(rlon,rlat,rx,ry,UTM_PROJECTION_ZONE)
 
 ! convert geodetic longitude and latitude to UTM, and back
+! a list of UTM zones of the world is available at www.dmap.co.uk/utmworld.htm
 
   implicit none
 
