@@ -64,3 +64,9 @@ NSEIS                    = 1000
 ! number of point sources
 NSOURCES                 = 1
 
+! for the movies
+SAVE_AVS_DX_MOVIE        = .true.
+SAVE_DISPLACEMENT        = .false.
+NMOVIE                   = 200
+HDUR_MIN_MOVIES          = 2.4d0
+

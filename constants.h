@@ -43,14 +43,6 @@
 ! do not use if you do not plan to use AVS or OpenDX to visualize the mesh
   logical, parameter :: SAVE_AVS_DX_MESH_FILES = .true.
 
-! save a movie or not, and interval in time steps at which we save movie frames
-! save either displacement (for static offset) or velocity
-! define minimum half-duration of source for movie creation
-  logical, parameter :: SAVE_AVS_DX_MOVIE = .true.
-  logical, parameter :: SAVE_DISPLACEMENT = .false.
-  integer, parameter :: NMOVIE = 200
-  double precision, parameter :: HDUR_MIN_MOVIES = 2.4d0
-
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
