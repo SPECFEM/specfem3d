@@ -47,7 +47,7 @@
 
   character(len=150) outputname
 
-  integer iproc,ipoin
+  integer iproc,ipoin,npoints
 
 ! for sorting routine
   integer npointot,ilocnum,nglob,ieoff,ispecloc
@@ -58,7 +58,7 @@
 ! for GMT movie
   integer ix,iy,islice_x,islice_y,ispec_x,ispec_y
   double precision long_current,lat_current,utm_x_current,utm_y_current,dataval_interp
-  double precision, dimension(NGNOD2D_AVS_DX) :: xval,yval,dataval
+  double precision, dimension(:), allocatable :: xval,yval,dataval
   double precision size_slice_xi,size_slice_eta,size_gmt_long,size_gmt_lat
   double precision ratio_xi,ratio_eta,ratio_slice_xi,ratio_slice_eta
   integer, dimension(:,:,:,:), allocatable :: ispecGMT_store
@@ -74,6 +74,10 @@
              NPROC_ETA,NPROC_XI,NSEIS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES
 
+  logical SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  integer NMOVIE
+  double precision HDUR_MIN_MOVIES
+
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision DT,LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX
   double precision THICKNESS_TAPER_BLOCKS,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
@@ -81,10 +85,6 @@
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,STACEY_ABS_CONDITIONS
-
-  logical SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  integer NMOVIE
-  double precision HDUR_MIN_MOVIES
 
   double precision zscaling
 
@@ -105,8 +105,6 @@
   print *
   print *,'Recombining all movie frames to create a movie'
   print *
-
-  if(.not. SAVE_AVS_DX_MOVIE) stop 'movie frames were not saved by the solver'
 
   print *
   print *,'reading parameter file'
@@ -143,7 +141,11 @@
   endif
   print *
 
-  ilocnum = NGNOD2D_AVS_DX*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+  if(USE_HIGHRES_FOR_MOVIES) then
+    ilocnum = NGLLSQUARE*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+  else
+    ilocnum = NGNOD2D_AVS_DX*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+  endif
   allocate(store_val_x(ilocnum,0:NPROC-1))
   allocate(store_val_y(ilocnum,0:NPROC-1))
   allocate(store_val_z(ilocnum,0:NPROC-1))
@@ -257,7 +259,11 @@
   print *
 
 ! maximum theoretical number of points at the surface
-  npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
+  if(USE_HIGHRES_FOR_MOVIES) then
+    npointot = NGLLSQUARE * nspectot_AVS_max
+  else
+    npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
+  endif
 
 ! allocate arrays for sorting routine
   allocate(iglob(npointot),loc(npointot))
@@ -325,6 +331,15 @@
 ! clear number of elements kept
   ispec = 0
 
+  if(USE_HIGHRES_FOR_MOVIES) then
+    npoints = NGLLSQUARE
+  else
+    npoints = NGNOD2D_AVS_DX
+  endif
+  allocate(xval(npoints))
+  allocate(yval(npoints))
+  allocate(dataval(npoints))
+
 ! read points for all the slices
   do iproc = 0,NPROC-1
 
@@ -334,10 +349,10 @@
   do ispecloc = 1,NEX_PER_PROC_XI*NEX_PER_PROC_ETA
 
   ispec = ispec + 1
-  ieoff = NGNOD2D_AVS_DX*(ispec-1)
+  ieoff = npoints*(ispec-1)
 
 ! four points for each element
-  do ilocnum = 1,NGNOD2D_AVS_DX
+  do ilocnum = 1,npoints
 
     ipoin = ipoin + 1
 
@@ -383,7 +398,7 @@
 
 !--- sort the list based upon coordinates to get rid of multiples
   print *,'sorting list of points'
-  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npoints,npointot,UTM_X_MIN,UTM_X_MAX)
 
 !--- print total number of points found
   print *
@@ -571,10 +586,10 @@
 
 ! get corresponding spectral element
        ispec = ispecGMT_store(ispec_x,ispec_y,islice_x,islice_y)
-       ieoff = NGNOD2D_AVS_DX*(ispec-1)
+       ieoff = npoints*(ispec-1)
 
 ! get values at the four corners of the element
-       do ilocnum = 1,NGNOD2D_AVS_DX
+       do ilocnum = 1,npoints
          xval(ilocnum) = xp_save(ilocnum+ieoff)
          yval(ilocnum) = yp_save(ilocnum+ieoff)
          dataval(ilocnum) = field_display(ilocnum+ieoff)
@@ -611,9 +626,9 @@
   mask_point = .false.
   ipoin = 0
   do ispec=1,nspectot_AVS_max
-  ieoff = NGNOD2D_AVS_DX*(ispec-1)
+  ieoff = npoints*(ispec-1)
 ! four points for each element
-  do ilocnum = 1,NGNOD2D_AVS_DX
+  do ilocnum = 1,npoints
     ibool_number = iglob(ilocnum+ieoff)
     if(.not. mask_point(ibool_number)) then
       ipoin = ipoin + 1
@@ -636,7 +651,7 @@
 
 ! output list of elements
   do ispec=1,nspectot_AVS_max
-    ieoff = NGNOD2D_AVS_DX*(ispec-1)
+    ieoff = npoints*(ispec-1)
 ! four points for each element
     ibool_number1 = iglob(ieoff + 1)
     ibool_number2 = iglob(ieoff + 2)
@@ -690,9 +705,9 @@
 
 ! output point data
   do ispec=1,nspectot_AVS_max
-  ieoff = NGNOD2D_AVS_DX*(ispec-1)
+  ieoff = npoints*(ispec-1)
 ! four points for each element
-  do ilocnum = 1,NGNOD2D_AVS_DX
+  do ilocnum = 1,npoints
     ibool_number = iglob(ilocnum+ieoff)
     if(.not. mask_point(ibool_number)) then
       if(USE_OPENDX) then
@@ -759,7 +774,7 @@
 !=====================================================================
 !
 
-  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npoints,npointot,UTM_X_MIN,UTM_X_MAX)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
@@ -774,7 +789,7 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision SMALLVALTOL
 
-  integer npointot
+  integer npoints,npointot
   integer iglob(npointot),loc(npointot)
   logical ifseg(npointot)
   double precision xp(npointot),yp(npointot),zp(npointot)
@@ -799,8 +814,8 @@
 
 ! establish initial pointers
   do ispec=1,nspec
-    ieoff=NGNOD2D_AVS_DX*(ispec-1)
-    do ilocnum=1,NGNOD2D_AVS_DX
+    ieoff=npoints*(ispec-1)
+    do ilocnum=1,npoints
       loc(ilocnum+ieoff)=ilocnum+ieoff
     enddo
   enddo
