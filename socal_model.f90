@@ -35,7 +35,7 @@
         vs=3.87d0
         rho=2.8d0
 
-  else if(zmesh >= DEPTH_5p5km_SOCAL) then
+  else if(idoubling == IFLAG_ONE_LAYER_TOPOGRAPHY .or. idoubling == IFLAG_BASEMENT_TOPO) then
         vp=5.5d0
         vs=3.18d0
         rho=2.4d0
