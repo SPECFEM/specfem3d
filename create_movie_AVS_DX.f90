@@ -36,7 +36,8 @@
 
 !! DK DK UGLY filter points that have non realistic amplitude
 !! DK DK UGLY simply set to 0 if you do not want to remove any point
-  integer, parameter :: NREMOVE = 40
+!! DK DK   integer, parameter :: NREMOVE = 40
+  integer, parameter :: NREMOVE = 0
   integer iremove,iglobval,iglobval_max
   double precision field_max
 
