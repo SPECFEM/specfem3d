@@ -144,7 +144,8 @@
     normal_bottom,normal_top
 
 ! buffers for send and receive between faces of the slices and the chunks
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_send_faces,buffer_received_faces
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_send_faces_scalar,buffer_received_faces_scalar
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_send_faces_vector,buffer_received_faces_vector
 
 ! -----------------
 
@@ -456,8 +457,11 @@
 ! define maximum size for message buffers
   NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
 
-  allocate(buffer_send_faces(NDIM,NPOIN2DMAX_XY))
-  allocate(buffer_received_faces(NDIM,NPOIN2DMAX_XY))
+  allocate(buffer_send_faces_scalar(NPOIN2DMAX_XY))
+  allocate(buffer_received_faces_scalar(NPOIN2DMAX_XY))
+
+  allocate(buffer_send_faces_vector(NDIM,NPOIN2DMAX_XY))
+  allocate(buffer_received_faces_vector(NDIM,NPOIN2DMAX_XY))
 
 ! start reading the databases
 
@@ -817,7 +821,7 @@
 ! the mass matrix needs to be assembled with MPI here once and for all
   call assemble_MPI_scalar(rmass,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-            buffer_send_faces,buffer_received_faces,npoin2D_xi,npoin2D_eta, &
+            buffer_send_faces_scalar,buffer_received_faces_scalar,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
@@ -1626,7 +1630,7 @@
 ! assemble all the contributions between slices using MPI
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-            buffer_send_faces,buffer_received_faces,npoin2D_xi,npoin2D_eta, &
+            buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   do i=1,NGLOB_AB

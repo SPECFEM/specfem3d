@@ -21,7 +21,7 @@
 
   subroutine assemble_MPI_scalar(array_val,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-            buffer_send_faces,buffer_received_faces,npoin2D_xi,npoin2D_eta, &
+            buffer_send_faces_scalar,buffer_received_faces_scalar,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   implicit none
@@ -51,7 +51,7 @@
   integer, dimension(NPOIN2DMAX_XMIN_XMAX) :: iboolleft_xi,iboolright_xi
   integer, dimension(NPOIN2DMAX_YMIN_YMAX) :: iboolleft_eta,iboolright_eta
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY) :: buffer_send_faces,buffer_received_faces
+  real(kind=CUSTOM_REAL), dimension(NPOIN2DMAX_XY) :: buffer_send_faces_scalar,buffer_received_faces_scalar
 
 ! MPI status of messages to be received
   integer msg_status(MPI_STATUS_SIZE)
@@ -72,7 +72,7 @@
 
 ! slices copy the right face into the buffer
   do ipoin=1,npoin2D_xi
-    buffer_send_faces(1,ipoin) = array_val(iboolright_xi(ipoin))
+    buffer_send_faces_scalar(ipoin) = array_val(iboolright_xi(ipoin))
   enddo
 
 ! send messages forward along each row
@@ -86,15 +86,15 @@
   else
     ireceiver = addressing(iproc_xi + 1,iproc_eta)
   endif
-  call MPI_SENDRECV(buffer_send_faces,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,ireceiver, &
-        itag2,buffer_received_faces,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_scalar,npoin2D_xi,CUSTOM_MPI_TYPE,ireceiver, &
+        itag2,buffer_received_faces_scalar,npoin2D_xi,CUSTOM_MPI_TYPE,isender, &
         itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices add the buffer received to the contributions on the left face
   if(iproc_xi > 0) then
   do ipoin=1,npoin2D_xi
       array_val(iboolleft_xi(ipoin)) = array_val(iboolleft_xi(ipoin)) + &
-                                buffer_received_faces(1,ipoin)
+                                buffer_received_faces_scalar(ipoin)
   enddo
   endif
 
@@ -102,7 +102,7 @@
 ! now we have to send the result back to the sender
 ! all slices copy the left face into the buffer
   do ipoin=1,npoin2D_xi
-    buffer_send_faces(1,ipoin) = array_val(iboolleft_xi(ipoin))
+    buffer_send_faces_scalar(ipoin) = array_val(iboolleft_xi(ipoin))
   enddo
 
 ! send messages backward along each row
@@ -116,14 +116,14 @@
   else
     ireceiver = addressing(iproc_xi - 1,iproc_eta)
   endif
-  call MPI_SENDRECV(buffer_send_faces,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,ireceiver, &
-        itag2,buffer_received_faces,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_scalar,npoin2D_xi,CUSTOM_MPI_TYPE,ireceiver, &
+        itag2,buffer_received_faces_scalar,npoin2D_xi,CUSTOM_MPI_TYPE,isender, &
         itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices copy the buffer received to the contributions on the right face
   if(iproc_xi < NPROC_XI-1) then
   do ipoin=1,npoin2D_xi
-    array_val(iboolright_xi(ipoin)) = buffer_received_faces(1,ipoin)
+    array_val(iboolright_xi(ipoin)) = buffer_received_faces_scalar(ipoin)
   enddo
   endif
 
@@ -138,7 +138,7 @@
 
 ! slices copy the right face into the buffer
   do ipoin=1,npoin2D_eta
-    buffer_send_faces(1,ipoin) = array_val(iboolright_eta(ipoin))
+    buffer_send_faces_scalar(ipoin) = array_val(iboolright_eta(ipoin))
   enddo
 
 ! send messages forward along each row
@@ -152,15 +152,15 @@
   else
     ireceiver = addressing(iproc_xi,iproc_eta + 1)
   endif
-  call MPI_SENDRECV(buffer_send_faces,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,ireceiver, &
-    itag2,buffer_received_faces,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_scalar,npoin2D_eta,CUSTOM_MPI_TYPE,ireceiver, &
+    itag2,buffer_received_faces_scalar,npoin2D_eta,CUSTOM_MPI_TYPE,isender, &
     itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices add the buffer received to the contributions on the left face
   if(iproc_eta > 0) then
   do ipoin=1,npoin2D_eta
       array_val(iboolleft_eta(ipoin)) = array_val(iboolleft_eta(ipoin)) + &
-                                buffer_received_faces(1,ipoin)
+                                buffer_received_faces_scalar(ipoin)
   enddo
   endif
 
@@ -168,7 +168,7 @@
 ! now we have to send the result back to the sender
 ! all slices copy the left face into the buffer
   do ipoin=1,npoin2D_eta
-    buffer_send_faces(1,ipoin) = array_val(iboolleft_eta(ipoin))
+    buffer_send_faces_scalar(ipoin) = array_val(iboolleft_eta(ipoin))
   enddo
 
 ! send messages backward along each row
@@ -182,14 +182,14 @@
   else
     ireceiver = addressing(iproc_xi,iproc_eta - 1)
   endif
-  call MPI_SENDRECV(buffer_send_faces,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,ireceiver, &
-    itag2,buffer_received_faces,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_scalar,npoin2D_eta,CUSTOM_MPI_TYPE,ireceiver, &
+    itag2,buffer_received_faces_scalar,npoin2D_eta,CUSTOM_MPI_TYPE,isender, &
     itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices copy the buffer received to the contributions on the right face
   if(iproc_eta < NPROC_ETA-1) then
   do ipoin=1,npoin2D_eta
-    array_val(iboolright_eta(ipoin)) = buffer_received_faces(1,ipoin)
+    array_val(iboolright_eta(ipoin)) = buffer_received_faces_scalar(ipoin)
   enddo
   endif
 
