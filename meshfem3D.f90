@@ -61,6 +61,15 @@
 ! If you use this code for your own research, please send an email
 ! to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite:
 !
+! @article{KoLiTrSuStSh04,
+! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
+!   and Christiane Stidham and John H. Shaw},
+! year=2004,
+! title={Simulations of Strong Ground Motion in the {L}os {A}ngeles {B}asin
+!   Based upon the Spectral-Element Method},
+! journal={Bull. Seism. Soc. Am.},
+! note="in press"}
+!
 ! @article{KoTr99,
 ! author={D. Komatitsch and J. Tromp},
 ! year=1999,
@@ -68,6 +77,30 @@
 ! journal={Geophys. J. Int.},
 ! volume=139,
 ! pages={806-822}}
+!
+! Reference frame - convention:
+! ----------------------------
+!
+! The code uses the following convention for the reference frame:
+!
+!  - X axis is East
+!  - Y axis is North
+!  - Z axis is up
+!
+! Note that this convention is different from both the Aki-Richards convention
+! and the Harvard CMT convention.
+!
+! Let us recall that the Aki-Richards convention is:
+!
+!  - X axis is North
+!  - Y axis is East
+!  - Z axis is down
+!
+! and that the Harvard CMT convention is:
+!
+!  - X axis is South
+!  - Y axis is East
+!  - Z axis is up
 !
 ! Evolution of the code:
 ! ---------------------

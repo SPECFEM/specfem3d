@@ -24,7 +24,7 @@
   nlines = nstep / NVAL
 
 ! initialize time step number
-  it = -1
+  it = 0
 
 ! initial time
   initial_time = 3600 * hour + 60 * minutes + seconds
@@ -41,7 +41,7 @@
 
     do ival = 1,NVAL
       it = it + 1
-      write(12,*) sngl(it*dt + initial_time),sngl(a(ival)/100.d0)
+      write(12,*) sngl((it-1)*dt + initial_time),sngl(a(ival)/100.d0)
     enddo
 
   enddo
