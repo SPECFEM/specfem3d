@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  G l o b e  V e r s i o n  3 . 5
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!        (c) California Institute of Technology July 2004
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -23,10 +23,13 @@
 
   double precision t,hdur
 
+  double precision hdur_gauss
   double precision, external :: erf
 
 ! Gaussian moment-rate tensor
-  comp_source_time_function = 0.5d0*(1.0d0+erf(SOURCE_DECAY_RATE*t/hdur))
+! for Gaussian use 1.66667*hdur to get roughly a triangle with half-duration hdur
+  hdur_gauss = hdur * 5. / 3.
+  comp_source_time_function = 0.5d0*(1.0d0+erf(SOURCE_DECAY_RATE*t/hdur_gauss))
 
   end function comp_source_time_function
 
