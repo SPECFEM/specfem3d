@@ -5,7 +5,8 @@
 # read DATA/Par_file to get information about the run
 
 # name of the file that contains the list of machines
-set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 34- `
+set machine_file = "mymachines"
+
 set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 34- `
 
 # compute total number of processors needed
@@ -17,13 +18,13 @@ set NPROC_ETA = `grep NPROC_ETA DATA/Par_file | cut -c 34- `
 
 rm -f sources error*txt starttimeloop* timestamp* PI* RECORDHEADERS
 
-if ( -f $list_of_machines ) then
+if ( -f $machine_file ) then
   echo " "
-  echo using machine file \"$list_of_machines\"
+  echo using machine file \"$machine_file\"
   echo " "
   echo list of active machines:
   echo " "
-  cat $list_of_machines
+  cat $machine_file
   echo " "
 endif
 
@@ -39,7 +40,7 @@ echo " "
 
 #### use this on Beowulf
 set MPIRUN="mpirun"
-$MPIRUN -nolocal -machinefile $list_of_machines -np $numprocessors $PWD/xspecfem3D 
+$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xspecfem3D 
 
 #### use this on SGI
 # mpirun -np $numprocessors xspecfem3D

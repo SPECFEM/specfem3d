@@ -150,7 +150,7 @@
     gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
     vp_final = vp_ref_hauksson * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
-! y = ymay
+! y = ymax
   else if(utm_y_eval > END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
     xmesh = utm_x_eval
     ymesh = END_Y_GOCAD_MR

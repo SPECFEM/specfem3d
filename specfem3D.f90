@@ -313,7 +313,7 @@
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
   logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   character(len=150) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname
@@ -376,7 +376,7 @@
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -532,7 +532,7 @@
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
           LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION)
+          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
@@ -563,7 +563,7 @@
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
-            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE)
+            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION)
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

@@ -4,7 +4,7 @@
 !
 !=====================================================================
 
-  subroutine utm_geo(rlon,rlat,rx,ry,UTM_PROJECTION_ZONE,iway)
+  subroutine utm_geo(rlon,rlat,rx,ry,UTM_PROJECTION_ZONE,iway,SUPPRESS_UTM_PROJECTION)
 
 ! convert geodetic longitude and latitude to UTM, and back
 ! use iway = ILONGLAT2UTM for long/lat to UTM, IUTM2LONGLAT for UTM to lat/long
@@ -38,6 +38,7 @@
 
   integer UTM_PROJECTION_ZONE,iway
   double precision rx,ry,rlon,rlat
+  logical SUPPRESS_UTM_PROJECTION
 
   double precision, parameter :: degrad=PI/180., raddeg=180./PI
   double precision, parameter :: semimaj=6378206.4d0, semimin=6356583.8d0

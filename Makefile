@@ -180,6 +180,7 @@ meshfem3D: constants.h \
        $O/read_moho_map.o \
        $O/exit_mpi.o \
        $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o
 ## use MPI here
@@ -219,6 +220,7 @@ meshfem3D: constants.h \
        $O/read_moho_map.o \
        $O/exit_mpi.o \
        $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o $(MPI_FLAGS)
 
@@ -232,6 +234,7 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/numerical_recipes.o \
        $O/write_seismograms.o \
        $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o \
        $O/locate_source.o \
@@ -261,6 +264,7 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/numerical_recipes.o \
        $O/write_seismograms.o \
        $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o \
        $O/locate_source.o \
@@ -285,29 +289,29 @@ convolve_source_timefunction: $O/convolve_source_timefunction.o
 	${F90} $(FLAGS_CHECK) -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
 
 create_header_file: $O/create_header_file.o $O/read_parameter_file.o \
-     $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o
+     $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcreate_header_file $O/create_header_file.o \
-     $O/read_parameter_file.o $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o
+     $O/read_parameter_file.o $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o $O/read_value_parameters.o
 
 create_movie_AVS_DX: $O/create_movie_AVS_DX.o $O/read_parameter_file.o \
-     $O/compute_parameters.o $O/utm_geo.o
+     $O/compute_parameters.o $O/utm_geo.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcreate_movie_AVS_DX $O/create_movie_AVS_DX.o \
-     $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o
+     $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o $O/read_value_parameters.o
 
 combine_AVS_DX: constants.h $O/combine_AVS_DX.o $O/get_cmt.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcombine_AVS_DX $O/combine_AVS_DX.o $O/get_cmt.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 
 check_mesh_quality_AVS_DX: constants.h $O/check_mesh_quality_AVS_DX.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcheck_mesh_quality_AVS_DX $O/check_mesh_quality_AVS_DX.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 
 check_buffers_2D: constants.h $O/check_buffers_2D.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcheck_buffers_2D $O/check_buffers_2D.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 
 clean:
 	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX
@@ -371,6 +375,9 @@ $O/exit_mpi.o: constants.h exit_mpi.f90
 
 $O/read_parameter_file.o: constants.h read_parameter_file.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/read_parameter_file.o read_parameter_file.f90
+
+$O/read_value_parameters.o: constants.h read_value_parameters.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/read_value_parameters.o read_value_parameters.f90
 
 $O/utm_geo.o: constants.h utm_geo.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/utm_geo.o utm_geo.f90

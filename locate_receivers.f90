@@ -26,7 +26,7 @@
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION)
 
   implicit none
 
@@ -38,7 +38,7 @@
 
   integer NPROC,UTM_PROJECTION_ZONE
 
-  logical TOPOGRAPHY
+  logical TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
 
   integer nrec,myrank
 
@@ -183,7 +183,7 @@
     if(dabs(stbur(irec)) > 0.001d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
 
 ! convert station location to UTM
-    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
 ! compute horizontal distance between source and receiver in km
       horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 + (stutm_x(irec)-utm_x_source)**2) / 1000.

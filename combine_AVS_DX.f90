@@ -86,7 +86,7 @@
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
   logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   double precision zscaling
@@ -126,7 +126,7 @@
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION)
 
   if(.not. SAVE_AVS_DX_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
 
@@ -579,7 +579,7 @@ endif
     z_source_quad3 = 2000.
     z_source_quad4 = 2000.
 
-    call utm_geo(long,lat,x_target_source,y_target_source,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+    call utm_geo(long,lat,x_target_source,y_target_source,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
     x_source_quad1 = x_target_source
     y_source_quad1 = y_target_source
@@ -624,7 +624,7 @@ endif
       read(11,*) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
 
 ! points for the receivers are put at the surface for clarity (depth ignored)
-      call utm_geo(stlon(irec),stlat(irec),x_target(irec),y_target(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+      call utm_geo(stlon(irec),stlat(irec),x_target(irec),y_target(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
       z_target(irec) = 2000.
 

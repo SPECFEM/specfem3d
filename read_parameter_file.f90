@@ -25,7 +25,7 @@
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION)
 
   implicit none
 
@@ -43,12 +43,9 @@
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   character(len=150) LOCAL_PATH,MODEL
-
-! first 34 characters of each line in the file are a comment
-  character(len=34) junk
 
 ! local variables
   integer ios,icounter,isource,idummy,NEX_MAX
@@ -59,31 +56,22 @@
 
   open(unit=IIN,file='DATA/Par_file',status='old')
 
-! ignore header
-  do idummy=1,11
-    read(IIN,*)
-  enddo
+  call read_value_double_precision(LATITUDE_MIN)
+  call read_value_double_precision(LATITUDE_MAX)
+  call read_value_double_precision(LONGITUDE_MIN)
+  call read_value_double_precision(LONGITUDE_MAX)
+  call read_value_double_precision(DEPTH_BLOCK_KM)
+  call read_value_integer(UTM_PROJECTION_ZONE)
+  call read_value_logical(SUPPRESS_UTM_PROJECTION)
 
-  read(IIN,2) junk,LATITUDE_MIN
-  read(IIN,2) junk,LATITUDE_MAX
-  read(IIN,2) junk,LONGITUDE_MIN
-  read(IIN,2) junk,LONGITUDE_MAX
-  read(IIN,2) junk,DEPTH_BLOCK_KM
-  read(IIN,1) junk,UTM_PROJECTION_ZONE
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,NEX_XI
-  read(IIN,1) junk,NEX_ETA
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,NPROC_XI
-  read(IIN,1) junk,NPROC_ETA
+  call read_value_integer(NEX_XI)
+  call read_value_integer(NEX_ETA)
+  call read_value_integer(NPROC_XI)
+  call read_value_integer(NPROC_ETA)
 
 ! convert basin size to UTM coordinates and depth of mesh to meters
-  call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
-  call utm_geo(LONGITUDE_MAX,LATITUDE_MAX,UTM_X_MAX,UTM_Y_MAX,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+  call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+  call utm_geo(LONGITUDE_MAX,LATITUDE_MAX,UTM_X_MAX,UTM_Y_MAX,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
   Z_DEPTH_BLOCK = - dabs(DEPTH_BLOCK_KM) * 1000.d0
 
@@ -134,17 +122,11 @@
   NER_MOHO_16 = NER_MOHO_16 * 2
   NER_BOTTOM_MOHO = NER_BOTTOM_MOHO * 4
 
-! define the velocity model
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,4) junk,MODEL
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,OCEANS
-  read(IIN,3) junk,TOPOGRAPHY
-  read(IIN,3) junk,ATTENUATION
-  read(IIN,3) junk,USE_OLSEN_ATTENUATION
+  call read_value_string(MODEL)
+  call read_value_logical(OCEANS)
+  call read_value_logical(TOPOGRAPHY)
+  call read_value_logical(ATTENUATION)
+  call read_value_logical(USE_OLSEN_ATTENUATION)
 
   if(MODEL == 'SoCal') then
 
@@ -199,13 +181,8 @@
   if(VP_VS_RATIO_GOCAD_TOP <= sqrt(2.d0) .or. VP_VS_RATIO_GOCAD_BOTTOM <= sqrt(2.d0)) &
       stop 'wrong value of Poisson''s ratio for Gocad Vs block'
 
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,ABSORBING_CONDITIONS
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,2) junk,RECORD_LENGTH_IN_SECONDS
+  call read_value_logical(ABSORBING_CONDITIONS)
+  call read_value_double_precision(RECORD_LENGTH_IN_SECONDS)
 
 ! compute total number of time steps, rounded to next multiple of 100
   NSTEP = 100 * (int(RECORD_LENGTH_IN_SECONDS / (100.d0*DT)) + 1)
@@ -225,14 +202,12 @@
   NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
   if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
 
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,MOVIE_SURFACE
-  read(IIN,3) junk,MOVIE_VOLUME
-  read(IIN,1) junk,NTSTEP_BETWEEN_FRAMES
-  read(IIN,3) junk,CREATE_SHAKEMAP
-  read(IIN,3) junk,SAVE_DISPLACEMENT
-  read(IIN,3) junk,USE_HIGHRES_FOR_MOVIES
+  call read_value_logical(MOVIE_SURFACE)
+  call read_value_logical(MOVIE_VOLUME)
+  call read_value_integer(NTSTEP_BETWEEN_FRAMES)
+  call read_value_logical(CREATE_SHAKEMAP)
+  call read_value_logical(SAVE_DISPLACEMENT)
+  call read_value_logical(USE_HIGHRES_FOR_MOVIES)
 
 ! compute the minimum value of hdur in CMTSOLUTION file
   open(unit=1,file='DATA/CMTSOLUTION',status='old')
@@ -261,39 +236,14 @@
   if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. minval_hdur < TINYVAL) &
     stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
 
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,SAVE_AVS_DX_MESH_FILES
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,4) junk,LOCAL_PATH
-
-! ignore name of machine file (used by scripts but not by mesher nor solver)
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,*)
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,NTSTEP_BETWEEN_OUTPUT_INFO
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,1) junk,NTSTEP_BETWEEN_OUTPUT_SEISMOS
-
-  read(IIN,*)
-  read(IIN,*)
-  read(IIN,3) junk,PRINT_SOURCE_TIME_FUNCTION
+  call read_value_logical(SAVE_AVS_DX_MESH_FILES)
+  call read_value_string(LOCAL_PATH)
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO)
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION)
 
 ! close parameter file
   close(IIN)
-
-! formats
- 1 format(a,i20)
- 2 format(a,f20.0)
- 3 format(a,l20)
- 4 format(a,a)
 
   end subroutine read_parameter_file
 

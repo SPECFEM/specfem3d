@@ -26,7 +26,7 @@
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION)
+                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION)
 
   implicit none
 
@@ -39,7 +39,7 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION
+  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK
 
@@ -167,7 +167,8 @@
   Myz(isource) = - moment_tensor(4,isource)
   Mxy(isource) = - moment_tensor(6,isource)
 
-  call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource),UTM_PROJECTION_ZONE,ILONGLAT2UTM)
+  call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource), &
+                   UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
 ! compute elevation of topography at the epicenter
   if(TOPOGRAPHY) then

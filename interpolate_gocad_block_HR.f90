@@ -128,7 +128,7 @@
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
     vp_final = vp_ref_MR * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
-! y = ymay
+! y = ymax
   else if(utm_y_eval > END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
     gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR)) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &

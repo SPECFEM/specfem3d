@@ -28,7 +28,7 @@
            HAUKSSON_REGIONAL_MODEL,OCEANS, &
            VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
            IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
-           ANISOTROPY,SAVE_AVS_DX_MESH_FILES)
+           ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION)
 
 ! create the different regions of the mesh
 
@@ -52,7 +52,7 @@
 
   logical HARVARD_3D_GOCAD_MODEL,HAUKSSON_REGIONAL_MODEL
   logical OCEANS,IMPOSE_MINIMUM_VP_GOCAD
-  logical MOHO_MAP_LUPEI,ANISOTROPY,SAVE_AVS_DX_MESH_FILES
+  logical MOHO_MAP_LUPEI,ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
@@ -889,7 +889,7 @@ enddo
           yval = ystore(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
 
 ! project x and y in UTM back to long/lat since topo file is in long/lat
-  call utm_geo(long,lat,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
+  call utm_geo(long,lat,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
 
 ! get coordinate of corner in bathy/topo model
     icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
