@@ -34,7 +34,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xix,xiy,xiz,etax,etay,etaz, &
         gammax,gammay,gammaz
 
-  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ) :: sourcearray
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
 
   double precision xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
 
@@ -44,30 +44,14 @@
   double precision, dimension(NGLLZ) :: zigll
 
 ! source arrays
-  double precision, dimension(:,:,:,:), allocatable :: sourcearrayd
-  double precision, dimension(:,:,:), allocatable :: G11,G12,G13,G21,G22,G23,G31,G32,G33
-  double precision, dimension(:), allocatable :: hxis,hpxis,hetas,hpetas,hgammas,hpgammas
+  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
+  double precision, dimension(NGLLX,NGLLY,NGLLZ) :: G11,G12,G13,G21,G22,G23,G31,G32,G33
+  double precision, dimension(NGLLX) :: hxis,hpxis
+  double precision, dimension(NGLLY) :: hetas,hpetas
+  double precision, dimension(NGLLZ) :: hgammas,hpgammas
 
   integer k,l,m
   integer ir,it,iv
-
-! allocate memory for arrays
-  allocate(sourcearrayd(3,NGLLX,NGLLY,NGLLZ))
-  allocate(G11(NGLLX,NGLLY,NGLLZ))
-  allocate(G12(NGLLX,NGLLY,NGLLZ))
-  allocate(G13(NGLLX,NGLLY,NGLLZ))
-  allocate(G21(NGLLX,NGLLY,NGLLZ))
-  allocate(G22(NGLLX,NGLLY,NGLLZ))
-  allocate(G23(NGLLX,NGLLY,NGLLZ))
-  allocate(G31(NGLLX,NGLLY,NGLLZ))
-  allocate(G32(NGLLX,NGLLY,NGLLZ))
-  allocate(G33(NGLLX,NGLLY,NGLLZ))
-  allocate(hxis(NGLLX))
-  allocate(hpxis(NGLLX))
-  allocate(hetas(NGLLY))
-  allocate(hpetas(NGLLY))
-  allocate(hgammas(NGLLZ))
-  allocate(hpgammas(NGLLZ))
 
 ! calculate G_ij for general source location
 ! the source does not necessarily correspond to a Gauss-Lobatto point
@@ -145,23 +129,6 @@
     sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
   endif
 
-! deallocate arrays
-  deallocate(sourcearrayd)
-  deallocate(G11)
-  deallocate(G12)
-  deallocate(G13)
-  deallocate(G21)
-  deallocate(G22)
-  deallocate(G23)
-  deallocate(G31)
-  deallocate(G32)
-  deallocate(G33)
-  deallocate(hxis)
-  deallocate(hpxis)
-  deallocate(hetas)
-  deallocate(hpetas)
-  deallocate(hgammas)
-  deallocate(hpgammas)
-
   end subroutine compute_arrays_source
+
 
