@@ -741,7 +741,7 @@
                   NSPEC2D_A_XI,NSPEC2D_B_XI)
 
 ! Stacey put back
-  call get_absorb(prname,iboun,nspec, &
+  call get_absorb(myrank,prname,iboun,nspec, &
        nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM)
 

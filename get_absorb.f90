@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-  subroutine get_absorb(prname,iboun,nspec, &
+  subroutine get_absorb(myrank,prname,iboun,nspec, &
         nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM)
 
@@ -25,7 +25,7 @@
 
   include "constants.h"
 
-  integer nspec
+  integer nspec,myrank
 
   integer NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM
 
@@ -118,7 +118,7 @@
 
 ! check theoretical value of elements at the bottom
   if(ispecb5 /= NSPEC2D_BOTTOM) &
-    call exit_MPI('ispecb5 should equal NSPEC2D_BOTTOM in absorbing boundary detection')
+    call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM in absorbing boundary detection')
 
 ! IMPROVE save these temporary arrays for the solver for Stacey conditions
 

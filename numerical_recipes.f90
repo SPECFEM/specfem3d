@@ -8,6 +8,9 @@
 ! double precision routines
 
   double precision function erf(x)
+
+  implicit none
+
   double precision x
 
 ! this routine uses routine gammp
@@ -24,6 +27,9 @@
 ! ---------------------------------
 
   double precision function gammp(a,x)
+
+  implicit none
+
   double precision a,x
 
 ! this routine uses routines gcf and gser
@@ -44,6 +50,8 @@
 ! ---------------------------------
 
   subroutine gcf(gammcf,a,x,gln)
+
+  implicit none
 
   double precision a,gammcf,gln,x
 
@@ -86,6 +94,8 @@
 
   subroutine gser(gamser,a,x,gln)
 
+  implicit none
+
   double precision a,gamser,gln,x
 
   integer, parameter :: ITMAX=100
@@ -127,6 +137,8 @@
 ! ---------------------------------
 
   double precision function gammln(xx)
+
+  implicit none
 
   double precision xx
 
