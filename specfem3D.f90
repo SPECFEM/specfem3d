@@ -870,6 +870,7 @@
 
 !! DK DK to debug
     print *,'int_Q_mu = ',int_Q_mu
+    stop 'debug mode to change'
 
      else
        iattenuation_sediments = IATTENUATION_SEDIMENTS_90
