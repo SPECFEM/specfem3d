@@ -134,7 +134,7 @@ g -warn unused -warn declarations -std95 -check nobounds
 #MPI_FLAGS = 
 
 baksave:
-	cp *f90 *h README_SPECFEM3D_BASIN_v1.2 DATA/Par_file* Makefile go_mesher go_solver runall mymachines bak
+	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver runall mymachines bak
 
 meshfem3D: constants.h \
        $O/meshfem3D.o \
