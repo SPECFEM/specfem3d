@@ -136,10 +136,10 @@ MPI_FLAGS =
 ######## IBM SP or Power 4 - file names need to be *.f instead of *.f90 ######
 #F90 = mpxlf_r
 #MPIF90 = mpxlf_r
-#FLAGS_CHECK = -O3 -Q -qarch=auto -qcache=auto -qtune=auto -qlanglvl=95pure -qmaxmem=65536 -qflag=L:L -qhalt=L
-#FLAGS_CHECK = -q64 -O3 -qarch=pwr4 -qlanglvl=95pure -qflag=L:L -qhalt=L
+#FLAGS_CHECK = -O3 -Q -qarch=auto -qcache=auto -qtune=auto -qlanglvl=95pure -qmaxmem=65536 -qflag=L:L -qhalt=L -qsuffix=f=f90
+#FLAGS_CHECK = -q64 -O3 -qarch=pwr4 -qlanglvl=95pure -qflag=L:L -qhalt=L -qsuffix=f=f90
 # use this on IDRIS machines, www.idris.fr
-#FLAGS_CHECK = -q64 -O4 -qfree=f90
+#FLAGS_CHECK = -q64 -O4 -qfree=f90 -qsuffix=f=f90
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS = 
 
