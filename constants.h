@@ -89,6 +89,9 @@
 ! hdur for movie and shakemaps
   double precision, parameter :: HDUR_MOVIE = 2.4d0
 
+! save high resolution AVS_DX mesh in the mesher
+  logical, parameter ::  SAVE_HIGH_RES_AVS_DX = .false.
+
 !----------- do not modify anything below -------------
 
 ! some useful constants

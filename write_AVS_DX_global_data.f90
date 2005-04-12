@@ -46,11 +46,16 @@
 ! processor identification
   character(len=150) prname
 
+! ------------------------------------
+
+  if (.not. SAVE_HIGH_RES_AVS_DX) then
+
 ! writing points
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='unknown')
 
 ! erase the logical mask used to mark points already found
   mask_ibool(:) = .false.
+
 
 ! mark global AVS or DX points
   do ispec=1,nspec
@@ -180,6 +185,94 @@
   enddo
 
   close(10)
+
+  else ! =============SAVE_HIGH_RES_AVS_DX = .true.====================
+
+  ! writing points
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='unknown')
+
+! erase the logical mask used to mark points already found
+  mask_ibool(:) = .false.
+
+! mark global AVS or DX points
+  do ispec=1,nspec
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob = ibool(i,j,k,ispec)
+          mask_ibool(iglob) = .true.
+        enddo
+      enddo
+    enddo
+  enddo
+
+! count global number of AVS or DX points
+  npoin = count(mask_ibool(:))
+
+! number of points in AVS or DX file
+  write(10,*) npoin
+
+! erase the logical mask used to mark points already found
+  mask_ibool(:) = .false.
+
+! output global AVS or DX points
+  numpoin = 0
+  do ispec=1,nspec
+    do k = 1, NGLLZ, ik
+      do j = 1, NGLLY, ij
+        do i = 1, NGLLX, ii
+          iglob = ibool(i,j,k,ispec)
+          if(.not. mask_ibool(iglob)) then
+            numpoin = numpoin + 1
+            num_ibool_AVS_DX(iglob) = numpoin
+            write(10,*) numpoin,sngl(xstore(i,j,k,ispec)), &
+                  sngl(ystore(i,j,k,ispec)),sngl(zstore(i,j,k,ispec))
+            mask_ibool(iglob) = .true.
+          endif
+        enddo
+      enddo
+    enddo
+  enddo
+
+! check that number of global points output is okay
+  if(numpoin /= npoin) &
+        call exit_MPI(myrank,'incorrect number of global points in AVS or DX file creation')
+  
+  close(10)
+  
+! writing elements
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='unknown')
+
+! number of elements in AVS or DX file
+  
+  write(10,*) nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) / (ii * ij * ik)
+
+! output global AVS or DX elements
+  do ispec=1,nspec
+    do k = 1, NGLLZ-1
+      do j = 1, NGLLY-1
+        do i = 1, NGLLX-1
+          iglob1 = ibool(i,j,k,ispec)
+          iglob2 = ibool(i+1,j,k,ispec)
+          iglob3 = ibool(i+1,j+1,k,ispec)
+          iglob4 = ibool(i,j+1,k,ispec)
+          iglob5 = ibool(i,j,k+1,ispec)
+          iglob6 = ibool(i+1,j,k+1,ispec)
+          iglob7 = ibool(i+1,j+1,k+1,ispec)
+          iglob8 = ibool(i,j+1,k+1,ispec)
+          write(10,*) ispec,idoubling(ispec),num_ibool_AVS_DX(iglob1), &
+                num_ibool_AVS_DX(iglob2),num_ibool_AVS_DX(iglob3), &
+                num_ibool_AVS_DX(iglob4),num_ibool_AVS_DX(iglob5), &
+                num_ibool_AVS_DX(iglob6),num_ibool_AVS_DX(iglob7), &
+                num_ibool_AVS_DX(iglob8)
+        enddo
+      enddo
+    enddo
+  enddo
+
+  close(10)
+
+  endif
 
   end subroutine write_AVS_DX_global_data
 
