@@ -48,7 +48,7 @@ O = obj
 # Beowulf Portland pgf90
 #
 F90 = pgf90
-MPIF90 = /home/local/mpich/bin/mpif90
+MPIF90 = mpif90 #/home/local/mpich/bin/mpif90
 FLAGS_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Mstandard -Knoieee
 FLAGS_NO_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Munroll=c:6 -Mstandard -Knoieee
 MPI_FLAGS = 
@@ -172,6 +172,7 @@ meshfem3D: constants.h \
        $O/numerical_recipes.o \
        $O/interpolate_gocad_block_MR.o \
        $O/interpolate_gocad_block_HR.o \
+       $O/salton_trough_gocad.o \
        $O/socal_model.o \
        $O/aniso_model.o \
        $O/compute_rho_estimate.o \
@@ -212,6 +213,7 @@ meshfem3D: constants.h \
        $O/numerical_recipes.o \
        $O/interpolate_gocad_block_MR.o \
        $O/interpolate_gocad_block_HR.o \
+       $O/salton_trough_gocad.o \
        $O/socal_model.o \
        $O/aniso_model.o \
        $O/compute_rho_estimate.o \
@@ -453,6 +455,9 @@ $O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90
 
 $O/interpolate_gocad_block_HR.o: constants.h interpolate_gocad_block_HR.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/interpolate_gocad_block_HR.o interpolate_gocad_block_HR.f90
+
+$O/salton_trough_gocad.o: constants.h salton_trough_gocad.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/salton_trough_gocad.o salton_trough_gocad.f90
 
 $O/socal_model.o: constants.h socal_model.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/socal_model.o socal_model.f90

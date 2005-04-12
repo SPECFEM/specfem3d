@@ -239,6 +239,7 @@
   double precision, dimension(:), allocatable :: t_cmt,hdur
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
+  double precision :: t0
 
 
 ! time scheme
@@ -563,6 +564,15 @@
           NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
+
+! LQY calculate t0 -- the earliest start time, after Vala, only for Gaussian STF
+  hdur = 5. / 3. * hdur
+
+! LQY filter the stf by gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
+  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
+
+  t0 = - minval(t_cmt-hdur)
+
 
   open(unit=IIN,file='DATA/STATIONS_FILTERED',status='old')
   read(IIN,*) nrec
@@ -1131,7 +1141,7 @@
     if(myrank == 0) then
 
       write(IMAIN,*) 'Time step # ',it
-      write(IMAIN,*) 'Time: ',sngl((it-1)*DT-minval(hdur)),' seconds'
+      write(IMAIN,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
 
 ! elapsed time since beginning of the simulation
       tCPU = MPI_WTIME() - time_start
@@ -1149,7 +1159,7 @@
       write(outputname,"('OUTPUT_FILES/timestamp',i6.6)") it
       open(unit=IOUT,file=outputname,status='unknown')
       write(IOUT,*) 'Time step # ',it
-      write(IOUT,*) 'Time: ',sngl((it-1)*DT-minval(hdur)),' seconds'
+      write(IOUT,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
       write(IOUT,*) 'Elapsed time in seconds = ',tCPU
       write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
       write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
@@ -1716,7 +1726,7 @@
 !   add the source (only if this proc carries the source)
     if(myrank == islice_selected_source(isource)) then
 
-      stf = comp_source_time_function(dble(it-1)*DT-hdur(isource)-t_cmt(isource),hdur(isource))
+      stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur(isource))
 
 !     distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
@@ -1868,11 +1878,11 @@
 ! write the current seismograms
   if(mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0) then
     call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-        network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+        network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
     call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
-        network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,2)
+        network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
     call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
-        network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,3)
+        network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
   endif
 
 ! save movie frame
@@ -2289,11 +2299,11 @@
 
 ! write the final seismograms
   call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+          network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
   call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,2)
+          network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
   call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,3)
+          network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
 
 ! close the main output file
   if(myrank == 0) then

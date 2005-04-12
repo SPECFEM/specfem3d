@@ -188,6 +188,10 @@
   double precision vp_block_gocad_HR(0:NX_GOCAD_HR-1,0:NY_GOCAD_HR-1,0:NZ_GOCAD_HR-1)
   integer irecord,nrecord,i_vp
 
+! for the harvard 3D salton sea model
+  real :: vp_st_gocad(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW)
+  double precision :: umesh, vmesh, wmesh, vp_st, vs_st, rho_st
+
 ! for Hauksson's model
   double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp_hauksson,vs_hauksson
   integer ilayer
@@ -392,6 +396,9 @@
     vp_block_gocad_HR(ix,iy,iz) = dble(i_vp)
   enddo
   close(27)
+
+! read Salton Trough model
+  call read_salton_sea_model(vp_st_gocad)
 
   endif
 
@@ -647,6 +654,20 @@
                   vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, &
                   MOHO_MAP_LUPEI)
 
+          endif
+! get the Harvard Salton Trough model
+          if (HARVARD_3D_GOCAD_MODEL) then
+            call vx_xyz2uvw(xmesh, ymesh, zmesh, umesh, vmesh, wmesh)
+            if (umesh >= 0 .and. umesh <= GOCAD_ST_NU-1 .and. &
+                  vmesh >= 0 .and. vmesh <=  GOCAD_ST_NV-1 .and. &
+                  wmesh >= 0 .and. wmesh <= GOCAD_ST_NW-1) then
+              call vx_xyz_interp(umesh,vmesh,wmesh, vp_st, vs_st, rho_st, vp_st_gocad)
+              if (abs(vp_st - GOCAD_ST_NO_DATA_VALUE) > 1.0d-3) then
+                vp = vp_st
+                vs = vs_st
+                rho = rho_st
+              endif
+            endif
           endif
        endif
 ! store flag indicating whether point is in the sediments

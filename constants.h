@@ -86,6 +86,9 @@
 ! source decay rate
   double precision, parameter :: SOURCE_DECAY_RATE = 2.628d0
 
+! hdur for movie and shakemaps
+  double precision, parameter :: HDUR_MOVIE = 2.4d0
+
 !----------- do not modify anything below -------------
 
 ! some useful constants
@@ -255,6 +258,15 @@
 
 ! implement smooth transition between Hauksson, HR and MR Gocad blocks
   logical, parameter :: TAPER_GOCAD_TRANSITIONS = .true.
+
+!  Salton Sea Gocad voxet
+  integer, parameter :: GOCAD_ST_NU = 638, GOCAD_ST_NV = 219, GOCAD_ST_NW = 76
+  double precision, parameter :: GOCAD_ST_O_X = 720844.0, GOCAD_ST_O_Y = 3401799.250, &
+    GOCAD_ST_O_Z =      -6354.334
+  double precision, parameter :: GOCAD_ST_U_X = -209197.89, GOCAD_ST_U_Y =  320741.71
+  double precision, parameter :: GOCAD_ST_V_X = 109670.74, GOCAD_ST_V_Y = 71530.72
+  double precision, parameter :: GOCAD_ST_W_Z =  7666.334
+  double precision, parameter :: GOCAD_ST_NO_DATA_VALUE = -99999
 
 !
 !--- larger Hauksson model for entire So-Cal, 15 km resolution
