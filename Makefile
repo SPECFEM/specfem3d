@@ -59,13 +59,13 @@ MPI_FLAGS =
 #F90 = ifort
 #MPIF90 = mpif90
 #
-# Caltech cluster
+# Caltech cluster  (Hrothgar)
 #
 #FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds
 #
-# more recent machines
+# more recent machines (e.g. Pangu)
 #
-#FLAGS_NO_CHECK = -fast -tpp7 -xN -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds
+#FLAGS_NO_CHECK = -fast -tpp7 -xN  -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds # -e95
 #
 # debug with range checking
 #
@@ -317,9 +317,11 @@ check_buffers_2D: constants.h $O/check_buffers_2D.o \
 	${F90} $(FLAGS_CHECK) -o xcheck_buffers_2D $O/check_buffers_2D.o \
        $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 
-clean:
-	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX
+combine_paraview_data: constants.h $O/combine_paraview_data.o $O/write_c_binary.o
+	${F90} $(FLAGS_CHECK) -o xcombine_paraview_data  $O/combine_paraview_data.o $O/write_c_binary.o
 
+clean:
+	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data
 ####
 #### rule for each .o file below
 ####
@@ -518,4 +520,11 @@ $O/compute_arrays_source.o: constants.h compute_arrays_source.f90
 
 $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/get_attenuation_model.o get_attenuation_model.f90
+
+$O/combine_paraview_data.o: constants.h combine_paraview_data.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/combine_paraview_data.o combine_paraview_data.f90
+
+$O/write_c_binary.o: write_c_binary.c
+	cc -c -o $O/write_c_binary.o write_c_binary.c
+
 

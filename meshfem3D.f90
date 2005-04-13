@@ -146,6 +146,7 @@
 
 ! for loop on all the slices
   integer iproc_xi,iproc_eta
+  integer, dimension(:,:), allocatable :: addressing
 
 ! use integer array to store topography values
   integer icornerlat,icornerlong,NX_TOPO,NY_TOPO
@@ -268,6 +269,7 @@
   allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
   allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
 
+  allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1))
   allocate(iproc_xi_slice(0:NPROC-1))
   allocate(iproc_eta_slice(0:NPROC-1))
 
@@ -290,10 +292,21 @@
         iprocnum = iproc_eta * NPROC_XI + iproc_xi
         iproc_xi_slice(iprocnum) = iproc_xi
         iproc_eta_slice(iprocnum) = iproc_eta
+        addressing(iproc_xi,iproc_eta) = iprocnum
         if(myrank == 0) write(IOUT,*) iprocnum,iproc_xi,iproc_eta
       enddo
     enddo
   if(myrank == 0) close(IOUT)
+
+  if (myrank == 0) then
+    write(IMAIN,*) 'Spatial distribution of slice numbers:'
+    do iproc_eta = NPROC_ETA-1, 0, -1
+      do iproc_xi = 0, NPROC_XI-1, 1
+        write(IMAIN,'(i5)',advance='no') addressing(iproc_xi,iproc_eta)
+      enddo
+      write(IMAIN,'(a1)',advance='yes') ' '
+    enddo
+  endif
 
   if(myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank

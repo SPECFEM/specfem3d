@@ -39,8 +39,8 @@
 ! numbering of global AVS or DX points
   integer num_ibool_AVS_DX(npointot)
 
-  integer ispec
-  integer iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
+  integer ispec, i, j, k
+  integer iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8, iglob
   integer npoin,numpoin
 
 ! processor identification
@@ -218,9 +218,9 @@
 ! output global AVS or DX points
   numpoin = 0
   do ispec=1,nspec
-    do k = 1, NGLLZ, ik
-      do j = 1, NGLLY, ij
-        do i = 1, NGLLX, ii
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
           if(.not. mask_ibool(iglob)) then
             numpoin = numpoin + 1
@@ -245,7 +245,7 @@
 
 ! number of elements in AVS or DX file
   
-  write(10,*) nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) / (ii * ij * ik)
+  write(10,*) nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) 
 
 ! output global AVS or DX elements
   do ispec=1,nspec
