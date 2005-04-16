@@ -81,11 +81,11 @@
 
   character(len=100) string_read
 
-  integer ios
+  integer index_equal_sign,ios
 
   do
     read(unit=IIN,fmt=200,iostat=ios) string_read
-    if(ios /= 0) stop 'error while reading input file'
+    if(ios /= 0) stop 'error while reading parameter file'
 
 ! suppress leading white spaces, if any
     string_read = adjustl(string_read)
@@ -102,8 +102,15 @@
 ! suppress trailing comments, if any
   if(index(string_read,'#') > 0) string_read = string_read(1:index(string_read,'#')-1)
 
-! suppress leading junk (first 34 characters)
-  string_read = string_read(35:len_trim(string_read))
+! suppress leading junk (up to the first equal sign, included)
+  index_equal_sign = index(string_read,'=')
+  if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in DATA/Par_file'
+  string_read = string_read(index_equal_sign + 1:len_trim(string_read))
+
+! suppress leading and trailing white spaces again, if any, after having
+! suppressed the leading junk
+  string_read = adjustl(string_read)
+  string_read = string_read(1:len_trim(string_read))
 
 ! format
  200 format(a100)

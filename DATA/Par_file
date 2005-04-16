@@ -1,21 +1,12 @@
-# ----------------------------------------------------------------
-#
-#    This is the parameter file
-#    Put variable names first and actual value after 34th column
-#
-# ----------------------------------------------------------------
-#
-#<-                              ->
-#
 
 # coordinates of mesh block in latitude/longitude and depth in km
-LATITUDE_MIN                    = 32.2d0
-LATITUDE_MAX                    = 36.8d0
-LONGITUDE_MIN                   = -120.3d0
-LONGITUDE_MAX                   = -114.7d0
-DEPTH_BLOCK_KM                  = 60.d0
-UTM_PROJECTION_ZONE             = 11
-SUPPRESS_UTM_PROJECTION         = .false.
+LATITUDE_MIN              = 32.2d0         # coordinates of block defining the Los Angeles region
+LATITUDE_MAX              = 36.8d0
+LONGITUDE_MIN             = -120.3d0
+LONGITUDE_MAX             = -114.7d0
+DEPTH_BLOCK_KM            = 60.d0
+UTM_PROJECTION_ZONE       = 11
+SUPPRESS_UTM_PROJECTION   = .false.
 
 
 # number of elements at the surface along edges of the mesh at the surface
@@ -28,7 +19,7 @@ NPROC_XI                        = 12
 NPROC_ETA                       = 12
 
 # model (SoCal, Harvard_LA, Min_Chen_anisotropy)
-MODEL                           = Harvard_LA
+MODEL              = Harvard_LA
 
 # parameters describing the model
 OCEANS                          = .true.
@@ -68,5 +59,4 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 200000
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
-
 

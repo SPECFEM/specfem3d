@@ -1,9 +1,3 @@
-#
-# This is the parameter file
-# Put variable names first and actual value after 34th column
-#
-#-------------------------------->
-#
 
 # coordinates of mesh block in latitude/longitude and depth in km
 LATITUDE_MIN                    = 32.2d0
