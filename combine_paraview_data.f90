@@ -19,13 +19,13 @@
 program combine_paraview_data
 
 ! combines the database files on several slices.
-! the local database file needs to have been collect onto the frontend (copy_local_database.pl)
+! the local database file needs to have been collected onto the frontend (copy_local_database.pl)
 
   implicit none
 
   include 'constants.h'
   include 'OUTPUT_FILES/values_from_mesher.h'
-  
+
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec
   integer np, ne, npp, np1, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
@@ -135,7 +135,7 @@ program combine_paraview_data
     mask_ibool(:) = .false.
     numpoin = 0
     if (.not. SAVE_HIGH_RES_AVS_DX) then
-      
+
       do ispec=1,nspec
         iglob1=ibool(1,1,1,ispec)
         iglob2=ibool(NGLLX,1,1,ispec)
@@ -145,10 +145,10 @@ program combine_paraview_data
         iglob6=ibool(NGLLX,1,NGLLZ,ispec)
         iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
         iglob8=ibool(1,NGLLY,NGLLZ,ispec)
-        
+
         if(.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -156,7 +156,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob2)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -164,7 +164,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob3)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -172,7 +172,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob4)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -180,7 +180,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob5)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -188,7 +188,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob6)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -196,7 +196,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob7)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -204,7 +204,7 @@ program combine_paraview_data
         endif
         if(.not. mask_ibool(iglob8)) then
           numpoin = numpoin + 1
-          read(25,*) njunk, x, y, z 
+          read(25,*) njunk, x, y, z
           call write_real(x)
           call write_real(y)
           call write_real(z)
@@ -217,7 +217,7 @@ program combine_paraview_data
         mask_ibool(iglob5) = .true.
         mask_ibool(iglob6) = .true.
         mask_ibool(iglob7) = .true.
-        mask_ibool(iglob8) = .true.     
+        mask_ibool(iglob8) = .true.
       enddo ! ispec
 
     else  ! high resolution
@@ -228,7 +228,7 @@ program combine_paraview_data
               iglob = ibool(i,j,k,ispec)
               if(.not. mask_ibool(iglob)) then
                 numpoin = numpoin + 1
-                read(25,*) njunk, x, y, z 
+                read(25,*) njunk, x, y, z
                 call write_real(x)
                 call write_real(y)
                 call write_real(z)
@@ -243,9 +243,9 @@ program combine_paraview_data
     close(25)
     if (numpoin /= npoint) stop 'Error: number of points are not consistent'
     np = np + npoint
-    
+
   enddo  ! all slices
- 
+
  if (np /=  npp) stop 'Error: Number of total points are not consistent'
  print *, 'Total number of points: ', np
  print *, ' '
@@ -264,7 +264,7 @@ program combine_paraview_data
     if (ios /= 0) stop 'Error opening '// trim(local_element_file)
     print *, trim(local_element_file)
     print *, ' '
- 
+
     read(26, *) nelement
     if (it == 1) then
       nee = nelement * num_node
@@ -287,7 +287,7 @@ program combine_paraview_data
     enddo
     ne = ne + nelement
     close(26)
- 
+
   enddo
   if (ne /= nee) stop 'Number of total elements are not consistent'
   print *, 'Total number of elements: ', ne
@@ -297,3 +297,4 @@ program combine_paraview_data
   print *, 'Done writing '//trim(mesh_file)
 
 end program combine_paraview_data
+
