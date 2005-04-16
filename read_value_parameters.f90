@@ -107,8 +107,7 @@
   if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in DATA/Par_file'
   string_read = string_read(index_equal_sign + 1:len_trim(string_read))
 
-! suppress leading and trailing white spaces again, if any, after having
-! suppressed the leading junk
+! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
   string_read = adjustl(string_read)
   string_read = string_read(1:len_trim(string_read))
 
