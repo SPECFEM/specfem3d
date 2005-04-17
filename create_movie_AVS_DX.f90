@@ -58,8 +58,6 @@
   integer, dimension(:), allocatable :: iglob,loc,ireorder
   logical, dimension(:), allocatable :: ifseg,mask_point
   double precision, dimension(:), allocatable :: xp,yp,zp,xp_save,yp_save,zp_save,field_display
-!! DK DK for NREMOVE
-  double precision, dimension(:), allocatable :: field_display_remove
 
 ! movie files stored by solver
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: &
@@ -272,8 +270,6 @@
   allocate(field_display(npointot))
   allocate(mask_point(npointot))
   allocate(ireorder(npointot))
-!! DK DK for NREMOVE
-  allocate(field_display_remove(npointot))
 
   print *
   if(APPLY_THRESHOLD .and. .not. plot_shaking_map) print *,'Will apply a threshold to amplitude below ',100.*THRESHOLD,' %'
@@ -781,8 +777,6 @@
   deallocate(field_display)
   deallocate(mask_point)
   deallocate(ireorder)
-!! DK DK for NREMOVE
-  deallocate(field_display_remove)
 
   if(USE_HIGHRES_FOR_MOVIES) then
     deallocate(x)

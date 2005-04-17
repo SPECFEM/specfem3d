@@ -205,7 +205,7 @@
   double precision, parameter :: DEGREES_PER_CELL_TOPO_SOCAL = 5.d0 / 1000.d0
   character(len=100), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
 
-!! DK DK UGLY for Lacq gas field
+! size of topography and bathymetry file for Lacq (France) gas field
   integer, parameter :: NX_TOPO_LACQ = 499,NY_TOPO_LACQ = 401
   double precision, parameter :: ORIG_LAT_TOPO_LACQ = 100000.d0
   double precision, parameter :: ORIG_LONG_TOPO_LACQ = 340400.d0
@@ -304,7 +304,7 @@
   double precision, parameter :: DEPTH_16km_SOCAL = -16000.d0
   double precision, parameter :: DEPTH_MOHO_SOCAL = -35000.d0
 
-!! DK DK UGLY LACQ
+! layer for Lacq (France) gas field
   double precision, parameter :: DEPTH_INTERFACE_LACQ = -7000.d0
 
 ! reference surface of the model before adding topography

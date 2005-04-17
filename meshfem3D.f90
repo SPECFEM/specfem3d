@@ -430,7 +430,7 @@
 ! read basin topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
 
-!! DK DK UGLY LACQ
+! for Lacq (France) gas field
     if(MODEL == 'Lacq_gas_field_France') then
       NX_TOPO = NX_TOPO_LACQ
       NY_TOPO = NY_TOPO_LACQ
@@ -438,6 +438,8 @@
       ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
       DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
       topo_file = TOPO_FILE_LACQ
+
+! for Southern California
     else
       NX_TOPO = NX_TOPO_SOCAL
       NY_TOPO = NY_TOPO_SOCAL
@@ -634,7 +636,7 @@
   else
     Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
 
-!! DK DK UGLY LACQ
+! for Lacq (France) gas field
     if(MODEL == 'Lacq_gas_field_France') Z_DEPTH_MOHO = DEPTH_INTERFACE_LACQ
 
   endif

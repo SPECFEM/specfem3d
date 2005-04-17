@@ -52,7 +52,7 @@
     rn(npr)=(Z_DEPTH_MOHO-Z_DEPTH_BLOCK)*dble(ir)/dble(2*NER_BOTTOM_MOHO)
   enddo
 
-!! do not use d16km when Moho map is honored
+! do not use d16km when Moho map is honored
   if(MOHO_MAP_LUPEI) then
 
 !
@@ -96,8 +96,8 @@
 !! DK DK UGLY modif Manu removed     (z_top-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
   enddo
 
-!! DK DK UGLY LACQ added case of Lacq_gas_field_France
-  else
+! for Lacq (France) gas field, case of Lacq_gas_field_France
+  else if(MODEL == 'Lacq_gas_field_France') then
 
 !
 !--- bottom of the mesh (Z_DEPTH_BLOCK) to main mesh interface (called Moho for compatibility)

@@ -502,7 +502,7 @@
 ! read basin topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
 
-!! DK DK UGLY LACQ
+! for Lacq (France) gas field
     if(MODEL == 'Lacq_gas_field_France') then
       NX_TOPO = NX_TOPO_LACQ
       NY_TOPO = NY_TOPO_LACQ

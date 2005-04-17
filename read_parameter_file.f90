@@ -93,7 +93,7 @@
   call read_value_logical(ATTENUATION)
   call read_value_logical(USE_OLSEN_ATTENUATION)
 
-!! DK DK UGLY LACQ  added case of Lacq_gas_field_France
+! for Lacq (France) gas field
   if(MODEL == 'Lacq_gas_field_France') then
 
 ! time step in seconds
