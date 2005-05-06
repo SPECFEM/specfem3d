@@ -103,6 +103,13 @@
     write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .false.'
   endif
 
+! default simulation type - forward simulation
+  write(IOUT,*) 'integer, parameter :: SIMULATION_TYPE = 1'
+
+! default NOT saving forward simulation last frame and 
+! absorbing boundary contribution
+  write(IOUT,*) 'logical, parameter :: SAVE_FORWARD = .false.'
+
   write(IOUT,*)
 
   close(IOUT)

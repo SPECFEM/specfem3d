@@ -565,12 +565,10 @@
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
-! LQY calculate t0 -- the earliest start time, after Vala, only for Gaussian STF
-  hdur = 5. / 3. * hdur
-
 ! LQY filter the stf by gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
 
+! LQY calculate t0 -- the earliest start time, after Vala
   t0 = - minval(t_cmt-hdur)
 
 

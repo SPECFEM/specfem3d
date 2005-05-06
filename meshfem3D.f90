@@ -811,8 +811,9 @@
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
 
+! LQY -- implementing station burial in locate_receiver()
 ! check that station is not buried, burial is not implemented in current code
-    if(dabs(stbur) > 0.1d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
+!    if(dabs(stbur) > 0.1d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
 
     if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
       nrec_filtered = nrec_filtered + 1
