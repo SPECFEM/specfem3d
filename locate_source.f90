@@ -394,7 +394,7 @@
   enddo
   final_distance_source(isource) = distmin
 
-  if(SHOW_DETAILS_LOCATE_SOURCE) then
+  if(SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES == 1) then
 
     write(IMAIN,*)
     write(IMAIN,*) '*************************************'

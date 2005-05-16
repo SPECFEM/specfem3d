@@ -104,6 +104,7 @@
   endif
 
 ! default simulation type - forward simulation
+  write(IOUT,*) 
   write(IOUT,*) 'integer, parameter :: SIMULATION_TYPE = 1'
 
 ! default NOT saving forward simulation last frame and 

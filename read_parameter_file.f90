@@ -35,7 +35,7 @@
             NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
+  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, UTM_MAX
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,DT
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
@@ -86,6 +86,7 @@
 ! right distribution is determined based upon maximum value of NEX
 
   NEX_MAX = max(NEX_XI,NEX_ETA)
+  UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
   call read_value_string(MODEL)
   call read_value_logical(OCEANS)
@@ -106,8 +107,8 @@
     NER_MOHO_16        = 3
     NER_BOTTOM_MOHO    = 8
 
-! standard mesh for SAF 1857 on Caltech cluster
-  else if (NEX_MAX <= 288) then
+! standard mesh for on Caltech cluster
+  else if (UTM_MAX/NEX_MAX >= 1.5) then
 
 ! time step in seconds
     DT                 = 0.011d0
@@ -119,7 +120,7 @@
     NER_MOHO_16        = 2
     NER_BOTTOM_MOHO    = 5
 
-  else if(NEX_MAX <= 456) then
+  else if(UTM_MAX/NEX_MAX >= 1.0) then
 
 ! time step in seconds
     DT                 = 0.009d0

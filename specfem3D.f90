@@ -109,6 +109,7 @@
 ! Evolution of the code:
 ! ---------------------
 !
+! MPI v. 1.3 Qinya Liu, Caltech, May 2005, add adjoint and kernel simulations
 ! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
 !  full anisotropy, volume movie
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
@@ -122,7 +123,7 @@
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: tau_mu,tau_sigma,beta
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: factor_scale,one_minus_sum_beta
 
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: tauinv,alphaval,betaval,gammaval,factor_common
+  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: tauinv,factor_common, alphaval,betaval,gammaval
   integer iattenuation
   double precision scale_factor
 
@@ -130,6 +131,14 @@
     R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION) :: &
     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+
+! ADJOINT
+  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: b_alphaval, b_betaval, b_gammaval
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_R_xx, b_R_yy, &
+    b_R_xy,b_R_xz,b_R_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable ::  b_epsilondev_xx,b_epsilondev_yy, &
+        b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
+! ADJOINT
 
   integer NPOIN2DMAX_XY
 
@@ -193,10 +202,8 @@
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
-
   real(kind=CUSTOM_REAL) duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
   real(kind=CUSTOM_REAL) duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
-
   real(kind=CUSTOM_REAL) sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz
 
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
@@ -212,12 +219,46 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
+! time scheme
+  real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
+
+! ADJOINT
+  real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ, b_veloc, b_accel
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappa_k, mu_k
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: rho_kl, mu_kl, kappa_kl, &
+    rhop_kl, beta_kl, alpha_kl
+  real(kind=CUSTOM_REAL) dsxx,dsxy,dsxz,dsyy,dsyz,dszz
+  real(kind=CUSTOM_REAL) b_duxdxl,b_duxdyl,b_duxdzl,b_duydxl,b_duydyl,b_duydzl,b_duzdxl,b_duzdyl,b_duzdzl
+  real(kind=CUSTOM_REAL) b_duxdxl_plus_duydyl,b_duxdxl_plus_duzdzl,b_duydyl_plus_duzdzl
+  real(kind=CUSTOM_REAL) b_duxdyl_plus_duydxl,b_duzdxl_plus_duxdzl,b_duzdyl_plus_duydzl
+  real(kind=CUSTOM_REAL) b_dsxx,b_dsxy,b_dsxz,b_dsyy,b_dsyz,b_dszz
+  real(kind=CUSTOM_REAL) b_sigma_xx,b_sigma_yy,b_sigma_zz,b_sigma_xy,b_sigma_xz,b_sigma_yz
+  real(kind=CUSTOM_REAL) b_tempx1l,b_tempx2l,b_tempx3l
+  real(kind=CUSTOM_REAL) b_tempy1l,b_tempy2l,b_tempy3l
+  real(kind=CUSTOM_REAL) b_tempz1l,b_tempz2l,b_tempz3l
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+    b_tempx1,b_tempx2,b_tempx3,b_tempy1,b_tempy2,b_tempy3,b_tempz1,b_tempz2,b_tempz3
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: absorb_xmin, absorb_xmax, &
+    absorb_ymin, absorb_ymax, absorb_zmin ! for absorbing b.c.
+  integer reclen_xmin, reclen_xmax, reclen_ymin, reclen_ymax, reclen_zmin, reclen1, reclen2
+  real(kind=CUSTOM_REAL) b_deltat, b_deltatover2, b_deltatsqover2
+! ADJOINT
+
 ! for attenuation
   real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
   real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
     epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
   real(kind=CUSTOM_REAL) epsilon_trace_over_3
+
+! ADJOINT
+  real(kind=CUSTOM_REAL) b_R_xx_val,b_R_yy_val
+  real(kind=CUSTOM_REAL) b_alphaval_loc,b_betaval_loc,b_gammaval_loc,b_Sn,b_Snp1
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_epsilondev_xx_loc, &
+    b_epsilondev_yy_loc, b_epsilondev_xy_loc, b_epsilondev_xz_loc, b_epsilondev_yz_loc
+  real(kind=CUSTOM_REAL) b_epsilon_trace_over_3
+! ADJOINT
 
   integer l
   integer i_SLS
@@ -233,6 +274,12 @@
   real(kind=CUSTOM_REAL) stf_used
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
+!ADJOINT
+  character(len=150) adj_source_file
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: adj_sourcearray
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
+!ADJOINT
+
   double precision sec,stf
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
@@ -241,16 +288,16 @@
   double precision, external :: comp_source_time_function
   double precision :: t0
 
-
-! time scheme
-  real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
-
 ! receiver information
+  character(len=150) rec_filename
   integer nrec,nrec_local,nrec_tot_found
   integer irec_local
   integer, allocatable, dimension(:) :: islice_selected_rec,ispec_selected_rec,number_receiver_global
-  double precision, allocatable, dimension(:) :: xi_receiver,eta_receiver
+  double precision, allocatable, dimension(:) :: xi_receiver,eta_receiver,gamma_receiver
   double precision hlagrange
+! ADJOINT
+  integer nrec_simulation, nadj_rec_local
+! ADJOINT
 
 ! timing information for the stations
   double precision, allocatable, dimension(:,:,:) :: nu
@@ -277,8 +324,8 @@
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
 ! Lagrange interpolators at receivers
-  double precision, dimension(:), allocatable :: hxir,hetar,hpxir,hpetar
-  double precision, dimension(:,:), allocatable :: hxir_store,hetar_store
+  double precision, dimension(:), allocatable :: hxir,hetar,hpxir,hpetar,hgammar,hpgammar
+  double precision, dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
 
 ! 2-D addressing and buffers for summation between slices
   integer, dimension(:), allocatable :: iboolleft_xi, &
@@ -297,6 +344,9 @@
 
 ! maximum of the norm of the displacement
   real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all
+! ADJOINT
+  real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
+! ADJOINT
 
 ! timer MPI
   integer ihours,iminutes,iseconds,int_tCPU
@@ -342,7 +392,7 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,weight
 
 ! to save movie frames
-  integer ipoin
+  integer ipoin, nmovie_points
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
       store_val_x,store_val_y,store_val_z, &
       store_val_ux,store_val_uy,store_val_uz, &
@@ -353,10 +403,8 @@
 
 ! to save full 3D snapshot of velocity
   integer itotal_poin
-  real(kind=CUSTOM_REAL) div,curl_x,curl_y,curl_z
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
-  integer, dimension(:), allocatable :: indirect_poin
-  logical, dimension(:), allocatable :: mask_poin
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -370,6 +418,10 @@
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
+! check SIMULATION_TYPE
+  if (SIMULATION_TYPE /= 1 .and.  SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
+        call exit_mpi(myrank, 'SIMULATION_TYPE could be only 1, 2, or 3')
+
 ! read the parameter file
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
@@ -382,6 +434,10 @@
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
         SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
+
+! check simulation pararmeters
+  if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
+  if (SIMULATION_TYPE == 3 .and. ATTENUATION) call exit_mpi(myrank, 'attenuation is not implemented for backward simulations')
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -497,112 +553,7 @@
   if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-! read basin topography and bathymetry file
-  if(TOPOGRAPHY .or. OCEANS) then
-
-! for Lacq (France) gas field
-    if(MODEL == 'Lacq_gas_field_France') then
-      NX_TOPO = NX_TOPO_LACQ
-      NY_TOPO = NY_TOPO_LACQ
-      ORIG_LAT_TOPO = ORIG_LAT_TOPO_LACQ
-      ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
-      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
-      topo_file = TOPO_FILE_LACQ
-    else
-      NX_TOPO = NX_TOPO_SOCAL
-      NY_TOPO = NY_TOPO_SOCAL
-      ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-      ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-      topo_file = TOPO_FILE_SOCAL
-    endif
-
-    allocate(itopo_bathy_basin(NX_TOPO,NY_TOPO))
-
-    call read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
-
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'regional topography file read ranges in m from ', &
-        minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
-      write(IMAIN,*)
-    endif
-
-  endif
-
-! allocate arrays for source
-  allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
-  allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
-  allocate(islice_selected_source(NSOURCES))
-  allocate(ispec_selected_source(NSOURCES))
-  allocate(Mxx(NSOURCES))
-  allocate(Myy(NSOURCES))
-  allocate(Mzz(NSOURCES))
-  allocate(Mxy(NSOURCES))
-  allocate(Mxz(NSOURCES))
-  allocate(Myz(NSOURCES))
-  allocate(xi_source(NSOURCES))
-  allocate(eta_source(NSOURCES))
-  allocate(gamma_source(NSOURCES))
-  allocate(t_cmt(NSOURCES))
-  allocate(hdur(NSOURCES))
-  allocate(utm_x_source(NSOURCES))
-  allocate(utm_y_source(NSOURCES))
-
-! locate sources in the mesh
-  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
-          xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-          NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-          islice_selected_source,ispec_selected_source, &
-          xi_source,eta_source,gamma_source, &
-          LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
-          PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
-          NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
-
-  if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
-
-! LQY filter the stf by gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
-  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
-
-! LQY calculate t0 -- the earliest start time, after Vala
-  t0 = - minval(t_cmt-hdur)
-
-
-  open(unit=IIN,file='DATA/STATIONS_FILTERED',status='old')
-  read(IIN,*) nrec
-  close(IIN)
-
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Total number of receivers = ',nrec
-    write(IMAIN,*)
-  endif
-
-  if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
-
-! allocate memory for receiver arrays
-  allocate(islice_selected_rec(nrec))
-  allocate(ispec_selected_rec(nrec))
-  allocate(xi_receiver(nrec))
-  allocate(eta_receiver(nrec))
-  allocate(station_name(nrec))
-  allocate(network_name(nrec))
-  allocate(nu(NDIM,NDIM,nrec))
-
-! locate receivers in the mesh
-  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,idoubling, &
-            xstore,ystore,zstore,xigll,yigll, &
-            nrec,islice_selected_rec,ispec_selected_rec, &
-            xi_receiver,eta_receiver,station_name,network_name,nu, &
-            NPROC,utm_x_source(1),utm_y_source(1), &
-            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-            NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
-
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+! LQY -- reordered the code to put source and receiver related part together
 
 ! read 2-D addressing for summation between slices with MPI
 
@@ -636,6 +587,8 @@
   allocate(hpxir(NGLLX))
   allocate(hetar(NGLLY))
   allocate(hpetar(NGLLY))
+  allocate(hgammar(NGLLZ))
+  allocate(hpgammar(NGLLZ))
 
 ! create name of database
   call create_name_database(prname,myrank,LOCAL_PATH)
@@ -736,100 +689,317 @@
       open(unit=27,file=prname(1:len_trim(prname))//'nkmin_eta.bin',status='unknown',form='unformatted')
       read(27) nkmin_eta
       close(27)
+
+! read in absorbing wavefield saved by forward simulations
+      if (nspec2D_xmin > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+        allocate(absorb_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
+        reclen_xmin = CUSTOM_REAL * (NDIM * NGLLY * NGLLZ * nspec2D_xmin)
+        if (SIMULATION_TYPE == 3) then
+          open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='old',form='unformatted',access='direct', &
+                recl=reclen_xmin+2*4)
+        else
+          open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='unknown',form='unformatted',access='direct',&
+                recl=reclen_xmin+2*4)
+        endif
+      endif
+
+      if (nspec2D_xmax > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+        allocate(absorb_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
+        reclen_xmax = CUSTOM_REAL * (NDIM * NGLLY * NGLLZ * nspec2D_xmax)
+        if (SIMULATION_TYPE == 3) then
+          open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='old',form='unformatted',access='direct', &
+                recl=reclen_xmax+2*4)
+        else
+          open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='unknown',form='unformatted',access='direct', &
+                recl=reclen_xmax+2*4)
+        endif
+      endif
+
+      if (nspec2D_ymin > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+        allocate(absorb_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
+        reclen_ymin = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymin)
+        if (SIMULATION_TYPE == 3) then
+          open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='old',form='unformatted',access='direct',&
+                recl=reclen_ymin+2*4)
+        else
+          open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='unknown',form='unformatted',access='direct',&
+                recl=reclen_ymin+2*4)
+        endif
+      endif
+
+      if (nspec2D_ymax > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+        allocate(absorb_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
+        reclen_ymax = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymax)
+        if (SIMULATION_TYPE == 3) then  
+          open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='old',form='unformatted',access='direct',&
+                recl=reclen_ymax+2*4)
+        else
+          open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='unknown',form='unformatted',access='direct',&
+                recl=reclen_ymax+2*4)
+        endif
+      endif
+
+      if (NSPEC2D_BOTTOM > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+        allocate(absorb_zmin(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
+        reclen_zmin = CUSTOM_REAL * (NDIM * NGLLX * NGLLY * NSPEC2D_BOTTOM)
+         if (SIMULATION_TYPE == 3) then
+         open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='old',form='unformatted',access='direct',&
+                recl=reclen_zmin+2*4)
+        else
+          open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='unknown',form='unformatted',access='direct',&
+                recl=reclen_zmin+2*4)
+        endif
+      endif
+
   endif
 
-  do isource = 1,NSOURCES
 
-!   check that the source slice number is okay
-    if(islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
-      call exit_MPI(myrank,'something is wrong with the source slice number')
+! $$$$$$$$$$$$$$$$$$$$$$$$ SOURCES $$$$$$$$$$$$$$$$$
 
-!   compute source arrays in source slice
-    if(myrank == islice_selected_source(isource)) then
-      call compute_arrays_source(ispec_selected_source(isource), &
-             xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
-             Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
-             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-             xigll,yigll,zigll,NSPEC_AB)
-      sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
+! read basin topography and bathymetry file
+  if(TOPOGRAPHY .or. OCEANS) then
+
+! for Lacq (France) gas field
+    if(MODEL == 'Lacq_gas_field_France') then
+      NX_TOPO = NX_TOPO_LACQ
+      NY_TOPO = NY_TOPO_LACQ
+      ORIG_LAT_TOPO = ORIG_LAT_TOPO_LACQ
+      ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
+      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
+      topo_file = TOPO_FILE_LACQ
+    else
+      NX_TOPO = NX_TOPO_SOCAL
+      NY_TOPO = NY_TOPO_SOCAL
+      ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+      ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+      topo_file = TOPO_FILE_SOCAL
     endif
 
-  enddo
+    allocate(itopo_bathy_basin(NX_TOPO,NY_TOPO))
+
+    call read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
+
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'regional topography file read ranges in m from ', &
+        minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
+      write(IMAIN,*)
+    endif
+
+  endif
+
+! allocate arrays for source
+  allocate(islice_selected_source(NSOURCES))
+  allocate(ispec_selected_source(NSOURCES))
+  allocate(Mxx(NSOURCES))
+  allocate(Myy(NSOURCES))
+  allocate(Mzz(NSOURCES))
+  allocate(Mxy(NSOURCES))
+  allocate(Mxz(NSOURCES))
+  allocate(Myz(NSOURCES))
+  allocate(xi_source(NSOURCES))
+  allocate(eta_source(NSOURCES))
+  allocate(gamma_source(NSOURCES))
+  allocate(t_cmt(NSOURCES))
+  allocate(hdur(NSOURCES))
+  allocate(utm_x_source(NSOURCES))
+  allocate(utm_y_source(NSOURCES))
+
+! locate sources in the mesh
+  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
+          xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
+          sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+          islice_selected_source,ispec_selected_source, &
+          xi_source,eta_source,gamma_source, &
+          LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
+          TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
+          PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
+          NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
+
+  if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
+
+! LQY filter the stf by gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
+  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
+
+! LQY calculate t0 -- the earliest start time
+  t0 = - minval(t_cmt-hdur)
+
+!$$$$$$$$$$$$$$$$$$ RECEIVERS $$$$$$$$$$$$$$$$$$$$$
+
+  if (SIMULATION_TYPE == 1) then
+    rec_filename = 'DATA/STATIONS_FILTERED'
+    open(unit=IIN,file=trim(rec_filename),status='old')
+    read(IIN,*) nrec
+    close(IIN)
+    if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+  else
+    rec_filename = 'DATA/STATIONS_ADJOINT_FILTERED'
+    call station_filter(myrank,'DATA/STATIONS_ADJOINT',trim(rec_filename),nrec, &
+           LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
+    if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one source')
+    call MPI_BARRIER(MPI_COMM_WORLD,ier)
+  endif
 
   if(myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
+    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+      write(IMAIN,*) 'Total number of receivers = ', nrec
+    else
+      write(IMAIN,*) 'Total number of adjoint sources = ', nrec
+    endif
     write(IMAIN,*)
+  endif
+
+  if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+
+! allocate memory for receiver arrays
+  allocate(islice_selected_rec(nrec))
+  allocate(ispec_selected_rec(nrec))
+  allocate(xi_receiver(nrec))
+  allocate(eta_receiver(nrec))
+  allocate(gamma_receiver(nrec))
+  allocate(station_name(nrec))
+  allocate(network_name(nrec))
+  allocate(nu(NDIM,NDIM,nrec))
+
+! locate receivers in the mesh
+  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,idoubling, &
+            xstore,ystore,zstore,xigll,yigll,zigll,trim(rec_filename), &
+            nrec,islice_selected_rec,ispec_selected_rec, &
+            xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
+            NPROC,utm_x_source(1),utm_y_source(1), &
+            TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+            NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
+
+
+!###################### SOURCE ARRAYS ################
+
+  if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
+    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
+! LQY calculate sourcearrays
+    do isource = 1,NSOURCES
+
+!   check that the source slice number is okay
+      if(islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
+            call exit_MPI(myrank,'something is wrong with the source slice number')
+
+!   compute source arrays in source slice
+      if(myrank == islice_selected_source(isource)) then
+        call compute_arrays_source(ispec_selected_source(isource), &
+              xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
+              Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
+              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+              xigll,yigll,zigll,NSPEC_AB)
+        sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
+      endif
+    enddo
+  endif
+
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    nadj_rec_local = 0
+    do irec = 1,nrec
+      if(myrank == islice_selected_rec(irec))then
+!   check that the source slice number is okay
+        if(islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
+              call exit_MPI(myrank,'something is wrong with the source slice number in adjoint simulation')
+        nadj_rec_local = nadj_rec_local + 1
+      endif
+    enddo
+    allocate(adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+    if (nadj_rec_local > 0) allocate(adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+    irec_local = 0
+    do irec = 1, nrec
+!   compute only adjoint source arrays in the local slice
+      if(myrank == islice_selected_rec(irec)) then
+        irec_local = irec_local + 1
+        adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+        call compute_arrays_adjoint_source(myrank, adj_source_file, &
+              xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
+              adj_sourcearray, xigll,yigll,zigll,NSTEP)
+
+        adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
+        
+      endif
+    enddo
   endif
 
 !--- select local receivers
 
 ! count number of receivers located in this slice
   nrec_local = 0
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+    nrec_simulation = nrec
+    do irec = 1,nrec
+      if(myrank == islice_selected_rec(irec)) nrec_local = nrec_local + 1
+    enddo
+  else
+    nrec_simulation = NSOURCES
+    do isource = 1, NSOURCES
+      if(myrank == islice_selected_source(isource)) nrec_local = nrec_local + 1
+    enddo
+  endif
 
-  do irec = 1,nrec
-
-! check that the receiver slice number is okay
-  if(islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
-    call exit_MPI(myrank,'something is wrong with the receiver slice number')
-
-! write info about that receiver
-  if(myrank == islice_selected_rec(irec)) nrec_local = nrec_local + 1
-
-  enddo
-
-! allocate seismogram array
-  allocate(seismograms_d(NDIM,nrec_local,NSTEP))
-  allocate(seismograms_v(NDIM,nrec_local,NSTEP))
-  allocate(seismograms_a(NDIM,nrec_local,NSTEP))
-
+  if (nrec_local > 0) then
 ! allocate Lagrange interpolators for receivers
   allocate(hxir_store(nrec_local,NGLLX))
   allocate(hetar_store(nrec_local,NGLLY))
+  allocate(hgammar_store(nrec_local,NGLLZ))
 
 ! define local to global receiver numbering mapping
   allocate(number_receiver_global(nrec_local))
   irec_local = 0
-  do irec = 1,nrec
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+    do irec = 1,nrec
     if(myrank == islice_selected_rec(irec)) then
       irec_local = irec_local + 1
       number_receiver_global(irec_local) = irec
     endif
   enddo
+  else
+  do isource = 1,NSOURCES
+    if(myrank == islice_selected_source(isource)) then
+      irec_local = irec_local + 1
+      number_receiver_global(irec_local) = isource
+    endif
+  enddo
+  endif
 
 ! define and store Lagrange interpolators at all the receivers
   do irec_local = 1,nrec_local
     irec = number_receiver_global(irec_local)
-    call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
-    call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
+    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+      call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
+      call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
+      call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
+    else
+      call lagrange_any(xi_source(irec),NGLLX,xigll,hxir,hpxir)
+      call lagrange_any(eta_source(irec),NGLLY,yigll,hetar,hpetar)
+      call lagrange_any(gamma_source(irec),NGLLZ,zigll,hgammar,hpgammar)
+    endif
     hxir_store(irec_local,:) = hxir(:)
     hetar_store(irec_local,:) = hetar(:)
+    hgammar_store(irec_local,:) = hgammar(:)
   enddo
+  endif
 
 ! check that the sum of the number of receivers in each slice is nrec
   call MPI_REDUCE(nrec_local,nrec_tot_found,1,MPI_INTEGER,MPI_SUM,0, &
                           MPI_COMM_WORLD,ier)
   if(myrank == 0) then
     write(IMAIN,*)
+    write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
+    write(IMAIN,*)
+    write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
-    if(nrec_tot_found /= nrec) then
+    if(nrec_tot_found /= nrec_simulation) then
       call exit_MPI(myrank,'problem when dispatching the receivers')
     else
       write(IMAIN,*) 'this total is okay'
     endif
   endif
-
-! initialize seismograms
-  seismograms_d(:,:,:) = 0._CUSTOM_REAL
-  seismograms_v(:,:,:) = 0._CUSTOM_REAL
-  seismograms_a(:,:,:) = 0._CUSTOM_REAL
-
-! initialize memory variables for attenuation
-  epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
-  epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
-  epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
-  epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
-  epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
 
   if(myrank == 0) then
 
@@ -902,6 +1072,13 @@
 ! rescale mu in PREM to average frequency for attenuation
 
   if(ATTENUATION) then
+
+! initialize memory variables for attenuation
+    epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
 
 ! get and store PREM attenuation model
     do iattenuation = 1,NUM_REGIONS_ATTENUATION
@@ -995,6 +1172,18 @@
 
   endif
 
+! allocate seismogram array
+  if (nrec_local > 0) then
+  allocate(seismograms_d(NDIM,nrec_local,NSTEP))
+  allocate(seismograms_v(NDIM,nrec_local,NSTEP))
+  allocate(seismograms_a(NDIM,nrec_local,NSTEP))
+  endif
+
+! initialize seismograms
+  seismograms_d(:,:,:) = 0._CUSTOM_REAL
+  seismograms_v(:,:,:) = 0._CUSTOM_REAL
+  seismograms_a(:,:,:) = 0._CUSTOM_REAL
+
 ! initialize arrays to zero
   displ(:,:) = 0._CUSTOM_REAL
   veloc(:,:) = 0._CUSTOM_REAL
@@ -1003,54 +1192,74 @@
 ! put negligible initial value to avoid very slow underflow trapping
   if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
 
+  if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
+
+  allocate(b_displ(NDIM,NGLOB_AB))
+  allocate(b_veloc(NDIM,NGLOB_AB))
+  allocate(b_accel(NDIM,NGLOB_AB))
+
+  open(unit=27,file=trim(prname)//'displ_last.bin',status='old',form='unformatted')
+  read(27) b_displ
+  close(27)
+
+  open(unit=27,file=trim(prname)//'veloc_last.bin',status='old',form='unformatted')
+  read(27) b_veloc
+  close(27)
+
+  open(unit=27,file=trim(prname)//'accel_last.bin',status='old',form='unformatted')
+  read(27) b_accel
+  close(27)
+
+  allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+
+  allocate(mu_k(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappa_k(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+
+  rho_kl(:,:,:,:) = 0._CUSTOM_REAL
+  mu_kl(:,:,:,:) = 0._CUSTOM_REAL
+  kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+  endif
+
 ! synchronize all processes to make sure everybody is ready to start time loop
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
   if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
 ! allocate files to save movies and shaking map
   if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
-
-! save all points for high resolution, or only four corners for low resolution
-    if(USE_HIGHRES_FOR_MOVIES) then
-      allocate(store_val_x(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_y(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_z(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_ux(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_uy(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_uz(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_norm_displ(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_norm_veloc(NGLLSQUARE*NSPEC2D_TOP))
-      allocate(store_val_norm_accel(NGLLSQUARE*NSPEC2D_TOP))
-
-      allocate(store_val_x_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_y_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_z_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_ux_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_uy_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_uz_all(NGLLSQUARE*NSPEC2D_TOP,0:NPROC-1))
+    if (USE_HIGHRES_FOR_MOVIES) then
+      nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
     else
-      allocate(store_val_x(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_y(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_z(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_ux(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_uy(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_uz(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_norm_displ(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_norm_veloc(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-      allocate(store_val_norm_accel(NGNOD2D_AVS_DX*NSPEC2D_TOP))
-
-      allocate(store_val_x_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_y_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_z_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_ux_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_uy_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
-      allocate(store_val_uz_all(NGNOD2D_AVS_DX*NSPEC2D_TOP,0:NPROC-1))
+      nmovie_points = NGNOD2D * NSPEC2D_TOP
     endif
+    allocate(store_val_x(nmovie_points))
+    allocate(store_val_y(nmovie_points))
+    allocate(store_val_z(nmovie_points))
+    allocate(store_val_ux(nmovie_points))
+    allocate(store_val_uy(nmovie_points))
+    allocate(store_val_uz(nmovie_points))
+    allocate(store_val_norm_displ(nmovie_points))
+    allocate(store_val_norm_veloc(nmovie_points))
+    allocate(store_val_norm_accel(nmovie_points))
+
+    allocate(store_val_x_all(nmovie_points,0:NPROC-1))
+    allocate(store_val_y_all(nmovie_points,0:NPROC-1))
+    allocate(store_val_z_all(nmovie_points,0:NPROC-1))
+    allocate(store_val_ux_all(nmovie_points,0:NPROC-1))
+    allocate(store_val_uy_all(nmovie_points,0:NPROC-1))
+    allocate(store_val_uz_all(nmovie_points,0:NPROC-1))
 
 ! to compute max of norm for shaking map
     store_val_norm_displ(:) = -1.
     store_val_norm_veloc(:) = -1.
     store_val_norm_accel(:) = -1.
+  else if (MOVIE_VOLUME) then
+    allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   endif
 
 !
@@ -1073,6 +1282,15 @@
   endif
   deltatover2 = deltat/2.
   deltatsqover2 = deltat*deltat/2.
+  if (SIMULATION_TYPE == 3) then
+    if(CUSTOM_REAL == SIZE_REAL) then
+      b_deltat = - sngl(DT)
+    else
+      b_deltat = - DT
+    endif
+    b_deltatover2 = b_deltat/2.
+    b_deltatsqover2 = b_deltat*b_deltat/2.
+  endif
 
 ! precompute Runge-Kutta coefficients if attenuation
   if(ATTENUATION) then
@@ -1082,6 +1300,14 @@
       deltat**3*tauinv(:,:)**3 / 6. + deltat**4*tauinv(:,:)**4 / 24.
     betaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 3. + deltat**3*tauinv(:,:)**2 / 8. + deltat**4*tauinv(:,:)**3 / 24.
     gammaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 6. + deltat**3*tauinv(:,:)**2 / 24.
+    if (SIMULATION_TYPE == 3) then
+      b_alphaval(:,:) = 1 + b_deltat*tauinv(:,:) + b_deltat**2*tauinv(:,:)**2 / 2. + &
+            b_deltat**3*tauinv(:,:)**3 / 6. + b_deltat**4*tauinv(:,:)**4 / 24.
+      b_betaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 3. + &
+            b_deltat**3*tauinv(:,:)**2 / 8. + b_deltat**4*tauinv(:,:)**3 / 24.
+      b_gammaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 6. + &
+            b_deltat**3*tauinv(:,:)**2 / 24.
+    endif
   endif
 
   if(myrank == 0) then
@@ -1096,9 +1322,6 @@
     write(IOUT,*) 'starting time loop'
     close(IOUT)
   endif
-
-! get MPI starting time
-  time_start = MPI_WTIME()
 
 ! clear memory variables if attenuation
   if(ATTENUATION) then
@@ -1116,7 +1339,34 @@
       R_yz(:,:,:,:,:) = VERYSMALLVAL
     endif
 
+    if (SIMULATION_TYPE == 3) then
+      allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
+      allocate(b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
+      allocate(b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
+      allocate(b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
+      allocate(b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
+
+      open(unit=27,file=trim(prname)//'R_xx_last.bin',status='old',form='unformatted')
+      read(27) b_R_xx
+      close(27)
+      open(unit=27,file=trim(prname)//'R_yy_last.bin',status='old',form='unformatted')
+      read(27) b_R_yy
+      close(27)
+      open(unit=27,file=trim(prname)//'R_xy_last.bin',status='old',form='unformatted')
+      read(27) b_R_xy
+      close(27)
+      open(unit=27,file=trim(prname)//'R_xz_last.bin',status='old',form='unformatted')
+      read(27) b_R_xz
+      close(27)
+      open(unit=27,file=trim(prname)//'R_yz_last.bin',status='old',form='unformatted')
+      read(27) b_R_yz
+      close(27)
+    endif
+
   endif
+
+! get MPI starting time
+  time_start = MPI_WTIME()
 
 ! *********************************************************
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -1135,7 +1385,11 @@
 ! compute the maximum of the maxima for all the slices using an MPI reduction
     call MPI_REDUCE(Usolidnorm,Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0, &
                           MPI_COMM_WORLD,ier)
-
+    if (SIMULATION_TYPE == 3) then
+      b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
+      call MPI_REDUCE(b_Usolidnorm,b_Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0, &
+                          MPI_COMM_WORLD,ier)
+    endif
     if(myrank == 0) then
 
       write(IMAIN,*) 'Time step # ',it
@@ -1150,8 +1404,12 @@
       write(IMAIN,*) 'Elapsed time in seconds = ',tCPU
       write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
       write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
-      write(IMAIN,*) 'Max norm displacement vector U in solid in all slices (m) = ',Usolidnorm_all
+      write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
+      if (SIMULATION_TYPE == 3) write(IMAIN,*) &
+            'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
       write(IMAIN,*)
+      call flush(IMAIN)
+
 
 ! write time stamp file to give information about progression of simulation
       write(outputname,"('OUTPUT_FILES/timestamp',i6.6)") it
@@ -1161,11 +1419,15 @@
       write(IOUT,*) 'Elapsed time in seconds = ',tCPU
       write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
       write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
-      write(IOUT,*) 'Max norm displacement vector U in solid in all slices (m) = ',Usolidnorm_all
+      write(IOUT,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
+      if (SIMULATION_TYPE == 3) write(IOUT,*) &
+            'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
       close(IOUT)
 
 ! check stability of the code, exit if unstable
       if(Usolidnorm_all > STABILITY_THRESHOLD) call exit_MPI(myrank,'code became unstable and blew up')
+      if (SIMULATION_TYPE == 3 .and. b_Usolidnorm_all > STABILITY_THRESHOLD) &
+            call exit_MPI(myrank,'backward simulation became unstable and blew up')
 
     endif
   endif
@@ -1175,6 +1437,11 @@
     displ(:,i) = displ(:,i) + deltat*veloc(:,i) + deltatsqover2*accel(:,i)
     veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
     accel(:,i) = 0._CUSTOM_REAL
+    if (SIMULATION_TYPE == 3) then
+      b_displ(:,i) = b_displ(:,i) + b_deltat*b_veloc(:,i) + b_deltatsqover2*b_accel(:,i)
+      b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
+      b_accel(:,i) = 0._CUSTOM_REAL
+    endif
   enddo
 
   do ispec = 1,NSPEC_AB
@@ -1195,12 +1462,31 @@
           tempz2l = 0.
           tempz3l = 0.
 
+          if (SIMULATION_TYPE == 3) then
+            b_tempx1l = 0.
+            b_tempx2l = 0.
+            b_tempx3l = 0.
+
+            b_tempy1l = 0.
+            b_tempy2l = 0.
+            b_tempy3l = 0.
+
+            b_tempz1l = 0.
+            b_tempz2l = 0.
+            b_tempz3l = 0.
+          endif
+
           do l=1,NGLLX
             hp1 = hprime_xx(l,i)
             iglob = ibool(l,j,k,ispec)
             tempx1l = tempx1l + displ(1,iglob)*hp1
             tempy1l = tempy1l + displ(2,iglob)*hp1
             tempz1l = tempz1l + displ(3,iglob)*hp1
+            if (SIMULATION_TYPE == 3) then
+              b_tempx1l = b_tempx1l + b_displ(1,iglob)*hp1
+              b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
+              b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
+            endif
           enddo
 
           do l=1,NGLLY
@@ -1209,6 +1495,11 @@
             tempx2l = tempx2l + displ(1,iglob)*hp2
             tempy2l = tempy2l + displ(2,iglob)*hp2
             tempz2l = tempz2l + displ(3,iglob)*hp2
+            if (SIMULATION_TYPE == 3) then
+              b_tempx2l = b_tempx2l + b_displ(1,iglob)*hp2
+              b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
+              b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
+            endif
           enddo
 
           do l=1,NGLLZ
@@ -1217,6 +1508,11 @@
             tempx3l = tempx3l + displ(1,iglob)*hp3
             tempy3l = tempy3l + displ(2,iglob)*hp3
             tempz3l = tempz3l + displ(3,iglob)*hp3
+            if (SIMULATION_TYPE == 3) then
+              b_tempx3l = b_tempx3l + b_displ(1,iglob)*hp3
+              b_tempy3l = b_tempy3l + b_displ(2,iglob)*hp3
+              b_tempz3l = b_tempz3l + b_displ(3,iglob)*hp3
+            endif
           enddo
 
 !         get derivatives of ux, uy and uz with respect to x, y and z
@@ -1251,6 +1547,46 @@
           duzdxl_plus_duxdzl = duzdxl + duxdzl
           duzdyl_plus_duydzl = duzdyl + duydzl
 
+          if (SIMULATION_TYPE == 3) then
+            dsxx = duxdxl
+            dsxy = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
+            dsxz = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
+            dsyy = duydyl
+            dsyz = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
+            dszz = duzdzl
+
+            b_duxdxl = xixl*b_tempx1l + etaxl*b_tempx2l + gammaxl*b_tempx3l
+            b_duxdyl = xiyl*b_tempx1l + etayl*b_tempx2l + gammayl*b_tempx3l
+            b_duxdzl = xizl*b_tempx1l + etazl*b_tempx2l + gammazl*b_tempx3l
+
+            b_duydxl = xixl*b_tempy1l + etaxl*b_tempy2l + gammaxl*b_tempy3l
+            b_duydyl = xiyl*b_tempy1l + etayl*b_tempy2l + gammayl*b_tempy3l
+            b_duydzl = xizl*b_tempy1l + etazl*b_tempy2l + gammazl*b_tempy3l
+
+            b_duzdxl = xixl*b_tempz1l + etaxl*b_tempz2l + gammaxl*b_tempz3l
+            b_duzdyl = xiyl*b_tempz1l + etayl*b_tempz2l + gammayl*b_tempz3l
+            b_duzdzl = xizl*b_tempz1l + etazl*b_tempz2l + gammazl*b_tempz3l
+
+            b_duxdxl_plus_duydyl = b_duxdxl + b_duydyl
+            b_duxdxl_plus_duzdzl = b_duxdxl + b_duzdzl
+            b_duydyl_plus_duzdzl = b_duydyl + b_duzdzl
+            b_duxdyl_plus_duydxl = b_duxdyl + b_duydxl
+            b_duzdxl_plus_duxdzl = b_duzdxl + b_duxdzl
+            b_duzdyl_plus_duydzl = b_duzdyl + b_duydzl
+
+            b_dsxx =  b_duxdxl
+            b_dsxy = 0.5_CUSTOM_REAL * b_duxdyl_plus_duydxl
+            b_dsxz = 0.5_CUSTOM_REAL * b_duzdxl_plus_duxdzl
+            b_dsyy =  b_duydyl
+            b_dsyz = 0.5_CUSTOM_REAL * b_duzdyl_plus_duydzl
+            b_dszz =  b_duzdzl
+
+            kappa_k(i,j,k,ispec) = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
+            mu_k(i,j,k,ispec) = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
+                  2 * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) - ONE_THIRD * kappa_k(i,j,k,ispec)
+
+          endif
+
 ! precompute terms for attenuation if needed
   if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
 
@@ -1261,6 +1597,15 @@
     epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
     epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
     epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+
+   if (SIMULATION_TYPE == 3) then
+      b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
+      b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
+      b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
+      b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
+      b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
+      b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
+    endif
 
 ! distinguish attenuation factors
     if(flag_sediments(i,j,k,ispec)) then
@@ -1373,6 +1718,26 @@
 
        sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
             c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
+
+       if (SIMULATION_TYPE == 3) then
+         b_sigma_xx = c11*b_duxdxl + c16*b_duxdyl_plus_duydxl + c12*b_duydyl + &
+               c15*b_duzdxl_plus_duxdzl + c14*b_duzdyl_plus_duydzl + c13*b_duzdzl
+
+         b_sigma_yy = c12*b_duxdxl + c26*b_duxdyl_plus_duydxl + c22*b_duydyl + &
+               c25*b_duzdxl_plus_duxdzl + c24*b_duzdyl_plus_duydzl + c23*b_duzdzl
+
+         b_sigma_zz = c13*b_duxdxl + c36*b_duxdyl_plus_duydxl + c23*b_duydyl + &
+               c35*b_duzdxl_plus_duxdzl + c34*b_duzdyl_plus_duydzl + c33*b_duzdzl
+
+         b_sigma_xy = c16*b_duxdxl + c66*b_duxdyl_plus_duydxl + c26*b_duydyl + &
+               c56*b_duzdxl_plus_duxdzl + c46*b_duzdyl_plus_duydzl + c36*b_duzdzl
+
+         b_sigma_xz = c15*b_duxdxl + c56*b_duxdyl_plus_duydxl + c25*b_duydyl + &
+               c55*b_duzdxl_plus_duxdzl + c45*b_duzdyl_plus_duydzl + c35*b_duzdzl
+
+         b_sigma_yz = c14*b_duxdxl + c46*b_duxdyl_plus_duydxl + c24*b_duydyl + &
+               c45*b_duzdxl_plus_duxdzl + c44*b_duzdyl_plus_duydzl + c34*b_duzdzl
+       endif
     else
 ! For isotropic case
 ! use unrelaxed parameters if attenuation
@@ -1389,21 +1754,41 @@
        sigma_xy = mul*duxdyl_plus_duydxl
        sigma_xz = mul*duzdxl_plus_duxdzl
        sigma_yz = mul*duzdyl_plus_duydzl
+
+       if (SIMULATION_TYPE == 3) then
+         b_sigma_xx = lambdalplus2mul*b_duxdxl + lambdal*b_duydyl_plus_duzdzl
+         b_sigma_yy = lambdalplus2mul*b_duydyl + lambdal*b_duxdxl_plus_duzdzl
+         b_sigma_zz = lambdalplus2mul*b_duzdzl + lambdal*b_duxdxl_plus_duydyl
+
+         b_sigma_xy = mul*b_duxdyl_plus_duydxl
+         b_sigma_xz = mul*b_duzdxl_plus_duxdzl
+         b_sigma_yz = mul*b_duzdyl_plus_duydzl
+       endif
     endif
 
 ! subtract memory variables if attenuation
-      if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-         do i_sls = 1,N_SLS
-      R_xx_val = R_xx(i,j,k,ispec,i_sls)
-      R_yy_val = R_yy(i,j,k,ispec,i_sls)
-      sigma_xx = sigma_xx - R_xx_val
-      sigma_yy = sigma_yy - R_yy_val
-      sigma_zz = sigma_zz + R_xx_val + R_yy_val
-      sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-      sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-      sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-    enddo
-  endif
+    if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+      do i_sls = 1,N_SLS
+        R_xx_val = R_xx(i,j,k,ispec,i_sls)
+        R_yy_val = R_yy(i,j,k,ispec,i_sls)
+        sigma_xx = sigma_xx - R_xx_val
+        sigma_yy = sigma_yy - R_yy_val
+        sigma_zz = sigma_zz + R_xx_val + R_yy_val
+        sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
+        sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
+        sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
+        if (SIMULATION_TYPE == 3) then
+          b_R_xx_val = b_R_xx(i,j,k,ispec,i_sls)
+          b_R_yy_val = b_R_yy(i,j,k,ispec,i_sls)
+          b_sigma_xx = b_sigma_xx - b_R_xx_val
+          b_sigma_yy = b_sigma_yy - b_R_yy_val
+          b_sigma_zz = b_sigma_zz + b_R_xx_val + b_R_yy_val
+          b_sigma_xy = b_sigma_xy - b_R_xy(i,j,k,ispec,i_sls)
+          b_sigma_xz = b_sigma_xz - b_R_xz(i,j,k,ispec,i_sls)
+          b_sigma_yz = b_sigma_yz - b_R_yz(i,j,k,ispec,i_sls)
+        endif
+      enddo
+    endif
 
 ! form dot product with test vector, symmetric form
       tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
@@ -1417,6 +1802,20 @@
       tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl)
       tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
       tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
+
+      if (SIMULATION_TYPE == 3) then
+        b_tempx1(i,j,k) = jacobianl * (b_sigma_xx*xixl + b_sigma_xy*xiyl + b_sigma_xz*xizl)
+        b_tempy1(i,j,k) = jacobianl * (b_sigma_xy*xixl + b_sigma_yy*xiyl + b_sigma_yz*xizl)
+        b_tempz1(i,j,k) = jacobianl * (b_sigma_xz*xixl + b_sigma_yz*xiyl + b_sigma_zz*xizl)
+
+        b_tempx2(i,j,k) = jacobianl * (b_sigma_xx*etaxl + b_sigma_xy*etayl + b_sigma_xz*etazl)
+        b_tempy2(i,j,k) = jacobianl * (b_sigma_xy*etaxl + b_sigma_yy*etayl + b_sigma_yz*etazl)
+        b_tempz2(i,j,k) = jacobianl * (b_sigma_xz*etaxl + b_sigma_yz*etayl + b_sigma_zz*etazl)
+
+        b_tempx3(i,j,k) = jacobianl * (b_sigma_xx*gammaxl + b_sigma_xy*gammayl + b_sigma_xz*gammazl)
+        b_tempy3(i,j,k) = jacobianl * (b_sigma_xy*gammaxl + b_sigma_yy*gammayl + b_sigma_yz*gammazl)
+        b_tempz3(i,j,k) = jacobianl * (b_sigma_xz*gammaxl + b_sigma_yz*gammayl + b_sigma_zz*gammazl)
+      endif
 
           enddo
         enddo
@@ -1438,11 +1837,30 @@
           tempy3l = 0.
           tempz3l = 0.
 
+          if (SIMULATION_TYPE == 3) then
+            b_tempx1l = 0.
+            b_tempy1l = 0.
+            b_tempz1l = 0.
+
+            b_tempx2l = 0.
+            b_tempy2l = 0.
+            b_tempz2l = 0.
+
+            b_tempx3l = 0.
+            b_tempy3l = 0.
+            b_tempz3l = 0.
+          endif
+
           do l=1,NGLLX
             fac1 = hprimewgll_xx(i,l)
             tempx1l = tempx1l + tempx1(l,j,k)*fac1
             tempy1l = tempy1l + tempy1(l,j,k)*fac1
             tempz1l = tempz1l + tempz1(l,j,k)*fac1
+            if (SIMULATION_TYPE == 3) then
+              b_tempx1l = b_tempx1l + b_tempx1(l,j,k)*fac1
+              b_tempy1l = b_tempy1l + b_tempy1(l,j,k)*fac1
+              b_tempz1l = b_tempz1l + b_tempz1(l,j,k)*fac1
+            endif
           enddo
 
           do l=1,NGLLY
@@ -1450,6 +1868,11 @@
             tempx2l = tempx2l + tempx2(i,l,k)*fac2
             tempy2l = tempy2l + tempy2(i,l,k)*fac2
             tempz2l = tempz2l + tempz2(i,l,k)*fac2
+            if (SIMULATION_TYPE == 3) then
+              b_tempx2l = b_tempx2l + b_tempx2(i,l,k)*fac2
+              b_tempy2l = b_tempy2l + b_tempy2(i,l,k)*fac2
+              b_tempz2l = b_tempz2l + b_tempz2(i,l,k)*fac2
+            endif
           enddo
 
           do l=1,NGLLZ
@@ -1457,6 +1880,11 @@
             tempx3l = tempx3l + tempx3(i,j,l)*fac3
             tempy3l = tempy3l + tempy3(i,j,l)*fac3
             tempz3l = tempz3l + tempz3(i,j,l)*fac3
+            if (SIMULATION_TYPE == 3) then
+              b_tempx3l = b_tempx3l + b_tempx3(i,j,l)*fac3
+              b_tempy3l = b_tempy3l + b_tempy3(i,j,l)*fac3
+              b_tempz3l = b_tempz3l + b_tempz3(i,j,l)*fac3
+            endif
           enddo
 
           fac1 = wgllwgll_yz(j,k)
@@ -1470,6 +1898,11 @@
   accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
   accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
   accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
+  if (SIMULATION_TYPE == 3) then
+    b_accel(1,iglob) = b_accel(1,iglob) - (fac1*b_tempx1l + fac2*b_tempx2l + fac3*b_tempx3l)
+    b_accel(2,iglob) = b_accel(2,iglob) - (fac1*b_tempy1l + fac2*b_tempy2l + fac3*b_tempy3l)
+    b_accel(3,iglob) = b_accel(3,iglob) - (fac1*b_tempz1l + fac2*b_tempz2l + fac3*b_tempz3l)
+  endif
 
 ! update memory variables based upon the Runge-Kutta scheme
 
@@ -1512,6 +1945,40 @@
   Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
   R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
 
+  if (SIMULATION_TYPE == 3) then
+    b_alphaval_loc = b_alphaval(iselected,i_sls)
+    b_betaval_loc = b_betaval(iselected,i_sls)
+    b_gammaval_loc = b_gammaval(iselected,i_sls)
+    
+! term in xx
+    b_Sn   = factor_loc * b_epsilondev_xx(i,j,k,ispec)
+    b_Snp1   = factor_loc * b_epsilondev_xx_loc(i,j,k)
+    b_R_xx(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xx(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+
+! term in yy
+    b_Sn   = factor_loc * b_epsilondev_yy(i,j,k,ispec)
+    b_Snp1   = factor_loc * b_epsilondev_yy_loc(i,j,k)
+    b_R_yy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yy(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+
+! term in zz not computed since zero trace
+  
+! term in xy
+    b_Sn   = factor_loc * b_epsilondev_xy(i,j,k,ispec)
+    b_Snp1   = factor_loc * b_epsilondev_xy_loc(i,j,k)
+    b_R_xy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xy(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+
+! term in xz
+    b_Sn   = factor_loc * b_epsilondev_xz(i,j,k,ispec)
+    b_Snp1   = factor_loc * b_epsilondev_xz_loc(i,j,k)
+    b_R_xz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xz(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+
+! term in yz
+    b_Sn   = factor_loc * b_epsilondev_yz(i,j,k,ispec)
+    b_Snp1   = factor_loc * b_epsilondev_yz_loc(i,j,k)
+    b_R_yz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yz(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+
+  endif
+
     enddo   ! end of loop on memory variables
 
   endif  !  end attenuation
@@ -1527,6 +1994,13 @@
     epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
     epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
     epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+    if (SIMULATION_TYPE == 3) then
+      b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
+      b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
+      b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
+      b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
+      b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
+    endif
   endif
 
   enddo   ! spectral element loop
@@ -1536,6 +2010,10 @@
   if(ABSORBING_CONDITIONS) then
 
 !   xmin
+    if (SIMULATION_TYPE == 3 .and. nspec2D_xmin > 0)  then
+      read(31,rec=NSTEP-it+1) reclen1,absorb_xmin,reclen2
+      if (reclen1 /= reclen_xmin .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_xmin')
+    endif
     do ispec2D=1,nspec2D_xmin
 
       ispec=ibelm_xmin(ispec2D)
@@ -1568,11 +2046,27 @@
           accel(2,iglob)=accel(2,iglob) - ty*weight
           accel(3,iglob)=accel(3,iglob) - tz*weight
 
+          if (SIMULATION_TYPE == 3) then
+            b_accel(1,iglob)=b_accel(1,iglob) - absorb_xmin(1,j,k,ispec2D)
+            b_accel(2,iglob)=b_accel(2,iglob) - absorb_xmin(2,j,k,ispec2D)
+            b_accel(3,iglob)=b_accel(3,iglob) - absorb_xmin(3,j,k,ispec2D)
+          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            absorb_xmin(1,j,k,ispec2D) = tx*weight
+            absorb_xmin(2,j,k,ispec2D) = ty*weight
+            absorb_xmin(3,j,k,ispec2D) = tz*weight
+          endif
+
         enddo
       enddo
     enddo
 
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_xmin > 0 ) write(31,rec=it) reclen_xmin,absorb_xmin,reclen_xmin
+
 !   xmax
+    if (SIMULATION_TYPE == 3 .and. nspec2D_xmax > 0)  then
+      read(32,rec=NSTEP-it+1) reclen1,absorb_xmax,reclen2
+      if (reclen1 /= reclen_xmax .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_xmax')
+    endif
     do ispec2D=1,nspec2D_xmax
       ispec=ibelm_xmax(ispec2D)
 
@@ -1604,11 +2098,27 @@
           accel(2,iglob)=accel(2,iglob) - ty*weight
           accel(3,iglob)=accel(3,iglob) - tz*weight
 
+          if (SIMULATION_TYPE == 3) then
+            b_accel(1,iglob)=b_accel(1,iglob) - absorb_xmax(1,j,k,ispec2D)
+            b_accel(2,iglob)=b_accel(2,iglob) - absorb_xmax(2,j,k,ispec2D)
+            b_accel(3,iglob)=b_accel(3,iglob) - absorb_xmax(3,j,k,ispec2D)
+          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            absorb_xmax(1,j,k,ispec2D) = tx*weight
+            absorb_xmax(2,j,k,ispec2D) = ty*weight
+            absorb_xmax(3,j,k,ispec2D) = tz*weight
+          endif
+
         enddo
       enddo
     enddo
 
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_xmax > 0 ) write(32,rec=it) reclen_xmax,absorb_xmax,reclen_xmax
+
 !   ymin
+    if (SIMULATION_TYPE == 3 .and. nspec2D_ymin > 0)  then
+      read(33,rec=NSTEP-it+1) reclen1,absorb_ymin,reclen2
+      if (reclen1 /= reclen_ymin .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_ymin')
+    endif
     do ispec2D=1,nspec2D_ymin
 
       ispec=ibelm_ymin(ispec2D)
@@ -1641,11 +2151,27 @@
           accel(2,iglob)=accel(2,iglob) - ty*weight
           accel(3,iglob)=accel(3,iglob) - tz*weight
 
+          if (SIMULATION_TYPE == 3) then
+            b_accel(1,iglob)=b_accel(1,iglob) - absorb_ymin(1,i,k,ispec2D)
+            b_accel(2,iglob)=b_accel(2,iglob) - absorb_ymin(2,i,k,ispec2D)
+            b_accel(3,iglob)=b_accel(3,iglob) - absorb_ymin(3,i,k,ispec2D)
+          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            absorb_ymin(1,i,k,ispec2D) = tx*weight
+            absorb_ymin(2,i,k,ispec2D) = ty*weight
+            absorb_ymin(3,i,k,ispec2D) = tz*weight
+          endif
+
         enddo
       enddo
     enddo
 
+   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_ymin > 0 ) write(33,rec=it) reclen_ymin,absorb_ymin,reclen_ymin
+
 !   ymax
+    if (SIMULATION_TYPE == 3 .and. nspec2D_ymax > 0)  then
+      read(34,rec=NSTEP-it+1) reclen1,absorb_ymax,reclen2
+      if (reclen1 /= reclen_ymax .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_ymax')
+    endif
     do ispec2D=1,nspec2D_ymax
 
       ispec=ibelm_ymax(ispec2D)
@@ -1678,11 +2204,27 @@
           accel(2,iglob)=accel(2,iglob) - ty*weight
           accel(3,iglob)=accel(3,iglob) - tz*weight
 
+          if (SIMULATION_TYPE == 3) then
+            b_accel(1,iglob)=b_accel(1,iglob) - absorb_ymax(1,i,k,ispec2D)
+            b_accel(2,iglob)=b_accel(2,iglob) - absorb_ymax(2,i,k,ispec2D)
+            b_accel(3,iglob)=b_accel(3,iglob) - absorb_ymax(3,i,k,ispec2D)
+          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            absorb_ymax(1,i,k,ispec2D) = tx*weight
+            absorb_ymax(2,i,k,ispec2D) = ty*weight
+            absorb_ymax(3,i,k,ispec2D) = tz*weight
+          endif
+
         enddo
       enddo
     enddo
 
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_ymax > 0) write(34,rec=it) reclen_ymax,absorb_ymax,reclen_ymax
+
 !   bottom (zmin)
+    if (SIMULATION_TYPE == 3 .and. NSPEC2D_BOTTOM > 0)  then
+      read(35,rec=NSTEP-it+1) reclen1,absorb_zmin,reclen2
+      if (reclen1 /= reclen_zmin .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_zmin')
+    endif
     do ispec2D=1,NSPEC2D_BOTTOM
 
       ispec=ibelm_bottom(ispec2D)
@@ -1713,11 +2255,26 @@
           accel(2,iglob)=accel(2,iglob) - ty*weight
           accel(3,iglob)=accel(3,iglob) - tz*weight
 
+          if (SIMULATION_TYPE == 3) then
+            b_accel(1,iglob)=b_accel(1,iglob) - absorb_zmin(1,i,j,ispec2D)
+            b_accel(2,iglob)=b_accel(2,iglob) - absorb_zmin(2,i,j,ispec2D)
+            b_accel(3,iglob)=b_accel(3,iglob) - absorb_zmin(3,i,j,ispec2D)
+          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+            absorb_zmin(1,i,j,ispec2D) = tx*weight
+            absorb_zmin(2,i,j,ispec2D) = ty*weight
+            absorb_zmin(3,i,j,ispec2D) = tz*weight
+          endif
+
         enddo
       enddo
     enddo
 
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. NSPEC2D_BOTTOM > 0) write(35,rec=it) reclen_zmin,absorb_zmin,reclen_zmin
+
   endif  ! end of Stacey conditions
+
+
+  if (SIMULATION_TYPE == 1) then
 
   do isource = 1,NSOURCES
 
@@ -1747,16 +2304,86 @@
 
   enddo
 
+  endif
+
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+
+    irec_local = 0
+    do irec = 1,nrec
+
+!   add the source (only if this proc carries the source)
+      if(myrank == islice_selected_rec(irec)) then
+
+        irec_local = irec_local + 1
+!     add source array
+        do k = 1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+            iglob = ibool(i,j,k,ispec_selected_rec(irec))
+            accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
+          enddo
+        enddo
+        enddo
+
+      endif
+
+    enddo
+
+  endif
+
+  if (SIMULATION_TYPE == 3) then
+    do isource = 1,NSOURCES
+
+!   add the source (only if this proc carries the source)
+    if(myrank == islice_selected_source(isource)) then
+
+      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur(isource))
+
+!     distinguish between single and double precision for reals
+      if(CUSTOM_REAL == SIZE_REAL) then
+        stf_used = sngl(stf)
+      else
+        stf_used = stf
+      endif
+
+!     add source array
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+            iglob = ibool(i,j,k,ispec_selected_source(isource))
+            b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
+          enddo
+        enddo
+      enddo
+
+    endif
+
+  enddo
+
+  endif
+
+
 ! assemble all the contributions between slices using MPI
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
+  if (SIMULATION_TYPE == 3) then
+    call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
+          iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
+          buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
+          NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
+  endif
 
   do i=1,NGLOB_AB
     accel(1,i) = accel(1,i)*rmass(i)
     accel(2,i) = accel(2,i)*rmass(i)
     accel(3,i) = accel(3,i)*rmass(i)
+   if (SIMULATION_TYPE == 3) then
+      b_accel(1,i) = b_accel(1,i)*rmass(i)
+      b_accel(2,i) = b_accel(2,i)*rmass(i)
+      b_accel(3,i) = b_accel(3,i)*rmass(i)
+    endif
   enddo
 
   if(OCEANS) then
@@ -1798,6 +2425,17 @@
             accel(2,iglob) = accel(2,iglob) + additional_term * ny
             accel(3,iglob) = accel(3,iglob) + additional_term * nz
 
+            if (SIMULATION_TYPE == 3) then
+              b_force_normal_comp = (b_accel(1,iglob)*nx + &
+                    b_accel(2,iglob)*ny + b_accel(3,iglob)*nz) / rmass(iglob)
+
+              b_additional_term = (rmass_ocean_load(iglob) - rmass(iglob)) * b_force_normal_comp
+
+              b_accel(1,iglob) = b_accel(1,iglob) + b_additional_term * nx
+              b_accel(2,iglob) = b_accel(2,iglob) + b_additional_term * ny
+              b_accel(3,iglob) = b_accel(3,iglob) + b_additional_term * nz
+            endif
+
 !           done with this point
             updated_dof_ocean_load(iglob) = .true.
 
@@ -1810,35 +2448,41 @@
 
   do i=1,NGLOB_AB
     veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
+    if (SIMULATION_TYPE == 3) then
+      b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
+    endif
   enddo
 
 ! write the seismograms with time shift
-
+  if (nrec_local > 0) then
   do irec_local = 1,nrec_local
 
 ! get global number of that receiver
     irec = number_receiver_global(irec_local)
 
 ! perform the general interpolation using Lagrange polynomials
-        dxd = ZERO
-        dyd = ZERO
-        dzd = ZERO
+    dxd = ZERO
+    dyd = ZERO
+    dzd = ZERO
+    
+    vxd = ZERO
+    vyd = ZERO
+    vzd = ZERO
 
-        vxd = ZERO
-        vyd = ZERO
-        vzd = ZERO
+    axd = ZERO
+    ayd = ZERO
+    azd = ZERO
+    if (SIMULATION_TYPE == 1)  then
 
-        axd = ZERO
-        ayd = ZERO
-        azd = ZERO
-
+      do k = 1,NGLLZ
         do j = 1,NGLLY
           do i = 1,NGLLX
 
 ! receivers are always located at the surface of the mesh
-            iglob = ibool(i,j,NGLLZ,ispec_selected_rec(irec))
+            iglob = ibool(i,j,k,ispec_selected_rec(irec))
 
-            hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)
+            hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+
 
 ! save displacement
             dxd = dxd + dble(displ(1,iglob))*hlagrange
@@ -1857,6 +2501,57 @@
 
           enddo
         enddo
+      enddo
+
+    else if (SIMULATION_TYPE == 2) then
+
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+    
+            iglob = ibool(i,j,k,ispec_selected_source(irec))
+
+            hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+  
+            dxd = dxd + dble(displ(1,iglob))*hlagrange
+            dyd = dyd + dble(displ(2,iglob))*hlagrange
+            dzd = dzd + dble(displ(3,iglob))*hlagrange
+            vxd = vxd + dble(veloc(1,iglob))*hlagrange
+            vyd = vyd + dble(veloc(2,iglob))*hlagrange
+            vzd = vzd + dble(veloc(3,iglob))*hlagrange
+            axd = axd + dble(accel(1,iglob))*hlagrange
+            ayd = ayd + dble(accel(2,iglob))*hlagrange
+            azd = azd + dble(accel(3,iglob))*hlagrange
+  
+          enddo
+        enddo
+      enddo
+
+    else if (SIMULATION_TYPE == 3) then
+          
+      do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+
+          iglob = ibool(i,j,k,ispec_selected_rec(irec))
+             
+          hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+
+          dxd = dxd + dble(b_displ(1,iglob))*hlagrange
+          dyd = dyd + dble(b_displ(2,iglob))*hlagrange
+          dzd = dzd + dble(b_displ(3,iglob))*hlagrange
+          vxd = vxd + dble(b_veloc(1,iglob))*hlagrange
+          vyd = vyd + dble(b_veloc(2,iglob))*hlagrange
+          vzd = vzd + dble(b_veloc(3,iglob))*hlagrange
+          axd = axd + dble(b_accel(1,iglob))*hlagrange
+          ayd = ayd + dble(b_accel(2,iglob))*hlagrange
+          azd = azd + dble(b_accel(3,iglob))*hlagrange
+        enddo
+      enddo
+      enddo
+    endif
+
+        
 
 ! store North, East and Vertical components
 
@@ -1875,29 +2570,71 @@
 
 ! write the current seismograms
   if(mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0) then
-    call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-        network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
-    call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
-        network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
-    call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
-        network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
+    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+      call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
+            network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+      call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
+            network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
+      call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
+            network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
+    else
+      call write_adj_seismograms(myrank,seismograms_d,number_receiver_global, &
+            nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+    endif
   endif
 
-! save movie frame
+  endif
+
+! kernel calculations
+  if (SIMULATION_TYPE == 3) then
+    do ispec = 1, NSPEC_AB
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) + dot_product(accel(:,iglob), b_displ(:,iglob)) * DT
+            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * mu_k(i,j,k,ispec) * DT
+            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + kappa_k(i,j,k,ispec) * DT
+          enddo
+        enddo
+      enddo
+    enddo
+  endif
+
+! save MOVIE on the SURFACE
   if(MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 
 ! get coordinates of surface mesh and surface displacement
     ipoin = 0
+
+   k = NGLLZ
+   if (USE_HIGHRES_FOR_MOVIES) then
+     do ispec2D = 1,NSPEC2D_TOP
+       ispec = ibelm_top(ispec2D)
+       do j = 1,NGLLY
+         do i = 1,NGLLX
+           ipoin = ipoin + 1
+           iglob = ibool(i,j,k,ispec)
+           store_val_x(ipoin) = xstore(iglob)
+           store_val_y(ipoin) = ystore(iglob)
+           store_val_z(ipoin) = zstore(iglob)
+           if(SAVE_DISPLACEMENT) then
+             store_val_ux(ipoin) = displ(1,iglob)
+             store_val_uy(ipoin) = displ(2,iglob)
+             store_val_uz(ipoin) = displ(3,iglob)
+           else
+             store_val_ux(ipoin) = veloc(1,iglob)
+             store_val_uy(ipoin) = veloc(2,iglob)
+             store_val_uz(ipoin) = veloc(3,iglob)
+           endif
+         enddo
+       enddo
+     enddo ! ispec_top
+   else
     do ispec2D = 1,NSPEC2D_TOP
       ispec = ibelm_top(ispec2D)
-      k = NGLLZ
-
-! save all points for high resolution, or only four corners for low resolution
-    if(USE_HIGHRES_FOR_MOVIES) then
-
-! loop on all the points inside the element
-      do j = 1,NGLLY
-      do i = 1,NGLLX
+      do j = 1,NGLLY,NGLLY-1
+      do i = 1,NGLLX,NGLLX-1
       ipoin = ipoin + 1
       iglob = ibool(i,j,k,ispec)
       store_val_x(ipoin) = xstore(iglob)
@@ -1914,90 +2651,10 @@
       endif
       enddo
       enddo
-
-    else
-
-! first corner
-      ipoin = ipoin + 1
-      i = 1
-      j = 1
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      if(SAVE_DISPLACEMENT) then
-        store_val_ux(ipoin) = displ(1,iglob)
-        store_val_uy(ipoin) = displ(2,iglob)
-        store_val_uz(ipoin) = displ(3,iglob)
-      else
-        store_val_ux(ipoin) = veloc(1,iglob)
-        store_val_uy(ipoin) = veloc(2,iglob)
-        store_val_uz(ipoin) = veloc(3,iglob)
-      endif
-
-! second corner
-      ipoin = ipoin + 1
-      i = NGLLX
-      j = 1
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      if(SAVE_DISPLACEMENT) then
-        store_val_ux(ipoin) = displ(1,iglob)
-        store_val_uy(ipoin) = displ(2,iglob)
-        store_val_uz(ipoin) = displ(3,iglob)
-      else
-        store_val_ux(ipoin) = veloc(1,iglob)
-        store_val_uy(ipoin) = veloc(2,iglob)
-        store_val_uz(ipoin) = veloc(3,iglob)
-      endif
-
-! third corner
-      ipoin = ipoin + 1
-      i = NGLLX
-      j = NGLLY
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      if(SAVE_DISPLACEMENT) then
-        store_val_ux(ipoin) = displ(1,iglob)
-        store_val_uy(ipoin) = displ(2,iglob)
-        store_val_uz(ipoin) = displ(3,iglob)
-      else
-        store_val_ux(ipoin) = veloc(1,iglob)
-        store_val_uy(ipoin) = veloc(2,iglob)
-        store_val_uz(ipoin) = veloc(3,iglob)
-      endif
-
-! fourth corner
-      ipoin = ipoin + 1
-      i = 1
-      j = NGLLY
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      if(SAVE_DISPLACEMENT) then
-        store_val_ux(ipoin) = displ(1,iglob)
-        store_val_uy(ipoin) = displ(2,iglob)
-        store_val_uz(ipoin) = displ(3,iglob)
-      else
-        store_val_ux(ipoin) = veloc(1,iglob)
-        store_val_uy(ipoin) = veloc(2,iglob)
-        store_val_uz(ipoin) = veloc(3,iglob)
-      endif
+    enddo ! ispec_top
     endif
 
-    enddo
-
-! gather info on master proc
-    if(USE_HIGHRES_FOR_MOVIES) then
-      ispec = NGLLSQUARE*NSPEC2D_TOP
-    else
-      ispec = NGNOD2D_AVS_DX*NSPEC2D_TOP
-    endif
+    ispec = nmovie_points
 
     call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
@@ -2021,50 +2678,86 @@
 
   endif
 
-! save movie in full 3D mesh
+! compute SHAKING INTENSITY MAP
+ if(CREATE_SHAKEMAP) then
+
+    ipoin = 0
+    k = NGLLZ
+    
+! save all points for high resolution, or only four corners for low resolution
+    if(USE_HIGHRES_FOR_MOVIES) then
+      
+    do ispec2D = 1,NSPEC2D_TOP
+      ispec = ibelm_top(ispec2D)
+
+! loop on all the points inside the element
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          ipoin = ipoin + 1
+          iglob = ibool(i,j,k,ispec)
+          store_val_x(ipoin) = xstore(iglob)
+          store_val_y(ipoin) = ystore(iglob)
+          store_val_z(ipoin) = zstore(iglob)
+          store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
+          store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
+          store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
+        enddo
+      enddo
+    enddo
+
+    else
+    do ispec2D = 1,NSPEC2D_TOP
+      ispec = ibelm_top(ispec2D)
+      do j = 1,NGLLY, NGLLY-1
+        do i = 1,NGLLX, NGLLX-1
+          ipoin = ipoin + 1
+          iglob = ibool(i,j,k,ispec)
+          store_val_x(ipoin) = xstore(iglob)
+          store_val_y(ipoin) = ystore(iglob)
+          store_val_z(ipoin) = zstore(iglob)
+          store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
+          store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
+          store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
+        enddo
+      enddo
+    enddo
+    endif
+
+! save shakemap only at the end of the simulation
+    if(it == NSTEP) then
+    ispec = nmovie_points
+    call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+    call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+    call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+    call MPI_GATHER(store_val_norm_displ,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+    call MPI_GATHER(store_val_norm_veloc,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+    call MPI_GATHER(store_val_norm_accel,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+
+! save movie data to disk in home directory
+    if(myrank == 0) then
+      open(unit=IOUT,file='OUTPUT_FILES/shakingdata',status='unknown',form='unformatted')
+      write(IOUT) store_val_x_all
+      write(IOUT) store_val_y_all
+      write(IOUT) store_val_z_all
+! this saves norm of displacement, velocity and acceleration
+! but we use the same ux, uy, uz arrays as for the movies to save memory
+      write(IOUT) store_val_ux_all
+      write(IOUT) store_val_uy_all
+      write(IOUT) store_val_uz_all
+      close(IOUT)
+    endif
+
+    endif
+  endif
+
+! save MOVIE in full 3D MESH
   if(MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 
 ! save velocity here to avoid static offset on displacement for movies
 
 ! save full snapshot data to local disk
 
-! suppress white spaces if any
-    clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-
-! create full final local path
-    final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
-
-    write(outputname,"('snapshot_full_model_proc',i4.4,'_it',i6.6,'.dat')") myrank,it
-    open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//outputname,status='unknown')
-
-    allocate(mask_poin(NGLOB_AB))
-    allocate(indirect_poin(NGLOB_AB))
-
-! count total number of points and define indirect addressing
-    itotal_poin = 0
-    mask_poin(:) = .false.
-    indirect_poin(:) = 0
-    do ispec=1,NSPEC_AB
-      do k = 1,NGLLZ
-        do j = 1,NGLLY
-          do i = 1,NGLLX
-            ipoin = ibool(i,j,k,ispec)
-            if(.not. mask_poin(ipoin)) then
-              itotal_poin = itotal_poin + 1
-              indirect_poin(ipoin) = itotal_poin
-              mask_poin(ipoin) = .true.
-            endif
-          enddo
-        enddo
-      enddo
-    enddo
-
-! write number of elements and points
-    write(IOUT,*) itotal_poin
-    write(IOUT,*) NSPEC_AB
-
-! write coordinates of points, and velocity at these points
-    mask_poin(:) = .false.
+! calculate strain div and curl
     do ispec=1,NSPEC_AB
 
     do k=1,NGLLZ
@@ -2138,170 +2831,140 @@
       do k = 1,NGLLZ
         do j = 1,NGLLY
           do i = 1,NGLLX
-            ipoin = ibool(i,j,k,ispec)
-            if(.not. mask_poin(ipoin)) then
-! compute div and curl of velocity
-              div = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
-              curl_x = dvzdyl(i,j,k) - dvydzl(i,j,k)
-              curl_y = dvxdzl(i,j,k) - dvzdxl(i,j,k)
-              curl_z = dvydxl(i,j,k) - dvxdyl(i,j,k)
-              write(IOUT,200) xstore(ipoin),ystore(ipoin),zstore(ipoin), &
-                              veloc(1,ipoin),veloc(2,ipoin),veloc(3,ipoin), &
-                              div,curl_x,curl_y,curl_z
-              mask_poin(ipoin) = .true.
-            endif
+            div(i,j,k,ispec) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
+            curl_x(i,j,k,ispec) = dvzdyl(i,j,k) - dvydzl(i,j,k)
+            curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
+            curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
           enddo
         enddo
       enddo
     enddo
-
-! write topology of elements
-    do ispec=1,NSPEC_AB
-      do k = 1,NGLLZ
-        do j = 1,NGLLY
-          do i = 1,NGLLX
-            write(IOUT,210) indirect_poin(ibool(i,j,k,ispec))
-          enddo
-        enddo
-      enddo
-    enddo
-
-    close(IOUT)
-
-    deallocate(mask_poin)
-    deallocate(indirect_poin)
-
- 200 format(e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6,1x,e13.6)
- 210 format(i10)
+    
+    write(outputname,"('div_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) div
+    close(27)
+    write(outputname,"('curl_x_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_x
+    close(27)
+    write(outputname,"('curl_y_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_y
+    close(27)
+    write(outputname,"('curl_z_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_z
+    close(27)
+    write(outputname,"('veloc_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) veloc
+    close(27)
 
   endif
-
-! compute shaking intensity map
-  if(CREATE_SHAKEMAP) then
-
-! get coordinates of surface mesh and surface displacement
-    ipoin = 0
-    do ispec2D = 1,NSPEC2D_TOP
-      ispec = ibelm_top(ispec2D)
-      k = NGLLZ
-
-! save all points for high resolution, or only four corners for low resolution
-    if(USE_HIGHRES_FOR_MOVIES) then
-
-! loop on all the points inside the element
-      do j = 1,NGLLY
-      do i = 1,NGLLX
-      ipoin = ipoin + 1
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-      store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-      store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
-      enddo
-      enddo
-
-    else
-
-! first corner
-      ipoin = ipoin + 1
-      i = 1
-      j = 1
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-      store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-      store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
-
-! second corner
-      ipoin = ipoin + 1
-      i = NGLLX
-      j = 1
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-      store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-      store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
-
-! third corner
-      ipoin = ipoin + 1
-      i = NGLLX
-      j = NGLLY
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-      store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-      store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
-
-! fourth corner
-      ipoin = ipoin + 1
-      i = 1
-      j = NGLLY
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-      store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-      store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
-
-    endif
-
-    enddo
-
-! save shakemap only at the end of the simulation
-    if(it == NSTEP) then
-
-! gather info on master proc
-    if(USE_HIGHRES_FOR_MOVIES) then
-      ispec = NGLLSQUARE*NSPEC2D_TOP
-    else
-      ispec = NGNOD2D_AVS_DX*NSPEC2D_TOP
-    endif
-
-    call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_norm_displ,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_norm_veloc,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_norm_accel,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-
-! save movie data to disk in home directory
-    if(myrank == 0) then
-      open(unit=IOUT,file='OUTPUT_FILES/shakingdata',status='unknown',form='unformatted')
-      write(IOUT) store_val_x_all
-      write(IOUT) store_val_y_all
-      write(IOUT) store_val_z_all
-! this saves norm of displacement, velocity and acceleration
-! but we use the same ux, uy, uz arrays as for the movies to save memory
-      write(IOUT) store_val_ux_all
-      write(IOUT) store_val_uy_all
-      write(IOUT) store_val_uz_all
-      close(IOUT)
-    endif
-
-    endif
-  endif
-
 !
 !---- end of time iteration loop
 !
   enddo   ! end of main time loop
 
-! write the final seismograms
-  call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
-  call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
+! save last frame
+
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+    open(unit=27,file=prname(1:len_trim(prname))//'displ_last.bin',status='unknown',form='unformatted')
+    write(27) displ
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'veloc_last.bin',status='unknown',form='unformatted')
+    write(27) veloc
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'accel_last.bin',status='unknown',form='unformatted')
+    write(27) accel
+    close(27)
+
+    if (ATTENUATION) then
+      open(unit=27,file=prname(1:len_trim(prname))//'R_xx_last.bin',status='unknown',form='unformatted')
+      write(27) R_xx
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'R_yy_last.bin',status='unknown',form='unformatted')
+      write(27) R_yy
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'R_xy_last.bin',status='unknown',form='unformatted')
+      write(27) R_xy
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'R_xz_last.bin',status='unknown',form='unformatted')
+      write(27) R_xz
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'R_yz_last.bin',status='unknown',form='unformatted')
+      write(27) R_yz
+      close(27)
+    endif
+  else if (SIMULATION_TYPE == 3) then
+    deallocate(b_displ,b_veloc,b_accel)
+    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    
+    ! rhop, beta, alpha kernels
+    do ispec = 1, NSPEC_AB
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+            rho_kl(i,j,k,ispec) = - rho_vs(i,j,k,ispec) **2  * rho_kl(i,j,k,ispec) / mustore(i,j,k,ispec)
+            mu_kl(i,j,k,ispec) = - mustore(i,j,k,ispec) * mu_kl(i,j,k,ispec)
+            kappa_kl(i,j,k,ispec) = - kappastore(i,j,k,ispec) * kappa_kl(i,j,k,ispec)
+            rhop_kl(i,j,k,ispec) = rho_kl(i,j,k,ispec) + kappa_kl(i,j,k,ispec) + mu_kl(i,j,k,ispec)
+            beta_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (mu_kl(i,j,k,ispec) - 4._CUSTOM_REAL * mustore(i,j,k,ispec) &
+                  / (3._CUSTOM_REAL * kappastore(i,j,k,ispec)) * kappa_kl(i,j,k,ispec))
+            alpha_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (1._CUSTOM_REAL + &
+                  4._CUSTOM_REAL * mustore(i,j,k,ispec)/ (3._CUSTOM_REAL * kappastore(i,j,k,ispec))) &
+                  * kappa_kl(i,j,k,ispec)
+          enddo
+        enddo
+      enddo
+    enddo
+
+! save kernels to binary files
+    open(unit=27,file=prname(1:len_trim(prname))//'rho_kl.bin',status='unknown',form='unformatted')
+    write(27) rho_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'mu_kl.bin',status='unknown',form='unformatted')
+    write(27) mu_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kl.bin',status='unknown',form='unformatted')
+    write(27) kappa_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kl.bin',status='unknown',form='unformatted')
+    write(27) rhop_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'beta_kl.bin',status='unknown',form='unformatted')
+    write(27) beta_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kl.bin',status='unknown',form='unformatted')
+    write(27) alpha_kl
+    close(27)
+  endif
+
+  if(ABSORBING_CONDITIONS .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
+    if (nspec2D_xmin > 0) close(31)
+    if (nspec2D_xmax > 0) close(32)
+    if (nspec2D_ymin > 0) close(33)
+    if (nspec2D_ymax > 0) close(34)
+    if (NSPEC2D_BOTTOM > 0) close(35)
+  endif
+
+  if (nrec_local > 0) then
+    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+      call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
+          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+      call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
           network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
-  call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
+      call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
           network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
+    else
+      call write_adj_seismograms(myrank,seismograms_d,number_receiver_global, &
+          nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+  endif
+  endif
 
 ! close the main output file
   if(myrank == 0) then

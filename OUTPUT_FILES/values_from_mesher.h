@@ -49,3 +49,7 @@
  logical, parameter :: ATTENUATION_VAL = .true.
  logical, parameter :: ANISOTROPY_VAL = .false.
 
+ integer, parameter :: SIMULATION_TYPE = 1
+ logical, parameter :: SAVE_FORWARD = .false.
+
+

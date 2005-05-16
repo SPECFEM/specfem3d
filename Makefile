@@ -61,11 +61,11 @@ MPI_FLAGS =
 #
 # Caltech cluster  (Hrothgar)
 #
-#FLAGS_NO_CHECK = -O3 -tpp6 -xK  -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds  #-std95 -e95
+#FLAGS_NO_CHECK = -O3 -tpp6 -xK -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl #-std95 -e95
 #
 # more recent machines (e.g. Pangu)
 #
-#FLAGS_NO_CHECK = -fast -tpp7 -xN  -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds # -e95
+#FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition  -tpp7 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl # -e95 -xN  -std95
 #
 # debug with range checking
 #

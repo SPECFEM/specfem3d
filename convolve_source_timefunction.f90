@@ -42,9 +42,6 @@
   read(33,*) triangle
   close(33)
 
-! for Gaussian use 1.66667*hdur to get roughly a triangle with half-duration hdur
-  if(.not.triangle) hdur = hdur * 5. / 3.
-
 ! allocate arrays
   allocate(time(nlines),sem(nlines),sem_fil(nlines))
 
