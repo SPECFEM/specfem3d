@@ -392,7 +392,7 @@
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,weight
 
 ! to save movie frames
-  integer ipoin, nmovie_points
+  integer ipoin, nmovie_points, iloc, iorderi(NGNOD2D), iorderj(NGNOD2D)
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
       store_val_x,store_val_y,store_val_z, &
       store_val_ux,store_val_uy,store_val_uz, &
@@ -1233,6 +1233,8 @@
       nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
     else
       nmovie_points = NGNOD2D * NSPEC2D_TOP
+      iorderi(1) = 1; iorderi(2) = NGLLX; iorderi(3) = NGLLX; iorderi(4) = 1
+      iorderj(1) = 1; iorderj(2) = 1; iorderj(3) = NGLLY; iorderj(4) = NGLLY
     endif
     allocate(store_val_x(nmovie_points))
     allocate(store_val_y(nmovie_points))
@@ -2631,28 +2633,26 @@
        enddo
      enddo ! ispec_top
    else
-    do ispec2D = 1,NSPEC2D_TOP
-      ispec = ibelm_top(ispec2D)
-      do j = 1,NGLLY,NGLLY-1
-      do i = 1,NGLLX,NGLLX-1
-      ipoin = ipoin + 1
-      iglob = ibool(i,j,k,ispec)
-      store_val_x(ipoin) = xstore(iglob)
-      store_val_y(ipoin) = ystore(iglob)
-      store_val_z(ipoin) = zstore(iglob)
-      if(SAVE_DISPLACEMENT) then
-        store_val_ux(ipoin) = displ(1,iglob)
-        store_val_uy(ipoin) = displ(2,iglob)
-        store_val_uz(ipoin) = displ(3,iglob)
-      else
-        store_val_ux(ipoin) = veloc(1,iglob)
-        store_val_uy(ipoin) = veloc(2,iglob)
-        store_val_uz(ipoin) = veloc(3,iglob)
-      endif
-      enddo
-      enddo
-    enddo ! ispec_top
-    endif
+     do ispec2D = 1,NSPEC2D_TOP
+       ispec = ibelm_top(ispec2D)
+       do iloc = 1, NGNOD2D
+         ipoin = ipoin + 1
+         iglob = ibool(iorderi(iloc),iorderj(iloc),k,ispec)
+         store_val_x(ipoin) = xstore(iglob)
+         store_val_y(ipoin) = ystore(iglob)
+         store_val_z(ipoin) = zstore(iglob)
+         if(SAVE_DISPLACEMENT) then
+           store_val_ux(ipoin) = displ(1,iglob)
+           store_val_uy(ipoin) = displ(2,iglob)
+           store_val_uz(ipoin) = displ(3,iglob)
+         else
+           store_val_ux(ipoin) = veloc(1,iglob)
+           store_val_uy(ipoin) = veloc(2,iglob)
+           store_val_uz(ipoin) = veloc(3,iglob)
+         endif
+       enddo
+     enddo ! ispec_top
+   endif
 
     ispec = nmovie_points
 
@@ -2706,12 +2706,11 @@
     enddo
 
     else
-    do ispec2D = 1,NSPEC2D_TOP
-      ispec = ibelm_top(ispec2D)
-      do j = 1,NGLLY, NGLLY-1
-        do i = 1,NGLLX, NGLLX-1
+      do ispec2D = 1,NSPEC2D_TOP
+        ispec = ibelm_top(ispec2D)
+        do iloc = 1, NGNOD2D
           ipoin = ipoin + 1
-          iglob = ibool(i,j,k,ispec)
+          iglob = ibool(iorderi(iloc),iorderj(iloc),k,ispec)      
           store_val_x(ipoin) = xstore(iglob)
           store_val_y(ipoin) = ystore(iglob)
           store_val_z(ipoin) = zstore(iglob)
@@ -2720,7 +2719,6 @@
           store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
         enddo
       enddo
-    enddo
     endif
 
 ! save shakemap only at the end of the simulation
