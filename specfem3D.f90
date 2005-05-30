@@ -957,7 +957,7 @@
       irec_local = irec_local + 1
       number_receiver_global(irec_local) = irec
     endif
-  enddo
+    enddo
   else
   do isource = 1,NSOURCES
     if(myrank == islice_selected_source(isource)) then
@@ -983,7 +983,7 @@
     hetar_store(irec_local,:) = hetar(:)
     hgammar_store(irec_local,:) = hgammar(:)
   enddo
-  endif
+  endif ! nrec_local
 
 ! check that the sum of the number of receivers in each slice is nrec
   call MPI_REDUCE(nrec_local,nrec_tot_found,1,MPI_INTEGER,MPI_SUM,0, &
@@ -1177,12 +1177,11 @@
   allocate(seismograms_d(NDIM,nrec_local,NSTEP))
   allocate(seismograms_v(NDIM,nrec_local,NSTEP))
   allocate(seismograms_a(NDIM,nrec_local,NSTEP))
-  endif
-
 ! initialize seismograms
   seismograms_d(:,:,:) = 0._CUSTOM_REAL
   seismograms_v(:,:,:) = 0._CUSTOM_REAL
   seismograms_a(:,:,:) = 0._CUSTOM_REAL
+  endif
 
 ! initialize arrays to zero
   displ(:,:) = 0._CUSTOM_REAL
@@ -2585,7 +2584,7 @@
     endif
   endif
 
-  endif
+  endif ! nrec_local
 
 ! kernel calculations
   if (SIMULATION_TYPE == 3) then
