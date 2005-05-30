@@ -2573,14 +2573,14 @@
   if(mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0) then
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-            network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+            network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
       call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
             network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
       call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
             network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
     else
       call write_adj_seismograms(myrank,seismograms_d,number_receiver_global, &
-            nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
     endif
   endif
 
@@ -2952,14 +2952,14 @@
   if (nrec_local > 0) then
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       call write_seismograms(myrank,seismograms_d,number_receiver_global,station_name, &
-          network_name,nrec,nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+          network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
       call write_seismograms(myrank,seismograms_v,number_receiver_global,station_name, &
           network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,2)
       call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
           network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
     else
       call write_adj_seismograms(myrank,seismograms_d,number_receiver_global, &
-          nrec_local,it,DT,NSTEP,minval(hdur),LOCAL_PATH,1)
+          nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
   endif
   endif
 
