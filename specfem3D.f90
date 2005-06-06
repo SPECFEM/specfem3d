@@ -1073,13 +1073,6 @@
 
   if(ATTENUATION) then
 
-! initialize memory variables for attenuation
-    epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
-    epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
-    epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
-    epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
-    epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
-
 ! get and store PREM attenuation model
     do iattenuation = 1,NUM_REGIONS_ATTENUATION
 
@@ -1326,6 +1319,38 @@
 
 ! clear memory variables if attenuation
   if(ATTENUATION) then
+ 
+   ! initialize memory variables for attenuation
+    epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
+    epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
+
+    if (SIMULATION_TYPE == 3) then
+      allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+
+      open(unit=27,file=trim(prname)//'epsilondev_xx_last.bin',status='old',form='unformatted')
+      read(27) b_epsilondev_xx
+      close(27)     
+      open(unit=27,file=trim(prname)//'epsilondev_yy_last.bin',status='old',form='unformatted')
+      read(27) b_epsilondev_yy
+      close(27)     
+      open(unit=27,file=trim(prname)//'epsilondev_xy_last.bin',status='old',form='unformatted')
+      read(27) b_epsilondev_xy
+      close(27)     
+      open(unit=27,file=trim(prname)//'epsilondev_xz_last.bin',status='old',form='unformatted')
+      read(27) b_epsilondev_xz
+      close(27)     
+      open(unit=27,file=trim(prname)//'epsilondev_yz_last.bin',status='old',form='unformatted')
+      read(27) b_epsilondev_yz
+      close(27)     
+    endif
+
     R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
     R_yy(:,:,:,:,:) = 0._CUSTOM_REAL
     R_xy(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -2892,6 +2917,21 @@
       close(27)
       open(unit=27,file=prname(1:len_trim(prname))//'R_yz_last.bin',status='unknown',form='unformatted')
       write(27) R_yz
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_xx_last.bin',status='unknown',form='unformatted')
+      write(27) epsilondev_xx
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_yy_last.bin',status='unknown',form='unformatted')
+      write(27) epsilondev_yy
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_xy_last.bin',status='unknown',form='unformatted')
+      write(27) epsilondev_xy
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_xz_last.bin',status='unknown',form='unformatted')
+      write(27) epsilondev_xz
+      close(27)
+      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_yz_last.bin',status='unknown',form='unformatted')
+      write(27) epsilondev_yz
       close(27)
     endif
   else if (SIMULATION_TYPE == 3) then
