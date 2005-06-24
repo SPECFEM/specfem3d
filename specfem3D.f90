@@ -2722,9 +2722,9 @@
           store_val_x(ipoin) = xstore(iglob)
           store_val_y(ipoin) = ystore(iglob)
           store_val_z(ipoin) = zstore(iglob)
-          store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-          store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-          store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
+          store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),abs(displ(2,iglob)),abs(displ(3,iglob)))
+          store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),abs(veloc(2,iglob)),abs(veloc(3,iglob)))
+          store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),abs(accel(2,iglob)),abs(accel(3,iglob)))
         enddo
       enddo
     enddo
@@ -2738,9 +2738,9 @@
           store_val_x(ipoin) = xstore(iglob)
           store_val_y(ipoin) = ystore(iglob)
           store_val_z(ipoin) = zstore(iglob)
-          store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),sqrt(displ(1,iglob)**2+displ(2,iglob)**2+displ(3,iglob)**2))
-          store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),sqrt(veloc(1,iglob)**2+veloc(2,iglob)**2+veloc(3,iglob)**2))
-          store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),sqrt(accel(1,iglob)**2+accel(2,iglob)**2+accel(3,iglob)**2))
+          store_val_norm_displ(ipoin) = max(store_val_norm_displ(ipoin),abs(displ(2,iglob)),abs(displ(3,iglob)))
+          store_val_norm_veloc(ipoin) = max(store_val_norm_veloc(ipoin),abs(veloc(2,iglob)),abs(veloc(3,iglob)))
+          store_val_norm_accel(ipoin) = max(store_val_norm_accel(ipoin),abs(accel(2,iglob)),abs(accel(3,iglob)))
         enddo
       enddo
     endif
