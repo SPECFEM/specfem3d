@@ -27,33 +27,38 @@ program combine_paraview_data
   include 'OUTPUT_FILES/values_from_mesher.h'
 
   integer i,j,k,ispec, ios, it
-  integer iproc, proc1, proc2, num_node, node_list(300), nspec
+  integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
   integer np, ne, npp, np1, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
   integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8, iglob
   logical mask_ibool(NGLOB_AB)
   real(kind=CUSTOM_REAL) data(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
   real x, y, z, dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   character(len=150) :: sline, arg(5), filename, indir, outdir, prname
-  character(len=150) :: mesh_file, local_point_file, local_element_file, local_data_file, local_ibool_file
+  character(len=150) :: mesh_file, local_point_file, local_element_file, local_file, local_data_file, local_ibool_file
+  integer :: num_ibool(NGLOB_AB)
+  logical :: HIGH_RESOLUTION_MESH
+  integer :: ires
 
 
-  do i = 1, 5
+  do i = 1, 6
     call getarg(i,arg(i))
-    if (i < 5 .and. trim(arg(i)) == '') then
-      print *, 'Usage: xcombine_data start_slice end_slice filename input_dir output_dir'
-      print *, '    or xcombine_data slice_list filename input_dir output_dir'
+    if (i < 6 .and. trim(arg(i)) == '') then
+      print *, 'Usage: xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
+      print *, '    or xcombine_data slice_list filename input_dir output_dir high/low-resolution'
       print *, ' possible filenames -- '
       print *, '   rho_vp, rho_vs, kappastore, mustore etc'
       print *, '   which are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,nspec)  '
       print *, '   in filename.bin'
       print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
+      print *, ' give 0 for low resolution and 1 for high resolution'
       stop ' Reenter command line options'
     endif
   enddo
 
 ! get slice list
-  if (trim(arg(5)) == '') then
+  if (trim(arg(6)) == '') then
     num_node = 0
     open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ios)
     if (ios /= 0) stop 'Error opening '//trim(arg(1))
@@ -69,6 +74,7 @@ program combine_paraview_data
     filename = arg(2)
     indir= arg(3)
     outdir = arg(4)
+    read(arg(5),*) ires
   else
     read(arg(1),*) proc1
     read(arg(2),*) proc2
@@ -79,15 +85,24 @@ program combine_paraview_data
     filename = arg(3)
     indir = arg(4)
     outdir = arg(5)
+    read(arg(6),*) ires
+  endif
+
+  if (ires == 0) then
+    HIGH_RESOLUTION_MESH = .false.
+  else
+    HIGH_RESOLUTION_MESH = .true.
   endif
 
   print *, 'Slice list: '
   print *, node_list(1:num_node)
 
-  ! for paraview
+  ! open paraview output mesh file
   mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
   call open_file(trim(mesh_file)//char(0))
+
   nspec = NSPEC_AB
+  nglob = NGLOB_AB
 
   np = 0
 
@@ -97,44 +112,46 @@ program combine_paraview_data
 
     iproc = node_list(it)
 
+    print *, ' '
     print *, 'Reading slice ', iproc
     write(prname,'(a,i4.4,a)') trim(indir)//'/proc',iproc,'_'
-
-    local_point_file = trim(prname) // 'AVS_DXpoints.txt'
-    open(unit = 25, file = trim(local_point_file), status = 'old', iostat = ios)
-    if (ios /= 0) stop 'Error opening '// trim(local_point_file)
-
+    
+  ! data file
     local_data_file = trim(prname) // trim(filename) // '.bin'
     open(unit = 27,file = trim(local_data_file),status='old', iostat = ios,form ='unformatted')
     if (ios /= 0) stop 'Error opening '// trim(local_data_file)
-
-    local_ibool_file = trim(prname) // 'ibool' // '.bin'
-    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
-    if (ios /= 0) stop 'Error opening '// trim(local_data_file)
-
-    print *, trim(local_point_file)
-    print *, trim(local_data_file)
-    print *, ' '
-
-    read(25, *) npoint
     read(27) data
-    read(28) ibool
     close(27)
-    close(28)
-    if (it == 1) then
-      npp = npoint * num_node
-      np1 = npoint
-      call write_integer(npp)
-    endif
+    print *, trim(local_data_file)
+
     if (CUSTOM_REAL == SIZE_DOUBLE) then
       dat = sngl(data)
     else
       dat = data
     endif
 
-    mask_ibool(:) = .false.
-    numpoin = 0
-    if (.not. SAVE_HIGH_RES_AVS_DX) then
+  ! ibool file
+    local_ibool_file = trim(prname) // 'ibool' // '.bin'
+    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
+    if (ios /= 0) stop 'Error opening '// trim(local_data_file)
+    read(28) ibool
+    close(28)
+    print *, trim(local_ibool_file)
+    
+     mask_ibool(:) = .false.
+     numpoin = 0
+
+    if (.not. HIGH_RESOLUTION_MESH) then
+
+      local_point_file = trim(prname) // 'AVS_DXpoints.txt'
+      open(unit = 25, file = trim(local_point_file), status = 'old', iostat = ios)
+      if (ios /= 0) stop 'Error opening '// trim(local_point_file) 
+      read(25,*) npoint
+    
+      if (it == 1) then
+        npp = npoint * num_node
+        call write_integer(npp)
+      endif
 
       do ispec=1,nspec
         iglob1=ibool(1,1,1,ispec)
@@ -145,7 +162,7 @@ program combine_paraview_data
         iglob6=ibool(NGLLX,1,NGLLZ,ispec)
         iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
         iglob8=ibool(1,NGLLY,NGLLZ,ispec)
-
+        
         if(.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
@@ -153,6 +170,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(1,1,1,ispec))
+          mask_ibool(iglob1) = .true.
         endif
         if(.not. mask_ibool(iglob2)) then
           numpoin = numpoin + 1
@@ -161,6 +179,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(NGLLX,1,1,ispec))
+          mask_ibool(iglob2) = .true.
         endif
         if(.not. mask_ibool(iglob3)) then
           numpoin = numpoin + 1
@@ -169,6 +188,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(NGLLX,NGLLY,1,ispec))
+          mask_ibool(iglob3) = .true.
         endif
         if(.not. mask_ibool(iglob4)) then
           numpoin = numpoin + 1
@@ -177,6 +197,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(1,NGLLY,1,ispec))
+          mask_ibool(iglob4) = .true.
         endif
         if(.not. mask_ibool(iglob5)) then
           numpoin = numpoin + 1
@@ -185,6 +206,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(1,1,NGLLZ,ispec))
+          mask_ibool(iglob5) = .true.
         endif
         if(.not. mask_ibool(iglob6)) then
           numpoin = numpoin + 1
@@ -193,6 +215,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(NGLLX,1,NGLLZ,ispec))
+          mask_ibool(iglob6) = .true.
         endif
         if(.not. mask_ibool(iglob7)) then
           numpoin = numpoin + 1
@@ -201,6 +224,7 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(NGLLX,NGLLY,NGLLZ,ispec))
+          mask_ibool(iglob7) = .true.
         endif
         if(.not. mask_ibool(iglob8)) then
           numpoin = numpoin + 1
@@ -209,18 +233,35 @@ program combine_paraview_data
           call write_real(y)
           call write_real(z)
           call write_real(dat(1,NGLLY,NGLLZ,ispec))
-        endif
-        mask_ibool(iglob1) = .true.
-        mask_ibool(iglob2) = .true.
-        mask_ibool(iglob3) = .true.
-        mask_ibool(iglob4) = .true.
-        mask_ibool(iglob5) = .true.
-        mask_ibool(iglob6) = .true.
-        mask_ibool(iglob7) = .true.
-        mask_ibool(iglob8) = .true.
+          mask_ibool(iglob8) = .true.
+        endif 
       enddo ! ispec
+      close(25)
 
     else  ! high resolution
+
+      if (it == 1) then
+        npp = nglob * num_node
+        npoint = nglob
+        call write_integer(npp)
+      endif
+      
+      local_file = trim(prname)//'x.bin'
+      open(unit = 27,file = trim(prname)//'x.bin',status='old', iostat = ios,form ='unformatted')
+      if (ios /= 0) stop 'Error opening '// trim(local_file)
+      read(27) xstore
+      close(27)
+      local_file = trim(prname)//'y.bin'
+      open(unit = 27,file = trim(prname)//'y.bin',status='old', iostat = ios,form ='unformatted')
+      if (ios /= 0) stop 'Error opening '// trim(local_file)
+      read(27) ystore
+      close(27)
+      local_file = trim(prname)//'z.bin'
+      open(unit = 27,file = trim(prname)//'z.bin',status='old', iostat = ios,form ='unformatted')
+      if (ios /= 0) stop 'Error opening '// trim(local_file)
+      read(27) zstore
+      close(27)
+
       do ispec=1,nspec
         do k = 1, NGLLZ
           do j = 1, NGLLY
@@ -228,67 +269,138 @@ program combine_paraview_data
               iglob = ibool(i,j,k,ispec)
               if(.not. mask_ibool(iglob)) then
                 numpoin = numpoin + 1
-                read(25,*) njunk, x, y, z
+                if (CUSTOM_REAL == SIZE_DOUBLE) then
+                  x = sngl(xstore(iglob))
+                  y = sngl(ystore(iglob))
+                  z = sngl(zstore(iglob))
+                else
+                  x = xstore(iglob)
+                  y = ystore(iglob)
+                  z = zstore(iglob)
+                endif
                 call write_real(x)
                 call write_real(y)
                 call write_real(z)
                 call write_real(dat(i,j,k,ispec))
+                mask_ibool(iglob) = .true.
               endif
-              mask_ibool(iglob) = .true.
             enddo ! i
           enddo ! j
         enddo ! k
       enddo !ispec
     endif
-    close(25)
+    
     if (numpoin /= npoint) stop 'Error: number of points are not consistent'
     np = np + npoint
 
-  enddo  ! all slices
+  enddo  ! all slices for points
 
  if (np /=  npp) stop 'Error: Number of total points are not consistent'
  print *, 'Total number of points: ', np
  print *, ' '
 
+
  ne = 0
 ! write element information
-  do it = 1, num_node
+ do it = 1, num_node
 
     iproc = node_list(it)
 
     print *, 'Reading slice ', iproc
     write(prname,'(a,i4.4,a)') trim(indir)//'/proc',iproc,'_'
 
-    local_element_file = trim(prname) // 'AVS_DXelements.txt'
-    open(unit = 26, file = trim(local_element_file), status = 'old', iostat = ios)
-    if (ios /= 0) stop 'Error opening '// trim(local_element_file)
-    print *, trim(local_element_file)
-    print *, ' '
+    np = npoint * (it-1)
 
-    read(26, *) nelement
-    if (it == 1) then
-      nee = nelement * num_node
-      call write_integer(nee)
-    end if
+    if (.not. HIGH_RESOLUTION_MESH) then
 
-    np = np1 * (it-1)
-    do i = 1, nelement
-      read(26,*) njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
-      n1 = n1+np-1; n2 = n2+np-1; n3 = n3+np-1; n4 = n4+np-1
-      n5 = n5+np-1; n6 = n6+np-1; n7 = n7+np-1; n8 = n8+np-1
-      call write_integer(n1)
-      call write_integer(n2)
-      call write_integer(n3)
-      call write_integer(n4)
-      call write_integer(n5)
-      call write_integer(n6)
-      call write_integer(n7)
-      call write_integer(n8)
-    enddo
+      local_element_file = trim(prname) // 'AVS_DXelements.txt'
+      open(unit = 26, file = trim(local_element_file), status = 'old', iostat = ios)
+      if (ios /= 0) stop 'Error opening '// trim(local_element_file)
+      print *, trim(local_element_file)
+
+      read(26, *) nelement
+      if (it == 1) then
+        nee = nelement * num_node
+        call write_integer(nee)
+      end if
+
+      do i = 1, nelement
+        read(26,*) njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
+        n1 = n1+np-1; n2 = n2+np-1; n3 = n3+np-1; n4 = n4+np-1
+        n5 = n5+np-1; n6 = n6+np-1; n7 = n7+np-1; n8 = n8+np-1
+        call write_integer(n1)
+        call write_integer(n2)
+        call write_integer(n3)
+        call write_integer(n4)
+        call write_integer(n5)
+        call write_integer(n6)
+        call write_integer(n7)
+        call write_integer(n8)
+      enddo
+      close(26)
+
+    else ! high resolution mesh
+
+      if (it == 1) then
+        nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
+        nee = nelement * num_node
+        call write_integer(nee)
+      endif
+  
+      numpoin = 0
+      mask_ibool = .false.
+      do ispec=1,nspec
+        do k = 1, NGLLZ
+          do j = 1, NGLLY
+            do i = 1, NGLLX
+              iglob = ibool(i,j,k,ispec)
+              if(.not. mask_ibool(iglob)) then
+                numpoin = numpoin + 1
+                num_ibool(iglob) = numpoin
+                mask_ibool(iglob) = .true.
+              endif
+            enddo ! i
+          enddo ! j
+        enddo ! k
+      enddo !ispec
+
+      do ispec = 1, nspec
+        do k = 1, NGLLZ-1
+          do j = 1, NGLLY-1
+            do i = 1, NGLLX-1
+              iglob1 = ibool(i,j,k,ispec)
+              iglob2 = ibool(i+1,j,k,ispec)
+              iglob3 = ibool(i+1,j+1,k,ispec)
+              iglob4 = ibool(i,j+1,k,ispec)
+              iglob5 = ibool(i,j,k+1,ispec)
+              iglob6 = ibool(i+1,j,k+1,ispec)
+              iglob7 = ibool(i+1,j+1,k+1,ispec)
+              iglob8 = ibool(i,j+1,k+1,ispec)
+              n1 = num_ibool(iglob1)+np-1
+              n2 = num_ibool(iglob2)+np-1
+              n3 = num_ibool(iglob3)+np-1 
+              n4 = num_ibool(iglob4)+np-1
+              n5 = num_ibool(iglob5)+np-1
+              n6 = num_ibool(iglob6)+np-1
+              n7 = num_ibool(iglob7)+np-1
+              n8 = num_ibool(iglob8)+np-1
+              call write_integer(n1)
+              call write_integer(n2)
+              call write_integer(n3)
+              call write_integer(n4)
+              call write_integer(n5)
+              call write_integer(n6)
+              call write_integer(n7)
+              call write_integer(n8)
+            enddo
+          enddo
+        enddo
+      enddo
+ 
+    endif
     ne = ne + nelement
-    close(26)
 
-  enddo
+  enddo ! num_node
   if (ne /= nee) stop 'Number of total elements are not consistent'
   print *, 'Total number of elements: ', ne
 
