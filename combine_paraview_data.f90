@@ -15,8 +15,10 @@
 !
 !=====================================================================
 
+  program combine_paraview_data
 
-program combine_paraview_data
+! puts the output of SPECFEM3D in ParaView format.
+! see http://www.paraview.org for details
 
 ! combines the database files on several slices.
 ! the local database file needs to have been collected onto the frontend (copy_local_database.pl)
@@ -408,5 +410,5 @@ program combine_paraview_data
 
   print *, 'Done writing '//trim(mesh_file)
 
-end program combine_paraview_data
+  end program combine_paraview_data
 
