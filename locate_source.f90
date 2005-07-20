@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -32,11 +32,15 @@
 
   implicit none
 
+#ifdef USE_MPI
 ! standard include of the MPI library
   include 'mpif.h'
+#endif
 
   include "constants.h"
+#ifdef USE_MPI
   include "precision.h"
+#endif
 
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES,NX_TOPO,NY_TOPO
@@ -65,7 +69,9 @@
   integer iprocloop
 
   integer i,j,k,ispec,iglob,isource
+#ifdef USE_MPI
   integer ier
+#endif
 
   double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
   double precision dist
@@ -140,7 +146,11 @@
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
 ! get MPI starting time
+#ifdef USE_MPI
   time_start = MPI_WTIME()
+#else
+  time_start = 0.d0
+#endif
 
 ! loop on all the sources
   do isource = 1,NSOURCES
@@ -350,10 +360,9 @@
 ! end of loop on all the sources
   enddo
 
-!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
-
 ! now gather information from all the nodes
   ispec_selected_source_all(:,:) = -1
+#ifdef USE_MPI
   call MPI_GATHER(ispec_selected_source,NSOURCES,MPI_INTEGER,ispec_selected_source_all,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 
   call MPI_GATHER(xi_source,NSOURCES,MPI_DOUBLE_PRECISION,xi_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -367,6 +376,17 @@
     y_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
   call MPI_GATHER(z_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
     z_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+#else
+  ispec_selected_source_all(:,0) = ispec_selected_source(:)
+
+  xi_source_all(:,0) = xi_source(:)
+  eta_source_all(:,0) = eta_source(:)
+  gamma_source_all(:,0) = gamma_source(:)
+  final_distance_source_all(:,0) = final_distance_source(:)
+  x_found_source_all(:,0) = x_found_source(:)
+  y_found_source_all(:,0) = y_found_source(:)
+  z_found_source_all(:,0) = z_found_source(:)
+#endif
 
 ! this is executed by main process only
   if(myrank == 0) then
@@ -490,15 +510,21 @@
   endif     ! end of section executed by main process only
 
 ! main process broadcasts the results to all the slices
+#ifdef USE_MPI
   call MPI_BCAST(islice_selected_source,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
   call MPI_BCAST(ispec_selected_source,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
   call MPI_BCAST(xi_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
   call MPI_BCAST(eta_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
   call MPI_BCAST(gamma_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+#endif
 
 ! elapsed time since beginning of source detection
   if(myrank == 0) then
+#ifdef USE_MPI
     tCPU = MPI_WTIME() - time_start
+#else
+    tCPU = 0.d0
+#endif
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
     write(IMAIN,*)

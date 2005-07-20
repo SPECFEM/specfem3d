@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -18,8 +18,7 @@
 !----
 !---- locate_receivers finds the correct position of the receivers
 !----
-! LQY -- idoubling is no longer used
-  subroutine locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,idoubling, &
+  subroutine locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
                  xstore,ystore,zstore,xigll,yigll,zigll,rec_filename, &
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
@@ -29,11 +28,15 @@
 
   implicit none
 
+#ifdef USE_MPI
 ! standard include of the MPI library
   include 'mpif.h'
+#endif
 
   include "constants.h"
+#ifdef USE_MPI
   include "precision.h"
+#endif
 
   integer NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
 
@@ -42,7 +45,6 @@
   integer nrec,myrank
 
   integer NSPEC_AB,NGLOB_AB
-  integer idoubling(NSPEC_AB)
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
@@ -68,7 +70,9 @@
 
   integer irec
   integer i,j,k,ispec,iglob
+#ifdef USE_MPI
   integer ier
+#endif
 
   integer icornerlong,icornerlat
   double precision utm_x_source,utm_y_source
@@ -124,7 +128,11 @@
 ! **************
 
 ! get MPI starting time
+#ifdef USE_MPI
   time_start = MPI_WTIME()
+#else
+  time_start = 0.d0
+#endif
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -274,9 +282,8 @@
 
       do ispec=1,NSPEC_AB
 
-! LQY -- now receiver can be at depth
-! examine elements located in sediments only (receivers always at the surface)
-!      if(idoubling(ispec) == IFLAG_ONE_LAYER_TOPOGRAPHY .or. idoubling(ispec) == IFLAG_BASEMENT_TOPO) then
+! modification by Qinya Liu: idoubling is no longer used because receivers can now be in depth
+! (in previous versions, receivers were always assumed to be at the surface)
 
 ! loop only on points inside the element
 ! exclude edges to ensure this point is not shared with other elements
@@ -300,7 +307,7 @@
 
           enddo
         enddo
-       enddo 
+       enddo
 !      endif
 
 ! end of loop on all the spectral elements in current slice
@@ -430,10 +437,13 @@
     enddo
 
 ! synchronize all the processes to make sure all the estimates are available
+#ifdef USE_MPI
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
 
 ! for MPI version, gather information from all the nodes
   ispec_selected_rec_all(:,:) = -1
+#ifdef USE_MPI
   call MPI_GATHER(ispec_selected_rec,nrec,MPI_INTEGER,ispec_selected_rec_all,nrec,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 
   call MPI_GATHER(xi_receiver,nrec,MPI_DOUBLE_PRECISION,xi_receiver_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -443,6 +453,17 @@
   call MPI_GATHER(x_found,nrec,MPI_DOUBLE_PRECISION,x_found_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
   call MPI_GATHER(y_found,nrec,MPI_DOUBLE_PRECISION,y_found_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
   call MPI_GATHER(z_found,nrec,MPI_DOUBLE_PRECISION,z_found_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+#else
+  ispec_selected_rec_all(:,0) = ispec_selected_rec
+
+  xi_receiver_all(:,0) = xi_receiver(:)
+  eta_receiver_all(:,0) = eta_receiver(:)
+  gamma_receiver_all(:,0) = gamma_receiver(:)
+  final_distance_all(:,0) = final_distance(:)
+  x_found_all(:,0) = x_found(:)
+  y_found_all(:,0) = y_found(:)
+  z_found_all(:,0) = z_found(:)
+#endif
 
 ! this is executed by main process only
   if(myrank == 0) then
@@ -526,7 +547,11 @@
   close(27)
 
 ! elapsed time since beginning of mesh generation
+#ifdef USE_MPI
   tCPU = MPI_WTIME() - time_start
+#else
+  tCPU = 0.d0
+#endif
   write(IMAIN,*)
   write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
   write(IMAIN,*)
@@ -535,6 +560,7 @@
 
   endif    ! end of section executed by main process only
 
+#ifdef USE_MPI
 ! main process broadcasts the results to all the slices
   call MPI_BCAST(islice_selected_rec,nrec,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
   call MPI_BCAST(ispec_selected_rec,nrec,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
@@ -544,6 +570,7 @@
 
 ! synchronize all the processes to make sure everybody has finished
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
 
 ! deallocate arrays
   deallocate(stlat)
@@ -576,11 +603,11 @@
 
 !===========================
 
-subroutine station_filter(myrank,filename,filtered_filename,nfilter,&
+  subroutine station_filter(myrank,filename,filtered_filename,nfilter,&
       LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
-  implicit none 
-  
+  implicit none
+
   include 'constants.h'
 
 ! input
@@ -592,7 +619,7 @@ subroutine station_filter(myrank,filename,filtered_filename,nfilter,&
   integer nfilter
 
   integer irec, nrec, nrec_filtered, ios
- 
+
   double precision stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME) station_name
   character(len=MAX_LENGTH_NETWORK_NAME) network_name
@@ -621,15 +648,16 @@ subroutine station_filter(myrank,filename,filtered_filename,nfilter,&
     enddo
     close(IIN)
     close(IOUT)
-    
+
     write(IMAIN,*)
     write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(filename)
     write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_filename)
     write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
     write(IMAIN,*)
-    
+
   endif
 
   nfilter = nrec_filtered
 
-end subroutine station_filter
+  end subroutine station_filter
+

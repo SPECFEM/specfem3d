@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -18,7 +18,7 @@
   subroutine define_subregions_basin(myrank,isubregion,iaddx,iaddy,iaddz, &
         ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
         doubling_index,npx,npy, &
-        NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER)
+        NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER,USE_REGULAR_MESH)
 
 ! define shape of elements in current subregion of the mesh
 
@@ -34,12 +34,76 @@
 
   integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER
 
+  logical USE_REGULAR_MESH
+
 ! topology of the elements
   integer iaddx(NGNOD)
   integer iaddy(NGNOD)
   integer iaddz(NGNOD)
 
 ! **************
+
+!
+!--- case of a regular mesh
+!
+  if(USE_REGULAR_MESH) then
+
+! use two layers even for a regular mesh, because the algorithm detects the top of the mesh
+! (the "topography") based on one layer of elements with flag IFLAG_ONE_LAYER_TOPOGRAPHY
+  if(isubregion == 2) then
+
+    call usual_hex_nodes(iaddx,iaddy,iaddz)
+
+    iy1=0
+    iy2=npy-2
+    diy=2
+
+    ix1=0
+    ix2=npx-2
+    dix=2
+
+    ir1=0
+    ir2=2*(NER - 2)
+    dir=2
+
+    iax=1
+    iay=1
+    iar=1
+
+    doubling_index = IFLAG_BASEMENT_TOPO
+
+  else if(isubregion == 1) then
+
+    call usual_hex_nodes(iaddx,iaddy,iaddz)
+
+    iy1=0
+    iy2=npy-2
+    diy=2
+
+    ix1=0
+    ix2=npx-2
+    dix=2
+
+    ir1=2*(NER - 1)
+    ir2=ir1
+    dir=2
+
+    iax=1
+    iay=1
+    iar=1
+
+    doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
+
+  else
+
+    call exit_MPI(myrank,'incorrect subregion code')
+
+  endif
+
+!
+!--- case of a non-regular mesh with mesh doublings
+!
+  else
 
 ! this last region only defined when NER_SEDIM > 1
   if(isubregion == 30) then
@@ -782,6 +846,8 @@
   else
 
     call exit_MPI(myrank,'incorrect subregion code')
+
+  endif
 
   endif
 

@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 !
 !=====================================================================
 !
-! Copyright July 2004, by the California Institute of Technology.
+! Copyright July 2005, by the California Institute of Technology.
 ! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 !
 ! Any commercial use must be negotiated with the Office of Technology
@@ -95,7 +95,9 @@ and that the Harvard CMT convention is:
 PARAMETERS TO CHANGE ON DIFFERENT MACHINES:
 
 - Use the appropriate compiler flags in the Makefile.
-  Set F90, MPIF90, FLAGS_NO_CHECK, FLAGS_CHECK and MPI_FLAGS
+  Set F90, MPIF90, FLAGS_NO_CHECK, FLAGS_CHECK and MPI_FLAGS.
+  Also set C_PREPROCESSOR to activate C preprocessing
+  in your Fortran compiler (see the manual of your Fortran compiler for the right syntax)
 - In constants.h set USE_LOCAL_PATH_BEOWULF flag.
   On clusters (e.g., Beowulfs), use this option in almost all cases.
 - In constants.h set FIX_UNDERFLOW_PROBLEM flag
@@ -106,7 +108,7 @@ PARAMETERS TO CHANGE ON DIFFERENT MACHINES:
 - Also, in constants.h choose the CUSTOM_REAL size depending on
   single or double precision
 - When running on an SGI, add "setenv TRAP_FPE OFF" to your .cshrc file
-   before compiling, in order to turn underflow trapping off
+  before compiling, in order to turn underflow trapping off
 
 DIRECTORIES:
 
@@ -143,7 +145,7 @@ MESHER (meshfem3D):
   LONGITUDE_MIN          ! minimum longitude in the block (negative for West)
   LONGITUDE_MAX          ! maximum longitude in the block
   DEPTH_BLOCK_KM         ! depth of bottom of mesh in km
-  IZONE_UTM_PROJECTION   ! zone of the UTM projection (e.g. 11 for Los Angeles)
+  UTM_PROJECTION_ZONE    ! zone of the UTM projection (e.g. 11 for Los Angeles)
 
 - set all the parameters in DATA/Par_file, in particular the following:
 
@@ -257,6 +259,16 @@ MOVIE OF THE RESULTS:
     Note that this option creates large files!
     Also set CREATE_SHAKEMAP is you want to create a ShakeMap at the end
     of the simulation.
+
+SERIAL RUNS (WITHOUT MPI):
+
+On a large serial machine, one may want to run a serial version of the code without MPI.
+To do this, one needs to:
+
+- set NPROC_XI = NPROC_ETA = 1 in DATA/Par_file
+- type "make meshfem3D_serial" and "make specfem3D_serial" instead of
+    "make meshfem3D" and "make specfem3D"
+- run the code serially with "./xmeshfem3D" and "./xspecfem3D"
 
 Note: The Gauss-Lobatto subroutines in gll_library.f90 are based in part on
       software libraries from M.I.T., Department of Mechanical Engineering.

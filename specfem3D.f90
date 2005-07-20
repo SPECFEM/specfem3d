@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 !
 !=====================================================================
 !
-! Copyright July 2004, by the California Institute of Technology.
+! Copyright July 2005, by the California Institute of Technology.
 ! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 !
 ! Any commercial use must be negotiated with the Office of Technology
@@ -45,11 +45,15 @@
 
   implicit none
 
+#ifdef USE_MPI
 ! standard include of the MPI library
   include 'mpif.h'
+#endif
 
   include "constants.h"
+#ifdef USE_MPI
   include "precision.h"
+#endif
 
 ! include values created by the mesher
   include "OUTPUT_FILES/values_from_mesher.h"
@@ -109,7 +113,8 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! MPI v. 1.3 Qinya Liu, Caltech, May 2005, add adjoint and kernel simulations
+! MPI v. 1.3 Dimitri Komatitsch, University of Pau, and Qinya Liu, Caltech, July 2005:
+!  serial version, regular mesh, adjoint and kernel calculations, ParaView support
 ! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
 !  full anisotropy, volume movie
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
@@ -182,8 +187,7 @@
   logical, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: flag_sediments
 
 ! Stacey
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
 
 ! local to global mapping
   integer, dimension(NSPEC_AB) :: idoubling
@@ -208,9 +212,6 @@
 
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
   real(kind=CUSTOM_REAL) fac1,fac2,fac3
-  real(kind=CUSTOM_REAL) lambdal,kappal,mul,lambdalplus2mul
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
-      c44,c45,c46,c55,c56,c66
 
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
@@ -336,7 +337,10 @@
   integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
 
 ! proc numbers for MPI
-  integer myrank,sizeprocs,ier
+  integer myrank,sizeprocs
+#ifdef USE_MPI
+  integer ier
+#endif
 
   integer npoin2D_xi,npoin2D_eta
 
@@ -354,8 +358,8 @@
 
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
-             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
-             NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
+             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
@@ -367,10 +371,11 @@
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
   logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname,MODEL
+  character(len=150) LOCAL_PATH,prname,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -402,7 +407,6 @@
       store_val_ux_all,store_val_uy_all,store_val_uz_all
 
 ! to save full 3D snapshot of velocity
-  integer itotal_poin
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
 
@@ -414,26 +418,36 @@
 ! myrank is the rank of each process, between 0 and sizeprocs-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
 ! and also takes care of the main output
+#ifdef USE_MPI
   call MPI_INIT(ier)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+#else
+  myrank = 0
+  sizeprocs = 1
+#endif
 
 ! check SIMULATION_TYPE
-  if (SIMULATION_TYPE /= 1 .and.  SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
-        call exit_mpi(myrank, 'SIMULATION_TYPE could be only 1, 2, or 3')
+  if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
+        call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
 
 ! read the parameter file
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
+
+#ifndef USE_MPI
+  if(NPROC_XI /= 1 .or. NPROC_ETA /= 1) stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+#endif
 
 ! check simulation pararmeters
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
@@ -446,7 +460,7 @@
       NSPEC_AB_JUNK,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB_JUNK)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB_JUNK,USE_REGULAR_MESH)
 
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
@@ -730,7 +744,7 @@
       if (nspec2D_ymax > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
         allocate(absorb_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
         reclen_ymax = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymax)
-        if (SIMULATION_TYPE == 3) then  
+        if (SIMULATION_TYPE == 3) then
           open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='old',form='unformatted',access='direct',&
                 recl=reclen_ymax+2*4)
         else
@@ -839,7 +853,9 @@
     call station_filter(myrank,'DATA/STATIONS_ADJOINT',trim(rec_filename),nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one source')
+#ifdef USE_MPI
     call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
   endif
 
   if(myrank == 0) then
@@ -865,7 +881,7 @@
   allocate(nu(NDIM,NDIM,nrec))
 
 ! locate receivers in the mesh
-  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,idoubling, &
+  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
             xstore,ystore,zstore,xigll,yigll,zigll,trim(rec_filename), &
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
@@ -921,7 +937,7 @@
               adj_sourcearray, xigll,yigll,zigll,NSTEP)
 
         adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
-        
+
       endif
     enddo
   endif
@@ -986,8 +1002,11 @@
   endif ! nrec_local
 
 ! check that the sum of the number of receivers in each slice is nrec
-  call MPI_REDUCE(nrec_local,nrec_tot_found,1,MPI_INTEGER,MPI_SUM,0, &
-                          MPI_COMM_WORLD,ier)
+#ifdef USE_MPI
+  call MPI_REDUCE(nrec_local,nrec_tot_found,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,ier)
+#else
+  nrec_tot_found = nrec_local
+#endif
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
@@ -1047,6 +1066,7 @@
 
   endif
 
+#ifdef USE_MPI
 ! synchronize all the processes before assembling the mass matrix
 ! to make sure all the nodes have finished to read their databases
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
@@ -1058,6 +1078,7 @@
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
+#endif
 
 ! check that mass matrix is positive
   if(minval(rmass(:)) <= 0.) call exit_MPI(myrank,'negative mass matrix term')
@@ -1216,7 +1237,9 @@
   endif
 
 ! synchronize all processes to make sure everybody is ready to start time loop
+#ifdef USE_MPI
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
   if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
 ! allocate files to save movies and shaking map
@@ -1225,8 +1248,14 @@
       nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
     else
       nmovie_points = NGNOD2D * NSPEC2D_TOP
-      iorderi(1) = 1; iorderi(2) = NGLLX; iorderi(3) = NGLLX; iorderi(4) = 1
-      iorderj(1) = 1; iorderj(2) = 1; iorderj(3) = NGLLY; iorderj(4) = NGLLY
+      iorderi(1) = 1
+      iorderi(2) = NGLLX
+      iorderi(3) = NGLLX
+      iorderi(4) = 1
+      iorderj(1) = 1
+      iorderj(2) = 1
+      iorderj(3) = NGLLY
+      iorderj(4) = NGLLY
     endif
     allocate(store_val_x(nmovie_points))
     allocate(store_val_y(nmovie_points))
@@ -1319,7 +1348,7 @@
 
 ! clear memory variables if attenuation
   if(ATTENUATION) then
- 
+
    ! initialize memory variables for attenuation
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
@@ -1336,19 +1365,19 @@
 
       open(unit=27,file=trim(prname)//'epsilondev_xx_last.bin',status='old',form='unformatted')
       read(27) b_epsilondev_xx
-      close(27)     
+      close(27)
       open(unit=27,file=trim(prname)//'epsilondev_yy_last.bin',status='old',form='unformatted')
       read(27) b_epsilondev_yy
-      close(27)     
+      close(27)
       open(unit=27,file=trim(prname)//'epsilondev_xy_last.bin',status='old',form='unformatted')
       read(27) b_epsilondev_xy
-      close(27)     
+      close(27)
       open(unit=27,file=trim(prname)//'epsilondev_xz_last.bin',status='old',form='unformatted')
       read(27) b_epsilondev_xz
-      close(27)     
+      close(27)
       open(unit=27,file=trim(prname)//'epsilondev_yz_last.bin',status='old',form='unformatted')
       read(27) b_epsilondev_yz
-      close(27)     
+      close(27)
     endif
 
     R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -1392,13 +1421,17 @@
   endif
 
 ! get MPI starting time
+#ifdef USE_MPI
   time_start = MPI_WTIME()
+#else
+  time_start = 0.d0
+#endif
 
 ! *********************************************************
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
 ! *********************************************************
 
-  do it=1,NSTEP
+  do it = 1,NSTEP
 
 ! compute the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
@@ -1409,12 +1442,19 @@
     Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
-    call MPI_REDUCE(Usolidnorm,Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0, &
-                          MPI_COMM_WORLD,ier)
+#ifdef USE_MPI
+    call MPI_REDUCE(Usolidnorm,Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+#else
+    Usolidnorm_all = Usolidnorm
+#endif
+
     if (SIMULATION_TYPE == 3) then
       b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
-      call MPI_REDUCE(b_Usolidnorm,b_Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0, &
-                          MPI_COMM_WORLD,ier)
+#ifdef USE_MPI
+      call MPI_REDUCE(b_Usolidnorm,b_Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
+#else
+      b_Usolidnorm_all = b_Usolidnorm
+#endif
     endif
     if(myrank == 0) then
 
@@ -1422,7 +1462,11 @@
       write(IMAIN,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
 
 ! elapsed time since beginning of the simulation
+#ifdef USE_MPI
       tCPU = MPI_WTIME() - time_start
+#else
+      tCPU = 0.d0
+#endif
       int_tCPU = int(tCPU)
       ihours = int_tCPU / 3600
       iminutes = (int_tCPU - 3600*ihours) / 60
@@ -1975,7 +2019,7 @@
     b_alphaval_loc = b_alphaval(iselected,i_sls)
     b_betaval_loc = b_betaval(iselected,i_sls)
     b_gammaval_loc = b_gammaval(iselected,i_sls)
-    
+
 ! term in xx
     b_Sn   = factor_loc * b_epsilondev_xx(i,j,k,ispec)
     b_Snp1   = factor_loc * b_epsilondev_xx_loc(i,j,k)
@@ -1987,7 +2031,7 @@
     b_R_yy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yy(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
 
 ! term in zz not computed since zero trace
-  
+
 ! term in xy
     b_Sn   = factor_loc * b_epsilondev_xy(i,j,k,ispec)
     b_Snp1   = factor_loc * b_epsilondev_xy_loc(i,j,k)
@@ -2389,17 +2433,17 @@
   endif
 
 
+#ifdef USE_MPI
 ! assemble all the contributions between slices using MPI
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
-  if (SIMULATION_TYPE == 3) then
-    call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
+  if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
           iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
           buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
           NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
-  endif
+#endif
 
   do i=1,NGLOB_AB
     accel(1,i) = accel(1,i)*rmass(i)
@@ -2490,7 +2534,7 @@
     dxd = ZERO
     dyd = ZERO
     dzd = ZERO
-    
+
     vxd = ZERO
     vyd = ZERO
     vzd = ZERO
@@ -2534,11 +2578,11 @@
       do k = 1,NGLLZ
         do j = 1,NGLLY
           do i = 1,NGLLX
-    
+
             iglob = ibool(i,j,k,ispec_selected_source(irec))
 
             hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
-  
+
             dxd = dxd + dble(displ(1,iglob))*hlagrange
             dyd = dyd + dble(displ(2,iglob))*hlagrange
             dzd = dzd + dble(displ(3,iglob))*hlagrange
@@ -2548,19 +2592,19 @@
             axd = axd + dble(accel(1,iglob))*hlagrange
             ayd = ayd + dble(accel(2,iglob))*hlagrange
             azd = azd + dble(accel(3,iglob))*hlagrange
-  
+
           enddo
         enddo
       enddo
 
     else if (SIMULATION_TYPE == 3) then
-          
+
       do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
 
           iglob = ibool(i,j,k,ispec_selected_rec(irec))
-             
+
           hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
 
           dxd = dxd + dble(b_displ(1,iglob))*hlagrange
@@ -2577,7 +2621,7 @@
       enddo
     endif
 
-        
+
 
 ! store North, East and Vertical components
 
@@ -2680,12 +2724,21 @@
 
     ispec = nmovie_points
 
+#ifdef USE_MPI
     call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_ux,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_uy,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_uz,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+#else
+    store_val_x_all(:,0) = store_val_x(:)
+    store_val_y_all(:,0) = store_val_y(:)
+    store_val_z_all(:,0) = store_val_z(:)
+    store_val_ux_all(:,0) = store_val_ux(:)
+    store_val_uy_all(:,0) = store_val_uy(:)
+    store_val_uz_all(:,0) = store_val_uz(:)
+#endif
 
 ! save movie data to disk in home directory
     if(myrank == 0) then
@@ -2707,10 +2760,10 @@
 
     ipoin = 0
     k = NGLLZ
-    
+
 ! save all points for high resolution, or only four corners for low resolution
     if(USE_HIGHRES_FOR_MOVIES) then
-      
+
     do ispec2D = 1,NSPEC2D_TOP
       ispec = ibelm_top(ispec2D)
 
@@ -2734,7 +2787,7 @@
         ispec = ibelm_top(ispec2D)
         do iloc = 1, NGNOD2D
           ipoin = ipoin + 1
-          iglob = ibool(iorderi(iloc),iorderj(iloc),k,ispec)      
+          iglob = ibool(iorderi(iloc),iorderj(iloc),k,ispec)
           store_val_x(ipoin) = xstore(iglob)
           store_val_y(ipoin) = ystore(iglob)
           store_val_z(ipoin) = zstore(iglob)
@@ -2748,12 +2801,21 @@
 ! save shakemap only at the end of the simulation
     if(it == NSTEP) then
     ispec = nmovie_points
+#ifdef USE_MPI
     call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_norm_displ,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_norm_veloc,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
     call MPI_GATHER(store_val_norm_accel,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+#else
+    store_val_x_all(:,0) = store_val_x(:)
+    store_val_y_all(:,0) = store_val_y(:)
+    store_val_z_all(:,0) = store_val_z(:)
+    store_val_ux_all(:,0) = store_val_ux(:)
+    store_val_uy_all(:,0) = store_val_uy(:)
+    store_val_uz_all(:,0) = store_val_uz(:)
+#endif
 
 ! save movie data to disk in home directory
     if(myrank == 0) then
@@ -2861,7 +2923,7 @@
         enddo
       enddo
     enddo
-    
+
     write(outputname,"('div_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) div
@@ -2939,7 +3001,7 @@
     allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    
+
     ! rhop, beta, alpha kernels
     do ispec = 1, NSPEC_AB
       do k = 1, NGLLZ
@@ -3011,11 +3073,13 @@
     close(IMAIN)
   endif
 
+#ifdef USE_MPI
 ! synchronize all the processes to make sure everybody has finished
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
 
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
+#endif
 
   end program specfem3D
 

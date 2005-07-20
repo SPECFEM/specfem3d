@@ -40,9 +40,9 @@
   double precision rx,ry,rlon,rlat
   logical SUPPRESS_UTM_PROJECTION
 
-  double precision, parameter :: degrad=PI/180., raddeg=180./PI
+  double precision, parameter :: degrad=PI/180.d0, raddeg=180.d0/PI
   double precision, parameter :: semimaj=6378206.4d0, semimin=6356583.8d0
-  double precision, parameter :: scfa=.9996d0
+  double precision, parameter :: scfa=0.9996d0
   double precision, parameter :: north=0.d0, east=500000.d0
 
   double precision e2,e4,e6,ep2,xx,yy,dlat,dlon,zone,cm,cmr,delam

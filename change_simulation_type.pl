@@ -3,23 +3,23 @@
 use Time::Local;
 use Getopt::Std;
 use POSIX;
- 
+
 sub Usage{
 print STDERR <<END;
- 
+
 Usage:   change_simulation_type.pl  [-a|-f|-b|-F]
          Changes SIMULATION_TYPE in OUTPUT_FILES/values_from_mesher.h
          -a -- change type to run adjoint calculation(2)
          -f -- change type to run forward calculation(1)
          -b -- change type to run both simultaneously(3)
-         -F -- chagne type to run forward calculation(1) with save_forward = .true.
+         -F -- change type to run forward calculation(1) with save_forward = .true.
 END
 exit(1);
 }
- 
+
 @ARGV == 1 or Usage();
-if(!getopts('abfF')) {die(" check input arguments\n");}
- 
+if(!getopts('abfF')) {die("check input arguments\n");}
+
 open(IN,"OUTPUT_FILES/values_from_mesher.h");
 @vfm=<IN>;
 close(IN);
@@ -48,7 +48,7 @@ foreach $vfm (@vfm){
     }
   }
   if ($vfm=~/SAVE_FORWARD/) {
-    if ($opt_F) { $vfm=~s/= .*/= .true./; } 
+    if ($opt_F) { $vfm=~s/= .*/= .true./; }
     else {$vfm=~s/= .*/= .false./;}
 
   }

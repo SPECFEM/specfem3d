@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -29,7 +29,7 @@
            VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
            IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
            ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
-           ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO)
+           ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
 
 ! create the different regions of the mesh
 
@@ -53,7 +53,7 @@
   integer npointot
 
   logical HARVARD_3D_GOCAD_MODEL,HAUKSSON_REGIONAL_MODEL
-  logical OCEANS,IMPOSE_MINIMUM_VP_GOCAD
+  logical OCEANS,IMPOSE_MINIMUM_VP_GOCAD,USE_REGULAR_MESH
   logical MOHO_MAP_LUPEI,ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
@@ -404,7 +404,7 @@
 
 !--- apply heuristic rule to modify doubling regions to balance angles
 
-  if(APPLY_HEURISTIC_RULE) then
+  if(APPLY_HEURISTIC_RULE .and. .not. USE_REGULAR_MESH) then
 
 ! define number of subregions affected by heuristic rule in doubling regions
   nsubregions = 8
@@ -440,7 +440,6 @@
          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
 
 ! side 2
-!      if (iy == iy2) then
       horiz_size = xgrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
                  - xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
       xgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
@@ -450,7 +449,6 @@
                  - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
       zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
          zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + vert_size * MAGIC_RATIO / 0.50
-!      endif
 
 !----
     else if(itype_element == ITYPE_UNUSUAL_1p) then
@@ -467,7 +465,6 @@
          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
 
 ! side 2
-!      if (iy == iy2) then
       horiz_size = xgrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
                  - xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
       xgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
@@ -477,13 +474,11 @@
                  - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
       zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
          zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + vert_size * MAGIC_RATIO / 0.50
-!      endif
 
 !----
     else if(itype_element == ITYPE_UNUSUAL_4) then
 
 ! side 1
-!      if (ix == ix2) then
       horiz_size = ygrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
                  - ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
       ygrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
@@ -493,7 +488,6 @@
                  - zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
       zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
          zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + vert_size * MAGIC_RATIO / 0.50
-!       endif
 
 ! side 2
       horiz_size = ygrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) &
@@ -510,7 +504,6 @@
     else if(itype_element == ITYPE_UNUSUAL_4p) then
 
 ! side 1
-!      if (ix == ix2) then
       horiz_size = ygrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
                  - ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
       ygrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
@@ -520,7 +513,6 @@
                  - zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
       zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
          zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + vert_size * MAGIC_RATIO / 0.50
-!      endif
 
 ! side 2
       horiz_size = ygrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) &
@@ -549,10 +541,14 @@
   ispec = 0
 
 ! define number of subregions in the mesh
-  if(NER_SEDIM > 1) then
-    nsubregions = 30
+  if(USE_REGULAR_MESH) then
+    nsubregions = 2
   else
-    nsubregions = 29
+    if(NER_SEDIM > 1) then
+      nsubregions = 30
+    else
+      nsubregions = 29
+    endif
   endif
 
   do isubregion = 1,nsubregions
@@ -561,7 +557,7 @@
     call define_subregions_basin(myrank,isubregion,iaddx,iaddy,iaddz, &
               ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
               doubling_index,npx,npy, &
-              NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER)
+              NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER,USE_REGULAR_MESH)
 
 ! loop on all the mesh points in current subregion
   do ir = ir1,ir2,dir

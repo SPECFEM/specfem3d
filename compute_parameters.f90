@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -21,7 +21,7 @@
       NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
   implicit none
 
@@ -53,13 +53,80 @@
 
   integer NSPEC_NO_DOUBLING,NSPEC2D_NO_DOUBLING_XI,NSPEC2D_NO_DOUBLING_ETA
 
+  logical USE_REGULAR_MESH
+
+!
+!--- case of a regular mesh
+!
+  if(USE_REGULAR_MESH) then
+
+! total number of spectral elements along radius
+  NER = NER_SEDIM
+
+! number of elements horizontally in each slice (i.e. per processor)
+! these two values MUST be equal in all cases
+  NEX_PER_PROC_XI = NEX_XI / NPROC_XI
+  NEX_PER_PROC_ETA = NEX_ETA / NPROC_ETA
+
+! total number of processors in each of the six chunks
+  NPROC = NPROC_XI * NPROC_ETA
+
+! exact number of spectral elements without doubling layers
+  NSPEC_NO_DOUBLING = NEX_XI*NEX_ETA*NER_SEDIM
+
+! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
+
+! exact number of surface elements for a chunk without doubling layers
+
+  NSPEC2D_NO_DOUBLING_XI = NEX_PER_PROC_XI*NER_SEDIM
+
+  NSPEC2D_NO_DOUBLING_ETA = NEX_PER_PROC_ETA*NER_SEDIM
+
+! exact number of spectral elements
+  NSPEC_AB = NSPEC_NO_DOUBLING / NPROC
+
+! exact number of surface elements for faces A and B along XI and ETA
+  NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI
+  NSPEC2D_B_XI = NSPEC2D_NO_DOUBLING_XI
+  NSPEC2D_A_ETA = NSPEC2D_NO_DOUBLING_ETA
+  NSPEC2D_B_ETA = NSPEC2D_NO_DOUBLING_ETA
+
+! exact number of surface elements on the bottom and top boundaries
+! and theoretical number of spectral elements in radial direction
+
+  NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
+  NSPEC2D_BOTTOM = NSPEC2D_TOP
+
+  NSPEC1D_RADIAL_BEDROCK = NER
+
+! face with max number of elements is type B here
+! maximum number of surface elements on vertical boundaries of the slices
+  NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
+  NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
+
+! theoretical number of Gauss-Lobatto points in radial direction
+  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+
+! 2-D addressing and buffers for summation between slices
+! we add one to number of points because of the flag after the last point
+  NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
+  NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+
+! exact number of global points
+  NGLOB_AB = (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1) * (NER*(NGLLZ-1)+1)
+
+!
+!--- case of a non-regular mesh with mesh doublings
+!
+  else
+
 ! total number of spectral elements along radius
   NER = NER_BOTTOM_MOHO + NER_MOHO_16 + NER_16_BASEMENT + NER_BASEMENT_SEDIM + NER_SEDIM
 
 ! number of elements horizontally in each slice (i.e. per processor)
 ! these two values MUST be equal in all cases
-  NEX_PER_PROC_XI = NEX_XI/NPROC_XI
-  NEX_PER_PROC_ETA = NEX_ETA/NPROC_ETA
+  NEX_PER_PROC_XI = NEX_XI / NPROC_XI
+  NEX_PER_PROC_ETA = NEX_ETA / NPROC_ETA
 
 ! total number of processors in each of the six chunks
   NPROC = NPROC_XI * NPROC_ETA
@@ -132,11 +199,10 @@
 ! exact number of surface elements on the bottom and top boundaries
 ! and theoretical number of spectral elements in radial direction
 
-  NSPEC2D_TOP = NEX_XI*NEX_ETA/NPROC
-  NSPEC2D_BOTTOM = (NEX_XI/4)*(NEX_ETA/4)/NPROC
+  NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
+  NSPEC2D_BOTTOM = (NEX_XI/4)*(NEX_ETA/4) / NPROC
 
-  NSPEC1D_RADIAL_BEDROCK = (NER_BASEMENT_SEDIM+NER_16_BASEMENT+NER_MOHO_16)/2 &
-     + NER_BOTTOM_MOHO/4
+  NSPEC1D_RADIAL_BEDROCK = (NER_BASEMENT_SEDIM+NER_16_BASEMENT+NER_MOHO_16)/2 + NER_BOTTOM_MOHO/4
 
 ! face with max number of elements is type B here
 ! maximum number of surface elements on vertical boundaries of the slices
@@ -183,6 +249,8 @@
 ! add number of points in the sediments
   NGLOB_AB = NGLOB_AB + (NEX_PER_PROC_XI*(NGLLX-1)+1) &
     *(NEX_PER_PROC_ETA*(NGLLY-1)+1)*(NER_SEDIM*(NGLLZ-1)+0)
+
+  endif ! end of section for non-regular mesh with doublings
 
   end subroutine compute_parameters
 

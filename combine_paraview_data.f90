@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -30,7 +30,7 @@
 
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
-  integer np, ne, npp, np1, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
+  integer np, ne, npp, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
   integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8, iglob
   logical mask_ibool(NGLOB_AB)
@@ -49,9 +49,9 @@
     if (i < 6 .and. trim(arg(i)) == '') then
       print *, 'Usage: xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
       print *, '    or xcombine_data slice_list filename input_dir output_dir high/low-resolution'
-      print *, ' possible filenames -- '
+      print *, ' possible filenames are '
       print *, '   rho_vp, rho_vs, kappastore, mustore etc'
-      print *, '   which are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,nspec)  '
+      print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,nspec)  '
       print *, '   in filename.bin'
       print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
       print *, ' give 0 for low resolution and 1 for high resolution'
@@ -63,7 +63,10 @@
   if (trim(arg(6)) == '') then
     num_node = 0
     open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ios)
-    if (ios /= 0) stop 'Error opening '//trim(arg(1))
+    if (ios /= 0) then
+      print *,'Error opening ',trim(arg(1))
+      stop
+    endif
     do while ( 1 == 1)
       read(20,'(a)',iostat=ios) sline
       if (ios /= 0) exit
@@ -117,11 +120,14 @@
     print *, ' '
     print *, 'Reading slice ', iproc
     write(prname,'(a,i4.4,a)') trim(indir)//'/proc',iproc,'_'
-    
+
   ! data file
     local_data_file = trim(prname) // trim(filename) // '.bin'
     open(unit = 27,file = trim(local_data_file),status='old', iostat = ios,form ='unformatted')
-    if (ios /= 0) stop 'Error opening '// trim(local_data_file)
+    if (ios /= 0) then
+      print *,'Error opening ',trim(local_data_file)
+      stop
+    endif
     read(27) data
     close(27)
     print *, trim(local_data_file)
@@ -135,11 +141,14 @@
   ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
     open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
-    if (ios /= 0) stop 'Error opening '// trim(local_data_file)
+    if (ios /= 0) then
+      print *,'Error opening ',trim(local_data_file)
+      stop
+    endif
     read(28) ibool
     close(28)
     print *, trim(local_ibool_file)
-    
+
      mask_ibool(:) = .false.
      numpoin = 0
 
@@ -147,9 +156,12 @@
 
       local_point_file = trim(prname) // 'AVS_DXpoints.txt'
       open(unit = 25, file = trim(local_point_file), status = 'old', iostat = ios)
-      if (ios /= 0) stop 'Error opening '// trim(local_point_file) 
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_point_file)
+        stop
+      endif
       read(25,*) npoint
-    
+
       if (it == 1) then
         npp = npoint * num_node
         call write_integer(npp)
@@ -164,7 +176,7 @@
         iglob6=ibool(NGLLX,1,NGLLZ,ispec)
         iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
         iglob8=ibool(1,NGLLY,NGLLZ,ispec)
-        
+
         if(.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
@@ -236,7 +248,7 @@
           call write_real(z)
           call write_real(dat(1,NGLLY,NGLLZ,ispec))
           mask_ibool(iglob8) = .true.
-        endif 
+        endif
       enddo ! ispec
       close(25)
 
@@ -247,20 +259,29 @@
         npoint = nglob
         call write_integer(npp)
       endif
-      
+
       local_file = trim(prname)//'x.bin'
       open(unit = 27,file = trim(prname)//'x.bin',status='old', iostat = ios,form ='unformatted')
-      if (ios /= 0) stop 'Error opening '// trim(local_file)
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_file)
+        stop
+      endif
       read(27) xstore
       close(27)
       local_file = trim(prname)//'y.bin'
       open(unit = 27,file = trim(prname)//'y.bin',status='old', iostat = ios,form ='unformatted')
-      if (ios /= 0) stop 'Error opening '// trim(local_file)
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_file)
+        stop
+      endif
       read(27) ystore
       close(27)
       local_file = trim(prname)//'z.bin'
       open(unit = 27,file = trim(prname)//'z.bin',status='old', iostat = ios,form ='unformatted')
-      if (ios /= 0) stop 'Error opening '// trim(local_file)
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_file)
+        stop
+      endif
       read(27) zstore
       close(27)
 
@@ -291,7 +312,7 @@
         enddo ! k
       enddo !ispec
     endif
-    
+
     if (numpoin /= npoint) stop 'Error: number of points are not consistent'
     np = np + npoint
 
@@ -317,7 +338,10 @@
 
       local_element_file = trim(prname) // 'AVS_DXelements.txt'
       open(unit = 26, file = trim(local_element_file), status = 'old', iostat = ios)
-      if (ios /= 0) stop 'Error opening '// trim(local_element_file)
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_element_file)
+        stop
+      endif
       print *, trim(local_element_file)
 
       read(26, *) nelement
@@ -328,8 +352,14 @@
 
       do i = 1, nelement
         read(26,*) njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
-        n1 = n1+np-1; n2 = n2+np-1; n3 = n3+np-1; n4 = n4+np-1
-        n5 = n5+np-1; n6 = n6+np-1; n7 = n7+np-1; n8 = n8+np-1
+        n1 = n1+np-1
+        n2 = n2+np-1
+        n3 = n3+np-1
+        n4 = n4+np-1
+        n5 = n5+np-1
+        n6 = n6+np-1
+        n7 = n7+np-1
+        n8 = n8+np-1
         call write_integer(n1)
         call write_integer(n2)
         call write_integer(n3)
@@ -348,7 +378,7 @@
         nee = nelement * num_node
         call write_integer(nee)
       endif
-  
+
       numpoin = 0
       mask_ibool = .false.
       do ispec=1,nspec
@@ -380,7 +410,7 @@
               iglob8 = ibool(i,j+1,k+1,ispec)
               n1 = num_ibool(iglob1)+np-1
               n2 = num_ibool(iglob2)+np-1
-              n3 = num_ibool(iglob3)+np-1 
+              n3 = num_ibool(iglob3)+np-1
               n4 = num_ibool(iglob4)+np-1
               n5 = num_ibool(iglob5)+np-1
               n6 = num_ibool(iglob6)+np-1
@@ -398,7 +428,7 @@
           enddo
         enddo
       enddo
- 
+
     endif
     ne = ne + nelement
 

@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 !
 !=====================================================================
 !
-! Copyright July 2004, by the California Institute of Technology.
+! Copyright July 2005, by the California Institute of Technology.
 ! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 !
 ! Any commercial use must be negotiated with the Office of Technology
@@ -45,16 +45,20 @@
 
   implicit none
 
+#ifdef USE_MPI
 ! standard include of the MPI library
   include 'mpif.h'
+#endif
 
   include "constants.h"
+#ifdef USE_MPI
   include "precision.h"
+#endif
 
 !=====================================================================!
 !                                                                     !
 !  meshfem3D produces a spectral element grid for a basin.            !
-!  the mesher uses the UTM projection                                 !
+!  The mesher uses the UTM projection                                 !
 !                                                                     !
 !=====================================================================!
 !
@@ -106,6 +110,8 @@
 ! Evolution of the code:
 ! ---------------------
 !
+! MPI v. 1.3 Dimitri Komatitsch, University of Pau, and Qinya Liu, Caltech, July 2005:
+!  serial version, regular mesh, adjoint and kernel calculations, ParaView support
 ! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
 !  full anisotropy, volume movie
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
@@ -135,7 +141,10 @@
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
 ! proc numbers for MPI
-  integer myrank,sizeprocs,ier
+  integer myrank,sizeprocs
+#ifdef USE_MPI
+  integer ier
+#endif
 
 ! check area and volume of the final mesh
   double precision area_local_bottom,area_total_bottom
@@ -166,8 +175,8 @@
 
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
-             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_ETA,NEX_XI, &
-             NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
+             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
@@ -180,7 +189,8 @@
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
   logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   character(len=150) LOCAL_PATH,MODEL
@@ -218,16 +228,25 @@
 ! myrank is the rank of each process, between 0 and NPROC-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
 ! and also takes care of the main output
+#ifdef USE_MPI
   call MPI_INIT(ier)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
+#else
+  myrank = 0
+  sizeprocs = 1
+#endif
 
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file='OUTPUT_FILES/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
+#ifdef USE_MPI
   time_start = MPI_WTIME()
+#else
+  time_start = 0.d0
+#endif
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -241,14 +260,19 @@
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
+
+#ifndef USE_MPI
+  if(NPROC_XI /= 1 .or. NPROC_ETA /= 1) stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+#endif
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -257,7 +281,7 @@
       NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
@@ -347,16 +371,18 @@
   if(NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
   if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
 
-! check that size can be coarsened in depth twice (block size multiple of 8)
-  if(mod(NEX_XI/8,NPROC_XI) /= 0) &
-    call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI')
+! check that mesh can be cut into the right number of slices
+! also check that mesh can be coarsened in depth twice (block size multiple of 8)
+  if(USE_REGULAR_MESH) then
+    if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
+    if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
+  else
+    if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8 for a non-regular mesh')
+    if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8 for a non-regular mesh')
 
-  if(mod(NEX_ETA/8,NPROC_ETA) /= 0) &
-    call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA')
-
-  if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
-
-  if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
+    if(mod(NEX_XI/8,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI for a non-regular mesh')
+    if(mod(NEX_ETA/8,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA for a non-regular mesh')
+  endif
 
   if(myrank == 0) then
 
@@ -641,16 +667,20 @@
 
   endif
 
-! define vertical spacing of the mesh
-  call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
+! define vertical spacing of the mesh in case of a non-regular mesh with mesh doublings
+  if(.not. USE_REGULAR_MESH) call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed                     z_top, &
                      Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI,MODEL)
 
 !   fill the volume
-    do ir=0,2*NER
-      rn=rns(ir)
+    do ir = 0,2*NER
+      if(USE_REGULAR_MESH) then
+        rn = dble(ir) / dble(2*NER)
+      else
+        rn = rns(ir)
+      endif
       xgrid(ir,ix,iy) = x_current
       ygrid(ir,ix,iy) = y_current
       zgrid(ir,ix,iy) = z_bot*(ONE-rn) + z_top*rn
@@ -679,7 +709,9 @@
   npointot = nspec * NGLLCUBE
 
 ! make sure everybody is synchronized
+#ifdef USE_MPI
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(idoubling(nspec))
@@ -705,16 +737,21 @@
          VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
          IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
          ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
-         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO)
+         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
 
 ! print min and max of topography included
   if(TOPOGRAPHY) then
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
+#ifdef USE_MPI
       call MPI_REDUCE(min_elevation,min_elevation_all,1,MPI_DOUBLE_PRECISION, &
                           MPI_MIN,0,MPI_COMM_WORLD,ier)
       call MPI_REDUCE(max_elevation,max_elevation_all,1,MPI_DOUBLE_PRECISION, &
                           MPI_MAX,0,MPI_COMM_WORLD,ier)
+#else
+      min_elevation_all = min_elevation
+      max_elevation_all = max_elevation
+#endif
 
     if(myrank == 0) then
       write(IMAIN,*)
@@ -727,12 +764,18 @@
 ! use MPI reduction to compute total area and volume
   area_total_bottom   = ZERO
   area_total_top   = ZERO
+#ifdef USE_MPI
   call MPI_REDUCE(area_local_bottom,area_total_bottom,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
                           MPI_COMM_WORLD,ier)
   call MPI_REDUCE(area_local_top,area_total_top,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
                           MPI_COMM_WORLD,ier)
   call MPI_REDUCE(volume_local,volume_total,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
                           MPI_COMM_WORLD,ier)
+#else
+  area_total_bottom = area_local_bottom
+  area_total_top = area_local_top
+  volume_total = volume_local
+#endif
 
   if(myrank == 0) then
 
@@ -754,7 +797,9 @@
   endif
 
 ! make sure everybody is synchronized
+#ifdef USE_MPI
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
 
   if(myrank == 0) then
 ! check volume
@@ -848,7 +893,11 @@
 
 ! elapsed time since beginning of mesh generation
   if(myrank == 0) then
+#ifdef USE_MPI
     tCPU = MPI_WTIME() - time_start
+#else
+    tCPU = 0.d0
+#endif
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
     write(IMAIN,*) 'End of mesh generation'
@@ -862,11 +911,13 @@
     close(IMAIN)
   endif
 
+#ifdef USE_MPI
 ! synchronize all the processes to make sure everybody has finished
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
 
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
+#endif
 
   end program meshfem3D
 

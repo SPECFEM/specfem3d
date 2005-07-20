@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -14,8 +14,6 @@
 !      Do not redistribute this program without written permission.
 !
 !=======================================================================
-
-
 
 subroutine read_salton_sea_model(vp_array)
 
@@ -44,9 +42,9 @@ subroutine vx_xyz2uvw(xmesh, ymesh, zmesh, uc, vc, wc)
 
   implicit none
   include 'constants.h'
- 
+
   double precision :: xmesh, ymesh, zmesh, uc, vc, wc
-  
+
   uc = (GOCAD_ST_NU-1) * ((xmesh -  GOCAD_ST_O_X) * GOCAD_ST_V_Y - (ymesh - GOCAD_ST_O_Y) * GOCAD_ST_V_X)  &
              / (GOCAD_ST_U_X * GOCAD_ST_V_Y - GOCAD_ST_U_Y * GOCAD_ST_V_X)
   vc = (GOCAD_ST_NV-1) * ((ymesh - GOCAD_ST_O_Y) - uc * GOCAD_ST_U_Y/(GOCAD_ST_NU-1) ) / GOCAD_ST_V_Y
@@ -69,9 +67,13 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
   real,parameter :: eps = 1.0e-3
 
 
-  i = uc + 1 ; j = vc + 1;  k = wc + 1
+  i = uc + 1
+  j = vc + 1
+  k = wc + 1
 
-  xi = uc + 1 - i; eta = vc + 1- j; ga = wc + 1 -k
+  xi = uc + 1 - i
+  eta = vc + 1- j
+  ga = wc + 1 -k
 
   ixi = nint(xi)
   ieta = nint(eta)
@@ -83,11 +85,11 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
 
 
   if (i > 0 .or. i < GOCAD_ST_NU  .or. j > 0 .or. j < GOCAD_ST_NV .or. k > 0 .or. k < GOCAD_ST_NW) then
-    v1 = vp_array(i,j,k) 
+    v1 = vp_array(i,j,k)
     v2 = vp_array(i+1,j,k)
     v3 = vp_array(i+1,j+1,k)
     v4 = vp_array(i,j+1,k)
-    v5 = vp_array(i,j,k+1) 
+    v5 = vp_array(i,j,k+1)
     v6 = vp_array(i+1,j,k+1)
     v7 = vp_array(i+1,j+1,k+1)
     v8 = vp_array(i,j+1,k+1)
@@ -133,7 +135,7 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
     endif
     zmesh = wc / (GOCAD_ST_NW - 1) * GOCAD_ST_W_Z + GOCAD_ST_O_Z
     if (zmesh > -8500.)  then
-      vs = vp / (2 - (0.27*zmesh/(-8500)));
+      vs = vp / (2 - (0.27*zmesh/(-8500)))
     else
       vs = vp/1.73
     endif
@@ -150,5 +152,3 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
 
 end subroutine vx_xyz_interp
 
-      
-    

@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -18,21 +18,22 @@
   subroutine read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
-        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL)
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
+        SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
 
   implicit none
 
   include "constants.h"
 
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-            NEX_ETA,NEX_XI,NPROC_ETA,NPROC_XI,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+            NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, UTM_MAX
@@ -43,7 +44,7 @@
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
-  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
   character(len=150) LOCAL_PATH,MODEL
 
@@ -75,8 +76,8 @@
 
   Z_DEPTH_BLOCK = - dabs(DEPTH_BLOCK_KM) * 1000.d0
 
-  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL) &
-    stop 'bottom of mesh must be deeper than deepest regional layer'
+  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL .and. MODEL /= 'Lacq_gas_field_France' .and. MODEL /= 'Copper_Carcione') &
+    stop 'bottom of mesh must be deeper than deepest regional layer for Southern California'
 
 ! check that parameters computed are consistent
   if(UTM_X_MIN >= UTM_X_MAX) stop 'horizontal dimension of UTM block incorrect'
@@ -106,6 +107,20 @@
     NER_16_BASEMENT    = 3
     NER_MOHO_16        = 3
     NER_BOTTOM_MOHO    = 8
+
+! for copper crystal studied with Jose Carcione
+  else if(MODEL == 'Copper_Carcione') then
+
+! time step in seconds
+    DT                 = 10.d-9
+
+! number of elements in the vertical direction
+! use the same number of elements in the three directions because the copper crystal is a cube
+    NER_SEDIM          = NEX_XI
+    NER_BASEMENT_SEDIM = 0
+    NER_16_BASEMENT    = 0
+    NER_MOHO_16        = 0
+    NER_BOTTOM_MOHO    = 0
 
 ! standard mesh for on Caltech cluster
   else if (UTM_MAX/NEX_MAX >= 1.5) then
@@ -154,8 +169,27 @@
     VP_MIN_GOCAD             = 1.d0
     VP_VS_RATIO_GOCAD_TOP    = 2.0d0
     VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
-
     ANISOTROPY               = .false.
+    USE_REGULAR_MESH         = .false.
+
+  else if(MODEL == 'Copper_Carcione') then
+
+    BASEMENT_MAP             = .false.
+    MOHO_MAP_LUPEI           = .false.
+    HAUKSSON_REGIONAL_MODEL  = .false.
+    HARVARD_3D_GOCAD_MODEL   = .false.
+    THICKNESS_TAPER_BLOCK_HR = 1.d0
+    THICKNESS_TAPER_BLOCK_MR = 1.d0
+    IMPOSE_MINIMUM_VP_GOCAD  = .false.
+    VP_MIN_GOCAD             = 1.d0
+    VP_VS_RATIO_GOCAD_TOP    = 2.0d0
+    VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
+! copper crystal is anisotropic, but we handle it direcly in the main routine that computes
+! the forces by using constants for the c_ijkl to save memory because the crystal
+! is homogeneous, therefore we do not use general anisotropy for a heterogeneous medium
+    ANISOTROPY               = .false.
+! copper crystal is homogeneous, therefore use a regular mesh
+    USE_REGULAR_MESH         = .true.
 
   else if(MODEL == 'Harvard_LA') then
 
@@ -169,8 +203,8 @@
     VP_MIN_GOCAD             = 750.d0
     VP_VS_RATIO_GOCAD_TOP    = 2.0d0
     VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
-
     ANISOTROPY               = .false.
+    USE_REGULAR_MESH         = .false.
 
   else if(MODEL == 'Min_Chen_anisotropy') then
 
@@ -184,8 +218,8 @@
     VP_MIN_GOCAD             = 1.d0
     VP_VS_RATIO_GOCAD_TOP    = 2.0d0
     VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
-
     ANISOTROPY               = .true.
+    USE_REGULAR_MESH         = .false.
 
   else
     stop 'model not implemented, edit read_parameter_file.f90 and recompile'

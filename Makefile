@@ -1,11 +1,11 @@
 #=====================================================================
 #
-#          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+#          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 #          --------------------------------------------------
 #
 #                 Dimitri Komatitsch and Jeroen Tromp
 #    Seismological Laboratory - California Institute of Technology
-#         (c) California Institute of Technology July 2004
+#         (c) California Institute of Technology July 2005
 #
 #    A signed non-commercial agreement is required to use this program.
 #   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,7 +15,7 @@
 #
 #=====================================================================
 #
-# Copyright July 2004, by the California Institute of Technology.
+# Copyright July 2005, by the California Institute of Technology.
 # ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
 #
 # Any commercial use must be negotiated with the Office of Technology
@@ -45,19 +45,20 @@ O = obj
 
 ################ PC Linux #################
 #
-# Beowulf Portland pgf90
+# Portland pgf90
 #
-F90 = pgf90
-MPIF90 = mpif90 #/home/local/mpich/bin/mpif90
-FLAGS_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Mstandard -Knoieee
-FLAGS_NO_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Munroll=c:6 -Mstandard -Knoieee
-MPI_FLAGS = 
+#F90 = pgf90
+#MPIF90 = mpif90 #/home/local/mpich/bin/mpif90
+#FLAGS_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Mstandard -Knoieee
+#FLAGS_NO_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Munroll=c:6 -Mstandard -Knoieee
+#MPI_FLAGS = 
+#C_PREPROCESSOR = -Mpreprocess
 
 #
 # Intel ifort Fortran90 for Linux
 #
-#F90 = ifort
-#MPIF90 = mpif90
+F90 = ifort
+MPIF90 = mpif90
 #
 # Caltech cluster  (Hrothgar)
 #
@@ -69,9 +70,10 @@ MPI_FLAGS =
 #
 # debug with range checking
 #
-#FLAGS_NO_CHECK = -O0 -static -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check bounds
-#FLAGS_CHECK = $(FLAGS_NO_CHECK)
-#MPI_FLAGS = -Vaxlib
+FLAGS_NO_CHECK = -O0 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check bounds
+FLAGS_CHECK = $(FLAGS_NO_CHECK)
+MPI_FLAGS =
+C_PREPROCESSOR = -cpp
 
 #
 # g95 (free f95 compiler from http://www.g95.org, still under development, but works)
@@ -81,6 +83,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = -O
 #FLAGS_NO_CHECK = -O
 #MPI_FLAGS =
+#C_PREPROCESSOR =
 
 #
 # AbSoft
@@ -90,6 +93,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = -W132 -s -O2 -cpu:p7 -v -YDEALLOC=ALL
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS =   
+#C_PREPROCESSOR =
 
 #
 # NAG compiler for Linux
@@ -99,6 +103,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = -O -u -strict95 -C=all
 #FLAGS_NO_CHECK = -O -u -strict95
 #MPI_FLAGS = 
+#C_PREPROCESSOR =
 
 #
 # Lahey f90
@@ -108,6 +113,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = --warn --wo --tpp --f95 --dal -O --chk
 #FLAGS_NO_CHECK = --warn --wo --tpp --f95 --dal -O
 #MPI_FLAGS = 
+#C_PREPROCESSOR =
 
 ################ SGI Irix #################
 ##
@@ -118,6 +124,7 @@ MPI_FLAGS =
 #FLAGS_NO_CHECK = -ansi -u -64 -O3 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4
 #FLAGS_CHECK = $(FLAGS_NO_CHECK) -check_bounds
 #MPI_FLAGS = -lmpi -lfastm -lfpe
+#C_PREPROCESSOR =
 
 ################## Compaq Dec Alpha #################
 #F90 = f90
@@ -125,6 +132,7 @@ MPI_FLAGS =
 #FLAGS_NO_CHECK = -fast -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nounderflow
 #FLAGS_CHECK = $(FLAGS_NO_CHECK) -check bounds
 #MPI_FLAGS = -lfmpi -lmpi
+#C_PREPROCESSOR = -cpp
 
 ################## Earth Simulator and NEC SX-5 ##################
 #F90 = f90
@@ -132,6 +140,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = -C hopt -R2 -Wf" -L nostdout noinclist mrgmsg noeject -msg b -pvctl loopcnt=5000000 expand=6 fullmsg vecthreshold=20 -s" -pi auto line=100 exp=swap_all,rank
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS =
+#C_PREPROCESSOR =
 
 ######## IBM SP or Power 4 ######
 #F90 = mpxlf_r
@@ -142,6 +151,7 @@ MPI_FLAGS =
 #FLAGS_CHECK = -q64 -O4 -qfree=f90 -qsuffix=f=f90
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS = 
+#C_PREPROCESSOR =
 
 baksave:
 	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver mymachines bak
@@ -186,7 +196,6 @@ meshfem3D: constants.h \
        $O/read_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o
-## use MPI here
 	${MPIF90} $(FLAGS_CHECK) -o xmeshfem3D \
        $O/meshfem3D.o \
        $O/create_regions_mesh.o \
@@ -258,7 +267,6 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/get_attenuation_model.o \
        $O/assemble_MPI_vector.o \
        $O/assemble_MPI_scalar.o
-## use MPI here
 	${MPIF90} $(FLAGS_NO_CHECK) -o xspecfem3D \
        $O/specfem3D.o \
        $O/read_arrays_solver.o \
@@ -288,6 +296,146 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/get_attenuation_model.o \
        $O/assemble_MPI_vector.o \
        $O/assemble_MPI_scalar.o $(MPI_FLAGS)
+
+#
+# serial versions below: for runs without MPI on serial machines
+#
+meshfem3D_serial: constants.h \
+       $O/meshfem3D_serial.o \
+       $O/create_regions_mesh.o \
+       $O/calc_jacobian.o \
+       $O/gll_library.o \
+       $O/get_jacobian_boundaries.o \
+       $O/get_absorb.o \
+       $O/get_flags_boundaries.o \
+       $O/get_MPI_cutplanes_xi.o \
+       $O/get_MPI_cutplanes_eta.o \
+       $O/get_global.o \
+       $O/write_AVS_DX_global_faces_data.o \
+       $O/write_AVS_DX_surface_data.o \
+       $O/write_AVS_DX_global_data.o \
+       $O/write_AVS_DX_mesh_quality_data.o \
+       $O/create_name_database.o \
+       $O/define_subregions_basin.o \
+       $O/define_subregions_heuristic.o \
+       $O/get_shape3D.o \
+       $O/get_shape2D.o \
+       $O/hex_nodes.o \
+       $O/lagrange_poly.o \
+       $O/mesh_vertical.o \
+       $O/numerical_recipes.o \
+       $O/interpolate_gocad_block_MR.o \
+       $O/interpolate_gocad_block_HR.o \
+       $O/salton_trough_gocad.o \
+       $O/socal_model.o \
+       $O/aniso_model.o \
+       $O/compute_rho_estimate.o \
+       $O/hauksson_model.o \
+       $O/save_arrays.o \
+       $O/save_header_file.o \
+       $O/read_basin_topo_bathy_file.o \
+       $O/read_moho_map.o \
+       $O/exit_mpi_serial.o \
+       $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
+       $O/utm_geo.o \
+       $O/compute_parameters.o
+	${F90} $(FLAGS_CHECK) -o xmeshfem3D \
+       $O/meshfem3D_serial.o \
+       $O/create_regions_mesh.o \
+       $O/calc_jacobian.o \
+       $O/gll_library.o \
+       $O/get_jacobian_boundaries.o \
+       $O/get_absorb.o \
+       $O/get_flags_boundaries.o \
+       $O/get_MPI_cutplanes_xi.o \
+       $O/get_MPI_cutplanes_eta.o \
+       $O/get_global.o \
+       $O/write_AVS_DX_global_faces_data.o \
+       $O/write_AVS_DX_surface_data.o \
+       $O/write_AVS_DX_global_data.o \
+       $O/write_AVS_DX_mesh_quality_data.o \
+       $O/create_name_database.o \
+       $O/define_subregions_basin.o \
+       $O/define_subregions_heuristic.o \
+       $O/get_shape3D.o \
+       $O/get_shape2D.o \
+       $O/hex_nodes.o \
+       $O/lagrange_poly.o \
+       $O/mesh_vertical.o \
+       $O/numerical_recipes.o \
+       $O/interpolate_gocad_block_MR.o \
+       $O/interpolate_gocad_block_HR.o \
+       $O/salton_trough_gocad.o \
+       $O/socal_model.o \
+       $O/aniso_model.o \
+       $O/compute_rho_estimate.o \
+       $O/hauksson_model.o \
+       $O/save_arrays.o \
+       $O/save_header_file.o \
+       $O/read_basin_topo_bathy_file.o \
+       $O/read_moho_map.o \
+       $O/exit_mpi_serial.o \
+       $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
+       $O/utm_geo.o \
+       $O/compute_parameters.o
+
+# solver also depends on values from mesher
+specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
+       $O/specfem3D_serial.o \
+       $O/read_arrays_solver.o \
+       $O/calc_jacobian.o \
+       $O/gll_library.o \
+       $O/get_cmt.o \
+       $O/numerical_recipes.o \
+       $O/write_seismograms.o \
+       $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
+       $O/utm_geo.o \
+       $O/compute_parameters.o \
+       $O/locate_source_serial.o \
+       $O/locate_receivers_serial.o \
+       $O/get_global.o \
+       $O/comp_source_time_function.o \
+       $O/recompute_jacobian.o \
+       $O/hex_nodes.o \
+       $O/lagrange_poly.o \
+       $O/read_basin_topo_bathy_file.o \
+       $O/exit_mpi_serial.o \
+       $O/get_shape3D.o \
+       $O/create_name_database.o \
+       $O/read_arrays_buffers_solver.o \
+       $O/define_derivation_matrices.o \
+       $O/compute_arrays_source.o \
+       $O/get_attenuation_model.o
+	${F90} $(FLAGS_NO_CHECK) -o xspecfem3D \
+       $O/specfem3D_serial.o \
+       $O/read_arrays_solver.o \
+       $O/calc_jacobian.o \
+       $O/gll_library.o \
+       $O/get_cmt.o \
+       $O/numerical_recipes.o \
+       $O/write_seismograms.o \
+       $O/read_parameter_file.o \
+       $O/read_value_parameters.o \
+       $O/utm_geo.o \
+       $O/compute_parameters.o \
+       $O/locate_source_serial.o \
+       $O/locate_receivers_serial.o \
+       $O/get_global.o \
+       $O/comp_source_time_function.o \
+       $O/recompute_jacobian.o \
+       $O/hex_nodes.o \
+       $O/lagrange_poly.o \
+       $O/read_basin_topo_bathy_file.o \
+       $O/exit_mpi_serial.o \
+       $O/get_shape3D.o \
+       $O/create_name_database.o \
+       $O/read_arrays_buffers_solver.o \
+       $O/define_derivation_matrices.o \
+       $O/compute_arrays_source.o \
+       $O/get_attenuation_model.o
 
 convolve_source_timefunction: $O/convolve_source_timefunction.o
 	${F90} $(FLAGS_CHECK) -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
@@ -322,38 +470,71 @@ combine_paraview_data: constants.h $O/combine_paraview_data.o $O/write_c_binary.
 
 clean:
 	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data
+
 ####
-#### rule for each .o file below
+#### rule to build each .o file below
 ####
 
 ###
-### optimized flags and dependence on values from mesher here
+### MPI compilation, optimized flags and dependence on values from mesher
 ###
 
-### use MPI here
 $O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/specfem3D.o specfem3D.f90
+	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_NO_CHECK) -c -o $O/specfem3D.o specfem3D.f90
 
-### use MPI here
 $O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
 	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
 
-### use MPI here
 $O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_scalar.f90
 	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/assemble_MPI_scalar.o assemble_MPI_scalar.f90
 
-$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
-	${F90} $(FLAGS_CHECK) -c -o $O/read_arrays_solver.o read_arrays_solver.f90
+###
+### MPI compilation without optimization
+###
+
+$O/meshfem3D.o: constants.h meshfem3D.f90
+	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/meshfem3D.o meshfem3D.f90
+
+$O/locate_source.o: constants.h locate_source.f90
+	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/locate_source.o locate_source.f90
+
+$O/locate_receivers.o: constants.h locate_receivers.f90
+	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/locate_receivers.o locate_receivers.f90
+
+$O/exit_mpi.o: constants.h exit_mpi.f90
+	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/exit_mpi.o exit_mpi.f90
 
 ###
-### regular compilation options here
+### serial compilation, optimized flags and dependence on values from mesher
 ###
+
+$O/specfem3D_serial.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
+	${F90} $(C_PREPROCESSOR) $(FLAGS_NO_CHECK) -c -o $O/specfem3D_serial.o specfem3D.f90
+
+###
+### serial compilation without optimization
+###
+
+$O/meshfem3D_serial.o: constants.h meshfem3D.f90
+	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/meshfem3D_serial.o meshfem3D.f90
+
+$O/locate_source_serial.o: constants.h locate_source.f90
+	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/locate_source_serial.o locate_source.f90
+
+$O/locate_receivers_serial.o: constants.h locate_receivers.f90
+	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/locate_receivers_serial.o locate_receivers.f90
+
+$O/exit_mpi_serial.o: constants.h exit_mpi.f90
+	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/exit_mpi_serial.o exit_mpi.f90
 
 $O/convolve_source_timefunction.o: convolve_source_timefunction.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/convolve_source_timefunction.o convolve_source_timefunction.f90
 
 $O/create_header_file.o: create_header_file.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/create_header_file.o create_header_file.f90
+
+$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/read_arrays_solver.o read_arrays_solver.f90
 
 $O/combine_AVS_DX.o: constants.h combine_AVS_DX.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/combine_AVS_DX.o combine_AVS_DX.f90
@@ -366,18 +547,6 @@ $O/check_mesh_quality_AVS_DX.o: constants.h check_mesh_quality_AVS_DX.f90
 
 $O/check_buffers_2D.o: constants.h check_buffers_2D.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/check_buffers_2D.o check_buffers_2D.f90
-
-### use MPI here
-$O/locate_source.o: constants.h locate_source.f90
-	${MPIF90} $(FLAGS_CHECK) -c -o $O/locate_source.o locate_source.f90
-
-### use MPI here
-$O/locate_receivers.o: constants.h locate_receivers.f90
-	${MPIF90} $(FLAGS_CHECK) -c -o $O/locate_receivers.o locate_receivers.f90
-
-## use MPI here
-$O/exit_mpi.o: constants.h exit_mpi.f90
-	${MPIF90} $(FLAGS_CHECK) -c -o $O/exit_mpi.o exit_mpi.f90
 
 $O/read_parameter_file.o: constants.h read_parameter_file.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/read_parameter_file.o read_parameter_file.f90
@@ -444,10 +613,6 @@ $O/hex_nodes.o: constants.h hex_nodes.f90
 
 $O/mesh_vertical.o: constants.h mesh_vertical.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/mesh_vertical.o mesh_vertical.f90
-
-## use MPI here
-$O/meshfem3D.o: constants.h meshfem3D.f90
-	${MPIF90} $(FLAGS_CHECK) -c -o $O/meshfem3D.o meshfem3D.f90
 
 $O/numerical_recipes.o: constants.h numerical_recipes.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/numerical_recipes.o numerical_recipes.f90
@@ -524,7 +689,10 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 $O/combine_paraview_data.o: constants.h combine_paraview_data.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/combine_paraview_data.o combine_paraview_data.f90
 
+###
+### C files below
+###
+
 $O/write_c_binary.o: write_c_binary.c
 	cc -c -o $O/write_c_binary.o write_c_binary.c
-
 

@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 2
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2004
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -147,9 +147,9 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   integer myrank, NSTEP
 
   double precision xi_receiver, eta_receiver, gamma_receiver
-  
+
   character(len=*) adj_source_file
-  
+
 ! output
   real(kind=CUSTOM_REAL) :: adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
 
@@ -184,8 +184,8 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
     do itime = 1, NSTEP
       read(IIN,*) junk, adj_src(itime,icomp)
     enddo
-    close(IIN) 
- 
+    close(IIN)
+
   enddo
 
   do k = 1, NGLLZ
@@ -195,8 +195,8 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
       enddo
     enddo
   enddo
-      
+
 
 end subroutine compute_arrays_adjoint_source
-    
-    
+
+
