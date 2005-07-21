@@ -53,6 +53,7 @@ O = obj
 #FLAGS_NO_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Munroll=c:6 -Mstandard -Knoieee
 #MPI_FLAGS = 
 #C_PREPROCESSOR = -Mpreprocess
+#TURN_MPI_ON = -DUSE_MPI
 
 #
 # Intel ifort Fortran90 for Linux
@@ -74,6 +75,7 @@ FLAGS_NO_CHECK = -O0 -e95 -implicitnone -warn truncated_source -warn argument_ch
 FLAGS_CHECK = $(FLAGS_NO_CHECK)
 MPI_FLAGS =
 C_PREPROCESSOR = -cpp
+TURN_MPI_ON = -DUSE_MPI
 
 #
 # g95 (free f95 compiler from http://www.g95.org, still under development, but works)
@@ -84,6 +86,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_NO_CHECK = -O
 #MPI_FLAGS =
 #C_PREPROCESSOR =
+#TURN_MPI_ON =
 
 #
 # AbSoft
@@ -94,6 +97,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS =   
 #C_PREPROCESSOR =
+#TURN_MPI_ON =
 
 #
 # NAG compiler for Linux
@@ -104,6 +108,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_NO_CHECK = -O -u -strict95
 #MPI_FLAGS = 
 #C_PREPROCESSOR =
+#TURN_MPI_ON =
 
 #
 # Lahey f90
@@ -114,6 +119,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_NO_CHECK = --warn --wo --tpp --f95 --dal -O
 #MPI_FLAGS = 
 #C_PREPROCESSOR =
+#TURN_MPI_ON =
 
 ################ SGI Irix #################
 ##
@@ -125,6 +131,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_CHECK = $(FLAGS_NO_CHECK) -check_bounds
 #MPI_FLAGS = -lmpi -lfastm -lfpe
 #C_PREPROCESSOR =
+#TURN_MPI_ON =
 
 ################## Compaq Dec Alpha #################
 #F90 = f90
@@ -133,6 +140,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_CHECK = $(FLAGS_NO_CHECK) -check bounds
 #MPI_FLAGS = -lfmpi -lmpi
 #C_PREPROCESSOR = -cpp
+#TURN_MPI_ON = -DUSE_MPI
 
 ################## Earth Simulator and NEC SX-5 ##################
 #F90 = f90
@@ -141,6 +149,7 @@ C_PREPROCESSOR = -cpp
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS =
 #C_PREPROCESSOR =
+#TURN_MPI_ON =
 
 ######## IBM SP or Power 4 ######
 #F90 = mpxlf_r
@@ -151,7 +160,8 @@ C_PREPROCESSOR = -cpp
 #FLAGS_CHECK = -q64 -O4 -qfree=f90 -qsuffix=f=f90
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS = 
-#C_PREPROCESSOR =
+#C_PREPROCESSOR = -qsuffix=cpp=f90
+#TURN_MPI_ON = -WF,-DUSE_MPI
 
 baksave:
 	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver mymachines bak
@@ -480,7 +490,7 @@ clean:
 ###
 
 $O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_NO_CHECK) -c -o $O/specfem3D.o specfem3D.f90
+	${MPIF90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/specfem3D.o specfem3D.f90
 
 $O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
 	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
@@ -493,39 +503,39 @@ $O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble
 ###
 
 $O/meshfem3D.o: constants.h meshfem3D.f90
-	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/meshfem3D.o meshfem3D.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/meshfem3D.o meshfem3D.f90
 
 $O/locate_source.o: constants.h locate_source.f90
-	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/locate_source.o locate_source.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/locate_source.o locate_source.f90
 
 $O/locate_receivers.o: constants.h locate_receivers.f90
-	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/locate_receivers.o locate_receivers.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/locate_receivers.o locate_receivers.f90
 
 $O/exit_mpi.o: constants.h exit_mpi.f90
-	${MPIF90} $(C_PREPROCESSOR) -DUSE_MPI $(FLAGS_CHECK) -c -o $O/exit_mpi.o exit_mpi.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/exit_mpi.o exit_mpi.f90
 
 ###
 ### serial compilation, optimized flags and dependence on values from mesher
 ###
 
 $O/specfem3D_serial.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${F90} $(C_PREPROCESSOR) $(FLAGS_NO_CHECK) -c -o $O/specfem3D_serial.o specfem3D.f90
+	${F90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) -c -o $O/specfem3D_serial.o specfem3D.f90
 
 ###
 ### serial compilation without optimization
 ###
 
 $O/meshfem3D_serial.o: constants.h meshfem3D.f90
-	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/meshfem3D_serial.o meshfem3D.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/meshfem3D_serial.o meshfem3D.f90
 
 $O/locate_source_serial.o: constants.h locate_source.f90
-	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/locate_source_serial.o locate_source.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/locate_source_serial.o locate_source.f90
 
 $O/locate_receivers_serial.o: constants.h locate_receivers.f90
-	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/locate_receivers_serial.o locate_receivers.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/locate_receivers_serial.o locate_receivers.f90
 
 $O/exit_mpi_serial.o: constants.h exit_mpi.f90
-	${F90} $(C_PREPROCESSOR) $(FLAGS_CHECK) -c -o $O/exit_mpi_serial.o exit_mpi.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/exit_mpi_serial.o exit_mpi.f90
 
 $O/convolve_source_timefunction.o: convolve_source_timefunction.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/convolve_source_timefunction.o convolve_source_timefunction.f90
