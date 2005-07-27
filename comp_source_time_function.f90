@@ -25,10 +25,32 @@
 
   double precision, external :: erf
 
-! Gaussian moment-rate tensor
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+  include "carcione_anisotropy.h"
+  double precision a_source,t0_source
+#endif
 
-  comp_source_time_function = 0.5d0*(1.0d0+erf(SOURCE_DECAY_RATE*t/hdur))
+! quasi Heaviside, small Gaussian moment-rate tensor
+  comp_source_time_function = 0.5d0*(1.0d0 + erf(SOURCE_DECAY_RATE*t/hdur))
 
+#ifdef CARCIONE_ANISO
+! onset time is chosen as characteristic time plus 25 %
+  a_source = (PI*SOURCE_DOMINANT_FREQ)**2
+  t0_source = 1.25d0 / SOURCE_DOMINANT_FREQ
+
+! Gaussian
+  if(SOURCE_TIME_FUNCTION == 1) then
+    comp_source_time_function = + FACTOR_SOURCE*exp(-a_source*(t-t0_source)**2)
+
+! Ricker
+  else if(SOURCE_TIME_FUNCTION == 2) then
+    comp_source_time_function = - FACTOR_SOURCE*(1.d0-2.d0*a_source*(t-t0_source)**2)*exp(-a_source*(t-t0_source)**2)
+
+  else
+    stop 'incorrect type of source time function for Carcione copper'
+  endif
+#endif
 
   end function comp_source_time_function
 

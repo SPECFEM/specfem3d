@@ -24,6 +24,9 @@
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
                  TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+#ifdef CARCIONE_ANISO
+                 x_target_no_rot,y_target_no_rot,z_target_no_rot, &
+#endif
                  NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   implicit none
@@ -36,6 +39,11 @@
   include "constants.h"
 #ifdef USE_MPI
   include "precision.h"
+#endif
+
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+  include "carcione_anisotropy.h"
 #endif
 
   integer NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
@@ -67,6 +75,11 @@
   double precision, allocatable, dimension(:) :: horiz_dist,elevation
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision, allocatable, dimension(:,:) :: x_found_all,y_found_all,z_found_all
+
+#ifdef CARCIONE_ANISO
+  double precision x_target_new,y_target_new
+  double precision, dimension(nrec) :: x_target_no_rot,y_target_no_rot,z_target_no_rot
+#endif
 
   integer irec
   integer i,j,k,ispec,iglob
@@ -198,10 +211,6 @@
     read(1,*,iostat=ios) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
-! LQY -- station burial is implemented
-! check that station is not buried, burial is not implemented in current code
-!    if(dabs(stbur(irec)) > 0.001d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
-
 ! convert station location to UTM
     call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
@@ -217,15 +226,26 @@
 !     get the Cartesian components of n in the model: nu
 
 ! orientation consistent with the UTM projection
+
 !     East
       nu(1,1,irec) = 1.d0
       nu(1,2,irec) = 0.d0
       nu(1,3,irec) = 0.d0
 
+#ifdef CARCIONE_ANISO
+      nu(1,1,irec) = + cos(ANGLE_ROTATE)
+      nu(1,2,irec) = + sin(ANGLE_ROTATE)
+#endif
+
 !     North
       nu(2,1,irec) = 0.d0
       nu(2,2,irec) = 1.d0
       nu(2,3,irec) = 0.d0
+
+#ifdef CARCIONE_ANISO
+      nu(2,1,irec) = - sin(ANGLE_ROTATE)
+      nu(2,2,irec) = + cos(ANGLE_ROTATE)
+#endif
 
 !     Vertical
       nu(3,1,irec) = 0.d0
@@ -276,6 +296,18 @@
       y_target(irec) = stutm_y(irec)
       z_target(irec) = elevation(irec) - stbur(irec)
 
+#ifdef CARCIONE_ANISO
+!! DK DK store original location before rotation for information and display
+      x_target_no_rot(irec) = x_target(irec)
+      y_target_no_rot(irec) = y_target(irec)
+      z_target_no_rot(irec) = z_target(irec)
+
+!! DK DK UGLY rotate coordinates
+      x_target_new =   x_target(irec)*cos(ANGLE_ROTATE) + y_target(irec)*sin(ANGLE_ROTATE)
+      y_target_new = - x_target(irec)*sin(ANGLE_ROTATE) + y_target(irec)*cos(ANGLE_ROTATE)
+      x_target(irec) = x_target_new
+      y_target(irec) = y_target_new
+#endif
 
 ! examine top of the elements only (receivers always at the surface)
 !      k = NGLLZ
@@ -287,9 +319,15 @@
 
 ! loop only on points inside the element
 ! exclude edges to ensure this point is not shared with other elements
+#ifndef CARCIONE_ANISO
        do k=2,NGLLZ-1
         do j=2,NGLLY-1
           do i=2,NGLLX-1
+#else
+       do k=1,NGLLZ
+         do j=1,NGLLY
+           do i=1,NGLLX
+#endif
 
             iglob = ibool(i,j,k,ispec)
             dist = dsqrt((x_target(irec)-dble(xstore(iglob)))**2 &
@@ -504,7 +542,11 @@
     write(IMAIN,*) '        original UTM y: ',sngl(stutm_y(irec))
     write(IMAIN,*) '   horizontal distance: ',sngl(horiz_dist(irec))
     if(TOPOGRAPHY) write(IMAIN,*) '  topography elevation: ',sngl(elevation(irec))
-    write(IMAIN,*) '   target x, y, z: ', sngl(x_target(irec)), sngl(y_target(irec)), sngl(z_target(irec))
+#ifdef CARCIONE_ANISO
+    write(IMAIN,*) '   original target x, y, z before rotation: ', &
+       sngl(x_target_no_rot(irec)), sngl(y_target_no_rot(irec)), sngl(z_target_no_rot(irec))
+#endif
+    write(IMAIN,*) '   target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
     write(IMAIN,*) 'closest estimate found: ',sngl(final_distance(irec)),' m away'
     write(IMAIN,*) ' in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
@@ -603,7 +645,7 @@
 
 !===========================
 
-  subroutine station_filter(myrank,filename,filtered_filename,nfilter,&
+  subroutine station_filter(myrank,filename,filtered_filename,nfilter, &
       LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
   implicit none
@@ -631,7 +673,7 @@
   read(IIN, *) nrec
   do irec = 1, nrec
     read(IIN, *) station_name, network_name, stlat, stlon, stele, stbur
-    if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
+    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
           nrec_filtered = nrec_filtered + 1
   enddo
   close(IIN)
@@ -643,7 +685,7 @@
     write(IOUT,*) nrec_filtered
     do irec = 1,nrec
       read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-      if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
+      if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
             write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
     enddo
     close(IIN)

@@ -55,6 +55,11 @@
   include "precision.h"
 #endif
 
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+  include "carcione_anisotropy.h"
+#endif
+
 ! include values created by the mesher
   include "OUTPUT_FILES/values_from_mesher.h"
 
@@ -212,6 +217,13 @@
 
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
   real(kind=CUSTOM_REAL) fac1,fac2,fac3
+
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifndef CARCIONE_ANISO
+  real(kind=CUSTOM_REAL) lambdal,kappal,mul,lambdalplus2mul
+  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
+      c44,c45,c46,c55,c56,c66
+#endif
 
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
@@ -410,6 +422,19 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
 
+#ifdef CARCIONE_ANISO
+  integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source,ispec2D_source_ymin
+  double precision x_target_source_no_rot,y_target_source_no_rot,z_target_source_no_rot
+
+! receiver information
+  double precision, allocatable, dimension(:) :: x_target_no_rot,y_target_no_rot,z_target_no_rot
+
+! for postscript display
+  double precision xmesh,ymesh,zmesh,xmesh_new,ymesh_new
+  double precision, dimension(:,:,:,:), allocatable :: coord2D
+  double precision, dimension(:,:,:), allocatable :: normdispl2D
+#endif
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! initialize the MPI communicator and start the NPROC MPI processes.
@@ -567,10 +592,7 @@
   if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
 
-! LQY -- reordered the code to put source and receiver related part together
-
 ! read 2-D addressing for summation between slices with MPI
-
   call read_arrays_buffers_solver(myrank,iboolleft_xi, &
      iboolright_xi,iboolleft_eta,iboolright_eta, &
      npoin2D_xi,npoin2D_eta, &
@@ -830,14 +852,18 @@
           LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
           TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
           PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
+#ifdef CARCIONE_ANISO
+          ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source, &
+          x_target_source_no_rot,y_target_source_no_rot,z_target_source_no_rot, &
+#endif
           NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
-! LQY filter the stf by gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
+! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
 
-! LQY calculate t0 -- the earliest start time
+! define t0 as the earliest start time
   t0 = - minval(t_cmt-hdur)
 
 !$$$$$$$$$$$$$$$$$$ RECEIVERS $$$$$$$$$$$$$$$$$$$$$
@@ -880,6 +906,12 @@
   allocate(network_name(nrec))
   allocate(nu(NDIM,NDIM,nrec))
 
+#ifdef CARCIONE_ANISO
+  allocate(x_target_no_rot(nrec))
+  allocate(y_target_no_rot(nrec))
+  allocate(z_target_no_rot(nrec))
+#endif
+
 ! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
             xstore,ystore,zstore,xigll,yigll,zigll,trim(rec_filename), &
@@ -887,6 +919,9 @@
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
             TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+#ifdef CARCIONE_ANISO
+            x_target_no_rot,y_target_no_rot,z_target_no_rot, &
+#endif
             NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
 
@@ -895,7 +930,8 @@
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
     allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
-! LQY calculate sourcearrays
+
+! compute source arrays
     do isource = 1,NSOURCES
 
 !   check that the source slice number is okay
@@ -1285,6 +1321,12 @@
     allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   endif
 
+#ifdef CARCIONE_ANISO
+! allocate arrays for postscript display
+  allocate(coord2D(2,NGLLX,NGLLZ,nspec2D_ymin))
+  allocate(normdispl2D(NGLLX,NGLLZ,nspec2D_ymin))
+#endif
+
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
@@ -1427,6 +1469,18 @@
   time_start = 0.d0
 #endif
 
+#ifdef CARCIONE_ANISO
+! detect in which 2D element the source is located on vertical face Ymin
+  isource = 1
+  if(myrank == islice_selected_source(isource)) then
+    ispec2D_source_ymin = -1
+    do ispec2D = 1,nspec2D_ymin
+      if(ibelm_ymin(ispec2D) == ispec_selected_source(isource)) ispec2D_source_ymin = ispec2D
+    enddo
+    if(ispec2D_source_ymin == -1) call exit_MPI(myrank,'source element not detected on vertical face Ymin')
+  endif
+#endif
+
 ! *********************************************************
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
 ! *********************************************************
@@ -1478,7 +1532,7 @@
       if (SIMULATION_TYPE == 3) write(IMAIN,*) &
             'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
       write(IMAIN,*)
-      call flush(IMAIN)
+!! DK DK XXXXXXXXXXX YYYYY suppressed because non standard      call flush(IMAIN)
 
 
 ! write time stamp file to give information about progression of simulation
@@ -1732,6 +1786,30 @@
 
   endif
 
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+
+     sigma_xx = c11_copper*duxdxl + c16_copper*duxdyl_plus_duydxl + c12_copper*duydyl + &
+        c15_copper*duzdxl_plus_duxdzl + c14_copper*duzdyl_plus_duydzl + c13_copper*duzdzl
+
+     sigma_yy = c12_copper*duxdxl + c26_copper*duxdyl_plus_duydxl + c22_copper*duydyl + &
+        c25_copper*duzdxl_plus_duxdzl + c24_copper*duzdyl_plus_duydzl + c23_copper*duzdzl
+
+     sigma_zz = c13_copper*duxdxl + c36_copper*duxdyl_plus_duydxl + c23_copper*duydyl + &
+        c35_copper*duzdxl_plus_duxdzl + c34_copper*duzdyl_plus_duydzl + c33_copper*duzdzl
+
+     sigma_xy = c16_copper*duxdxl + c66_copper*duxdyl_plus_duydxl + c26_copper*duydyl + &
+        c56_copper*duzdxl_plus_duxdzl + c46_copper*duzdyl_plus_duydzl + c36_copper*duzdzl
+
+     sigma_xz = c15_copper*duxdxl + c56_copper*duxdyl_plus_duydxl + c25_copper*duydyl + &
+        c55_copper*duzdxl_plus_duxdzl + c45_copper*duzdyl_plus_duydzl + c35_copper*duzdzl
+
+     sigma_yz = c14_copper*duxdxl + c46_copper*duxdyl_plus_duydxl + c24_copper*duydyl + &
+        c45_copper*duzdxl_plus_duxdzl + c44_copper*duzdyl_plus_duydzl + c34_copper*duzdzl
+
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#else
+
     kappal = kappastore(i,j,k,ispec)
     mul = mustore(i,j,k,ispec)
 
@@ -1835,6 +1913,9 @@
          b_sigma_yz = mul*b_duzdyl_plus_duydzl
        endif
     endif
+
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#endif
 
 ! subtract memory variables if attenuation
     if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
@@ -2360,6 +2441,7 @@
         stf_used = stf
       endif
 
+#ifndef CARCIONE_ANISO
 !     add source array
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -2369,6 +2451,17 @@
           enddo
         enddo
       enddo
+#else
+! add force source on vertical face Ymin for copper crystal study with Carcione
+! force component is along normal to Ymin with minus sign
+   iglob = ibool(ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source,ispec_selected_source(isource))
+   accel(1,iglob) = accel(1,iglob) - FACTOR_SOURCE*stf_used* &
+     normal_ymin(1,ix_initial_guess_source,iz_initial_guess_source,ispec2D_source_ymin)
+   accel(2,iglob) = accel(2,iglob) - FACTOR_SOURCE*stf_used* &
+     normal_ymin(2,ix_initial_guess_source,iz_initial_guess_source,ispec2D_source_ymin)
+   accel(3,iglob) = accel(3,iglob) - FACTOR_SOURCE*stf_used* &
+     normal_ymin(3,ix_initial_guess_source,iz_initial_guess_source,ispec2D_source_ymin)
+#endif
 
     endif
 
@@ -2946,6 +3039,58 @@
     close(27)
 
   endif
+
+#ifdef CARCIONE_ANISO
+! create the cutplane and write a postscript snapshot
+  if(POSTSCRIPT_SNAPSHOTS .and. (mod(it,NTSTEP_BETWEEN_FRAMES) == 0 .or. it == 5)) then
+
+! cutplane corresponds to Y_min face (vertical free surface)
+
+    do ispec2D = 1,nspec2D_ymin
+
+    ispec = ibelm_ymin(ispec2D)
+
+! use Ymin face of this element
+    j = 1
+
+        do i=1,NGLLX
+          do k=1,NGLLZ
+
+    xmesh = xstore(ibool(i,j,k,ispec))
+    ymesh = ystore(ibool(i,j,k,ispec))
+    zmesh = zstore(ibool(i,j,k,ispec))
+
+!! DK DK UGLY rotate coordinates back to display vertical free surface
+    xmesh_new =   xmesh*cos(-ANGLE_ROTATE) + ymesh*sin(-ANGLE_ROTATE)
+    ymesh_new = - xmesh*sin(-ANGLE_ROTATE) + ymesh*cos(-ANGLE_ROTATE)
+    xmesh = xmesh_new
+    ymesh = ymesh_new
+
+! use X and Z values of coordinates to define displayed surface after rotation
+            coord2D(1,i,k,ispec2D) = xmesh
+            coord2D(2,i,k,ispec2D) = zmesh
+
+! norm corresponds to full three-component vector, not to 2D projection on plane
+            normdispl2D(i,k,ispec2D) = &
+              sqrt(displ(1,ibool(i,j,k,ispec))**2 + &
+                   displ(2,ibool(i,j,k,ispec))**2 + &
+                   displ(3,ibool(i,j,k,ispec))**2)
+
+          enddo
+        enddo
+    enddo
+
+! draw snapshot with grayscale norm
+! norm corresponds to full three-component vector, not to 2D projection on plane (see above)
+    write(IMAIN,*) 'starting postscript display'
+    call plotpost_norm(coord2D,normdispl2D,it,DT,nspec2D_ymin,NEX_XI,NER, &
+           x_target_no_rot,z_target_no_rot,nrec,x_target_source_no_rot,z_target_source_no_rot)
+    write(IMAIN,*) 'postscript display finished'
+    write(IMAIN,*)
+
+  endif
+#endif
+
 !
 !---- end of time iteration loop
 !

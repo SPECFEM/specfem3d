@@ -55,6 +55,11 @@
   include "precision.h"
 #endif
 
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+  include "carcione_anisotropy.h"
+#endif
+
 !=====================================================================!
 !                                                                     !
 !  meshfem3D produces a spectral element grid for a basin.            !
@@ -130,6 +135,11 @@
 
   double precision xin,etan,rn
   double precision x_current,y_current,z_top,z_bot
+
+#ifdef CARCIONE_ANISO
+!! DK DK UGLY rotate coordinates
+  double precision x_current_new,y_current_new
+#endif
 
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
 
@@ -534,6 +544,14 @@
     etan=dble(iy)/dble(npy)
     y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
+#ifdef CARCIONE_ANISO
+!! DK DK UGLY rotate coordinates
+    x_current_new =   x_current*cos(ANGLE_ROTATE) + y_current*sin(ANGLE_ROTATE)
+    y_current_new = - x_current*sin(ANGLE_ROTATE) + y_current*cos(ANGLE_ROTATE)
+    x_current = x_current_new
+    y_current = y_current_new
+#endif
+
 ! define basin between topography surface and fictitious bottom
     if(TOPOGRAPHY) then
 
@@ -849,18 +867,12 @@
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
 
 ! filter list of stations, only retain stations that are in the basin model
-
   nrec_filtered = 0
   open(unit=IIN,file='DATA/STATIONS',status='old')
   read(IIN,*) nrec
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-
-! LQY -- implementing station burial in locate_receiver()
-! check that station is not buried, burial is not implemented in current code
-!    if(dabs(stbur) > 0.1d0) call exit_MPI(myrank,'stations with non-zero burial not implemented yet')
-
-    if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
+    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
       nrec_filtered = nrec_filtered + 1
   enddo
   close(IIN)
@@ -881,7 +893,7 @@
 
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-    if(stlat > LATITUDE_MIN .and. stlat < LATITUDE_MAX .and. stlon > LONGITUDE_MIN .and. stlon < LONGITUDE_MAX) &
+    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
       write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
               sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
   enddo

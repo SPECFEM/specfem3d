@@ -28,6 +28,10 @@
                  LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
                  TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
                  PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
+#ifdef CARCIONE_ANISO
+                 ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source, &
+                 x_target_source_no_rot,y_target_source_no_rot,z_target_source_no_rot, &
+#endif
                  NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
   implicit none
@@ -40,6 +44,11 @@
   include "constants.h"
 #ifdef USE_MPI
   include "precision.h"
+#endif
+
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+  include "carcione_anisotropy.h"
 #endif
 
   integer NPROC,UTM_PROJECTION_ZONE
@@ -102,6 +111,11 @@
 
   double precision x_target_source,y_target_source,z_target_source
 
+#ifdef CARCIONE_ANISO
+  double precision x_target_source_no_rot,y_target_source_no_rot,z_target_source_no_rot
+  double precision x_target_source_new,y_target_source_new
+#endif
+
   integer islice_selected_source(NSOURCES)
 
 ! timer MPI
@@ -156,8 +170,8 @@
   do isource = 1,NSOURCES
 
 ! check that the current source is inside the basin model
-  if(lat(isource) <= LATITUDE_MIN .or. lat(isource) >= LATITUDE_MAX .or. long(isource) <= LONGITUDE_MIN &
-       .or. long(isource) >= LONGITUDE_MAX)  call exit_MPI(myrank,'the current source is outside the model')
+  if(lat(isource) < LATITUDE_MIN .or. lat(isource) > LATITUDE_MAX .or. long(isource) < LONGITUDE_MIN &
+       .or. long(isource) > LONGITUDE_MAX)  call exit_MPI(myrank,'the current source is outside the model')
 
   if(depth(isource) >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
     call exit_MPI(myrank,'the current source is below the bottom of the model')
@@ -227,6 +241,19 @@
   y_target_source = utm_y_source(isource)
   z_target_source = - depth(isource)*1000.0d0 + elevation(isource)
 
+#ifdef CARCIONE_ANISO
+! save the position of the source before rotation
+  x_target_source_no_rot = x_target_source
+  y_target_source_no_rot = y_target_source
+  z_target_source_no_rot = z_target_source
+
+!! DK DK UGLY rotate coordinates
+  x_target_source_new =   x_target_source*cos(ANGLE_ROTATE) + y_target_source*sin(ANGLE_ROTATE)
+  y_target_source_new = - x_target_source*sin(ANGLE_ROTATE) + y_target_source*cos(ANGLE_ROTATE)
+  x_target_source = x_target_source_new
+  y_target_source = y_target_source_new
+#endif
+
 ! set distance to huge initial value
   distmin = HUGEVAL
 
@@ -234,9 +261,15 @@
 
 ! loop only on points inside the element
 ! exclude edges to ensure this point is not shared with other elements
+#ifndef CARCIONE_ANISO
   do k=2,NGLLZ-1
     do j=2,NGLLY-1
       do i=2,NGLLX-1
+#else
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+#endif
 
 !       keep this point if it is closer to the receiver
         iglob = ibool(i,j,k,ispec)
@@ -449,6 +482,16 @@
     write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
     write(IMAIN,*) '         depth: ',depth(isource),' km'
     if(TOPOGRAPHY) write(IMAIN,*) 'topo elevation: ',elevation(isource),' m'
+
+#ifdef CARCIONE_ANISO
+!! DK DK UGLY display rotated coordinates
+    write(IMAIN,*)
+    write(IMAIN,*) 'requested position of the source after rotation:'
+    write(IMAIN,*)
+    write(IMAIN,*) '         xloc: ',x_target_source
+    write(IMAIN,*) '         yloc: ',y_target_source
+    write(IMAIN,*) '        depth: ',- z_target_source
+#endif
 
     write(IMAIN,*)
     write(IMAIN,*) 'position of the source that will be used:'

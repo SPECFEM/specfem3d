@@ -37,6 +37,11 @@
 
   include "constants.h"
 
+!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
+#ifdef CARCIONE_ANISO
+  include "carcione_anisotropy.h"
+#endif
+
 ! number of spectral elements in each block
   integer nspec
 
@@ -205,6 +210,11 @@
   logical point_is_in_sediments
   logical, dimension(:,:,:,:), allocatable :: flag_sediments
   logical, dimension(:), allocatable :: not_fully_in_bedrock
+
+#ifdef CARCIONE_ANISO
+!! DK DK UGLY rotate coordinates back to detect boundaries
+    double precision xmesh_new,ymesh_new
+#endif
 
 ! **************
 
@@ -593,6 +603,15 @@
          ymesh = ymesh + shape3D(ia,i,j,k)*yelm(ia)
          zmesh = zmesh + shape3D(ia,i,j,k)*zelm(ia)
        enddo
+
+#ifdef CARCIONE_ANISO
+!! DK DK UGLY rotate coordinates back to detect boundaries
+    xmesh_new =   xmesh*cos(-ANGLE_ROTATE) + ymesh*sin(-ANGLE_ROTATE)
+    ymesh_new = - xmesh*sin(-ANGLE_ROTATE) + ymesh*cos(-ANGLE_ROTATE)
+    xmesh = xmesh_new
+    ymesh = ymesh_new
+#endif
+
        xstore_local(i,j,k) = xmesh
        ystore_local(i,j,k) = ymesh
        zstore_local(i,j,k) = zmesh
