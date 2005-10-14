@@ -296,7 +296,7 @@
   double precision sec,stf
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
-  double precision, dimension(:), allocatable :: t_cmt,hdur
+  double precision, dimension(:), allocatable :: t_cmt,hdur,hdur_gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
   double precision :: t0
@@ -839,6 +839,7 @@
   allocate(gamma_source(NSOURCES))
   allocate(t_cmt(NSOURCES))
   allocate(hdur(NSOURCES))
+  allocate(hdur_gaussian(NSOUCES))
   allocate(utm_x_source(NSOURCES))
   allocate(utm_y_source(NSOURCES))
 
@@ -860,8 +861,11 @@
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
+! convert the half duration for triangle STF to the one for gaussian STF
+  hdur_gaussian = hdur/SOURCE_DECAY_RATE
+
 ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
-  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
+  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur_gaussian = sqrt(hdur_gaussian**2 + HDUR_MOVIE**2)
 
 ! define t0 as the earliest start time
   t0 = - minval(t_cmt-hdur)
@@ -2432,7 +2436,7 @@
 !   add the source (only if this proc carries the source)
     if(myrank == islice_selected_source(isource)) then
 
-      stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur(isource))
+      stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
 
 !     distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
@@ -2500,7 +2504,7 @@
 !   add the source (only if this proc carries the source)
     if(myrank == islice_selected_source(isource)) then
 
-      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur(isource))
+      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
 
 !     distinguish between single and double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then

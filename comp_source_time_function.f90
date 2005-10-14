@@ -31,8 +31,8 @@
   double precision a_source,t0_source
 #endif
 
-! quasi Heaviside, small Gaussian moment-rate tensor
-  comp_source_time_function = 0.5d0*(1.0d0 + erf(SOURCE_DECAY_RATE*t/hdur))
+! quasi Heaviside, small Gaussian moment-rate tensor with hdur
+  comp_source_time_function = 0.5d0*(1.0d0 + erf(t/hdur))
 
 #ifdef CARCIONE_ANISO
 ! onset time is chosen as characteristic time plus 25 %

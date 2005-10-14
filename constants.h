@@ -84,7 +84,7 @@
   integer, parameter :: MAX_LENGTH_NETWORK_NAME = 8
 
 ! source decay rate
-  double precision, parameter :: SOURCE_DECAY_RATE = 2.628d0
+  double precision, parameter :: SOURCE_DECAY_RATE = 1.621d0
 
 ! hdur for movie and shakemaps
   double precision, parameter :: HDUR_MOVIE = 2.4d0
