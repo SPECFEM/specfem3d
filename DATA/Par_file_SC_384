@@ -41,6 +41,7 @@ NTSTEP_BETWEEN_FRAMES           = 200
 CREATE_SHAKEMAP                 = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
+HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
 SAVE_AVS_DX_MESH_FILES          = .true.

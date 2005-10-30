@@ -86,9 +86,6 @@
 ! source decay rate
   double precision, parameter :: SOURCE_DECAY_RATE = 1.628d0
 
-! hdur for movie and shakemaps
-  double precision, parameter :: HDUR_MOVIE = 2.4d0
-
 !----------- do not modify anything below -------------
 
 ! some useful constants

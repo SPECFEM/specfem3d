@@ -24,7 +24,7 @@
         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
         SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
 
@@ -37,7 +37,7 @@
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, UTM_MAX
-  double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,DT
+  double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,DT,HDUR_MOVIE
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
@@ -256,6 +256,10 @@
   call read_value_logical(CREATE_SHAKEMAP)
   call read_value_logical(SAVE_DISPLACEMENT)
   call read_value_logical(USE_HIGHRES_FOR_MOVIES)
+  call read_value_double_precision(HDUR_MOVIE)
+! computes a default hdur_movie that creates nice looking movies.
+! Sets HDUR_MOVIE as the minimum period the mesh can resolve for Southern California model
+  if(HDUR_MOVIE <=TINYVAL) HDUR_MOVIE = max(384/NEX_XI*2.5,384/NEX_ETA*2.5)
 
 ! compute the minimum value of hdur in CMTSOLUTION file
   open(unit=1,file='DATA/CMTSOLUTION',status='old')
@@ -281,8 +285,8 @@
   close(1)
 
 ! one cannot use a Heaviside source for the movies
-  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. minval_hdur < TINYVAL) &
-    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
+!  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
+!    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
 
   call read_value_logical(SAVE_AVS_DX_MESH_FILES)
   call read_value_string(LOCAL_PATH)
