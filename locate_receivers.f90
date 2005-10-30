@@ -669,7 +669,7 @@
   nrec_filtered = 0
 
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
-  if (ios /= 0) call exit_mpi(myrank, 'No file'//trim(filename)//', exit')
+  if (ios /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
   read(IIN, *) nrec
   do irec = 1, nrec
     read(IIN, *) station_name, network_name, stlat, stlon, stele, stbur

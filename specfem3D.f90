@@ -861,14 +861,20 @@
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
+! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
+  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
+     hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
+     if(myrank == 0) then
+        write(IMAIN,*)
+        write(IMAIN,*) 'Each source is being convolved with HDUR_MOVIE = ',HDUR_MOVIE
+        write(IMAIN,*)
+     endif
+  endif
 ! convert the half duration for triangle STF to the one for gaussian STF
   hdur_gaussian = hdur/SOURCE_DECAY_RATE
 
-! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
-  if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) hdur_gaussian = sqrt(hdur_gaussian**2 + HDUR_MOVIE**2)
-
 ! define t0 as the earliest start time
-  t0 = - minval(t_cmt-hdur)
+  t0 = - 1.5d0 * minval(t_cmt-hdur)
 
 !$$$$$$$$$$$$$$$$$$ RECEIVERS $$$$$$$$$$$$$$$$$$$$$
 
