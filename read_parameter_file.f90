@@ -259,7 +259,8 @@
   call read_value_double_precision(HDUR_MOVIE)
 ! computes a default hdur_movie that creates nice looking movies.
 ! Sets HDUR_MOVIE as the minimum period the mesh can resolve for Southern California model
-  if(HDUR_MOVIE <=TINYVAL) HDUR_MOVIE = max(384/NEX_XI*2.5,384/NEX_ETA*2.5)
+  if(HDUR_MOVIE <=TINYVAL .and. (MODEL == 'Harvard_LA' .or. MODEL == 'SoCal')) &
+	HDUR_MOVIE = max(384/NEX_XI*2.4,384/NEX_ETA*2.4)
 
 ! compute the minimum value of hdur in CMTSOLUTION file
   open(unit=1,file='DATA/CMTSOLUTION',status='old')
