@@ -526,8 +526,8 @@
       iglob7 = iglob7 + iglobpointoffset
       iglob8 = iglob8 + iglobpointoffset
       if(equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
-        write(11,200) numelem + iglobelemoffset, &
-            iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
+        write(11,"(i6,' 1 hex ',i6,1x,i6,1x,i6,1x,i6,1x,i6,1x,i6,1x,i6,1x,i6)") &
+            numelem + iglobelemoffset,iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
   enddo
 
   iglobelemoffset = iglobelemoffset + nspec
@@ -538,8 +538,6 @@
   close(14)
 
   enddo
-
- 200 format(i6,' 1 hex ',i6,1x,i6,1x,i6,1x,i6,1x,i6,1x,i6,1x,i6,1x,i6)
 
 ! ************* generate element data values ******************
 

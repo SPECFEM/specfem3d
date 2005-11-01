@@ -84,7 +84,7 @@
   integer index_equal_sign,ios
 
   do
-    read(unit=IIN,fmt=200,iostat=ios) string_read
+    read(unit=IIN,fmt="(a100)",iostat=ios) string_read
     if(ios /= 0) stop 'error while reading parameter file'
 
 ! suppress leading white spaces, if any
@@ -110,9 +110,6 @@
 ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
   string_read = adjustl(string_read)
   string_read = string_read(1:len_trim(string_read))
-
-! format
- 200 format(a100)
 
   end subroutine read_next_line
 

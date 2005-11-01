@@ -34,8 +34,7 @@
   nproc_max_loop = NPROC-1
 
 ! create the name for the database of the current slide and region
-  write(procname,10) iproc
- 10 format('/proc',i4.4,'_')
+  write(procname,"('/proc',i4.4,'_')") iproc
 
 ! on a Beowulf-type machine, path on frontend can be different from local paths
   if(USE_LOCAL_PATH_BEOWULF) then
@@ -51,8 +50,7 @@
     close(48)
 
 ! create the serial prefix pointing to the correct machine
-    write(serial_prefix,20) num_active_proc(iproc)
- 20 format('/auto/scratch_n',i3.3,'/')
+    write(serial_prefix,"('/auto/scratch_n',i3.3,'/')") num_active_proc(iproc)
 
 ! suppress everything until the last "/" to define the base name of local path
 ! this is system dependent since it assumes the disks are mounted

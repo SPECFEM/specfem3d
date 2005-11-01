@@ -588,7 +588,7 @@
         open(unit=11,file='OUTPUT_FILES/AVS_movie_all.inp',status='unknown')
         write(11,*) nframes
         write(11,*) 'data'
-        write(11,401) 1,1
+        write(11,"('step',i1,' image',i1)") 1,1
         write(11,*) nglob,' ',nspectot_AVS_max
       else if(.not. UNIQUE_FILE) then
         write(outputname,"('OUTPUT_FILES/AVS_movie_',i6.6,'.inp')") ivalue
@@ -662,14 +662,13 @@
       ibool_number4 = iglob(ieoff + 4)
       if(USE_OPENDX) then
 ! point order in OpenDX is 1,4,2,3 *not* 1,2,3,4 as in AVS
-        write(11,210) ireorder(ibool_number1)-1,ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
+        write(11,"(i10,1x,i10,1x,i10,1x,i10)") ireorder(ibool_number1)-1, &
+          ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
       else
-        write(11,211) ispec,ireorder(ibool_number1),ireorder(ibool_number4),ireorder(ibool_number2),ireorder(ibool_number3)
+        write(11,"(i10,' 1 quad ',i10,1x,i10,1x,i10,1x,i10)") ispec,ireorder(ibool_number1), &
+          ireorder(ibool_number4),ireorder(ibool_number2),ireorder(ibool_number3)
       endif
     enddo
-
- 210 format(i10,1x,i10,1x,i10,1x,i10)
- 211 format(i10,' 1 quad ',i10,1x,i10,1x,i10,1x,i10)
 
   endif
 
@@ -679,15 +678,16 @@
     write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
   else
     if(UNIQUE_FILE) then
+! step number for AVS multistep file
       if(iframe > 1) then
         if(iframe < 10) then
-          write(11,401) iframe,iframe
+          write(11,"('step',i1,' image',i1)") iframe,iframe
         else if(iframe < 100) then
-          write(11,402) iframe,iframe
+          write(11,"('step',i2,' image',i2)") iframe,iframe
         else if(iframe < 1000) then
-          write(11,403) iframe,iframe
+          write(11,"('step',i3,' image',i3)") iframe,iframe
         else
-          write(11,404) iframe,iframe
+          write(11,"('step',i4,' image',i4)") iframe,iframe
         endif
       endif
       write(11,*) '1 0'
@@ -696,12 +696,6 @@
     write(11,*) '1 1'
     write(11,*) 'a, b'
   endif
-
-! step number for AVS multistep file
- 401 format('step',i1,' image',i1)
- 402 format('step',i2,' image',i2)
- 403 format('step',i3,' image',i3)
- 404 format('step',i4,' image',i4)
 
 ! output data values
   mask_point = .false.
@@ -717,22 +711,19 @@
           if(plot_shaking_map) then
             write(11,*) sngl(field_display(ilocnum+ieoff))
           else
-            write(11,501) field_display(ilocnum+ieoff)
+            write(11,"(f7.2)") field_display(ilocnum+ieoff)
           endif
         else
           if(plot_shaking_map) then
             write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
           else
-            write(11,502) ireorder(ibool_number),field_display(ilocnum+ieoff)
+            write(11,"(i10,1x,f7.2)") ireorder(ibool_number),field_display(ilocnum+ieoff)
           endif
         endif
       endif
       mask_point(ibool_number) = .true.
     enddo
   enddo
-
- 501 format(f7.2)
- 502 format(i10,1x,f7.2)
 
 ! define OpenDX field
   if(USE_OPENDX) then
