@@ -207,7 +207,7 @@ meshfem3D: constants.h \
        $O/aniso_model.o \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
-       $O/save_arrays.o \
+       $O/save_arrays_solver.o \
        $O/save_header_file.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
@@ -247,7 +247,7 @@ meshfem3D: constants.h \
        $O/aniso_model.o \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
-       $O/save_arrays.o \
+       $O/save_arrays_solver.o \
        $O/save_header_file.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
@@ -353,7 +353,7 @@ meshfem3D_serial: constants.h \
        $O/aniso_model.o \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
-       $O/save_arrays.o \
+       $O/save_arrays_solver.o \
        $O/save_header_file.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
@@ -393,7 +393,7 @@ meshfem3D_serial: constants.h \
        $O/aniso_model.o \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
-       $O/save_arrays.o \
+       $O/save_arrays_solver.o \
        $O/save_header_file.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
@@ -662,8 +662,8 @@ $O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
 $O/hauksson_model.o: constants.h hauksson_model.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/hauksson_model.o hauksson_model.f90
 
-$O/save_arrays.o: constants.h save_arrays.f90
-	${F90} $(FLAGS_CHECK) -c -o $O/save_arrays.o save_arrays.f90
+$O/save_arrays_solver.o: constants.h save_arrays_solver.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/save_arrays_solver.o save_arrays_solver.f90
 
 $O/comp_source_time_function.o: constants.h comp_source_time_function.f90
 	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/comp_source_time_function.o comp_source_time_function.f90

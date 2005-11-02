@@ -996,7 +996,7 @@ enddo
   endif
 
 ! save the binary files
-  call save_arrays(flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,prname,xixstore,xiystore,xizstore, &
+  call save_arrays_solver(flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,prname,xixstore,xiystore,xizstore, &
             etaxstore,etaystore,etazstore, &
             gammaxstore,gammaystore,gammazstore,jacobianstore, &
             xstore,ystore,zstore,kappastore,mustore, &

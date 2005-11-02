@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-  subroutine save_arrays(flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,prname,xixstore,xiystore,xizstore, &
+  subroutine save_arrays_solver(flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,prname,xixstore,xiystore,xizstore, &
             etaxstore,etaystore,etazstore, &
             gammaxstore,gammaystore,gammazstore,jacobianstore, &
             xstore,ystore,zstore,kappastore,mustore, &
@@ -453,5 +453,5 @@
   write(27) rmass
   close(27)
 
-  end subroutine save_arrays
+  end subroutine save_arrays_solver
 
