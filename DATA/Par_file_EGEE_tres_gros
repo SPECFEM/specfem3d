@@ -43,7 +43,7 @@ USE_HIGHRES_FOR_MOVIES          = .false.
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_AVS_DX_MESH_FILES          = .false.
+SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = /data/DATABASES_MPI_DIMITRI

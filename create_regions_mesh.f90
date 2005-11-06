@@ -28,7 +28,7 @@
            HAUKSSON_REGIONAL_MODEL,OCEANS, &
            VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
            IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
-           ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
+           ANISOTROPY,SAVE_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
            ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
 
 ! create the different regions of the mesh
@@ -59,7 +59,7 @@
 
   logical HARVARD_3D_GOCAD_MODEL,HAUKSSON_REGIONAL_MODEL
   logical OCEANS,IMPOSE_MINIMUM_VP_GOCAD,USE_REGULAR_MESH
-  logical MOHO_MAP_LUPEI,ANISOTROPY,SAVE_AVS_DX_MESH_FILES,SUPPRESS_UTM_PROJECTION
+  logical MOHO_MAP_LUPEI,ANISOTROPY,SAVE_MESH_FILES,SUPPRESS_UTM_PROJECTION
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
@@ -886,7 +886,7 @@ enddo
        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM)
 
 ! create AVS or DX mesh data for the slice, edges and faces
-  if(SAVE_AVS_DX_MESH_FILES) then
+  if(SAVE_MESH_FILES) then
     call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
 ! It might be not necessary to save the ansotropic perturbation mesh data (c11store ...), so I just keep as it was
     call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
