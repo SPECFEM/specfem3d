@@ -173,8 +173,14 @@ TURN_MPI_ON = -DUSE_MPI
 #C_PREPROCESSOR = -qsuffix=cpp=f90
 #TURN_MPI_ON = -WF,-DUSE_MPI
 
-baksave:
+default: meshfem3D specfem3D create_movie_AVS_DX combine_AVS_DX check_mesh_quality_AVS_DX check_buffers_2D combine_paraview_data convolve_source_timefunction
+
+all: clean default
+
+backup:
 	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver mymachines bak
+
+bak: backup
 
 meshfem3D: constants.h \
        $O/meshfem3D.o \
@@ -208,7 +214,7 @@ meshfem3D: constants.h \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
        $O/save_arrays_solver.o \
-       $O/save_header_file.o \
+       $O/save_mesh_statistics.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
        $O/exit_mpi.o \
@@ -248,7 +254,7 @@ meshfem3D: constants.h \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
        $O/save_arrays_solver.o \
-       $O/save_header_file.o \
+       $O/save_mesh_statistics.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
        $O/exit_mpi.o \
@@ -258,7 +264,7 @@ meshfem3D: constants.h \
        $O/compute_parameters.o $(MPI_FLAGS)
 
 # solver also depends on values from mesher
-specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
+specfem3D: constants.h \
        $O/specfem3D.o \
        $O/read_arrays_solver.o \
        $O/calc_jacobian.o \
@@ -354,7 +360,7 @@ meshfem3D_serial: constants.h \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
        $O/save_arrays_solver.o \
-       $O/save_header_file.o \
+       $O/save_mesh_statistics.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
        $O/exit_mpi_serial.o \
@@ -394,7 +400,7 @@ meshfem3D_serial: constants.h \
        $O/compute_rho_estimate.o \
        $O/hauksson_model.o \
        $O/save_arrays_solver.o \
-       $O/save_header_file.o \
+       $O/save_mesh_statistics.o \
        $O/read_basin_topo_bathy_file.o \
        $O/read_moho_map.o \
        $O/exit_mpi_serial.o \
@@ -404,7 +410,7 @@ meshfem3D_serial: constants.h \
        $O/compute_parameters.o
 
 # solver also depends on values from mesher
-specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
+specfem3D_serial: constants.h \
        $O/specfem3D_serial.o \
        $O/read_arrays_solver.o \
        $O/calc_jacobian.o \
@@ -464,11 +470,6 @@ specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
 convolve_source_timefunction: $O/convolve_source_timefunction.o
 	${F90} $(FLAGS_CHECK) -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
 
-create_header_file: $O/create_header_file.o $O/read_parameter_file.o \
-     $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o $O/read_value_parameters.o
-	${F90} $(FLAGS_CHECK) -o xcreate_header_file $O/create_header_file.o \
-     $O/read_parameter_file.o $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o $O/read_value_parameters.o
-
 create_movie_AVS_DX: $O/create_movie_AVS_DX.o $O/read_parameter_file.o \
      $O/compute_parameters.o $O/utm_geo.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcreate_movie_AVS_DX $O/create_movie_AVS_DX.o \
@@ -490,26 +491,27 @@ check_buffers_2D: constants.h $O/check_buffers_2D.o \
        $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
 
 combine_paraview_data: constants.h $O/combine_paraview_data.o $O/write_c_binary.o
-	${F90} $(FLAGS_CHECK) -o xcombine_paraview_data  $O/combine_paraview_data.o $O/write_c_binary.o
+	${F90} $(FLAGS_CHECK) -o xcombine_paraview_data  $O/combine_paraview_data.o $O/write_c_binary.o \
+       $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o $O/read_value_parameters.o
 
 clean:
-	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data
+	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcreate_movie_AVS_DX xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xcombine_paraview_data xconvolve_source_timefunction
 
 ####
 #### rule to build each .o file below
 ####
 
 ###
-### MPI compilation, optimized flags and dependence on values from mesher
+### MPI compilation with optimized flags
 ###
 
-$O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
+$O/specfem3D.o: constants.h specfem3D.f90
 	${MPIF90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) $(TURN_CARCIONE_ON) -c -o $O/specfem3D.o specfem3D.f90
 
-$O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
+$O/assemble_MPI_vector.o: constants.h assemble_MPI_vector.f90
 	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
 
-$O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_scalar.f90
+$O/assemble_MPI_scalar.o: constants.h assemble_MPI_scalar.f90
 	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/assemble_MPI_scalar.o assemble_MPI_scalar.f90
 
 ###
@@ -529,10 +531,10 @@ $O/exit_mpi.o: constants.h exit_mpi.f90
 	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/exit_mpi.o exit_mpi.f90
 
 ###
-### serial compilation, optimized flags and dependence on values from mesher
+### serial compilation with optimized flags
 ###
 
-$O/specfem3D_serial.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
+$O/specfem3D_serial.o: constants.h specfem3D.f90
 	${F90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/specfem3D_serial.o specfem3D.f90
 
 ###
@@ -554,17 +556,14 @@ $O/exit_mpi_serial.o: constants.h exit_mpi.f90
 $O/convolve_source_timefunction.o: convolve_source_timefunction.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/convolve_source_timefunction.o convolve_source_timefunction.f90
 
-$O/create_header_file.o: create_header_file.f90
-	${F90} $(FLAGS_CHECK) -c -o $O/create_header_file.o create_header_file.f90
-
-$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
+$O/read_arrays_solver.o: constants.h read_arrays_solver.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/read_arrays_solver.o read_arrays_solver.f90
 
 $O/combine_AVS_DX.o: constants.h combine_AVS_DX.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/combine_AVS_DX.o combine_AVS_DX.f90
 
-$O/save_header_file.o: constants.h save_header_file.f90
-	${F90} $(FLAGS_CHECK) -c -o $O/save_header_file.o save_header_file.f90
+$O/save_mesh_statistics.o: constants.h save_mesh_statistics.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/save_mesh_statistics.o save_mesh_statistics.f90
 
 $O/check_mesh_quality_AVS_DX.o: constants.h check_mesh_quality_AVS_DX.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/check_mesh_quality_AVS_DX.o check_mesh_quality_AVS_DX.f90

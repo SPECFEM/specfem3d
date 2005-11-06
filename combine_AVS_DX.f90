@@ -25,7 +25,7 @@
 
   include "constants.h"
 
-  integer iproc,nspec,npoin
+  integer iproc,nspec_AVS,npoin
   integer ispec
   integer iglob1,iglob2,iglob3,iglob4
   integer ipoin,numpoin,iglobpointoffset,ntotpoin,ntotspec
@@ -75,7 +75,7 @@
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer NSOURCES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
@@ -84,7 +84,7 @@
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
@@ -98,11 +98,11 @@
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
   integer NER
 
-  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
+               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob
 
   integer proc_p1,proc_p2
 
@@ -128,7 +128,7 @@
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,,HDUR_MOVIE, &
         SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
+        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
 
   if(.not. SAVE_AVS_DX_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
 
@@ -195,10 +195,10 @@
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
 
   print *
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
@@ -260,9 +260,9 @@
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old')
   endif
 
-  read(10,*) nspec
-  print *,'There are ',nspec,' AVS or DX elements in the slice'
-  ntotspec = ntotspec + nspec
+  read(10,*) nspec_AVS
+  print *,'There are ',nspec_AVS,' AVS or DX elements in the slice'
+  ntotspec = ntotspec + nspec_AVS
   close(10)
 
   enddo
@@ -369,14 +369,14 @@ endif
     open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old')
   endif
 
-  read(10,*) nspec
-  print *,'There are ',nspec,' AVS or DX elements in the slice'
+  read(10,*) nspec_AVS
+  print *,'There are ',nspec_AVS,' AVS or DX elements in the slice'
 
   read(12,*) npoin
   print *,'There are ',npoin,' global AVS or DX points in the slice'
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec
+  do ispec=1,nspec_AVS
       read(10,*) numelem,idoubling,iglob1,iglob2,iglob3,iglob4
   if(numelem /= ispec) stop 'incorrect element number'
 ! compute max of the doubling flag
@@ -410,7 +410,7 @@ endif
 
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec
+  iglobelemoffset = iglobelemoffset + nspec_AVS
   iglobpointoffset = iglobpointoffset + npoin
 
   close(10)
@@ -456,11 +456,11 @@ endif
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old')
   endif
 
-  read(10,*) nspec
-  print *,'There are ',nspec,' AVS or DX elements in the slice'
+  read(10,*) nspec_AVS
+  print *,'There are ',nspec_AVS,' AVS or DX elements in the slice'
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec
+  do ispec=1,nspec_AVS
       read(10,*) numelem,idoubling,iglob1,iglob2,iglob3,iglob4
       if(numelem /= ispec) stop 'incorrect element number'
 
@@ -483,7 +483,7 @@ endif
       endif
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec
+  iglobelemoffset = iglobelemoffset + nspec_AVS
 
   close(10)
 

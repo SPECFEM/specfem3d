@@ -54,7 +54,7 @@
   double precision lat,long
 
 ! for sorting routine
-  integer npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
+  integer npointot,ilocnum,nglob_AVS,i,j,ielm,ieoff,ispecloc
   integer, dimension(:), allocatable :: iglob,loc,ireorder
   logical, dimension(:), allocatable :: ifseg,mask_point
   double precision, dimension(:), allocatable :: xp,yp,zp,xp_save,yp_save,zp_save,field_display
@@ -67,7 +67,7 @@
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer NSOURCES
 
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
@@ -80,7 +80,7 @@
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   double precision zscaling
 
@@ -90,11 +90,11 @@
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
   integer NER
 
-  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
+               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -118,16 +118,16 @@
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,,HDUR_MOVIE, &
         SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
+        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
 
   print *
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
@@ -458,11 +458,11 @@
 
 !--- sort the list based upon coordinates to get rid of multiples
   print *,'sorting list of points'
-  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob_AVS,npointot,UTM_X_MIN,UTM_X_MAX)
 
 !--- print total number of points found
   print *
-  print *,'found a total of ',nglob,' points'
+  print *,'found a total of ',nglob_AVS,' points'
   print *,'initial number of points (with multiples) was ',npointot
 
 
@@ -564,12 +564,12 @@
     if(USE_OPENDX) then
       write(outputname,"('OUTPUT_FILES/DX_shaking_map.dx')")
       open(unit=11,file=outputname,status='unknown')
-      write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
+      write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob_AVS,' data follows'
     else if(USE_AVS) then
       if(UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
       write(outputname,"('OUTPUT_FILES/AVS_shaking_map.inp')")
       open(unit=11,file=outputname,status='unknown')
-      write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
+      write(11,*) nglob_AVS,' ',nspectot_AVS_max,' 1 0 0'
     else if(USE_GMT) then
       write(outputname,"('OUTPUT_FILES/gmt_shaking_map.xyz')")
       open(unit=11,file=outputname,status='unknown')
@@ -582,18 +582,18 @@
     if(USE_OPENDX) then
       write(outputname,"('OUTPUT_FILES/DX_movie_',i6.6,'.dx')") ivalue
       open(unit=11,file=outputname,status='unknown')
-      write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
+      write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob_AVS,' data follows'
     else if(USE_AVS) then
       if(UNIQUE_FILE .and. iframe == 1) then
         open(unit=11,file='OUTPUT_FILES/AVS_movie_all.inp',status='unknown')
         write(11,*) nframes
         write(11,*) 'data'
         write(11,"('step',i1,' image',i1)") 1,1
-        write(11,*) nglob,' ',nspectot_AVS_max
+        write(11,*) nglob_AVS,' ',nspectot_AVS_max
       else if(.not. UNIQUE_FILE) then
         write(outputname,"('OUTPUT_FILES/AVS_movie_',i6.6,'.inp')") ivalue
         open(unit=11,file=outputname,status='unknown')
-        write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
+        write(11,*) nglob_AVS,' ',nspectot_AVS_max,' 1 0 0'
       endif
     else if(USE_GMT) then
       write(outputname,"('OUTPUT_FILES/gmt_movie_',i6.6,'.xyz')") ivalue
@@ -675,7 +675,7 @@
   if(USE_OPENDX) then
     write(11,*) 'attribute "element type" string "quads"'
     write(11,*) 'attribute "ref" string "positions"'
-    write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
+    write(11,*) 'object 3 class array type float rank 0 items ',nglob_AVS,' data follows'
   else
     if(UNIQUE_FILE) then
 ! step number for AVS multistep file
@@ -784,7 +784,7 @@
 !=====================================================================
 !
 
-  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  subroutine get_global_AVS(nspec,xp,yp,zp,iglob,loc,ifseg,nglob_AVS,npointot,UTM_X_MIN,UTM_X_MAX)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
@@ -803,7 +803,7 @@
   integer iglob(npointot),loc(npointot)
   logical ifseg(npointot)
   double precision xp(npointot),yp(npointot),zp(npointot)
-  integer nspec,nglob
+  integer nspec,nglob_AVS
 
   integer ispec,i,j
   integer ieoff,ilocnum,nseg,ioff,iseg,ig
@@ -887,7 +887,7 @@
     iglob(loc(i))=ig
   enddo
 
-  nglob=ig
+  nglob_AVS = ig
 
 ! deallocate arrays
   deallocate(ind)

@@ -18,7 +18,7 @@
 !----
 !---- locate_receivers finds the correct position of the receivers
 !----
-  subroutine locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
+  subroutine locate_receivers(ibool,myrank,nspec,nglob, &
                  xstore,ystore,zstore,xigll,yigll,zigll,rec_filename, &
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
@@ -52,14 +52,14 @@
 
   integer nrec,myrank
 
-  integer NSPEC_AB,NGLOB_AB
+  integer nspec,nglob
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
   double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
 
 ! arrays containing coordinates of the points
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 ! use integer array to store topography values
   integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
@@ -312,7 +312,7 @@
 ! examine top of the elements only (receivers always at the surface)
 !      k = NGLLZ
 
-      do ispec=1,NSPEC_AB
+      do ispec = 1,nspec
 
 ! modification by Qinya Liu: idoubling is no longer used because receivers can now be in depth
 ! (in previous versions, receivers were always assumed to be at the surface)

@@ -25,24 +25,62 @@
 
   implicit none
 
-  include 'constants.h'
-  include 'OUTPUT_FILES/values_from_mesher.h'
+  include "constants.h"
 
   integer i,j,k,ispec, ios, it
-  integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
+  integer iproc, proc1, proc2, num_node, node_list(300)
   integer np, ne, npp, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
-  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8, iglob
-  logical mask_ibool(NGLOB_AB)
-  real(kind=CUSTOM_REAL) data(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
-  real x, y, z, dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+
+  real x, y, z
+
+  logical, dimension(:), allocatable :: mask_ibool
+
+  integer, dimension(:), allocatable :: num_ibool
+  integer, dimension(:,:,:,:), allocatable :: ibool
+
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore, ystore, zstore
+
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: data,dat
+
   character(len=150) :: sline, arg(5), filename, indir, outdir, prname
   character(len=150) :: mesh_file, local_point_file, local_element_file, local_file, local_data_file, local_ibool_file
-  integer :: num_ibool(NGLOB_AB)
-  logical :: HIGH_RESOLUTION_MESH
-  integer :: ires
+  logical HIGH_RESOLUTION_MESH
+  integer ires
 
+! parameters read from parameter file
+  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
+             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
+             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
+  integer NSOURCES
+
+  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
+  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
+  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
+
+  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
+          OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
+          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
+  logical ANISOTROPY,SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
+
+  character(len=150) LOCAL_PATH,MODEL
+
+! parameters deduced from parameters read from file
+  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
+  integer NER
+
+  integer nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob
+
+  print *
+  print *,'Recombining ParaView data for slices'
+  print *
 
   do i = 1, 6
     call getarg(i,arg(i))
@@ -58,6 +96,42 @@
       stop ' Reenter command line options'
     endif
   enddo
+
+  print *
+  print *,'reading parameter file'
+  print *
+
+! read the parameter file
+  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
+        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
+        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,,HDUR_MOVIE, &
+        SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
+
+! compute other parameters based upon values read
+  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
+
+  allocate(mask_ibool(nglob))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(data(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(dat(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(xstore(nglob))
+  allocate(ystore(nglob))
+  allocate(zstore(nglob))
+  allocate(num_ibool(nglob))
 
 ! get slice list
   if (trim(arg(6)) == '') then
@@ -105,9 +179,6 @@
   ! open paraview output mesh file
   mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
   call open_file(trim(mesh_file)//char(0))
-
-  nspec = NSPEC_AB
-  nglob = NGLOB_AB
 
   np = 0
 

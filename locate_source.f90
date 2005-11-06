@@ -19,7 +19,7 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
+  subroutine locate_source(ibool,NSOURCES,myrank,nspec,nglob,xstore,ystore,zstore, &
                  xigll,yigll,zigll,NPROC, &
                  sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                  NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
@@ -52,14 +52,14 @@
 #endif
 
   integer NPROC,UTM_PROJECTION_ZONE
-  integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES,NX_TOPO,NY_TOPO
+  integer NSTEP,nspec,nglob,NSOURCES,NX_TOPO,NY_TOPO
 
   logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK
   double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
 ! use integer array to store topography values
   integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
@@ -68,7 +68,7 @@
   integer myrank
 
 ! arrays containing coordinates of the points
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
   integer yr,jda,ho,mi
 
@@ -257,7 +257,7 @@
 ! set distance to huge initial value
   distmin = HUGEVAL
 
-  do ispec=1,NSPEC_AB
+  do ispec = 1,nspec
 
 ! loop only on points inside the element
 ! exclude edges to ensure this point is not shared with other elements

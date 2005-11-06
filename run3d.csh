@@ -7,14 +7,11 @@ set OUTDIR="SEM"
 sleep 1
 make clean
 sleep 1
-make meshfem3D
+make all
+
 sleep 10
 go_mesher
 
-sleep 5
-make clean
-sleep 1
-make specfem3D
 sleep 10
 go_solver
 
