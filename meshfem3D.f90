@@ -733,7 +733,10 @@
   allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+
+! exit if there is not enough memory to allocate all the arrays
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! create all the regions of the mesh
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
@@ -838,13 +841,12 @@
   write(IMAIN,*) 'total number of elements in each slice: ',nspec
   write(IMAIN,*)
   write(IMAIN,*) 'total number of points in each slice: ',nglob
-
   write(IMAIN,*)
   write(IMAIN,*) 'total number of elements in entire mesh: ',nspec*NPROC
   write(IMAIN,*) 'total number of points in entire mesh: ',nglob*NPROC
   write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob*NPROC*NDIM
   write(IMAIN,*)
-
+  write(IMAIN,*) 'for some mesh statistics, see file OUTPUT_FILES/mesh_statistics.txt'
   write(IMAIN,*)
   write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
   write(IMAIN,*)

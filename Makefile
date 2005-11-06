@@ -263,7 +263,6 @@ meshfem3D: constants.h \
        $O/utm_geo.o \
        $O/compute_parameters.o $(MPI_FLAGS)
 
-# solver also depends on values from mesher
 specfem3D: constants.h \
        $O/specfem3D.o \
        $O/read_arrays_solver.o \
@@ -409,7 +408,6 @@ meshfem3D_serial: constants.h \
        $O/utm_geo.o \
        $O/compute_parameters.o
 
-# solver also depends on values from mesher
 specfem3D_serial: constants.h \
        $O/specfem3D_serial.o \
        $O/read_arrays_solver.o \

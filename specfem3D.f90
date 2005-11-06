@@ -134,7 +134,6 @@
   integer iattenuation
   double precision scale_factor
 
-! YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
   integer NSPEC_ATTENUATION
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_xx,R_yy,R_xy,R_xz,R_yz
@@ -170,8 +169,6 @@
 
 ! -----------------
 
-! YYYYYYYYYYYYYYYYYYYYYYYYYYYY FFFFFFFFFFFFFFFFFFFFFFFF
-
 ! mesh parameters
   integer, dimension(:,:,:,:), allocatable :: ibool
 
@@ -197,7 +194,7 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
 ! additional mass matrix for ocean load
-! ocean load mass matrix is always allocated statically even if no oceans
+! ocean load mass matrix is always allocated even if no oceans
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
   logical, dimension(:), allocatable :: updated_dof_ocean_load
   real(kind=CUSTOM_REAL) additional_term,force_normal_comp
@@ -573,8 +570,6 @@
 
 ! -----------------
 
-! YYYYYYYYYYYYYYYYYYYYYYYYYYYY FFFFFFFFFFFFFFFFFFFFFFFF
-
 ! mesh parameters
   allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
 
@@ -641,8 +636,6 @@
   allocate(veloc(NDIM,nglob))
   allocate(accel(NDIM,nglob))
 
-! YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-
 ! if attenuation is off, set dummy size of arrays to one
   if(ATTENUATION) then
     NSPEC_ATTENUATION = nspec
@@ -661,7 +654,10 @@
   allocate(R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
   allocate(R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
   allocate(R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-  allocate(R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
+  allocate(R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS),stat=ier)
+
+! exit if there is not enough memory to allocate all the arrays
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! start reading the databases
 
