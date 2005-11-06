@@ -35,10 +35,6 @@
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: USE_LOCAL_PATH_BEOWULF = .true.
 
-! on some processors (e.g. Pentiums) it is necessary to suppress underflows
-! by using a small initial field instead of zero
-  logical, parameter :: FIX_UNDERFLOW_PROBLEM = .true.
-
 ! apply heuristic rule to modify doubling regions to balance angles
   logical, parameter :: APPLY_HEURISTIC_RULE = .true.
 
@@ -86,7 +82,13 @@
 ! source decay rate
   double precision, parameter :: SOURCE_DECAY_RATE = 1.628d0
 
+!------------------------------------------------------
 !----------- do not modify anything below -------------
+!------------------------------------------------------
+
+! on some processors (e.g. Pentiums) it is necessary to suppress underflows
+! by using a small initial field instead of zero
+  logical, parameter :: FIX_UNDERFLOW_PROBLEM = .true.
 
 ! some useful constants
   double precision, parameter :: PI = 3.141592653589793d0
