@@ -77,7 +77,7 @@ MPIF90 = mpif90
 #
 # more recent machines (e.g. Pangu)
 #
-#FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition  -tpp7 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
+#FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition -tpp7 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
 #
 # debug with range checking
 #
