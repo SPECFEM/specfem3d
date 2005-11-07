@@ -57,8 +57,6 @@
   write(IOUT,*) 'average distance between points along X in m = ',sngl(UTM_X_MAX-UTM_X_MIN)/real(NEX_XI*(NGLLX-1))
   write(IOUT,*) 'average distance between points along Y in m = ',sngl(UTM_Y_MAX-UTM_Y_MIN)/real(NEX_ETA*(NGLLY-1))
   write(IOUT,*)
-  write(IOUT,*) 'on Earth Simulator and SX-5, make sure "loopcnt=" parameter in Makefile is greater than ',nglob
-  write(IOUT,*)
 
   close(IOUT)
 
