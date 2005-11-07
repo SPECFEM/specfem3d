@@ -1,4 +1,8 @@
 
+# forward or adjoint simulation
+SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
+SAVE_FORWARD                    = .false.
+
 # coordinates of mesh block in latitude/longitude and depth in km
 LATITUDE_MIN                    = 32.2d0
 LATITUDE_MAX                    = 36.8d0

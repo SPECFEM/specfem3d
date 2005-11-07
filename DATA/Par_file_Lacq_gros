@@ -1,4 +1,8 @@
 
+# forward or adjoint simulation
+SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
+SAVE_FORWARD                    = .false.
+
 # coordinates of mesh block in latitude/longitude and depth in km
 # original area:   49.8 km East  40 km North
 #LATITUDE_MIN                   = 100000.d0

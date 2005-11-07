@@ -73,15 +73,15 @@ MPIF90 = mpif90
 #
 # Caltech cluster  (Hrothgar)
 #
-#FLAGS_NO_CHECK = -O3 -tpp6 -xK -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl #-std95 -e95
+#FLAGS_NO_CHECK = -O3 -tpp6 -xK -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
 #
 # more recent machines (e.g. Pangu)
 #
-#FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition  -tpp7 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl # -e95 -xN  -std95
+#FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition  -tpp7 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
 #
 # debug with range checking
 #
-FLAGS_NO_CHECK = -O0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check bounds
+FLAGS_NO_CHECK = -O0 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check bounds
 FLAGS_CHECK = $(FLAGS_NO_CHECK)
 MPI_FLAGS =
 C_PREPROCESSOR = -cpp
