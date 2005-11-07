@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-! save some statistics about the mesh
+! output some statistics about the mesh
 
   subroutine save_mesh_statistics(nspec,nglob,NEX_XI,NEX_ETA,NPROC,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX)
 
@@ -28,37 +28,33 @@
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
 
-  open(unit=IOUT,file='OUTPUT_FILES/mesh_statistics.txt',status='unknown')
-
-  write(IOUT,*)
-  write(IOUT,*) 'mesh statistics:'
-  write(IOUT,*) '---------------'
-  write(IOUT,*)
-  write(IOUT,*) 'number of processors = ',NPROC
-  write(IOUT,*)
-  write(IOUT,*) 'total number of elements per AB slice = ',nspec
-  write(IOUT,*) 'total number of points per AB slice = ',nglob
-  write(IOUT,*)
-  write(IOUT,*) 'total for full mesh:'
-  write(IOUT,*) '-------------------'
-  write(IOUT,*)
-  write(IOUT,*) 'exact total number of spectral elements in entire mesh = ',NPROC*nspec
-  write(IOUT,*) 'approximate total number of points in entire mesh = ',dble(NPROC)*dble(nglob)
+  write(IMAIN,*)
+  write(IMAIN,*) 'mesh statistics:'
+  write(IMAIN,*) '---------------'
+  write(IMAIN,*)
+  write(IMAIN,*) 'number of processors = ',NPROC
+  write(IMAIN,*)
+  write(IMAIN,*) 'total number of elements per AB slice = ',nspec
+  write(IMAIN,*) 'total number of points per AB slice = ',nglob
+  write(IMAIN,*)
+  write(IMAIN,*) 'total for full mesh:'
+  write(IMAIN,*) '-------------------'
+  write(IMAIN,*)
+  write(IMAIN,*) 'exact total number of spectral elements in entire mesh = ',NPROC*nspec
+  write(IMAIN,*) 'approximate total number of points in entire mesh = ',dble(NPROC)*dble(nglob)
 ! there are 3 DOFs in solid regions
-  write(IOUT,*) 'approximate total number of degrees of freedom in entire mesh = ',3.d0*dble(NPROC)*dble(nglob)
-  write(IOUT,*)
-  write(IOUT,*) 'resolution of the mesh at the surface:'
-  write(IOUT,*) '-------------------------------------'
-  write(IOUT,*)
-  write(IOUT,*) 'spectral elements along X = ',NEX_XI
-  write(IOUT,*) 'spectral elements along Y = ',NEX_ETA
-  write(IOUT,*) 'GLL points along X = ',NEX_XI*(NGLLX-1) + 1
-  write(IOUT,*) 'GLL points along Y = ',NEX_ETA*(NGLLY-1) + 1
-  write(IOUT,*) 'average distance between points along X in m = ',sngl(UTM_X_MAX-UTM_X_MIN)/real(NEX_XI*(NGLLX-1))
-  write(IOUT,*) 'average distance between points along Y in m = ',sngl(UTM_Y_MAX-UTM_Y_MIN)/real(NEX_ETA*(NGLLY-1))
-  write(IOUT,*)
-
-  close(IOUT)
+  write(IMAIN,*) 'approximate total number of degrees of freedom in entire mesh = ',3.d0*dble(NPROC)*dble(nglob)
+  write(IMAIN,*)
+  write(IMAIN,*) 'resolution of the mesh at the surface:'
+  write(IMAIN,*) '-------------------------------------'
+  write(IMAIN,*)
+  write(IMAIN,*) 'spectral elements along X = ',NEX_XI
+  write(IMAIN,*) 'spectral elements along Y = ',NEX_ETA
+  write(IMAIN,*) 'GLL points along X = ',NEX_XI*(NGLLX-1) + 1
+  write(IMAIN,*) 'GLL points along Y = ',NEX_ETA*(NGLLY-1) + 1
+  write(IMAIN,*) 'average distance between points along X in m = ',sngl(UTM_X_MAX-UTM_X_MIN)/real(NEX_XI*(NGLLX-1))
+  write(IMAIN,*) 'average distance between points along Y in m = ',sngl(UTM_Y_MAX-UTM_Y_MIN)/real(NEX_ETA*(NGLLY-1))
+  write(IMAIN,*)
 
   end subroutine save_mesh_statistics
 

@@ -442,10 +442,6 @@
   sizeprocs = 1
 #endif
 
-! check SIMULATION_TYPE
-  if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
-        call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
-
 ! read the parameter file
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
@@ -464,7 +460,11 @@
   if(NPROC_XI /= 1 .or. NPROC_ETA /= 1) stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
 #endif
 
-! check simulation pararmeters
+! check simulation type
+  if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
+        call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
+
+! check simulation parameters
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
   if (SIMULATION_TYPE == 3 .and. ATTENUATION) call exit_mpi(myrank, 'attenuation is not implemented for backward simulations')
 
@@ -472,8 +472,7 @@
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI,NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
 
@@ -582,6 +581,7 @@
   allocate(gammax(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(gammay(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(gammaz(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(jacobian(NGLLX,NGLLY,NGLLZ,nspec))
 
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec))

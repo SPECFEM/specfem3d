@@ -846,8 +846,6 @@
   write(IMAIN,*) 'total number of points in entire mesh: ',nglob*NPROC
   write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob*NPROC*NDIM
   write(IMAIN,*)
-  write(IMAIN,*) 'for some mesh statistics, see file OUTPUT_FILES/mesh_statistics.txt'
-  write(IMAIN,*)
   write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
   write(IMAIN,*)
 
