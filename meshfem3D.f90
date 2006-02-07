@@ -151,10 +151,7 @@
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
 ! proc numbers for MPI
-  integer myrank,sizeprocs
-#ifdef USE_MPI
-  integer ier
-#endif
+  integer myrank,sizeprocs,ier
 
 ! check area and volume of the final mesh
   double precision area_local_bottom,area_total_bottom
