@@ -33,7 +33,7 @@
 
   include "constants.h"
 
-  integer iproc,nspec_AVS,npoin
+  integer iproc,nspec,npoin
   integer ispec
   integer iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
   integer ipoin,numpoin,iglobpointoffset,ntotpoin,ntotspec
@@ -71,11 +71,11 @@
   integer NER
 
 ! for all the regions
-  integer nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob
+               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
 ! for quality of mesh
   logical, dimension(:), allocatable :: mask_ibool
@@ -150,10 +150,10 @@
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
   print *
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
@@ -182,9 +182,9 @@
   close(10)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old')
-  read(10,*) nspec_AVS
-  print *,'There are ',nspec_AVS,' AVS or DX elements in the slice'
-  ntotspec = ntotspec + nspec_AVS
+  read(10,*) nspec
+  print *,'There are ',nspec,' AVS or DX elements in the slice'
+  ntotspec = ntotspec + nspec
   close(10)
 
   enddo
@@ -222,11 +222,11 @@
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
-  read(10,*) nspec_AVS
-  print *,'There are ',nspec_AVS,' AVS or DX elements in the slice'
+  read(10,*) nspec
+  print *,'There are ',nspec,' AVS or DX elements in the slice'
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec_AVS
+  do ispec=1,nspec
       read(10,*) numelem,equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,points_per_wavelength
       if(numelem /= ispec) stop 'incorrect element number'
 
@@ -248,7 +248,7 @@
 
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec_AVS
+  iglobelemoffset = iglobelemoffset + nspec
 
   close(10)
 
@@ -308,10 +308,10 @@
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
-  read(10,*) nspec_AVS
+  read(10,*) nspec
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec_AVS
+  do ispec=1,nspec
       read(10,*) numelem,equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,points_per_wavelength
       if(numelem /= ispec) stop 'incorrect element number'
 
@@ -327,7 +327,7 @@
 
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec_AVS
+  iglobelemoffset = iglobelemoffset + nspec
 
   close(10)
 
@@ -403,12 +403,12 @@
   open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
   open(unit=14,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
-  read(10,*) nspec_AVS
+  read(10,*) nspec
   read(12,*) npoin
-  read(14,*) nspec_AVS
+  read(14,*) nspec
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec_AVS
+  do ispec=1,nspec
     read(10,*) numelem,idoubling,iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
     if(numelem /= ispec) stop 'incorrect element number'
 
@@ -438,7 +438,7 @@
 
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec_AVS
+  iglobelemoffset = iglobelemoffset + nspec
   iglobpointoffset = iglobpointoffset + npoin
 
   close(10)
@@ -503,12 +503,12 @@
   open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
   open(unit=14,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
-  read(10,*) nspec_AVS
+  read(10,*) nspec
   read(12,*) npoin
-  read(14,*) nspec_AVS
+  read(14,*) nspec
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec_AVS
+  do ispec=1,nspec
     read(10,*) numelem,idoubling,iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
     if(numelem /= ispec) stop 'incorrect element number'
 
@@ -530,7 +530,7 @@
             numelem + iglobelemoffset,iglob1,iglob2,iglob3,iglob4,iglob5,iglob6,iglob7,iglob8
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec_AVS
+  iglobelemoffset = iglobelemoffset + nspec
   iglobpointoffset = iglobpointoffset + npoin
 
   close(10)
@@ -556,10 +556,10 @@
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
-  read(10,*) nspec_AVS
+  read(10,*) nspec
 
 ! read local elements in this slice and output global AVS or DX elements
-  do ispec=1,nspec_AVS
+  do ispec=1,nspec
       read(10,*) numelem,equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,points_per_wavelength
       if(numelem /= ispec) stop 'incorrect element number'
 
@@ -571,7 +571,7 @@
 
   enddo
 
-  iglobelemoffset = iglobelemoffset + nspec_AVS
+  iglobelemoffset = iglobelemoffset + nspec
 
   close(10)
 

@@ -60,6 +60,9 @@
   include "carcione_anisotropy.h"
 #endif
 
+! include values created by the mesher
+  include "OUTPUT_FILES/values_from_mesher.h"
+
 !=======================================================================!
 !                                                                       !
 !   specfem3D is a 3-D spectral-element solver for a basin.             !
@@ -134,9 +137,10 @@
   integer iattenuation
   double precision scale_factor
 
-  integer NSPEC_ATTENUATION
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS) :: &
+    R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION) :: &
+    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
 
 ! ADJOINT
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: b_alphaval, b_betaval, b_gammaval
@@ -170,37 +174,40 @@
 ! -----------------
 
 ! mesh parameters
-  integer, dimension(:,:,:,:), allocatable :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,kappastore,mustore, &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+        kappastore,mustore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
         c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
         c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
-
 ! flag for sediments
-  logical, dimension(:), allocatable :: not_fully_in_bedrock
-  logical, dimension(:,:,:,:), allocatable :: flag_sediments
+  logical not_fully_in_bedrock(NSPEC_AB)
+  logical, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: flag_sediments
 
 ! Stacey
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
 
 ! local to global mapping
-  integer, dimension(:), allocatable :: idoubling
+  integer, dimension(NSPEC_AB) :: idoubling
 
 ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: rmass
 
 ! additional mass matrix for ocean load
-! ocean load mass matrix is always allocated even if no oceans
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
-  logical, dimension(:), allocatable :: updated_dof_ocean_load
+! ocean load mass matrix is always allocated statically even if no oceans
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: rmass_ocean_load
+  logical, dimension(NGLOB_AB) :: updated_dof_ocean_load
   real(kind=CUSTOM_REAL) additional_term,force_normal_comp
 
 ! displacement, velocity, acceleration
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
@@ -383,9 +390,12 @@
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
   integer NER
 
-  integer NSPEC2D_A_XI,NSPEC2D_B_XI,NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nspec,nglob
+  integer NSPEC2D_A_XI,NSPEC2D_B_XI, &
+               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX, &
+               NSPEC_AB_JUNK, NGLOB_AB_JUNK
 
 ! names of the data files for all the processors in MPI
   character(len=150) outputname
@@ -469,9 +479,10 @@
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI,NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+      NSPEC_AB_JUNK,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB_JUNK,USE_REGULAR_MESH)
 
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
@@ -563,99 +574,6 @@
   allocate(buffer_send_faces_vector(NDIM,NPOIN2DMAX_XY))
   allocate(buffer_received_faces_vector(NDIM,NPOIN2DMAX_XY))
 
-
-! -----------------
-
-! mesh parameters
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
-
-  allocate(xix(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xiy(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xiz(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(etax(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(etay(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(etaz(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(gammax(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(gammay(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(gammaz(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(jacobian(NGLLX,NGLLY,NGLLZ,nspec))
-
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec))
-
-  allocate(c11store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c12store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c13store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c14store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c15store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c16store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c22store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c23store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c24store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c25store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c26store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c33store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c34store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c35store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c36store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c44store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c45store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c46store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c55store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c56store(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(c66store(NGLLX,NGLLY,NGLLZ,nspec))
-
-  allocate(xstore(nglob))
-  allocate(ystore(nglob))
-  allocate(zstore(nglob))
-
-! flag for sediments
-  allocate(not_fully_in_bedrock(nspec))
-  allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,nspec))
-
-! Stacey
-  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec))
-
-! local to global mapping
-  allocate(idoubling(nspec))
-
-! mass matrix
-  allocate(rmass(nglob))
-
-! additional mass matrix for ocean load
-! ocean load mass matrix is always allocated even if no oceans
-  allocate(rmass_ocean_load(nglob))
-  allocate(updated_dof_ocean_load(nglob))
-
-! displacement, velocity, acceleration
-  allocate(displ(NDIM,nglob))
-  allocate(veloc(NDIM,nglob))
-  allocate(accel(NDIM,nglob))
-
-! if attenuation is off, set dummy size of arrays to one
-  if(ATTENUATION) then
-    NSPEC_ATTENUATION = nspec
-  else
-    NSPEC_ATTENUATION = 1
-  endif
-
-! allocate arrays for memory variables for attenuation
-  allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-  allocate(epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-  allocate(epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-  allocate(epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-  allocate(epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-
-  allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-  allocate(R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-  allocate(R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-  allocate(R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-  allocate(R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS),stat=ier)
-
-! exit if there is not enough memory to allocate all the arrays
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
 ! start reading the databases
 
 ! read arrays created by the mesher
@@ -665,10 +583,10 @@
             c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
             c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
             c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
-            kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS,nspec,nglob)
+            kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
 
 ! check that the number of points in this slice is correct
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) &
+  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
 
 ! read 2-D addressing for summation between slices with MPI
@@ -923,7 +841,7 @@
   allocate(utm_y_source(NSOURCES))
 
 ! locate sources in the mesh
-  call locate_source(ibool,NSOURCES,myrank,nspec,nglob, &
+  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
           sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
           NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
@@ -1002,7 +920,7 @@
 #endif
 
 ! locate receivers in the mesh
-  call locate_receivers(ibool,myrank,nspec,nglob, &
+  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
             xstore,ystore,zstore,xigll,yigll,zigll,trim(rec_filename), &
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
@@ -1033,7 +951,7 @@
               xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
               Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
               xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-              xigll,yigll,zigll,nspec)
+              xigll,yigll,zigll,NSPEC_AB)
         sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
       endif
     enddo
@@ -1200,7 +1118,7 @@
   call assemble_MPI_scalar(rmass,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_scalar,buffer_received_faces_scalar,npoin2D_xi,npoin2D_eta, &
-            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY,nglob)
+            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 #endif
@@ -1243,7 +1161,7 @@
 
 ! rescale shear modulus according to attenuation model
 
-    do ispec = 1,nspec
+    do ispec = 1,NSPEC_AB
     if(not_fully_in_bedrock(ispec)) then
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -1332,9 +1250,9 @@
 
   if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
 
-  allocate(b_displ(NDIM,nglob))
-  allocate(b_veloc(NDIM,nglob))
-  allocate(b_accel(NDIM,nglob))
+  allocate(b_displ(NDIM,NGLOB_AB))
+  allocate(b_veloc(NDIM,NGLOB_AB))
+  allocate(b_accel(NDIM,NGLOB_AB))
 
   open(unit=27,file=trim(prname)//'displ_last.bin',status='old',form='unformatted')
   read(27) b_displ
@@ -1348,12 +1266,12 @@
   read(27) b_accel
   close(27)
 
-  allocate(rho_kl(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(mu_kl(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
-  allocate(mu_k(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(kappa_k(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(mu_k(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappa_k(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
   rho_kl(:,:,:,:) = 0._CUSTOM_REAL
   mu_kl(:,:,:,:) = 0._CUSTOM_REAL
@@ -1404,10 +1322,10 @@
     store_val_norm_veloc(:) = -1.
     store_val_norm_accel(:) = -1.
   else if (MOVIE_VOLUME) then
-    allocate(div(NGLLX,NGLLY,NGLLZ,nspec))
-    allocate(curl_x(NGLLX,NGLLY,NGLLZ,nspec))
-    allocate(curl_y(NGLLX,NGLLY,NGLLZ,nspec))
-    allocate(curl_z(NGLLX,NGLLY,NGLLZ,nspec))
+    allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   endif
 
 #ifdef CARCIONE_ANISO
@@ -1646,7 +1564,7 @@
   endif
 
 ! update displacement using finite difference time scheme
-  do i=1,nglob
+  do i=1,NGLOB_AB
     displ(:,i) = displ(:,i) + deltat*veloc(:,i) + deltatsqover2*accel(:,i)
     veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
     accel(:,i) = 0._CUSTOM_REAL
@@ -1657,7 +1575,7 @@
     endif
   enddo
 
-  do ispec = 1,nspec
+  do ispec = 1,NSPEC_AB
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -1801,7 +1719,7 @@
           endif
 
 ! precompute terms for attenuation if needed
-  if(ATTENUATION .and. not_fully_in_bedrock(ispec)) then
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
 
 ! compute deviatoric strain
     epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
@@ -1903,7 +1821,7 @@
     mul = mustore(i,j,k,ispec)
 
 ! For fully anisotropic case
-    if(ANISOTROPY) then
+    if(ANISOTROPY_VAL) then
        c11 = c11store(i,j,k,ispec)
        c12 = c12store(i,j,k,ispec)
        c13 = c13store(i,j,k,ispec)
@@ -1925,7 +1843,7 @@
        c55 = c55store(i,j,k,ispec)
        c56 = c56store(i,j,k,ispec)
        c66 = c66store(i,j,k,ispec)
-       !if(ATTENUATION.and. not_fully_in_bedrock(ispec)) then
+       !if(ATTENUATION_VAL.and. not_fully_in_bedrock(ispec)) then
        !   mul = c44
        !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
        !   c12 = c12 - TWO_THIRDS * minus_sum_beta * mul
@@ -1978,7 +1896,7 @@
     else
 ! For isotropic case
 ! use unrelaxed parameters if attenuation
-       if(ATTENUATION .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
+       if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
 
        lambdalplus2mul = kappal + FOUR_THIRDS * mul
        lambdal = lambdalplus2mul - 2.*mul
@@ -2007,7 +1925,7 @@
 #endif
 
 ! subtract memory variables if attenuation
-    if(ATTENUATION .and. not_fully_in_bedrock(ispec)) then
+    if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
       do i_sls = 1,N_SLS
         R_xx_val = R_xx(i,j,k,ispec,i_sls)
         R_yy_val = R_yy(i,j,k,ispec,i_sls)
@@ -2146,7 +2064,7 @@
 
 ! update memory variables based upon the Runge-Kutta scheme
 
-  if(ATTENUATION .and. not_fully_in_bedrock(ispec)) then
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
 
 ! use Runge-Kutta scheme to march in time
   do i_sls = 1,N_SLS
@@ -2228,7 +2146,7 @@
     enddo
 
 ! save deviatoric strain for Runge-Kutta scheme
-  if(ATTENUATION .and. not_fully_in_bedrock(ispec)) then
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
     epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
     epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
     epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
@@ -2620,14 +2538,14 @@
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
-            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY,nglob)
+            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
   if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
           iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
           buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
-          NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY,nglob)
+          NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 #endif
 
-  do i=1,nglob
+  do i=1,NGLOB_AB
     accel(1,i) = accel(1,i)*rmass(i)
     accel(2,i) = accel(2,i)*rmass(i)
     accel(3,i) = accel(3,i)*rmass(i)
@@ -2698,7 +2616,7 @@
     enddo
   endif
 
-  do i=1,nglob
+  do i=1,NGLOB_AB
     veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
     if (SIMULATION_TYPE == 3) then
       b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
@@ -2839,7 +2757,7 @@
 
 ! kernel calculations
   if (SIMULATION_TYPE == 3) then
-    do ispec = 1, nspec
+    do ispec = 1, NSPEC_AB
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
@@ -3024,7 +2942,7 @@
 ! save full snapshot data to local disk
 
 ! calculate strain div and curl
-    do ispec=1,nspec
+    do ispec=1,NSPEC_AB
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -3232,12 +3150,12 @@
     endif
   else if (SIMULATION_TYPE == 3) then
     deallocate(b_displ,b_veloc,b_accel)
-    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,nspec))
-    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,nspec))
-    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,nspec))
+    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
     ! rhop, beta, alpha kernels
-    do ispec = 1, nspec
+    do ispec = 1, NSPEC_AB
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX

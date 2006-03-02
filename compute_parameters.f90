@@ -18,10 +18,10 @@
   subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
   implicit none
 
@@ -34,10 +34,10 @@
 ! parameters to be computed based upon parameters above read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER
 
-  integer nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
   integer NEX_DOUBLING_SEDIM_XI,NEX_DOUBLING_SEDIM_ETA
   integer NEX_DOUBLING_SEDIM_PER_PROC_XI,NEX_DOUBLING_SEDIM_PER_PROC_ETA
@@ -83,7 +83,7 @@
   NSPEC2D_NO_DOUBLING_ETA = NEX_PER_PROC_ETA*NER_SEDIM
 
 ! exact number of spectral elements
-  nspec = NSPEC_NO_DOUBLING / NPROC
+  NSPEC_AB = NSPEC_NO_DOUBLING / NPROC
 
 ! exact number of surface elements for faces A and B along XI and ETA
   NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI
@@ -113,7 +113,7 @@
   NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
 
 ! exact number of global points
-  nglob = (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1) * (NER*(NGLLZ-1)+1)
+  NGLOB_AB = (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1) * (NER*(NGLLZ-1)+1)
 
 !
 !--- case of a non-regular mesh with mesh doublings
@@ -187,7 +187,7 @@
   NSPEC2D_DOUBLING_B_ETA=12*NUM2D_DOUBLING_BRICKS_ETA
 
 ! exact number of spectral elements
-  nspec = (NSPEC_NO_DOUBLING + NSPEC_DOUBLING_AB) / NPROC
+  NSPEC_AB = (NSPEC_NO_DOUBLING + NSPEC_DOUBLING_AB) / NPROC
 
 ! exact number of surface elements for faces A and B
 ! along XI and ETA for doubling region
@@ -231,7 +231,7 @@
   nblocks_xi = NEX_PER_PROC_XI / 8
   nblocks_eta = NEX_PER_PROC_ETA / 8
 
-  nglob = nblocks_xi*nblocks_eta*(200*NGLLX**3 - 484*NGLLX**2 + 392*NGLLX - 106 + nglob_no_doubling_volume)
+  NGLOB_AB = nblocks_xi*nblocks_eta*(200*NGLLX**3 - 484*NGLLX**2 + 392*NGLLX - 106 + nglob_no_doubling_volume)
 
 ! same thing for 2D surfaces for the three types of faces
   nglob_no_doubling_surface = (4*(NGLLX-1)+1)*((NER_BASEMENT_SEDIM/2-3)*(NGLLX-1)-1) &
@@ -241,13 +241,14 @@
   nglob_surface_typeB = 36*NGLLX**2 - 57 * NGLLX + 23
 
 ! final number of points in volume obtained by removing planes counted twice
-  nglob = nglob &
+  NGLOB_AB = NGLOB_AB &
      - (nblocks_xi-1)*nblocks_eta*(nglob_surface_typeA + nglob_no_doubling_surface) &
      - (nblocks_eta-1)*nblocks_xi*(nglob_surface_typeB + nglob_no_doubling_surface) &
      + (nblocks_eta-1)*(nblocks_xi-1)*NPOIN1D_RADIAL_BEDROCK
 
 ! add number of points in the sediments
-  nglob = nglob + (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1)*(NER_SEDIM*(NGLLZ-1)+0)
+  NGLOB_AB = NGLOB_AB + (NEX_PER_PROC_XI*(NGLLX-1)+1) &
+    *(NEX_PER_PROC_ETA*(NGLLY-1)+1)*(NER_SEDIM*(NGLLZ-1)+0)
 
   endif ! end of section for non-regular mesh with doublings
 

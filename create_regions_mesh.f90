@@ -18,7 +18,7 @@
   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
            xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,nspec, &
            volume_local,area_local_bottom,area_local_top, &
-           nglob,npointot, &
+           NGLOB_AB,npointot, &
            NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
            NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
@@ -156,7 +156,7 @@
   logical, dimension(:), allocatable :: ifseg
   double precision, dimension(:), allocatable :: xp,yp,zp
 
-  integer nglob
+  integer nglob,NGLOB_AB
   integer ieoff,ilocnum
 
 ! mass matrix
@@ -831,7 +831,8 @@ enddo
   enddo
   enddo
 
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) call exit_MPI(myrank,'incorrect global numbering')
+  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
+    call exit_MPI(myrank,'incorrect global numbering')
 
 ! creating mass matrix (will be fully assembled with MPI in the solver)
   allocate(rmass(nglob))
@@ -848,7 +849,8 @@ enddo
 
 ! distinguish between single and double precision for reals
     if(CUSTOM_REAL == SIZE_REAL) then
-      rmass(iglobnum) = rmass(iglobnum) + sngl(dble(rhostore(i,j,k,ispec)) * dble(jacobianl) * weight)
+      rmass(iglobnum) = rmass(iglobnum) + &
+             sngl(dble(rhostore(i,j,k,ispec)) * dble(jacobianl) * weight)
     else
       rmass(iglobnum) = rmass(iglobnum) + rhostore(i,j,k,ispec) * jacobianl * weight
     endif

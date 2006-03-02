@@ -207,7 +207,7 @@
   integer NER
 
 ! this for all the regions
-  integer nglob,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+  integer NSPEC_AB,NGLOB_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
@@ -285,10 +285,10 @@
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      nspec,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,nglob,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
@@ -717,6 +717,9 @@
   area_local_bottom = ZERO
   area_local_top = ZERO
 
+! assign theoretical number of elements
+  nspec = NSPEC_AB
+
 ! compute maximum number of points
   npointot = nspec * NGLLCUBE
 
@@ -740,7 +743,7 @@
          xstore,ystore,zstore,npx,npy, &
          iproc_xi,iproc_eta,nspec, &
          volume_local,area_local_bottom,area_local_top, &
-         nglob,npointot, &
+         NGLOB_AB,npointot, &
          NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
          NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
          NSPEC2DMAX_XMIN_XMAX, &
@@ -835,13 +838,14 @@
   write(IMAIN,*) 'Repartition of elements:'
   write(IMAIN,*) '-----------------------'
   write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in each slice: ',nspec
+  write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
   write(IMAIN,*)
-  write(IMAIN,*) 'total number of points in each slice: ',nglob
+  write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
+
   write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in entire mesh: ',nspec*NPROC
-  write(IMAIN,*) 'total number of points in entire mesh: ',nglob*NPROC
-  write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob*NPROC*NDIM
+  write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
+  write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
+  write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
   write(IMAIN,*)
   write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
   write(IMAIN,*)
@@ -856,8 +860,9 @@
   write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
   write(IMAIN,*)
 
-! save some statistics about the mesh
-  call save_mesh_statistics(nspec,nglob,NEX_XI,NEX_ETA,NPROC,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX)
+! copy number of elements and points in an include file for the solver
+  call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
+             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
 
 ! filter list of stations, only retain stations that are in the basin model
   nrec_filtered = 0

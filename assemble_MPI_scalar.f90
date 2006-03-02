@@ -22,7 +22,7 @@
   subroutine assemble_MPI_scalar(array_val,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_scalar,buffer_received_faces_scalar,npoin2D_xi,npoin2D_eta, &
-            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY,nglob)
+            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   implicit none
 
@@ -32,9 +32,11 @@
   include "constants.h"
   include "precision.h"
 
+! include values created by the mesher
+  include "OUTPUT_FILES/values_from_mesher.h"
+
 ! array to assemble
-  integer nglob
-  real(kind=CUSTOM_REAL), dimension(nglob) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: array_val
 
   integer iproc_xi,iproc_eta
   integer npoin2D_xi,npoin2D_eta
