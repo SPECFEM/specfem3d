@@ -49,7 +49,7 @@ O = obj
 #
 #F90 = pgf90
 #MPIF90 = mpif90
-#FLAGS_CHECK = -O2 -Mnobounds -Mneginfo -Mdclchk -Knoieee
+#FLAGS_CHECK = -O2 -Mbounds -Mneginfo -Mdclchk -Knoieee
 #FLAGS_NO_CHECK = -O2 -Mnobounds -Mneginfo -Mdclchk -Knoieee
 #MPI_FLAGS = 
 #C_PREPROCESSOR = -Mpreprocess
