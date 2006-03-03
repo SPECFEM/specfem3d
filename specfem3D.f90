@@ -177,7 +177,9 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+
+! material properties in case of a fully anisotropic material
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
         c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
         c36store,c44store,c45store,c46store,c55store,c56store,c66store
@@ -554,6 +556,53 @@
 
   allocate(buffer_send_faces_vector(NDIM,NPOIN2DMAX_XY))
   allocate(buffer_received_faces_vector(NDIM,NPOIN2DMAX_XY))
+
+! allocate material properties in case of a fully anisotropic material
+  if(ANISOTROPY) then
+    allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  else
+    allocate(c11store(1,1,1,1))
+    allocate(c12store(1,1,1,1))
+    allocate(c13store(1,1,1,1))
+    allocate(c14store(1,1,1,1))
+    allocate(c15store(1,1,1,1))
+    allocate(c16store(1,1,1,1))
+    allocate(c22store(1,1,1,1))
+    allocate(c23store(1,1,1,1))
+    allocate(c24store(1,1,1,1))
+    allocate(c25store(1,1,1,1))
+    allocate(c26store(1,1,1,1))
+    allocate(c33store(1,1,1,1))
+    allocate(c34store(1,1,1,1))
+    allocate(c35store(1,1,1,1))
+    allocate(c36store(1,1,1,1))
+    allocate(c44store(1,1,1,1))
+    allocate(c45store(1,1,1,1))
+    allocate(c46store(1,1,1,1))
+    allocate(c55store(1,1,1,1))
+    allocate(c56store(1,1,1,1))
+    allocate(c66store(1,1,1,1))
+  endif
 
 ! start reading the databases
 
