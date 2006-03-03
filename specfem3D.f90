@@ -349,7 +349,10 @@
   integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
 
 ! proc numbers for MPI
-  integer myrank,sizeprocs,ier
+  integer myrank,sizeprocs
+#ifdef USE_MPI
+  integer ier
+#endif
 
   integer npoin2D_xi,npoin2D_eta
 
