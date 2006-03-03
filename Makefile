@@ -43,22 +43,12 @@
 
 O = obj
 
-
-
-######## XXXXXXXXXXXX YYYYYYYYYYYYY UGLY DK DK add Carcione aniso CARCIONE_ANISO
-
-#TURN_CARCIONE_ON = -DCARCIONE_ANISO
-#TURN_CARCIONE_ON = -WF,-DCARCIONE_ANISO
-TURN_CARCIONE_ON = 
-
-
-
 ################ PC Linux #################
 #
 # Portland pgf90
 #
 #F90 = pgf90
-#MPIF90 = mpif90 #/home/local/mpich/bin/mpif90
+#MPIF90 = mpif90
 #FLAGS_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Knoieee
 #FLAGS_NO_CHECK = -fast -Mnobounds -Mneginfo -Mdclchk -Munroll=c:6 -Knoieee
 #MPI_FLAGS = 
@@ -291,7 +281,6 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/define_derivation_matrices.o \
        $O/compute_arrays_source.o \
        $O/get_attenuation_model.o \
-       $O/plotpost_norm.o \
        $O/assemble_MPI_vector.o \
        $O/assemble_MPI_scalar.o
 	${MPIF90} $(FLAGS_NO_CHECK) -o xspecfem3D \
@@ -321,7 +310,6 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/define_derivation_matrices.o \
        $O/compute_arrays_source.o \
        $O/get_attenuation_model.o \
-       $O/plotpost_norm.o \
        $O/assemble_MPI_vector.o \
        $O/assemble_MPI_scalar.o $(MPI_FLAGS)
 
@@ -436,8 +424,7 @@ specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/read_arrays_buffers_solver.o \
        $O/define_derivation_matrices.o \
        $O/compute_arrays_source.o \
-       $O/get_attenuation_model.o \
-       $O/plotpost_norm.o
+       $O/get_attenuation_model.o
 	${F90} $(FLAGS_NO_CHECK) -o xspecfem3D \
        $O/specfem3D_serial.o \
        $O/read_arrays_solver.o \
@@ -464,8 +451,7 @@ specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/read_arrays_buffers_solver.o \
        $O/define_derivation_matrices.o \
        $O/compute_arrays_source.o \
-       $O/get_attenuation_model.o \
-       $O/plotpost_norm.o
+       $O/get_attenuation_model.o
 
 convolve_source_timefunction: $O/convolve_source_timefunction.o
 	${F90} $(FLAGS_CHECK) -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
@@ -510,7 +496,7 @@ clean:
 ###
 
 $O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${MPIF90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) $(TURN_CARCIONE_ON) -c -o $O/specfem3D.o specfem3D.f90
+	${MPIF90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/specfem3D.o specfem3D.f90
 
 $O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
 	${MPIF90} $(FLAGS_NO_CHECK) -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
@@ -523,13 +509,13 @@ $O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble
 ###
 
 $O/meshfem3D.o: constants.h meshfem3D.f90
-	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) $(TURN_CARCIONE_ON) -c -o $O/meshfem3D.o meshfem3D.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/meshfem3D.o meshfem3D.f90
 
 $O/locate_source.o: constants.h locate_source.f90
-	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) $(TURN_CARCIONE_ON) -c -o $O/locate_source.o locate_source.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/locate_source.o locate_source.f90
 
 $O/locate_receivers.o: constants.h locate_receivers.f90
-	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) $(TURN_CARCIONE_ON) -c -o $O/locate_receivers.o locate_receivers.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/locate_receivers.o locate_receivers.f90
 
 $O/exit_mpi.o: constants.h exit_mpi.f90
 	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/exit_mpi.o exit_mpi.f90
@@ -539,20 +525,20 @@ $O/exit_mpi.o: constants.h exit_mpi.f90
 ###
 
 $O/specfem3D_serial.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${F90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/specfem3D_serial.o specfem3D.f90
+	${F90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) -c -o $O/specfem3D_serial.o specfem3D.f90
 
 ###
 ### serial compilation without optimization
 ###
 
 $O/meshfem3D_serial.o: constants.h meshfem3D.f90
-	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/meshfem3D_serial.o meshfem3D.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/meshfem3D_serial.o meshfem3D.f90
 
 $O/locate_source_serial.o: constants.h locate_source.f90
-	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/locate_source_serial.o locate_source.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/locate_source_serial.o locate_source.f90
 
 $O/locate_receivers_serial.o: constants.h locate_receivers.f90
-	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/locate_receivers_serial.o locate_receivers.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/locate_receivers_serial.o locate_receivers.f90
 
 $O/exit_mpi_serial.o: constants.h exit_mpi.f90
 	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/exit_mpi_serial.o exit_mpi.f90
@@ -672,7 +658,7 @@ $O/save_arrays_solver.o: constants.h save_arrays_solver.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/save_arrays_solver.o save_arrays_solver.f90
 
 $O/comp_source_time_function.o: constants.h comp_source_time_function.f90
-	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/comp_source_time_function.o comp_source_time_function.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/comp_source_time_function.o comp_source_time_function.f90
 
 $O/read_basin_topo_bathy_file.o: constants.h read_basin_topo_bathy_file.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/read_basin_topo_bathy_file.o read_basin_topo_bathy_file.f90
@@ -690,7 +676,7 @@ $O/recompute_jacobian.o: constants.h recompute_jacobian.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/recompute_jacobian.o recompute_jacobian.f90
 
 $O/create_regions_mesh.o: constants.h create_regions_mesh.f90
-	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_CARCIONE_ON) -c -o $O/create_regions_mesh.o create_regions_mesh.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/create_regions_mesh.o create_regions_mesh.f90
 
 $O/create_name_database.o: constants.h create_name_database.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/create_name_database.o create_name_database.f90
@@ -715,9 +701,6 @@ $O/compute_arrays_source.o: constants.h compute_arrays_source.f90
 
 $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/get_attenuation_model.o get_attenuation_model.f90
-
-$O/plotpost_norm.o: constants.h plotpost_norm.f90
-	${F90} $(FLAGS_CHECK) -c -o $O/plotpost_norm.o plotpost_norm.f90
 
 $O/combine_paraview_data.o: constants.h combine_paraview_data.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/combine_paraview_data.o combine_paraview_data.f90

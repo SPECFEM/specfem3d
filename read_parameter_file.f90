@@ -79,7 +79,7 @@
 
   Z_DEPTH_BLOCK = - dabs(DEPTH_BLOCK_KM) * 1000.d0
 
-  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL .and. MODEL /= 'Lacq_gas_field_France' .and. MODEL /= 'Copper_Carcione') &
+  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL .and. MODEL /= 'Lacq_gas_field_France') &
     stop 'bottom of mesh must be deeper than deepest regional layer for Southern California'
 
 ! check that parameters computed are consistent
@@ -110,20 +110,6 @@
     NER_16_BASEMENT    = 3
     NER_MOHO_16        = 3
     NER_BOTTOM_MOHO    = 8
-
-! for copper crystal studied with Jose Carcione
-  else if(MODEL == 'Copper_Carcione') then
-
-! time step in seconds
-    DT                 = 10.d-9
-
-! number of elements in the vertical direction
-! use the same number of elements in the three directions because the copper crystal is a cube
-    NER_SEDIM          = NEX_XI
-    NER_BASEMENT_SEDIM = 0
-    NER_16_BASEMENT    = 0
-    NER_MOHO_16        = 0
-    NER_BOTTOM_MOHO    = 0
 
 ! standard mesh for on Caltech cluster
   else if (UTM_MAX/NEX_MAX >= 1.5) then
@@ -174,25 +160,6 @@
     VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
     ANISOTROPY               = .false.
     USE_REGULAR_MESH         = .false.
-
-  else if(MODEL == 'Copper_Carcione') then
-
-    BASEMENT_MAP             = .false.
-    MOHO_MAP_LUPEI           = .false.
-    HAUKSSON_REGIONAL_MODEL  = .false.
-    HARVARD_3D_GOCAD_MODEL   = .false.
-    THICKNESS_TAPER_BLOCK_HR = 1.d0
-    THICKNESS_TAPER_BLOCK_MR = 1.d0
-    IMPOSE_MINIMUM_VP_GOCAD  = .false.
-    VP_MIN_GOCAD             = 1.d0
-    VP_VS_RATIO_GOCAD_TOP    = 2.0d0
-    VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
-! copper crystal is anisotropic, but we handle it direcly in the main routine that computes
-! the forces by using constants for the c_ijkl to save memory because the crystal
-! is homogeneous, therefore we do not use general anisotropy for a heterogeneous medium
-    ANISOTROPY               = .false.
-! copper crystal is homogeneous, therefore use a regular mesh
-    USE_REGULAR_MESH         = .true.
 
   else if(MODEL == 'Harvard_LA') then
 

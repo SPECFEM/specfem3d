@@ -55,11 +55,6 @@
   include "precision.h"
 #endif
 
-!!!!!!!! DK DK XXXXXXXXXXX YYYYYYYYYY UGLY for Carcione copper aniso
-#ifdef CARCIONE_ANISO
-  include "carcione_anisotropy.h"
-#endif
-
 !=====================================================================!
 !                                                                     !
 !  meshfem3D produces a spectral element grid for a basin.            !
@@ -135,11 +130,6 @@
 
   double precision xin,etan,rn
   double precision x_current,y_current,z_top,z_bot
-
-#ifdef CARCIONE_ANISO
-!! DK DK UGLY rotate coordinates
-  double precision x_current_new,y_current_new
-#endif
 
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
 
@@ -540,14 +530,6 @@
 
     etan=dble(iy)/dble(npy)
     y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
-
-#ifdef CARCIONE_ANISO
-!! DK DK UGLY rotate coordinates
-    x_current_new =   x_current*cos(ANGLE_ROTATE) + y_current*sin(ANGLE_ROTATE)
-    y_current_new = - x_current*sin(ANGLE_ROTATE) + y_current*cos(ANGLE_ROTATE)
-    x_current = x_current_new
-    y_current = y_current_new
-#endif
 
 ! define basin between topography surface and fictitious bottom
     if(TOPOGRAPHY) then
