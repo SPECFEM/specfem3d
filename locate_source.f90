@@ -122,7 +122,7 @@
   double precision, dimension(NSOURCES) :: lat,long,depth,elevation
   double precision moment_tensor(6,NSOURCES)
 
-  character(len=150) plot_file
+  character(len=150) OUTPUT_FILES,plot_file
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision distmin
@@ -138,6 +138,9 @@
   integer, parameter :: NSAMP_PLOT_SOURCE = 1000
 
 ! **************
+
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
 ! read all the sources
   call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
@@ -481,15 +484,15 @@
 
 ! print the source-time function
   if(NSOURCES == 1) then
-    plot_file = 'OUTPUT_FILES/plot_source_time_function.txt'
+    plot_file = '/plot_source_time_function.txt'
   else
    if(isource < 10) then
-      write(plot_file,"('OUTPUT_FILES/plot_source_time_function',i1,'.txt')") isource
+      write(plot_file,"('/plot_source_time_function',i1,'.txt')") isource
     else
-      write(plot_file,"('OUTPUT_FILES/plot_source_time_function',i2,'.txt')") isource
+      write(plot_file,"('/plot_source_time_function',i2,'.txt')") isource
     endif
   endif
-  open(unit=27,file=plot_file(1:len_trim(plot_file)),status='unknown')
+  open(unit=27,file=trim(OUTPUT_FILES)//plot_file,status='unknown')
 
   do it=1,NSTEP
     time_source = dble(it-1)*DT

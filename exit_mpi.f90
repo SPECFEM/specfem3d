@@ -41,14 +41,16 @@
   integer ier
 #endif
   character(len=80) outputname
+  character(len=150) OUTPUT_FILES
 
 ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI... proc ',myrank
 
 ! write error message to file
-  write(outputname,"('OUTPUT_FILES/error_message',i3.3,'.txt')") myrank
-  open(unit=IERROR,file=outputname,status='unknown')
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+  write(outputname,"('/error_message',i3.3,'.txt')") myrank
+  open(unit=IERROR,file=trim(OUTPUT_FILES)//outputname,status='unknown')
   write(IERROR,*) error_msg(1:len(error_msg))
   write(IERROR,*) 'Error detected, aborting MPI... proc ',myrank
   close(IERROR)

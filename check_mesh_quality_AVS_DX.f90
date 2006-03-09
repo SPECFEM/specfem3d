@@ -64,7 +64,7 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -155,6 +155,9 @@
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+
   print *
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
   print *
@@ -173,7 +176,7 @@
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
   read(10,*) npoin
@@ -218,7 +221,7 @@
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
@@ -304,7 +307,7 @@
   do iproc=proc_p1,proc_p2
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 
@@ -338,7 +341,7 @@
   print *,'histogram of skewness (0. good - 1. bad):'
   print *
   total_percent = 0.
-  open(unit=14,file='OUTPUT_FILES/mesh_quality_histogram.txt',status='unknown')
+  open(unit=14,file=trim(OUTPUT_FILES)//'/mesh_quality_histogram.txt',status='unknown')
   do iclass = 0,NCLASS-1
     current_percent = 100.*dble(classes_skewness(iclass))/dble(ntotspec)
     total_percent = total_percent + current_percent
@@ -348,7 +351,7 @@
   close(14)
 
 ! create script for Gnuplot histogram file
-  open(unit=14,file='OUTPUT_FILES/plot_mesh_quality_histogram.gnu',status='unknown')
+  open(unit=14,file=trim(OUTPUT_FILES)//'/plot_mesh_quality_histogram.gnu',status='unknown')
   write(14,*) 'set term x11'
   write(14,*) 'set xrange [0:1]'
   write(14,*) 'set xtics 0,0.1,1'
@@ -397,7 +400,7 @@
   do iproc=proc_p1,proc_p2
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old')
   open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
@@ -466,7 +469,7 @@
   do iproc=proc_p1,proc_p2
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
   read(10,*) npoin
@@ -497,7 +500,7 @@
   do iproc=proc_p1,proc_p2
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old')
   open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
@@ -552,7 +555,7 @@
   do iproc=proc_p1,proc_p2
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
 

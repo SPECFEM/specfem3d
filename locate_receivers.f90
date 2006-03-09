@@ -124,6 +124,7 @@
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
 
+  character(len=150) OUTPUT_FILES
 
 ! **************
 
@@ -535,8 +536,11 @@
       write(IMAIN,*) '************************************************************'
     endif
 
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+
 ! write the list of stations and associated epicentral distance
-  open(unit=27,file='OUTPUT_FILES/output_list_stations.txt',status='unknown')
+  open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
   do irec=1,nrec
     write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
   enddo

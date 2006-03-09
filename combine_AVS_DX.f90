@@ -92,7 +92,7 @@
 
   double precision zscaling
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -131,6 +131,9 @@
         NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
 
   if(.not. SAVE_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
+
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
   allocate(hdur(NSOURCES))
   allocate(t_cmt(NSOURCES))
@@ -241,7 +244,7 @@
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old')
@@ -277,10 +280,10 @@
 
 ! use different name for surface and for slices
   if(USE_OPENDX) then
-    open(unit=11,file='OUTPUT_FILES/DX_fullmesh.dx',status='unknown')
+    open(unit=11,file=trim(OUTPUT_FILES)//'/DX_fullmesh.dx',status='unknown')
     write(11,*) 'object 1 class array type float rank 1 shape 3 items ',ntotpoinAVS_DX,' data follows'
   else
-    open(unit=11,file='OUTPUT_FILES/AVS_fullmesh.inp',status='unknown')
+    open(unit=11,file=trim(OUTPUT_FILES)//'/AVS_fullmesh.inp',status='unknown')
   endif
 
 ! write AVS or DX header with element data or point data
@@ -303,7 +306,7 @@
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old')
@@ -359,7 +362,7 @@ endif
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old')
@@ -448,7 +451,7 @@ endif
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old')
@@ -503,7 +506,7 @@ endif
   print *,'Reading slice ',iproc
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old')
 
@@ -599,7 +602,8 @@ endif
     print *,'reading position of the receivers from DATA/STATIONS_FILTERED file'
 
 ! get number of stations from receiver file
-    open(unit=11,file='DATA/STATIONS_FILTERED',status='old')
+    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+    open(unit=11,file=filtered_rec_filename,status='old')
 
 ! read total number of receivers
     read(11,*) nrec
@@ -635,7 +639,7 @@ endif
   ntotpoinAVS_DX = ntotpoinAVS_DX + 2*nrec + 1
   ntotspecAVS_DX = ntotspecAVS_DX + nrec + 1
 
-  open(unit=11,file='OUTPUT_FILES/AVS_source_receivers.inp',status='unknown')
+  open(unit=11,file=trim(OUTPUT_FILES)//'/AVS_source_receivers.inp',status='unknown')
 
 ! write AVS or DX header with element data
   write(11,*) ntotpoinAVS_DX,' ',ntotspecAVS_DX,' 0 1 0'
@@ -676,7 +680,7 @@ endif
 
 ! create a file with the epicenter only, represented as a quadrangle
 
-  open(unit=11,file='OUTPUT_FILES/AVS_epicenter.inp',status='unknown')
+  open(unit=11,file=trim(OUTPUT_FILES)//'/AVS_epicenter.inp',status='unknown')
 
 ! write AVS or DX header with element data
   write(11,*) '4 1 0 1 0'

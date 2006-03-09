@@ -65,7 +65,7 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -110,6 +110,9 @@
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+
   print *
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
   print *,'There are ',NPROC_XI,' slices along xi'
@@ -121,7 +124,7 @@
 
 ! open file with global slice number addressing
   print *,'reading slice addressing'
-  open(unit=34,file='OUTPUT_FILES/addressing.txt',status='old')
+  open(unit=34,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old')
   do iproc = 0,NPROC-1
       read(34,*) iproc_read,iproc_xi,iproc_eta
       if(iproc_read /= iproc) stop 'incorrect slice number read'
@@ -160,8 +163,8 @@
   iotherproc = addressing(iproc_xi+1,iproc_eta)
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,ithisproc,LOCAL_PATH,NPROC)
-  call create_serial_name_database(prname_other,iotherproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,ithisproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
+  call create_serial_name_database(prname_other,iotherproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
 ! read 2-D addressing for summation between slices along xi with MPI
 
@@ -240,8 +243,8 @@
   iotherproc = addressing(iproc_xi,iproc_eta+1)
 
 ! create the name for the database of the current slide
-  call create_serial_name_database(prname,ithisproc,LOCAL_PATH,NPROC)
-  call create_serial_name_database(prname_other,iotherproc,LOCAL_PATH,NPROC)
+  call create_serial_name_database(prname,ithisproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
+  call create_serial_name_database(prname_other,iotherproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
 ! read 2-D addressing for summation between slices along xi with MPI
 

@@ -84,7 +84,7 @@
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   double precision zscaling
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -128,6 +128,9 @@
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
   print *
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
@@ -307,11 +310,11 @@
 
 ! read all the elements from the same file
   if(plot_shaking_map) then
-    write(outputname,"('OUTPUT_FILES/shakingdata')")
+    write(outputname,"('/shakingdata')")
   else
-    write(outputname,"('OUTPUT_FILES/moviedata',i6.6)") it
+    write(outputname,"('/moviedata',i6.6)") it
   endif
-  open(unit=IOUT,file=outputname,status='old',form='unformatted')
+  open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='old',form='unformatted')
   read(IOUT) store_val_x
   read(IOUT) store_val_y
   read(IOUT) store_val_z
@@ -562,17 +565,17 @@
   if(plot_shaking_map) then
 
     if(USE_OPENDX) then
-      write(outputname,"('OUTPUT_FILES/DX_shaking_map.dx')")
-      open(unit=11,file=outputname,status='unknown')
+      write(outputname,"('/DX_shaking_map.dx')")
+      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
     else if(USE_AVS) then
       if(UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
-      write(outputname,"('OUTPUT_FILES/AVS_shaking_map.inp')")
-      open(unit=11,file=outputname,status='unknown')
+      write(outputname,"('/AVS_shaking_map.inp')")
+      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
     else if(USE_GMT) then
-      write(outputname,"('OUTPUT_FILES/gmt_shaking_map.xyz')")
-      open(unit=11,file=outputname,status='unknown')
+      write(outputname,"('/gmt_shaking_map.xyz')")
+      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
     else
       stop 'wrong output format selected'
     endif
@@ -580,24 +583,24 @@
   else
 
     if(USE_OPENDX) then
-      write(outputname,"('OUTPUT_FILES/DX_movie_',i6.6,'.dx')") ivalue
-      open(unit=11,file=outputname,status='unknown')
+      write(outputname,"('/DX_movie_',i6.6,'.dx')") ivalue
+      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
     else if(USE_AVS) then
       if(UNIQUE_FILE .and. iframe == 1) then
-        open(unit=11,file='OUTPUT_FILES/AVS_movie_all.inp',status='unknown')
+        open(unit=11,file=trim(OUTPUT_FILES)//'/AVS_movie_all.inp',status='unknown')
         write(11,*) nframes
         write(11,*) 'data'
         write(11,"('step',i1,' image',i1)") 1,1
         write(11,*) nglob,' ',nspectot_AVS_max
       else if(.not. UNIQUE_FILE) then
-        write(outputname,"('OUTPUT_FILES/AVS_movie_',i6.6,'.inp')") ivalue
-        open(unit=11,file=outputname,status='unknown')
+        write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
+        open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
         write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
       endif
     else if(USE_GMT) then
-      write(outputname,"('OUTPUT_FILES/gmt_movie_',i6.6,'.xyz')") ivalue
-      open(unit=11,file=outputname,status='unknown')
+      write(outputname,"('/gmt_movie_',i6.6,'.xyz')") ivalue
+      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
     else
       stop 'wrong output format selected'
     endif
@@ -749,9 +752,9 @@
   print *
   print *,'done creating movie or shaking map'
   print *
-  if(USE_OPENDX) print *,'DX files are stored in OUTPUT_FILES/DX_*.dx'
-  if(USE_AVS) print *,'AVS files are stored in OUTPUT_FILES/AVS_*.inp'
-  if(USE_GMT) print *,'GMT files are stored in OUTPUT_FILES/gmt_*.xyz'
+  if(USE_OPENDX) print *,'DX files are stored in ', trim(OUTPUT_FILES), '/DX_*.dx'
+  if(USE_AVS) print *,'AVS files are stored in ', trim(OUTPUT_FILES), '/AVS_*.inp'
+  if(USE_GMT) print *,'GMT files are stored in ', trim(OUTPUT_FILES), '/gmt_*.xyz'
   print *
 
 

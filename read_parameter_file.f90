@@ -46,7 +46,7 @@
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) LOCAL_PATH,MODEL,CMTSOLUTION
 
 ! local variables
   integer ios,icounter,isource,idummy,NEX_MAX
@@ -55,32 +55,44 @@
 
   character(len=150) dummystring
 
+  integer, external :: err_occurred
+
   open(unit=IIN,file='DATA/Par_file',status='old')
 
-  call read_value_integer(SIMULATION_TYPE)
-  call read_value_logical(SAVE_FORWARD)
+  call read_value_integer(SIMULATION_TYPE, 'solver.SIMULATION_TYPE')
+  if(err_occurred() /= 0) return
+  call read_value_logical(SAVE_FORWARD, 'solver.SAVE_FORWARD')
+  if(err_occurred() /= 0) return
 
-  call read_value_double_precision(LATITUDE_MIN)
-  call read_value_double_precision(LATITUDE_MAX)
-  call read_value_double_precision(LONGITUDE_MIN)
-  call read_value_double_precision(LONGITUDE_MAX)
-  call read_value_double_precision(DEPTH_BLOCK_KM)
-  call read_value_integer(UTM_PROJECTION_ZONE)
-  call read_value_logical(SUPPRESS_UTM_PROJECTION)
+  call read_value_double_precision(LATITUDE_MIN, 'mesher.LATITUDE_MIN')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(LATITUDE_MAX, 'mesher.LATITUDE_MAX')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(LONGITUDE_MIN, 'mesher.LONGITUDE_MIN')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(LONGITUDE_MAX, 'mesher.LONGITUDE_MAX')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(DEPTH_BLOCK_KM, 'mesher.DEPTH_BLOCK_KM')
+  if(err_occurred() /= 0) return
+  call read_value_integer(UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
+  if(err_occurred() /= 0) return
+  call read_value_logical(SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
+  if(err_occurred() /= 0) return
 
-  call read_value_integer(NEX_XI)
-  call read_value_integer(NEX_ETA)
-  call read_value_integer(NPROC_XI)
-  call read_value_integer(NPROC_ETA)
+  call read_value_integer(NEX_XI, 'mesher.NEX_XI')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NEX_ETA, 'mesher.NEX_ETA')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NPROC_XI, 'mesher.NPROC_XI')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NPROC_ETA, 'mesher.NPROC_ETA')
+  if(err_occurred() /= 0) return
 
 ! convert basin size to UTM coordinates and depth of mesh to meters
   call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
   call utm_geo(LONGITUDE_MAX,LATITUDE_MAX,UTM_X_MAX,UTM_Y_MAX,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
   Z_DEPTH_BLOCK = - dabs(DEPTH_BLOCK_KM) * 1000.d0
-
-  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL .and. MODEL /= 'Lacq_gas_field_France') &
-    stop 'bottom of mesh must be deeper than deepest regional layer for Southern California'
 
 ! check that parameters computed are consistent
   if(UTM_X_MIN >= UTM_X_MAX) stop 'horizontal dimension of UTM block incorrect'
@@ -92,11 +104,19 @@
   NEX_MAX = max(NEX_XI,NEX_ETA)
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
-  call read_value_string(MODEL)
-  call read_value_logical(OCEANS)
-  call read_value_logical(TOPOGRAPHY)
-  call read_value_logical(ATTENUATION)
-  call read_value_logical(USE_OLSEN_ATTENUATION)
+  call read_value_string(MODEL, 'MODEL')
+  if(err_occurred() /= 0) return
+  call read_value_logical(OCEANS, 'model.OCEANS')
+  if(err_occurred() /= 0) return
+  call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY')
+  if(err_occurred() /= 0) return
+  call read_value_logical(ATTENUATION, 'model.ATTENUATION')
+  if(err_occurred() /= 0) return
+  call read_value_logical(USE_OLSEN_ATTENUATION, 'model.USE_OLSEN_ATTENUATION')
+  if(err_occurred() /= 0) return
+
+  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL .and. MODEL /= 'Lacq_gas_field_France') &
+    stop 'bottom of mesh must be deeper than deepest regional layer for Southern California'
 
 ! for Lacq (France) gas field
   if(MODEL == 'Lacq_gas_field_France') then
@@ -199,15 +219,18 @@
   if(VP_VS_RATIO_GOCAD_TOP <= sqrt(2.d0) .or. VP_VS_RATIO_GOCAD_BOTTOM <= sqrt(2.d0)) &
       stop 'wrong value of Poisson''s ratio for Gocad Vs block'
 
-  call read_value_logical(ABSORBING_CONDITIONS)
-  call read_value_double_precision(RECORD_LENGTH_IN_SECONDS)
+  call read_value_logical(ABSORBING_CONDITIONS, 'solver.ABSORBING_CONDITIONS')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(RECORD_LENGTH_IN_SECONDS, 'solver.RECORD_LENGTH_IN_SECONDS')
+  if(err_occurred() /= 0) return
 
 ! compute total number of time steps, rounded to next multiple of 100
   NSTEP = 100 * (int(RECORD_LENGTH_IN_SECONDS / (100.d0*DT)) + 1)
 
 ! compute the total number of sources in the CMTSOLUTION file
 ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-  open(unit=1,file='DATA/CMTSOLUTION',iostat=ios,status='old')
+  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
+  open(unit=1,file=CMTSOLUTION,iostat=ios,status='old')
   if(ios /= 0) stop 'error opening CMTSOLUTION file'
   icounter = 0
   do while(ios == 0)
@@ -220,20 +243,27 @@
   NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
   if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
 
-  call read_value_logical(MOVIE_SURFACE)
-  call read_value_logical(MOVIE_VOLUME)
-  call read_value_integer(NTSTEP_BETWEEN_FRAMES)
-  call read_value_logical(CREATE_SHAKEMAP)
-  call read_value_logical(SAVE_DISPLACEMENT)
-  call read_value_logical(USE_HIGHRES_FOR_MOVIES)
-  call read_value_double_precision(HDUR_MOVIE)
+  call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
+  if(err_occurred() /= 0) return
+  call read_value_logical(MOVIE_VOLUME, 'solver.MOVIE_VOLUME')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'solver.NTSTEP_BETWEEN_FRAMES')
+  if(err_occurred() /= 0) return
+  call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP')
+  if(err_occurred() /= 0) return
+  call read_value_logical(SAVE_DISPLACEMENT, 'solver.SAVE_DISPLACEMENT')
+  if(err_occurred() /= 0) return
+  call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'solver.USE_HIGHRES_FOR_MOVIES')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
+  if(err_occurred() /= 0) return
 ! computes a default hdur_movie that creates nice looking movies.
 ! Sets HDUR_MOVIE as the minimum period the mesh can resolve for Southern California model
   if(HDUR_MOVIE <=TINYVAL .and. (MODEL == 'Harvard_LA' .or. MODEL == 'SoCal')) &
   HDUR_MOVIE = max(384/NEX_XI*2.4,384/NEX_ETA*2.4)
 
 ! compute the minimum value of hdur in CMTSOLUTION file
-  open(unit=1,file='DATA/CMTSOLUTION',status='old')
+  open(unit=1,file=CMTSOLUTION,status='old')
   minval_hdur = HUGEVAL
   do isource = 1,NSOURCES
 
@@ -259,11 +289,16 @@
 !  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
 !    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
 
-  call read_value_logical(SAVE_MESH_FILES)
-  call read_value_string(LOCAL_PATH)
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO)
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
-  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION)
+  call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
+  if(err_occurred() /= 0) return
+  call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
+  if(err_occurred() /= 0) return
+  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
+  if(err_occurred() /= 0) return
 
 ! close parameter file
   close(IIN)

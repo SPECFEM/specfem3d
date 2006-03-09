@@ -41,7 +41,7 @@
 ! modifications.
 !
 
-  program specfem3D
+  subroutine specfem3D
 
   implicit none
 
@@ -295,7 +295,7 @@
   double precision :: t0
 
 ! receiver information
-  character(len=150) rec_filename
+  character(len=150) rec_filename, filtered_rec_filename
   integer nrec,nrec_local,nrec_tot_found
   integer irec_local
   integer, allocatable, dimension(:) :: islice_selected_rec,ispec_selected_rec,number_receiver_global
@@ -380,7 +380,7 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,prname,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,prname,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -417,14 +417,12 @@
 
 ! ************** PROGRAM STARTS HERE **************
 
-! initialize the MPI communicator and start the NPROC MPI processes.
 ! sizeprocs returns number of processes started
 ! (should be equal to NPROC)
 ! myrank is the rank of each process, between 0 and sizeprocs-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
 ! and also takes care of the main output
 #ifdef USE_MPI
-  call MPI_INIT(ier)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 #else
@@ -467,9 +465,12 @@
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB_JUNK,USE_REGULAR_MESH)
 
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file='OUTPUT_FILES/output_solver.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
 
   if(myrank == 0) then
 
@@ -534,7 +535,7 @@
   allocate(iproc_eta_slice(0:NPROC-1))
 
 ! open file with global slice number addressing
-  open(unit=IIN,file='OUTPUT_FILES/addressing.txt',status='old')
+  open(unit=IIN,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old')
   do iproc = 0,NPROC-1
     read(IIN,*) iproc_read,iproc_xi,iproc_eta
     if(iproc_read /= iproc) call exit_MPI(myrank,'incorrect slice number read')
@@ -902,14 +903,15 @@
 !$$$$$$$$$$$$$$$$$$ RECEIVERS $$$$$$$$$$$$$$$$$$$$$
 
   if (SIMULATION_TYPE == 1) then
-    rec_filename = 'DATA/STATIONS_FILTERED'
-    open(unit=IIN,file=trim(rec_filename),status='old')
+    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+    open(unit=IIN,file=filtered_rec_filename,status='old')
     read(IIN,*) nrec
     close(IIN)
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   else
-    rec_filename = 'DATA/STATIONS_ADJOINT_FILTERED'
-    call station_filter(myrank,'DATA/STATIONS_ADJOINT',trim(rec_filename),nrec, &
+    call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS_ADJOINT')
+    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_ADJOINT_FILTERED')
+    call station_filter(myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one source')
 #ifdef USE_MPI
@@ -941,7 +943,7 @@
 
 ! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
-            xstore,ystore,zstore,xigll,yigll,zigll,trim(rec_filename), &
+            xstore,ystore,zstore,xigll,yigll,zigll,filtered_rec_filename, &
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
@@ -1401,7 +1403,7 @@
 
 ! create an empty file to monitor the start of the simulation
   if(myrank == 0) then
-    open(unit=IOUT,file='OUTPUT_FILES/starttimeloop.txt',status='unknown')
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown')
     write(IOUT,*) 'starting time loop'
     close(IOUT)
   endif
@@ -1540,8 +1542,8 @@
       write(IMAIN,*)
 
 ! write time stamp file to give information about progression of simulation
-      write(outputname,"('OUTPUT_FILES/timestamp',i6.6)") it
-      open(unit=IOUT,file=outputname,status='unknown')
+      write(outputname,"('/timestamp',i6.6)") it
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(IOUT,*) 'Time step # ',it
       write(IOUT,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
       write(IOUT,*) 'Elapsed time in seconds = ',tCPU
@@ -2800,8 +2802,8 @@
 
 ! save movie data to disk in home directory
     if(myrank == 0) then
-      write(outputname,"('OUTPUT_FILES/moviedata',i6.6)") it
-      open(unit=IOUT,file=outputname,status='unknown',form='unformatted')
+      write(outputname,"('/moviedata',i6.6)") it
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted')
       write(IOUT) store_val_x_all
       write(IOUT) store_val_y_all
       write(IOUT) store_val_z_all
@@ -2877,7 +2879,7 @@
 
 ! save movie data to disk in home directory
     if(myrank == 0) then
-      open(unit=IOUT,file='OUTPUT_FILES/shakingdata',status='unknown',form='unformatted')
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted')
       write(IOUT) store_val_x_all
       write(IOUT) store_val_y_all
       write(IOUT) store_val_z_all
@@ -3135,10 +3137,7 @@
 #ifdef USE_MPI
 ! synchronize all the processes to make sure everybody has finished
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
-
-! stop all the MPI processes, and exit
-  call MPI_FINALIZE(ier)
 #endif
 
-  end program specfem3D
+  end subroutine specfem3D
 

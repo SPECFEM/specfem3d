@@ -187,6 +187,7 @@
   double precision vp_block_gocad_MR(0:NX_GOCAD_MR-1,0:NY_GOCAD_MR-1,0:NZ_GOCAD_MR-1)
   double precision vp_block_gocad_HR(0:NX_GOCAD_HR-1,0:NY_GOCAD_HR-1,0:NZ_GOCAD_HR-1)
   integer irecord,nrecord,i_vp
+  character(len=150) BASIN_MODEL_3D_MEDIUM_RES_FILE,BASIN_MODEL_3D_HIGH_RES_FILE
 
 ! for the harvard 3D salton sea model
   real :: vp_st_gocad(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW)
@@ -195,6 +196,7 @@
 ! for Hauksson's model
   double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp_hauksson,vs_hauksson
   integer ilayer
+  character(len=150 ) HAUKSSON_REGIONAL_MODEL_FILE
 
 ! Stacey put back
 ! indices for Clayton-Engquist absorbing conditions
@@ -350,7 +352,10 @@
 
 !--- read Hauksson's model
   if(HAUKSSON_REGIONAL_MODEL) then
-    open(unit=14,file='DATA/hauksson_model/hauksson_final_grid_smooth.dat',status='old')
+    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
+                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
+                          'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
+    open(unit=14,file=HAUKSSON_REGIONAL_MODEL_FILE,status='old')
     do iy = 1,NGRID_NEW_HAUKSSON
       do ix = 1,NGRID_NEW_HAUKSSON
         read(14,*) (vp_hauksson(ilayer,ix,iy),ilayer=1,NLAYERS_HAUKSSON), &
@@ -371,7 +376,10 @@
   vp_block_gocad_MR(:,:,:) = 20000.
 
 ! read Vp from extracted text file
-  open(unit=27,file='DATA/la_3D_block_harvard/la_3D_medium_res/LA_MR_voxet_extracted.txt',status='old')
+  call get_value_string(BASIN_MODEL_3D_MEDIUM_RES_FILE, &
+                        'model.BASIN_MODEL_3D_MEDIUM_RES_FILE', &
+                        'DATA/la_3D_block_harvard/la_3D_medium_res/LA_MR_voxet_extracted.txt')
+  open(unit=27,file=BASIN_MODEL_3D_MEDIUM_RES_FILE,status='old')
   read(27,*) nrecord
   do irecord = 1,nrecord
     read(27,*) ix,iy,iz,i_vp
@@ -387,7 +395,10 @@
   vp_block_gocad_HR(:,:,:) = 20000.
 
 ! read Vp from extracted text file
-  open(unit=27,file='DATA/la_3D_block_harvard/la_3D_high_res/LA_HR_voxet_extracted.txt',status='old')
+  call get_value_string(BASIN_MODEL_3D_HIGH_RES_FILE, &
+                        'model.BASIN_MODEL_3D_HIGH_RES_FILE', &
+                        'DATA/la_3D_block_harvard/la_3D_high_res/LA_HR_voxet_extracted.txt')
+  open(unit=27,file=BASIN_MODEL_3D_HIGH_RES_FILE,status='old')
   read(27,*) nrecord
   do irecord = 1,nrecord
     read(27,*) ix,iy,iz,i_vp

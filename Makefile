@@ -173,6 +173,7 @@ backup:
 bak: backup
 
 meshfem3D: constants.h \
+       $O/program_meshfem3D.o \
        $O/meshfem3D.o \
        $O/create_regions_mesh.o \
        $O/calc_jacobian.o \
@@ -210,9 +211,11 @@ meshfem3D: constants.h \
        $O/exit_mpi.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o
 	${MPIF90} $(FLAGS_CHECK) -o xmeshfem3D \
+       $O/program_meshfem3D.o \
        $O/meshfem3D.o \
        $O/create_regions_mesh.o \
        $O/calc_jacobian.o \
@@ -250,11 +253,13 @@ meshfem3D: constants.h \
        $O/exit_mpi.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o $(MPI_FLAGS)
 
 # solver also depends on values from mesher
 specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
+       $O/program_specfem3D.o \
        $O/specfem3D.o \
        $O/read_arrays_solver.o \
        $O/calc_jacobian.o \
@@ -264,6 +269,7 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/write_seismograms.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o \
        $O/locate_source.o \
@@ -284,6 +290,7 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/assemble_MPI_vector.o \
        $O/assemble_MPI_scalar.o
 	${MPIF90} $(FLAGS_NO_CHECK) -o xspecfem3D \
+       $O/program_specfem3D.o \
        $O/specfem3D.o \
        $O/read_arrays_solver.o \
        $O/calc_jacobian.o \
@@ -293,6 +300,7 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/write_seismograms.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o \
        $O/locate_source.o \
@@ -317,6 +325,7 @@ specfem3D: constants.h OUTPUT_FILES/values_from_mesher.h \
 # serial versions below: for runs without MPI on serial machines
 #
 meshfem3D_serial: constants.h \
+       $O/program_meshfem3D_serial.o \
        $O/meshfem3D_serial.o \
        $O/create_regions_mesh.o \
        $O/calc_jacobian.o \
@@ -354,9 +363,11 @@ meshfem3D_serial: constants.h \
        $O/exit_mpi_serial.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o
 	${F90} $(FLAGS_CHECK) -o xmeshfem3D \
+       $O/program_meshfem3D_serial.o \
        $O/meshfem3D_serial.o \
        $O/create_regions_mesh.o \
        $O/calc_jacobian.o \
@@ -394,11 +405,13 @@ meshfem3D_serial: constants.h \
        $O/exit_mpi_serial.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o
 
 # solver also depends on values from mesher
 specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
+       $O/program_specfem3D_serial.o \
        $O/specfem3D_serial.o \
        $O/read_arrays_solver.o \
        $O/calc_jacobian.o \
@@ -408,6 +421,7 @@ specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/write_seismograms.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o \
        $O/locate_source_serial.o \
@@ -426,6 +440,7 @@ specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/compute_arrays_source.o \
        $O/get_attenuation_model.o
 	${F90} $(FLAGS_NO_CHECK) -o xspecfem3D \
+       $O/program_specfem3D_serial.o \
        $O/specfem3D_serial.o \
        $O/read_arrays_solver.o \
        $O/calc_jacobian.o \
@@ -435,6 +450,7 @@ specfem3D_serial: constants.h OUTPUT_FILES/values_from_mesher.h \
        $O/write_seismograms.o \
        $O/read_parameter_file.o \
        $O/read_value_parameters.o \
+       $O/get_value_parameters.o \
        $O/utm_geo.o \
        $O/compute_parameters.o \
        $O/locate_source_serial.o \
@@ -457,35 +473,45 @@ convolve_source_timefunction: $O/convolve_source_timefunction.o
 	${F90} $(FLAGS_CHECK) -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
 
 create_header_file: $O/create_header_file.o $O/read_parameter_file.o \
-     $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o $O/read_value_parameters.o
+     $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o \
+     $O/get_value_parameters.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcreate_header_file $O/create_header_file.o \
-     $O/read_parameter_file.o $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o $O/read_value_parameters.o
+     $O/read_parameter_file.o $O/compute_parameters.o $O/save_header_file.o $O/utm_geo.o \
+     $O/get_value_parameters.o $O/read_value_parameters.o
 
 create_movie_AVS_DX: $O/create_movie_AVS_DX.o $O/read_parameter_file.o \
-     $O/compute_parameters.o $O/utm_geo.o $O/read_value_parameters.o
+     $O/compute_parameters.o $O/utm_geo.o \
+     $O/get_value_parameters.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcreate_movie_AVS_DX $O/create_movie_AVS_DX.o \
-     $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o $O/read_value_parameters.o
+     $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o \
+     $O/get_value_parameters.o $O/read_value_parameters.o
 
 combine_AVS_DX: constants.h $O/combine_AVS_DX.o $O/get_cmt.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o \
+       $O/get_value_parameters.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcombine_AVS_DX $O/combine_AVS_DX.o $O/get_cmt.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o \
+       $O/get_value_parameters.o $O/read_value_parameters.o
 
 check_mesh_quality_AVS_DX: constants.h $O/check_mesh_quality_AVS_DX.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o \
+       $O/get_value_parameters.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcheck_mesh_quality_AVS_DX $O/check_mesh_quality_AVS_DX.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o \
+       $O/get_value_parameters.o $O/read_value_parameters.o
 
 check_buffers_2D: constants.h $O/check_buffers_2D.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o \
+       $O/get_value_parameters.o $O/read_value_parameters.o
 	${F90} $(FLAGS_CHECK) -o xcheck_buffers_2D $O/check_buffers_2D.o \
-       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o $O/read_value_parameters.o
+       $O/read_parameter_file.o $O/compute_parameters.o $O/create_serial_name_database.o $O/utm_geo.o \
+       $O/get_value_parameters.o $O/read_value_parameters.o
 
 combine_paraview_data: constants.h $O/combine_paraview_data.o $O/write_c_binary.o
 	${F90} $(FLAGS_CHECK) -o xcombine_paraview_data  $O/combine_paraview_data.o $O/write_c_binary.o
 
 clean:
-	rm -f $O/*.o *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data
+	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data
 
 ####
 #### rule to build each .o file below
@@ -494,6 +520,9 @@ clean:
 ###
 ### MPI compilation, optimized flags and dependence on values from mesher
 ###
+
+$O/program_specfem3D.o: constants.h program_specfem3D.f90
+	${MPIF90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/program_specfem3D.o program_specfem3D.f90
 
 $O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
 	${MPIF90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/specfem3D.o specfem3D.f90
@@ -507,6 +536,9 @@ $O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble
 ###
 ### MPI compilation without optimization
 ###
+
+$O/program_meshfem3D.o: constants.h program_meshfem3D.f90
+	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/program_meshfem3D.o program_meshfem3D.f90
 
 $O/meshfem3D.o: constants.h meshfem3D.f90
 	${MPIF90} $(FLAGS_CHECK) $(C_PREPROCESSOR) $(TURN_MPI_ON) -c -o $O/meshfem3D.o meshfem3D.f90
@@ -524,12 +556,18 @@ $O/exit_mpi.o: constants.h exit_mpi.f90
 ### serial compilation, optimized flags and dependence on values from mesher
 ###
 
+$O/program_specfem3D_serial.o: constants.h program_specfem3D.f90
+	${F90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) -c -o $O/program_specfem3D_serial.o program_specfem3D.f90
+
 $O/specfem3D_serial.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
 	${F90} $(FLAGS_NO_CHECK) $(C_PREPROCESSOR) -c -o $O/specfem3D_serial.o specfem3D.f90
 
 ###
 ### serial compilation without optimization
 ###
+
+$O/program_meshfem3D_serial.o: constants.h program_meshfem3D.f90
+	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/program_meshfem3D_serial.o program_meshfem3D.f90
 
 $O/meshfem3D_serial.o: constants.h meshfem3D.f90
 	${F90} $(FLAGS_CHECK) $(C_PREPROCESSOR) -c -o $O/meshfem3D_serial.o meshfem3D.f90
@@ -569,6 +607,9 @@ $O/read_parameter_file.o: constants.h read_parameter_file.f90
 
 $O/read_value_parameters.o: constants.h read_value_parameters.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/read_value_parameters.o read_value_parameters.f90
+
+$O/get_value_parameters.o: constants.h get_value_parameters.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/get_value_parameters.o get_value_parameters.f90
 
 $O/utm_geo.o: constants.h utm_geo.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/utm_geo.o utm_geo.f90
@@ -712,3 +753,155 @@ $O/combine_paraview_data.o: constants.h combine_paraview_data.f90
 $O/write_c_binary.o: write_c_binary.c
 	cc -c -o $O/write_c_binary.o write_c_binary.c
 
+###
+### Pyre-related stuff
+###
+
+CC = cc
+MPICC = mpicc
+
+PYCOMMON_OBJ = \
+       $O/misc.o \
+       $O/Specfem3DBasinCode.o \
+       $O/trampoline.o \
+       \
+       $O/calc_jacobian.o \
+       $O/compute_parameters.o \
+       $O/create_name_database.o \
+       $O/get_global.o \
+       $O/get_shape3D.o \
+       $O/gll_library.o \
+       $O/hex_nodes.o \
+       $O/lagrange_poly.o \
+       $O/numerical_recipes.o \
+       $O/read_basin_topo_bathy_file.o \
+       $O/read_parameter_file.o \
+       $O/utm_geo.o
+
+PYCOMMON_MPI_OBJ = \
+       $O/PyxMPI.o \
+       $O/exit_mpi.o
+
+PYCOMMON_SERIAL_OBJ = \
+       $O/exit_mpi_serial.o
+
+PYMESHFEM_OBJ = \
+       $O/aniso_model.o \
+       $O/compute_rho_estimate.o \
+       $O/create_regions_mesh.o \
+       $O/define_subregions_basin.o \
+       $O/define_subregions_heuristic.o \
+       $O/get_MPI_cutplanes_eta.o \
+       $O/get_MPI_cutplanes_xi.o \
+       $O/get_absorb.o \
+       $O/get_flags_boundaries.o \
+       $O/get_jacobian_boundaries.o \
+       $O/get_shape2D.o \
+       $O/hauksson_model.o \
+       $O/interpolate_gocad_block_HR.o \
+       $O/interpolate_gocad_block_MR.o \
+       $O/mesh_vertical.o \
+       $O/read_moho_map.o \
+       $O/salton_trough_gocad.o \
+       $O/save_arrays_solver.o \
+       $O/save_header_file.o \
+       $O/socal_model.o \
+       $O/write_AVS_DX_global_data.o \
+       $O/write_AVS_DX_global_faces_data.o \
+       $O/write_AVS_DX_mesh_quality_data.o \
+       $O/write_AVS_DX_surface_data.o \
+       $(PYCOMMON_OBJ)
+
+PYMESHFEM_SERIAL_OBJ = \
+       $(PYMESHFEM_OBJ) \
+       $(PYCOMMON_SERIAL_OBJ) \
+       $O/pymeshfem3D_serial.o \
+       $O/meshfem3D_serial.o
+
+PYMESHFEM_MPI_OBJ = \
+       $(PYMESHFEM_OBJ) \
+       $(PYCOMMON_MPI_OBJ) \
+       $O/pymeshfem3D.o \
+       $O/meshfem3D.o
+
+PYSPECFEM_OBJ = \
+       $O/comp_source_time_function.o \
+       $O/compute_arrays_source.o \
+       $O/define_derivation_matrices.o \
+       $O/get_attenuation_model.o \
+       $O/get_cmt.o \
+       $O/read_arrays_buffers_solver.o \
+       $O/read_arrays_solver.o \
+       $O/recompute_jacobian.o \
+       $O/write_seismograms.o \
+       $(PYCOMMON_OBJ)
+
+PYSPECFEM_SERIAL_OBJ = \
+       $(PYSPECFEM_OBJ) \
+       $(PYCOMMON_SERIAL_OBJ) \
+       $O/locate_receivers_serial.o \
+       $O/locate_source_serial.o \
+       $O/pyspecfem3D_serial.o \
+       $O/specfem3D_serial.o
+
+PYSPECFEM_MPI_OBJ = \
+       $(PYSPECFEM_OBJ) \
+       $(PYCOMMON_MPI_OBJ) \
+       $O/assemble_MPI_scalar.o \
+       $O/assemble_MPI_vector.o \
+       $O/locate_receivers.o \
+       $O/locate_source.o \
+       $O/pyspecfem3D.o \
+       $O/specfem3D.o
+
+pymeshfem3D: constants.h $O/config $(PYMESHFEM_MPI_OBJ)
+	${MPICC} $(CFLAGS) -o xmeshfem3D \
+		$(PYMESHFEM_MPI_OBJ) $(MPI_FLAGS) `./$O/config --python-ldflags` `./$O/config --fclibs`
+
+pyspecfem3D: constants.h $O/config $(PYSPECFEM_MPI_OBJ)
+	${MPICC} $(CFLAGS) -o xspecfem3D \
+		$(PYSPECFEM_MPI_OBJ) $(MPI_FLAGS) `./$O/config --python-ldflags` `./$O/config --fclibs`
+
+pymeshfem3D_serial: constants.h $O/config $(PYMESHFEM_SERIAL_OBJ)
+	${CC} $(CFLAGS) -o xmeshfem3D \
+		$(PYMESHFEM_SERIAL_OBJ) `./$O/config --python-ldflags` `./$O/config --fclibs`
+
+pyspecfem3D_serial: constants.h $O/config $(PYSPECFEM_SERIAL_OBJ)
+	${CC} $(CFLAGS) -o xspecfem3D \
+		$(PYSPECFEM_SERIAL_OBJ) `./$O/config --python-ldflags` `./$O/config --fclibs`
+
+$O/pymeshfem3D.o: main.c $O/config.h $O/config
+	${MPICC} $(CFLAGS) $(TURN_MPI_ON) -DSCRIPT=Meshfem -c -I$O `./$O/config --python-cppflags` -o $O/pymeshfem3D.o main.c
+
+$O/pyspecfem3D.o: main.c $O/config.h $O/config
+	${MPICC} $(CFLAGS) $(TURN_MPI_ON) -DSCRIPT=Specfem -c -I$O `./$O/config --python-cppflags` -o $O/pyspecfem3D.o main.c
+
+$O/pymeshfem3D_serial.o: main.c $O/config.h $O/config
+	${CC} $(CFLAGS) -DSCRIPT=Meshfem -c -I$O `./$O/config --python-cppflags` -o $O/pymeshfem3D_serial.o main.c
+
+$O/pyspecfem3D_serial.o: main.c $O/config.h $O/config
+	${CC} $(CFLAGS) -DSCRIPT=Specfem -c -I$O `./$O/config --python-cppflags` -o $O/pyspecfem3D_serial.o main.c
+
+$O/misc.o: misc.c $O/config.h $O/config
+	${MPICC} $(CFLAGS) -c -I$O `./$O/config --python-cppflags` -o $O/misc.o misc.c
+
+$O/Specfem3DBasinCode.o: Specfem3DBasinCode.c $O/config.h $O/config
+	${CC} -c $(CFLAGS) -I$O `./$O/config --python-cppflags` -o $O/Specfem3DBasinCode.o Specfem3DBasinCode.c
+
+$O/PyxMPI.o: PyxMPI.c $O/config.h $O/config
+	${MPICC} -c $(CFLAGS) -I$O `./$O/config --python-cppflags` -o $O/PyxMPI.o PyxMPI.c
+
+$O/trampoline.o: trampoline.f90
+	${F90} $(FLAGS_NO_CHECK) -c -o $O/trampoline.o trampoline.f90
+
+$O/config.h: config.h.in configure
+	./configure FC=$(F90) CC=$(CC)
+
+$O/config: config.in configure
+	./configure FC=$(F90) CC=$(CC)
+
+# target to update the Pyrex-generated code
+# requires Pyrex:  http://www.cosc.canterbury.ac.nz/~greg/python/Pyrex/
+pyrex:
+	pyrexc Specfem3DBasinCode.pyx -o Specfem3DBasinCode.c
+	pyrexc PyxMPI.pyx -o PyxMPI.c

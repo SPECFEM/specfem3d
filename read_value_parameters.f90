@@ -17,12 +17,15 @@
 
 ! read values from parameter file, ignoring white lines and comments
 
-  subroutine read_value_integer(value_to_read)
+  subroutine read_value_integer(value_to_read, name)
 
   implicit none
 
   integer value_to_read
+  character(len=*) name
   character(len=100) string_read
+
+  call unused_string(name)
 
   call read_next_line(string_read)
   read(string_read,*) value_to_read
@@ -31,12 +34,15 @@
 
 !--------------------
 
-  subroutine read_value_double_precision(value_to_read)
+  subroutine read_value_double_precision(value_to_read, name)
 
   implicit none
 
   double precision value_to_read
+  character(len=*) name
   character(len=100) string_read
+
+  call unused_string(name)
 
   call read_next_line(string_read)
   read(string_read,*) value_to_read
@@ -45,12 +51,15 @@
 
 !--------------------
 
-  subroutine read_value_logical(value_to_read)
+  subroutine read_value_logical(value_to_read, name)
 
   implicit none
 
   logical value_to_read
+  character(len=*) name
   character(len=100) string_read
+
+  call unused_string(name)
 
   call read_next_line(string_read)
   read(string_read,*) value_to_read
@@ -59,12 +68,15 @@
 
 !--------------------
 
-  subroutine read_value_string(value_to_read)
+  subroutine read_value_string(value_to_read, name)
 
   implicit none
 
   character(len=*) value_to_read
+  character(len=*) name
   character(len=100) string_read
+
+  call unused_string(name)
 
   call read_next_line(string_read)
   value_to_read = string_read
@@ -112,4 +124,43 @@
   string_read = string_read(1:len_trim(string_read))
 
   end subroutine read_next_line
+
+!--------------------
+
+  subroutine open_parameter_file
+
+  include "constants.h"
+
+  open(unit=IIN,file='DATA/Par_file',status='old')
+
+  end subroutine open_parameter_file
+
+!--------------------
+
+  subroutine close_parameter_file
+
+  include "constants.h"
+
+  close(IIN)
+
+  end subroutine close_parameter_file
+
+!--------------------
+
+  integer function err_occurred()
+
+  err_occurred = 0
+
+  end function err_occurred
+
+!--------------------
+
+! dummy subroutine to avoid warnings about variable not used in other subroutines
+  subroutine unused_string(s)
+
+  character(len=*) s
+
+  if (len(s) == 1) continue
+
+  end subroutine unused_string
 

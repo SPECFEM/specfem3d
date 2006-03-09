@@ -24,8 +24,13 @@ subroutine read_salton_sea_model(vp_array)
   real :: vp_array(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW)
   integer :: ios, reclen
 
+  character(len=150) SALTON_SEA_MODEL_FILE
+
   reclen=(GOCAD_ST_NU * GOCAD_ST_NV * GOCAD_ST_NW) * 4
-  open(11,file='DATA/st_3D_block_harvard/regrid3_vel_p.bin',status='old',form='unformatted',access='direct',recl=reclen,iostat=ios)
+  call get_value_string(SALTON_SEA_MODEL_FILE, &
+                        'model.SALTON_SEA_MODEL_FILE', &
+                        'DATA/st_3D_block_harvard/regrid3_vel_p.bin')
+  open(11,file=SALTON_SEA_MODEL_FILE,status='old',form='unformatted',access='direct',recl=reclen,iostat=ios)
   if (ios /= 0) then
     print *, 'iostat = ', ios
     stop 'Error opening file'

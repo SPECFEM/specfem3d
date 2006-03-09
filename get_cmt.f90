@@ -29,12 +29,13 @@
 
   integer mo,da,julian_day,isource
   character(len=5) datasource
-  character(len=150) string
+  character(len=150) string, CMTSOLUTION
 
 !
 !---- read hypocenter info
 !
-  open(unit=1,file='DATA/CMTSOLUTION',status='old')
+  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
+  open(unit=1,file=CMTSOLUTION,status='old')
 
 ! read source number isource
   do isource=1,NSOURCES

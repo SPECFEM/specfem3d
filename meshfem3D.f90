@@ -41,7 +41,7 @@
 ! modifications.
 !
 
-  program meshfem3D
+  subroutine meshfem3D
 
   implicit none
 
@@ -190,7 +190,7 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -211,22 +211,22 @@
   integer iz_basement
   double precision x_corner,y_corner
   double precision z_basement(NX_BASEMENT,NY_BASEMENT)
+  character(len=150) BASEMENT_MAP_FILE
 
 ! to filter list of stations
   integer irec,nrec,nrec_filtered
   double precision stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME) station_name
   character(len=MAX_LENGTH_NETWORK_NAME) network_name
+  character(len=150) rec_filename, filtered_rec_filename
 
 ! ************** PROGRAM STARTS HERE **************
 
-! initialize the MPI communicator and start the NPROC MPI processes.
 ! sizeprocs returns number of processes started (should be equal to NPROC).
 ! myrank is the rank of each process, between 0 and NPROC-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
 ! and also takes care of the main output
 #ifdef USE_MPI
-  call MPI_INIT(ier)
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 #else
@@ -234,9 +234,12 @@
   sizeprocs = 1
 #endif
 
+! get the base pathname for output files
+  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file='OUTPUT_FILES/output_mesher.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
 #ifdef USE_MPI
@@ -304,7 +307,7 @@
 
 ! create global slice addressing for solver
   if(myrank == 0) then
-    open(unit=IOUT,file='OUTPUT_FILES/addressing.txt',status='unknown')
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/addressing.txt',status='unknown')
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
   endif
@@ -498,7 +501,10 @@
 
 ! read basement map
   if(BASEMENT_MAP) then
-    open(unit=55,file='DATA/la_basement/reggridbase2_filtered_ascii.dat',status='old')
+    call get_value_string(BASEMENT_MAP_FILE, &
+                          'model.BASEMENT_MAP_FILE', &
+                          'DATA/la_basement/reggridbase2_filtered_ascii.dat')
+    open(unit=55,file=BASEMENT_MAP_FILE,status='old')
     do ix=1,NX_BASEMENT
       do iy=1,NY_BASEMENT
         read(55,*) iz_basement
@@ -847,8 +853,10 @@
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
 
 ! filter list of stations, only retain stations that are in the basin model
+  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
+  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
   nrec_filtered = 0
-  open(unit=IIN,file='DATA/STATIONS',status='old')
+  open(unit=IIN,file=rec_filename,status='old')
   read(IIN,*) nrec
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
@@ -858,15 +866,15 @@
   close(IIN)
 
   write(IMAIN,*)
-  write(IMAIN,*) 'there are ',nrec,' stations in file DATA/STATIONS'
-  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file DATA/STATIONS_FILTERED'
+  write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(rec_filename)
+  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_rec_filename)
   write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
   write(IMAIN,*)
 
   if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the basin model')
 
-  open(unit=IIN,file='DATA/STATIONS',status='old')
-  open(unit=IOUT,file='DATA/STATIONS_FILTERED',status='unknown')
+  open(unit=IIN,file=rec_filename,status='old')
+  open(unit=IOUT,file=filtered_rec_filename,status='unknown')
 
   read(IIN,*) nrec
   write(IOUT,*) nrec_filtered
@@ -906,10 +914,7 @@
 #ifdef USE_MPI
 ! synchronize all the processes to make sure everybody has finished
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
-
-! stop all the MPI processes, and exit
-  call MPI_FINALIZE(ier)
 #endif
 
-  end program meshfem3D
+  end subroutine meshfem3D
 

@@ -15,7 +15,7 @@
 !
 !=====================================================================
 
-  subroutine create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC)
+  subroutine create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
 ! create name of the database for serial codes (AVS_DX and codes to check buffers)
 
@@ -26,7 +26,7 @@
   integer iproc,NPROC
 
 ! name of the database file
-  character(len=150) prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix
+  character(len=150) prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
 
   integer iprocloop,nproc_max_loop
   integer, dimension(:), allocatable :: num_active_proc
@@ -43,7 +43,7 @@
     allocate(num_active_proc(0:nproc_max_loop))
 
 ! read filtered file with name of active machines
-    open(unit=48,file='OUTPUT_FILES/filtered_machines.txt',status='old')
+    open(unit=48,file=trim(OUTPUT_FILES)//'/filtered_machines.txt',status='old')
     do iprocloop = 0,nproc_max_loop
       read(48,*) num_active_proc(iprocloop)
     enddo
