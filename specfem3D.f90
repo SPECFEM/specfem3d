@@ -66,7 +66,7 @@
 !=======================================================================!
 !
 ! If you use this code for your own research, please send an email
-! to Jeroen Tromp <jtromp@caltech.edu> for information, and cite:
+! to Jeroen Tromp <jtromp AT caltech.edu> for information, and cite:
 !
 ! @article{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
