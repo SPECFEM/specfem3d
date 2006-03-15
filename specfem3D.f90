@@ -1050,21 +1050,27 @@
   endif
 
 ! define and store Lagrange interpolators at all the receivers
-  do irec_local = 1,nrec_local
-    irec = number_receiver_global(irec_local)
-    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+    do irec_local = 1,nrec_local
+      irec = number_receiver_global(irec_local)
       call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
       call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
       call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
-    else
+      hxir_store(irec_local,:) = hxir(:)
+      hetar_store(irec_local,:) = hetar(:)
+      hgammar_store(irec_local,:) = hgammar(:)
+    enddo
+  else
+    do irec_local = 1,nrec_local
+      irec = number_receiver_global(irec_local)
       call lagrange_any(xi_source(irec),NGLLX,xigll,hxir,hpxir)
       call lagrange_any(eta_source(irec),NGLLY,yigll,hetar,hpetar)
       call lagrange_any(gamma_source(irec),NGLLZ,zigll,hgammar,hpgammar)
-    endif
-    hxir_store(irec_local,:) = hxir(:)
-    hetar_store(irec_local,:) = hetar(:)
-    hgammar_store(irec_local,:) = hgammar(:)
-  enddo
+      hxir_store(irec_local,:) = hxir(:)
+      hetar_store(irec_local,:) = hetar(:)
+      hgammar_store(irec_local,:) = hgammar(:)
+    enddo
+  endif
   endif ! nrec_local
 
 ! check that the sum of the number of receivers in each slice is nrec
@@ -1276,18 +1282,10 @@
   allocate(b_displ(NDIM,NGLOB_AB))
   allocate(b_veloc(NDIM,NGLOB_AB))
   allocate(b_accel(NDIM,NGLOB_AB))
-
-  open(unit=27,file=trim(prname)//'displ_last.bin',status='old',form='unformatted')
+  open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',form='unformatted')
   read(27) b_displ
-  close(27)
-
-  open(unit=27,file=trim(prname)//'veloc_last.bin',status='old',form='unformatted')
   read(27) b_veloc
-  close(27)
-
-  open(unit=27,file=trim(prname)//'accel_last.bin',status='old',form='unformatted')
   read(27) b_accel
-  close(27)
 
   allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -1422,30 +1420,6 @@
     epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
 
-    if (SIMULATION_TYPE == 3) then
-      allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-
-      open(unit=27,file=trim(prname)//'epsilondev_xx_last.bin',status='old',form='unformatted')
-      read(27) b_epsilondev_xx
-      close(27)
-      open(unit=27,file=trim(prname)//'epsilondev_yy_last.bin',status='old',form='unformatted')
-      read(27) b_epsilondev_yy
-      close(27)
-      open(unit=27,file=trim(prname)//'epsilondev_xy_last.bin',status='old',form='unformatted')
-      read(27) b_epsilondev_xy
-      close(27)
-      open(unit=27,file=trim(prname)//'epsilondev_xz_last.bin',status='old',form='unformatted')
-      read(27) b_epsilondev_xz
-      close(27)
-      open(unit=27,file=trim(prname)//'epsilondev_yz_last.bin',status='old',form='unformatted')
-      read(27) b_epsilondev_yz
-      close(27)
-    endif
-
     R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
     R_yy(:,:,:,:,:) = 0._CUSTOM_REAL
     R_xy(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -1467,24 +1441,26 @@
       allocate(b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
       allocate(b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
 
-      open(unit=27,file=trim(prname)//'R_xx_last.bin',status='old',form='unformatted')
+      allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+      allocate(b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
+  
       read(27) b_R_xx
-      close(27)
-      open(unit=27,file=trim(prname)//'R_yy_last.bin',status='old',form='unformatted')
       read(27) b_R_yy
-      close(27)
-      open(unit=27,file=trim(prname)//'R_xy_last.bin',status='old',form='unformatted')
       read(27) b_R_xy
-      close(27)
-      open(unit=27,file=trim(prname)//'R_xz_last.bin',status='old',form='unformatted')
       read(27) b_R_xz
-      close(27)
-      open(unit=27,file=trim(prname)//'R_yz_last.bin',status='old',form='unformatted')
       read(27) b_R_yz
-      close(27)
+      read(27) b_epsilondev_xx
+      read(27) b_epsilondev_yy
+      read(27) b_epsilondev_xy
+      read(27) b_epsilondev_xz
+      read(27) b_epsilondev_yz
     endif
 
   endif
+  close(27)
 
 ! get MPI starting time
 #ifdef USE_MPI
@@ -1571,12 +1547,15 @@
     displ(:,i) = displ(:,i) + deltat*veloc(:,i) + deltatsqover2*accel(:,i)
     veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
     accel(:,i) = 0._CUSTOM_REAL
-    if (SIMULATION_TYPE == 3) then
+  enddo
+
+  if (SIMULATION_TYPE == 3) then
+    do i=1,NGLOB_AB    
       b_displ(:,i) = b_displ(:,i) + b_deltat*b_veloc(:,i) + b_deltatsqover2*b_accel(:,i)
       b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
       b_accel(:,i) = 0._CUSTOM_REAL
-    endif
-  enddo
+    enddo
+  endif
 
   do ispec = 1,NSPEC_AB
 
@@ -2513,12 +2492,14 @@
     accel(1,i) = accel(1,i)*rmass(i)
     accel(2,i) = accel(2,i)*rmass(i)
     accel(3,i) = accel(3,i)*rmass(i)
-   if (SIMULATION_TYPE == 3) then
+  enddo
+  if (SIMULATION_TYPE == 3) then
+    do i=1,NGLOB_AB
       b_accel(1,i) = b_accel(1,i)*rmass(i)
       b_accel(2,i) = b_accel(2,i)*rmass(i)
       b_accel(3,i) = b_accel(3,i)*rmass(i)
-    endif
-  enddo
+    enddo
+  endif
 
   if(OCEANS) then
 
@@ -2582,10 +2563,12 @@
 
   do i=1,NGLOB_AB
     veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
-    if (SIMULATION_TYPE == 3) then
-      b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
-    endif
   enddo
+  if (SIMULATION_TYPE == 3) then
+    do i=1,NGLOB_AB
+      b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
+    enddo
+  endif
 
 ! write the seismograms with time shift
   if (nrec_local > 0) then
@@ -3019,48 +3002,24 @@
 ! save last frame
 
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    open(unit=27,file=prname(1:len_trim(prname))//'displ_last.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',status='unknown',form='unformatted')
     write(27) displ
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'veloc_last.bin',status='unknown',form='unformatted')
     write(27) veloc
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'accel_last.bin',status='unknown',form='unformatted')
     write(27) accel
-    close(27)
-
     if (ATTENUATION) then
-      open(unit=27,file=prname(1:len_trim(prname))//'R_xx_last.bin',status='unknown',form='unformatted')
       write(27) R_xx
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'R_yy_last.bin',status='unknown',form='unformatted')
       write(27) R_yy
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'R_xy_last.bin',status='unknown',form='unformatted')
       write(27) R_xy
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'R_xz_last.bin',status='unknown',form='unformatted')
       write(27) R_xz
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'R_yz_last.bin',status='unknown',form='unformatted')
       write(27) R_yz
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_xx_last.bin',status='unknown',form='unformatted')
       write(27) epsilondev_xx
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_yy_last.bin',status='unknown',form='unformatted')
       write(27) epsilondev_yy
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_xy_last.bin',status='unknown',form='unformatted')
       write(27) epsilondev_xy
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_xz_last.bin',status='unknown',form='unformatted')
       write(27) epsilondev_xz
-      close(27)
-      open(unit=27,file=prname(1:len_trim(prname))//'epsilondev_yz_last.bin',status='unknown',form='unformatted')
       write(27) epsilondev_yz
-      close(27)
     endif
+    close(27)
+ 
   else if (SIMULATION_TYPE == 3) then
     deallocate(b_displ,b_veloc,b_accel)
     allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -3088,22 +3047,22 @@
     enddo
 
 ! save kernels to binary files
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_kl.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted')
     write(27) rho_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'mu_kl.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'mu_kernel.bin',status='unknown',form='unformatted')
     write(27) mu_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kl.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kernel.bin',status='unknown',form='unformatted')
     write(27) kappa_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kl.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kernel.bin',status='unknown',form='unformatted')
     write(27) rhop_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'beta_kl.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'beta_kernel.bin',status='unknown',form='unformatted')
     write(27) beta_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kl.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted')
     write(27) alpha_kl
     close(27)
   endif

@@ -71,7 +71,7 @@ MPIF90 = mpif90
 #
 # debug with range checking
 #
-FLAGS_NO_CHECK = -O0 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check bounds
+FLAGS_NO_CHECK = -O3 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check bounds
 FLAGS_CHECK = $(FLAGS_NO_CHECK)
 MPI_FLAGS =
 C_PREPROCESSOR = -cpp
