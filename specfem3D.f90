@@ -1446,7 +1446,7 @@
       allocate(b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
       allocate(b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
       allocate(b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-  
+
       read(27) b_R_xx
       read(27) b_R_yy
       read(27) b_R_xy
@@ -1550,7 +1550,7 @@
   enddo
 
   if (SIMULATION_TYPE == 3) then
-    do i=1,NGLOB_AB    
+    do i=1,NGLOB_AB
       b_displ(:,i) = b_displ(:,i) + b_deltat*b_veloc(:,i) + b_deltatsqover2*b_accel(:,i)
       b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
       b_accel(:,i) = 0._CUSTOM_REAL
@@ -3019,7 +3019,7 @@
       write(27) epsilondev_yz
     endif
     close(27)
- 
+
   else if (SIMULATION_TYPE == 3) then
     deallocate(b_displ,b_veloc,b_accel)
     allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
