@@ -263,6 +263,12 @@ To do this, one needs to:
     "make meshfem3D" and "make specfem3D"
 - run the code serially with "./xmeshfem3D" and "./xspecfem3D"
 
+BUG REPORTS:
+
+To report bugs or suggest improvements to the code, please send an email
+to Jeroen Tromp <jtromp AT caltech.edu> and/or use our online
+bug tracking system at http://www.geodynamics.org/roundup .
+
 Note: The Gauss-Lobatto subroutines in gll_library.f90 are based in part on
       software libraries from M.I.T., Department of Mechanical Engineering.
 

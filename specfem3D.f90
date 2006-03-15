@@ -110,6 +110,10 @@
 !  - Y axis is East
 !  - Z axis is up
 !
+! To report bugs or suggest improvements to the code, please send an email
+! to Jeroen Tromp <jtromp AT caltech.edu> and/or use our online
+! bug tracking system at http://www.geodynamics.org/roundup .
+!
 ! Evolution of the code:
 ! ---------------------
 !
