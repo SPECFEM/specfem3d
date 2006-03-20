@@ -68,3 +68,33 @@
 
   end subroutine exit_MPI
 
+!
+!----
+!
+
+! version without rank number printed in the error message
+  subroutine exit_MPI_without_rank(error_msg)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+
+  character(len=*) error_msg
+
+  integer ier
+
+! write error message to screen
+  write(*,*) error_msg(1:len(error_msg))
+  write(*,*) 'Error detected, aborting MPI...'
+
+! stop all the MPI processes, and exit
+! on some machines, MPI_FINALIZE needs to be called before MPI_ABORT
+  call MPI_FINALIZE(ier)
+  call MPI_ABORT(ier)
+  stop 'error, program ended in exit_MPI'
+
+  end subroutine exit_MPI_without_rank
+
