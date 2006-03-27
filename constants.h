@@ -320,6 +320,3 @@
   integer, parameter :: ITYPE_UNUSUAL_4  = 3
   integer, parameter :: ITYPE_UNUSUAL_4p = 4
 
-! number of data values per line in sac2000 alpha file
-  integer, parameter :: NVALUES_SAC2000_LINE = 5
-

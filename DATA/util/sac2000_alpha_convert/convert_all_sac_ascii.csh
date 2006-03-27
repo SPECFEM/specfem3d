@@ -5,7 +5,7 @@
 
 rm -r xconv
 
-ifc -o xconv convert_files_sacalpha_ascii.f90
+ifort -o xconv convert_files_sacalpha_ascii.f90
 
 foreach file ($*)
   echo $file
