@@ -152,7 +152,7 @@ TURN_MPI_ON = -DUSE_MPI
 #C_PREPROCESSOR =
 #TURN_MPI_ON =
 
-######## IBM SP or Power 4 ######
+######## IBM ######
 #F90 = mpxlf_r
 #MPIF90 = mpxlf_r
 #FLAGS_CHECK = -O3 -Q -qarch=auto -qcache=auto -qtune=auto -qlanglvl=95pure -qmaxmem=65536 -qflag=L:L -qhalt=L -qsuffix=f=f90
