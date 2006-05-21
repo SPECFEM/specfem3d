@@ -2709,9 +2709,9 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) + dot_product(accel(:,iglob), b_displ(:,iglob)) * DT
-            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * mu_k(i,j,k,ispec) * DT
-            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + kappa_k(i,j,k,ispec) * DT
+            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) + dot_product(accel(:,iglob), b_displ(:,iglob)) * deltat
+            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * mu_k(i,j,k,ispec) * deltat
+            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + kappa_k(i,j,k,ispec) * deltat
           enddo
         enddo
       enddo
