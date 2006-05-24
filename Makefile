@@ -153,12 +153,16 @@ TURN_MPI_ON = -DUSE_MPI
 #TURN_MPI_ON =
 
 ######## IBM ######
+#
+# do NOT remove option -qsave otherwise the IBM compiler allocates the arrays in the stack
+# and the code crashes if the stack size is too small (which is often the case)
+#
 #F90 = mpxlf_r
 #MPIF90 = mpxlf_r
-#FLAGS_CHECK = -O3 -Q -qarch=auto -qcache=auto -qtune=auto -qlanglvl=95pure -qmaxmem=65536 -qflag=L:L -qhalt=L -qsuffix=f=f90
-#FLAGS_CHECK = -q64 -O3 -qarch=pwr4 -qlanglvl=95pure -qflag=L:L -qhalt=L -qsuffix=f=f90
+#FLAGS_CHECK = -O3 -qsave -Q -qarch=auto -qcache=auto -qtune=auto -qlanglvl=95pure -qmaxmem=65536 -qflag=L:L -qhalt=L -qsuffix=f=f90
+#FLAGS_CHECK = -q64 -qsave -O3 -qarch=pwr4 -qlanglvl=95pure -qflag=L:L -qhalt=L -qsuffix=f=f90
 # use this on IDRIS machines, www.idris.fr
-#FLAGS_CHECK = -q64 -O4 -qfree=f90 -qsuffix=f=f90
+#FLAGS_CHECK = -q64 -qsave -O4 -qfree=f90 -qsuffix=f=f90
 #FLAGS_NO_CHECK = $(FLAGS_CHECK)
 #MPI_FLAGS = 
 #C_PREPROCESSOR = -qsuffix=cpp=f90
