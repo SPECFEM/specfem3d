@@ -1600,9 +1600,9 @@
               b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
               b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
             endif
-          enddo
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLY
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
             hp2 = hprime_yy(l,j)
             iglob = ibool(i,l,k,ispec)
             tempx2l = tempx2l + displ(1,iglob)*hp2
@@ -1613,9 +1613,9 @@
               b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
               b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
             endif
-          enddo
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLZ
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
             hp3 = hprime_zz(l,k)
             iglob = ibool(i,j,l,ispec)
             tempx3l = tempx3l + displ(1,iglob)*hp3
@@ -1974,9 +1974,9 @@
               b_tempy1l = b_tempy1l + b_tempy1(l,j,k)*fac1
               b_tempz1l = b_tempz1l + b_tempz1(l,j,k)*fac1
             endif
-          enddo
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLY
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
             fac2 = hprimewgll_yy(j,l)
             tempx2l = tempx2l + tempx2(i,l,k)*fac2
             tempy2l = tempy2l + tempy2(i,l,k)*fac2
@@ -1986,9 +1986,9 @@
               b_tempy2l = b_tempy2l + b_tempy2(i,l,k)*fac2
               b_tempz2l = b_tempz2l + b_tempz2(i,l,k)*fac2
             endif
-          enddo
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLZ
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
             fac3 = hprimewgll_zz(k,l)
             tempx3l = tempx3l + tempx3(i,j,l)*fac3
             tempy3l = tempy3l + tempy3(i,j,l)*fac3
@@ -2913,17 +2913,17 @@
             tempx1l = tempx1l + veloc(1,iglob)*hp1
             tempy1l = tempy1l + veloc(2,iglob)*hp1
             tempz1l = tempz1l + veloc(3,iglob)*hp1
-          enddo
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLY
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
             hp2 = hprime_yy(l,j)
             iglob = ibool(i,l,k,ispec)
             tempx2l = tempx2l + veloc(1,iglob)*hp2
             tempy2l = tempy2l + veloc(2,iglob)*hp2
             tempz2l = tempz2l + veloc(3,iglob)*hp2
-          enddo
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLZ
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
             hp3 = hprime_zz(l,k)
             iglob = ibool(i,j,l,ispec)
             tempx3l = tempx3l + veloc(1,iglob)*hp3
