@@ -2978,23 +2978,23 @@
       enddo
     enddo
 
-    write(outputname,"('div_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('div_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) div
     close(27)
-    write(outputname,"('curl_x_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('curl_x_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_x
     close(27)
-    write(outputname,"('curl_y_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('curl_y_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_y
     close(27)
-    write(outputname,"('curl_z_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('curl_z_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_z
     close(27)
-    write(outputname,"('veloc_proc',i4.4,'_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('veloc_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) veloc
     close(27)

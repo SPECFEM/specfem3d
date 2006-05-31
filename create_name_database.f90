@@ -27,7 +27,7 @@
   character(len=150) prname,procname,LOCAL_PATH,clean_LOCAL_PATH
 
 ! create the name for the database of the current slide and region
-  write(procname,"('/proc',i4.4,'_')") iproc
+  write(procname,"('/proc',i6.6,'_')") iproc
 
 ! suppress white spaces if any
   clean_LOCAL_PATH = adjustl(LOCAL_PATH)

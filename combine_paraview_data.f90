@@ -122,7 +122,7 @@
 
     print *, ' '
     print *, 'Reading slice ', iproc
-    write(prname,'(a,i4.4,a)') trim(indir)//'/proc',iproc,'_'
+    write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
   ! data file
     local_data_file = trim(prname) // trim(filename) // '.bin'
@@ -333,7 +333,7 @@
     iproc = node_list(it)
 
     print *, 'Reading slice ', iproc
-    write(prname,'(a,i4.4,a)') trim(indir)//'/proc',iproc,'_'
+    write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
     np = npoint * (it-1)
 

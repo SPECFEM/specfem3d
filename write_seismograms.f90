@@ -182,7 +182,7 @@
 ! create the name of the seismogram file for each slice
 ! file name includes the name of the station, the network and the component
 
-      write(sisname,"(a,i3.3,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
+      write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
            'NT',chn,component
 
 ! suppress white spaces if any
