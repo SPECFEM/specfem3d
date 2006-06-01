@@ -43,7 +43,7 @@
     allocate(num_active_proc(0:nproc_max_loop))
 
 ! read filtered file with name of active machines
-    open(unit=48,file=trim(OUTPUT_FILES)//'/filtered_machines.txt',status='old')
+    open(unit=48,file=trim(OUTPUT_FILES)//'/filtered_machines.txt',status='old',action='read')
     do iprocloop = 0,nproc_max_loop
       read(48,*) num_active_proc(iprocloop)
     enddo

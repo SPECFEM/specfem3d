@@ -178,13 +178,13 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old',action='read')
   read(10,*) npoin
   print *,'There are ',npoin,' global AVS or DX points in the slice'
   ntotpoin = ntotpoin + npoin
   close(10)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old',action='read')
   read(10,*) nspec
   print *,'There are ',nspec,' AVS or DX elements in the slice'
   ntotspec = ntotspec + nspec
@@ -223,7 +223,7 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old',action='read')
 
   read(10,*) nspec
   print *,'There are ',nspec,' AVS or DX elements in the slice'
@@ -309,7 +309,7 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old',action='read')
 
   read(10,*) nspec
 
@@ -402,9 +402,9 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old')
-  open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
-  open(unit=14,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old',action='read')
+  open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old',action='read')
+  open(unit=14,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old',action='read')
 
   read(10,*) nspec
   read(12,*) npoin
@@ -471,7 +471,7 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old',action='read')
   read(10,*) npoin
 
 ! read local points in this slice and output global AVS or DX points
@@ -502,9 +502,9 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old')
-  open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old')
-  open(unit=14,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelements.txt',status='old',action='read')
+  open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpoints.txt',status='old',action='read')
+  open(unit=14,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old',action='read')
 
   read(10,*) nspec
   read(12,*) npoin
@@ -557,7 +557,7 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXmeshquality.txt',status='old',action='read')
 
   read(10,*) nspec
 

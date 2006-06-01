@@ -355,7 +355,7 @@
     call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
                           'model.HAUKSSON_REGIONAL_MODEL_FILE', &
                           'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
-    open(unit=14,file=HAUKSSON_REGIONAL_MODEL_FILE,status='old')
+    open(unit=14,file=HAUKSSON_REGIONAL_MODEL_FILE,status='old',action='read')
     do iy = 1,NGRID_NEW_HAUKSSON
       do ix = 1,NGRID_NEW_HAUKSSON
         read(14,*) (vp_hauksson(ilayer,ix,iy),ilayer=1,NLAYERS_HAUKSSON), &
@@ -379,7 +379,7 @@
   call get_value_string(BASIN_MODEL_3D_MEDIUM_RES_FILE, &
                         'model.BASIN_MODEL_3D_MEDIUM_RES_FILE', &
                         'DATA/la_3D_block_harvard/la_3D_medium_res/LA_MR_voxet_extracted.txt')
-  open(unit=27,file=BASIN_MODEL_3D_MEDIUM_RES_FILE,status='old')
+  open(unit=27,file=BASIN_MODEL_3D_MEDIUM_RES_FILE,status='old',action='read')
   read(27,*) nrecord
   do irecord = 1,nrecord
     read(27,*) ix,iy,iz,i_vp
@@ -398,7 +398,7 @@
   call get_value_string(BASIN_MODEL_3D_HIGH_RES_FILE, &
                         'model.BASIN_MODEL_3D_HIGH_RES_FILE', &
                         'DATA/la_3D_block_harvard/la_3D_high_res/LA_HR_voxet_extracted.txt')
-  open(unit=27,file=BASIN_MODEL_3D_HIGH_RES_FILE,status='old')
+  open(unit=27,file=BASIN_MODEL_3D_HIGH_RES_FILE,status='old',action='read')
   read(27,*) nrecord
   do irecord = 1,nrecord
     read(27,*) ix,iy,iz,i_vp

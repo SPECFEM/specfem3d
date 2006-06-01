@@ -35,7 +35,7 @@
 !---- read hypocenter info
 !
   call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
-  open(unit=1,file=CMTSOLUTION,status='old')
+  open(unit=1,file=CMTSOLUTION,status='old',action='read')
 
 ! read source number isource
   do isource=1,NSOURCES

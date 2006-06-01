@@ -314,7 +314,7 @@
   else
     write(outputname,"('/moviedata',i6.6)") it
   endif
-  open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='old',form='unformatted')
+  open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='old',action='read',form='unformatted')
   read(IOUT) store_val_x
   read(IOUT) store_val_y
   read(IOUT) store_val_z

@@ -124,7 +124,7 @@
 
 ! open file with global slice number addressing
   print *,'reading slice addressing'
-  open(unit=34,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old')
+  open(unit=34,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old',action='read')
   do iproc = 0,NPROC-1
       read(34,*) iproc_read,iproc_xi,iproc_eta
       if(iproc_read /= iproc) stop 'incorrect slice number read'
@@ -170,7 +170,7 @@
 
 ! read iboolright_xi of this slice
   write(*,*) 'reading MPI buffer iboolright_xi slice ',ithisproc
-  open(unit=34,file=prname(1:len_trim(prname))//'iboolright_xi.txt',status='old')
+  open(unit=34,file=prname(1:len_trim(prname))//'iboolright_xi.txt',status='old',action='read')
   npoin2D_xi = 1
  360  continue
   read(34,*) iboolright_xi(npoin2D_xi), &
@@ -192,7 +192,7 @@
 
 ! read iboolleft_xi of other slice
   write(*,*) 'reading MPI buffer iboolleft_xi slice ',iotherproc
-  open(unit=34,file=prname_other(1:len_trim(prname_other))//'iboolleft_xi.txt',status='old')
+  open(unit=34,file=prname_other(1:len_trim(prname_other))//'iboolleft_xi.txt',status='old',action='read')
   npoin2D_xi = 1
  350  continue
   read(34,*) iboolleft_xi(npoin2D_xi), &
@@ -250,7 +250,7 @@
 
 ! read iboolright_eta of this slice
   write(*,*) 'reading MPI buffer iboolright_eta slice ',ithisproc
-  open(unit=34,file=prname(1:len_trim(prname))//'iboolright_eta.txt',status='old')
+  open(unit=34,file=prname(1:len_trim(prname))//'iboolright_eta.txt',status='old',action='read')
   npoin2D_eta = 1
  460  continue
   read(34,*) iboolright_eta(npoin2D_eta), &
@@ -272,7 +272,7 @@
 
 ! read iboolleft_eta of other slice
   write(*,*) 'reading MPI buffer iboolleft_eta slice ',iotherproc
-  open(unit=34,file=prname_other(1:len_trim(prname_other))//'iboolleft_eta.txt',status='old')
+  open(unit=34,file=prname_other(1:len_trim(prname_other))//'iboolleft_eta.txt',status='old',action='read')
   npoin2D_eta = 1
  450  continue
   read(34,*) iboolleft_eta(npoin2D_eta), &

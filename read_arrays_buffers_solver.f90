@@ -49,7 +49,7 @@
 ! read 2-D addressing for summation between slices along xi with MPI
 
 ! read iboolleft_xi of this slice
-  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolleft_xi.txt',status='old')
+  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolleft_xi.txt',status='old',action='read')
   npoin2D_xi = 1
  350  continue
   read(IIN,*) iboolleft_xi(npoin2D_xi),xdummy,ydummy,zdummy
@@ -66,7 +66,7 @@
   close(IIN)
 
 ! read iboolright_xi of this slice
-  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolright_xi.txt',status='old')
+  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolright_xi.txt',status='old',action='read')
   npoin2D_xi = 1
  360  continue
   read(IIN,*) iboolright_xi(npoin2D_xi),xdummy,ydummy,zdummy
@@ -96,7 +96,7 @@
 ! read 2-D addressing for summation between slices along eta with MPI
 
 ! read iboolleft_eta of this slice
-  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolleft_eta.txt',status='old')
+  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolleft_eta.txt',status='old',action='read')
   npoin2D_eta = 1
  370  continue
   read(IIN,*) iboolleft_eta(npoin2D_eta),xdummy,ydummy,zdummy
@@ -113,7 +113,7 @@
   close(IIN)
 
 ! read iboolright_eta of this slice
-  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolright_eta.txt',status='old')
+  open(unit=IIN,file=prname(1:len_trim(prname))//'iboolright_eta.txt',status='old',action='read')
   npoin2D_eta = 1
  380  continue
   read(IIN,*) iboolright_eta(npoin2D_eta),xdummy,ydummy,zdummy

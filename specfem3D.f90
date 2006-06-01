@@ -540,7 +540,7 @@
 
 ! open file with global slice number addressing
   if(myrank == 0) then
-    open(unit=IIN,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old')
+    open(unit=IIN,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old',action='read')
     do iproc = 0,NPROC-1
       read(IIN,*) iproc_read,iproc_xi,iproc_eta
       if(iproc_read /= iproc) call exit_MPI(myrank,'incorrect slice number read')
@@ -702,7 +702,7 @@
   allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
 
 ! boundary parameters
-  open(unit=27,file=prname(1:len_trim(prname))//'ibelm.bin',status='old',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'ibelm.bin',status='old',action='read',form='unformatted')
   read(27) ibelm_xmin
   read(27) ibelm_xmax
   read(27) ibelm_ymin
@@ -711,7 +711,7 @@
   read(27) ibelm_top
   close(27)
 
-  open(unit=27,file=prname(1:len_trim(prname))//'normal.bin',status='old',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'normal.bin',status='old',action='read',form='unformatted')
   read(27) normal_xmin
   read(27) normal_xmax
   read(27) normal_ymin
@@ -728,7 +728,7 @@
   read(27) nspec2D_ymax
   close(27)
 
-  open(unit=27,file=prname(1:len_trim(prname))//'jacobian2D.bin',status='old',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'jacobian2D.bin',status='old',action='read',form='unformatted')
   read(27) jacobian2D_xmin
   read(27) jacobian2D_xmax
   read(27) jacobian2D_ymin
@@ -770,7 +770,7 @@
         allocate(absorb_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
         reclen_xmin = CUSTOM_REAL * (NDIM * NGLLY * NGLLZ * nspec2D_xmin)
         if (SIMULATION_TYPE == 3) then
-          open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='old',form='unformatted',access='direct', &
+          open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='old',action='read',form='unformatted',access='direct', &
                 recl=reclen_xmin+2*4)
         else
           open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='unknown',form='unformatted',access='direct',&
@@ -782,7 +782,7 @@
         allocate(absorb_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
         reclen_xmax = CUSTOM_REAL * (NDIM * NGLLY * NGLLZ * nspec2D_xmax)
         if (SIMULATION_TYPE == 3) then
-          open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='old',form='unformatted',access='direct', &
+          open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='old',action='read',form='unformatted',access='direct', &
                 recl=reclen_xmax+2*4)
         else
           open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='unknown',form='unformatted',access='direct', &
@@ -794,7 +794,7 @@
         allocate(absorb_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
         reclen_ymin = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymin)
         if (SIMULATION_TYPE == 3) then
-          open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='old',form='unformatted',access='direct',&
+          open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='old',action='read',form='unformatted',access='direct',&
                 recl=reclen_ymin+2*4)
         else
           open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='unknown',form='unformatted',access='direct',&
@@ -806,7 +806,7 @@
         allocate(absorb_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
         reclen_ymax = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymax)
         if (SIMULATION_TYPE == 3) then
-          open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='old',form='unformatted',access='direct',&
+          open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='old',action='read',form='unformatted',access='direct',&
                 recl=reclen_ymax+2*4)
         else
           open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='unknown',form='unformatted',access='direct',&
@@ -818,7 +818,7 @@
         allocate(absorb_zmin(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
         reclen_zmin = CUSTOM_REAL * (NDIM * NGLLX * NGLLY * NSPEC2D_BOTTOM)
          if (SIMULATION_TYPE == 3) then
-         open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='old',form='unformatted',access='direct',&
+         open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='old',action='read',form='unformatted',access='direct',&
                 recl=reclen_zmin+2*4)
         else
           open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='unknown',form='unformatted',access='direct',&
@@ -915,7 +915,7 @@
 
   if (SIMULATION_TYPE == 1) then
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-    open(unit=IIN,file=filtered_rec_filename,status='old')
+    open(unit=IIN,file=filtered_rec_filename,status='old',action='read')
     read(IIN,*) nrec
     close(IIN)
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
@@ -1289,7 +1289,7 @@
   allocate(b_displ(NDIM,NGLOB_AB))
   allocate(b_veloc(NDIM,NGLOB_AB))
   allocate(b_accel(NDIM,NGLOB_AB))
-  open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',form='unformatted')
+  open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
   read(27) b_displ
   read(27) b_veloc
   read(27) b_accel

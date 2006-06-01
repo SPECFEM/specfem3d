@@ -126,7 +126,7 @@
 
   ! data file
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    open(unit = 27,file = trim(local_data_file),status='old', iostat = ios,form ='unformatted')
+    open(unit = 27,file = trim(local_data_file),status='old',action='read', iostat = ios,form ='unformatted')
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
@@ -143,7 +143,7 @@
 
   ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
-    open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
+    open(unit = 28,file = trim(local_ibool_file),status='old',action='read', iostat = ios, form='unformatted')
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
@@ -264,7 +264,7 @@
       endif
 
       local_file = trim(prname)//'x.bin'
-      open(unit = 27,file = trim(prname)//'x.bin',status='old', iostat = ios,form ='unformatted')
+      open(unit = 27,file = trim(prname)//'x.bin',status='old',action='read', iostat = ios,form ='unformatted')
       if (ios /= 0) then
         print *,'Error opening ',trim(local_file)
         stop
@@ -272,7 +272,7 @@
       read(27) xstore
       close(27)
       local_file = trim(prname)//'y.bin'
-      open(unit = 27,file = trim(prname)//'y.bin',status='old', iostat = ios,form ='unformatted')
+      open(unit = 27,file = trim(prname)//'y.bin',status='old',action='read', iostat = ios,form ='unformatted')
       if (ios /= 0) then
         print *,'Error opening ',trim(local_file)
         stop
@@ -280,7 +280,7 @@
       read(27) ystore
       close(27)
       local_file = trim(prname)//'z.bin'
-      open(unit = 27,file = trim(prname)//'z.bin',status='old', iostat = ios,form ='unformatted')
+      open(unit = 27,file = trim(prname)//'z.bin',status='old',action='read', iostat = ios,form ='unformatted')
       if (ios /= 0) then
         print *,'Error opening ',trim(local_file)
         stop

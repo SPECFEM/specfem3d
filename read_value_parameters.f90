@@ -131,7 +131,7 @@
 
   include "constants.h"
 
-  open(unit=IIN,file='DATA/Par_file',status='old')
+  open(unit=IIN,file='DATA/Par_file',status='old',action='read')
 
   end subroutine open_parameter_file
 

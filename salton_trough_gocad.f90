@@ -30,7 +30,7 @@ subroutine read_salton_sea_model(vp_array)
   call get_value_string(SALTON_SEA_MODEL_FILE, &
                         'model.SALTON_SEA_MODEL_FILE', &
                         'DATA/st_3D_block_harvard/regrid3_vel_p.bin')
-  open(11,file=SALTON_SEA_MODEL_FILE,status='old',form='unformatted',access='direct',recl=reclen,iostat=ios)
+  open(11,file=SALTON_SEA_MODEL_FILE,status='old',action='read',form='unformatted',access='direct',recl=reclen,iostat=ios)
   if (ios /= 0) then
     print *, 'iostat = ', ios
     stop 'Error opening file'

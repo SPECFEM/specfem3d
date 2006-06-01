@@ -36,7 +36,7 @@
   logical triangle
 
 ! read file with number of lines in input
-  open(unit=33,file='input_convolve_code.txt',status='old')
+  open(unit=33,file='input_convolve_code.txt',status='old',action='read')
   read(33,*) nlines
   read(33,*) hdur
   read(33,*) triangle

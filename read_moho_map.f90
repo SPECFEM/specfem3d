@@ -37,7 +37,7 @@
   call get_value_string(MOHO_MAP_FILE, &
                         'model.MOHO_MAP_FILE', &
                         'DATA/moho_map/moho_lupei_zhu.dat')
-  open(unit=13,file=MOHO_MAP_FILE,status='old')
+  open(unit=13,file=MOHO_MAP_FILE,status='old',action='read')
 ! file starts from North-West corner
   do iy=NY_MOHO,1,-1
     do ix=1,NX_MOHO

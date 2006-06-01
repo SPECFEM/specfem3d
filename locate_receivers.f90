@@ -154,7 +154,7 @@
   endif
 
 ! get number of stations from receiver file
-  open(unit=1,file=trim(rec_filename),status='old',iostat=ios)
+  open(unit=1,file=trim(rec_filename),status='old',action='read',iostat=ios)
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
   read(1,*) nrec_dummy
 
@@ -637,7 +637,7 @@
   close(IIN)
 
   if (myrank == 0) then
-    open(unit=IIN,file=trim(filename),status='old')
+    open(unit=IIN,file=trim(filename),status='old',action='read')
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
     read(IIN,*) nrec
     write(IOUT,*) nrec_filtered

@@ -34,7 +34,7 @@
 
   itopo_bathy_basin(:,:) = 0
 
-  open(unit=13,file=topo_file,status='old')
+  open(unit=13,file=topo_file,status='old',action='read')
   do iy=1,NY_TOPO
     do ix=1,NX_TOPO
       read(13,*) itopo_bathy_basin(ix,iy)

@@ -508,7 +508,7 @@
     call get_value_string(BASEMENT_MAP_FILE, &
                           'model.BASEMENT_MAP_FILE', &
                           'DATA/la_basement/reggridbase2_filtered_ascii.dat')
-    open(unit=55,file=BASEMENT_MAP_FILE,status='old')
+    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
     do ix=1,NX_BASEMENT
       do iy=1,NY_BASEMENT
         read(55,*) iz_basement
@@ -860,7 +860,7 @@
   call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
   call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
   nrec_filtered = 0
-  open(unit=IIN,file=rec_filename,status='old')
+  open(unit=IIN,file=rec_filename,status='old',action='read')
   read(IIN,*) nrec
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
@@ -877,7 +877,7 @@
 
   if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the basin model')
 
-  open(unit=IIN,file=rec_filename,status='old')
+  open(unit=IIN,file=rec_filename,status='old',action='read')
   open(unit=IOUT,file=filtered_rec_filename,status='unknown')
 
   read(IIN,*) nrec

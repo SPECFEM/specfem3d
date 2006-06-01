@@ -57,7 +57,7 @@
 
   integer, external :: err_occurred
 
-  open(unit=IIN,file='DATA/Par_file',status='old')
+  open(unit=IIN,file='DATA/Par_file',status='old',action='read')
 
   call read_value_integer(SIMULATION_TYPE, 'solver.SIMULATION_TYPE')
   if(err_occurred() /= 0) return
@@ -230,7 +230,7 @@
 ! compute the total number of sources in the CMTSOLUTION file
 ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
   call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
-  open(unit=1,file=CMTSOLUTION,iostat=ios,status='old')
+  open(unit=1,file=CMTSOLUTION,iostat=ios,status='old',action='read')
   if(ios /= 0) stop 'error opening CMTSOLUTION file'
   icounter = 0
   do while(ios == 0)
@@ -263,7 +263,7 @@
   HDUR_MOVIE = max(384/NEX_XI*2.4,384/NEX_ETA*2.4)
 
 ! compute the minimum value of hdur in CMTSOLUTION file
-  open(unit=1,file=CMTSOLUTION,status='old')
+  open(unit=1,file=CMTSOLUTION,status='old',action='read')
   minval_hdur = HUGEVAL
   do isource = 1,NSOURCES
 

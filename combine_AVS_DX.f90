@@ -247,9 +247,9 @@
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old',action='read')
   else if(ivalue == 2) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
   endif
 
   read(10,*) npoin
@@ -258,9 +258,9 @@
   close(10)
 
   if(ivalue == 1) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old',action='read')
   else if(ivalue == 2) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old',action='read')
   endif
 
   read(10,*) nspec
@@ -309,9 +309,9 @@
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old',action='read')
   else if(ivalue == 2) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
   endif
 
   read(10,*) npoin
@@ -365,11 +365,11 @@ endif
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old')
-    open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old',action='read')
+    open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old',action='read')
   else if(ivalue == 2) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old')
-    open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old',action='read')
+    open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
   endif
 
   read(10,*) nspec
@@ -454,9 +454,9 @@ endif
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
   if(ivalue == 1) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old',action='read')
   else if(ivalue == 2) then
-    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old')
+    open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old',action='read')
   endif
 
   read(10,*) nspec
@@ -508,7 +508,7 @@ endif
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old')
+  open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
 
   read(10,*) npoin
   print *,'There are ',npoin,' global AVS or DX points in the slice'
@@ -603,7 +603,7 @@ endif
 
 ! get number of stations from receiver file
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-    open(unit=11,file=filtered_rec_filename,status='old')
+    open(unit=11,file=filtered_rec_filename,status='old',action='read')
 
 ! read total number of receivers
     read(11,*) nrec
