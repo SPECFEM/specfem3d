@@ -50,7 +50,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      =  /scratch/DATABASES_MPI_LQY
+LOCAL_PATH                      = /scratch/komatits/DATABASES_MPI
 
 # machine file for MPI
 # this is not needed for new cluster and is in go_mesher/go_solver
