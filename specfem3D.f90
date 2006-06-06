@@ -1307,12 +1307,6 @@
 
   endif
 
-! synchronize all processes to make sure everybody is ready to start time loop
-#ifdef USE_MPI
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
-  if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
-
 ! allocate files to save movies and shaking map
   if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
     if (USE_HIGHRES_FOR_MOVIES) then
@@ -1356,10 +1350,6 @@
     allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   endif
 
-!
-!   s t a r t   t i m e   i t e r a t i o n s
-!
-
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '           time step: ',sngl(DT),' s'
@@ -1402,19 +1392,6 @@
       b_gammaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 6. + &
             b_deltat**3*tauinv(:,:)**2 / 24.
     endif
-  endif
-
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Starting time iteration loop...'
-    write(IMAIN,*)
-  endif
-
-! create an empty file to monitor the start of the simulation
-  if(myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown')
-    write(IOUT,*) 'starting time loop'
-    close(IOUT)
   endif
 
 ! clear memory variables if attenuation
@@ -1468,6 +1445,29 @@
 
   endif
   close(27)
+
+!
+!   s t a r t   t i m e   i t e r a t i o n s
+!
+
+! synchronize all processes to make sure everybody is ready to start time loop
+#ifdef USE_MPI
+  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+#endif
+  if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
+
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'Starting time iteration loop...'
+    write(IMAIN,*)
+  endif
+
+! create an empty file to monitor the start of the simulation
+  if(myrank == 0) then
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown')
+    write(IOUT,*) 'starting time loop'
+    close(IOUT)
+  endif
 
 ! get MPI starting time
 #ifdef USE_MPI
