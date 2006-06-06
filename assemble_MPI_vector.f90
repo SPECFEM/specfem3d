@@ -57,7 +57,7 @@
   integer msg_status(MPI_STATUS_SIZE)
 
   integer ipoin
-  integer isender,ireceiver,ier
+  integer sender,receiver,ier
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -77,17 +77,17 @@
 
 ! send messages forward along each row
   if(iproc_xi == 0) then
-    isender = MPI_PROC_NULL
+    sender = MPI_PROC_NULL
   else
-    isender = addressing(iproc_xi - 1,iproc_eta)
+    sender = addressing(iproc_xi - 1,iproc_eta)
   endif
   if(iproc_xi == NPROC_XI-1) then
-    ireceiver = MPI_PROC_NULL
+    receiver = MPI_PROC_NULL
   else
-    ireceiver = addressing(iproc_xi + 1,iproc_eta)
+    receiver = addressing(iproc_xi + 1,iproc_eta)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,ireceiver, &
-        itag2,buffer_received_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,receiver, &
+        itag2,buffer_received_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,sender, &
         itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices add the buffer received to the contributions on the left face
@@ -107,17 +107,17 @@
 
 ! send messages backward along each row
   if(iproc_xi == NPROC_XI-1) then
-    isender = MPI_PROC_NULL
+    sender = MPI_PROC_NULL
   else
-    isender = addressing(iproc_xi + 1,iproc_eta)
+    sender = addressing(iproc_xi + 1,iproc_eta)
   endif
   if(iproc_xi == 0) then
-    ireceiver = MPI_PROC_NULL
+    receiver = MPI_PROC_NULL
   else
-    ireceiver = addressing(iproc_xi - 1,iproc_eta)
+    receiver = addressing(iproc_xi - 1,iproc_eta)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,ireceiver, &
-        itag2,buffer_received_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,receiver, &
+        itag2,buffer_received_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,sender, &
         itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices copy the buffer received to the contributions on the right face
@@ -143,17 +143,17 @@
 
 ! send messages forward along each row
   if(iproc_eta == 0) then
-    isender = MPI_PROC_NULL
+    sender = MPI_PROC_NULL
   else
-    isender = addressing(iproc_xi,iproc_eta - 1)
+    sender = addressing(iproc_xi,iproc_eta - 1)
   endif
   if(iproc_eta == NPROC_ETA-1) then
-    ireceiver = MPI_PROC_NULL
+    receiver = MPI_PROC_NULL
   else
-    ireceiver = addressing(iproc_xi,iproc_eta + 1)
+    receiver = addressing(iproc_xi,iproc_eta + 1)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,ireceiver, &
-    itag2,buffer_received_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,receiver, &
+    itag2,buffer_received_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,sender, &
     itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices add the buffer received to the contributions on the left face
@@ -173,17 +173,17 @@
 
 ! send messages backward along each row
   if(iproc_eta == NPROC_ETA-1) then
-    isender = MPI_PROC_NULL
+    sender = MPI_PROC_NULL
   else
-    isender = addressing(iproc_xi,iproc_eta + 1)
+    sender = addressing(iproc_xi,iproc_eta + 1)
   endif
   if(iproc_eta == 0) then
-    ireceiver = MPI_PROC_NULL
+    receiver = MPI_PROC_NULL
   else
-    ireceiver = addressing(iproc_xi,iproc_eta - 1)
+    receiver = addressing(iproc_xi,iproc_eta - 1)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,ireceiver, &
-    itag2,buffer_received_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,isender, &
+  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,receiver, &
+    itag2,buffer_received_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,sender, &
     itag,MPI_COMM_WORLD,msg_status,ier)
 
 ! all slices copy the buffer received to the contributions on the right face
