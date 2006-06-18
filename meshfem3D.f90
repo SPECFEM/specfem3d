@@ -854,7 +854,7 @@
 
 ! copy number of elements and points in an include file for the solver
   call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
-             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
+             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP)
 
 ! filter list of stations, only retain stations that are in the basin model
   call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')

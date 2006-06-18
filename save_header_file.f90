@@ -18,14 +18,13 @@
 ! save header file OUTPUT_FILES/values_from_mesher.h
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
-             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY)
+             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP)
 
   implicit none
 
   include "constants.h"
 
-  integer NSPEC_AB,NGLOB_AB
-  integer NEX_XI,NEX_ETA,NPROC
+  integer NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC,NSTEP
 
   logical ATTENUATION,ANISOTROPY
 
@@ -86,6 +85,9 @@
   write(IOUT,*) 'integer, parameter :: NSPEC_AB = ',NSPEC_AB
   write(IOUT,*) 'integer, parameter :: NGLOB_AB = ',NGLOB_AB
   write(IOUT,*)
+  write(IOUT,*) '!'
+  write(IOUT,*) '! number of time steps = ',NSTEP
+  write(IOUT,*) '!'
 
 ! if attenuation is off, set dummy size of arrays to one
   if(ATTENUATION) then
