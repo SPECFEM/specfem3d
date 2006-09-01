@@ -109,11 +109,13 @@
 
   integer ispec_selected_source(NSOURCES)
 
-  integer, dimension(NSOURCES,0:NPROC-1) :: ispec_selected_source_all
-  double precision, dimension(NSOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all, &
+  integer ngather, ns, ne, ig, is, ng
+
+  integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: ispec_selected_source_all
+  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all, &
      final_distance_source_all,x_found_source_all,y_found_source_all,z_found_source_all
 
-  double precision hdur(NSOURCES)
+  double precision hdur(NSOURCES), hdur_gaussian(NSOURCES), t0
 
   double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
@@ -134,9 +136,6 @@
   double precision time_source
   double precision, external :: comp_source_time_function
 
-! number of points to plot the source time function
-  integer, parameter :: NSAMP_PLOT_SOURCE = 1000
-
 ! **************
 
 ! get the base pathname for output files
@@ -144,6 +143,12 @@
 
 ! read all the sources
   call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+
+! convert the half duration for triangle STF to the one for gaussian STF
+  hdur_gaussian = hdur/SOURCE_DECAY_RATE
+
+! define t0 as the earliest start time
+  t0 = - 1.5d0 * minval(t_cmt-hdur)
 
 ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
@@ -364,21 +369,28 @@
   enddo
 
 ! now gather information from all the nodes
-  ispec_selected_source_all(:,:) = -1
-#ifdef USE_MPI
-  call MPI_GATHER(ispec_selected_source,NSOURCES,MPI_INTEGER,ispec_selected_source_all,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+  ngather = NSOURCES/NGATHER_SOURCES
+  if (mod(NSOURCES,NGATHER_SOURCES)/= 0) ngather = ngather+1
+  do ig = 1, ngather
+    ns = (ig-1) * NGATHER_SOURCES + 1
+    ne = min(ig*NGATHER_SOURCES, NSOURCES)
+    ng = ne - ns + 1
 
-  call MPI_GATHER(xi_source,NSOURCES,MPI_DOUBLE_PRECISION,xi_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(eta_source,NSOURCES,MPI_DOUBLE_PRECISION,eta_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(gamma_source,NSOURCES,MPI_DOUBLE_PRECISION,gamma_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(final_distance_source,NSOURCES,MPI_DOUBLE_PRECISION, &
-    final_distance_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(x_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
-    x_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(y_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
-    y_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(z_found_source,NSOURCES,MPI_DOUBLE_PRECISION, &
-    z_found_source_all,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+    ispec_selected_source_all(:,:) = -1
+#ifdef USE_MPI
+  call MPI_GATHER(ispec_selected_source(ns:ne),ng,MPI_INTEGER,ispec_selected_source_all(1:ng,:),ng,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+
+  call MPI_GATHER(xi_source(ns:ne),ng,MPI_DOUBLE_PRECISION,xi_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(eta_source(ns:ne),ng,MPI_DOUBLE_PRECISION,eta_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(gamma_source(ns:ne),ng,MPI_DOUBLE_PRECISION,gamma_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(final_distance_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
+    final_distance_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(x_found_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
+    x_found_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(y_found_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
+    y_found_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  call MPI_GATHER(z_found_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
+    z_found_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #else
   ispec_selected_source_all(:,0) = ispec_selected_source(:)
 
@@ -395,27 +407,36 @@
   if(myrank == 0) then
 
 ! check that the gather operation went well
-  if(any(ispec_selected_source_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
+  if(any(ispec_selected_source_all(1:ng,:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
 
 ! loop on all the sources
-  do isource = 1,NSOURCES
+  do is = 1,ng
+    isource = ns + is - 1  
 
 ! loop on all the results to determine the best slice
   distmin = HUGEVAL
   do iprocloop = 0,NPROC-1
-    if(final_distance_source_all(isource,iprocloop) < distmin) then
-      distmin = final_distance_source_all(isource,iprocloop)
+    if(final_distance_source_all(is,iprocloop) < distmin) then
+      distmin = final_distance_source_all(is,iprocloop)
       islice_selected_source(isource) = iprocloop
-      ispec_selected_source(isource) = ispec_selected_source_all(isource,iprocloop)
-      xi_source(isource) = xi_source_all(isource,iprocloop)
-      eta_source(isource) = eta_source_all(isource,iprocloop)
-      gamma_source(isource) = gamma_source_all(isource,iprocloop)
-      x_found_source(isource) = x_found_source_all(isource,iprocloop)
-      y_found_source(isource) = y_found_source_all(isource,iprocloop)
-      z_found_source(isource) = z_found_source_all(isource,iprocloop)
+      ispec_selected_source(isource) = ispec_selected_source_all(is,iprocloop)
+      xi_source(isource) = xi_source_all(is,iprocloop)
+      eta_source(isource) = eta_source_all(is,iprocloop)
+      gamma_source(isource) = gamma_source_all(is,iprocloop)
+      x_found_source(isource) = x_found_source_all(is,iprocloop)
+      y_found_source(isource) = y_found_source_all(is,iprocloop)
+      z_found_source(isource) = z_found_source_all(is,iprocloop)
     endif
   enddo
   final_distance_source(isource) = distmin
+
+  enddo
+  endif
+  enddo
+
+  if (myrank == 0) then
+
+  do isource = 1,NSOURCES
 
   if(SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES == 1) then
 
@@ -496,7 +517,7 @@
 
   do it=1,NSTEP
     time_source = dble(it-1)*DT
-    write(27,*) sngl(time_source),sngl(comp_source_time_function(time_source,hdur(isource)))
+    write(27,*) sngl(time_source-t0),sngl(comp_source_time_function(time_source-t0-t_cmt(isource),hdur_gaussian(isource)))
   enddo
   close(27)
 

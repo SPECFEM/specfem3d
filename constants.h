@@ -24,9 +24,9 @@
   integer, parameter :: SIZE_DOUBLE = 8
 
 ! uncomment this to run in single precision
-! integer, parameter :: CUSTOM_REAL = SIZE_REAL
+ integer, parameter :: CUSTOM_REAL = SIZE_REAL
 ! uncomment this to run in double precision (increases memory size by 2)
-  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
+!  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
 
 !----------- parameters that can be changed by the user -----------
 
@@ -78,6 +78,9 @@
 ! maximum length of station and network name for receivers
   integer, parameter :: MAX_LENGTH_STATION_NAME = 32
   integer, parameter :: MAX_LENGTH_NETWORK_NAME = 8
+
+! number of sources to be gathered by MPI_Gather
+  integer, parameter :: NGATHER_SOURCES = 10000
 
 ! source decay rate
   double precision, parameter :: SOURCE_DECAY_RATE = 1.628d0

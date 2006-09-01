@@ -21,7 +21,7 @@
 ! ALSO CHANGE FILE constants.h ACCORDINGLY
 !
 ! uncomment this to run in single precision
-! integer, parameter :: CUSTOM_MPI_TYPE = MPI_REAL
+ integer, parameter :: CUSTOM_MPI_TYPE = MPI_REAL
 ! uncomment this to run in double precision
-  integer, parameter :: CUSTOM_MPI_TYPE = MPI_DOUBLE_PRECISION
+!  integer, parameter :: CUSTOM_MPI_TYPE = MPI_DOUBLE_PRECISION
 
