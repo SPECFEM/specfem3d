@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2005
+!         (c) California Institute of Technology September 2006
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -411,7 +411,7 @@
 
 ! loop on all the sources
   do is = 1,ng
-    isource = ns + is - 1  
+    isource = ns + is - 1
 
 ! loop on all the results to determine the best slice
   distmin = HUGEVAL
