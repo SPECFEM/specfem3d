@@ -30,7 +30,6 @@ Main developers: Dimitri Komatitsch and Jeroen Tromp
 Additional contributions by:
 
 Qinya Liu
-Leif Strand
 Min Chen
 
 
@@ -91,8 +90,8 @@ PARAMETERS TO CHANGE ON DIFFERENT MACHINES:
   Set F90, MPIF90, FLAGS_NO_CHECK, FLAGS_CHECK and MPI_FLAGS.
   Also set C_PREPROCESSOR to activate C preprocessing
   in your Fortran compiler (see the manual of your Fortran compiler for the right syntax)
-- In constants.h set USE_LOCAL_PATH_BEOWULF flag.
-  On clusters (e.g., Beowulfs), use this option in almost all cases.
+- In constants.h set LOCAL_PATH_IS_ALSO_GLOBAL flag.
+  On clusters (e.g., Beowulfs), set this option to .false. in almost all cases.
 - In constants.h set FIX_UNDERFLOW_PROBLEM flag
   (need to fix underflow trapping on some machines, e.g., Pentium processors)
 - In Par_file set LOCAL_PATH (this is where databases are written and read)
@@ -233,7 +232,7 @@ SOLVER (specfem3D):
     to avoid writing to the output text files too often. Same thing
     with NTSTEP_BETWEEN_OUTPUT_SEISMOS.
 - On clusters (e.g., Beowulfs) the seismogram files are distributed on the
-    local disks (option USE_LOCAL_PATH_BEOWULF selected) and need to be
+    local disks (option LOCAL_PATH_IS_ALSO_GLOBAL turned off) and need to be
     gathered at the end of the simulation
 - For the same model, rerun the solver for different events by changing the
   CMTSOLUTION file, or for different stations by changing the STATIONS file.

@@ -30,10 +30,10 @@
 
 !----------- parameters that can be changed by the user -----------
 
-! set to .true.  if running on a Beowulf-type machine with local disks
-! set to .false. if running on a shared-memory machine with common file system
+! set to .false.  if running on a Beowulf-type machine with local disks
+! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
-  logical, parameter :: USE_LOCAL_PATH_BEOWULF = .true.
+  logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .false.
 
 ! apply heuristic rule to modify doubling regions to balance angles
   logical, parameter :: APPLY_HEURISTIC_RULE = .true.
