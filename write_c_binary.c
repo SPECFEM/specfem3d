@@ -1,7 +1,7 @@
 /*
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
+!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
 !          --------------------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
