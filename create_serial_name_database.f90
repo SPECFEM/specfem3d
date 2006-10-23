@@ -37,7 +37,7 @@
   write(procname,"('/proc',i6.6,'_')") iproc
 
 ! on a Beowulf-type machine, path on frontend can be different from local paths
-  if(USE_LOCAL_PATH_BEOWULF) then
+  if(.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
 
 ! allocate array for active processors
     allocate(num_active_proc(0:nproc_max_loop))
