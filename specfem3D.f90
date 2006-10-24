@@ -945,6 +945,15 @@
 
   if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
+! write source and receiver VTK files for Paraview
+    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
+    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
+    write(IOVTK,'(a)') 'Source and Receiver VTK file'
+    write(IOVTK,'(a)') 'ASCII'
+    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+    write(IOVTK, '(a,i6,a)') 'POINTS ', NSOURCES+nrec, ' float'
+  endif
+
 ! allocate memory for receiver arrays
   allocate(islice_selected_rec(nrec))
   allocate(ispec_selected_rec(nrec))
@@ -1090,6 +1099,9 @@
   nrec_tot_found = nrec_local
 #endif
   if(myrank == 0) then
+
+    close(IOVTK)
+
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)
