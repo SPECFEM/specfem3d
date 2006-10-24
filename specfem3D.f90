@@ -967,6 +967,7 @@
   if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
 ! write source and receiver VTK files for Paraview
+  if (myrank == 0) then
     open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
     write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
     write(IOVTK,'(a)') 'Source and Receiver VTK file'
