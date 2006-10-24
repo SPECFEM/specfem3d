@@ -68,7 +68,7 @@
 ! If you use this code for your own research, please send an email
 ! to Jeroen Tromp <jtromp AT caltech.edu> for information, and cite:
 !
-! @article{KoLiTrSuStSh04,
+! @ARTICLE{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
 !   and Christiane Stidham and John H. Shaw},
 ! year=2004,
@@ -76,15 +76,36 @@
 !   based upon the Spectral-Element Method},
 ! journal={Bull. Seism. Soc. Am.},
 ! volume=94,
+! number=1,
 ! pages={187-206}}
 !
-! @article{KoTr99,
+! @ARTICLE{KoTr99,
 ! author={D. Komatitsch and J. Tromp},
 ! year=1999,
 ! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
 ! journal={Geophys. J. Int.},
 ! volume=139,
-! pages={806-822}}
+! number=3,
+! pages={806-822},
+! doi={10.1046/j.1365-246x.1999.00967.x}}
+!
+! @ARTICLE{KoVi98,
+! author={D. Komatitsch and J. P. Vilotte},
+! title={The spectral-element method: an efficient tool to simulate the seismic response of 2{D} and 3{D} geological structures},
+! journal={Bull. Seismol. Soc. Am.},
+! year=1998,
+! volume=88,
+! number=2,
+! pages={368-392}}
+!
+! If you use the kernel capabilities of the code, please cite
+!
+! @ARTICLE{Liu06a,
+!     AUTHOR = {Q. Liu and J. Tromp},
+!     JOURNAL =bssa,
+!     TITLE = {{Finite-frequency kernels based upon adjoint methods}},
+!     NOTE = {accepted},
+!     YEAR = {2006}
 !
 ! Reference frame - convention:
 ! ----------------------------
@@ -945,6 +966,16 @@
 
   if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
+! write source and receiver VTK files for Paraview
+  if (myrank == 0) then
+    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
+    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
+    write(IOVTK,'(a)') 'Source and Receiver VTK file'
+    write(IOVTK,'(a)') 'ASCII'
+    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+    write(IOVTK, '(a,i6,a)') 'POINTS ', NSOURCES+nrec, ' float'
+  endif
+
 ! allocate memory for receiver arrays
   allocate(islice_selected_rec(nrec))
   allocate(ispec_selected_rec(nrec))
@@ -1090,6 +1121,9 @@
   nrec_tot_found = nrec_local
 #endif
   if(myrank == 0) then
+
+    close(IOVTK)
+
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)

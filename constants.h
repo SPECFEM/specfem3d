@@ -50,6 +50,8 @@
   integer, parameter :: IMAIN = 42
 ! uncomment this to write messages to the screen
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
+! I/O unit for source and receiver vtk file
+  integer, parameter :: IOVTK = 98
 
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
