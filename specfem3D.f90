@@ -98,6 +98,13 @@
 ! number=2,
 ! pages={368-392}}
 !
+! @ARTICLE{Liu06a,
+!     AUTHOR = {Q. Liu and J. Tromp},
+!     JOURNAL =bssa,
+!     TITLE = {{Finite-frequency kernels based upon adjoint methods}},
+!     NOTE = {accepted},
+!     YEAR = {2006}
+!
 ! Reference frame - convention:
 ! ----------------------------
 !
