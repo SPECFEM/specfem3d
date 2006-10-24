@@ -65,7 +65,7 @@
 ! If you use this code for your own research, please send an email
 ! to Jeroen Tromp <jtromp AT caltech.edu> for information, and cite:
 !
-! @article{KoLiTrSuStSh04,
+! @ARTICLE{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
 !   and Christiane Stidham and John H. Shaw},
 ! year=2004,
@@ -75,13 +75,23 @@
 ! volume=94,
 ! pages={187-206}}
 !
-! @article{KoTr99,
+! @ARTICLE{KoTr99,
 ! author={D. Komatitsch and J. Tromp},
 ! year=1999,
 ! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
 ! journal={Geophys. J. Int.},
 ! volume=139,
 ! pages={806-822}}
+!
+! @ARTICLE{KoVi98,
+! author = {D. Komatitsch and J. P. Vilotte},
+! title = {The spectral-element method: an efficient tool to simulate
+! the seismic response of 2{D} and 3{D} geological structures},
+! journal = {Bull. Seismol. Soc. Am.},
+! year = {1998},
+! volume = {88},
+! number = {2},
+! pages = {368-392}}
 !
 ! Reference frame - convention:
 ! ----------------------------
