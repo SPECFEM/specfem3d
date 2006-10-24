@@ -168,7 +168,7 @@ TURN_MPI_ON = -DUSE_MPI
 #C_PREPROCESSOR = -qsuffix=cpp=f90
 #TURN_MPI_ON = -WF,-DUSE_MPI
 
-default: meshfem3D create_movie_AVS_DX combine_AVS_DX check_mesh_quality_AVS_DX check_buffers_2D convolve_source_timefunction
+default: meshfem3D create_movie_AVS_DX combine_AVS_DX check_mesh_quality_AVS_DX check_buffers_2D convolve_source_timefunction create_movie_GMT_basin
 
 all: clean default
 
@@ -515,8 +515,11 @@ check_buffers_2D: constants.h $O/check_buffers_2D.o \
 combine_paraview_data: constants.h $O/combine_paraview_data.o $O/write_c_binary.o
 	${F90} $(FLAGS_CHECK) -o xcombine_paraview_data  $O/combine_paraview_data.o $O/write_c_binary.o
 
+create_movie_GMT_basin :  $O/create_movie_GMT_basin.o $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o  $O/read_value_parameters.o $O/get_value_parameters.o
+	$(F90) $(FLAGS)  -o xcreate_movie_GMT_basin  $O/create_movie_GMT_basin.o $O/read_parameter_file.o $O/compute_parameters.o $O/utm_geo.o  $O/read_value_parameters.o $O/get_value_parameters.o
+
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data
+	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data xcreate_movie_GMT_basin
 
 ####
 #### rule to build each .o file below
@@ -750,6 +753,9 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 
 $O/combine_paraview_data.o: constants.h combine_paraview_data.f90
 	${F90} $(FLAGS_CHECK) -c -o $O/combine_paraview_data.o combine_paraview_data.f90
+
+$O/create_movie_GMT_basin.o: constants.h create_movie_GMT_basin.f90
+	${F90} $(FLAGS_CHECK) -c -o $O/create_movie_GMT_basin.o create_movie_GMT_basin.f90
 
 ###
 ### C files below

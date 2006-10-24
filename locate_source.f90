@@ -234,6 +234,7 @@
   x_target_source = utm_x_source(isource)
   y_target_source = utm_y_source(isource)
   z_target_source = - depth(isource)*1000.0d0 + elevation(isource)
+  if(myrank == 0) write(IOVTK,*) x_target_source,y_target_source,z_target_source
 
 ! set distance to huge initial value
   distmin = HUGEVAL
