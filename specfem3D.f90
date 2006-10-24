@@ -98,6 +98,8 @@
 ! number=2,
 ! pages={368-392}}
 !
+! If you use the kernel capabilities of the code, please cite
+!
 ! @ARTICLE{Liu06a,
 !     AUTHOR = {Q. Liu and J. Tromp},
 !     JOURNAL =bssa,
