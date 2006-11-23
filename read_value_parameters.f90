@@ -102,6 +102,9 @@
 ! suppress leading white spaces, if any
     string_read = adjustl(string_read)
 
+! suppress trailing carriage return (ASCII code 13) if any (e.g. if input text file coming from Windows/DOS)
+    if(index(string_read,achar(13)) > 0) string_read = string_read(1:index(string_read,achar(13))-1)
+
 ! exit loop when we find the first line that is not a comment or a white line
     if(len_trim(string_read) == 0) cycle
     if(string_read(1:1) /= '#') exit
