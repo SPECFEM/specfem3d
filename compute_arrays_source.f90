@@ -51,7 +51,6 @@
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
 
   integer k,l,m
-  integer ir,it,iv
 
 ! calculate G_ij for general source location
 ! the source does not necessarily correspond to a Gauss-Lobatto point
