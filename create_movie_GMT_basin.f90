@@ -144,7 +144,7 @@ program create_movie_GMT
   print *
 
   print *, 'DT = ', DT , ' NSTEP = ', NSTEP
-  print * 
+  print *
 
   if(SAVE_DISPLACEMENT) then
      print *,'Vertical displacement will be shown in the movie'
@@ -250,7 +250,7 @@ program create_movie_GMT
      open(unit=IOUT,file=outputname,status='old',form='unformatted',iostat=ios1)
      if (ios1 /= 0) then
         print *, 'Error opening file ', trim(outputname)
-        stop 
+        stop
      else
        print *, 'reading file ', trim(outputname)
      endif
@@ -271,7 +271,7 @@ program create_movie_GMT
 !                   UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
 !     print *
 !     print *, 'max long = ', long, '  max lat = ', lat
-  
+
      ! clear number of elements kept
      ispec = 0
 
@@ -357,7 +357,7 @@ program create_movie_GMT
               enddo
 
 ! low resolution movie/shakemap
-           else 
+           else
 
               ispec = ispec + 1
               ieoff = NGNOD2D_AVS_DX*(ispec-1)
@@ -490,18 +490,11 @@ program create_movie_GMT
 
   enddo
 
-  ! step number for AVS multistep file
-401 format('step',i1,' image',i1)
-402 format('step',i2,' image',i2)
-403 format('step',i3,' image',i3)
-404 format('step',i4,' image',i4)
-
   print *,'GMT files are stored in OUTPUT_FILES/gmt_*.xyz'
   print *
   print *, 'The maximum absolute value of all frames is ', max_all_frames
   print *
   print *
-
 
   deallocate(store_val_x)
   deallocate(store_val_y)
