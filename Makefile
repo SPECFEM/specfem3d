@@ -61,11 +61,7 @@ O = obj
 F90 = ifort
 MPIF90 = mpif90
 #
-# Caltech cluster  (Hrothgar)
-#
-#FLAGS_NO_CHECK = -O3 -tpp6 -xK -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
-#
-# more recent machines (e.g. Pangu)
+# Caltech cluster (Pangu)
 #
 #FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition -tpp7 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
 FLAGS_NO_CHECK = -O3 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds
@@ -75,11 +71,20 @@ FLAGS_NO_CHECK = -O3 -implicitnone -std95 -e95 -warn truncated_source -warn argu
 #FLAGS_NO_CHECK = -O3 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check bounds
 FLAGS_CHECK = $(FLAGS_NO_CHECK)
 MPI_FLAGS =
+
 C_PREPROCESSOR = -cpp
 TURN_MPI_ON = -DUSE_MPI
 
+# GNU gfortran
+#F90 = gfortran
+#MPIF90 = mpif90
+#FLAGS_CHECK = -std=gnu -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow
+#FLAGS_CHECK = $(FLAGS_NOCHECK) -fbounds-check
+#C_PREPROCESSOR = -cpp
+#TURN_MPI_ON = -DUSE_MPI
+
 #
-# g95 (free f95 compiler from http://www.g95.org, still under development, but works)
+# g95 (free f95 compiler from http://www.g95.org)
 #
 #F90 = g95
 #MPIF90 = g95
