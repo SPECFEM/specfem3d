@@ -45,15 +45,7 @@
 
   implicit none
 
-#ifdef USE_MPI
-! standard include of the MPI library
-  include 'mpif.h'
-#endif
-
   include "constants.h"
-#ifdef USE_MPI
-  include "precision.h"
-#endif
 
 ! include values created by the mesher
   include "OUTPUT_FILES/values_from_mesher.h"
@@ -371,9 +363,6 @@
 
 ! proc numbers for MPI
   integer myrank,sizeprocs
-#ifdef USE_MPI
-  integer ier
-#endif
 
   integer npoin2D_xi,npoin2D_eta
 
@@ -386,6 +375,7 @@
 ! ADJOINT
 
 ! timer MPI
+  double precision, external :: wtime
   integer ihours,iminutes,iseconds,int_tCPU
   double precision time_start,tCPU
 
@@ -450,13 +440,8 @@
 ! myrank is the rank of each process, between 0 and sizeprocs-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
 ! and also takes care of the main output
-#ifdef USE_MPI
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
-#else
-  myrank = 0
-  sizeprocs = 1
-#endif
+  call world_size(sizeprocs)
+  call world_rank(myrank)
 
 ! read the parameter file
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
@@ -472,9 +457,9 @@
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
         NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
 
-#ifndef USE_MPI
-  if(NPROC_XI /= 1 .or. NPROC_ETA /= 1) stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
-#endif
+  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
+    stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+  endif
 
 ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
@@ -576,9 +561,9 @@
   endif
 
 ! broadcast the information read on the master to the nodes
-  call MPI_BCAST(addressing,NPROC_XI*NPROC_ETA,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(iproc_xi_slice,NPROC,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(iproc_eta_slice,NPROC,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
+  call bcast_all_i(addressing,NPROC_XI*NPROC_ETA)
+  call bcast_all_i(iproc_xi_slice,NPROC)
+  call bcast_all_i(iproc_eta_slice,NPROC)
 
 ! determine local slice coordinates using addressing
   iproc_xi = iproc_xi_slice(myrank)
@@ -949,9 +934,7 @@
     call station_filter(myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one source')
-#ifdef USE_MPI
-    call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+    call sync_all()
   endif
 
   if(myrank == 0) then
@@ -1115,11 +1098,7 @@
   endif ! nrec_local
 
 ! check that the sum of the number of receivers in each slice is nrec
-#ifdef USE_MPI
-  call MPI_REDUCE(nrec_local,nrec_tot_found,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,ier)
-#else
-  nrec_tot_found = nrec_local
-#endif
+  call sum_all_i(nrec_local,nrec_tot_found)
   if(myrank == 0) then
 
     close(IOVTK)
@@ -1182,10 +1161,9 @@
 
   endif
 
-#ifdef USE_MPI
 ! synchronize all the processes before assembling the mass matrix
 ! to make sure all the nodes have finished to read their databases
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
+  call sync_all()
 
 ! the mass matrix needs to be assembled with MPI here once and for all
   call assemble_MPI_scalar(rmass,iproc_xi,iproc_eta,addressing, &
@@ -1194,7 +1172,6 @@
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
-#endif
 
 ! check that mass matrix is positive
   if(minval(rmass(:)) <= 0.) call exit_MPI(myrank,'negative mass matrix term')
@@ -1488,9 +1465,7 @@
 !
 
 ! synchronize all processes to make sure everybody is ready to start time loop
-#ifdef USE_MPI
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
   if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
   if(myrank == 0) then
@@ -1507,11 +1482,7 @@
   endif
 
 ! get MPI starting time
-#ifdef USE_MPI
-  time_start = MPI_WTIME()
-#else
-  time_start = 0.d0
-#endif
+  time_start = wtime()
 
 ! *********************************************************
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -1528,19 +1499,11 @@
     Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
-#ifdef USE_MPI
-    call MPI_REDUCE(Usolidnorm,Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-#else
-    Usolidnorm_all = Usolidnorm
-#endif
+    call max_all_cr(Usolidnorm,Usolidnorm_all)
 
     if (SIMULATION_TYPE == 3) then
       b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
-#ifdef USE_MPI
-      call MPI_REDUCE(b_Usolidnorm,b_Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
-#else
-      b_Usolidnorm_all = b_Usolidnorm
-#endif
+      call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
     endif
     if(myrank == 0) then
 
@@ -1548,11 +1511,7 @@
       write(IMAIN,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
 
 ! elapsed time since beginning of the simulation
-#ifdef USE_MPI
-      tCPU = MPI_WTIME() - time_start
-#else
-      tCPU = 0.d0
-#endif
+      tCPU = wtime() - time_start
       int_tCPU = int(tCPU)
       ihours = int_tCPU / 3600
       iminutes = (int_tCPU - 3600*ihours) / 60
@@ -2520,7 +2479,6 @@
   endif
 
 
-#ifdef USE_MPI
 ! assemble all the contributions between slices using MPI
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
@@ -2530,7 +2488,6 @@
           iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
           buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
           NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
-#endif
 
   do i=1,NGLOB_AB
     accel(1,i) = accel(1,i)*rmass(i)
@@ -2815,21 +2772,12 @@
 
     ispec = nmovie_points
 
-#ifdef USE_MPI
-    call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_ux,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_uy,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_uz,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-#else
-    store_val_x_all(:,0) = store_val_x(:)
-    store_val_y_all(:,0) = store_val_y(:)
-    store_val_z_all(:,0) = store_val_z(:)
-    store_val_ux_all(:,0) = store_val_ux(:)
-    store_val_uy_all(:,0) = store_val_uy(:)
-    store_val_uz_all(:,0) = store_val_uz(:)
-#endif
+    call gather_all_cr(store_val_x,ispec,store_val_x_all,ispec,NPROC)
+    call gather_all_cr(store_val_y,ispec,store_val_y_all,ispec,NPROC)
+    call gather_all_cr(store_val_z,ispec,store_val_z_all,ispec,NPROC)
+    call gather_all_cr(store_val_ux,ispec,store_val_ux_all,ispec,NPROC)
+    call gather_all_cr(store_val_uy,ispec,store_val_uy_all,ispec,NPROC)
+    call gather_all_cr(store_val_uz,ispec,store_val_uz_all,ispec,NPROC)
 
 ! save movie data to disk in home directory
     if(myrank == 0) then
@@ -2892,21 +2840,12 @@
 ! save shakemap only at the end of the simulation
     if(it == NSTEP) then
     ispec = nmovie_points
-#ifdef USE_MPI
-    call MPI_GATHER(store_val_x,ispec,CUSTOM_MPI_TYPE,store_val_x_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_y,ispec,CUSTOM_MPI_TYPE,store_val_y_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_z,ispec,CUSTOM_MPI_TYPE,store_val_z_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_norm_displ,ispec,CUSTOM_MPI_TYPE,store_val_ux_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_norm_veloc,ispec,CUSTOM_MPI_TYPE,store_val_uy_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-    call MPI_GATHER(store_val_norm_accel,ispec,CUSTOM_MPI_TYPE,store_val_uz_all,ispec,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
-#else
-    store_val_x_all(:,0) = store_val_x(:)
-    store_val_y_all(:,0) = store_val_y(:)
-    store_val_z_all(:,0) = store_val_z(:)
-    store_val_ux_all(:,0) = store_val_ux(:)
-    store_val_uy_all(:,0) = store_val_uy(:)
-    store_val_uz_all(:,0) = store_val_uz(:)
-#endif
+    call gather_all_cr(store_val_x,ispec,store_val_x_all,ispec,NPROC)
+    call gather_all_cr(store_val_y,ispec,store_val_y_all,ispec,NPROC)
+    call gather_all_cr(store_val_z,ispec,store_val_z_all,ispec,NPROC)
+    call gather_all_cr(store_val_norm_displ,ispec,store_val_ux_all,ispec,NPROC)
+    call gather_all_cr(store_val_norm_veloc,ispec,store_val_uy_all,ispec,NPROC)
+    call gather_all_cr(store_val_norm_accel,ispec,store_val_uz_all,ispec,NPROC)
 
 ! save movie data to disk in home directory
     if(myrank == 0) then
@@ -3141,10 +3080,8 @@
     close(IMAIN)
   endif
 
-#ifdef USE_MPI
 ! synchronize all the processes to make sure everybody has finished
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
 
   end subroutine specfem3D
 

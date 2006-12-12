@@ -26,11 +26,7 @@
 
   implicit none
 
-! standard include of the MPI library
-  include 'mpif.h'
-
   include "constants.h"
-  include "precision.h"
 
 ! include values created by the mesher
   include "OUTPUT_FILES/values_from_mesher.h"
@@ -53,11 +49,10 @@
 
   real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY) :: buffer_send_faces_vector,buffer_received_faces_vector
 
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ipoin
   integer sender,receiver,ier
+
+  integer, external :: proc_null
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -77,18 +72,17 @@
 
 ! send messages forward along each row
   if(iproc_xi == 0) then
-    sender = MPI_PROC_NULL
+    sender = proc_null()
   else
     sender = addressing(iproc_xi - 1,iproc_eta)
   endif
   if(iproc_xi == NPROC_XI-1) then
-    receiver = MPI_PROC_NULL
+    receiver = proc_null()
   else
     receiver = addressing(iproc_xi + 1,iproc_eta)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,receiver, &
-        itag2,buffer_received_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,sender, &
-        itag,MPI_COMM_WORLD,msg_status,ier)
+  call sendrecv_all_cr(buffer_send_faces_vector,NDIM*npoin2D_xi,receiver,itag2, &
+                       buffer_received_faces_vector,NDIM*npoin2D_xi,sender,itag)
 
 ! all slices add the buffer received to the contributions on the left face
   if(iproc_xi > 0) then
@@ -107,18 +101,17 @@
 
 ! send messages backward along each row
   if(iproc_xi == NPROC_XI-1) then
-    sender = MPI_PROC_NULL
+    sender = proc_null()
   else
     sender = addressing(iproc_xi + 1,iproc_eta)
   endif
   if(iproc_xi == 0) then
-    receiver = MPI_PROC_NULL
+    receiver = proc_null()
   else
     receiver = addressing(iproc_xi - 1,iproc_eta)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,receiver, &
-        itag2,buffer_received_faces_vector,NDIM*npoin2D_xi,CUSTOM_MPI_TYPE,sender, &
-        itag,MPI_COMM_WORLD,msg_status,ier)
+  call sendrecv_all_cr(buffer_send_faces_vector,NDIM*npoin2D_xi,receiver,itag2, &
+                       buffer_received_faces_vector,NDIM*npoin2D_xi,sender,itag)
 
 ! all slices copy the buffer received to the contributions on the right face
   if(iproc_xi < NPROC_XI-1) then
@@ -143,18 +136,17 @@
 
 ! send messages forward along each row
   if(iproc_eta == 0) then
-    sender = MPI_PROC_NULL
+    sender = proc_null()
   else
     sender = addressing(iproc_xi,iproc_eta - 1)
   endif
   if(iproc_eta == NPROC_ETA-1) then
-    receiver = MPI_PROC_NULL
+    receiver = proc_null()
   else
     receiver = addressing(iproc_xi,iproc_eta + 1)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,receiver, &
-    itag2,buffer_received_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,sender, &
-    itag,MPI_COMM_WORLD,msg_status,ier)
+  call sendrecv_all_cr(buffer_send_faces_vector,NDIM*npoin2D_eta,receiver,itag2, &
+                       buffer_received_faces_vector,NDIM*npoin2D_eta,sender,itag)
 
 ! all slices add the buffer received to the contributions on the left face
   if(iproc_eta > 0) then
@@ -173,18 +165,17 @@
 
 ! send messages backward along each row
   if(iproc_eta == NPROC_ETA-1) then
-    sender = MPI_PROC_NULL
+    sender = proc_null()
   else
     sender = addressing(iproc_xi,iproc_eta + 1)
   endif
   if(iproc_eta == 0) then
-    receiver = MPI_PROC_NULL
+    receiver = proc_null()
   else
     receiver = addressing(iproc_xi,iproc_eta - 1)
   endif
-  call MPI_SENDRECV(buffer_send_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,receiver, &
-    itag2,buffer_received_faces_vector,NDIM*npoin2D_eta,CUSTOM_MPI_TYPE,sender, &
-    itag,MPI_COMM_WORLD,msg_status,ier)
+  call sendrecv_all_cr(buffer_send_faces_vector,NDIM*npoin2D_eta,receiver,itag2, &
+                       buffer_received_faces_vector,NDIM*npoin2D_eta,sender,itag)
 
 ! all slices copy the buffer received to the contributions on the right face
   if(iproc_eta < NPROC_ETA-1) then
