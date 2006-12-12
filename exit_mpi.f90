@@ -21,15 +21,7 @@
 
   implicit none
 
-#ifdef USE_MPI
-! standard include of the MPI library
-  include 'mpif.h'
-#endif
-
   include "constants.h"
-#ifdef USE_MPI
-  include "precision.h"
-#endif
 
 ! identifier for error message file
   integer, parameter :: IERROR = 30
@@ -37,9 +29,6 @@
   integer myrank
   character(len=*) error_msg
 
-#ifdef USE_MPI
-  integer ier
-#endif
   character(len=80) outputname
   character(len=150) OUTPUT_FILES
 
@@ -58,13 +47,7 @@
 ! close output file
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
-#ifdef USE_MPI
-! stop all the MPI processes, and exit
-! on some machines, MPI_FINALIZE needs to be called before MPI_ABORT
-  call MPI_FINALIZE(ier)
-  call MPI_ABORT(ier)
-#endif
-  stop 'error, program ended in exit_MPI'
+  call stop_all()
 
   end subroutine exit_MPI
 
@@ -77,24 +60,15 @@
 
   implicit none
 
-! standard include of the MPI library
-  include 'mpif.h'
-
   include "constants.h"
 
   character(len=*) error_msg
-
-  integer ier
 
 ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))
   write(*,*) 'Error detected, aborting MPI...'
 
-! stop all the MPI processes, and exit
-! on some machines, MPI_FINALIZE needs to be called before MPI_ABORT
-  call MPI_FINALIZE(ier)
-  call MPI_ABORT(ier)
-  stop 'error, program ended in exit_MPI'
+  call stop_all()
 
   end subroutine exit_MPI_without_rank
 

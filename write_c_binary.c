@@ -19,6 +19,7 @@
 
 // after Brian's function
 
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -28,7 +29,7 @@
 static int fd;
 
 void
-open_file_(char *file) {
+FC_FUNC_(open_file,OPEN_FILE)(char *file) {
   /*    fprintf(stderr, "Opening file: %s\n", file); */
   fd = open(file, O_WRONLY | O_CREAT, 0644);
   if(fd == -1) {
@@ -38,18 +39,18 @@ open_file_(char *file) {
 }
 
 void
-close_file_() {
+FC_FUNC_(close_file,CLOSE_FILE)() {
   /*    fprintf(stderr, "Closing file\n"); */
   close(fd);
 }
 
 void
-write_integer_(int *z) {
+FC_FUNC_(write_integer,WRITE_INTEGER)(int *z) {
   write(fd, z, sizeof(int));
 }
 
 void
-write_real_(float *z) {
+FC_FUNC_(write_real,WRITE_REAL)(float *z) {
   write(fd, z, sizeof(float));
 }
 

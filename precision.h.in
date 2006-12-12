@@ -5,7 +5,7 @@
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,13 +15,14 @@
 !
 !=====================================================================
 
+! @configure_input@
+
 !
 ! solver in single or double precision depending on the machine
 !
+! set to MPI_REAL to run in single precision
+! set to MPI_DOUBLE_PRECISION to run in double precision
+!
 ! ALSO CHANGE FILE constants.h ACCORDINGLY
 !
-! uncomment this to run in single precision
- integer, parameter :: CUSTOM_MPI_TYPE = MPI_REAL
-! uncomment this to run in double precision
-!  integer, parameter :: CUSTOM_MPI_TYPE = MPI_DOUBLE_PRECISION
-
+  integer, parameter :: CUSTOM_MPI_TYPE = @CUSTOM_MPI_TYPE@

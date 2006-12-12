@@ -5,7 +5,7 @@
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!         (c) California Institute of Technology July 2005
 !
 !    A signed non-commercial agreement is required to use this program.
 !   Please check http://www.gps.caltech.edu/research/jtromp for details.
@@ -15,6 +15,8 @@
 !
 !=====================================================================
 
+! @configure_input@
+
 !
 ! solver in single or double precision depending on the machine (4 or 8 bytes)
 !
@@ -23,17 +25,16 @@
   integer, parameter :: SIZE_REAL = 4
   integer, parameter :: SIZE_DOUBLE = 8
 
-! uncomment this to run in single precision
- integer, parameter :: CUSTOM_REAL = SIZE_REAL
-! uncomment this to run in double precision (increases memory size by 2)
-!  integer, parameter :: CUSTOM_REAL = SIZE_DOUBLE
+! set to SIZE_REAL to run in single precision
+! set to SIZE_DOUBLE to run in double precision (increases memory size by 2)
+  integer, parameter :: CUSTOM_REAL = @CUSTOM_REAL@
 
 !----------- parameters that can be changed by the user -----------
 
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
-  logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .false.
+  logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
 ! apply heuristic rule to modify doubling regions to balance angles
   logical, parameter :: APPLY_HEURISTIC_RULE = .true.

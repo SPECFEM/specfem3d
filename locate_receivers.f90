@@ -28,15 +28,7 @@
 
   implicit none
 
-#ifdef USE_MPI
-! standard include of the MPI library
-  include 'mpif.h'
-#endif
-
   include "constants.h"
-#ifdef USE_MPI
-  include "precision.h"
-#endif
 
   integer NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
 
@@ -70,9 +62,6 @@
 
   integer irec
   integer i,j,k,ispec,iglob
-#ifdef USE_MPI
-  integer ier
-#endif
 
   integer icornerlong,icornerlat
   double precision utm_x_source,utm_y_source
@@ -103,6 +92,7 @@
   double precision gammax,gammay,gammaz
 
 ! timer MPI
+  double precision, external :: wtime
   double precision time_start,tCPU
 
 ! use dynamic allocation
@@ -129,11 +119,7 @@
 ! **************
 
 ! get MPI starting time
-#ifdef USE_MPI
-  time_start = MPI_WTIME()
-#else
-  time_start = 0.d0
-#endif
+  time_start = wtime()
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -435,33 +421,18 @@
     enddo
 
 ! synchronize all the processes to make sure all the estimates are available
-#ifdef USE_MPI
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
 
 ! for MPI version, gather information from all the nodes
   ispec_selected_rec_all(:,:) = -1
-#ifdef USE_MPI
-  call MPI_GATHER(ispec_selected_rec,nrec,MPI_INTEGER,ispec_selected_rec_all,nrec,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-
-  call MPI_GATHER(xi_receiver,nrec,MPI_DOUBLE_PRECISION,xi_receiver_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(eta_receiver,nrec,MPI_DOUBLE_PRECISION,eta_receiver_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(gamma_receiver,nrec,MPI_DOUBLE_PRECISION,gamma_receiver_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(final_distance,nrec,MPI_DOUBLE_PRECISION,final_distance_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(x_found,nrec,MPI_DOUBLE_PRECISION,x_found_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(y_found,nrec,MPI_DOUBLE_PRECISION,y_found_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(z_found,nrec,MPI_DOUBLE_PRECISION,z_found_all,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-#else
-  ispec_selected_rec_all(:,0) = ispec_selected_rec
-
-  xi_receiver_all(:,0) = xi_receiver(:)
-  eta_receiver_all(:,0) = eta_receiver(:)
-  gamma_receiver_all(:,0) = gamma_receiver(:)
-  final_distance_all(:,0) = final_distance(:)
-  x_found_all(:,0) = x_found(:)
-  y_found_all(:,0) = y_found(:)
-  z_found_all(:,0) = z_found(:)
-#endif
+  call gather_all_i(ispec_selected_rec,nrec,ispec_selected_rec_all,nrec,NPROC)
+  call gather_all_dp(xi_receiver,nrec,xi_receiver_all,nrec,NPROC)
+  call gather_all_dp(eta_receiver,nrec,eta_receiver_all,nrec,NPROC)
+  call gather_all_dp(gamma_receiver,nrec,gamma_receiver_all,nrec,NPROC)
+  call gather_all_dp(final_distance,nrec,final_distance_all,nrec,NPROC)
+  call gather_all_dp(x_found,nrec,x_found_all,nrec,NPROC)
+  call gather_all_dp(y_found,nrec,y_found_all,nrec,NPROC)
+  call gather_all_dp(z_found,nrec,z_found_all,nrec,NPROC)
 
 ! this is executed by main process only
   if(myrank == 0) then
@@ -548,11 +519,7 @@
   close(27)
 
 ! elapsed time since beginning of mesh generation
-#ifdef USE_MPI
-  tCPU = MPI_WTIME() - time_start
-#else
-  tCPU = 0.d0
-#endif
+  tCPU = wtime() - time_start
   write(IMAIN,*)
   write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
   write(IMAIN,*)
@@ -561,17 +528,14 @@
 
   endif    ! end of section executed by main process only
 
-#ifdef USE_MPI
 ! main process broadcasts the results to all the slices
-  call MPI_BCAST(islice_selected_rec,nrec,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(ispec_selected_rec,nrec,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(xi_receiver,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(eta_receiver,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(gamma_receiver,nrec,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-
+  call bcast_all_i(islice_selected_rec,nrec)
+  call bcast_all_i(ispec_selected_rec,nrec)
+  call bcast_all_dp(xi_receiver,nrec)
+  call bcast_all_dp(eta_receiver,nrec)
+  call bcast_all_dp(gamma_receiver,nrec)
 ! synchronize all the processes to make sure everybody has finished
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
 
 ! deallocate arrays
   deallocate(stlat)

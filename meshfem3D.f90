@@ -45,15 +45,7 @@
 
   implicit none
 
-#ifdef USE_MPI
-! standard include of the MPI library
-  include 'mpif.h'
-#endif
-
   include "constants.h"
-#ifdef USE_MPI
-  include "precision.h"
-#endif
 
 !=====================================================================!
 !                                                                     !
@@ -184,6 +176,7 @@
   integer imoho_depth(NX_MOHO,NY_MOHO)
 
 ! timer MPI
+  double precision, external :: wtime
   double precision time_start,tCPU
 
 ! addressing for all the slices
@@ -245,13 +238,8 @@
 ! myrank is the rank of each process, between 0 and NPROC-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
 ! and also takes care of the main output
-#ifdef USE_MPI
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
-#else
-  myrank = 0
-  sizeprocs = 1
-#endif
+  call world_size(sizeprocs)
+  call world_rank(myrank)
 
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
@@ -261,11 +249,7 @@
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
-#ifdef USE_MPI
-  time_start = MPI_WTIME()
-#else
-  time_start = 0.d0
-#endif
+  time_start = wtime()
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -289,9 +273,9 @@
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
         NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
 
-#ifndef USE_MPI
-  if(NPROC_XI /= 1 .or. NPROC_ETA /= 1) stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
-#endif
+  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
+    stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+  endif
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -731,9 +715,7 @@
   npointot = nspec * NGLLCUBE
 
 ! make sure everybody is synchronized
-#ifdef USE_MPI
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(idoubling(nspec))
@@ -768,15 +750,8 @@
   if(TOPOGRAPHY) then
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
-#ifdef USE_MPI
-      call MPI_REDUCE(min_elevation,min_elevation_all,1,MPI_DOUBLE_PRECISION, &
-                          MPI_MIN,0,MPI_COMM_WORLD,ier)
-      call MPI_REDUCE(max_elevation,max_elevation_all,1,MPI_DOUBLE_PRECISION, &
-                          MPI_MAX,0,MPI_COMM_WORLD,ier)
-#else
-      min_elevation_all = min_elevation
-      max_elevation_all = max_elevation
-#endif
+      call min_all_dp(min_elevation,min_elevation_all)
+      call max_all_dp(max_elevation,max_elevation_all)
 
     if(myrank == 0) then
       write(IMAIN,*)
@@ -789,18 +764,9 @@
 ! use MPI reduction to compute total area and volume
   area_total_bottom   = ZERO
   area_total_top   = ZERO
-#ifdef USE_MPI
-  call MPI_REDUCE(area_local_bottom,area_total_bottom,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
-                          MPI_COMM_WORLD,ier)
-  call MPI_REDUCE(area_local_top,area_total_top,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
-                          MPI_COMM_WORLD,ier)
-  call MPI_REDUCE(volume_local,volume_total,1,MPI_DOUBLE_PRECISION,MPI_SUM,0, &
-                          MPI_COMM_WORLD,ier)
-#else
-  area_total_bottom = area_local_bottom
-  area_total_top = area_local_top
-  volume_total = volume_local
-#endif
+  call sum_all_dp(area_local_bottom,area_total_bottom)
+  call sum_all_dp(area_local_top,area_total_top)
+  call sum_all_dp(volume_local,volume_total)
 
   if(myrank == 0) then
 
@@ -822,9 +788,7 @@
   endif
 
 ! make sure everybody is synchronized
-#ifdef USE_MPI
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
 
   if(myrank == 0) then
 ! check volume
@@ -912,11 +876,7 @@
 
 ! elapsed time since beginning of mesh generation
   if(myrank == 0) then
-#ifdef USE_MPI
-    tCPU = MPI_WTIME() - time_start
-#else
-    tCPU = 0.d0
-#endif
+    tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
     write(IMAIN,*) 'End of mesh generation'
@@ -930,10 +890,8 @@
     close(IMAIN)
   endif
 
-#ifdef USE_MPI
 ! synchronize all the processes to make sure everybody has finished
-  call MPI_BARRIER(MPI_COMM_WORLD,ier)
-#endif
+  call sync_all()
 
   end subroutine meshfem3D
 

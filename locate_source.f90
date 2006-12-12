@@ -32,15 +32,7 @@
 
   implicit none
 
-#ifdef USE_MPI
-! standard include of the MPI library
-  include 'mpif.h'
-#endif
-
   include "constants.h"
-#ifdef USE_MPI
-  include "precision.h"
-#endif
 
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES,NX_TOPO,NY_TOPO
@@ -69,9 +61,6 @@
   integer iprocloop
 
   integer i,j,k,ispec,iglob,isource
-#ifdef USE_MPI
-  integer ier
-#endif
 
   double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
   double precision dist
@@ -105,6 +94,7 @@
   integer islice_selected_source(NSOURCES)
 
 ! timer MPI
+  double precision, external :: wtime
   double precision time_start,tCPU
 
   integer ispec_selected_source(NSOURCES)
@@ -154,11 +144,7 @@
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
 ! get MPI starting time
-#ifdef USE_MPI
-  time_start = MPI_WTIME()
-#else
-  time_start = 0.d0
-#endif
+  time_start = wtime()
 
 ! loop on all the sources
   do isource = 1,NSOURCES
@@ -378,31 +364,16 @@
     ng = ne - ns + 1
 
     ispec_selected_source_all(:,:) = -1
-#ifdef USE_MPI
-  call MPI_GATHER(ispec_selected_source(ns:ne),ng,MPI_INTEGER,ispec_selected_source_all(1:ng,:),ng,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 
-  call MPI_GATHER(xi_source(ns:ne),ng,MPI_DOUBLE_PRECISION,xi_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(eta_source(ns:ne),ng,MPI_DOUBLE_PRECISION,eta_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(gamma_source(ns:ne),ng,MPI_DOUBLE_PRECISION,gamma_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(final_distance_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
-    final_distance_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(x_found_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
-    x_found_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(y_found_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
-    y_found_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_GATHER(z_found_source(ns:ne),ng,MPI_DOUBLE_PRECISION, &
-    z_found_source_all(1:ng,:),ng,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-#else
-  ispec_selected_source_all(:,0) = ispec_selected_source(:)
+  call gather_all_i(ispec_selected_source(ns:ne),ng,ispec_selected_source_all(1:ng,:),ng)
 
-  xi_source_all(:,0) = xi_source(:)
-  eta_source_all(:,0) = eta_source(:)
-  gamma_source_all(:,0) = gamma_source(:)
-  final_distance_source_all(:,0) = final_distance_source(:)
-  x_found_source_all(:,0) = x_found_source(:)
-  y_found_source_all(:,0) = y_found_source(:)
-  z_found_source_all(:,0) = z_found_source(:)
-#endif
+  call gather_all_dp(xi_source(ns:ne),ng,xi_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(eta_source(ns:ne),ng,eta_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(gamma_source(ns:ne),ng,gamma_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(final_distance_source(ns:ne),ng,final_distance_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(x_found_source(ns:ne),ng,x_found_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(y_found_source(ns:ne),ng,y_found_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(z_found_source(ns:ne),ng,z_found_source_all(1:ng,:),ng,NPROC)
 
 ! this is executed by main process only
   if(myrank == 0) then
@@ -535,21 +506,15 @@
   endif     ! end of section executed by main process only
 
 ! main process broadcasts the results to all the slices
-#ifdef USE_MPI
-  call MPI_BCAST(islice_selected_source,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(ispec_selected_source,NSOURCES,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(xi_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(eta_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-  call MPI_BCAST(gamma_source,NSOURCES,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-#endif
+  call bcast_all_i(islice_selected_source,NSOURCES)
+  call bcast_all_i(ispec_selected_source,NSOURCES)
+  call bcast_all_dp(xi_source,NSOURCES)
+  call bcast_all_dp(eta_source,NSOURCES)
+  call bcast_all_dp(gamma_source,NSOURCES)
 
 ! elapsed time since beginning of source detection
   if(myrank == 0) then
-#ifdef USE_MPI
-    tCPU = MPI_WTIME() - time_start
-#else
-    tCPU = 0.d0
-#endif
+    tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
     write(IMAIN,*)
