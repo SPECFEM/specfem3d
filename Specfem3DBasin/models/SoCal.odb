@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+
+from Specfem3DBasin import Model
+
+
+def model():
+    return Model("SoCal")
+
+
+# end of file

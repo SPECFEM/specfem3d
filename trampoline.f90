@@ -8,6 +8,6 @@
 ! __intel_new_proc_init_P.  Without this, SPECFEM runs several
 ! times slower (!).
 
-  call run_python_script
+  call FC_PY_MAIN()
 
   end program trampoline

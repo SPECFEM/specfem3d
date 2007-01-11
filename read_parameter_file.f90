@@ -104,7 +104,7 @@
   NEX_MAX = max(NEX_XI,NEX_ETA)
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
-  call read_value_string(MODEL, 'MODEL')
+  call read_value_string(MODEL, 'model.name')
   if(err_occurred() /= 0) return
   call read_value_logical(OCEANS, 'model.OCEANS')
   if(err_occurred() /= 0) return

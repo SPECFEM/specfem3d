@@ -9,7 +9,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 # $Id: configure.ac,v 1.1 2005/08/24 22:45:51 leif Exp $
 
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.61)
 AC_INIT([Specfem 3D Basin], [1.4.0], [jtromp AT caltech.edu], [Specfem3DBasin])
 AC_CONFIG_SRCDIR([specfem3D.f90])
 AC_CONFIG_HEADER([config.h])
@@ -114,8 +114,43 @@ AC_ARG_VAR(PYTHONPATH, [Python module search path])
 
 AC_LANG(C)
 if test "$want_pyre" = yes; then
-    AC_MSG_NOTICE([running $PYTHON setup.py develop])
-    $PYTHON setup.py develop
+    builddir=`pwd`
+    save_PYTHONPATH="$PYTHONPATH"
+    PYTHONPATH="$builddir/python:$PYTHONPATH"; export PYTHONPATH
+    # Cheap work-around for the inability of merlin/setuptools to control #! line.
+    rm -f pyspecfem3D
+    $as_ln_s $PYTHON pyspecfem3D
+    pyspecfem3D="$builddir/pyspecfem3D"
+    cd $srcdir
+
+    AC_MSG_NOTICE([downloading missing Python dependencies])
+    AS_IF([AC_TRY_COMMAND([$pyspecfem3D setup.py install_deps -zmxd $builddir/deps >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD])],
+          [],
+          [AC_MSG_FAILURE([cannot download missing Python dependencies])])
+
+    AC_MSG_NOTICE([building Python dependencies])
+    AS_IF([AC_TRY_COMMAND([$pyspecfem3D setup.py develop -H None -f $builddir/deps -s $builddir -d $builddir/python >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD])],
+          [],
+          [AC_MSG_FAILURE([building Python dependencies])])
+
+    AC_MSG_CHECKING([for egg-related flags])
+    AS_IF([AC_TRY_COMMAND([$pyspecfem3D setup.py egg_flags >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD])],
+          [AC_MSG_RESULT(ok)
+           . egg-flags.sh
+           rm -f egg-flags.sh
+          ],
+          [AC_MSG_RESULT(failed)
+          AC_MSG_FAILURE([cannot scan Python eggs for flags])])
+
+    cd $builddir
+    rm -f pyspecfem3D
+    PYTHONPATH="$save_PYTHONPATH"
+    PYTHONPATH="${pythondir}:${pyexecdir}${save_PYTHONPATH:+:${save_PYTHONPATH}}"
+
+    AC_SUBST(PYTHONPATH)
+    AC_SUBST(PYTHON_EGG_CFLAGS)
+    AC_SUBST(PYTHON_EGG_CPPFLAGS)
+    AC_SUBST(PYTHON_EGG_LDFLAGS)
 fi
 
 

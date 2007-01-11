@@ -663,6 +663,9 @@ FLAGS_CHECK
 FLAGS_NO_CHECK
 LOCAL_PATH_IS_ALSO_GLOBAL
 PYTHONPATH
+PYTHON_EGG_CFLAGS
+PYTHON_EGG_CPPFLAGS
+PYTHON_EGG_LDFLAGS
 LIBOBJS
 LTLIBOBJS'
 ac_subst_files=''
@@ -5002,9 +5005,84 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "$want_pyre" = yes; then
-    { echo "$as_me:$LINENO: running $PYTHON setup.py develop" >&5
-echo "$as_me: running $PYTHON setup.py develop" >&6;}
-    $PYTHON setup.py develop
+    builddir=`pwd`
+    save_PYTHONPATH="$PYTHONPATH"
+    PYTHONPATH="$builddir/python:$PYTHONPATH"; export PYTHONPATH
+    # Cheap work-around for the inability of merlin/setuptools to control #! line.
+    rm -f pyspecfem3D
+    $as_ln_s $PYTHON pyspecfem3D
+    pyspecfem3D="$builddir/pyspecfem3D"
+    cd $srcdir
+
+    { echo "$as_me:$LINENO: downloading missing Python dependencies" >&5
+echo "$as_me: downloading missing Python dependencies" >&6;}
+    if { ac_try='$pyspecfem3D setup.py install_deps -zmxd $builddir/deps >&5 2>&5'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  :
+else
+  { { echo "$as_me:$LINENO: error: cannot download missing Python dependencies
+See \`config.log' for more details." >&5
+echo "$as_me: error: cannot download missing Python dependencies
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+    { echo "$as_me:$LINENO: building Python dependencies" >&5
+echo "$as_me: building Python dependencies" >&6;}
+    if { ac_try='$pyspecfem3D setup.py develop -H None -f $builddir/deps -s $builddir -d $builddir/python >&5 2>&5'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  :
+else
+  { { echo "$as_me:$LINENO: error: building Python dependencies
+See \`config.log' for more details." >&5
+echo "$as_me: error: building Python dependencies
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+    { echo "$as_me:$LINENO: checking for egg-related flags" >&5
+echo $ECHO_N "checking for egg-related flags... $ECHO_C" >&6; }
+    if { ac_try='$pyspecfem3D setup.py egg_flags >&5 2>&5'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  { echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6; }
+           . egg-flags.sh
+           rm -f egg-flags.sh
+
+else
+  { echo "$as_me:$LINENO: result: failed" >&5
+echo "${ECHO_T}failed" >&6; }
+          { { echo "$as_me:$LINENO: error: cannot scan Python eggs for flags
+See \`config.log' for more details." >&5
+echo "$as_me: error: cannot scan Python eggs for flags
+See \`config.log' for more details." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+    cd $builddir
+    rm -f pyspecfem3D
+    PYTHONPATH="$save_PYTHONPATH"
+    PYTHONPATH="${pythondir}:${pyexecdir}${save_PYTHONPATH:+:${save_PYTHONPATH}}"
+
+
+
+
+
 fi
 
 
@@ -6036,11 +6114,14 @@ FLAGS_CHECK!$FLAGS_CHECK$ac_delim
 FLAGS_NO_CHECK!$FLAGS_NO_CHECK$ac_delim
 LOCAL_PATH_IS_ALSO_GLOBAL!$LOCAL_PATH_IS_ALSO_GLOBAL$ac_delim
 PYTHONPATH!$PYTHONPATH$ac_delim
+PYTHON_EGG_CFLAGS!$PYTHON_EGG_CFLAGS$ac_delim
+PYTHON_EGG_CPPFLAGS!$PYTHON_EGG_CPPFLAGS$ac_delim
+PYTHON_EGG_LDFLAGS!$PYTHON_EGG_LDFLAGS$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 86; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 89; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

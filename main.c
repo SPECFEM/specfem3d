@@ -1,75 +1,107 @@
 
 #include <Python.h>
-#include <stdio.h>
+#include <mpi.h>
+
 #include "config.h"
 
 
-extern void initSpecfem3DBasinCode(void);
-extern void initPyxMPI(void);
+extern void initPyxParameters(void);
+extern void initPyxMeshfem(void);
+#ifdef WITH_SOLVER
+extern void initPyxSpecfem(void);
+#endif
 
-static int status;
+static int g_status;
+int g_argc;
+char **g_argv;
+
+#define COMMAND \
+"import sys; " \
+"path = sys.argv[1]; " \
+"requires = sys.argv[2]; " \
+"entry = sys.argv[3]; " \
+"path = path.split(':'); " \
+"path.extend(sys.path); " \
+"sys.path = path; " \
+"from merlin import loadObject; " \
+"entry = loadObject(entry); " \
+"entry(sys.argv[3:], kwds={'requires': requires})"
+
+/* include the implementation of _mpi */
+#include "mpi/_mpi.c"
 
 struct _inittab inittab[] = {
-    { "Specfem3DBasinCode", initSpecfem3DBasinCode },
-#ifdef USE_MPI
-    { "PyxMPI", initPyxMPI },
+#ifdef WITH_MPI
+    { "_mpi", init_mpi },
+#endif
+    { "PyxParameters", initPyxParameters },
+    { "PyxMeshfem", initPyxMeshfem },
+#ifdef WITH_SOLVER
+    { "PyxSpecfem", initPyxSpecfem },
 #endif
     { 0, 0 }
 };
 
 
-#define FC_RUN_PYTHON_SCRIPT FC_FUNC_(run_python_script, RUN_PYTHON_SCRIPT)
-void FC_RUN_PYTHON_SCRIPT()
+#define FC_PY_MAIN FC_FUNC_(fc_py_main, FC_PY_MAIN)
+void FC_PY_MAIN()
 {
-    /* run the Python script */
-#ifndef SCRIPT
-#define SCRIPT Specfem
-#endif
-#define STR(s) #s
-#define COMMAND(s) "from Specfem3DBasin."STR(s)" import "STR(s)"; app = "STR(s)"(); app.run()"
-    status = PyRun_SimpleString(COMMAND(SCRIPT)) != 0;
+    if (g_argc < 3 || strcmp(g_argv[1], "--pyre-start") != 0) {
+        g_status = Py_Main(g_argc, g_argv);
+        return;
+    }
+    
+    /* make sure 'sys.executable' is set to the path of this program  */
+    Py_SetProgramName(g_argv[0]);
+    
+    /* initialize Python */
+    Py_Initialize();
+    
+    /* initialize sys.argv */
+    PySys_SetArgv(g_argc - 1, g_argv + 1);
+    
+    /* run the Python command */
+    g_status = PyRun_SimpleString(COMMAND) != 0;
+    
+    /* shut down Python */
+    Py_Finalize();
 }
 
 
 int main(int argc, char **argv)
 {
+#if defined(WITH_MPI) && defined(USE_MPI)
+    /* initialize MPI */
+    if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+        fprintf(stderr, "%s: MPI_Init failed! Exiting ...", argv[0]);
+        return 1;
+    }
+#endif
+    
     /* add our extension module */
     if (PyImport_ExtendInittab(inittab) == -1) {
         fprintf(stderr, "%s: PyImport_ExtendInittab failed! Exiting ...", argv[0]);
         return 1;
     }
     
-    /* initialize Python */
-    Py_Initialize();
-    
-    /* initialize sys.argv */
-    PySys_SetArgv(argc, argv);
+    g_argc = argc;
+    g_argv = argv;
     
 #define main 42
 #if FC_MAIN == main
-    /* run the Python script */
-    FC_RUN_PYTHON_SCRIPT();
+    /* start Python */
+    FC_PY_MAIN();
 #else
-    /* call the Fortran trampoline (which runs the Python script) */
+    /* call the Fortran trampoline (which, in turn, starts Python) */
     FC_MAIN();
 #endif
     
-    /* shut down Python */
-    Py_Finalize();
-    
-    return status;
-}
-
-
-void xxxxfem3D_dispatch()
-{
-#define Meshfem 42
-#define Specfem 24
-#if SCRIPT == Meshfem
-    FC_FUNC(meshfem3d, MESHFEM3D)();
-#else
-    FC_FUNC(specfem3d, SPECFEM3D)();
+#if defined(WITH_MPI) && defined(USE_MPI)
+    /* shut down MPI */
+    MPI_Finalize();
 #endif
+    
+    return g_status;
 }
 
 

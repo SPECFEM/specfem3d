@@ -18,7 +18,7 @@
 ! create file OUTPUT_FILES/values_from_mesher.h based upon DATA/Par_file
 ! in order to compile the solver with the right array sizes
 
-  program create_header_file
+  subroutine create_header_file
 
   implicit none
 
@@ -49,12 +49,13 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,MODEL
+  character(len=150) LOCAL_PATH,MODEL,HEADER_FILE
 
 ! ************** PROGRAM STARTS HERE **************
 
+  call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', 'OUTPUT_FILES/values_from_mesher.h')
   print *
-  print *,'creating file OUTPUT_FILES/values_from_mesher.h to compile solver with correct values'
+  print *,'creating file ', trim(HEADER_FILE), ' to compile solver with correct values'
 
 ! read the parameter file
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
@@ -93,5 +94,5 @@
   print *,'done'
   print *
 
-  end program create_header_file
+  end subroutine create_header_file
 

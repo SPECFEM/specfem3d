@@ -30,8 +30,11 @@
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
 
+  character(len=150) HEADER_FILE
+
 ! copy number of elements and points in an include file for the solver
-  open(unit=IOUT,file='OUTPUT_FILES/values_from_mesher.h',status='unknown')
+  call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', 'OUTPUT_FILES/values_from_mesher.h')
+  open(unit=IOUT,file=HEADER_FILE,status='unknown')
   write(IOUT,*)
 
   write(IOUT,*) '!'
