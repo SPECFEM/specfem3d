@@ -59,8 +59,10 @@ MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK)
 @COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
 
 CC = @CC@
-CFLAGS = @CFLAGS@
-CPPFLAGS = @CPPFLAGS@
+CFLAGS = @CFLAGS@ $(CPPFLAGS)
+CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
+@COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
+@COND_MPI_FALSE@COND_MPI_CPPFLAGS =
 
 AR = ar
 ARFLAGS = cru
@@ -70,15 +72,19 @@ RANLIB = ranlib
 @COND_PYRE_TRUE@MPICC = @MPICC@
 @COND_PYRE_TRUE@FCLIBS = @FCLIBS@
 @COND_PYRE_TRUE@PYTHON = @PYTHON@
-@COND_PYRE_TRUE@PYTHON_CPPFLAGS = -I@PYTHON_INCDIR@
-@COND_PYRE_TRUE@PYTHON_LDFLAGS = @PYTHON_LDFLAGS@ @PYTHON_LINKFORSHARED@ @PYTHON_BLDLIBRARY@ @PYTHON_LIBS@ @PYTHON_MODLIBS@ @PYTHON_SYSLIBS@ @PYTHON_LDLAST@
+@COND_PYRE_TRUE@PYTHON_CFLAGS = $(PYTHON_EGG_CFLAGS) $(PYTHON_CPPFLAGS)
+@COND_PYRE_TRUE@PYTHON_CPPFLAGS = $(PYTHON_EGG_CPPFLAGS) -I@PYTHON_INCDIR@
+@COND_PYRE_TRUE@PYTHON_LDFLAGS = $(PYTHON_EGG_LDFLAGS) @PYTHON_LDFLAGS@ @PYTHON_LINKFORSHARED@ @PYTHON_BLDLIBRARY@ @PYTHON_LIBS@ @PYTHON_MODLIBS@ @PYTHON_SYSLIBS@ @PYTHON_LDLAST@
 @COND_PYRE_TRUE@OUTPUT_DIR = OUTPUT_FILES
+@COND_PYRE_TRUE@PYTHON_EGG_CFLAGS = @PYTHON_EGG_CFLAGS@
+@COND_PYRE_TRUE@PYTHON_EGG_CPPFLAGS = @PYTHON_EGG_CPPFLAGS@
+@COND_PYRE_TRUE@PYTHON_EGG_LDFLAGS = @PYTHON_EGG_LDFLAGS@
 
 
 O = obj
 
 # objects toggled between the pure Fortran and Pyrized version
-@COND_PYRE_TRUE@PYRE_EXTRA_OBJECTS = $O/misc.o $O/trampoline.o $O/PyxMeshfem.o $O/PyxMPI.o
+@COND_PYRE_TRUE@PYRE_EXTRA_OBJECTS = $O/misc.o $O/trampoline.o $O/PyxMeshfem.o
 @COND_PYRE_TRUE@COND_PYRE_OBJECTS = $O/PyxParameters.o $(PYRE_EXTRA_OBJECTS)
 
 # objects toggled between the pure Fortran and Pyrized version
@@ -91,6 +97,7 @@ libspecfem_a_OBJECTS = \
 	$O/compute_arrays_source.o \
 	$O/compute_parameters.o \
 	$O/compute_rho_estimate.o \
+	$O/create_header_file.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
 	$O/create_serial_name_database.o \
@@ -209,18 +216,15 @@ specfem3D: xspecfem3D
 @COND_PYRE_FALSE@
 
 # rules for the Pyrized version
-@COND_PYRE_TRUE@xspecfem3D: setup.py pyspecfem3D
-@COND_PYRE_TRUE@	$(PYTHON) setup.py develop
-@COND_PYRE_TRUE@	cp $(HOME)/.cig/bin/xspecfem3D xspecfem3D
-@COND_PYRE_TRUE@	cp $(HOME)/.cig/bin/xcreate_movie_AVS_DX xcreate_movie_AVS_DX
+@COND_PYRE_TRUE@xspecfem3D: pyspecfem3D
 @COND_PYRE_TRUE@
-@COND_PYRE_TRUE@pyspecfem3D: main.c $(XMESHFEM_OBJECTS)
-@COND_PYRE_TRUE@	${MPICC} $(CFLAGS) -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) main.c \
-@COND_PYRE_TRUE@		$(XMESHFEM_OBJECTS) $(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
+@COND_PYRE_TRUE@pyspecfem3D: main.c $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_TRUE@	${MPICC} -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) main.c \
+@COND_PYRE_TRUE@		$(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
 @COND_PYRE_TRUE@
-@COND_PYRE_TRUE@$(OUTPUT_DIR)/pyspecfem3D: main.c $(XSPECFEM_OBJECTS)
-@COND_PYRE_TRUE@	${MPICC} $(CFLAGS) -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) -DBUILDING_SOLVER main.c \
-@COND_PYRE_TRUE@		$(XSPECFEM_OBJECTS) $(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
+@COND_PYRE_TRUE@$(OUTPUT_DIR)/pyspecfem3D: main.c $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_TRUE@	${MPICC} -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) -DUSE_MPI -DWITH_SOLVER main.c \
+@COND_PYRE_TRUE@		$(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)$(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
 
 
 check_buffers_2D: xcheck_buffers_2D
@@ -236,8 +240,8 @@ combine_paraview_data: xcombine_paraview_data
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 	${FCCOMPILE_CHECK} -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
 
-xcreate_header_file: $O/create_header_file.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o xcreate_header_file $O/create_header_file.o $(LIBSPECFEM)
+xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
+	${FCCOMPILE_CHECK} -o xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
 
 @COND_PYRE_FALSE@xcreate_movie_AVS_DX: $O/create_movie_AVS_DX.o $(LIBSPECFEM)
 @COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_AVS_DX $O/create_movie_AVS_DX.o $(LIBSPECFEM)
@@ -320,6 +324,9 @@ $O/exit_mpi.o: constants.h exit_mpi.f90
 
 $O/convolve_source_timefunction.o: convolve_source_timefunction.f90
 	${FCCOMPILE_CHECK} -c -o $O/convolve_source_timefunction.o convolve_source_timefunction.f90
+
+$O/program_create_header_file.o: program_create_header_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_create_header_file.o program_create_header_file.f90
 
 $O/create_header_file.o: create_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_header_file.o create_header_file.f90
@@ -516,9 +523,6 @@ $O/PyxMeshfem.o: PyxMeshfem.c config.h
 $O/PyxSpecfem.o: PyxSpecfem.c config.h
 	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxSpecfem.o PyxSpecfem.c
 
-$O/PyxMPI.o: PyxMPI.c
-	${MPICC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxMPI.o PyxMPI.c
-
 $O/trampoline.o: trampoline.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/trampoline.o ${FCFLAGS_f90} trampoline.f90
 
@@ -528,4 +532,3 @@ pyrex:
 	pyrexc PyxParameters.pyx -o PyxParameters.c
 	pyrexc PyxMeshfem.pyx -o PyxMeshfem.c
 	pyrexc PyxSpecfem.pyx -o PyxSpecfem.c
-	pyrexc PyxMPI.pyx -o PyxMPI.c

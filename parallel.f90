@@ -395,21 +395,3 @@
   proc_null = MPI_PROC_NULL
 
   end function proc_null
-
-!
-!----
-!
-
-  subroutine foo()
-
-  implicit none
-
-! standard include of the MPI library
-  include 'mpif.h'
-
-  include "constants.h"
-  include "precision.h"
-
-  integer ier
-
-  end subroutine foo
