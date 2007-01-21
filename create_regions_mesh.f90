@@ -160,6 +160,19 @@
 ! boundary parameters locator
   integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top
 
+! ---- Moho Vars here ------
+! Moho boundary locator
+  integer, dimension(:), allocatable :: ibelm_moho_top, ibelm_moho_bot
+  logical, dimension(:), allocatable :: is_moho_top, is_moho_bot
+
+! 2-D jacobian and normals
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_moho
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_moho
+
+! number of elements on the boundaries
+  integer nspec_moho_top, nspec_moho_bottom
+! ---------------------------
+
 ! 2-D jacobians and normals
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: &
     jacobian2D_xmin,jacobian2D_xmax, &
@@ -310,6 +323,21 @@
   allocate(normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX))
   allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
   allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
+
+! Moho boundary parameters, 2-D jacobians and normals
+  if (SAVE_MOHO_MESH) then
+    allocate(ibelm_moho_top(NSPEC2D_BOTTOM))
+    allocate(ibelm_moho_bot(NSPEC2D_BOTTOM))
+    allocate(is_moho_top(nspec))
+    allocate(is_moho_bot(nspec))
+    is_moho_top = .false.
+    is_moho_bot = .false.
+    nspec_moho_top = 0
+    nspec_moho_bottom = 0
+    allocate(jacobian2D_moho(NGLLX,NGLLY,NSPEC2D_BOTTOM))
+    allocate(normal_moho(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
+  endif
+
 
 ! Stacey put back
   allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX))
@@ -587,6 +615,23 @@
         if(ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
         idoubling(ispec) = doubling_index
 
+! assign Moho surface element
+        if (SAVE_MOHO_MESH) then
+        if (isubregion == 15 .and. ir == ir1) then
+          nspec_moho_top = nspec_moho_top + 1
+          if (nspec_moho_top > NSPEC2D_BOTTOM) call exit_mpi(myrank,"Error counting moho top elements")
+          ibelm_moho_top(nspec_moho_top) = ispec
+          call compute_jacobian_2D(myrank,nspec_moho_top,xelm(1:NGNOD2D),yelm(1:NGNOD2D),zelm(1:NGNOD2D), &
+                     dershape2D_bottom,jacobian2D_moho,normal_moho,NGLLX,NGLLY,NSPEC2D_BOTTOM)
+          is_moho_top(ispec) = .true.
+        else if (isubregion == 28 .and. ir+dir > ir2) then
+          nspec_moho_bottom = nspec_moho_bottom + 1
+          if (nspec_moho_bottom > NSPEC2D_BOTTOM) call exit_mpi(myrank,"Error counting moho bottom elements")
+          ibelm_moho_bot(nspec_moho_bottom) = ispec
+          is_moho_bot(ispec) = .true.
+        endif
+        endif
+
 ! initialize flag indicating whether element is in sediments
   not_fully_in_bedrock(ispec) = .false.
 
@@ -792,6 +837,11 @@ enddo
 
 ! check total number of spectral elements created
   if(ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
+  if (SAVE_MOHO_MESH) then
+    if (nspec_moho_top /= NSPEC2D_BOTTOM .or. nspec_moho_bottom /= NSPEC2D_BOTTOM) &
+               call exit_mpi(myrank, "nspec_moho should equal NSPEC2D_BOTTOM")
+  endif
+
 
   do ispec=1,nspec
   ieoff = NGLLCUBE*(ispec-1)
@@ -1006,6 +1056,26 @@ enddo
             jacobian2D_bottom,jacobian2D_top, &
             iMPIcut_xi,iMPIcut_eta,nspec,nglob, &
             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP,OCEANS)
+
+! save Moho mesh arrays
+  if (SAVE_MOHO_MESH) then
+    open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
+    ! total number of elements, corner points, all points
+    write(27) NSPEC2D_BOTTOM
+    write(27) (NEX_PER_PROC_XI/4 + 1) * (NEX_PER_PROC_ETA/4 + 1)
+    write(27) (NEX_PER_PROC_XI/4 * (NGLLX - 1) + 1) * (NEX_PER_PROC_ETA/4 * (NGLLY - 1) + 1)
+    write(27) ibelm_moho_top
+    write(27) ibelm_moho_bot
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='unknown',form='unformatted')
+    write(27) normal_moho
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='unknown',form='unformatted')
+    write(27) is_moho_top
+    write(27) is_moho_bot
+    close(27)
+  endif
+
 
   do ispec=1,nspec
     do k=1,NGLLZ

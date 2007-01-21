@@ -88,6 +88,9 @@
 ! source decay rate
   double precision, parameter :: SOURCE_DECAY_RATE = 1.628d0
 
+! save moho mesh (temperary stays here)
+  logical, parameter :: SAVE_MOHO_MESH = .true.
+
 !------------------------------------------------------
 !----------- do not modify anything below -------------
 !------------------------------------------------------

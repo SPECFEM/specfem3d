@@ -182,6 +182,12 @@
     normal_xmax,normal_ymin,normal_ymax, &
     normal_bottom,normal_top
 
+! Moho mesh 
+  integer,dimension(:), allocatable :: ibelm_moho_top, ibelm_moho_bot
+  real(CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_moho
+  integer :: nspec2D_moho, njunk
+  logical, dimension(:), allocatable :: is_moho_top, is_moho_bot
+
 ! buffers for send and receive between faces of the slices and the chunks
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_send_faces_scalar,buffer_received_faces_scalar
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_send_faces_vector,buffer_received_faces_vector
@@ -249,9 +255,8 @@
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
 ! ADJOINT
-  real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp
+  real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp, kappa_k, mu_k
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ, b_veloc, b_accel
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappa_k, mu_k
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl
   real(kind=CUSTOM_REAL) dsxx,dsxy,dsxz,dsyy,dsyz,dszz
@@ -290,6 +295,12 @@
   integer i_SLS
   real(kind=CUSTOM_REAL) one_minus_sum_beta_use,minus_sum_beta,vs_val,Q_mu
   integer iselected,iattenuation_sediments,int_Q_mu
+
+! Moho kernel
+  integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: moho_kl
+  real(kind=CUSTOM_REAL) :: kernel_moho_top, kernel_moho_bot
 
 ! --------
 
@@ -729,6 +740,41 @@
   read(27) normal_top
   close(27)
 
+! moho boundary 
+  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+
+    allocate(ibelm_moho_top(NSPEC2D_BOTTOM))
+    allocate(ibelm_moho_bot(NSPEC2D_BOTTOM))
+    allocate(normal_moho(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
+    allocate(is_moho_top(NSPEC_AB))
+    allocate(is_moho_bot(NSPEC_AB))
+    allocate(dsdx_top(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
+    allocate(dsdx_bot(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
+    allocate(b_dsdx_top(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
+    allocate(b_dsdx_bot(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
+    allocate(moho_kl(NGLLX,NGLLY,NSPEC2D_BOTTOM))
+    moho_kl = ZERO
+    
+    open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
+    read(27) nspec2D_moho
+    read(27) njunk
+    read(27) njunk
+    read(27) ibelm_moho_top
+    read(27) ibelm_moho_bot
+    close(27)
+    if (nspec2D_moho /= NSPEC2D_BOTTOM) call exit_mpi(myrank, "nspec2D_moho /= NSPEC2D_BOTTOM for Moho mesh")
+
+    open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',form='unformatted')
+    read(27) normal_moho
+    close(27)
+
+    open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',form='unformatted')
+    read(27) is_moho_top
+    read(27) is_moho_bot
+    close(27)
+
+  endif
+
 ! Stacey put back
   open(unit=27,file=prname(1:len_trim(prname))//'nspec2D.bin',status='unknown',form='unformatted')
   read(27) nspec2D_xmin
@@ -873,6 +919,17 @@
 
   endif
 
+! write source and receiver VTK files for Paraview
+  if (myrank == 0) then
+    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
+    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
+    write(IOVTK,'(a)') 'Source and Receiver VTK file'
+    write(IOVTK,'(a)') 'ASCII'
+    write(IOVTK,'(a)') 'DATASET POLYDATA'
+    ! LQY -- cannot figure out NSOURCES+nrec at this point
+    write(IOVTK, '(a,i6,a)') 'POINTS ', 2, ' float'
+  endif
+
 ! allocate arrays for source
   allocate(islice_selected_source(NSOURCES))
   allocate(ispec_selected_source(NSOURCES))
@@ -948,16 +1005,6 @@
   endif
 
   if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
-
-! write source and receiver VTK files for Paraview
-  if (myrank == 0) then
-    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
-    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
-    write(IOVTK,'(a)') 'Source and Receiver VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-    write(IOVTK, '(a,i6,a)') 'POINTS ', NSOURCES+nrec, ' float'
-  endif
 
 ! allocate memory for receiver arrays
   allocate(islice_selected_rec(nrec))
@@ -1312,9 +1359,6 @@
   allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
-  allocate(mu_k(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(kappa_k(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-
   rho_kl(:,:,:,:) = 0._CUSTOM_REAL
   mu_kl(:,:,:,:) = 0._CUSTOM_REAL
   kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
@@ -1481,6 +1525,14 @@
     close(IOUT)
   endif
 
+! initialize Moho boundary index
+  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+    ispec2D_moho_top = 0
+    ispec2D_moho_bot = 0
+    k_top = 1
+    k_bot = NGLLZ
+  endif
+
 ! get MPI starting time
   time_start = wtime()
 
@@ -1560,7 +1612,20 @@
     enddo
   endif
 
+  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+    ispec2D_moho_top = 0
+    ispec2D_moho_bot = 0
+  endif
+
   do ispec = 1,NSPEC_AB
+
+    if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+      if (is_moho_top(ispec)) then
+        ispec2D_moho_top = ispec2D_moho_top + 1
+      else if (is_moho_bot(ispec)) then
+        ispec2D_moho_bot = ispec2D_moho_bot + 1
+      endif
+    endif
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -1655,6 +1720,31 @@
           duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
           duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
+! save strain on the Moho boundary
+          if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+            if (is_moho_top(ispec)) then
+              dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
+              dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
+              dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
+              dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
+              dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
+              dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
+              dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
+              dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
+              dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
+            else if (is_moho_bot(ispec)) then
+              dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
+              dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
+              dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
+              dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
+              dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
+              dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
+              dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
+              dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
+              dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
+            endif
+          endif
+              
 ! precompute some sums to save CPU time
           duxdxl_plus_duydyl = duxdxl + duydyl
           duxdxl_plus_duzdzl = duxdxl + duzdzl
@@ -1697,9 +1787,35 @@
             b_dsyz = 0.5_CUSTOM_REAL * b_duzdyl_plus_duydzl
             b_dszz =  b_duzdzl
 
-            kappa_k(i,j,k,ispec) = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
-            mu_k(i,j,k,ispec) = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
-                  2 * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) - ONE_THIRD * kappa_k(i,j,k,ispec)
+            kappa_k = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
+            mu_k = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
+                  2 * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) - ONE_THIRD * kappa_k
+            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * kappa_k
+            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * deltat * mu_k
+
+            if (SAVE_MOHO_MESH) then
+              if (is_moho_top(ispec)) then
+                b_dsdx_top(1,1,i,j,k,ispec2D_moho_top) = b_duxdxl
+                b_dsdx_top(1,2,i,j,k,ispec2D_moho_top) = b_duxdyl
+                b_dsdx_top(1,3,i,j,k,ispec2D_moho_top) = b_duxdzl
+                b_dsdx_top(2,1,i,j,k,ispec2D_moho_top) = b_duydxl
+                b_dsdx_top(2,2,i,j,k,ispec2D_moho_top) = b_duydyl
+                b_dsdx_top(2,3,i,j,k,ispec2D_moho_top) = b_duydzl
+                b_dsdx_top(3,1,i,j,k,ispec2D_moho_top) = b_duzdxl
+                b_dsdx_top(3,2,i,j,k,ispec2D_moho_top) = b_duzdyl
+                b_dsdx_top(3,3,i,j,k,ispec2D_moho_top) = b_duzdzl
+              else if (is_moho_bot(ispec)) then
+                b_dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = b_duxdxl
+                b_dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = b_duxdyl
+                b_dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = b_duxdzl
+                b_dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = b_duydxl
+                b_dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = b_duydyl
+                b_dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = b_duydzl
+                b_dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = b_duzdxl
+                b_dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = b_duzdyl
+                b_dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = b_duzdzl
+              endif
+            endif
 
           endif
 
@@ -2710,13 +2826,41 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) + dot_product(accel(:,iglob), b_displ(:,iglob)) * deltat
-            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * mu_k(i,j,k,ispec) * deltat
-            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + kappa_k(i,j,k,ispec) * deltat
+            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
           enddo
         enddo
       enddo
     enddo
+   
+    if (SAVE_MOHO_MESH) then
+      do ispec2D = 1, nspec2D_moho
+        ispec_top = ibelm_moho_top(ispec2D)
+        ispec_bot = ibelm_moho_bot(ispec2D)
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob_top = ibool(i,j,k_top,ispec_top)
+
+            call compute_boundary_kernel(kernel_moho_top, &
+                       mustore(i,j,k_top,ispec_top), kappastore(i,j,k_top,ispec_top), rho_vs(i,j,k_top,ispec_top), &
+                       accel(:,iglob_top),b_displ(:,iglob_top),dsdx_top(:,:,i,j,k_top,ispec2D), b_dsdx_top(:,:,i,j,k_top,ispec2D), &
+                       normal_moho(:,i,j,ispec2D)) 
+
+            iglob_bot = ibool(i,j,k_bot,ispec_bot)
+            ! iglob_top == iglob_bot!
+
+            call compute_boundary_kernel(kernel_moho_bot, &
+                       mustore(i,j,k_bot,ispec_bot), kappastore(i,j,k_bot,ispec_bot), rho_vs(i,j,k_bot,ispec_bot), &
+                       accel(:,iglob_bot),b_displ(:,iglob_bot),dsdx_bot(:,:,i,j,k_bot,ispec2D), b_dsdx_bot(:,:,i,j,k_bot,ispec2D), &
+                       normal_moho(:,i,j,ispec2D))
+
+            moho_kl(i,j,ispec2D) = moho_kl(i,j,ispec2D) + (kernel_moho_top - kernel_moho_bot) * deltat
+
+          enddo
+        enddo
+      enddo
+    endif
+    
+
   endif
 
 ! save MOVIE on the SURFACE
@@ -3048,6 +3192,12 @@
     open(unit=27,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted')
     write(27) alpha_kl
     close(27)
+    if (SAVE_MOHO_MESH) then
+      open(unit=27,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted')
+      write(27) moho_kl
+      close(27)
+    endif
+    
   endif
 
   if(ABSORBING_CONDITIONS .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
