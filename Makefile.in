@@ -143,6 +143,7 @@ libspecfem_a_OBJECTS = \
 	$O/write_AVS_DX_mesh_quality_data.o \
 	$O/write_AVS_DX_surface_data.o \
 	$O/write_seismograms.o \
+	$O/compute_boundary_kernel.o \
 	$(EMPTY_MACRO)
 
 # solver objects with statically allocated arrays; dependent upon
@@ -234,7 +235,8 @@ convolve_source_timefunction: xconvolve_source_timefunction
 create_header_file: xcreate_header_file
 create_movie_AVS_DX: xcreate_movie_AVS_DX
 create_movie_GMT_basin: xcreate_movie_GMT_basin
-combine_paraview_data: xcombine_paraview_data
+combine_vol_data: xcombine_vol_data
+combine_surf_data: xcombine_surf_data
 
 
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
@@ -255,14 +257,17 @@ xcheck_mesh_quality_AVS_DX: $O/check_mesh_quality_AVS_DX.o $(LIBSPECFEM)
 xcheck_buffers_2D: $O/check_buffers_2D.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcheck_buffers_2D $O/check_buffers_2D.o $(LIBSPECFEM)
 
-xcombine_paraview_data: $O/combine_paraview_data.o $O/write_c_binary.o
-	${FCCOMPILE_CHECK} -o xcombine_paraview_data  $O/combine_paraview_data.o $O/write_c_binary.o
+xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o
+	${FCCOMPILE_CHECK} -o xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o
+
+xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o
+	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o
 
 xcreate_movie_GMT_basin:  $O/create_movie_GMT_basin.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcreate_movie_GMT_basin  $O/create_movie_GMT_basin.o $(LIBSPECFEM)
 
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_paraview_data xcreate_movie_GMT_basin
+	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT_basin
 
 ###
 ### rule for the archive library
@@ -487,8 +492,14 @@ $O/compute_arrays_source.o: constants.h compute_arrays_source.f90
 $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_attenuation_model.o get_attenuation_model.f90
 
-$O/combine_paraview_data.o: constants.h combine_paraview_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_paraview_data.o combine_paraview_data.f90
+$O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
+
+$O/combine_vol_data.o: constants.h combine_vol_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90
+
+$O/combine_surf_data.o: constants.h combine_surf_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
 
 $O/create_movie_GMT_basin.o: constants.h create_movie_GMT_basin.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_movie_GMT_basin.o create_movie_GMT_basin.f90
