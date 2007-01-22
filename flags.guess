@@ -33,7 +33,7 @@ case $UNAME_MS in
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
                     # standard options
-                    FLAGS_NO_CHECK="-O3 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds"
+                    FLAGS_NO_CHECK="-O3 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -extend_source"
                     # old hrothgar cluster at Caltech
                     #FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -assume byterecl
                     # Pangu at Caltech

@@ -409,7 +409,7 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,prname,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,prname,prname_Q,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -478,7 +478,7 @@
 
 ! check simulation parameters
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
-  if (SIMULATION_TYPE == 3 .and. ATTENUATION) call exit_mpi(myrank, 'attenuation is not implemented for backward simulations')
+! LQY -- note: kernel simulations with attenuation turned on has been implemented
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -687,6 +687,8 @@
 
 ! create name of database
   call create_name_database(prname,myrank,LOCAL_PATH)
+  if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
+           call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
 
 ! dynamic allocation of arrays
 
@@ -2819,6 +2821,45 @@
 
   endif ! nrec_local
 
+! resetting d/v/a/R/eps for the backward reconstruction with attenuation
+  if (ATTENUATION .and. it > 1 .and. it < NSTEP) then
+  if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
+    write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it
+    open(unit=27,file=trim(prname_Q)//trim(outputname),status='old',action='read',form='unformatted')
+    read(27) b_displ
+    read(27) b_veloc
+    read(27) b_accel
+    read(27) b_R_xx
+    read(27) b_R_yy
+    read(27) b_R_xy
+    read(27) b_R_xz
+    read(27) b_R_yz
+    read(27) b_epsilondev_xx
+    read(27) b_epsilondev_yy
+    read(27) b_epsilondev_xy
+    read(27) b_epsilondev_xz
+    read(27) b_epsilondev_yz
+    close(27)
+  else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. mod(it,NSTEP_Q_SAVE) == 0) then
+    write(outputname,"('save_Q_arrays_',i6.6,'.bin')") it
+    open(unit=27,file=trim(prname_Q)//trim(outputname),status='unknown',action='write',form='unformatted')
+    write(27) displ
+    write(27) veloc
+    write(27) accel
+    write(27) R_xx
+    write(27) R_yy
+    write(27) R_xy
+    write(27) R_xz
+    write(27) R_yz
+    write(27) epsilondev_xx
+    write(27) epsilondev_yy
+    write(27) epsilondev_xy
+    write(27) epsilondev_xz
+    write(27) epsilondev_yz
+    close(27)
+  endif
+  endif
+
 ! kernel calculations
   if (SIMULATION_TYPE == 3) then
     do ispec = 1, NSPEC_AB
@@ -2859,8 +2900,6 @@
         enddo
       enddo
     endif
-    
-
   endif
 
 ! save MOVIE on the SURFACE
