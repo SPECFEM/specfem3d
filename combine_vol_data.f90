@@ -135,11 +135,7 @@
     close(27)
     print *, trim(local_data_file)
 
-    if (CUSTOM_REAL == SIZE_DOUBLE) then
-      dat = sngl(data)
-    else
-      dat = data
-    endif
+    dat = data
 
   ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
@@ -295,15 +291,9 @@
               iglob = ibool(i,j,k,ispec)
               if(.not. mask_ibool(iglob)) then
                 numpoin = numpoin + 1
-                if (CUSTOM_REAL == SIZE_DOUBLE) then
-                  x = sngl(xstore(iglob))
-                  y = sngl(ystore(iglob))
-                  z = sngl(zstore(iglob))
-                else
-                  x = xstore(iglob)
-                  y = ystore(iglob)
-                  z = zstore(iglob)
-                endif
+                x = xstore(iglob)
+                y = ystore(iglob)
+                z = zstore(iglob)
                 call write_real(x)
                 call write_real(y)
                 call write_real(z)
