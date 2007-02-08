@@ -141,8 +141,8 @@
     NER_SEDIM          = 1
     NER_BASEMENT_SEDIM = 2
     NER_16_BASEMENT    = 2
-    NER_MOHO_16        = 2
-    NER_BOTTOM_MOHO    = 5
+    NER_MOHO_16        = 3
+    NER_BOTTOM_MOHO    = 3
 
   else if(UTM_MAX/NEX_MAX >= 1.0) then
 
