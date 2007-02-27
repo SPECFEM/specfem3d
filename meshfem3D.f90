@@ -54,8 +54,7 @@
 !                                                                     !
 !=====================================================================!
 !
-! If you use this code for your own research, please send an email
-! to Jeroen Tromp <jtromp AT caltech.edu> for information, and cite:
+! If you use this code for your own research, please cite some of these articles:
 !
 ! @ARTICLE{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
@@ -86,6 +85,18 @@
 ! volume=88,
 ! number=2,
 ! pages={368-392}}
+!
+! If you use the kernel capabilities of the code, please cite
+!
+! @ARTICLE{LiTr06,
+! author={Qinya Liu and Jeroen Tromp},
+! title={Finite-frequency kernels based on adjoint methods},
+! journal={Bull. Seismol. Soc. Am.},
+! year=2006,
+! volume=96,
+! number=6,
+! pages={2383-2397},
+! doi={10.1785/0120060041}}
 !
 ! Reference frame - convention:
 ! ----------------------------
