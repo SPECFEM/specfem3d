@@ -57,8 +57,7 @@
 !                                                                       !
 !=======================================================================!
 !
-! If you use this code for your own research, please send an email
-! to Jeroen Tromp <jtromp AT caltech.edu> for information, and cite:
+! If you use this code for your own research, please cite some of these articles:
 !
 ! @ARTICLE{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
@@ -92,12 +91,15 @@
 !
 ! If you use the kernel capabilities of the code, please cite
 !
-! @ARTICLE{Liu06a,
-!     AUTHOR = {Q. Liu and J. Tromp},
-!     JOURNAL =bssa,
-!     TITLE = {{Finite-frequency kernels based upon adjoint methods}},
-!     NOTE = {accepted},
-!     YEAR = {2006}
+! @ARTICLE{LiTr06,
+! author={Qinya Liu and Jeroen Tromp},
+! title={Finite-frequency kernels based on adjoint methods},
+! journal={Bull. Seismol. Soc. Am.},
+! year=2006,
+! volume=96,
+! number=6,
+! pages={2383-2397},
+! doi={10.1785/0120060041}}
 !
 ! Reference frame - convention:
 ! ----------------------------
@@ -182,7 +184,7 @@
     normal_xmax,normal_ymin,normal_ymax, &
     normal_bottom,normal_top
 
-! Moho mesh 
+! Moho mesh
   integer,dimension(:), allocatable :: ibelm_moho_top, ibelm_moho_bot
   real(CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_moho
   integer :: nspec2D_moho, njunk
@@ -742,7 +744,7 @@
   read(27) normal_top
   close(27)
 
-! moho boundary 
+! moho boundary
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
 
     allocate(ibelm_moho_top(NSPEC2D_BOTTOM))
@@ -756,7 +758,7 @@
     allocate(b_dsdx_bot(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
     allocate(moho_kl(NGLLX,NGLLY,NSPEC2D_BOTTOM))
     moho_kl = ZERO
-    
+
     open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
     read(27) nspec2D_moho
     read(27) njunk
@@ -1746,7 +1748,7 @@
               dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
             endif
           endif
-              
+
 ! precompute some sums to save CPU time
           duxdxl_plus_duydyl = duxdxl + duydyl
           duxdxl_plus_duzdzl = duxdxl + duzdzl
@@ -2872,7 +2874,7 @@
         enddo
       enddo
     enddo
-   
+
     if (SAVE_MOHO_MESH) then
       do ispec2D = 1, nspec2D_moho
         ispec_top = ibelm_moho_top(ispec2D)
@@ -2884,7 +2886,7 @@
             call compute_boundary_kernel(kernel_moho_top, &
                        mustore(i,j,k_top,ispec_top), kappastore(i,j,k_top,ispec_top), rho_vs(i,j,k_top,ispec_top), &
                        accel(:,iglob_top),b_displ(:,iglob_top),dsdx_top(:,:,i,j,k_top,ispec2D), b_dsdx_top(:,:,i,j,k_top,ispec2D), &
-                       normal_moho(:,i,j,ispec2D)) 
+                       normal_moho(:,i,j,ispec2D))
 
             iglob_bot = ibool(i,j,k_bot,ispec_bot)
             ! iglob_top == iglob_bot!
@@ -3236,7 +3238,7 @@
       write(27) moho_kl
       close(27)
     endif
-    
+
   endif
 
   if(ABSORBING_CONDITIONS .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
