@@ -27,7 +27,7 @@
 
   integer nrec,nrec_local,NSTEP,it,myrank,istore
   integer, dimension(nrec_local) :: number_receiver_global
-  real(kind=CUSTOM_REAL), dimension(3,nrec_local,NSTEP) :: seismograms
+  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision hdur,DT
   character(len=150) LOCAL_PATH
 
@@ -60,7 +60,7 @@
 ! save three components of displacement vector
     irecord = 1
 
-    do iorientation = 1,3
+    do iorientation = 1,NDIM
 
       if(iorientation == 1) then
         chn = 'BHE'
@@ -136,7 +136,7 @@
 
   integer nrec_local,NSTEP,it,myrank,istore
   integer, dimension(nrec_local) :: number_receiver_global
-  real(kind=CUSTOM_REAL), dimension(3,nrec_local,NSTEP) :: seismograms
+  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision hdur,DT
   character(len=150) LOCAL_PATH
 
@@ -167,7 +167,7 @@
 ! save three components of displacement vector
     irecord = 1
 
-    do iorientation = 1,3
+    do iorientation = 1,NDIM
 
       if(iorientation == 1) then
         chn = 'BHE'
