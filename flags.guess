@@ -165,9 +165,9 @@ case $UNAME_MS in
                 # small (which is often the case)
                 #
                 if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-O3 -qlanglvl=95pure -qfree=f90 -qsuffix=f=f90 -qsave -qnostrict -qhalt=w"
+                    FLAGS_CHECK="-O3 -qfree=f90 -qsuffix=f=f90 -qsave -qhalt=w"
                 # use this on MareNostrum at the Barcelona SuperComputing Center (Spain)
-                #FLAGS_CHECK = -O3 -qsave -qtune=ppc970 -qarch=ppc970 -qlanglvl=95pure -qfree=f90 -qsuffix=f=f90 -qnostrict -qhalt=w
+                #FLAGS_CHECK = -O3 -qsave -qtune=ppc970 -qarch=ppc970 -qfree=f90 -qsuffix=f=f90 -qhalt=w
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
                     FLAGS_NO_CHECK="\$(FLAGS_CHECK)"
