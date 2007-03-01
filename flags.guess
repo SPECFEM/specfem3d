@@ -165,16 +165,13 @@ case $UNAME_MS in
                 # small (which is often the case)
                 #
                 if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-O3 -qsave -Q -qarch=auto -qcache=auto -qtune=auto -qlanglvl=95pure -qmaxmem=65536 -qflag=L:L -qhalt=L"
-                    #FLAGS_CHECK = -q64 -qsave -O3 -qarch=pwr4 -qlanglvl=95pure -qflag=L:L -qhalt=L
+                    FLAGS_CHECK="-O3 -qlanglvl=95pure -qfree=f90 -qsuffix=f=f90 -qsave -qnostrict -qhalt=w"
+                # use this on MareNostrum at the Barcelona SuperComputing Center (Spain)
+                #FLAGS_CHECK = -O3 -qsave -qtune=ppc970 -qarch=ppc970 -qlanglvl=95pure -qfree=f90 -qsuffix=f=f90 -qnostrict -qhalt=w
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
                     FLAGS_NO_CHECK="\$(FLAGS_CHECK)"
                 fi
-                # use this on IDRIS machines, www.idris.fr
-                #FLAGS_CHECK = -q64 -qsave -O4 -qfree=f90
-                # use this on MareNostrum at the Barcelona SuperComputing Center (Spain)
-                #FLAGS_CHECK = -O3 -qsave -qstrict -qtune=ppc970 -qarch=ppc970 -qfree=f90
                 ;;
         esac
         ;;
