@@ -318,7 +318,6 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: adj_sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
 !ADJOINT
-
   double precision sec,stf
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
@@ -336,6 +335,11 @@
   double precision hlagrange
 ! ADJOINT
   integer nrec_simulation, nadj_rec_local
+! source frechet derivatives
+  real(kind=CUSTOM_REAL) :: displ_s(NDIM,NGLLX,NGLLY,NGLLZ), eps_s(NDIM,NDIM), eps_m_s(NDIM), stf_deltat
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
+  double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
 ! ADJOINT
 
 ! timing information for the stations
@@ -346,6 +350,7 @@
 ! seismograms
   double precision dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: seismograms_d,seismograms_v,seismograms_a
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
 
   integer i,j,k,ispec,irec,iglob
 
@@ -1136,6 +1141,9 @@
       hgammar_store(irec_local,:) = hgammar(:)
     enddo
   else
+    allocate(hpxir_store(nrec_local,NGLLX))
+    allocate(hpetar_store(nrec_local,NGLLY))
+    allocate(hpgammar_store(nrec_local,NGLLZ))
     do irec_local = 1,nrec_local
       irec = number_receiver_global(irec_local)
       call lagrange_any(xi_source(irec),NGLLX,xigll,hxir,hpxir)
@@ -1144,9 +1152,12 @@
       hxir_store(irec_local,:) = hxir(:)
       hetar_store(irec_local,:) = hetar(:)
       hgammar_store(irec_local,:) = hgammar(:)
+      hpxir_store(irec_local,:) = hpxir(:)
+      hpetar_store(irec_local,:) = hpetar(:)
+      hpgammar_store(irec_local,:) = hpgammar(:)
     enddo
   endif
-  endif ! nrec_local
+  endif ! nrec_local > 0
 
 ! check that the sum of the number of receivers in each slice is nrec
   call sum_all_i(nrec_local,nrec_tot_found)
@@ -1339,6 +1350,20 @@
   seismograms_d(:,:,:) = 0._CUSTOM_REAL
   seismograms_v(:,:,:) = 0._CUSTOM_REAL
   seismograms_a(:,:,:) = 0._CUSTOM_REAL
+  if (SIMULATION_TYPE == 2) then
+    ! allocate Frechet derivatives array
+    allocate(Mxx_der(nrec_local),Myy_der(nrec_local),Mzz_der(nrec_local),Mxy_der(nrec_local), &
+               Mxz_der(nrec_local),Myz_der(nrec_local), sloc_der(NDIM,nrec_local))
+    Mxx_der = 0._CUSTOM_REAL
+    Myy_der = 0._CUSTOM_REAL
+    Mzz_der = 0._CUSTOM_REAL
+    Mxy_der = 0._CUSTOM_REAL
+    Mxz_der = 0._CUSTOM_REAL
+    Myz_der = 0._CUSTOM_REAL
+    sloc_der = 0._CUSTOM_REAL
+    allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
+    seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
+  endif
   endif
 
 ! initialize arrays to zero
@@ -2760,10 +2785,31 @@
             axd = axd + dble(accel(1,iglob))*hlagrange
             ayd = ayd + dble(accel(2,iglob))*hlagrange
             azd = azd + dble(accel(3,iglob))*hlagrange
+            
+            displ_s(:,i,j,k) = displ(:,iglob)
 
           enddo
         enddo
       enddo
+
+      ispec = ispec_selected_source(irec)
+
+      call compute_adj_source_frechet(displ_s,Mxx(irec),Myy(irec),Mzz(irec),Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
+           hxir_store(irec_local,:),hetar_store(irec_local,:),hgammar_store(irec_local,:), &
+           hpxir_store(irec_local,:),hpetar_store(irec_local,:),hpgammar_store(irec_local,:),hprime_xx,hprime_yy,hprime_zz, &
+           xix(:,:,:,ispec),xiy(:,:,:,ispec),xiz(:,:,:,ispec),etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
+           gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
+
+      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(irec),hdur_gaussian(irec))
+      stf_deltat = stf * deltat
+      Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
+      Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
+      Mzz_der(irec_local) = Mzz_der(irec_local) + eps_s(3,3) * stf_deltat
+      Mxy_der(irec_local) = Mxy_der(irec_local) + 2 * eps_s(1,2) * stf_deltat
+      Mxz_der(irec_local) = Mxz_der(irec_local) + 2 * eps_s(1,3) * stf_deltat
+      Myz_der(irec_local) = Myz_der(irec_local) + 2 * eps_s(2,3) * stf_deltat
+                 
+      sloc_der(:,irec_local) = sloc_der(:,irec_local) + eps_m_s(:) * stf_deltat
 
     else if (SIMULATION_TYPE == 3) then
 
@@ -2803,6 +2849,11 @@
         seismograms_v(:,irec_local,it) = (nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd)
         seismograms_a(:,irec_local,it) = (nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd)
       endif
+
+      if (SIMULATION_TYPE == 2) then
+        seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
+      endif
+
 
   enddo
 
@@ -3258,9 +3309,35 @@
       call write_seismograms(myrank,seismograms_a,number_receiver_global,station_name, &
           network_name,nrec,nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,3)
     else
-      call write_adj_seismograms(myrank,seismograms_d,number_receiver_global, &
-          nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
-  endif
+!      call write_adj_seismograms(myrank,seismograms_d,number_receiver_global, &
+!          nrec_local,it,DT,NSTEP,t0,LOCAL_PATH,1)
+      call write_adj_seismograms2(myrank,seismograms_eps,number_receiver_global, &
+            nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
+      do irec_local = 1, nrec_local
+        write(outputname,'(a,i5.5)') 'OUTPUT_FILES/src_frechet.',number_receiver_global(irec_local)
+        open(unit=27,file=trim(outputname),status='unknown')
+!
+! r -> z, theta -> -y, phi -> x
+!
+!  Mrr =  Mzz
+!  Mtt =  Myy
+!  Mpp =  Mxx
+!  Mrt = -Myz
+!  Mrp =  Mxz
+!  Mtp = -Mxy
+
+        write(27,*) Mzz_der(irec_local)
+        write(27,*) Myy_der(irec_local)
+        write(27,*) Mxx_der(irec_local)
+        write(27,*) -Myz_der(irec_local)
+        write(27,*) Mxz_der(irec_local)
+        write(27,*) -Mxy_der(irec_local)
+        write(27,*) sloc_der(1,irec_local)
+        write(27,*) sloc_der(2,irec_local)
+        write(27,*) sloc_der(3,irec_local)
+        close(27)
+      enddo
+    endif
   endif
 
 ! close the main output file
