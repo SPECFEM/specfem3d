@@ -193,8 +193,7 @@
     sig=(x(i)-x(i-1))/(x(i+1)-x(i-1))
     p=sig*y2(i-1)+2.d0
     y2(i)=(sig-1.d0)/p
-    u(i)=(6.d0*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1)) &
-                /(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
+    u(i)=(6.d0*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
   enddo
 
   qn=0.5d0
@@ -211,36 +210,38 @@
 
 ! --------------
 
-! evaluate spline (Numerical Recipes)
+! evaluate spline (adapted from Numerical Recipes)
 
   subroutine splint(xa,ya,y2a,n,x,y)
 
   implicit none
 
   integer n
-  double precision XA(N),YA(N),Y2A(N)
+  double precision, dimension(n) :: XA,YA,Y2A
   double precision x,y
 
   integer k,klo,khi
   double precision h,a,b
 
-  KLO=1
-  KHI=N
- 1 IF (KHI-KLO > 1) THEN
-    K=(KHI+KLO)/2
-    IF(XA(K) > X)THEN
-      KHI=K
-    ELSE
-      KLO=K
-    ENDIF
-  goto 1
-  ENDIF
-  H=XA(KHI)-XA(KLO)
-  IF (H == 0.d0) stop 'Bad input in spline evaluation'
-  A=(XA(KHI)-X)/H
-  B=(X-XA(KLO))/H
+  KLO = 1
+  KHI = N
 
-  Y=A*YA(KLO)+B*YA(KHI)+((A**3-A)*Y2A(KLO) + (B**3-B)*Y2A(KHI))*(H**2)/6.d0
+  do while (KHI-KLO > 1)
+    K=(KHI+KLO)/2
+    if(XA(K) > X) then
+      KHI=K
+    else
+      KLO=K
+    endif
+  enddo
+
+  H = XA(KHI) - XA(KLO)
+  IF (H == 0.d0) stop 'bad input in spline evaluation'
+
+  A = (XA(KHI)-X) / H
+  B = (X-XA(KLO)) / H
+
+  Y = A*YA(KLO) + B*YA(KHI) + ((A**3-A)*Y2A(KLO) + (B**3-B)*Y2A(KHI))*(H**2)/6.d0
 
   end subroutine splint
 
