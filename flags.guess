@@ -18,10 +18,10 @@ case $UNAME_MS in
                 # Beowulf Portland pgf90
                 #
                 if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-O2 -Mbounds -Mneginfo -Mdclchk -Knoieee"
+                    FLAGS_CHECK="-O3 -Mbounds -Mneginfo -Mdclchk -Knoieee"
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
-                    FLAGS_NO_CHECK="-O2 -Mnobounds -Mneginfo -Mdclchk -Knoieee"
+                    FLAGS_NO_CHECK="-O3 -Mnobounds -Mneginfo -Mdclchk -Knoieee"
                 fi
                 ;;
             ifort|*/ifort)
