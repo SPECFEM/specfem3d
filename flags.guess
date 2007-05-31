@@ -18,10 +18,10 @@ case $UNAME_MS in
                 # Beowulf Portland pgf90
                 #
                 if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-O3 -Mbounds -Mneginfo -Mdclchk -Knoieee"
+                    FLAGS_CHECK="-fast -Mnobounds -Mneginfo -Mdclchk -Knoieee"
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
-                    FLAGS_NO_CHECK="-O3 -Mnobounds -Mneginfo -Mdclchk -Knoieee"
+                    FLAGS_NO_CHECK="-fast -Mnobounds -Mneginfo -Mdclchk -Knoieee -Minline"
                 fi
                 ;;
             ifort|*/ifort)
@@ -33,9 +33,7 @@ case $UNAME_MS in
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
                     # standard options
-                    FLAGS_NO_CHECK="-O3 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -extend_source"
-                    # old hrothgar cluster at Caltech
-                    #FLAGS_NO_CHECK = -O3 -tpp6 -xK -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -assume byterecl
+                    FLAGS_NO_CHECK="-O3 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -assume byterecl"
                     # Pangu at Caltech
                     #FLAGS_NO_CHECK = -O3 -static -ip -xP -Wl,--allow-multiple-definition -tpp7 -implicitnone -std95 -e95 -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -assume byterecl
                     # debug with range checking
@@ -43,12 +41,24 @@ case $UNAME_MS in
                 fi
                 #MPI_LIBS = -Vaxlib
                 ;;
+            gfortran|*/gfortran)
+                #
+                # GNU gfortran
+                #
+                if test x"$FLAGS_NO_CHECK" = x; then
+                    FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow"
+                fi
+                if test x"$FLAGS_CHECK" = x; then
+##############                    FLAGS_CHECK="\$(FLAGS_NO_CHECK) -fbounds-check"
+                    FLAGS_CHECK="\$(FLAGS_NO_CHECK)"
+                fi
+                ;;
             f95|*/f95)
                 #
                 # GNU gfortran
                 #
                 if test x"$FLAGS_NO_CHECK" = x; then
-                    FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow"
+                    FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow"
                 fi
                 if test x"$FLAGS_CHECK" = x; then
 ##############                    FLAGS_CHECK="\$(FLAGS_NO_CHECK) -fbounds-check"
@@ -165,9 +175,9 @@ case $UNAME_MS in
                 # small (which is often the case)
                 #
                 if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-O3 -qfree=f90 -qsuffix=f=f90 -qsave -qhalt=w"
-                # use this on MareNostrum at the Barcelona SuperComputing Center (Spain)
-                #FLAGS_CHECK = -O3 -qsave -qtune=ppc970 -qarch=ppc970 -qfree=f90 -qsuffix=f=f90 -qhalt=w
+                    FLAGS_CHECK="-O3 -qsave -qnostrict -qarch=auto -qtune=auto -qcache=auto -qfree=f90 -Q -qsuffix=f=f90 -qhalt=w"
+                # on MareNostrum at the Barcelona SuperComputing Center (Spain) use
+                # -qtune=ppc970 -qarch=ppc64v instead of -qarch=auto -qtune=auto
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
                     FLAGS_NO_CHECK="\$(FLAGS_CHECK)"
