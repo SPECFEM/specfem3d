@@ -30,8 +30,6 @@
   integer ier
 
 ! stop all the MPI processes, and exit
-! on some machines, MPI_FINALIZE needs to be called before MPI_ABORT
-  call MPI_FINALIZE(ier)
   call MPI_ABORT(ier)
   stop 'error, program ended in exit_MPI'
 
