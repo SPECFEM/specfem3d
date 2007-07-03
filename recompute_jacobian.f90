@@ -44,9 +44,6 @@
 ! for 8-node element
   double precision, parameter :: ONE_EIGHTH = 0.125d0
 
-! for checking the 3D shape functions
-  double precision sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
-
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
@@ -103,27 +100,6 @@
   dershape3D(3,7) = ONE_EIGHTH*ra1*rb1
   dershape3D(3,8) = ONE_EIGHTH*ra2*rb1
 
-!--- check the shape functions and their derivatives
-
-  sumshape = ZERO
-  sumdershapexi = ZERO
-  sumdershapeeta = ZERO
-  sumdershapegamma = ZERO
-
-  do ia=1,NGNOD
-    sumshape = sumshape + shape3D(ia)
-    sumdershapexi = sumdershapexi + dershape3D(1,ia)
-    sumdershapeeta = sumdershapeeta + dershape3D(2,ia)
-    sumdershapegamma = sumdershapegamma + dershape3D(3,ia)
-  enddo
-
-! sum of shape functions should be one
-! sum of derivaticves of shape functions should be zero
-  if(abs(sumshape-one) >  TINYVAL) stop 'error shape functions'
-  if(abs(sumdershapexi) >  TINYVAL) stop 'error deriv xi shape functions'
-  if(abs(sumdershapeeta) >  TINYVAL) stop 'error deriv eta shape functions'
-  if(abs(sumdershapegamma) >  TINYVAL) stop 'error deriv gamma shape functions'
-
 ! compute coordinates and jacobian matrix
   x=ZERO
   y=ZERO
@@ -154,8 +130,7 @@
     zgamma=zgamma+dershape3D(3,ia)*zelm(ia)
   enddo
 
-  jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + &
-             xgamma*(yxi*zeta-yeta*zxi)
+  jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
 
   if(jacobian <= ZERO) stop '3D Jacobian undefined'
 
