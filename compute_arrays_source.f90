@@ -282,17 +282,17 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
         tempz3l = 0._CUSTOM_REAL
 
         do l=1,NGLLX
-          hp1 = hprime_xx(l,i)
+          hp1 = hprime_xx(i,l)
           tempx1l = tempx1l + displ_s(1,l,j,k)*hp1
           tempy1l = tempy1l + displ_s(2,l,j,k)*hp1
           tempz1l = tempz1l + displ_s(3,l,j,k)*hp1
           
-          hp2 = hprime_yy(l,j)
+          hp2 = hprime_yy(j,l)
           tempx2l = tempx2l + displ_s(1,i,l,k)*hp2
           tempy2l = tempy2l + displ_s(2,i,l,k)*hp2
           tempz2l = tempz2l + displ_s(3,i,l,k)*hp2
 
-          hp3 = hprime_zz(l,k)
+          hp3 = hprime_zz(k,l)
           tempx3l = tempx3l + displ_s(1,i,j,l)*hp3
           tempy3l = tempy3l + displ_s(2,i,j,l)*hp3
           tempz3l = tempz3l + displ_s(3,i,j,l)*hp3
