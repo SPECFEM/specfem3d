@@ -221,6 +221,11 @@
   logical, dimension(:,:,:,:), allocatable :: flag_sediments
   logical, dimension(:), allocatable :: not_fully_in_bedrock
 
+! mask to sort ibool
+  integer, dimension(:), allocatable :: mask_ibool
+  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori
+  integer :: inumber
+
 ! **************
 
 ! create the name for the database of the current slide and region
@@ -876,6 +881,34 @@ enddo
 
   if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
     call exit_MPI(myrank,'incorrect global numbering')
+
+! create a new indirect addressing array instead, to reduce cache misses
+! in memory access in the solver
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(mask_ibool(nglob))
+  mask_ibool(:) = -1
+  copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)
+
+  inumber = 0
+  do ispec=1,nspec
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if(mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
+! create a new point
+          inumber = inumber + 1
+          ibool(i,j,k,ispec) = inumber
+          mask_ibool(copy_ibool_ori(i,j,k,ispec)) = inumber
+        else
+! use an existing point created previously
+          ibool(i,j,k,ispec) = mask_ibool(copy_ibool_ori(i,j,k,ispec))
+        endif
+      enddo
+    enddo
+  enddo
+  enddo
+  deallocate(copy_ibool_ori)
+  deallocate(mask_ibool)
 
 ! creating mass matrix (will be fully assembled with MPI in the solver)
   allocate(rmass(nglob))
