@@ -41,7 +41,8 @@
       meanval = meanval / dble((2*NSIZE+1)**2)
       value_new(ivalue,i,j) = meanval
     enddo
-    print *,(value_new(ivalue,i,j),ivalue=1,18)
+    !print *,(value_new(ivalue,i,j),ivalue=1,18)
+    write(*,'(3f7.4)') (value_new(ivalue,i,j),ivalue=1,18)
   enddo
   enddo
 
