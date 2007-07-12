@@ -51,6 +51,3 @@ print *,'end'
 
   end
 
-!! DK DK add UTM projection routine
-  include "../../utm_geo.f90"
-

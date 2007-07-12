@@ -5,6 +5,10 @@
 
   include "../../constants.h"
 
+  ! UTM projection zone
+  integer, parameter :: UTM_PROJECTION_ZONE = 11
+  logical, parameter :: SUPPRESS_UTM_PROJECTION = .false.
+
   integer i,j
   double precision utm_x,utm_y
 
@@ -43,7 +47,7 @@
 print *,'object 1 class array type float rank 1 shape 3 items 1107 data follows'
   do j=1,41
   do i=1,27
-  call utm_geo(rlon(i,j),rlat(i,j),utm_x,utm_y,IZONE_UTM_LA,ILONGLAT2UTM)
+  call utm_geo(rlon(i,j),rlat(i,j),utm_x,utm_y,UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 !!!  print *,rlon(i,j),rlat(i,j),' 0'
     print *,utm_x,utm_y,' 0'
   enddo
