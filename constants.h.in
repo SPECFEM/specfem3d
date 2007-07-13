@@ -318,9 +318,13 @@
   double precision, parameter :: SPACING_UTM_Y_HAUKSSON = (UTM_Y_END_HAUKSSON - UTM_Y_ORIG_HAUKSSON) / (NGRID_NEW_HAUKSSON-1.d0)
 
 ! layers in the So-Cal regional model
+! DEPTH_MOHO_SOCAL = -35 km was based on Dreger and Helmberger (1990)
+! and is (July 2007) the preferred Moho depth for Dreger.
+! The depth of 32 km is used in the standard processing (Wald et al., 1995)
+! of SoCal events and is the value in the original Kanamori-Hadley (1975) model.
   double precision, parameter :: DEPTH_5p5km_SOCAL = -5500.d0
   double precision, parameter :: DEPTH_16km_SOCAL = -16000.d0
-  double precision, parameter :: DEPTH_MOHO_SOCAL = -35000.d0
+  double precision, parameter :: DEPTH_MOHO_SOCAL = -32000.d0
 
 ! layer for Lacq (France) gas field
   double precision, parameter :: DEPTH_INTERFACE_LACQ = -7000.d0
