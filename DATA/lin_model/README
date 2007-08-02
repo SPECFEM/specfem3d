@@ -40,6 +40,17 @@ you need to comment the Hauksson model lines and un-comment the Lin model lines.
 Third, by having one less layer in the Lin model, I needed to make minor
 adjustments to hauksson_model.f90, which I have copied to
 SPECFEM3D/DATA/lin_model/hauksson_model.f90
+
+Fourth, make sure the extended region is specified in the Par_file,
+which I have copied to
+SPECFEM3D/DATA/lin_model/Par_file
+
+LONGITUDE_MIN                   = -121.6d0   ! -120.3d0
+NEX_XI                          = 336
+NEX_ETA                         = 288
+NPROC_XI                        = 14
+NPROC_ETA                       = 12
+
 -----------------------------------
 
 In the future, we can decide how to commit these changes.  For example, perhaps having
