@@ -1,0 +1,11 @@
+Carl Tape, 09-Aug-2007
+
+STATIONS moved to STATIONS_OLD.  All of STATIONS_OLD --- except THSB.AZ and K400.CE and the DW network stations --- are within the new STATIONS file.
+
+STATIONS_CALIFORNIA_BROADBAND -- all broadband stations in California, compiled from three sources : SCEDC, NCEDC, and BK (NCEDC).  (This file should be the default.)
+
+STATIONS_CALIFORNIA_TOMO -- stations within region of interest for adjoint tomography.  The aim is to exclude stations and sources within a certain distance of the boundaries, to avoid strong effects of false reflections.
+
+STATIONS_CALIFORNIA_BROADBAND moved to STATIONS 
+
+---------------------
