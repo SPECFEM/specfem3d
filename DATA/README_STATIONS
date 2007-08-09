@@ -6,6 +6,6 @@ STATIONS_CALIFORNIA_BROADBAND -- all broadband stations in California, compiled 
 
 STATIONS_CALIFORNIA_TOMO -- stations within region of interest for adjoint tomography.  The aim is to exclude stations and sources within a certain distance of the boundaries, to avoid strong effects of false reflections.
 
-STATIONS_CALIFORNIA_BROADBAND moved to STATIONS 
+STATIONS_CALIFORNIA_BROADBAND copied to STATIONS 
 
 ---------------------
