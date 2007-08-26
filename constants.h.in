@@ -85,8 +85,11 @@
 ! number of sources to be gathered by MPI_Gather
   integer, parameter :: NGATHER_SOURCES = 10000
 
-! source decay rate
-  double precision, parameter :: SOURCE_DECAY_RATE = 1.628d0
+! we mimic a triangle of half duration equal to half_duration_triangle
+! using a Gaussian having a very close shape, as explained in Figure 4.2
+! of the manual. This source decay rate to mimic an equivalent triangle
+! was found by trial and error
+  double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
 ! ---------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily, 
