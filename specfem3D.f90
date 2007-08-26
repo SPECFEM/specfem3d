@@ -981,7 +981,7 @@
      endif
   endif
 ! convert the half duration for triangle STF to the one for gaussian STF
-  hdur_gaussian = hdur/SOURCE_DECAY_RATE
+  hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
 
 ! define t0 as the earliest start time
   t0 = - 1.5d0 * minval(t_cmt-hdur)
