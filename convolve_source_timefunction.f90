@@ -47,15 +47,23 @@
 ! allocate arrays
   allocate(time(nlines),sem(nlines),sem_fil(nlines))
 
+! read the input seismogram
   do i = 1,nlines
     read(5,*) time(i),sem(i)
   enddo
 
+! define a Gaussian with the right exponent to mimic a triangle of equivalent half duration
   alpha = SOURCE_DECAY_MIMIC_TRIANGLE/half_duration_triangle
 
-  dt = time(2)-time(1)
+! compute the time step
+  dt = time(2) - time(1)
 
-  N_j = int(half_duration_triangle/dt)
+! number of integers for which the source wavelet is different from zero
+  if(triangle) then
+    N_j = ceiling(half_duration_triangle/dt)
+  else
+    N_j = ceiling(1.5d0*half_duration_triangle/dt)
+  endif
 
   do i = 1,nlines
 
@@ -72,7 +80,7 @@
        height = 1.d0 / half_duration_triangle
        if(abs(tau_j) > half_duration_triangle) then
          source = 0.d0
-       else if (tau_j < 0) then
+       else if (tau_j < 0.d0) then
          t1 = - N_j * dt
          displ1 = 0.d0
          t2 = 0.d0
@@ -108,7 +116,7 @@
   enddo
 
 ! compute number of samples to remove from end of seismograms
-  number_remove = int(half_duration_triangle / dt) + 1
+  number_remove = N_j + 1
   do i=1,nlines - number_remove
     write(*,*) sngl(time(i)),' ',sngl(sem_fil(i))
   enddo
