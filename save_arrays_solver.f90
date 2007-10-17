@@ -201,6 +201,15 @@
   write(27) rho_vs
   close(27)
 
+!!$! vp (for checking the mesh and model)
+!!$  open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted')
+!!$  write(27) (FOUR_THIRDS * mustore + kappastore) / rho_vp
+!!$  close(27)
+!!$
+!!$! vs (for checking the mesh and model)
+!!$  open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted')
+!!$  write(27) mustore / rho_vs
+!!$  close(27)
 
 ! kappa
   open(unit=27,file=prname(1:len_trim(prname))//'kappa.bin',status='unknown',form='unformatted')
