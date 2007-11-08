@@ -7,39 +7,23 @@
 !    Seismological Laboratory - California Institute of Technology
 !         (c) California Institute of Technology September 2006
 !
-!    A signed non-commercial agreement is required to use this program.
-!   Please check http://www.gps.caltech.edu/research/jtromp for details.
-!           Free for non-commercial academic research ONLY.
-!      This program is distributed WITHOUT ANY WARRANTY whatsoever.
-!      Do not redistribute this program without written permission.
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
 !
-! Copyright September 2006, by the California Institute of Technology.
-! ALL RIGHTS RESERVED. United States Government Sponsorship Acknowledged.
-!
-! Any commercial use must be negotiated with the Office of Technology
-! Transfer at the California Institute of Technology. This software may be
-! subject to U.S. export control laws and regulations. By accepting
-! this software, the user agrees to comply with all applicable U.S. export laws
-! and regulations, including the International Traffic and Arms Regulations,
-! 22 C.F.R. 120-130 and the Export Administration Regulations,
-! 15 C.F.R. 730-744. User has the responsibility to obtain export licenses,
-! or other export authority as may be required before exporting such
-! information to foreign countries or providing access to foreign nationals.
-! In no event shall the California Institute of Technology be liable to any
-! party for direct, indirect, special, incidental or consequential damages,
-! including lost profits, arising out of the use of this software and its
-! documentation, even if the California Institute of Technology has been
-! advised of the possibility of such damage.
-!
-! The California Institute of Technology specifically disclaims any
-! warranties, including the implied warranties or merchantability and fitness
-! for a particular purpose. The software and documentation provided hereunder
-! is on an "as is" basis, and the California Institute of Technology has no
-! obligations to provide maintenance, support, updates, enhancements or
-! modifications.
-!
+! United States Government Sponsorship Acknowledged.
 
   subroutine specfem3D
 
