@@ -255,3 +255,64 @@
 
   end function netlib_specfun_erf
 
+!
+! Subject: RE: Can one freely use and redistribute Fortran routines "specfun" from Netlib?
+! From: Jack Dongarra
+! Date: Wed, 21 Nov 2007 10:33:45 -0500
+! To: Rusty Lusk, Dimitri Komatitsch
+!
+! Yes the code can freely be used and incorporated into other software. You
+! should of course acknowledge the use of the software.
+!
+! Hope this helps,
+!
+! Jack Dongarra
+!
+! **********************************************************************
+! Prof. Jack Dongarra; Innovative Computing Laboratory; EECS Department;
+! 1122 Volunteer Blvd; University of Tennessee; Knoxville TN 37996-3450;
+! +1-865-974-8295; http://www.cs.utk.edu/~dongarra/
+!
+! -----Original Message-----
+! From: Rusty Lusk
+! Sent: Wednesday, November 21, 2007 10:29 AM
+! To: Dimitri Komatitsch
+! Cc: Jack Dongarra
+! Subject: Re: Can one freely use and redistribute Fortran routines "specfun"
+! from Netlib?
+!
+! Netlib is managed at the University of Tennesee, not Argonne at this
+! point. I have copied Jack Dongarra on this reply; he should be able
+! to answer questions about licensing issues for code from Netlib.
+!
+! Regards,
+! Rusty
+!
+! On Nov 21, 2007, at 8:36 AM, Dimitri Komatitsch wrote:
+!
+! >
+! > Dear Sir,
+! >
+! > Can one freely use and redistribute Fortran routines "specfun" from
+! > Netlib http://netlib2.cs.utk.edu/specfun/
+! > which were written back in 1985-1990 by William J. Cody
+! > from the Mathematics and Computer Science Division at Argonne?
+! >
+! > We use one of these routines (the error function, erf())
+! > in one of our source codes, which we would like to
+! > release as open source under GPL v2+, and we therefore
+! > wonder if we could include that erf() routine in the
+! > package in a separate file (of course saying in a comment in the
+! > header that it comes from Netlib and was written by William J. Cody from
+! > Argonne).
+! >
+! > Thank you,
+! > Best regards,
+! >
+! > Dimitri Komatitsch.
+! >
+! > --
+! > Dimitri Komatitsch - dimitri.komatitsch aT univ-pau.fr
+! > Professor, University of Pau, Institut universitaire de France
+! > and INRIA Magique3D, France   http://www.univ-pau.fr/~dkomati1
+! >
