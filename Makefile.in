@@ -112,6 +112,7 @@ libspecfem_a_OBJECTS = \
 	$O/mesh_vertical.o \
 	$O/meshfem3D.o \
 	$O/numerical_recipes.o \
+	$O/netlib_specfun_erf.o \
 	$O/read_arrays_buffers_solver.o \
 	$O/read_basin_topo_bathy_file.o \
 	$O/read_moho_map.o \
@@ -407,6 +408,9 @@ $O/mesh_vertical.o: constants.h mesh_vertical.f90
 
 $O/numerical_recipes.o: constants.h numerical_recipes.f90
 	${FCCOMPILE_CHECK} -c -o $O/numerical_recipes.o numerical_recipes.f90
+
+$O/netlib_specfun_erf.o: netlib_specfun_erf.f90
+	${FCCOMPILE_CHECK} -c -o $O/netlib_specfun_erf.o netlib_specfun_erf.f90
 
 $O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90
 	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_MR.o interpolate_gocad_block_MR.f90
