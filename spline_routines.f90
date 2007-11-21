@@ -10,7 +10,7 @@
 ! compute spline coefficients (Numerical Recipes)
 ! modified to use dynamic allocation
 
-  subroutine spline(x,y,n,yp1,ypn,y2)
+  subroutine spline_construction(x,y,n,yp1,ypn,y2)
 
   implicit none
 
@@ -44,13 +44,13 @@
 
   deallocate(u)
 
-  end subroutine spline
+  end subroutine spline_construction
 
 ! --------------
 
 ! evaluate spline (adapted from Numerical Recipes)
 
-  subroutine splint(xa,ya,y2a,n,x,y)
+  subroutine spline_evaluation(xa,ya,y2a,n,x,y)
 
   implicit none
 
@@ -81,5 +81,5 @@
 
   Y = A*YA(KLO) + B*YA(KHI) + ((A**3-A)*Y2A(KLO) + (B**3-B)*Y2A(KHI))*(H**2)/6.d0
 
-  end subroutine splint
+  end subroutine spline_evaluation
 
