@@ -111,7 +111,6 @@ libspecfem_a_OBJECTS = \
 	$O/locate_source.o \
 	$O/mesh_vertical.o \
 	$O/meshfem3D.o \
-	$O/spline_routines.o \
 	$O/netlib_specfun_erf.o \
 	$O/read_arrays_buffers_solver.o \
 	$O/read_basin_topo_bathy_file.o \
@@ -405,9 +404,6 @@ $O/hex_nodes.o: constants.h hex_nodes.f90
 
 $O/mesh_vertical.o: constants.h mesh_vertical.f90
 	${FCCOMPILE_CHECK} -c -o $O/mesh_vertical.o mesh_vertical.f90
-
-$O/spline_routines.o: constants.h spline_routines.f90
-	${FCCOMPILE_CHECK} -c -o $O/spline_routines.o spline_routines.f90
 
 $O/netlib_specfun_erf.o: netlib_specfun_erf.f90
 	${FCCOMPILE_CHECK} -c -o $O/netlib_specfun_erf.o netlib_specfun_erf.f90
