@@ -10,7 +10,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem 3D Basin], [1.4.0], [jtromp AT caltech.edu], [Specfem3DBasin])
+AC_INIT([Specfem 3D], [1.4.0], [jtromp AT caltech.edu], [Specfem3D])
 AC_CONFIG_SRCDIR([specfem3D.f90])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])

@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -73,7 +73,7 @@
 ! density of sea water
   real(kind=CUSTOM_REAL), parameter :: RHO_OCEANS = 1020.0
 
-! extend basin model below threshold and above topography to make sure
+! extend model below threshold and above topography to make sure
 ! there is no small gap between interpolated maps and sediments
   logical, parameter :: EXTEND_VOXET_BELOW_BASEMENT = .true.
   logical, parameter :: EXTEND_VOXET_ABOVE_TOPO = .true.
@@ -100,7 +100,7 @@
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
 ! ---------------------------------------------------------------------------------------
-! LQY -- Following 3 variables stays here temporarily, 
+! LQY -- Following 3 variables stays here temporarily,
 !        we need to move them to Par_file at a proper time
 ! ---------------------------------------------------------------------------------------
 ! save moho mesh and compute Moho boundary kernels
@@ -110,7 +110,7 @@
 ! to be used in the backward reconstruction in the presence of attenuation
   integer, parameter :: NSTEP_Q_SAVE = 200
 
-! the scratch disk to save the state variables saved in the forward 
+! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk
   character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy'

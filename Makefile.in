@@ -1,7 +1,7 @@
 #=====================================================================
 #
-#          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-#          --------------------------------------------------
+#               S p e c f e m 3 D  V e r s i o n  1 . 4
+#               ---------------------------------------
 #
 #                 Dimitri Komatitsch and Jeroen Tromp
 #    Seismological Laboratory - California Institute of Technology
@@ -87,7 +87,7 @@ libspecfem_a_OBJECTS = \
 	$O/create_regions_mesh.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
-	$O/define_subregions_basin.o \
+	$O/define_subregions.o \
 	$O/define_subregions_heuristic.o \
 	$O/exit_mpi.o \
 	$O/get_MPI_cutplanes_eta.o \
@@ -113,7 +113,7 @@ libspecfem_a_OBJECTS = \
 	$O/meshfem3D.o \
 	$O/netlib_specfun_erf.o \
 	$O/read_arrays_buffers_solver.o \
-	$O/read_basin_topo_bathy_file.o \
+	$O/read_topo_bathy_file.o \
 	$O/read_moho_map.o \
 	$O/read_parameter_file.o \
 	$O/read_value_parameters.o \
@@ -166,7 +166,7 @@ LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
 @COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
 @COND_PYRE_FALSE@	create_movie_AVS_DX \
-@COND_PYRE_FALSE@	create_movie_GMT_basin \
+@COND_PYRE_FALSE@	create_movie_GMT \
 @COND_PYRE_FALSE@	meshfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
@@ -179,7 +179,7 @@ default: $(DEFAULT)
 all: clean default
 
 backup:
-	cp *f90 *h README_SPECFEM3D_BASIN DATA/Par_file* Makefile go_mesher go_solver mymachines bak
+	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_mesher go_solver mymachines bak
 
 bak: backup
 
@@ -219,7 +219,7 @@ combine_AVS_DX: xcombine_AVS_DX
 convolve_source_timefunction: xconvolve_source_timefunction
 create_header_file: xcreate_header_file
 create_movie_AVS_DX: xcreate_movie_AVS_DX
-create_movie_GMT_basin: xcreate_movie_GMT_basin
+create_movie_GMT: xcreate_movie_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
 
@@ -248,11 +248,11 @@ xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o
 xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o
 	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o
 
-xcreate_movie_GMT_basin:  $O/create_movie_GMT_basin.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o xcreate_movie_GMT_basin  $O/create_movie_GMT_basin.o $(LIBSPECFEM)
+xcreate_movie_GMT:  $O/create_movie_GMT.o $(LIBSPECFEM)
+	${FCCOMPILE_CHECK} -o xcreate_movie_GMT  $O/create_movie_GMT.o $(LIBSPECFEM)
 
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT_basin
+	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT
 
 ###
 ### rule for the archive library
@@ -435,8 +435,8 @@ $O/save_arrays_solver.o: constants.h save_arrays_solver.f90
 $O/comp_source_time_function.o: constants.h comp_source_time_function.f90
 	${FCCOMPILE_CHECK} -c -o $O/comp_source_time_function.o comp_source_time_function.f90
 
-$O/read_basin_topo_bathy_file.o: constants.h read_basin_topo_bathy_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_basin_topo_bathy_file.o read_basin_topo_bathy_file.f90
+$O/read_topo_bathy_file.o: constants.h read_topo_bathy_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o read_topo_bathy_file.f90
 
 $O/read_moho_map.o: constants.h read_moho_map.f90
 	${FCCOMPILE_CHECK} -c -o $O/read_moho_map.o read_moho_map.f90
@@ -459,8 +459,8 @@ $O/create_name_database.o: constants.h create_name_database.f90
 $O/create_serial_name_database.o: constants.h create_serial_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_serial_name_database.o create_serial_name_database.f90
 
-$O/define_subregions_basin.o: constants.h define_subregions_basin.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions_basin.o define_subregions_basin.f90
+$O/define_subregions.o: constants.h define_subregions.f90
+	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90
 
 $O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
@@ -486,8 +486,8 @@ $O/combine_vol_data.o: constants.h combine_vol_data.f90
 $O/combine_surf_data.o: constants.h combine_surf_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
 
-$O/create_movie_GMT_basin.o: constants.h create_movie_GMT_basin.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_GMT_basin.o create_movie_GMT_basin.f90
+$O/create_movie_GMT.o: constants.h create_movie_GMT.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_movie_GMT.o create_movie_GMT.f90
 
 ###
 ### rule for the header file

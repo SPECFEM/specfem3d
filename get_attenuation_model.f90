@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -45,7 +45,7 @@
   double precision, parameter :: f_c_source = 0.141421d0
 
 ! reference frequency for target velocity values in velocity model
-! arbitrarily set to typical resolution of basin model (3 sec)
+! arbitrarily set to typical resolution of model (3 sec)
   double precision, parameter :: f0_REFERENCE = 0.3d0
 
   integer iattenuation,myrank

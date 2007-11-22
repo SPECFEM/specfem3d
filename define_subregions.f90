@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -23,7 +23,7 @@
 !
 !=====================================================================
 
-  subroutine define_subregions_basin(myrank,isubregion,iaddx,iaddy,iaddz, &
+  subroutine define_subregions(myrank,isubregion,iaddx,iaddy,iaddz, &
         ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
         doubling_index,npx,npy, &
         NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER,USE_REGULAR_MESH)
@@ -859,5 +859,5 @@
 
   endif
 
-  end subroutine define_subregions_basin
+  end subroutine define_subregions
 

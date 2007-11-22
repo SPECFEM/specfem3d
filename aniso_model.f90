@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -187,7 +187,7 @@
   d56 = S3 - S1sh
   d66 = AN - Ec
 
-! The mapping to the global Cartesian coordinate system used in the basin code
+! The mapping to the global Cartesian coordinate system used in the code
 ! (1---East, 2---North, 3---up)
   c11 = d22
   c12 = d12

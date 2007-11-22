@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -254,7 +254,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
-  
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
 
@@ -271,7 +271,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
 
   integer i,j,k,l
 
-  
+
 ! first compute the strain at all the GLL points of the source element
   do k = 1, NGLLZ
     do j = 1, NGLLY
@@ -280,11 +280,11 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
         tempx1l = 0._CUSTOM_REAL
         tempx2l = 0._CUSTOM_REAL
         tempx3l = 0._CUSTOM_REAL
-        
+
         tempy1l = 0._CUSTOM_REAL
         tempy2l = 0._CUSTOM_REAL
         tempy3l = 0._CUSTOM_REAL
-        
+
         tempz1l = 0._CUSTOM_REAL
         tempz2l = 0._CUSTOM_REAL
         tempz3l = 0._CUSTOM_REAL
@@ -294,7 +294,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
           tempx1l = tempx1l + displ_s(1,l,j,k)*hp1
           tempy1l = tempy1l + displ_s(2,l,j,k)*hp1
           tempz1l = tempz1l + displ_s(3,l,j,k)*hp1
-          
+
           hp2 = hprime_yy(j,l)
           tempx2l = tempx2l + displ_s(1,i,l,k)*hp2
           tempy2l = tempy2l + displ_s(2,i,l,k)*hp2
@@ -316,19 +316,19 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
         gammaxl = gammax(i,j,k)
         gammayl = gammay(i,j,k)
         gammazl = gammaz(i,j,k)
-   
+
         duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
         duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
         duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
-        
+
         duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
         duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
         duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
-        
+
         duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
         duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
         duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
-        
+
 ! strain eps_jk
         eps(1,1) = duxdxl
         eps(1,2) = (duxdyl + duydxl) / 2
@@ -341,7 +341,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
         eps(3,2) = eps(2,3)
 
         eps_array(:,:,i,j,k) = eps(:,:)
-    
+
 ! Mjk eps_jk
         eps_m_array(i,j,k) = Mxx * eps(1,1) + Myy * eps(2,2) + Mzz * eps(3,3) + &
                    2 * (Mxy * eps(1,2) + Mxz * eps(1,3) + Myz * eps(2,3))
@@ -359,7 +359,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
   do k = 1,NGLLZ
     do j = 1,NGLLY
       do i = 1,NGLLX
-        
+
         hlagrange = hxir(i)*hetar(j)*hgammar(k)
 
         eps_s(1,1) = eps_s(1,1) + eps_array(1,1,i,j,k)*hlagrange
@@ -378,7 +378,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
         gammax_s = gammax_s + gammax(i,j,k)*hlagrange
         gammay_s = gammay_s + gammay(i,j,k)*hlagrange
         gammaz_s = gammaz_s + gammaz(i,j,k)*hlagrange
-       
+
       enddo
     enddo
   enddo
@@ -389,7 +389,7 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
   eps_s(3,2) = eps_s(2,3)
 
 ! compute the gradient of M_jk * eps_jk, and then interpolate it
-  
+
   eps_m_s = 0.
   do k = 1,NGLLZ
     do j = 1,NGLLY
@@ -405,13 +405,13 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
                    + hlagrange_eta * etay_s + hlagrange_gamma * gammay_s)
         eps_m_s(3) = eps_m_s(3) +  eps_m_array(i,j,k) * (hlagrange_xi * xiz_s &
                    + hlagrange_eta * etaz_s + hlagrange_gamma * gammaz_s)
-        
+
       enddo
     enddo
   enddo
 
 end subroutine compute_adj_source_frechet
-                   
-       
+
+
 
 

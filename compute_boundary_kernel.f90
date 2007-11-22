@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -29,20 +29,20 @@ subroutine compute_boundary_kernel(kernel, mul, kappal, rho_vsl, accel, b_displ,
 
   implicit none
   include 'constants.h'
- 
+
   real(kind=CUSTOM_REAL)  kernel, mul, kappal, rho_vsl
   real(kind=CUSTOM_REAL) :: accel(NDIM), b_displ(NDIM), ds(NDIM,NDIM), b_ds(NDIM,NDIM), norm(NDIM)
 
   real(kind=CUSTOM_REAL) :: eps3, eps(NDIM,NDIM), epsdev(NDIM,NDIM), normal(NDIM,1)
   real(kind=CUSTOM_REAL) :: b_eps3, b_eps(NDIM,NDIM), b_epsdev(NDIM,NDIM)
   real(kind=CUSTOM_REAL) :: temp1(NDIM,NDIM), rhol, kl(1,1), one_matrix(1,1)
-   
+
 
   normal(:,1) = norm
   one_matrix(1,1) = ONE
 
   eps3 = ds(1,1) + ds(2,2) + ds(3,3)
-  
+
   eps(1,1) = ds(1,1)
   eps(2,2) = ds(2,2)
   eps(3,3) = ds(3,3)
@@ -57,10 +57,10 @@ subroutine compute_boundary_kernel(kernel, mul, kappal, rho_vsl, accel, b_displ,
   epsdev(1,1) = eps(1,1) - eps3 / 3
   epsdev(2,2) = eps(2,2) - eps3 / 3
   epsdev(3,3) = eps(3,3) - eps3 / 3
- 
- 
+
+
   b_eps3 = b_ds(1,1) + b_ds(2,2) + b_ds(3,3)
-  
+
   b_eps(1,1) = b_ds(1,1)
   b_eps(2,2) = b_ds(2,2)
   b_eps(3,3) = b_ds(3,3)
@@ -87,7 +87,7 @@ subroutine compute_boundary_kernel(kernel, mul, kappal, rho_vsl, accel, b_displ,
              - kappal *  matmul(transpose(normal),matmul(b_eps,normal)) * eps3 &
              - 2 * mul * matmul(transpose(normal), matmul(matmul(b_epsdev,ds), normal)) &
              - 2 * mul * matmul(transpose(normal), matmul(matmul(epsdev,b_ds), normal))
-             
+
   kernel = kl(1,1)
 
 end subroutine compute_boundary_kernel

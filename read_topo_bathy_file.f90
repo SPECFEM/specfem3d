@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -23,9 +23,9 @@
 !
 !=====================================================================
 
-  subroutine read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
+  subroutine read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
 !
-!---- read basin topography and bathymetry file once and for all
+!---- read topography and bathymetry file once and for all
 !
   implicit none
 
@@ -34,21 +34,21 @@
   integer NX_TOPO,NY_TOPO
 
 ! use integer array to store topography values
-  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+  integer itopo_bathy(NX_TOPO,NY_TOPO)
 
   character(len=100) topo_file
 
   integer ix,iy
 
-  itopo_bathy_basin(:,:) = 0
+  itopo_bathy(:,:) = 0
 
   open(unit=13,file=topo_file,status='old',action='read')
   do iy=1,NY_TOPO
     do ix=1,NX_TOPO
-      read(13,*) itopo_bathy_basin(ix,iy)
+      read(13,*) itopo_bathy(ix,iy)
     enddo
   enddo
   close(13)
 
-  end subroutine read_basin_topo_bathy_file
+  end subroutine read_topo_bathy_file
 

@@ -1,11 +1,11 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 3
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology July 2005
+!         (c) California Institute of Technology September 2006
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ program combine_surf_data
     if (i < 6 .and. trim(arg(i)) == '') then
       print *, 'Usage: xcombine_surface start_slice end_slice filename surfacename input_dir output_dir high/low-resolution 3D/2D'
       print *, '    or xcombine_surface slice_list filename surfacename input_dir output_dir high/low-resolution 3D/2D'
-      print *, ' possible filenames are kappastore(NGLLX,NGLLY,NGLLZ,nspec), alpha_kernel(NGLLX,NGLLY,nspec_surf)' 
+      print *, ' possible filenames are kappastore(NGLLX,NGLLY,NGLLZ,nspec), alpha_kernel(NGLLX,NGLLY,nspec_surf)'
       print *, ' possible surface name: moho   as in ibelm_moho.bin'
       print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
       print *, ' give 0 for low resolution and 1 for high resolution'
@@ -157,7 +157,7 @@ program combine_surf_data
     read(28) nspec_surf
     read(28) npoint1
     read(28) npoint2
- 
+
     if (it == 1) allocate(ibelm_surf(nspec_surf))
     read(28) ibelm_surf
     close(28)
@@ -252,7 +252,7 @@ program combine_surf_data
             call write_real(x)
             call write_real(y)
             call write_real(z)
-            if (FILE_ARRAY_IS_3D) then 
+            if (FILE_ARRAY_IS_3D) then
               call write_real(dat3D(i,j,k,ispec))
             else
               call write_real(dat2D(i,j,ispec_surf))
@@ -292,7 +292,7 @@ program combine_surf_data
     read(28) njunk
     read(28) ibelm_surf
     close(28)
-    
+
 ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
     open(unit = 28,file = trim(local_ibool_file),status='old', iostat = ios, form='unformatted')
