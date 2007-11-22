@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -29,7 +29,7 @@
 !! DK DK UGLY modif Manu removed                           z_top, &
                            Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI,MODEL)
 
-! create the vertical mesh, honoring the major discontinuities in the basin
+! create the vertical mesh, honoring the major discontinuities in the model
 
   implicit none
 
@@ -137,11 +137,11 @@
   rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
 
 ! check that the mesh that has been generated is correct
-  if(npr /= 2*NER) call exit_MPI(myrank,'incorrect intervals for basin')
+  if(npr /= 2*NER) call exit_MPI(myrank,'incorrect intervals for model')
 
 ! check that vertical spacing makes sense
   do ir=0,2*NER-1
-    if(rn(ir+1) < rn(ir)) call exit_MPI(myrank,'incorrect vertical spacing for basin')
+    if(rn(ir+1) < rn(ir)) call exit_MPI(myrank,'incorrect vertical spacing for model')
   enddo
 
   end subroutine mesh_vertical

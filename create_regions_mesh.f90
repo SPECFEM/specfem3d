@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -90,7 +90,7 @@
   integer icornerlat,icornerlong
   double precision lat,long,elevation
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
-  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+  integer itopo_bathy(NX_TOPO,NY_TOPO)
 
 ! auxiliary variables to generate the mesh
   integer ix,iy,iz,ir,ir1,ir2,dir
@@ -609,7 +609,7 @@
   do isubregion = 1,nsubregions
 
 ! define shape of elements
-    call define_subregions_basin(myrank,isubregion,iaddx,iaddy,iaddz, &
+    call define_subregions(myrank,isubregion,iaddx,iaddy,iaddz, &
               ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
               doubling_index,npx,npy, &
               NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER,USE_REGULAR_MESH)
@@ -1043,10 +1043,10 @@ enddo
 
 ! interpolate elevation at current point
     elevation = &
-      itopo_bathy_basin(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy_basin(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy_basin(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
 ! suppress positive elevation, which means no oceans
     if(elevation >= - MINIMUM_THICKNESS_3D_OCEANS) then

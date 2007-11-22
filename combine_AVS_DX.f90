@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -77,7 +77,7 @@
 ! small offset for source and receiver line in AVS_DX
 ! (small compared to normalized radius of the Earth)
 
-! offset to represent source and receivers for basin model
+! offset to represent source and receivers for model
   double precision, parameter :: small_offset = 2000.d0
 
 ! parameters read from parameter file

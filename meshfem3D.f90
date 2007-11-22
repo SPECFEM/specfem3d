@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -32,12 +32,12 @@
 
   include "constants.h"
 
-!=====================================================================!
-!                                                                     !
-!  meshfem3D produces a spectral element grid for a basin.            !
-!  The mesher uses the UTM projection                                 !
-!                                                                     !
-!=====================================================================!
+!=============================================================================!
+!                                                                             !
+!  meshfem3D produces a spectral element grid for a local or regional model.  !
+!  The mesher uses the UTM projection                                         !
+!                                                                             !
+!=============================================================================!
 !
 ! If you use this code for your own research, please cite some of these articles:
 !
@@ -166,7 +166,7 @@
   double precision lat,long,elevation,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
   character(len=100) topo_file
-  integer, dimension(:,:), allocatable :: itopo_bathy_basin
+  integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! use integer array to store Moho depth
   integer imoho_depth(NX_MOHO,NY_MOHO)
@@ -452,7 +452,7 @@
 
   endif
 
-! read basin topography and bathymetry file
+! read topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
 
 ! for Lacq (France) gas field
@@ -474,14 +474,14 @@
       topo_file = TOPO_FILE_SOCAL
     endif
 
-    allocate(itopo_bathy_basin(NX_TOPO,NY_TOPO))
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
-    call read_basin_topo_bathy_file(itopo_bathy_basin,NX_TOPO,NY_TOPO,topo_file)
+    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
 
     if(myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'regional topography file read ranges in m from ', &
-        minval(itopo_bathy_basin),' to ',maxval(itopo_bathy_basin)
+        minval(itopo_bathy),' to ',maxval(itopo_bathy)
       write(IMAIN,*)
     endif
 
@@ -536,7 +536,7 @@
     etan=dble(iy)/dble(npy)
     y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
-! define basin between topography surface and fictitious bottom
+! define model between topography surface and fictitious bottom
     if(TOPOGRAPHY) then
 
 ! project x and y in UTM back to long/lat since topo file is in long/lat
@@ -568,10 +568,10 @@
 
 ! interpolate elevation at current point
     elevation = &
-      itopo_bathy_basin(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy_basin(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy_basin(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
     else
 
@@ -694,7 +694,7 @@
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
-    write(IMAIN,*) 'creating mesh in the basin'
+    write(IMAIN,*) 'creating mesh in the model'
     write(IMAIN,*) '**************************'
     write(IMAIN,*)
   endif
@@ -831,7 +831,7 @@
   call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP)
 
-! filter list of stations, only retain stations that are in the basin model
+! filter list of stations, only retain stations that are in the model
   call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
   call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
   nrec_filtered = 0
@@ -850,7 +850,7 @@
   write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
   write(IMAIN,*)
 
-  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the basin model')
+  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the model')
 
   open(unit=IIN,file=rec_filename,status='old',action='read')
   open(unit=IOUT,file=filtered_rec_filename,status='unknown')

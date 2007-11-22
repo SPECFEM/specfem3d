@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -34,7 +34,7 @@
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy_basin,UTM_PROJECTION_ZONE, &
+                 TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE, &
                  PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
                  NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
 
@@ -53,7 +53,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
 ! use integer array to store topography values
-  integer itopo_bathy_basin(NX_TOPO,NY_TOPO)
+  integer itopo_bathy(NX_TOPO,NY_TOPO)
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
 
   integer myrank
@@ -157,7 +157,7 @@
 ! loop on all the sources
   do isource = 1,NSOURCES
 
-! check that the current source is inside the basin model
+! check that the current source is inside the model
   if(lat(isource) < LATITUDE_MIN .or. lat(isource) > LATITUDE_MAX .or. long(isource) < LONGITUDE_MIN &
        .or. long(isource) > LONGITUDE_MAX)  call exit_MPI(myrank,'the current source is outside the model')
 
@@ -214,10 +214,10 @@
 
 ! interpolate elevation at current point
     elevation(isource) = &
-      itopo_bathy_basin(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy_basin(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy_basin(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
   else
     elevation = 0.d0
