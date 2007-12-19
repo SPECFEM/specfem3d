@@ -38,7 +38,7 @@
   integer ier
 
 ! stop all the MPI processes, and exit
-  call MPI_ABORT(ier)
+  call MPI_ABORT(MPI_COMM_WORLD,30,ier)
   stop 'error, program ended in exit_MPI'
 
   end subroutine stop_all
