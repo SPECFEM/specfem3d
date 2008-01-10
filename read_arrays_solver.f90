@@ -46,53 +46,36 @@
   character(len=150) LOCAL_PATH
 
 ! coordinates in single precision
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
 
   logical ANISOTROPY
-  real(kind=CUSTOM_REAL) c11store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c12store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c13store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c14store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c15store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c16store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c22store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c23store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c24store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c25store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c26store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c33store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c34store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c35store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c36store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c44store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c45store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c46store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c55store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c56store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) c66store(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
+            c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
+            c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
+            c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
 ! material properties
-  real(kind=CUSTOM_REAL) kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  real(kind=CUSTOM_REAL) mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
 
 ! flag for sediments
-  logical not_fully_in_bedrock(NSPEC_AB)
-  logical flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  logical not_fully_in_bedrock(NSPEC_AB_VAL)
+  logical flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
 
 ! Stacey
-  real(kind=CUSTOM_REAL) rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL) rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  real(kind=CUSTOM_REAL) rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
 
 ! mass matrix and additional ocean load mass matrix
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: rmass,rmass_ocean_load
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: rmass,rmass_ocean_load
 
 ! global addressing
-  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
 
-  integer idoubling(NSPEC_AB)
+  integer idoubling(NSPEC_AB_VAL)
 
 ! processor identification
   character(len=150) prname
