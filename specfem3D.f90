@@ -145,10 +145,10 @@
 
 ! ADJOINT
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: b_alphaval, b_betaval, b_gammaval
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: b_R_xx, b_R_yy, &
-    b_R_xy,b_R_xz,b_R_yz
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable ::  b_epsilondev_xx,b_epsilondev_yy, &
-        b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) :: &
+             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL) ::  b_epsilondev_xx, &
+             b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
 ! ADJOINT
 
   integer NPOIN2DMAX_XY
@@ -159,64 +159,68 @@
   character(len=100) topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
-  integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax, &
-    ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: &
-    jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax, &
-    jacobian2D_bottom,jacobian2D_top
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_xmin, &
-    normal_xmax,normal_ymin,normal_ymax, &
-    normal_bottom,normal_top
+  integer, dimension(NSPEC2DMAX_XMIN_XMAX_VAL) :: ibelm_xmin,ibelm_xmax
+  integer, dimension(NSPEC2DMAX_YMIN_YMAX_VAL) :: ibelm_ymin,ibelm_ymax
+  integer, dimension(NSPEC2D_BOTTOM_VAL) :: ibelm_bottom
+  integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX_VAL) :: jacobian2D_xmin,jacobian2D_xmax
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX_VAL) :: jacobian2D_ymin,jacobian2D_ymax
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_BOTTOM_VAL) :: jacobian2D_bottom
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX_VAL) :: normal_xmin,normal_xmax
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX_VAL) :: normal_ymin,normal_ymax
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM_VAL) :: normal_bottom
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: normal_top
 
 ! Moho mesh
-  integer,dimension(:), allocatable :: ibelm_moho_top, ibelm_moho_bot
-  real(CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_moho
+  integer,dimension(NSPEC2D_MOHO_BOUN) :: ibelm_moho_top, ibelm_moho_bot
+  real(CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: normal_moho
   integer :: nspec2D_moho, njunk
-  logical, dimension(:), allocatable :: is_moho_top, is_moho_bot
+  logical, dimension(NSPEC_BOUN) :: is_moho_top, is_moho_bot
 
 ! buffers for send and receive between faces of the slices and the chunks
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_send_faces_scalar,buffer_received_faces_scalar
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_send_faces_vector,buffer_received_faces_vector
+  real(kind=CUSTOM_REAL), dimension(NPOIN2DMAX_XY_VAL) :: buffer_send_faces_scalar,buffer_received_faces_scalar
+  real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY_VAL) :: buffer_send_faces_vector,buffer_received_faces_vector
 
 ! -----------------
 
 ! mesh parameters
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: ibool
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
         kappastore,mustore
-
+ 
 ! material properties in case of a fully anisotropic material
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
         c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
         c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
         c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
 ! flag for sediments
-  logical not_fully_in_bedrock(NSPEC_AB)
-  logical, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: flag_sediments
+  logical not_fully_in_bedrock(NSPEC_AB_VAL)
+  logical, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: flag_sediments
 
 ! Stacey
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: rho_vp,rho_vs
 
 ! local to global mapping
-  integer, dimension(NSPEC_AB) :: idoubling
+  integer, dimension(NSPEC_AB_VAL) :: idoubling
 
 ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: rmass
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: rmass
 
 ! additional mass matrix for ocean load
 ! ocean load mass matrix is always allocated statically even if no oceans
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: rmass_ocean_load
-  logical, dimension(NGLOB_AB) :: updated_dof_ocean_load
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: rmass_ocean_load
+  logical, dimension(NGLOB_AB_VAL) :: updated_dof_ocean_load
   real(kind=CUSTOM_REAL) additional_term,force_normal_comp
 
 ! displacement, velocity, acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB_VAL) :: displ,veloc,accel
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
@@ -242,8 +246,8 @@
 
 ! ADJOINT
   real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp, kappa_k, mu_k
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ, b_veloc, b_accel
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable:: rho_kl, mu_kl, kappa_kl, &
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl
   real(kind=CUSTOM_REAL) dsxx,dsxy,dsxz,dsyy,dsyz,dszz
   real(kind=CUSTOM_REAL) b_duxdxl,b_duxdyl,b_duxdzl,b_duydxl,b_duydyl,b_duydzl,b_duzdxl,b_duzdyl,b_duzdzl
@@ -284,8 +288,8 @@
 
 ! Moho kernel
   integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: moho_kl
+  real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO_BOUN) :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: moho_kl
   real(kind=CUSTOM_REAL) :: kernel_moho_top, kernel_moho_bot
 
 ! --------
@@ -356,12 +360,12 @@
   double precision, dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
 
 ! 2-D addressing and buffers for summation between slices
-  integer, dimension(:), allocatable :: iboolleft_xi, &
-    iboolright_xi,iboolleft_eta,iboolright_eta
+  integer, dimension(NPOIN2DMAX_XMIN_XMAX_VAL) :: iboolleft_xi,iboolright_xi
+  integer, dimension(NPOIN2DMAX_YMIN_YMAX_VAL) :: iboolleft_eta,iboolright_eta
 
 ! for addressing of the slices
-  integer, dimension(:,:), allocatable :: addressing
-  integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
+  integer, dimension(0:NPROC_XI_VAL-1,0:NPROC_ETA_VAL) :: addressing
+  integer, dimension(0:NPROC_VAL-1) :: iproc_xi_slice,iproc_eta_slice
 
 ! proc numbers for MPI
   integer myrank,sizeprocs
@@ -411,14 +415,15 @@
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX, &
-               NSPEC_AB_JUNK, NGLOB_AB_JUNK
+               NSPEC_AB, NGLOB_AB
 
 ! names of the data files for all the processors in MPI
   character(len=150) outputname
 
 ! Stacey conditions put back
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,ispec2D
-  integer, dimension(:,:), allocatable :: nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta
+  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX_VAL) :: nimin,nimax,nkmin_eta
+  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX_VAL) :: njmin,njmax,nkmin_xi
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,weight
 
 ! to save movie frames
@@ -475,10 +480,10 @@
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB_JUNK,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB_JUNK,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
@@ -536,19 +541,6 @@
 ! check that we have at least one source
   if(NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
 
-! dynamic allocation of arrays
-
-! 2-D addressing and buffers for summation between slices, and point codes
-  allocate(iboolleft_xi(NPOIN2DMAX_XMIN_XMAX))
-  allocate(iboolright_xi(NPOIN2DMAX_XMIN_XMAX))
-  allocate(iboolleft_eta(NPOIN2DMAX_YMIN_YMAX))
-  allocate(iboolright_eta(NPOIN2DMAX_YMIN_YMAX))
-
-! for addressing of the slices
-  allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1))
-  allocate(iproc_xi_slice(0:NPROC-1))
-  allocate(iproc_eta_slice(0:NPROC-1))
-
 ! open file with global slice number addressing
   if(myrank == 0) then
     open(unit=IIN,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old',action='read')
@@ -574,59 +566,6 @@
 ! define maximum size for message buffers
   NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
 
-  allocate(buffer_send_faces_scalar(NPOIN2DMAX_XY))
-  allocate(buffer_received_faces_scalar(NPOIN2DMAX_XY))
-
-  allocate(buffer_send_faces_vector(NDIM,NPOIN2DMAX_XY))
-  allocate(buffer_received_faces_vector(NDIM,NPOIN2DMAX_XY))
-
-! allocate material properties in case of a fully anisotropic material
-  if(ANISOTROPY) then
-    allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  else
-    allocate(c11store(1,1,1,1))
-    allocate(c12store(1,1,1,1))
-    allocate(c13store(1,1,1,1))
-    allocate(c14store(1,1,1,1))
-    allocate(c15store(1,1,1,1))
-    allocate(c16store(1,1,1,1))
-    allocate(c22store(1,1,1,1))
-    allocate(c23store(1,1,1,1))
-    allocate(c24store(1,1,1,1))
-    allocate(c25store(1,1,1,1))
-    allocate(c26store(1,1,1,1))
-    allocate(c33store(1,1,1,1))
-    allocate(c34store(1,1,1,1))
-    allocate(c35store(1,1,1,1))
-    allocate(c36store(1,1,1,1))
-    allocate(c44store(1,1,1,1))
-    allocate(c45store(1,1,1,1))
-    allocate(c46store(1,1,1,1))
-    allocate(c55store(1,1,1,1))
-    allocate(c56store(1,1,1,1))
-    allocate(c66store(1,1,1,1))
-  endif
-
 ! start reading the databases
 
 ! read arrays created by the mesher
@@ -639,7 +578,7 @@
             kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
 
 ! check that the number of points in this slice is correct
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
+  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB_VAL) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
 
 ! read 2-D addressing for summation between slices with MPI
@@ -681,39 +620,6 @@
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
            call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
 
-! dynamic allocation of arrays
-
-! boundary parameters locator
-  allocate(ibelm_xmin(NSPEC2DMAX_XMIN_XMAX))
-  allocate(ibelm_xmax(NSPEC2DMAX_XMIN_XMAX))
-  allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX))
-  allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX))
-  allocate(ibelm_bottom(NSPEC2D_BOTTOM))
-  allocate(ibelm_top(NSPEC2D_TOP))
-
-  allocate(jacobian2D_xmin(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX))
-  allocate(jacobian2D_xmax(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX))
-  allocate(jacobian2D_ymin(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX))
-  allocate(jacobian2D_ymax(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX))
-  allocate(jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM))
-  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
-
-! Stacey put back
-  allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX))
-  allocate(nimax(2,NSPEC2DMAX_YMIN_YMAX))
-  allocate(njmin(2,NSPEC2DMAX_XMIN_XMAX))
-  allocate(njmax(2,NSPEC2DMAX_XMIN_XMAX))
-  allocate(nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX))
-  allocate(nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX))
-
-! normals
-  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX))
-  allocate(normal_xmax(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX))
-  allocate(normal_ymin(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX))
-  allocate(normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX))
-  allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
-  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
-
 ! boundary parameters
   open(unit=27,file=prname(1:len_trim(prname))//'ibelm.bin',status='old',action='read',form='unformatted')
   read(27) ibelm_xmin
@@ -736,16 +642,6 @@
 ! moho boundary
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
 
-    allocate(ibelm_moho_top(NSPEC2D_BOTTOM))
-    allocate(ibelm_moho_bot(NSPEC2D_BOTTOM))
-    allocate(normal_moho(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
-    allocate(is_moho_top(NSPEC_AB))
-    allocate(is_moho_bot(NSPEC_AB))
-    allocate(dsdx_top(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
-    allocate(dsdx_bot(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
-    allocate(b_dsdx_top(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
-    allocate(b_dsdx_bot(3,3,NGLLX,NGLLY,NGLLZ,NSPEC2D_BOTTOM))
-    allocate(moho_kl(NGLLX,NGLLY,NSPEC2D_BOTTOM))
     moho_kl = ZERO
 
     open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
@@ -1360,17 +1256,10 @@
 
   if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
 
-  allocate(b_displ(NDIM,NGLOB_AB))
-  allocate(b_veloc(NDIM,NGLOB_AB))
-  allocate(b_accel(NDIM,NGLOB_AB))
   open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
   read(27) b_displ
   read(27) b_veloc
   read(27) b_accel
-
-  allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
   rho_kl(:,:,:,:) = 0._CUSTOM_REAL
   mu_kl(:,:,:,:) = 0._CUSTOM_REAL
@@ -1490,18 +1379,6 @@
     endif
 
     if (SIMULATION_TYPE == 3) then
-      allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-      allocate(b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-      allocate(b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-      allocate(b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-      allocate(b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS))
-
-      allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-      allocate(b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION))
-
       read(27) b_R_xx
       read(27) b_R_yy
       read(27) b_R_xy
@@ -3224,10 +3101,6 @@
     close(27)
 
   else if (SIMULATION_TYPE == 3) then
-    deallocate(b_displ,b_veloc,b_accel)
-    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
     ! rhop, beta, alpha kernels
     do ispec = 1, NSPEC_AB
