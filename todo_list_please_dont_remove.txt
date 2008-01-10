@@ -17,7 +17,9 @@ To-do list for SPECFEM3D, by Dimitri Komatitsch
 
 Things to add later to the manual:
 ----------------------------------
-
+- Add the description of using basin_slice_number.pl and basin_normal.pl to
+  get the slice numbers to combine for a specific source/receiver pair 
+  (LQY, Jan 9, 2008)
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
