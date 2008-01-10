@@ -40,7 +40,7 @@
   include "OUTPUT_FILES/values_from_mesher.h"
 
 ! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB_VAL) :: array_val
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
 
   integer iproc_xi,iproc_eta
   integer npoin2D_xi,npoin2D_eta
@@ -58,7 +58,7 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY) :: buffer_send_faces_vector,buffer_received_faces_vector
 
   integer ipoin
-  integer sender,receiver
+  integer sender,receiver,ier
 
   integer, external :: proc_null
 
