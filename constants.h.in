@@ -104,7 +104,7 @@
 !        we need to move them to Par_file at a proper time
 ! ---------------------------------------------------------------------------------------
 ! save moho mesh and compute Moho boundary kernels
-  logical, parameter :: SAVE_MOHO_MESH = .true.
+  logical, parameter :: SAVE_MOHO_MESH = .false.
 
 ! number of steps to save the state variables in the forward simulation,
 ! to be used in the backward reconstruction in the presence of attenuation
@@ -113,7 +113,7 @@
 ! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk
-  character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy'
+  character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
