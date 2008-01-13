@@ -123,24 +123,11 @@
   call read_value_logical(USE_OLSEN_ATTENUATION, 'model.USE_OLSEN_ATTENUATION')
   if(err_occurred() /= 0) return
 
-  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL .and. MODEL /= 'Lacq_gas_field_France') &
+  if(dabs(DEPTH_BLOCK_KM) <= DEPTH_MOHO_SOCAL) &
     stop 'bottom of mesh must be deeper than deepest regional layer for Southern California'
 
-! for Lacq (France) gas field
-  if(MODEL == 'Lacq_gas_field_France') then
-
-! time step in seconds
-    DT                 = 0.003d0
-
-! number of elements in the vertical direction
-    NER_SEDIM          = 2
-    NER_BASEMENT_SEDIM = 6
-    NER_16_BASEMENT    = 3
-    NER_MOHO_16        = 3
-    NER_BOTTOM_MOHO    = 8
-
-! standard mesh for on Caltech cluster
-  else if (UTM_MAX/NEX_MAX >= 1.5) then
+! standard mesh for Southern California on Caltech cluster
+  if (UTM_MAX/NEX_MAX >= 1.5) then
 
 ! time step in seconds
     DT                 = 0.011d0
@@ -174,7 +161,7 @@
   NER_MOHO_16 = NER_MOHO_16 * 2
   NER_BOTTOM_MOHO = NER_BOTTOM_MOHO * 4
 
-  if(MODEL == 'SoCal' .or. MODEL == 'Lacq_gas_field_France') then
+  if(MODEL == 'SoCal') then
 
     BASEMENT_MAP             = .false.
     MOHO_MAP_LUPEI           = .false.

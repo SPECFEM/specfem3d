@@ -234,13 +234,6 @@
   double precision, parameter :: DEGREES_PER_CELL_TOPO_SOCAL = 5.d0 / 1000.d0
   character(len=100), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
 
-! size of topography and bathymetry file for Lacq (France) gas field
-  integer, parameter :: NX_TOPO_LACQ = 499,NY_TOPO_LACQ = 401
-  double precision, parameter :: ORIG_LAT_TOPO_LACQ = 100000.d0
-  double precision, parameter :: ORIG_LONG_TOPO_LACQ = 340400.d0
-  double precision, parameter :: DEGREES_PER_CELL_TOPO_LACQ = 100.d0
-  character(len=100), parameter :: TOPO_FILE_LACQ = 'DATA/lacq_thomas/mnt_Lacq_Lambert_final_dimitri.dat'
-
 ! size of Lupei Zhu's Moho map file for Southern California
   integer, parameter :: NX_MOHO = 71,NY_MOHO = 51
   double precision, parameter :: ORIG_LAT_MOHO = 32.d0
@@ -336,9 +329,6 @@
   double precision, parameter :: DEPTH_5p5km_SOCAL = -5500.d0
   double precision, parameter :: DEPTH_16km_SOCAL = -16000.d0
   double precision, parameter :: DEPTH_MOHO_SOCAL = -32000.d0
-
-! layer for Lacq (France) gas field
-  double precision, parameter :: DEPTH_INTERFACE_LACQ = -7000.d0
 
 ! reference surface of the model before adding topography
   double precision, parameter :: Z_SURFACE = 0.d0

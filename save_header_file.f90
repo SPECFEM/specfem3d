@@ -68,7 +68,7 @@
   write(IOUT,*) 'integer, parameter ::  NPROC_VAL = ',NPROC
   write(IOUT,*) 'integer, parameter :: NPROC_XI_VAL = ', NPROC_XI
   write(IOUT,*) 'integer, parameter :: NPROC_ETA_VAL = ', NPROC_ETA
-  
+
   write(IOUT,*) '!'
   write(IOUT,*) '! max points per processor = max vector length = ',NGLOB_AB
   write(IOUT,*) '! min vector length = ',NGLLSQUARE
@@ -120,7 +120,7 @@
     write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', 1
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .false.'
   endif
-  write(IOUT,*) 
+  write(IOUT,*)
 
 ! anisotropy
   if(ANISOTROPY) then
@@ -140,7 +140,7 @@
     write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', 1
   endif
 
-  ! adjoint 
+  ! adjoint
   if (SIMULATION_TYPE == 3) then
     write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', NSPEC_AB
     write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', NGLOB_AB
@@ -148,7 +148,7 @@
     write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', 1
     write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', 1
   endif
-  
+
   write(IOUT,*)
 
   write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_XMIN_XMAX_VAL = ', NSPEC2DMAX_XMIN_XMAX
@@ -161,7 +161,7 @@
 
   write(IOUT,*)
 
-! Moho boundary 
+! Moho boundary
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
     write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', NSPEC2D_BOTTOM
     write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', NSPEC_AB

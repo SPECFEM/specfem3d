@@ -193,7 +193,7 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
         kappastore,mustore
- 
+
 ! material properties in case of a fully anisotropic material
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
         c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
@@ -315,9 +315,8 @@
   double precision :: t0
 
 ! receiver information
-  character(len=150) rec_filename, filtered_rec_filename
-  integer nrec,nrec_local,nrec_tot_found
-  integer irec_local
+  character(len=150) rec_filename,filtered_rec_filename,dummystring
+  integer nrec,nrec_local,nrec_tot_found,irec_local,ios
   integer, allocatable, dimension(:) :: islice_selected_rec,ispec_selected_rec,number_receiver_global
   double precision, allocatable, dimension(:) :: xi_receiver,eta_receiver,gamma_receiver
   double precision hlagrange
@@ -778,22 +777,12 @@
 ! read topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
 
-! for Lacq (France) gas field
-    if(MODEL == 'Lacq_gas_field_France') then
-      NX_TOPO = NX_TOPO_LACQ
-      NY_TOPO = NY_TOPO_LACQ
-      ORIG_LAT_TOPO = ORIG_LAT_TOPO_LACQ
-      ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
-      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
-      topo_file = TOPO_FILE_LACQ
-    else
-      NX_TOPO = NX_TOPO_SOCAL
-      NY_TOPO = NY_TOPO_SOCAL
-      ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-      ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-      topo_file = TOPO_FILE_SOCAL
-    endif
+    NX_TOPO = NX_TOPO_SOCAL
+    NY_TOPO = NY_TOPO_SOCAL
+    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+    topo_file = TOPO_FILE_SOCAL
 
     allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
@@ -870,10 +859,18 @@
 
   if (SIMULATION_TYPE == 1) then
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-    open(unit=IIN,file=filtered_rec_filename,status='old',action='read')
-    read(IIN,*) nrec
+
+! get total number of stations
+    open(unit=IIN,file=filtered_rec_filename,iostat=ios,status='old',action='read')
+    nrec = 0
+    do while(ios == 0)
+      read(IIN,"(a)",iostat=ios) dummystring
+      if(ios == 0) nrec = nrec + 1
+    enddo
     close(IIN)
+
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+
   else
     call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS_ADJOINT')
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_ADJOINT_FILTERED')
