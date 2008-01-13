@@ -222,11 +222,11 @@
   character(len=150) BASEMENT_MAP_FILE
 
 ! to filter list of stations
-  integer irec,nrec,nrec_filtered
+  integer irec,nrec,nrec_filtered,ios
   double precision stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME) station_name
   character(len=MAX_LENGTH_NETWORK_NAME) network_name
-  character(len=150) rec_filename, filtered_rec_filename
+  character(len=150) rec_filename,filtered_rec_filename,dummystring
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -455,24 +455,13 @@
 ! read topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then
 
-! for Lacq (France) gas field
-    if(MODEL == 'Lacq_gas_field_France') then
-      NX_TOPO = NX_TOPO_LACQ
-      NY_TOPO = NY_TOPO_LACQ
-      ORIG_LAT_TOPO = ORIG_LAT_TOPO_LACQ
-      ORIG_LONG_TOPO = ORIG_LONG_TOPO_LACQ
-      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_LACQ
-      topo_file = TOPO_FILE_LACQ
-
 ! for Southern California
-    else
-      NX_TOPO = NX_TOPO_SOCAL
-      NY_TOPO = NY_TOPO_SOCAL
-      ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-      ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-      DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-      topo_file = TOPO_FILE_SOCAL
-    endif
+    NX_TOPO = NX_TOPO_SOCAL
+    NY_TOPO = NY_TOPO_SOCAL
+    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+    topo_file = TOPO_FILE_SOCAL
 
     allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
@@ -480,8 +469,7 @@
 
     if(myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) 'regional topography file read ranges in m from ', &
-        minval(itopo_bathy),' to ',maxval(itopo_bathy)
+      write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
       write(IMAIN,*)
     endif
 
@@ -492,17 +480,14 @@
     call read_moho_map(imoho_depth)
     if(myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) 'regional Moho depth read ranges in m from ', &
-        minval(imoho_depth),' to ',maxval(imoho_depth)
+      write(IMAIN,*) 'regional Moho depth read ranges in m from ',minval(imoho_depth),' to ',maxval(imoho_depth)
       write(IMAIN,*)
     endif
   endif
 
 ! read basement map
   if(BASEMENT_MAP) then
-    call get_value_string(BASEMENT_MAP_FILE, &
-                          'model.BASEMENT_MAP_FILE', &
-                          'DATA/la_basement/reggridbase2_filtered_ascii.dat')
+    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
     open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
     do ix=1,NX_BASEMENT
       do iy=1,NY_BASEMENT
@@ -663,10 +648,6 @@
 
   else
     Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
-
-! for Lacq (France) gas field
-    if(MODEL == 'Lacq_gas_field_France') Z_DEPTH_MOHO = DEPTH_INTERFACE_LACQ
-
   endif
 
 ! define vertical spacing of the mesh in case of a non-regular mesh with mesh doublings
@@ -833,12 +814,21 @@
              NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
              NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE)
 
-! filter list of stations, only retain stations that are in the model
   call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
   call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+
+! get total number of stations
+  open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
+  nrec = 0
+  do while(ios == 0)
+    read(IIN,"(a)",iostat=ios) dummystring
+    if(ios == 0) nrec = nrec + 1
+  enddo
+  close(IIN)
+
+! filter list of stations, only retain stations that are in the model
   nrec_filtered = 0
   open(unit=IIN,file=rec_filename,status='old',action='read')
-  read(IIN,*) nrec
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
     if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &

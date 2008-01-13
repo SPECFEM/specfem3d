@@ -46,11 +46,9 @@
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed  double precision z_top
 
-  integer npr,ir,NER_Lacq
+  integer npr,ir
 
   npr = -1
-
-  if(MODEL /= 'Lacq_gas_field_France') then
 
 !
 !--- bottom of the mesh (Z_DEPTH_BLOCK) to Moho
@@ -103,30 +101,6 @@
  (Z_SURFACE-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
 !! DK DK UGLY modif Manu removed     (z_top-Z_BASEMENT_SURFACE)*dble(ir)/dble(2*(NER_BASEMENT_SEDIM+NER_SEDIM))
   enddo
-
-! for Lacq (France) gas field, case of Lacq_gas_field_France
-  else if(MODEL == 'Lacq_gas_field_France') then
-
-!
-!--- bottom of the mesh (Z_DEPTH_BLOCK) to main mesh interface (called Moho for compatibility)
-!
-  do ir=0,2*NER_BOTTOM_MOHO-1
-    npr=npr+1
-    rn(npr)=(Z_DEPTH_MOHO-Z_DEPTH_BLOCK)*dble(ir)/dble(2*NER_BOTTOM_MOHO)
-  enddo
-
-!
-!--- main mesh interface (called Moho for compatibility) to surface of model (topography)
-!
-! also create last point exactly at the surface
-! other regions above stop one point below
-  NER_Lacq = NER_BASEMENT_SEDIM + NER_SEDIM + NER_16_BASEMENT + NER_MOHO_16
-  do ir=0,2*NER_Lacq - 0
-    npr=npr+1
-    rn(npr)=(Z_DEPTH_MOHO-Z_DEPTH_BLOCK) + (Z_SURFACE-Z_DEPTH_MOHO)*dble(ir)/dble(2*NER_Lacq)
-  enddo
-
-  endif  ! end of case of Lacq_gas_field_France
 
 ! normalize depths
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here

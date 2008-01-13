@@ -22,7 +22,7 @@ NEX_ETA                         = 6
 NPROC_XI                        = 1
 NPROC_ETA                       = 1
 
-# model (SoCal, Harvard_LA, Min_Chen_anisotropy, Lacq_gas_field_France, Copper_Carcione)
+# model (SoCal, Harvard_LA, Min_Chen_anisotropy, Copper_Carcione)
 MODEL                           = Copper_Carcione
 
 # parameters describing the model

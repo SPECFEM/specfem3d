@@ -22,7 +22,7 @@ NEX_ETA                         = 384
 NPROC_XI                        = 8
 NPROC_ETA                       = 8
 
-# model (SoCal, Harvard_LA, Min_Chen_anisotropy, Lacq_gas_field_France)
+# model (SoCal, Harvard_LA, Min_Chen_anisotropy)
 MODEL                           = Harvard_LA
 
 # parameters describing the model

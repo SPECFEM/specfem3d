@@ -64,10 +64,11 @@
   logical USE_OPENDX
 
 ! for receiver location
-  integer irec
+  integer irec,ios
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
+  character(len=150) dummystring
 
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
 
@@ -608,13 +609,17 @@ endif
 
     print *
     print *,'reading position of the receivers from DATA/STATIONS_FILTERED file'
+    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
 
 ! get number of stations from receiver file
-    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-    open(unit=11,file=filtered_rec_filename,status='old',action='read')
+    open(unit=11,file=filtered_rec_filename,iostat=ios,status='old',action='read')
+    nrec = 0
+    do while(ios == 0)
+      read(11,"(a)",iostat=ios) dummystring
+      if(ios == 0) nrec = nrec + 1
+    enddo
+    close(11)
 
-! read total number of receivers
-    read(11,*) nrec
     print *,'There are ',nrec,' three-component stations'
     print *
     if(nrec < 1) stop 'incorrect number of stations read - need at least one'
@@ -631,6 +636,7 @@ endif
     allocate(z_target(nrec))
 
 ! loop on all the stations
+    open(unit=11,file=filtered_rec_filename,status='old',action='read')
     do irec=1,nrec
       read(11,*) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
 
