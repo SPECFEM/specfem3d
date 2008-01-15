@@ -60,7 +60,6 @@
   integer, allocatable, dimension(:) :: ix_initial_guess,iy_initial_guess,iz_initial_guess
 
   integer iprocloop
-  integer nrec_dummy
   integer ios
 
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
@@ -150,9 +149,6 @@
 ! get number of stations from receiver file
   open(unit=1,file=trim(rec_filename),status='old',action='read',iostat=ios)
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
-  read(1,*) nrec_dummy
-
-  if(nrec_dummy /= nrec) call exit_MPI(myrank,'problem with number of receivers')
 
 ! allocate memory for arrays using number of stations
   allocate(stlat(nrec))
