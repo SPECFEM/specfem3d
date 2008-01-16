@@ -655,7 +655,7 @@
                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed                     z_top, &
-                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI,MODEL)
+                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
 
 !   fill the volume
     do ir = 0,2*NER
