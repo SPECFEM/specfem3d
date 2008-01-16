@@ -27,7 +27,7 @@
                            NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed                           z_top, &
-                           Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI,MODEL)
+                           Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
 
 ! create the vertical mesh, honoring the major discontinuities in the model
 
@@ -40,8 +40,6 @@
   logical MOHO_MAP_LUPEI
   double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
   double precision rn(0:2*NER)
-
-  character(len=150) MODEL
 
 !! DK DK UGLY modif z_top by Emmanuel Chaljub here
 !! DK DK UGLY modif Manu removed  double precision z_top
