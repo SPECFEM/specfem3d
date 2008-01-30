@@ -847,9 +847,6 @@
   open(unit=IIN,file=rec_filename,status='old',action='read')
   open(unit=IOUT,file=filtered_rec_filename,status='unknown')
 
-  read(IIN,*) nrec
-  write(IOUT,*) nrec_filtered
-
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
     if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
