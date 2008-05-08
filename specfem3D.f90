@@ -2051,9 +2051,9 @@
   R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
 
 ! term in zz not computed since zero trace
-! This is because we only implement Q_\mu attenuation and not Q_\Kappa.
+! This is because we only implement Q_\mu attenuation and not Q_\kappa.
 ! Note that this does *NOT* imply that there is no attenuation for P waves
-! because for Q_\Kappa = infinity one gets (see for instance Dahlen and Tromp (1998)
+! because for Q_\kappa = infinity one gets (see for instance Dahlen and Tromp (1998)
 ! equation (9.59) page 350): Q_\alpha = Q_\mu * 3 * (V_p/V_s)^2 / 4
 ! therefore Q_\alpha is not zero; for instance for V_p / V_s = sqrt(3)
 ! we get Q_\alpha = (9 / 4) * Q_\mu = 2.25 * Q_\mu
