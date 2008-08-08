@@ -26,15 +26,11 @@ case $FC in
         # Intel ifort Fortran90 for Linux
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -vec-report0 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback" # -mcmodel=medium
+            FLAGS_CHECK="-O3 -vec-report0 -e03 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe0 -ftz -traceback -ftrapuv" # -mcmodel=medium
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
             # standard options (leave option -ftz, which is *critical* for performance)
-            FLAGS_NO_CHECK="-O3 -xP -vec-report0 -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
-            # Pangu at Caltech
-            #FLAGS_NO_CHECK = $(IFORT_PROF) -O3 -static -ip -xP -vec-report0 -Wl,--allow-multiple-definition -fpe3 -ftz -L $$IFORT_ROOT/lib -limf -lirc
-            # debug with range checking
-            #FLAGS_NO_CHECK = -O0 -static -e95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check all
+            FLAGS_NO_CHECK="-O3 -xP -vec-report0 -e03 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
         fi
         #MPI_LIBS = -Vaxlib
         ;;
@@ -43,9 +39,9 @@ case $FC in
         # GNU gfortran
         #
         if test x"$FLAGS_NO_CHECK" = x; then
-            FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math" # -mcmodel=medium
+            FLAGS_NO_CHECK="-std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math" # -mcmodel=medium
 # older gfortran syntax
-#           FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math" # -mcmodel=medium
+#           FLAGS_NO_CHECK="-std=f2003 -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math" # -mcmodel=medium
         fi
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="\$(FLAGS_NO_CHECK)" # -fbounds-check
@@ -89,21 +85,6 @@ case $FC in
                 fi
                 if test x"$FLAGS_NO_CHECK" = x; then
                     FLAGS_NO_CHECK="-ansi -u -64 -O3 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4"
-                fi
-                ;;
-            alpha:OSF1)
-                ################## Compaq Dec Alpha #################
-                if test x"$MPIFC" = x; then
-                    MPIFC=$FC
-                    if test x"$MPILIBS" = x; then
-                        MPILIBS="-lfmpi -lmpi"
-                    fi
-                fi
-                if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="\$(FLAGS_NO_CHECK) -check bounds"
-                fi
-                if test x"$FLAGS_NO_CHECK" = x; then
-                    FLAGS_NO_CHECK="-fast -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -check nounderflow"
                 fi
                 ;;
             SX-*:SUPER-UX | ES:ESOS)
