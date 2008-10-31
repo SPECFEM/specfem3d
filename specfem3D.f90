@@ -185,13 +185,13 @@
 ! -----------------
 
 ! mesh parameters
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: ibool
+  integer, dimension(:,:,:,:), allocatable :: ibool
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         kappastore,mustore
 
 ! material properties in case of a fully anisotropic material
@@ -201,26 +201,26 @@
         c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
 ! flag for sediments
-  logical not_fully_in_bedrock(NSPEC_AB_VAL)
-  logical, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: flag_sediments
+  logical, dimension(:), allocatable :: not_fully_in_bedrock
+  logical, dimension(:,:,:,:), allocatable :: flag_sediments
 
 ! Stacey
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
 ! local to global mapping
-  integer, dimension(NSPEC_AB_VAL) :: idoubling
+  integer, dimension(:), allocatable :: idoubling
 
 ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: rmass
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
 ! additional mass matrix for ocean load
 ! ocean load mass matrix is always allocated statically even if no oceans
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: rmass_ocean_load
-  logical, dimension(NGLOB_AB_VAL) :: updated_dof_ocean_load
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
+  logical, dimension(:), allocatable :: updated_dof_ocean_load
   real(kind=CUSTOM_REAL) additional_term,force_normal_comp
 
 ! displacement, velocity, acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB_VAL) :: displ,veloc,accel
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
@@ -301,6 +301,7 @@
   real(kind=CUSTOM_REAL) stf_used
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
+  double precision, dimension(:,:,:), allocatable :: nu_source
 !ADJOINT
   character(len=150) adj_source_file
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: adj_sourcearray
@@ -312,7 +313,7 @@
   double precision, dimension(:), allocatable :: t_cmt,hdur,hdur_gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
-  double precision :: t0
+  double precision :: t0,f0
 
 ! receiver information
   character(len=150) rec_filename,filtered_rec_filename,dummystring
@@ -439,6 +440,51 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
 
+! for assembling in case of external mesh
+  integer :: ninterfaces_ext_mesh
+  integer :: max_nibool_interfaces_ext_mesh
+  integer, dimension(:), allocatable :: my_neighbours_ext_mesh
+  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_send_scalar_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: buffer_recv_scalar_ext_mesh
+  integer, dimension(:), allocatable :: request_send_scalar_ext_mesh
+  integer, dimension(:), allocatable :: request_recv_scalar_ext_mesh
+  integer, dimension(:), allocatable :: request_send_vector_ext_mesh
+  integer, dimension(:), allocatable :: request_recv_vector_ext_mesh
+
+! for detecting surface receivers and source in case of external mesh
+  integer, dimension(:), allocatable :: valence_external_mesh
+  logical, dimension(:), allocatable :: iglob_is_surface_external_mesh
+  logical, dimension(:), allocatable :: ispec_is_surface_external_mesh
+  integer, dimension(:,:), allocatable :: buffer_send_scalar_i_ext_mesh
+  integer, dimension(:,:), allocatable :: buffer_recv_scalar_i_ext_mesh
+  integer :: nfaces_surface_external_mesh
+  integer :: nfaces_surface_glob_ext_mesh
+  integer,dimension(:),allocatable :: nfaces_perproc_surface_ext_mesh
+  integer,dimension(:),allocatable :: faces_surface_offset_ext_mesh
+  integer,dimension(:,:),allocatable :: faces_surface_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_all_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_all_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_all_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all_external_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all_external_mesh
+  integer :: ii,jj,kk
+
+! for communications overlapping
+  logical, dimension(:), allocatable :: ispec_is_inner_ext_mesh
+  logical, dimension(:), allocatable :: iglob_is_inner_ext_mesh
+  integer :: iinterface
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! sizeprocs returns number of processes started
@@ -486,6 +532,19 @@
 
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+
+! info about external mesh simulation
+! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
+  if (USE_EXTERNAL_MESH) then
+    NPROC = sizeprocs
+    DT = DT_ext_mesh
+    NSTEP = NSTEP_ext_mesh
+    call create_name_database(prname,myrank,LOCAL_PATH)
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB
+    close(27)
+  endif
 
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
@@ -540,6 +599,9 @@
 ! check that we have at least one source
   if(NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
 
+! info on the addressing scheme that is not used in case of an external mesh simulation
+  if (.not. USE_EXTERNAL_MESH) then
+
 ! open file with global slice number addressing
   if(myrank == 0) then
     open(unit=IIN,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old',action='read')
@@ -565,10 +627,109 @@
 ! define maximum size for message buffers
   NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
 
+  endif ! end of (.not. USE_EXTERNAL_MESH)
+
 ! start reading the databases
 
+! allocate arrays for storing the databases
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(xstore(NGLOB_AB))
+  allocate(ystore(NGLOB_AB))
+  allocate(zstore(NGLOB_AB))
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(not_fully_in_bedrock(NSPEC_AB))
+  allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(idoubling(NSPEC_AB))
+  allocate(rmass(NGLOB_AB))
+  allocate(rmass_ocean_load(NGLOB_AB))
+  allocate(updated_dof_ocean_load(NGLOB_AB))
+  allocate(displ(NDIM,NGLOB_AB))
+  allocate(veloc(NDIM,NGLOB_AB))
+  allocate(accel(NDIM,NGLOB_AB))
+
+! info about external mesh simulation
+! nlegoff -- should be put in read_arrays_solver and read_arrays_buffer_solver for clarity
+  if (USE_EXTERNAL_MESH) then
+    call create_name_database(prname,myrank,LOCAL_PATH)
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB
+    read(27) xix
+    read(27) xiy
+    read(27) xiz
+    read(27) etax
+    read(27) etay
+    read(27) etaz
+    read(27) gammax
+    read(27) gammay
+    read(27) gammaz
+    read(27) jacobian
+    read(27) kappastore
+    read(27) mustore
+    read(27) rmass
+    read(27) ibool
+    read(27) xstore
+    read(27) ystore
+    read(27) zstore
+
+    read(27) ninterfaces_ext_mesh
+    read(27) max_nibool_interfaces_ext_mesh
+    allocate(my_neighbours_ext_mesh(ninterfaces_ext_mesh))
+    allocate(nibool_interfaces_ext_mesh(ninterfaces_ext_mesh))
+    allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+    read(27) my_neighbours_ext_mesh
+    read(27) nibool_interfaces_ext_mesh
+    read(27) ibool_interfaces_ext_mesh
+
+    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+    allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+    allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+    allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+    allocate(request_send_vector_ext_mesh(ninterfaces_ext_mesh))
+    allocate(request_recv_vector_ext_mesh(ninterfaces_ext_mesh))
+    allocate(request_send_scalar_ext_mesh(ninterfaces_ext_mesh))
+    allocate(request_recv_scalar_ext_mesh(ninterfaces_ext_mesh))
+    close(27)
+
+! locate inner and outer elements
+    allocate(ispec_is_inner_ext_mesh(NSPEC_AB))  
+    allocate(iglob_is_inner_ext_mesh(NGLOB_AB))
+    ispec_is_inner_ext_mesh(:) = .true.
+    iglob_is_inner_ext_mesh(:) = .true.
+    do iinterface = 1, ninterfaces_ext_mesh
+      do i = 1, nibool_interfaces_ext_mesh(iinterface)
+        iglob = ibool_interfaces_ext_mesh(i,iinterface)
+        iglob_is_inner_ext_mesh(iglob) = .false.
+      enddo
+    enddo
+    do ispec = 1, NSPEC_AB
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+            ispec_is_inner_ext_mesh(ispec) = iglob_is_inner_ext_mesh(iglob) .and. ispec_is_inner_ext_mesh(ispec)
+          enddo
+        enddo
+      enddo 
+    enddo
+
+  else
+    
 ! read arrays created by the mesher
-  call read_arrays_solver(myrank,xstore,ystore,zstore, &
+  call read_arrays_solver(myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
             flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,ANISOTROPY, &
             c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
@@ -577,7 +738,7 @@
             kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
 
 ! check that the number of points in this slice is correct
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB_VAL) &
+  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
 
 ! read 2-D addressing for summation between slices with MPI
@@ -585,6 +746,8 @@
      iboolright_xi,iboolleft_eta,iboolright_eta, &
      npoin2D_xi,npoin2D_eta, &
      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,LOCAL_PATH)
+
+  endif ! end of (USE_EXTERNAL_MESH)
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -619,6 +782,7 @@
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
            call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
 
+  if (.not. USE_EXTERNAL_MESH) then
 ! boundary parameters
   open(unit=27,file=prname(1:len_trim(prname))//'ibelm.bin',status='old',action='read',form='unformatted')
   read(27) ibelm_xmin
@@ -770,7 +934,307 @@
       endif
 
   endif
+  
+  endif ! end of (.not. USE_EXTERNAL_MESH)
 
+! detecting surface points/elements (based on valence check on NGLL points) for external mesh
+  if (USE_EXTERNAL_MESH) then
+  allocate(valence_external_mesh(NGLOB_AB))
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB))
+  allocate(iglob_is_surface_external_mesh(NGLOB_AB))
+
+  if (.not. RECVS_CAN_BE_BURIED_EXT_MESH) then
+  valence_external_mesh(:) = 0
+  ispec_is_surface_external_mesh(:) = .false.
+  iglob_is_surface_external_mesh(:) = .false.
+  do ispec = 1, NSPEC_AB
+    do k = 1, NGLLZ
+    do j = 1, NGLLY
+    do i = 1, NGLLX
+      iglob = ibool(i,j,k,ispec)
+      valence_external_mesh(iglob) = valence_external_mesh(iglob) + 1
+
+    enddo
+    enddo
+    enddo
+    
+  enddo 
+ 
+  allocate(buffer_send_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+  allocate(buffer_recv_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,NGLOB_AB,valence_external_mesh, &
+       buffer_send_scalar_i_ext_mesh,buffer_recv_scalar_i_ext_mesh, &
+       ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+       request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
+       )
+  
+  do ispec = 1, NSPEC_AB
+    do k = 1, NGLLZ
+    do j = 1, NGLLY
+    do i = 1, NGLLX
+      if ( &
+           (k == 1 .or. k == NGLLZ) .and. (j /= 1 .and. j /= NGLLY) .and. (i /= 1 .and. i /= NGLLX) .or. &
+           (j == 1 .or. j == NGLLY) .and. (k /= 1 .and. k /= NGLLZ) .and. (i /= 1 .and. i /= NGLLX) .or. &
+           (i == 1 .or. i == NGLLX) .and. (k /= 1 .and. k /= NGLLZ) .and. (j /= 1 .and. j /= NGLLY) &
+           ) then
+        iglob = ibool(i,j,k,ispec)
+        if (valence_external_mesh(iglob) == 1) then
+          ispec_is_surface_external_mesh(ispec) = .true.
+        
+          if (k == 1 .or. k == NGLLZ) then
+            do jj = 1, NGLLY
+            do ii = 1, NGLLX
+              iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
+            enddo
+            enddo
+          endif
+          if (j == 1 .or. j == NGLLY) then
+            do kk = 1, NGLLZ
+            do ii = 1, NGLLX
+              iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
+            enddo
+            enddo
+          endif
+          if (i == 1 .or. i == NGLLX) then
+            do kk = 1, NGLLZ
+            do jj = 1, NGLLY
+              iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
+            enddo
+            enddo
+          endif
+        endif
+
+      endif
+    enddo
+    enddo
+    enddo
+   
+  enddo
+
+  if (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
+  nfaces_surface_external_mesh = 0
+    do ispec = 1, NSPEC_AB
+      iglob = ibool(2,2,1,ispec)
+      if (iglob_is_surface_external_mesh(iglob)) then
+        nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+      endif
+      iglob = ibool(2,2,NGLLZ,ispec)
+      if (iglob_is_surface_external_mesh(iglob)) then
+        nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+      endif
+      iglob = ibool(2,1,2,ispec)
+      if (iglob_is_surface_external_mesh(iglob)) then
+        nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+      endif
+      iglob = ibool(2,NGLLY,2,ispec)
+      if (iglob_is_surface_external_mesh(iglob)) then
+        nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+      endif
+      iglob = ibool(1,2,2,ispec)
+      if (iglob_is_surface_external_mesh(iglob)) then
+        nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+      endif
+      iglob = ibool(NGLLX,2,2,ispec)
+      if (iglob_is_surface_external_mesh(iglob)) then
+        nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+      endif
+    enddo
+
+    allocate(nfaces_perproc_surface_ext_mesh(NPROC))
+    allocate(faces_surface_offset_ext_mesh(NPROC))
+    if (nfaces_surface_external_mesh == 0) then
+      if (USE_HIGHRES_FOR_MOVIES) then
+      allocate(faces_surface_external_mesh(NGLLX*NGLLY,1))
+      allocate(store_val_x_external_mesh(NGLLX*NGLLY*1))
+      allocate(store_val_y_external_mesh(NGLLX*NGLLY*1))
+      allocate(store_val_z_external_mesh(NGLLX*NGLLY*1))
+      allocate(store_val_ux_external_mesh(NGLLX*NGLLY*1))
+      allocate(store_val_uy_external_mesh(NGLLX*NGLLY*1))
+      allocate(store_val_uz_external_mesh(NGLLX*NGLLY*1))
+      else 
+      allocate(faces_surface_external_mesh(NGNOD2D,1))
+      allocate(store_val_x_external_mesh(NGNOD2D*1))
+      allocate(store_val_y_external_mesh(NGNOD2D*1))
+      allocate(store_val_z_external_mesh(NGNOD2D*1))
+      allocate(store_val_ux_external_mesh(NGNOD2D*1))
+      allocate(store_val_uy_external_mesh(NGNOD2D*1))
+      allocate(store_val_uz_external_mesh(NGNOD2D*1))
+      endif
+    else
+      if (USE_HIGHRES_FOR_MOVIES) then
+      allocate(faces_surface_external_mesh(NGLLX*NGLLY,nfaces_surface_external_mesh))
+      allocate(store_val_x_external_mesh(NGLLX*NGLLY*nfaces_surface_external_mesh))
+      allocate(store_val_y_external_mesh(NGLLX*NGLLY*nfaces_surface_external_mesh))
+      allocate(store_val_z_external_mesh(NGLLX*NGLLY*nfaces_surface_external_mesh))
+      allocate(store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_external_mesh))
+      allocate(store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_external_mesh))
+      allocate(store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_external_mesh))
+      else
+      allocate(faces_surface_external_mesh(NGNOD2D,nfaces_surface_external_mesh))
+      allocate(store_val_x_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
+      allocate(store_val_y_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
+      allocate(store_val_z_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
+      allocate(store_val_ux_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
+      allocate(store_val_uy_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
+      allocate(store_val_uz_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
+      endif
+    endif
+    call sum_all_i(nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh)
+    if (USE_HIGHRES_FOR_MOVIES) then
+    allocate(store_val_x_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_y_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_z_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_ux_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_uy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_uz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+    else
+    allocate(store_val_x_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_y_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_z_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_ux_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_uy_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_uz_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    endif
+    call gather_all_i(nfaces_surface_external_mesh,1,nfaces_perproc_surface_ext_mesh,1,NPROC)
+    
+    faces_surface_offset_ext_mesh(1) = 0
+    do i = 2, NPROC
+      faces_surface_offset_ext_mesh(i) = sum(nfaces_perproc_surface_ext_mesh(1:i-1))
+    enddo
+    if (USE_HIGHRES_FOR_MOVIES) then
+    faces_surface_offset_ext_mesh(:) = faces_surface_offset_ext_mesh(:)*NGLLX*NGLLY
+    else
+    faces_surface_offset_ext_mesh(:) = faces_surface_offset_ext_mesh(:)*NGNOD2D
+    endif
+
+    nfaces_surface_external_mesh = 0
+    do ispec = 1, NSPEC_AB
+      if (ispec_is_surface_external_mesh(ispec)) then
+        iglob = ibool(2,2,1,ispec)
+        if (iglob_is_surface_external_mesh(iglob)) then
+              nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+              if (USE_HIGHRES_FOR_MOVIES) then
+                ipoin =0
+                do j = NGLLY, 1, -1
+                  do i = 1, NGLLX
+                    ipoin = ipoin+1
+                    faces_surface_external_mesh(ipoin,nfaces_surface_external_mesh) = ibool(i,j,1,ispec)
+                  enddo
+               enddo
+              else
+              faces_surface_external_mesh(1,nfaces_surface_external_mesh) = ibool(1,1,1,ispec)
+              faces_surface_external_mesh(2,nfaces_surface_external_mesh) = ibool(1,NGLLY,1,ispec)
+              faces_surface_external_mesh(3,nfaces_surface_external_mesh) = ibool(NGLLX,NGLLY,1,ispec)
+              faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(NGLLX,1,1,ispec)
+              endif
+        endif
+        iglob = ibool(2,2,NGLLZ,ispec)
+        if (iglob_is_surface_external_mesh(iglob)) then
+              nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+              if (USE_HIGHRES_FOR_MOVIES) then
+                ipoin =0
+                do j = 1, NGLLY
+                  do i = 1, NGLLX
+                    ipoin = ipoin+1
+                    faces_surface_external_mesh(ipoin,nfaces_surface_external_mesh) = ibool(i,j,NGLLZ,ispec)
+                  enddo
+               enddo
+              else
+              faces_surface_external_mesh(1,nfaces_surface_external_mesh) = ibool(1,1,NGLLZ,ispec)
+              faces_surface_external_mesh(2,nfaces_surface_external_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
+              faces_surface_external_mesh(3,nfaces_surface_external_mesh) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+              faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(1,NGLLY,NGLLZ,ispec)
+              endif
+        endif
+        iglob = ibool(2,1,2,ispec)
+        if (iglob_is_surface_external_mesh(iglob)) then
+              nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+              if (USE_HIGHRES_FOR_MOVIES) then
+                ipoin =0
+                do k = 1, NGLLZ
+                  do i = 1, NGLLX
+                    ipoin = ipoin+1
+                    faces_surface_external_mesh(ipoin,nfaces_surface_external_mesh) = ibool(i,1,k,ispec)
+                  enddo
+               enddo
+              else
+              faces_surface_external_mesh(1,nfaces_surface_external_mesh) = ibool(1,1,1,ispec)
+              faces_surface_external_mesh(2,nfaces_surface_external_mesh) = ibool(NGLLX,1,1,ispec)
+              faces_surface_external_mesh(3,nfaces_surface_external_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
+              faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(1,1,NGLLZ,ispec)
+              endif
+        endif
+        iglob = ibool(2,NGLLY,2,ispec)
+        if (iglob_is_surface_external_mesh(iglob)) then
+              nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+              if (USE_HIGHRES_FOR_MOVIES) then
+                ipoin =0
+                do k = 1, NGLLZ
+                  do i = NGLLX, 1, -1
+                    ipoin = ipoin+1
+                    faces_surface_external_mesh(ipoin,nfaces_surface_external_mesh) = ibool(i,NGLLY,k,ispec)
+                  enddo
+               enddo
+              else
+              faces_surface_external_mesh(1,nfaces_surface_external_mesh) = ibool(NGLLX,NGLLY,1,ispec)
+              faces_surface_external_mesh(2,nfaces_surface_external_mesh) = ibool(1,NGLLY,1,ispec)
+              faces_surface_external_mesh(3,nfaces_surface_external_mesh) = ibool(1,NGLLY,NGLLZ,ispec)
+              faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+              endif
+        endif
+        iglob = ibool(1,2,2,ispec)
+        if (iglob_is_surface_external_mesh(iglob)) then
+              nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+              if (USE_HIGHRES_FOR_MOVIES) then
+                ipoin =0
+                do k = 1, NGLLZ
+                  do j = NGLLY, 1, -1
+                    ipoin = ipoin+1
+                    faces_surface_external_mesh(ipoin,nfaces_surface_external_mesh) = ibool(1,j,k,ispec)
+                  enddo
+               enddo
+              else
+              faces_surface_external_mesh(1,nfaces_surface_external_mesh) = ibool(1,NGLLY,1,ispec)
+              faces_surface_external_mesh(2,nfaces_surface_external_mesh) = ibool(1,1,1,ispec)
+              faces_surface_external_mesh(3,nfaces_surface_external_mesh) = ibool(1,1,NGLLZ,ispec)
+              faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(1,NGLLY,NGLLZ,ispec)
+              endif
+        endif
+        iglob = ibool(NGLLX,2,2,ispec)
+        if (iglob_is_surface_external_mesh(iglob)) then
+              nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+              if (USE_HIGHRES_FOR_MOVIES) then
+                ipoin =0
+                do k = 1, NGLLZ
+                  do j = 1, NGLLY
+                    ipoin = ipoin+1
+                    faces_surface_external_mesh(ipoin,nfaces_surface_external_mesh) = ibool(NGLLX,j,k,ispec)
+                  enddo
+               enddo
+              else
+              faces_surface_external_mesh(1,nfaces_surface_external_mesh) = ibool(NGLLX,1,1,ispec)
+              faces_surface_external_mesh(2,nfaces_surface_external_mesh) = ibool(NGLLX,NGLLY,1,ispec)
+              faces_surface_external_mesh(3,nfaces_surface_external_mesh) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+              faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
+              endif
+        endif
+        
+      endif
+    enddo
+
+    if (myrank == 0) then
+      print *, nfaces_perproc_surface_ext_mesh
+      print *, nfaces_surface_glob_ext_mesh
+ 
+    endif
+
+  endif
+
+  endif !
+
+  endif
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$ SOURCES $$$$$$$$$$$$$$$$$
 
@@ -794,6 +1258,11 @@
         minval(itopo_bathy),' to ',maxval(itopo_bathy)
       write(IMAIN,*)
     endif
+
+  else
+    NX_TOPO = 1
+    NY_TOPO = 1
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
   endif
 
@@ -825,6 +1294,7 @@
   allocate(hdur_gaussian(NSOURCES))
   allocate(utm_x_source(NSOURCES))
   allocate(utm_y_source(NSOURCES))
+  allocate(nu_source(3,3,NSOURCES))
 
 ! locate sources in the mesh
   call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
@@ -836,7 +1306,9 @@
           LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
           TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE, &
           PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
-          NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
+          NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
+          )
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
@@ -909,7 +1381,9 @@
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
             TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-            NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
+            NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+            iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
+)
 
 
 !###################### SOURCE ARRAYS ################
@@ -1105,10 +1579,19 @@
   call sync_all()
 
 ! the mass matrix needs to be assembled with MPI here once and for all
+  if (USE_EXTERNAL_MESH) then
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
+         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+         ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
+         )
+  else
   call assemble_MPI_scalar(rmass,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_scalar,buffer_received_faces_scalar,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
+  endif
 
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
@@ -1427,6 +1910,7 @@
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
 ! *********************************************************
 
+
   do it = 1,NSTEP
 
 ! compute the maximum of the norm of the displacement
@@ -1506,6 +1990,8 @@
     ispec2D_moho_top = 0
     ispec2D_moho_bot = 0
   endif
+
+  if (.not. USE_EXTERNAL_MESH) then
 
   do ispec = 1,NSPEC_AB
 
@@ -2404,7 +2890,40 @@
 
   if (SIMULATION_TYPE == 1) then
 
-  do isource = 1,NSOURCES
+!!!!!!!!!!  do isource = 1,NSOURCES
+  do isource = 1,1
+
+  if(FASTER_SOURCES_POINTS_ONLY) then
+
+!   add the source (only if this proc carries the source)
+    if(myrank == islice_selected_source(isource)) then
+
+      iglob = ibool(nint(xi_source(isource)), &
+           nint(eta_source(isource)), &
+           nint(gamma_source(isource)), &
+           ispec_selected_source(isource))
+      f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
+      t0 = 1.2d0/f0 
+if (it == 1 .and. myrank == 0) then
+     
+print *,'using a source of dominant frequency ',f0
+print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+endif
+      
+      
+      ! we use nu_source(:,3) here because we want a source normal to the surface.
+      ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
+      !accel(:,iglob) = accel(:,iglob) + &
+      !     sngl(nu_source(:,3,isource) * 10000000.d0 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
+      !     exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
+accel(:,iglob) = accel(:,iglob) + &
+           sngl(nu_source(:,3,isource) * 1.d10 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
+           exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
+
+    endif
+
+    else
 
 !   add the source (only if this proc carries the source)
     if(myrank == islice_selected_source(isource)) then
@@ -2429,6 +2948,8 @@
       enddo
 
     endif
+
+  endif ! end of if(FASTER_SOURCES_POINTS_ONLY)
 
   enddo
 
@@ -2490,12 +3011,41 @@
 
   endif
 
+  endif ! if (.not. USE_EXTERNAL_MESH)
 
 ! assemble all the contributions between slices using MPI
+  if (USE_EXTERNAL_MESH) then
+    call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt &
+         )    
+
+    call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,accel, &
+         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+         ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+         request_send_vector_ext_mesh,request_recv_vector_ext_mesh &
+         )
+
+    call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt &
+         )    
+
+    call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
+         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+         ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+         request_send_vector_ext_mesh,request_recv_vector_ext_mesh &
+         )
+  else
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
             iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
             buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
+  endif
   if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
           iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
           buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
@@ -2591,6 +3141,22 @@
     irec = number_receiver_global(irec_local)
 
 ! perform the general interpolation using Lagrange polynomials
+    if(FASTER_RECEIVERS_POINTS_ONLY) then
+
+      iglob = ibool(nint(xi_receiver(irec)),nint(eta_receiver(irec)), &
+           nint(gamma_receiver(irec)),ispec_selected_rec(irec))
+      dxd = dble(displ(1,iglob))
+      dyd = dble(displ(2,iglob))
+      dzd = dble(displ(3,iglob))
+      vxd = dble(veloc(1,iglob))
+      vyd = dble(veloc(2,iglob))
+      vzd = dble(veloc(3,iglob))
+      axd = dble(accel(1,iglob))
+      ayd = dble(accel(2,iglob))
+      azd = dble(accel(3,iglob))
+     
+    else
+
     dxd = ZERO
     dyd = ZERO
     dzd = ZERO
@@ -2632,6 +3198,8 @@
           enddo
         enddo
       enddo
+
+      
 
     else if (SIMULATION_TYPE == 2) then
 
@@ -2702,7 +3270,7 @@
       enddo
     endif
 
-
+    endif ! end of if(FASTER_RECEIVERS_POINTS_ONLY)
 
 ! store North, East and Vertical components
 
@@ -2822,6 +3390,269 @@
     endif
   endif
 
+
+  if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
+    if (it == 1) then
+
+      store_val_ux_external_mesh(:) = -HUGEVAL
+      store_val_uy_external_mesh(:) = -HUGEVAL
+      store_val_uz_external_mesh(:) = -HUGEVAL
+      do ispec = 1,nfaces_surface_external_mesh
+      if (USE_HIGHRES_FOR_MOVIES) then
+        do ipoin = 1, NGLLX*NGLLY
+          store_val_x_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = xstore(faces_surface_external_mesh(ipoin,ispec))
+          store_val_y_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = ystore(faces_surface_external_mesh(ipoin,ispec))
+          store_val_z_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = zstore(faces_surface_external_mesh(ipoin,ispec))
+        enddo
+      else
+        store_val_x_external_mesh(NGNOD2D*(ispec-1)+1) = xstore(faces_surface_external_mesh(1,ispec))
+        store_val_x_external_mesh(NGNOD2D*(ispec-1)+2) = xstore(faces_surface_external_mesh(2,ispec))
+        store_val_x_external_mesh(NGNOD2D*(ispec-1)+3) = xstore(faces_surface_external_mesh(3,ispec))
+        store_val_x_external_mesh(NGNOD2D*(ispec-1)+4) = xstore(faces_surface_external_mesh(4,ispec))
+        store_val_y_external_mesh(NGNOD2D*(ispec-1)+1) = ystore(faces_surface_external_mesh(1,ispec))
+        store_val_y_external_mesh(NGNOD2D*(ispec-1)+2) = ystore(faces_surface_external_mesh(2,ispec))
+        store_val_y_external_mesh(NGNOD2D*(ispec-1)+3) = ystore(faces_surface_external_mesh(3,ispec))
+        store_val_y_external_mesh(NGNOD2D*(ispec-1)+4) = ystore(faces_surface_external_mesh(4,ispec))
+        store_val_z_external_mesh(NGNOD2D*(ispec-1)+1) = zstore(faces_surface_external_mesh(1,ispec))
+        store_val_z_external_mesh(NGNOD2D*(ispec-1)+2) = zstore(faces_surface_external_mesh(2,ispec))
+        store_val_z_external_mesh(NGNOD2D*(ispec-1)+3) = zstore(faces_surface_external_mesh(3,ispec))
+        store_val_z_external_mesh(NGNOD2D*(ispec-1)+4) = zstore(faces_surface_external_mesh(4,ispec))
+      endif
+      enddo
+    endif
+
+    do ispec = 1,nfaces_surface_external_mesh
+    if (USE_HIGHRES_FOR_MOVIES) then
+      do ipoin = 1, NGLLX*NGLLY
+        store_val_ux_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = &
+             max(store_val_ux_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin), &
+             sqrt(displ(1,faces_surface_external_mesh(ipoin,ispec))**2 + &
+             displ(2,faces_surface_external_mesh(ipoin,ispec))**2 + &
+             displ(3,faces_surface_external_mesh(ipoin,ispec))**2))
+        store_val_uy_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = &
+             max(store_val_uy_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin), &
+             sqrt(veloc(1,faces_surface_external_mesh(ipoin,ispec))**2 + &
+             veloc(2,faces_surface_external_mesh(ipoin,ispec))**2 + &
+             veloc(3,faces_surface_external_mesh(ipoin,ispec))**2))
+        store_val_uz_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = &
+             max(store_val_uz_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin), &
+             sqrt(accel(1,faces_surface_external_mesh(ipoin,ispec))**2 + &
+             accel(2,faces_surface_external_mesh(ipoin,ispec))**2 + &
+             accel(3,faces_surface_external_mesh(ipoin,ispec))**2))
+
+      enddo
+    else
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+           max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1), &
+           sqrt(displ(1,faces_surface_external_mesh(1,ispec))**2 + &
+           displ(2,faces_surface_external_mesh(1,ispec))**2 + &
+           displ(3,faces_surface_external_mesh(1,ispec))**2))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+           max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+2), &
+           sqrt(displ(1,faces_surface_external_mesh(2,ispec))**2 + &
+           displ(2,faces_surface_external_mesh(2,ispec))**2 + &
+           displ(3,faces_surface_external_mesh(2,ispec))**2))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+3) = & 
+           max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+3), &
+           sqrt(displ(1,faces_surface_external_mesh(3,ispec))**2 + &
+           displ(2,faces_surface_external_mesh(3,ispec))**2 + &
+           displ(3,faces_surface_external_mesh(3,ispec))**2))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+4) = & 
+           max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+4), &
+           sqrt(displ(1,faces_surface_external_mesh(4,ispec))**2 + &
+           displ(2,faces_surface_external_mesh(4,ispec))**2 + &
+           displ(3,faces_surface_external_mesh(4,ispec))**2))
+     store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+           max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1), &
+           sqrt(veloc(1,faces_surface_external_mesh(1,ispec))**2 + &
+           veloc(2,faces_surface_external_mesh(1,ispec))**2 + &
+           veloc(3,faces_surface_external_mesh(1,ispec))**2))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+           max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+2), &
+           sqrt(veloc(1,faces_surface_external_mesh(2,ispec))**2 + &
+           veloc(2,faces_surface_external_mesh(2,ispec))**2 + &
+           veloc(3,faces_surface_external_mesh(2,ispec))**2))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+3) = & 
+           max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+3), &
+           sqrt(veloc(1,faces_surface_external_mesh(3,ispec))**2 + &
+           veloc(2,faces_surface_external_mesh(3,ispec))**2 + &
+           veloc(3,faces_surface_external_mesh(3,ispec))**2))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+4) = & 
+           max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+4), &
+           sqrt(veloc(1,faces_surface_external_mesh(4,ispec))**2 + &
+           veloc(2,faces_surface_external_mesh(4,ispec))**2 + &
+           veloc(3,faces_surface_external_mesh(4,ispec))**2))
+     store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+           max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1), &
+           sqrt(accel(1,faces_surface_external_mesh(1,ispec))**2 + &
+           accel(2,faces_surface_external_mesh(1,ispec))**2 + &
+           accel(3,faces_surface_external_mesh(1,ispec))**2))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+           max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+2), &
+           sqrt(accel(1,faces_surface_external_mesh(2,ispec))**2 + &
+           accel(2,faces_surface_external_mesh(2,ispec))**2 + &
+           accel(3,faces_surface_external_mesh(2,ispec))**2))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3) = & 
+           max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3), &
+           sqrt(accel(1,faces_surface_external_mesh(3,ispec))**2 + &
+           accel(2,faces_surface_external_mesh(3,ispec))**2 + &
+           accel(3,faces_surface_external_mesh(3,ispec))**2))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4) = & 
+           max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4), &
+           sqrt(accel(1,faces_surface_external_mesh(4,ispec))**2 + &
+           accel(2,faces_surface_external_mesh(4,ispec))**2 + &
+           accel(3,faces_surface_external_mesh(4,ispec))**2))
+    endif
+    enddo
+
+    if (it == NSTEP) then
+    if (USE_HIGHRES_FOR_MOVIES) then
+    call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    else
+    call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    endif
+
+    if(myrank == 0) then
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted')
+      write(IOUT) store_val_x_all_external_mesh
+      write(IOUT) store_val_y_all_external_mesh
+      write(IOUT) store_val_z_all_external_mesh
+      write(IOUT) store_val_ux_all_external_mesh
+      write(IOUT) store_val_uy_all_external_mesh
+      write(IOUT) store_val_uz_all_external_mesh
+      close(IOUT)
+    endif      
+    endif
+
+ endif
+
+  if(USE_EXTERNAL_MESH .and. EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+! get coordinates of surface mesh and surface displacement
+    do ispec = 1,nfaces_surface_external_mesh
+      if (USE_HIGHRES_FOR_MOVIES) then
+        do ipoin = 1, NGLLX*NGLLY
+          store_val_x_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = xstore(faces_surface_external_mesh(ipoin,ispec))
+          store_val_y_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = ystore(faces_surface_external_mesh(ipoin,ispec))
+          store_val_z_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = zstore(faces_surface_external_mesh(ipoin,ispec))
+          store_val_ux_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = veloc(1,faces_surface_external_mesh(ipoin,ispec))
+          store_val_uy_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = veloc(2,faces_surface_external_mesh(ipoin,ispec))
+          store_val_uz_external_mesh(NGLLX*NGLLY*(ispec-1)+ipoin) = veloc(3,faces_surface_external_mesh(ipoin,ispec))
+        enddo
+      else
+      store_val_x_external_mesh(NGNOD2D*(ispec-1)+1) = xstore(faces_surface_external_mesh(1,ispec))
+      store_val_x_external_mesh(NGNOD2D*(ispec-1)+2) = xstore(faces_surface_external_mesh(2,ispec))
+      store_val_x_external_mesh(NGNOD2D*(ispec-1)+3) = xstore(faces_surface_external_mesh(3,ispec))
+      store_val_x_external_mesh(NGNOD2D*(ispec-1)+4) = xstore(faces_surface_external_mesh(4,ispec))
+      store_val_y_external_mesh(NGNOD2D*(ispec-1)+1) = ystore(faces_surface_external_mesh(1,ispec))
+      store_val_y_external_mesh(NGNOD2D*(ispec-1)+2) = ystore(faces_surface_external_mesh(2,ispec))
+      store_val_y_external_mesh(NGNOD2D*(ispec-1)+3) = ystore(faces_surface_external_mesh(3,ispec))
+      store_val_y_external_mesh(NGNOD2D*(ispec-1)+4) = ystore(faces_surface_external_mesh(4,ispec))
+      store_val_z_external_mesh(NGNOD2D*(ispec-1)+1) = zstore(faces_surface_external_mesh(1,ispec))
+      store_val_z_external_mesh(NGNOD2D*(ispec-1)+2) = zstore(faces_surface_external_mesh(2,ispec))
+      store_val_z_external_mesh(NGNOD2D*(ispec-1)+3) = zstore(faces_surface_external_mesh(3,ispec))
+      store_val_z_external_mesh(NGNOD2D*(ispec-1)+4) = zstore(faces_surface_external_mesh(4,ispec))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = veloc(1,faces_surface_external_mesh(1,ispec))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+2) = veloc(1,faces_surface_external_mesh(2,ispec))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+3) = veloc(1,faces_surface_external_mesh(3,ispec))
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+4) = veloc(1,faces_surface_external_mesh(4,ispec))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = veloc(2,faces_surface_external_mesh(1,ispec))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+2) = veloc(2,faces_surface_external_mesh(2,ispec))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+3) = veloc(2,faces_surface_external_mesh(3,ispec))
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+4) = veloc(2,faces_surface_external_mesh(4,ispec))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = veloc(3,faces_surface_external_mesh(1,ispec))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+2) = veloc(3,faces_surface_external_mesh(2,ispec))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3) = veloc(3,faces_surface_external_mesh(3,ispec))
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4) = veloc(3,faces_surface_external_mesh(4,ispec))      
+      endif
+    enddo
+    
+    if (USE_HIGHRES_FOR_MOVIES) then
+    call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+         store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
+    else
+    call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+         store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
+         nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
+    endif
+
+    if(myrank == 0) then
+      write(outputname,"('/moviedata',i6.6)") it
+      open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted')
+      write(IOUT) store_val_x_all_external_mesh
+      write(IOUT) store_val_y_all_external_mesh
+      write(IOUT) store_val_z_all_external_mesh
+      write(IOUT) store_val_ux_all_external_mesh
+      write(IOUT) store_val_uy_all_external_mesh
+      write(IOUT) store_val_uz_all_external_mesh
+      close(IOUT)
+    endif
+  endif
+
 ! save MOVIE on the SURFACE
   if(MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 
@@ -2872,7 +3703,7 @@
        enddo
      enddo ! ispec_top
    endif
-
+   
     ispec = nmovie_points
 
     call gather_all_cr(store_val_x,ispec,store_val_x_all,ispec,NPROC)

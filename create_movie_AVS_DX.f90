@@ -40,13 +40,13 @@
 
 ! coefficient of power law used for non linear scaling
   logical, parameter :: NONLINEAR_SCALING = .true.
-  real(kind=CUSTOM_REAL), parameter :: POWER_SCALING = 0.25_CUSTOM_REAL
+  real(kind=CUSTOM_REAL), parameter :: POWER_SCALING = 0.13_CUSTOM_REAL
 
   integer it,it1,it2,ivalue,nspectot_AVS_max,ispec
   integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
   integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
 
-  logical USE_OPENDX,USE_AVS,USE_GMT,UNIQUE_FILE,plot_shaking_map
+  logical USE_OPENDX,USE_AVS,UNIQUE_FILE,plot_shaking_map
 
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: x,y,z,display
   real(kind=CUSTOM_REAL) xcoord,ycoord,zcoord
@@ -90,7 +90,6 @@
           OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
           BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
-  double precision zscaling
 
   character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
 
@@ -103,6 +102,16 @@
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
+
+!!!! NL NL for external meshes
+  real(kind=CUSTOM_REAL), parameter :: RADIUS_TO_MUTE = 1000._CUSTOM_REAL
+  logical, parameter :: MUTE_SOURCE = .true.
+  real(kind=CUSTOM_REAL), parameter :: X_SOURCE_EXT_MESH = -9023.021484375
+  real(kind=CUSTOM_REAL), parameter :: Y_SOURCE_EXT_MESH = 6123.611328125
+  real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
+  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 15808*4
+
+!!!! NL NL
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -151,10 +160,19 @@
   endif
   print *
 
-  if(USE_HIGHRES_FOR_MOVIES) then
-    ilocnum = NGLLSQUARE*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+  if (USE_EXTERNAL_MESH) then
+    NPROC = 1
+    if(USE_HIGHRES_FOR_MOVIES) then
+      ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
+    else
+      ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_AVS_DX
+    endif
   else
-    ilocnum = NGNOD2D_AVS_DX*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+    if(USE_HIGHRES_FOR_MOVIES) then
+      ilocnum = NGLLSQUARE*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+    else
+      ilocnum = NGNOD2D_AVS_DX*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+    endif
   endif
   allocate(store_val_x(ilocnum,0:NPROC-1))
   allocate(store_val_y(ilocnum,0:NPROC-1))
@@ -162,6 +180,7 @@
   allocate(store_val_ux(ilocnum,0:NPROC-1))
   allocate(store_val_uy(ilocnum,0:NPROC-1))
   allocate(store_val_uz(ilocnum,0:NPROC-1))
+  
 
   print *,'1 = create files in OpenDX format'
   print *,'2 = create files in AVS UCD format with individual files'
@@ -175,31 +194,19 @@
   if(iformat == 1) then
     USE_OPENDX = .true.
     USE_AVS = .false.
-    USE_GMT = .false.
     UNIQUE_FILE = .false.
   else if(iformat == 2) then
     USE_OPENDX = .false.
     USE_AVS = .true.
-    USE_GMT = .false.
     UNIQUE_FILE = .false.
   else if(iformat == 3) then
     USE_OPENDX = .false.
     USE_AVS = .true.
-    USE_GMT = .false.
     UNIQUE_FILE = .true.
   else
     USE_OPENDX = .false.
     USE_AVS = .false.
-    USE_GMT = .true.
     UNIQUE_FILE = .false.
-  endif
-
-  if(.not. USE_GMT) then
-    print *
-    print *,'scaling to apply to Z to amplify topography (1. to do nothing, 0. to get flat surface):'
-    read(5,*) zscaling
-  else
-    zscaling = 0.
   endif
 
   print *,'movie frames have been saved every ',NTSTEP_BETWEEN_FRAMES,' time steps'
@@ -262,10 +269,18 @@
   endif
 
 ! define the total number of elements at the surface
-  if(USE_HIGHRES_FOR_MOVIES) then
-    nspectot_AVS_max = NEX_XI * NEX_ETA * (NGLLX-1) * (NGLLY-1)
+  if (USE_EXTERNAL_MESH) then
+    if(USE_HIGHRES_FOR_MOVIES) then
+      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH * (NGLLX-1) * (NGLLY-1)
+    else
+      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH
+    endif
   else
-    nspectot_AVS_max = NEX_XI * NEX_ETA
+    if(USE_HIGHRES_FOR_MOVIES) then
+      nspectot_AVS_max = NEX_XI * NEX_ETA * (NGLLX-1) * (NGLLY-1)
+    else
+      nspectot_AVS_max = NEX_XI * NEX_ETA
+    endif
   endif
 
   print *
@@ -340,7 +355,8 @@
 ! reset point number
     ipoin = 0
 
-    do ispecloc = 1,NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+    !do ispecloc = 1,NEX_PER_PROC_XI*NEX_PER_PROC_ETA
+    do ispecloc = 1, NSPEC_SURFACE_EXT_MESH
 
       if(USE_HIGHRES_FOR_MOVIES) then
 ! assign the OpenDX "elements"
@@ -354,9 +370,6 @@
             ycoord = store_val_y(ipoin,iproc)
             zcoord = store_val_z(ipoin,iproc)
 
-! amplify topography, otherwise too flat to see anything
-            zcoord = zcoord * zscaling
-
             vectorx = store_val_ux(ipoin,iproc)
             vectory = store_val_uy(ipoin,iproc)
             vectorz = store_val_uz(ipoin,iproc)
@@ -366,6 +379,15 @@
             z(i,j) = zcoord
 
             if(plot_shaking_map) then
+!!!! NL NL mute value near source
+              if ( (sqrt(((x(i,j) - (X_SOURCE_EXT_MESH))**2 + &
+                   (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
+                   (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
+                   .and. MUTE_SOURCE) then
+                
+                display(i,j) = 0.
+              else
+
               if(inorm == 1) then
                 display(i,j) = vectorx
               else if(inorm == 2) then
@@ -373,8 +395,13 @@
               else
                 display(i,j) = vectorz
               endif
+            endif
             else
-              display(i,j) = vectorz
+              if (USE_EXTERNAL_MESH) then
+                display(i,j) = sqrt(vectorz**2+vectory**2+vectorx**2)
+              else
+                display(i,j) = vectorz
+              endif
             endif
 
           enddo
@@ -429,9 +456,6 @@
           ycoord = store_val_y(ipoin,iproc)
           zcoord = store_val_z(ipoin,iproc)
 
-! amplify topography, otherwise too flat to see anything
-          zcoord = zcoord * zscaling
-
           vectorx = store_val_ux(ipoin,iproc)
           vectory = store_val_uy(ipoin,iproc)
           vectorz = store_val_uz(ipoin,iproc)
@@ -444,6 +468,16 @@
 ! or show norm of vector if shaking map
 ! for shaking map, norm of U stored in ux, V in uy and A in uz
           if(plot_shaking_map) then
+!!!! NL NL mute value near source
+              if ( (sqrt(((x(i,j) - (X_SOURCE_EXT_MESH))**2 + &
+                   (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
+                   (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
+                   .and. MUTE_SOURCE) then
+                
+                display(i,j) = 0.
+              else
+
+
             if(inorm == 1) then
               field_display(ilocnum+ieoff) = dble(vectorx)
             else if(inorm == 2) then
@@ -451,8 +485,13 @@
             else
               field_display(ilocnum+ieoff) = dble(vectorz)
             endif
+            endif
           else
-            field_display(ilocnum+ieoff) = dble(vectorz)
+            if (USE_EXTERNAL_MESH) then
+              field_display(ilocnum+ieoff) =sqrt(vectorz**2+vectory**2+vectorx**2)
+            else
+              field_display(ilocnum+ieoff) = dble(vectorz)
+            endif
           endif
 
         enddo
@@ -469,7 +508,12 @@
 
 !--- sort the list based upon coordinates to get rid of multiples
   print *,'sorting list of points'
-  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  if (USE_EXTERNAL_MESH) then
+    call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot, &
+         dble(minval(store_val_x(:,0))),dble(maxval(store_val_x(:,0))))
+  else
+    call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+  endif
 
 !--- print total number of points found
   print *
@@ -501,7 +545,6 @@
   print *
   print *,'minimum amplitude in current snapshot after removal = ',min_field_current
   print *,'maximum amplitude in current snapshot after removal = ',max_field_current
-  if(inorm == 3) print *,'maximum corresponds to ',max_field_current/9.81,' g'
   print *
 
   endif
@@ -581,9 +624,6 @@
       write(outputname,"('/AVS_shaking_map.inp')")
       open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
-    else if(USE_GMT) then
-      write(outputname,"('/gmt_shaking_map.xyz')")
-      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
     else
       stop 'wrong output format selected'
     endif
@@ -606,32 +646,13 @@
         open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
         write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
       endif
-    else if(USE_GMT) then
-      write(outputname,"('/gmt_movie_',i6.6,'.xyz')") ivalue
-      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
     else
       stop 'wrong output format selected'
     endif
 
   endif
 
-  if(USE_GMT) then
-
-! output list of points
-    mask_point = .false.
-    do ispec=1,nspectot_AVS_max
-      ieoff = NGNOD2D_AVS_DX*(ispec-1)
-! four points for each element
-      do ilocnum = 1,NGNOD2D_AVS_DX
-        ibool_number = iglob(ilocnum+ieoff)
-        if(.not. mask_point(ibool_number)) then
-          call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
-                       UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-          write(11,*) long,lat,field_display(ilocnum+ieoff)
-        endif
-        mask_point(ibool_number) = .true.
-      enddo
-    enddo
+  if(.false.) then
 
   else
 
@@ -734,7 +755,7 @@
       endif
       mask_point(ibool_number) = .true.
     enddo
-  enddo
+   enddo
 
 ! define OpenDX field
   if(USE_OPENDX) then
@@ -762,7 +783,7 @@
   print *
   if(USE_OPENDX) print *,'DX files are stored in ', trim(OUTPUT_FILES), '/DX_*.dx'
   if(USE_AVS) print *,'AVS files are stored in ', trim(OUTPUT_FILES), '/AVS_*.inp'
-  if(USE_GMT) print *,'GMT files are stored in ', trim(OUTPUT_FILES), '/gmt_*.xyz'
+
   print *
 
 
@@ -825,7 +846,10 @@
   double precision UTM_X_MIN,UTM_X_MAX
 
 ! define geometrical tolerance based upon typical size of the model
-  SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
+    SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
+    print *, 'UTM_X_MAX', UTM_X_MAX
+    print *, 'UTM_X_MIN', UTM_X_MIN
+    print *, 'SMALLVALTOL', SMALLVALTOL
 
 ! dynamically allocate arrays
   allocate(ind(npointot))

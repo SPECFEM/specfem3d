@@ -228,6 +228,25 @@
   character(len=MAX_LENGTH_NETWORK_NAME) network_name
   character(len=150) rec_filename,filtered_rec_filename,dummystring
 
+! for Databases of external meshes
+  character(len=150) prname
+  integer :: dummy_node
+  integer :: dummy_elmnt
+  integer :: ispec, inode, num_interface, ie
+  integer :: nnodes_ext_mesh, nelmnts_ext_mesh
+  integer  :: ninterface_ext_mesh
+  integer  :: max_interface_size_ext_mesh
+  integer, dimension(:), allocatable  :: my_neighbours_ext_mesh
+  integer, dimension(:), allocatable  :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(:,:,:), allocatable  :: my_interfaces_ext_mesh
+  integer, dimension(:,:), allocatable  :: ibool_interfaces_ext_mesh
+  integer, dimension(:,:), allocatable  :: ibool_interfaces_ext_mesh_dummy
+  integer, dimension(:), allocatable  :: ibool_interface_ext_mesh_dummy
+  integer, dimension(:), allocatable  :: nibool_interfaces_ext_mesh
+  double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
+  integer, dimension(:,:), allocatable :: elmnts_ext_mesh
+  integer, dimension(:), allocatable :: mat_ext_mesh
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! sizeprocs returns number of processes started (should be equal to NPROC).
@@ -282,9 +301,16 @@
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
+! info about external mesh simulation
+! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
+  if (USE_EXTERNAL_MESH) then
+    NPROC = sizeprocs
+  endif
+
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
 
+  if (.not. USE_EXTERNAL_MESH) then
 ! dynamic allocation of mesh arrays
   allocate(rns(0:2*NER))
 
@@ -330,6 +356,8 @@
       write(IMAIN,'(a1)',advance='yes') ' '
     enddo
   endif
+  
+  endif ! end of (.not. USE_EXTERNAL_MESH)
 
   if(myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
@@ -362,6 +390,7 @@
 ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
 
+  if (.not. USE_EXTERNAL_MESH) then
 ! check that Poisson's ratio in Gocad block is fine
   if(VP_VS_RATIO_GOCAD_TOP < sqrt(2.) .or. VP_VS_RATIO_GOCAD_BOTTOM < sqrt(2.))&
     call exit_MPI(myrank,'vp/vs ratio in Gocad block is too small')
@@ -382,6 +411,8 @@
     if(mod(NEX_XI/8,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI for a non-regular mesh')
     if(mod(NEX_ETA/8,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA for a non-regular mesh')
   endif
+
+  endif ! end of (.not. USE_EXTERNAL_MESH)
 
   if(myrank == 0) then
 
@@ -498,6 +529,8 @@
     close(55)
   endif
 
+  if (.not. USE_EXTERNAL_MESH) then
+  
 ! get addressing for this process
   iproc_xi = iproc_xi_slice(myrank)
   iproc_eta = iproc_eta_slice(myrank)
@@ -672,6 +705,8 @@
   enddo
   enddo
 
+  endif ! end of (.not. USE_EXTERNAL_MESH)
+
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
@@ -684,6 +719,46 @@
   volume_local = ZERO
   area_local_bottom = ZERO
   area_local_top = ZERO
+
+! read databases about external mesh simulation
+! nlegoff --
+  if (USE_EXTERNAL_MESH) then
+    call create_name_database(prname,myrank,LOCAL_PATH)    
+    open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted')
+    read(IIN,*) nnodes_ext_mesh
+    allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
+    do inode = 1, nnodes_ext_mesh
+      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
+    enddo
+    
+    read(IIN,*) nelmnts_ext_mesh
+    allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
+    allocate(mat_ext_mesh(nelmnts_ext_mesh))
+    do ispec = 1, nelmnts_ext_mesh
+      read(IIN,*) dummy_elmnt, mat_ext_mesh(ispec), &
+           elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
+           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
+    enddo
+    NSPEC_AB = nelmnts_ext_mesh
+
+    read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
+    allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
+    allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
+    allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,ninterface_ext_mesh))
+    allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh))
+    allocate(nibool_interfaces_ext_mesh(ninterface_ext_mesh))
+    do num_interface = 1, ninterface_ext_mesh
+      read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
+      do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
+        read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
+             my_interfaces_ext_mesh(3,ie,num_interface), my_interfaces_ext_mesh(4,ie,num_interface), &
+             my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
+      enddo
+    enddo
+
+    close(IIN)
+
+  endif
 
 ! assign theoretical number of elements
   nspec = NSPEC_AB
@@ -705,6 +780,20 @@
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! create all the regions of the mesh
+  if (USE_EXTERNAL_MESH) then
+  call create_regions_mesh_ext_mesh(ibool, &
+           xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,nspec, &
+           volume_local,area_local_bottom,area_local_top, &
+           NGLOB_AB,npointot, &
+           myrank,LOCAL_PATH, &
+           nnodes_ext_mesh,nelmnts_ext_mesh, &
+           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh, &
+           ninterface_ext_mesh,max_interface_size_ext_mesh, &
+           my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
+           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh &
+           )
+
+  else
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
          xstore,ystore,zstore,npx,npy, &
          iproc_xi,iproc_eta,nspec, &
@@ -722,7 +811,7 @@
          IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
          ANISOTROPY,SAVE_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
          ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
-
+  endif
 ! print min and max of topography included
   if(TOPOGRAPHY) then
 
@@ -831,7 +920,8 @@
   open(unit=IIN,file=rec_filename,status='old',action='read')
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+         .or. USE_EXTERNAL_MESH) &
       nrec_filtered = nrec_filtered + 1
   enddo
   close(IIN)
@@ -849,7 +939,8 @@
 
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+         .or. USE_EXTERNAL_MESH) &
       write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
               sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
   enddo

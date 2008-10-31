@@ -122,6 +122,7 @@ libspecfem_a_OBJECTS = \
 	$O/save_arrays_solver.o \
 	$O/save_header_file.o \
 	$O/socal_model.o \
+	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
 	$O/write_AVS_DX_global_data.o \
 	$O/write_AVS_DX_global_faces_data.o \
@@ -129,6 +130,7 @@ libspecfem_a_OBJECTS = \
 	$O/write_AVS_DX_surface_data.o \
 	$O/write_seismograms.o \
 	$O/compute_boundary_kernel.o \
+	$O/compute_forces.o \
 	$(EMPTY_MACRO)
 
 # solver objects with statically allocated arrays; dependent upon
@@ -420,6 +422,9 @@ $O/salton_trough_gocad.o: constants.h salton_trough_gocad.f90
 $O/socal_model.o: constants.h socal_model.f90
 	${FCCOMPILE_CHECK} -c -o $O/socal_model.o socal_model.f90
 
+$O/sort_array_coordinates.o: constants.h sort_array_coordinates.f90
+	${FCCOMPILE_CHECK} -c -o $O/sort_array_coordinates.o sort_array_coordinates.f90
+
 $O/aniso_model.o: constants.h aniso_model.f90
 	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
 
@@ -479,6 +484,9 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 
 $O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
+
+$O/compute_forces.o: constants.h compute_forces.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_forces.o compute_forces.f90
 
 $O/combine_vol_data.o: constants.h combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90

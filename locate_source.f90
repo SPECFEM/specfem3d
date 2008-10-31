@@ -36,7 +36,9 @@
                  LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
                  TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE, &
                  PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
-                 NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO)
+                 NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+                 nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
+                 )
 
   implicit none
 
@@ -68,7 +70,7 @@
 
   integer iprocloop
 
-  integer i,j,k,ispec,iglob,isource
+  integer i,j,k,ispec,iglob,isource,imin,imax,jmin,jmax,kmin,kmax
 
   double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
   double precision dist
@@ -112,11 +114,13 @@
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: ispec_selected_source_all
   double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all, &
      final_distance_source_all,x_found_source_all,y_found_source_all,z_found_source_all
+  double precision, dimension(3,3,NGATHER_SOURCES,0:NPROC-1) :: nu_source_all
 
   double precision hdur(NSOURCES), hdur_gaussian(NSOURCES), t0
 
   double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
+  double precision, dimension(3,3,NSOURCES) :: nu_source
 
   integer icornerlong,icornerlat
   double precision, dimension(NSOURCES) :: lat,long,depth,elevation
@@ -126,6 +130,12 @@
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision distmin
+
+! for surface locating and normal computing with external mesh
+  integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
+  real(kind=CUSTOM_REAL), dimension(3) :: u_vector,v_vector,w_vector
+  logical, dimension(NGLOB_AB) :: iglob_is_surface_external_mesh
+  logical, dimension(NSPEC_AB) :: ispec_is_surface_external_mesh
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
 
@@ -157,13 +167,14 @@
 ! loop on all the sources
   do isource = 1,NSOURCES
 
+  if (.not. USE_EXTERNAL_MESH) then
 ! check that the current source is inside the model
   if(lat(isource) < LATITUDE_MIN .or. lat(isource) > LATITUDE_MAX .or. long(isource) < LONGITUDE_MIN &
        .or. long(isource) > LONGITUDE_MAX)  call exit_MPI(myrank,'the current source is outside the model')
 
   if(depth(isource) >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
     call exit_MPI(myrank,'the current source is below the bottom of the model')
-
+  endif
 !
 ! r -> z, theta -> -y, phi -> x
 !
@@ -183,7 +194,26 @@
   Mxy(isource) = - moment_tensor(6,isource)
 
   call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource), &
-                   UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+                   UTM_PROJECTION_ZONE,ILONGLAT2UTM,(SUPPRESS_UTM_PROJECTION .or. USE_EXTERNAL_MESH))
+
+! orientation consistent with the UTM projection
+
+!     East
+      nu_source(1,1,isource) = 1.d0
+      nu_source(1,2,isource) = 0.d0
+      nu_source(1,3,isource) = 0.d0
+
+!     North
+      nu_source(2,1,isource) = 0.d0
+      nu_source(2,2,isource) = 1.d0
+      nu_source(2,3,isource) = 0.d0
+
+!     Vertical
+      nu_source(3,1,isource) = 0.d0
+      nu_source(3,2,isource) = 0.d0
+      nu_source(3,3,isource) = 1.d0  
+
+  if (.not. USE_EXTERNAL_MESH) then
 
 ! compute elevation of topography at the epicenter
   if(TOPOGRAPHY) then
@@ -230,20 +260,61 @@
   z_target_source = - depth(isource)*1000.0d0 + elevation(isource)
   if(myrank == 0) write(IOVTK,*) x_target_source,y_target_source,z_target_source
 
+  else
+   
+    x_target_source = utm_x_source(isource)
+    y_target_source = utm_y_source(isource)
+    z_target_source = depth(isource)
+    if (myrank == 0) write(IOVTK,*) x_target_source, y_target_source, z_target_source
+
+  endif ! of if (.not. USE_EXTERNAL_MESH)
+
 ! set distance to huge initial value
   distmin = HUGEVAL
 
+  ispec_selected_source(isource) = 0
+
   do ispec=1,NSPEC_AB
 
+
+! define the interval in which we look for points
+      if(FASTER_SOURCES_POINTS_ONLY .and. USE_EXTERNAL_MESH) then
+        imin = 1
+        imax = NGLLX
+
+        jmin = 1
+        jmax = NGLLY
+
+        kmin = 1
+        kmax = NGLLZ
+
+      else
 ! loop only on points inside the element
 ! exclude edges to ensure this point is not shared with other elements
-  do k=2,NGLLZ-1
-    do j=2,NGLLY-1
-      do i=2,NGLLX-1
+        imin = 2
+        imax = NGLLX - 1
 
-!       keep this point if it is closer to the receiver
-        iglob = ibool(i,j,k,ispec)
-        dist=dsqrt((x_target_source-dble(xstore(iglob)))**2 &
+        jmin = 2
+        jmax = NGLLY - 1
+
+        kmin = 2
+        kmax = NGLLZ - 1
+      endif
+
+        do k = kmin,kmax
+        do j = jmin,jmax
+          do i = imin,imax
+
+            iglob = ibool(i,j,k,ispec)
+            
+            if (USE_EXTERNAL_MESH .and. (.not. SOURCES_CAN_BE_BURIED_EXT_MESH)) then
+              if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
+                cycle
+              endif
+            endif
+
+!       keep this point if it is closer to the source
+            dist=dsqrt((x_target_source-dble(xstore(iglob)))**2 &
                   +(y_target_source-dble(ystore(iglob)))**2 &
                   +(z_target_source-dble(zstore(iglob)))**2)
         if(dist < distmin) then
@@ -252,6 +323,19 @@
           ix_initial_guess_source = i
           iy_initial_guess_source = j
           iz_initial_guess_source = k
+
+! store xi,eta,gamma and x,y,z of point found
+  xi_source(isource) = dble(ix_initial_guess_source)
+  eta_source(isource) = dble(iy_initial_guess_source)
+  gamma_source(isource) = dble(iz_initial_guess_source)
+  x_found_source(isource) = xstore(iglob)
+  y_found_source(isource) = ystore(iglob)
+  z_found_source(isource) = zstore(iglob)
+
+! compute final distance between asked and found (converted to km)
+  final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
+    (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
+
         endif
 
       enddo
@@ -261,9 +345,152 @@
 ! end of loop on all the elements in current slice
   enddo
 
+  if (ispec_selected_source(isource) == 0) then
+    final_distance_source(isource) = HUGEVAL
+  endif
+
+! get normal to the face of the hexaedra if receiver is on the surface
+  if (USE_EXTERNAL_MESH .and. (.not. SOURCES_CAN_BE_BURIED_EXT_MESH) .and. &
+       .not. (ispec_selected_source(isource) == 0)) then
+    pt0_ix = -1
+    pt0_iy = -1
+    pt0_iz = -1
+    pt1_ix = -1
+    pt1_iy = -1
+    pt1_iz = -1
+    pt2_ix = -1
+    pt2_iy = -1
+    pt2_iz = -1
+! we get two vectors of the face (three points) to compute the normal
+    if (xi_source(isource) == 1 .and. &
+         iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected_source(isource)))) then
+      pt0_ix = 1
+      pt0_iy = NGLLY
+      pt0_iz = 1
+      pt1_ix = 1
+      pt1_iy = 1
+      pt1_iz = 1
+      pt2_ix = 1
+      pt2_iy = NGLLY
+      pt2_iz = NGLLZ
+    endif
+    if (xi_source(isource) == NGLLX .and. &
+         iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec_selected_source(isource)))) then
+      pt0_ix = NGLLX
+      pt0_iy = 1
+      pt0_iz = 1
+      pt1_ix = NGLLX
+      pt1_iy = NGLLY
+      pt1_iz = 1
+      pt2_ix = NGLLX
+      pt2_iy = 1
+      pt2_iz = NGLLZ
+    endif
+    if (eta_source(isource) == 1 .and. &
+         iglob_is_surface_external_mesh(ibool(2,1,2,ispec_selected_source(isource)))) then
+      pt0_ix = 1
+      pt0_iy = 1
+      pt0_iz = 1
+      pt1_ix = NGLLX
+      pt1_iy = 1
+      pt1_iz = 1
+      pt2_ix = 1
+      pt2_iy = 1
+      pt2_iz = NGLLZ
+    endif
+    if (eta_source(isource) == NGLLY .and. &
+         iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec_selected_source(isource)))) then
+      pt0_ix = NGLLX
+      pt0_iy = NGLLY
+      pt0_iz = 1
+      pt1_ix = 1
+      pt1_iy = NGLLY
+      pt1_iz = 1
+      pt2_ix = NGLLX
+      pt2_iy = NGLLY
+      pt2_iz = NGLLZ
+    endif
+    if (gamma_source(isource) == 1 .and. &
+         iglob_is_surface_external_mesh(ibool(2,2,1,ispec_selected_source(isource)))) then
+      pt0_ix = NGLLX
+      pt0_iy = 1
+      pt0_iz = 1
+      pt1_ix = 1
+      pt1_iy = 1
+      pt1_iz = 1
+      pt2_ix = NGLLX
+      pt2_iy = NGLLY
+      pt2_iz = 1
+    endif
+    if (gamma_source(isource) == NGLLZ .and. &
+         iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec_selected_source(isource)))) then
+      pt0_ix = 1
+      pt0_iy = 1
+      pt0_iz = NGLLZ
+      pt1_ix = NGLLX
+      pt1_iy = 1
+      pt1_iz = NGLLZ
+      pt2_ix = 1
+      pt2_iy = NGLLY
+      pt2_iz = NGLLZ
+    endif
+
+    if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
+         pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
+         pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
+       stop 'error in computing normal for sources.'
+    endif
+
+    u_vector(1) = xstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
+         - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
+    u_vector(2) = ystore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
+         - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
+    u_vector(3) = zstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
+         - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
+    v_vector(1) = xstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_source(isource))) &
+         - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
+    v_vector(2) = ystore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_source(isource))) &
+         - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
+    v_vector(3) = zstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_source(isource))) &
+         - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
+
+! cross product
+    w_vector(1) = u_vector(2)*v_vector(3) - u_vector(3)*v_vector(2)
+    w_vector(2) = u_vector(3)*v_vector(1) - u_vector(1)*v_vector(3)
+    w_vector(3) = u_vector(1)*v_vector(2) - u_vector(2)*v_vector(1)
+
+! normalize vector w
+    w_vector(:) = w_vector(:)/sqrt(w_vector(1)**2+w_vector(2)**2+w_vector(3)**2)
+
+! build the two other vectors for a disourcet base : we normalize u, and v=w^u    
+    u_vector(:) = u_vector(:)/sqrt(u_vector(1)**2+u_vector(2)**2+u_vector(3)**2)
+    v_vector(1) = w_vector(2)*u_vector(3) - w_vector(3)*u_vector(2)
+    v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)
+    v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
+
+! build rotation matrice nu for seismograms
+!     East (u)
+      nu_source(1,1,isource) = u_vector(1)
+      nu_source(1,2,isource) = v_vector(1)
+      nu_source(1,3,isource) = w_vector(1)
+
+!     North (v)
+      nu_source(2,1,isource) = u_vector(2)
+      nu_source(2,2,isource) = v_vector(2)
+      nu_source(2,3,isource) = w_vector(2)
+
+!     Vertical (w)
+      nu_source(3,1,isource) = u_vector(3)
+      nu_source(3,2,isource) = v_vector(3)
+      nu_source(3,3,isource) = w_vector(3)
+
+  endif ! of if (USE_EXTERNAL_MESH .and. (.not. RECEIVERS_CAN_BE_BURIED_EXT_MESH))
+
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source
 ! *******************************************
+
+  if(.not. FASTER_SOURCES_POINTS_ONLY) then
 
 ! use initial guess in xi, eta and gamma
   xi = xigll(ix_initial_guess_source)
@@ -360,6 +587,8 @@
   final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
     (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
 
+  endif ! of if (.not. FASTER_SOURCES_POINTS_ONLY)
+
 ! end of loop on all the sources
   enddo
 
@@ -373,7 +602,7 @@
 
     ispec_selected_source_all(:,:) = -1
 
-  call gather_all_i(ispec_selected_source(ns:ne),ng,ispec_selected_source_all(1:ng,:),ng)
+  call gather_all_i(ispec_selected_source(ns:ne),ng,ispec_selected_source_all(1:ng,:),ng,NPROC)
 
   call gather_all_dp(xi_source(ns:ne),ng,xi_source_all(1:ng,:),ng,NPROC)
   call gather_all_dp(eta_source(ns:ne),ng,eta_source_all(1:ng,:),ng,NPROC)
@@ -382,6 +611,7 @@
   call gather_all_dp(x_found_source(ns:ne),ng,x_found_source_all(1:ng,:),ng,NPROC)
   call gather_all_dp(y_found_source(ns:ne),ng,y_found_source_all(1:ng,:),ng,NPROC)
   call gather_all_dp(z_found_source(ns:ne),ng,z_found_source_all(1:ng,:),ng,NPROC)
+  call gather_all_dp(nu_source(:,:,ns:ne),3*3*ng,nu_source_all(:,:,1:ng,:),3*3*ng,NPROC)
 
 ! this is executed by main process only
   if(myrank == 0) then
@@ -406,6 +636,7 @@
       x_found_source(isource) = x_found_source_all(is,iprocloop)
       y_found_source(isource) = y_found_source_all(is,iprocloop)
       z_found_source(isource) = z_found_source_all(is,iprocloop)
+      nu_source(:,:,isource) = nu_source_all(:,:,isource,iprocloop)
     endif
   enddo
   final_distance_source(isource) = distmin
@@ -428,9 +659,19 @@
     write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
     write(IMAIN,*) '               in element ',ispec_selected_source(isource)
     write(IMAIN,*)
-    write(IMAIN,*) '   xi coordinate of source in that element: ',xi_source(isource)
-    write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
-    write(IMAIN,*) 'gamma coordinate of source in that element: ',gamma_source(isource)
+    if(FASTER_SOURCES_POINTS_ONLY) then
+      write(IMAIN,*) '   xi coordinate of source in that element: ',nint(xi_source(isource))
+      write(IMAIN,*) '  eta coordinate of source in that element: ',nint(eta_source(isource))
+      write(IMAIN,*) 'gamma coordinate of source in that element: ',nint(gamma_source(isource))
+      write(IMAIN,*) 'nu1 = ',nu_source(1,:,isource)
+      write(IMAIN,*) 'nu2 = ',nu_source(2,:,isource)
+      write(IMAIN,*) 'nu3 = ',nu_source(3,:,isource)
+      write(IMAIN,*) 'at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
+    else
+      write(IMAIN,*) '   xi coordinate of source in that element: ',xi_source(isource)
+      write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
+      write(IMAIN,*) 'gamma coordinate of source in that element: ',gamma_source(isource)
+    endif
 
 ! add message if source is a Heaviside
     if(hdur(isource) < 5.*DT) then
