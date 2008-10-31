@@ -25,7 +25,7 @@
 
 ! read arrays created by the mesher
 
-  subroutine read_arrays_solver(myrank,xstore,ystore,zstore, &
+  subroutine read_arrays_solver(myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,ANISOTROPY, &
                c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
@@ -41,41 +41,44 @@
 
   integer myrank
 
+  integer NSPEC_AB
+  integer NGLOB_AB
+  
   logical OCEANS
 
   character(len=150) LOCAL_PATH
 
 ! coordinates in single precision
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
 
   logical ANISOTROPY
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
             c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
             c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
             c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
 ! material properties
-  real(kind=CUSTOM_REAL) kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
-  real(kind=CUSTOM_REAL) mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  real(kind=CUSTOM_REAL) kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
 
 ! flag for sediments
-  logical not_fully_in_bedrock(NSPEC_AB_VAL)
-  logical flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  logical not_fully_in_bedrock(NSPEC_AB)
+  logical flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
 
 ! Stacey
-  real(kind=CUSTOM_REAL) rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
-  real(kind=CUSTOM_REAL) rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  real(kind=CUSTOM_REAL) rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL) rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
 
 ! mass matrix and additional ocean load mass matrix
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: rmass,rmass_ocean_load
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: rmass,rmass_ocean_load
 
 ! global addressing
-  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
 
-  integer idoubling(NSPEC_AB_VAL)
+  integer idoubling(NSPEC_AB)
 
 ! processor identification
   character(len=150) prname

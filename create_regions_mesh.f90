@@ -1153,3 +1153,972 @@ enddo
 
   end subroutine create_regions_mesh
 
+!
+!----
+!
+
+  subroutine create_regions_mesh_ext_mesh(ibool, &
+           xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,nspec, &
+           volume_local,area_local_bottom,area_local_top, &
+           NGLOB_AB,npointot, &
+           myrank,LOCAL_PATH, &
+           nnodes_ext_mesh,nelmnts_ext_mesh, &
+           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh, &
+           ninterface_ext_mesh,max_interface_size_ext_mesh, &
+           my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
+           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh &
+           )
+
+! create the different regions of the mesh
+
+  implicit none
+
+  include "constants.h"
+
+! number of spectral elements in each block
+  integer nspec
+
+  integer npx,npy
+  integer npointot
+
+  character(len=150) LOCAL_PATH
+
+! arrays with the mesh
+  double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
+
+  double precision xstore_local(NGLLX,NGLLY,NGLLZ)
+  double precision ystore_local(NGLLX,NGLLY,NGLLZ)
+  double precision zstore_local(NGLLX,NGLLY,NGLLZ)
+
+  double precision xmesh,ymesh,zmesh
+
+  integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+
+! data from the external mesh
+  integer :: nnodes_ext_mesh,nelmnts_ext_mesh
+  double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
+  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
+  integer, dimension(nelmnts_ext_mesh) :: mat_ext_mesh
+  double precision, external :: materials_ext_mesh
+  integer :: ninterface_ext_mesh,max_interface_size_ext_mesh
+  integer, dimension(ninterface_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(ninterface_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(6,max_interface_size_ext_mesh,ninterface_ext_mesh) :: my_interfaces_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh
+
+! for MPI buffers  
+  integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
+  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+  integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
+  double precision, dimension(:), allocatable :: work_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
+
+! Gauss-Lobatto-Legendre points and weights of integration
+  double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
+
+! 3D shape functions and their derivatives
+  double precision, dimension(:,:,:,:), allocatable :: shape3D
+  double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
+
+  double precision xelm(NGNOD)
+  double precision yelm(NGNOD)
+  double precision zelm(NGNOD)
+
+! the jacobian
+  real(kind=CUSTOM_REAL) jacobianl
+
+! arrays with mesh parameters
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
+    etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
+
+! for model density
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
+
+! proc numbers for MPI
+  integer myrank
+
+! check area and volume of the final mesh
+  double precision weight
+  double precision area_local_bottom,area_local_top
+  double precision volume_local
+
+! variables for creating array ibool (some arrays also used for AVS or DX files)
+  integer, dimension(:), allocatable :: iglob,locval
+  logical, dimension(:), allocatable :: ifseg
+  double precision, dimension(:), allocatable :: xp,yp,zp
+
+  integer nglob,NGLOB_AB
+  integer ieoff,ilocnum
+  integer ier
+  integer iinterface
+
+! mass matrix
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
+
+! ---------------------------
+
+! name of the database file
+  character(len=150) prname
+
+  integer i,j,k,ia,ispec,iglobnum,itype_element
+  integer iproc_xi,iproc_eta
+
+  double precision rho,vp,vs
+  double precision c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+
+! for the harvard 3D salton sea model
+  double precision :: umesh, vmesh, wmesh, vp_st, vs_st, rho_st
+
+! mask to sort ibool
+  integer, dimension(:), allocatable :: mask_ibool
+  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori
+  integer :: inumber
+
+! **************
+
+! create the name for the database of the current slide and region
+  call create_name_database(prname,myrank,LOCAL_PATH)
+
+! Gauss-Lobatto-Legendre points of integration
+  allocate(xigll(NGLLX))
+  allocate(yigll(NGLLY))
+  allocate(zigll(NGLLZ))
+
+! Gauss-Lobatto-Legendre weights of integration
+  allocate(wxgll(NGLLX))
+  allocate(wygll(NGLLY))
+  allocate(wzgll(NGLLZ))
+
+! 3D shape functions and their derivatives
+  allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ))
+  allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+
+! array with model density
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec))
+
+! arrays with mesh parameters
+  allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec))
+
+! set up coordinates of the Gauss-Lobatto-Legendre points
+  call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+  call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+
+! if number of points is odd, the middle abscissa is exactly zero
+  if(mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = ZERO
+  if(mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
+  if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
+
+! get the 3-D shape functions
+  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll)
+
+! allocate memory for arrays
+  allocate(iglob(npointot))
+  allocate(locval(npointot))
+  allocate(ifseg(npointot))
+  allocate(xp(npointot))
+  allocate(yp(npointot))
+  allocate(zp(npointot))
+
+!---
+
+  xstore(:,:,:,:) = 0.d0
+  ystore(:,:,:,:) = 0.d0
+  zstore(:,:,:,:) = 0.d0
+
+  do ispec = 1, nspec
+     !call get_xyzelm(xelm, yelm, zelm, ispec, elmnts_ext_mesh, nodes_coords_ext_mesh, nspec, nnodes_ext_mesh)
+     do ia = 1,NGNOD
+     xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
+     yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
+     zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
+     enddo
+
+     call calc_jacobian(myrank,xixstore,xiystore,xizstore, &
+          etaxstore,etaystore,etazstore, &
+          gammaxstore,gammaystore,gammazstore,jacobianstore, &
+          xstore,ystore,zstore, &
+          xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
+     
+  enddo
+
+! kappastore and mustore
+  do ispec = 1, nspec
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          kappastore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(ispec))* &
+               (materials_ext_mesh(2,mat_ext_mesh(ispec))*materials_ext_mesh(2,mat_ext_mesh(ispec)) - &
+               4.d0*materials_ext_mesh(3,mat_ext_mesh(ispec))*materials_ext_mesh(3,mat_ext_mesh(ispec))/3.d0)
+          mustore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(ispec))*materials_ext_mesh(3,mat_ext_mesh(ispec))*&
+               materials_ext_mesh(3,mat_ext_mesh(ispec))
+        enddo
+      enddo
+    enddo
+  enddo
+
+  locval = 0
+  ifseg = .false.
+  xp = 0.d0
+  yp = 0.d0
+  zp = 0.d0
+
+  do ispec=1,nspec
+  ieoff = NGLLX * NGLLY * NGLLZ * (ispec-1)
+  ilocnum = 0
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        ilocnum = ilocnum + 1
+        xp(ilocnum+ieoff) = xstore(i,j,k,ispec)
+        yp(ilocnum+ieoff) = ystore(i,j,k,ispec)
+        zp(ilocnum+ieoff) = zstore(i,j,k,ispec)
+      enddo
+    enddo
+  enddo
+  enddo
+
+  call get_global(nspec,xp,yp,zp,ibool,locval,ifseg,nglob,npointot, &
+       minval(nodes_coords_ext_mesh(1,:)),maxval(nodes_coords_ext_mesh(1,:)))
+
+  deallocate(xp,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(yp,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(zp,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(locval,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(ifseg,stat=ier); if(ier /= 0) stop 'error in deallocate'
+
+!
+!- we can create a new indirect addressing to reduce cache misses
+!
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(mask_ibool(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+
+  mask_ibool(:) = -1
+  copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)
+
+  inumber = 0
+  do ispec=1,nspec
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if(mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
+! create a new point
+          inumber = inumber + 1
+          ibool(i,j,k,ispec) = inumber
+          mask_ibool(copy_ibool_ori(i,j,k,ispec)) = inumber
+        else
+! use an existing point created previously
+          ibool(i,j,k,ispec) = mask_ibool(copy_ibool_ori(i,j,k,ispec))
+        endif
+      enddo
+    enddo
+  enddo
+  enddo
+
+  deallocate(copy_ibool_ori,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'  
+
+  allocate(xstore_dummy(nglob))
+  allocate(ystore_dummy(nglob))
+  allocate(zstore_dummy(nglob))
+  do ispec = 1, nspec
+     do k = 1, NGLLZ
+        do j = 1, NGLLY
+           do i = 1, NGLLX
+              iglobnum = ibool(i,j,k,ispec)
+              xstore_dummy(iglobnum) = xstore(i,j,k,ispec)
+           enddo
+        enddo
+     enddo
+  enddo
+  
+  do ispec = 1, nspec
+     do k = 1, NGLLZ
+        do j = 1, NGLLY
+           do i = 1, NGLLX
+              iglobnum = ibool(i,j,k,ispec)
+              ystore_dummy(iglobnum) = ystore(i,j,k,ispec)
+           enddo
+        enddo
+     enddo
+  enddo
+
+  do ispec = 1, nspec
+     do k = 1, NGLLZ
+        do j = 1, NGLLY
+           do i = 1, NGLLX
+              iglobnum = ibool(i,j,k,ispec)
+              zstore_dummy(iglobnum) = zstore(i,j,k,ispec)
+           enddo
+        enddo
+     enddo
+  enddo
+
+! creating mass matrix (will be fully assembled with MPI in the solver)
+  allocate(rmass(nglob))
+  rmass(:) = 0._CUSTOM_REAL
+
+  do ispec=1,nspec
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        weight=wxgll(i)*wygll(j)*wzgll(k)
+        iglobnum=ibool(i,j,k,ispec)
+
+        jacobianl=jacobianstore(i,j,k,ispec)
+
+! distinguish between single and double precision for reals
+    if(CUSTOM_REAL == SIZE_REAL) then
+      rmass(iglobnum) = rmass(iglobnum) + &
+             sngl(dble(materials_ext_mesh(1,mat_ext_mesh(ispec))) * dble(jacobianl) * weight)
+    else
+      rmass(iglobnum) = rmass(iglobnum) + materials_ext_mesh(1,mat_ext_mesh(ispec)) * jacobianl * weight
+    endif
+
+      enddo
+    enddo
+  enddo
+  enddo  
+
+  call prepare_assemble_MPI (nelmnts_ext_mesh,ibool, &
+       elmnts_ext_mesh, ESIZE, &
+       nglob, &
+       ninterface_ext_mesh, max_interface_size_ext_mesh, &
+       my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+       ibool_interfaces_ext_mesh, &
+       nibool_interfaces_ext_mesh &
+       )  
+
+! sort ibool comm buffers lexicographically
+  allocate(nibool_interfaces_ext_mesh_true(ninterface_ext_mesh))
+
+  do iinterface = 1, ninterface_ext_mesh
+     
+    allocate(xp(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(yp(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(zp(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(locval(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ibool_interface_ext_mesh_dummy(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))  
+
+    do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
+      xp(ilocnum) = xstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+      yp(ilocnum) = ystore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+      zp(ilocnum) = zstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+    enddo     
+
+    call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
+         ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
+         reorder_interface_ext_mesh,locval,ifseg,nibool_interfaces_ext_mesh_true(iinterface), &
+         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)    
+    
+    deallocate(xp)
+    deallocate(yp)
+    deallocate(zp)
+    deallocate(locval)
+    deallocate(ifseg)
+    deallocate(reorder_interface_ext_mesh)
+    deallocate(ibool_interface_ext_mesh_dummy)
+    deallocate(ind_ext_mesh)
+    deallocate(ninseg_ext_mesh)
+    deallocate(iwork_ext_mesh)
+    deallocate(work_ext_mesh)
+
+  enddo
+  
+! save the binary files
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'external_mesh.bin',status='unknown',action='write',form='unformatted')
+  write(IOUT) nspec
+  write(IOUT) nglob
+
+  write(IOUT) xixstore
+  write(IOUT) xiystore
+  write(IOUT) xizstore
+  write(IOUT) etaxstore
+  write(IOUT) etaystore
+  write(IOUT) etazstore
+  write(IOUT) gammaxstore
+  write(IOUT) gammaystore
+  write(IOUT) gammazstore
+
+  write(IOUT) jacobianstore
+  write(IOUT) kappastore
+  write(IOUT) mustore
+  
+  write(IOUT) rmass
+
+  write(IOUT) ibool
+
+  write(IOUT) xstore_dummy
+  write(IOUT) ystore_dummy
+  write(IOUT) zstore_dummy
+
+  write(IOUT) ninterface_ext_mesh
+  write(IOUT) maxval(nibool_interfaces_ext_mesh)
+  write(IOUT) my_neighbours_ext_mesh
+  write(IOUT) nibool_interfaces_ext_mesh
+  allocate(ibool_interfaces_ext_mesh_dummy(maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh))
+  do i = 1, ninterface_ext_mesh
+     ibool_interfaces_ext_mesh_dummy = ibool_interfaces_ext_mesh(1:maxval(nibool_interfaces_ext_mesh),:)
+  enddo
+  write(IOUT) ibool_interfaces_ext_mesh_dummy
+  close(IOUT)
+
+  end subroutine create_regions_mesh_ext_mesh
+
+!
+!----
+!
+
+  double precision function materials_ext_mesh(i,j)
+
+    implicit none
+    
+    integer :: i,j
+
+    select case (j)
+      case (1)
+        select case (i)
+          case (1)
+            materials_ext_mesh = 2000.d0
+          case (2)
+            materials_ext_mesh = 3000.d0
+          case (3)
+            materials_ext_mesh = 1732.051d0
+          case default 
+            call stop_all()
+          end select
+      case (2)
+        select case (i)
+          case (1)
+            materials_ext_mesh = 2000.d0
+          case (2)
+            materials_ext_mesh = 900.d0
+          case (3)
+            materials_ext_mesh = 500.d0
+          case default 
+            call stop_all()
+          end select
+      case default
+        call stop_all()
+    end select
+       
+  end function materials_ext_mesh
+
+!
+!----
+!
+
+subroutine prepare_assemble_MPI (nelmnts,ibool, &
+     knods, ngnode, &
+     npoin, &
+     ninterface, max_interface_size, &
+     my_nelmnts_neighbours, my_interfaces, &
+     ibool_interfaces_asteroid, &
+     nibool_interfaces_asteroid &
+     )
+
+  implicit none
+
+  include 'constants.h'
+
+  integer, intent(in)  :: nelmnts, npoin, ngnode
+  integer, dimension(ngnode,nelmnts), intent(in)  :: knods
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nelmnts), intent(in)  :: ibool
+
+  integer  :: ninterface
+  integer  :: max_interface_size
+  integer, dimension(ninterface)  :: my_nelmnts_neighbours
+  integer, dimension(6,max_interface_size,ninterface)  :: my_interfaces
+  integer, dimension(NGLLX*NGLLX*max_interface_size,ninterface)  :: &
+       ibool_interfaces_asteroid
+  integer, dimension(ninterface)  :: &
+       nibool_interfaces_asteroid
+
+  integer  :: num_interface
+  integer  :: ispec_interface
+
+  logical, dimension(npoin)  :: mask_ibool_asteroid
+
+  integer  :: ixmin, ixmax
+  integer  :: iymin, iymax
+  integer  :: izmin, izmax
+  integer, dimension(ngnode)  :: n
+  integer  :: e1, e2, e3, e4
+  integer  :: type
+  integer  :: ispec
+
+  integer  :: k
+  integer  :: npoin_interface_asteroid
+
+  integer  :: ix,iy,iz
+
+
+  ibool_interfaces_asteroid(:,:) = 0
+  nibool_interfaces_asteroid(:) = 0
+
+  do num_interface = 1, ninterface
+     npoin_interface_asteroid = 0
+     mask_ibool_asteroid(:) = .false.
+
+     do ispec_interface = 1, my_nelmnts_neighbours(num_interface)
+        ispec = my_interfaces(1,ispec_interface,num_interface)
+        type = my_interfaces(2,ispec_interface,num_interface)
+        do k = 1, ngnode
+           n(k) = knods(k,ispec)
+        end do
+        e1 = my_interfaces(3,ispec_interface,num_interface)
+        e2 = my_interfaces(4,ispec_interface,num_interface)
+        e3 = my_interfaces(5,ispec_interface,num_interface)
+        e4 = my_interfaces(6,ispec_interface,num_interface)
+        call get_edge(ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iymax, izmin, izmax)
+
+        do iz = min(izmin,izmax), max(izmin,izmax)
+           do iy = min(iymin,iymax), max(iymin,iymax)
+              do ix = min(ixmin,ixmax), max(ixmin,ixmax)
+
+                 if(.not. mask_ibool_asteroid(ibool(ix,iy,iz,ispec))) then
+                    mask_ibool_asteroid(ibool(ix,iy,iz,ispec)) = .true.
+                    npoin_interface_asteroid = npoin_interface_asteroid + 1
+                    ibool_interfaces_asteroid(npoin_interface_asteroid,num_interface)=&
+                         ibool(ix,iy,iz,ispec)
+                 end if
+              end do
+           end do
+        end do
+
+     end do
+     nibool_interfaces_asteroid(num_interface) = npoin_interface_asteroid
+   
+     
+  end do
+
+end subroutine prepare_assemble_MPI
+
+!
+!----
+!
+
+subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iymax, izmin, izmax )
+
+  implicit none
+
+  include "constants.h"
+
+  integer, intent(in)  :: ngnode
+  integer, dimension(ngnode), intent(in)  :: n
+  integer, intent(in)  :: type, e1, e2, e3, e4
+  integer, intent(out)  :: ixmin, ixmax, iymin, iymax, izmin, izmax
+  
+  integer, dimension(4) :: en
+  integer :: valence, i
+
+   if ( type == 1 ) then
+     if ( e1 == n(1) ) then
+        ixmin = 1
+        ixmax = 1
+        iymin = 1
+        iymax = 1
+        izmin = 1
+        izmax = 1
+     end if
+     if ( e1 == n(2) ) then
+        ixmin = NGLLX
+        ixmax = NGLLX
+        iymin = 1
+        iymax = 1
+        izmin = 1
+        izmax = 1
+     end if
+     if ( e1 == n(3) ) then
+        ixmin = NGLLX
+        ixmax = NGLLX
+        iymin = NGLLY
+        iymax = NGLLY
+        izmin = 1
+        izmax = 1
+     end if
+     if ( e1 == n(4) ) then
+        ixmin = 1
+        ixmax = 1
+        iymin = NGLLY
+        iymax = NGLLY
+        izmin = 1
+        izmax = 1
+     end if
+     if ( e1 == n(5) ) then
+        ixmin = 1
+        ixmax = 1
+        iymin = 1
+        iymax = 1
+        izmin = NGLLZ
+        izmax = NGLLZ
+     end if
+     if ( e1 == n(6) ) then
+        ixmin = NGLLX
+        ixmax = NGLLX
+        iymin = 1
+        iymax = 1
+        izmin = NGLLZ
+        izmax = NGLLZ
+     end if
+     if ( e1 == n(7) ) then
+        ixmin = NGLLX
+        ixmax = NGLLX
+        iymin = NGLLY
+        iymax = NGLLY
+        izmin = NGLLZ
+        izmax = NGLLZ
+     end if
+     if ( e1 == n(8) ) then
+        ixmin = 1
+        ixmax = 1
+        iymin = NGLLY
+        iymax = NGLLY
+        izmin = NGLLZ
+        izmax = NGLLZ
+     end if
+  else
+     if ( type == 2 ) then
+        if ( e1 ==  n(1) ) then
+           ixmin = 1
+           iymin = 1
+           izmin = 1
+           if ( e2 == n(2) ) then
+              ixmax = NGLLX
+              iymax = 1
+              izmax = 1
+           end if
+           if ( e2 == n(4) ) then
+              ixmax = 1
+              iymax = NGLLY
+              izmax = 1
+           end if
+           if ( e2 == n(5) ) then
+              ixmax = 1
+              iymax = 1
+              izmax = NGLLZ
+           end if
+        end if
+        if ( e1 == n(2) ) then
+           ixmin = NGLLX
+           iymin = 1
+           izmin = 1
+           if ( e2 == n(3) ) then
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = 1
+           end if
+           if ( e2 == n(1) ) then
+              ixmax = 1
+              iymax = 1
+              izmax = 1
+           end if
+           if ( e2 == n(6) ) then
+              ixmax = NGLLX
+              iymax = 1
+              izmax = NGLLZ
+           end if
+           
+        end if
+        if ( e1 == n(3) ) then
+           ixmin = NGLLX
+           iymin = NGLLY
+           izmin = 1
+           if ( e2 == n(4) ) then
+              ixmax = 1
+              iymax = NGLLY
+              izmax = 1
+           end if
+           if ( e2 == n(2) ) then
+              ixmax = NGLLX
+              iymax = 1
+              izmax = 1
+           end if
+           if ( e2 == n(7) ) then
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = NGLLZ
+           end if
+        end if
+        if ( e1 == n(4) ) then
+           ixmin = 1
+           iymin = NGLLY
+           izmin = 1
+           if ( e2 == n(1) ) then
+              ixmax = 1
+              iymax = 1
+              izmax = 1
+           end if
+           if ( e2 == n(3) ) then
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = 1
+           end if
+           if ( e2 == n(8) ) then
+              ixmax = 1
+              iymax = NGLLY
+              izmax = NGLLZ
+           end if
+        end if
+        if ( e1 == n(5) ) then
+           ixmin = 1
+           iymin = 1
+           izmin = NGLLZ
+           if ( e2 == n(1) ) then
+              ixmax = 1
+              iymax = 1
+              izmax = 1
+           end if
+           if ( e2 == n(6) ) then
+              ixmax = NGLLX
+              iymax = 1
+              izmax = NGLLZ
+           end if
+           if ( e2 == n(8) ) then
+              ixmax = 1
+              iymax = NGLLY
+              izmax = NGLLZ
+           end if
+        end if
+        if ( e1 == n(6) ) then
+           ixmin = NGLLX
+           iymin = 1
+           izmin = NGLLZ
+           if ( e2 == n(2) ) then
+              ixmax = NGLLX
+              iymax = 1
+              izmax = 1
+           end if
+           if ( e2 == n(7) ) then
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = NGLLZ
+           end if
+           if ( e2 == n(5) ) then
+              ixmax = 1
+              iymax = 1
+              izmax = NGLLZ
+           end if
+        end if
+        if ( e1 == n(7) ) then
+           ixmin = NGLLX
+           iymin = NGLLY
+           izmin = NGLLZ
+           if ( e2 == n(3) ) then
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = 1
+           end if
+           if ( e2 == n(8) ) then
+              ixmax = 1
+              iymax = NGLLY
+              izmax = NGLLZ
+           end if
+           if ( e2 == n(6) ) then
+              ixmax = NGLLX
+              iymax = 1
+              izmax = NGLLZ
+           end if
+        end if
+        if ( e1 == n(8) ) then
+           ixmin = 1
+           iymin = NGLLY
+           izmin = NGLLZ
+           if ( e2 == n(4) ) then
+              ixmax = 1
+              iymax = NGLLY
+              izmax = 1
+           end if
+           if ( e2 == n(5) ) then
+              ixmax = 1
+              iymax = 1
+              izmax = NGLLZ
+           end if
+           if ( e2 == n(7) ) then
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = NGLLZ
+           end if
+        end if
+        
+     else
+        if (type == 4) then
+           en(1) = e1
+           en(2) = e2
+           en(3) = e3
+           en(4) = e4
+           
+           valence = 0
+           do i = 1, 4
+              if ( en(i) == n(1)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(2)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(3)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(4)) then
+                 valence = valence+1
+              endif
+           enddo
+           if ( valence == 4 ) then
+              ixmin = 1
+              iymin = 1
+              izmin = 1
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = 1
+           endif
+           
+           valence = 0
+           do i = 1, 4
+              if ( en(i) == n(1)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(2)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(5)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(6)) then
+                 valence = valence+1
+              endif
+           enddo
+           if ( valence == 4 ) then
+              ixmin = 1
+              iymin = 1
+              izmin = 1
+              ixmax = NGLLX
+              iymax = 1
+              izmax = NGLLZ
+           endif
+           
+           valence = 0
+           do i = 1, 4
+              if ( en(i) == n(2)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(3)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(6)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(7)) then
+                 valence = valence+1
+              endif
+           enddo
+           if ( valence == 4 ) then
+              ixmin = NGLLX
+              iymin = 1
+              izmin = 1
+              ixmax = NGLLX
+              iymax = NGLLZ
+              izmax = NGLLZ
+           endif
+           
+           valence = 0
+           do i = 1, 4
+              if ( en(i) == n(3)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(4)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(7)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(8)) then
+                 valence = valence+1
+              endif
+           enddo
+           if ( valence == 4 ) then
+              ixmin = 1
+              iymin = NGLLY
+              izmin = 1
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = NGLLZ
+           endif
+           
+           valence = 0
+           do i = 1, 4
+              if ( en(i) == n(1)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(4)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(5)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(8)) then
+                 valence = valence+1
+              endif
+           enddo
+           if ( valence == 4 ) then
+              ixmin = 1
+              iymin = 1
+              izmin = 1
+              ixmax = 1
+              iymax = NGLLY
+              izmax = NGLLZ
+           endif
+           
+           valence = 0
+           do i = 1, 4
+              if ( en(i) == n(5)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(6)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(7)) then
+                 valence = valence+1
+              endif
+              if ( en(i) == n(8)) then
+                 valence = valence+1
+              endif
+           enddo
+           if ( valence == 4 ) then
+              ixmin = 1
+              iymin = 1
+              izmin = NGLLZ
+              ixmax = NGLLX
+              iymax = NGLLY
+              izmax = NGLLZ
+           endif
+           
+        else
+           stop 'ERROR get_edge'
+        endif
+        
+     end if
+  end if
+
+end subroutine get_edge

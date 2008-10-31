@@ -196,3 +196,172 @@
 
   end subroutine assemble_MPI_scalar
 
+!
+!----
+!
+
+  subroutine assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,array_val, &
+            buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+            ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+            request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
+            )
+
+  implicit none
+
+  include "constants.h"
+
+! include values created by the mesher
+  include "OUTPUT_FILES/values_from_mesher.h"
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: array_val
+
+  integer :: NPROC
+  integer :: NGLOB_AB
+
+  real(kind=CUSTOM_REAL), dimension(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh) :: &
+       buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
+
+  integer :: ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer, dimension(ninterfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(ninterfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
+
+  integer ipoin,iinterface
+  integer sender,receiver
+
+! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+! here we have to assemble all the contributions between partitions using MPI
+
+! assemble only if more than one partition
+  if(NPROC > 1) then
+
+! partition border copy into the buffer
+  do iinterface = 1, ninterfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      buffer_send_scalar_ext_mesh(ipoin,iinterface) = array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
+    enddo
+  enddo
+
+! send messages
+  do iinterface = 1, ninterfaces_ext_mesh
+    call issend_cr(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
+         nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_send_scalar_ext_mesh(iinterface) &
+         )
+    call irecv_cr(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
+         nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_recv_scalar_ext_mesh(iinterface) &
+         )
+  enddo
+
+! wait for communications completion
+  do iinterface = 1, ninterfaces_ext_mesh
+    call wait_req(request_recv_scalar_ext_mesh(iinterface))
+  enddo
+
+! adding contributions of neighbours
+  do iinterface = 1, ninterfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+           array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
+    enddo
+  enddo
+      
+  endif
+
+  end subroutine assemble_MPI_scalar_ext_mesh
+
+!
+!----
+!
+
+  subroutine assemble_MPI_scalar_i_ext_mesh(NPROC,NGLOB_AB,array_val, &
+            buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+            ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+            request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
+            )
+
+  implicit none
+
+  include "constants.h"
+
+! include values created by the mesher
+  include "OUTPUT_FILES/values_from_mesher.h"
+
+! array to assemble
+  integer, dimension(NGLOB_AB) :: array_val
+
+  integer :: NPROC
+  integer :: NGLOB_AB
+
+  integer, dimension(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh) :: &
+       buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
+
+  integer :: ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer, dimension(ninterfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(ninterfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
+
+  integer ipoin,iinterface
+  integer sender,receiver
+
+! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+! here we have to assemble all the contributions between partitions using MPI
+
+! assemble only if more than one partition
+  if(NPROC > 1) then
+
+! partition border copy into the buffer
+  do iinterface = 1, ninterfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      buffer_send_scalar_ext_mesh(ipoin,iinterface) = array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
+    enddo
+  enddo
+
+! send messages
+  do iinterface = 1, ninterfaces_ext_mesh
+    call issend_i(buffer_send_scalar_ext_mesh(1,iinterface), &
+         nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_send_scalar_ext_mesh(iinterface) &
+         )
+    call irecv_i(buffer_recv_scalar_ext_mesh(1,iinterface), &
+         nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_recv_scalar_ext_mesh(iinterface) &
+         )
+  enddo
+
+! wait for communications completion
+  do iinterface = 1, ninterfaces_ext_mesh
+    call wait_req(request_recv_scalar_ext_mesh(iinterface))
+  enddo
+
+! adding contributions of neighbours
+  do iinterface = 1, ninterfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+           array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
+    enddo
+  enddo
+      
+! wait for communications completion (send)
+  do iinterface = 1, ninterfaces_ext_mesh
+    call wait_req(request_send_scalar_ext_mesh(iinterface))
+  enddo
+
+
+  endif
+
+  end subroutine assemble_MPI_scalar_i_ext_mesh

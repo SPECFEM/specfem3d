@@ -191,6 +191,33 @@
 !----
 !
 
+  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer sendcnt,recvcounttot,NPROC
+  integer, dimension(NPROC) :: recvcount,recvoffset
+  real(kind=CUSTOM_REAL), dimension(sendcnt) :: sendbuf
+  real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
+
+  integer ier
+
+  call MPI_GATHERV(sendbuf,sendcnt,CUSTOM_MPI_TYPE, &
+                  recvbuf,recvcount,recvoffset,CUSTOM_MPI_TYPE, &
+                  0,MPI_COMM_WORLD,ier)
+
+  end subroutine gatherv_all_cr
+
+!
+!----
+!
+
   subroutine init()
 
   implicit none
@@ -401,3 +428,132 @@
   proc_null = MPI_PROC_NULL
 
   end function proc_null
+
+!
+!----
+!
+
+  subroutine issend_cr(sendbuf, sendcount, dest, sendtag, req)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer sendcount, dest, sendtag, req
+  real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
+
+! MPI status of messages to be received
+  integer msg_status(MPI_STATUS_SIZE)
+
+  integer ier
+
+  call MPI_ISSEND(sendbuf(1),sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
+                  MPI_COMM_WORLD,req,ier)
+
+  end subroutine issend_cr
+
+!
+!----
+!
+
+  subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer recvcount, dest, recvtag, req
+  real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
+
+! MPI status of messages to be received
+  integer msg_status(MPI_STATUS_SIZE)
+
+  integer ier
+
+  call MPI_IRECV(recvbuf(1),recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+                  MPI_COMM_WORLD,req,ier)
+
+  end subroutine irecv_cr
+
+!
+!----
+!
+
+  subroutine issend_i(sendbuf, sendcount, dest, sendtag, req)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer sendcount, dest, sendtag, req
+  integer, dimension(sendcount) :: sendbuf
+
+! MPI status of messages to be received
+  integer msg_status(MPI_STATUS_SIZE)
+
+  integer ier
+
+  call MPI_ISSEND(sendbuf(1),sendcount,MPI_INTEGER,dest,sendtag, &
+                  MPI_COMM_WORLD,req,ier)
+
+  end subroutine issend_i
+
+!
+!----
+!
+
+  subroutine irecv_i(recvbuf, recvcount, dest, recvtag, req)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer recvcount, dest, recvtag, req
+  integer, dimension(recvcount) :: recvbuf
+
+! MPI status of messages to be received
+  integer msg_status(MPI_STATUS_SIZE)
+
+  integer ier
+
+  call MPI_IRECV(recvbuf(1),recvcount,MPI_INTEGER,dest,recvtag, &
+                  MPI_COMM_WORLD,req,ier)
+
+  end subroutine irecv_i
+
+!
+!----
+!
+
+  subroutine wait_req(req)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  integer :: req
+
+  integer, dimension(MPI_STATUS_SIZE) :: req_mpi_status
+
+  integer :: ier
+
+  call mpi_wait(req,req_mpi_status,ier)
+  
+  end subroutine wait_req

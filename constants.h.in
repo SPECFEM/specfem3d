@@ -116,6 +116,42 @@
   character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
 
 !------------------------------------------------------
+! nlegoff -- Variables that should be read/computed elsewhere.
+!            Temporarily declared here.
+!------------------------------------------------------
+! whether or not an external mesh is used (provided by CUBIT for example)
+  logical, parameter :: USE_EXTERNAL_MESH = .false.
+
+! no lagrange interpolation on seismograms (we take the value on one NGLL point)
+  logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
+  logical, parameter :: FASTER_SOURCES_POINTS_ONLY = .false.
+
+! the receivers can be located inside the model 
+  logical, parameter :: RECVS_CAN_BE_BURIED_EXT_MESH = .true.
+  logical, parameter :: SOURCES_CAN_BE_BURIED_EXT_MESH = .true.
+
+! the seismograms are normal to surface
+  logical, parameter :: EXT_MESH_RECV_NORMAL = .false.
+
+!
+  logical, parameter :: EXTERNAL_MESH_MOVIE_SURFACE = .false.
+  logical, parameter :: EXTERNAL_MESH_CREATE_SHAKEMAP = .false.
+
+! deltat
+  double precision, parameter :: DT_ext_mesh = 0.001d0
+
+! NSTEP
+  integer, parameter :: NSTEP_ext_mesh = 100
+
+! number of nodes per element as provided by the external mesh
+  integer, parameter :: ESIZE = 8
+
+! geometry tolerance parameter to calculate number of independent grid points
+! sensitive to actual size of model, assumes reference sphere of radius 1
+! this is an absolute value for normalized coordinates in the Earth
+  double precision, parameter :: SMALLVAL_TOL = 1.d-10
+
+!------------------------------------------------------
 !----------- do not modify anything below -------------
 !------------------------------------------------------
 
