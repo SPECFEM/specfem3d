@@ -124,7 +124,12 @@
 
 ! no lagrange interpolation on seismograms (we take the value on one NGLL point)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
-  logical, parameter :: FASTER_SOURCES_POINTS_ONLY = .false.
+
+! use a force source located exactly at a grid point instead of a CMTSOLUTION source
+! this can be useful e.g. for oil industry foothills simulations or asteroid simulations
+! in which the source is a vertical force, normal force, impact etc.
+  logical, parameter :: USE_FORCE_POINT_SOURCE = .false.
+  double precision, parameter :: FACTOR_FORCE_SOURCE = 1.d10
 
 ! the receivers can be located inside the model 
   logical, parameter :: RECVS_CAN_BE_BURIED_EXT_MESH = .true.

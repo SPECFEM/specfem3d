@@ -2890,10 +2890,12 @@
 
   if (SIMULATION_TYPE == 1) then
 
-!!!!!!!!!!  do isource = 1,NSOURCES
-  do isource = 1,1
+! only one source for now if we use a force located at a grid point
+  if(USE_FORCE_POINT_SOURCE) NSOURCES = 1
 
-  if(FASTER_SOURCES_POINTS_ONLY) then
+  do isource = 1,NSOURCES
+
+  if(USE_FORCE_POINT_SOURCE) then
 
 !   add the source (only if this proc carries the source)
     if(myrank == islice_selected_source(isource)) then
@@ -2902,23 +2904,20 @@
            nint(eta_source(isource)), &
            nint(gamma_source(isource)), &
            ispec_selected_source(isource))
+
       f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
       t0 = 1.2d0/f0 
-if (it == 1 .and. myrank == 0) then
-     
-print *,'using a source of dominant frequency ',f0
-print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-endif
+
+      if (it == 1 .and. myrank == 0) then
+        print *,'using a source of dominant frequency ',f0
+        print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+        print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+      endif
       
-      
-      ! we use nu_source(:,3) here because we want a source normal to the surface.
-      ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-      !accel(:,iglob) = accel(:,iglob) + &
-      !     sngl(nu_source(:,3,isource) * 10000000.d0 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
-      !     exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
-accel(:,iglob) = accel(:,iglob) + &
-           sngl(nu_source(:,3,isource) * 1.d10 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
+! we use nu_source(:,3) here because we want a source normal to the surface.
+! This is the expression of a Ricker
+      accel(:,iglob) = accel(:,iglob) + &
+           sngl(nu_source(:,3,isource) * FACTOR_FORCE_SOURCE * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
            exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
 
     endif
@@ -2949,7 +2948,7 @@ accel(:,iglob) = accel(:,iglob) + &
 
     endif
 
-  endif ! end of if(FASTER_SOURCES_POINTS_ONLY)
+  endif ! end of if(USE_FORCE_POINT_SOURCE)
 
   enddo
 
@@ -3051,11 +3050,13 @@ accel(:,iglob) = accel(:,iglob) + &
           buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
           NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
+! multiply by the inverse of the mass matrix
   do i=1,NGLOB_AB
     accel(1,i) = accel(1,i)*rmass(i)
     accel(2,i) = accel(2,i)*rmass(i)
     accel(3,i) = accel(3,i)*rmass(i)
   enddo
+
   if (SIMULATION_TYPE == 3) then
     do i=1,NGLOB_AB
       b_accel(1,i) = b_accel(1,i)*rmass(i)
