@@ -278,7 +278,7 @@
 
 
 ! define the interval in which we look for points
-      if(FASTER_SOURCES_POINTS_ONLY .and. USE_EXTERNAL_MESH) then
+      if(USE_FORCE_POINT_SOURCE .and. USE_EXTERNAL_MESH) then
         imin = 1
         imax = NGLLX
 
@@ -490,7 +490,7 @@
 ! find the best (xi,eta,gamma) for the source
 ! *******************************************
 
-  if(.not. FASTER_SOURCES_POINTS_ONLY) then
+  if(.not. USE_FORCE_POINT_SOURCE) then
 
 ! use initial guess in xi, eta and gamma
   xi = xigll(ix_initial_guess_source)
@@ -587,7 +587,7 @@
   final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
     (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
 
-  endif ! of if (.not. FASTER_SOURCES_POINTS_ONLY)
+  endif ! of if (.not. USE_FORCE_POINT_SOURCE)
 
 ! end of loop on all the sources
   enddo
@@ -659,7 +659,7 @@
     write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
     write(IMAIN,*) '               in element ',ispec_selected_source(isource)
     write(IMAIN,*)
-    if(FASTER_SOURCES_POINTS_ONLY) then
+    if(USE_FORCE_POINT_SOURCE) then
       write(IMAIN,*) '   xi coordinate of source in that element: ',nint(xi_source(isource))
       write(IMAIN,*) '  eta coordinate of source in that element: ',nint(eta_source(isource))
       write(IMAIN,*) 'gamma coordinate of source in that element: ',nint(gamma_source(isource))

@@ -263,7 +263,7 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
 
   if (ispec_is_inner(ispec_selected_source(isource)) .eqv. phase_is_inner) then
 
-  if(FASTER_SOURCES_POINTS_ONLY) then
+  if(USE_FORCE_POINT_SOURCE) then
 
 !   add the source (only if this proc carries the source)
     if(myrank == islice_selected_source(isource)) then
