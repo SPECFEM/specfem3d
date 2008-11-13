@@ -2,9 +2,19 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
-- Nicolas should add C-PML following Elise Delavaud's implementation
+- re-add the kernel calculations
 
-- Nicolas should add support for CUBIT meshes decomposed by parMETIS or PT-Scotch, based on his existing implementation in the 2D code
+- add SOURCESOLUTION in addition to CMTSOLUTION, to choose between a CMT source and a force source
+
+- put a flag to choose between a Ricker source and a Heaviside source when a force source is used
+(we can cut and paste the Heaviside implementation from the case of a CMT source)
+
+- automatic detection (coloring / flags) of the free surface and of the PML absorbing elements in CUBIT;
+read this from input files in the solver
+
+- should add C-PML following Roland's 2D implementation
+
+- should add support for parMETIS or PT-Scotch (i.e. decompose the mesh in parallel rather than serial; this will be required for very large meshes, too large to fit on a serial machine)
 
 - recopier toutes les modifs importantes du code GLOBE vers ce code : Makefile with better options etc
 
@@ -17,9 +27,11 @@ To-do list for SPECFEM3D, by Dimitri Komatitsch
 
 Things to add later to the manual:
 ----------------------------------
-- Add the description of using basin_slice_number.pl and basin_normal.pl to
-  get the slice numbers to combine for a specific source/receiver pair 
-  (LQY, Jan 9, 2008)
+
+- remove old things from SPECFEM3D_BASIN in the manual and add new things
+related to CUBIT, METIS, SCOTCH etc. Add new figures showing the asteroid
+example etc
+
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
