@@ -1601,7 +1601,7 @@ enddo
       case (1)
         select case (i)
           case (1)
-            materials_ext_mesh = 2000.d0
+            materials_ext_mesh = 2700.d0
           case (2)
             materials_ext_mesh = 3000.d0
           case (3)
