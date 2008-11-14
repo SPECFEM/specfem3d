@@ -136,9 +136,11 @@
   logical, parameter :: SOURCES_CAN_BE_BURIED_EXT_MESH = .true.
 
 ! the seismograms are normal to surface
+! Z record corresponds to the normal, while E and N are two tangent vectors 
+! that completes an orthonormal.
   logical, parameter :: EXT_MESH_RECV_NORMAL = .false.
 
-!
+! shakemaps and movies can not be generated during the same run. Mutually exclusive.
   logical, parameter :: EXTERNAL_MESH_MOVIE_SURFACE = .false.
   logical, parameter :: EXTERNAL_MESH_CREATE_SHAKEMAP = .false.
 
