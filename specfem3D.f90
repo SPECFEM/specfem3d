@@ -1087,6 +1087,7 @@
       endif
     endif
     call sum_all_i(nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh)
+    if (myrank == 0) then
     if (USE_HIGHRES_FOR_MOVIES) then
     allocate(store_val_x_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
     allocate(store_val_y_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
@@ -1101,6 +1102,7 @@
     allocate(store_val_ux_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
     allocate(store_val_uy_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
     allocate(store_val_uz_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+    endif
     endif
     call gather_all_i(nfaces_surface_external_mesh,1,nfaces_perproc_surface_ext_mesh,1,NPROC)
     
