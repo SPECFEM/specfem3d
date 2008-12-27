@@ -538,18 +538,21 @@
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
+! check that we use an external mesh, because this new version of the solver
+! (SPECFEM3D_SESAME) is for external meshes only (created for instance using CUBIT
+! and decomposed with METIS or SCOTCH)
+  if (.not. USE_EXTERNAL_MESH) stop 'SPECFEM3D_SESAME is for external meshes only'
+
 ! info about external mesh simulation
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
-  if (USE_EXTERNAL_MESH) then
-    NPROC = sizeprocs
-    DT = DT_ext_mesh
-    NSTEP = NSTEP_ext_mesh
-    call create_name_database(prname,myrank,LOCAL_PATH)
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
-    read(27) NSPEC_AB
-    read(27) NGLOB_AB
-    close(27)
-  endif
+  NPROC = sizeprocs
+  DT = DT_ext_mesh
+  NSTEP = NSTEP_ext_mesh
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+  read(27) NSPEC_AB
+  read(27) NGLOB_AB
+  close(27)
 
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
@@ -604,36 +607,6 @@
 ! check that we have at least one source
   if(NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
 
-! info on the addressing scheme that is not used in case of an external mesh simulation
-  if (.not. USE_EXTERNAL_MESH) then
-
-! open file with global slice number addressing
-  if(myrank == 0) then
-    open(unit=IIN,file=trim(OUTPUT_FILES)//'/addressing.txt',status='old',action='read')
-    do iproc = 0,NPROC-1
-      read(IIN,*) iproc_read,iproc_xi,iproc_eta
-      if(iproc_read /= iproc) call exit_MPI(myrank,'incorrect slice number read')
-      addressing(iproc_xi,iproc_eta) = iproc
-      iproc_xi_slice(iproc) = iproc_xi
-      iproc_eta_slice(iproc) = iproc_eta
-    enddo
-    close(IIN)
-  endif
-
-! broadcast the information read on the master to the nodes
-  call bcast_all_i(addressing,NPROC_XI*NPROC_ETA)
-  call bcast_all_i(iproc_xi_slice,NPROC)
-  call bcast_all_i(iproc_eta_slice,NPROC)
-
-! determine local slice coordinates using addressing
-  iproc_xi = iproc_xi_slice(myrank)
-  iproc_eta = iproc_eta_slice(myrank)
-
-! define maximum size for message buffers
-  NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
-
-  endif ! end of (.not. USE_EXTERNAL_MESH)
-
 ! start reading the databases
 
 ! allocate arrays for storing the databases
@@ -667,7 +640,6 @@
 
 ! info about external mesh simulation
 ! nlegoff -- should be put in read_arrays_solver and read_arrays_buffer_solver for clarity
-  if (USE_EXTERNAL_MESH) then
     call create_name_database(prname,myrank,LOCAL_PATH)
     open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
@@ -752,8 +724,6 @@
      npoin2D_xi,npoin2D_eta, &
      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,LOCAL_PATH)
 
-  endif ! end of (USE_EXTERNAL_MESH)
-
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   if(myrank == 0) then
@@ -787,163 +757,7 @@
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
            call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
 
-  if (.not. USE_EXTERNAL_MESH) then
-! boundary parameters
-  open(unit=27,file=prname(1:len_trim(prname))//'ibelm.bin',status='old',action='read',form='unformatted')
-  read(27) ibelm_xmin
-  read(27) ibelm_xmax
-  read(27) ibelm_ymin
-  read(27) ibelm_ymax
-  read(27) ibelm_bottom
-  read(27) ibelm_top
-  close(27)
-
-  open(unit=27,file=prname(1:len_trim(prname))//'normal.bin',status='old',action='read',form='unformatted')
-  read(27) normal_xmin
-  read(27) normal_xmax
-  read(27) normal_ymin
-  read(27) normal_ymax
-  read(27) normal_bottom
-  read(27) normal_top
-  close(27)
-
-! moho boundary
-  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-
-    moho_kl = ZERO
-
-    open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
-    read(27) nspec2D_moho
-    read(27) njunk
-    read(27) njunk
-    read(27) ibelm_moho_top
-    read(27) ibelm_moho_bot
-    close(27)
-    if (nspec2D_moho /= NSPEC2D_BOTTOM) call exit_mpi(myrank, "nspec2D_moho /= NSPEC2D_BOTTOM for Moho mesh")
-
-    open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',form='unformatted')
-    read(27) normal_moho
-    close(27)
-
-    open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',form='unformatted')
-    read(27) is_moho_top
-    read(27) is_moho_bot
-    close(27)
-
-  endif
-
-! Stacey put back
-  open(unit=27,file=prname(1:len_trim(prname))//'nspec2D.bin',status='unknown',form='unformatted')
-  read(27) nspec2D_xmin
-  read(27) nspec2D_xmax
-  read(27) nspec2D_ymin
-  read(27) nspec2D_ymax
-  close(27)
-
-  open(unit=27,file=prname(1:len_trim(prname))//'jacobian2D.bin',status='old',action='read',form='unformatted')
-  read(27) jacobian2D_xmin
-  read(27) jacobian2D_xmax
-  read(27) jacobian2D_ymin
-  read(27) jacobian2D_ymax
-  read(27) jacobian2D_bottom
-  read(27) jacobian2D_top
-  close(27)
-
-! Stacey put back
-! read arrays for Stacey conditions
-
-  if(ABSORBING_CONDITIONS) then
-      open(unit=27,file=prname(1:len_trim(prname))//'nimin.bin',status='unknown',form='unformatted')
-      read(27) nimin
-      close(27)
-
-      open(unit=27,file=prname(1:len_trim(prname))//'nimax.bin',status='unknown',form='unformatted')
-      read(27) nimax
-      close(27)
-
-      open(unit=27,file=prname(1:len_trim(prname))//'njmin.bin',status='unknown',form='unformatted')
-      read(27) njmin
-      close(27)
-
-      open(unit=27,file=prname(1:len_trim(prname))//'njmax.bin',status='unknown',form='unformatted')
-      read(27) njmax
-      close(27)
-
-      open(unit=27,file=prname(1:len_trim(prname))//'nkmin_xi.bin',status='unknown',form='unformatted')
-      read(27) nkmin_xi
-      close(27)
-
-      open(unit=27,file=prname(1:len_trim(prname))//'nkmin_eta.bin',status='unknown',form='unformatted')
-      read(27) nkmin_eta
-      close(27)
-
-! read in absorbing wavefield saved by forward simulations
-      if (nspec2D_xmin > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-        allocate(absorb_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
-        reclen_xmin = CUSTOM_REAL * (NDIM * NGLLY * NGLLZ * nspec2D_xmin)
-        if (SIMULATION_TYPE == 3) then
-          open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='old',action='read',form='unformatted',access='direct', &
-                recl=reclen_xmin+2*4)
-        else
-          open(unit=31,file=trim(prname)//'absorb_xmin.bin',status='unknown',form='unformatted',access='direct',&
-                recl=reclen_xmin+2*4)
-        endif
-      endif
-
-      if (nspec2D_xmax > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-        allocate(absorb_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
-        reclen_xmax = CUSTOM_REAL * (NDIM * NGLLY * NGLLZ * nspec2D_xmax)
-        if (SIMULATION_TYPE == 3) then
-          open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='old',action='read',form='unformatted',access='direct', &
-                recl=reclen_xmax+2*4)
-        else
-          open(unit=32,file=trim(prname)//'absorb_xmax.bin',status='unknown',form='unformatted',access='direct', &
-                recl=reclen_xmax+2*4)
-        endif
-      endif
-
-      if (nspec2D_ymin > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-        allocate(absorb_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
-        reclen_ymin = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymin)
-        if (SIMULATION_TYPE == 3) then
-          open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='old',action='read',form='unformatted',access='direct',&
-                recl=reclen_ymin+2*4)
-        else
-          open(unit=33,file=trim(prname)//'absorb_ymin.bin',status='unknown',form='unformatted',access='direct',&
-                recl=reclen_ymin+2*4)
-        endif
-      endif
-
-      if (nspec2D_ymax > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-        allocate(absorb_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
-        reclen_ymax = CUSTOM_REAL * (NDIM * NGLLX * NGLLZ * nspec2D_ymax)
-        if (SIMULATION_TYPE == 3) then
-          open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='old',action='read',form='unformatted',access='direct',&
-                recl=reclen_ymax+2*4)
-        else
-          open(unit=34,file=trim(prname)//'absorb_ymax.bin',status='unknown',form='unformatted',access='direct',&
-                recl=reclen_ymax+2*4)
-        endif
-      endif
-
-      if (NSPEC2D_BOTTOM > 0 .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-        allocate(absorb_zmin(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
-        reclen_zmin = CUSTOM_REAL * (NDIM * NGLLX * NGLLY * NSPEC2D_BOTTOM)
-         if (SIMULATION_TYPE == 3) then
-         open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='old',action='read',form='unformatted',access='direct',&
-                recl=reclen_zmin+2*4)
-        else
-          open(unit=35,file=trim(prname)//'absorb_zmin.bin',status='unknown',form='unformatted',access='direct',&
-                recl=reclen_zmin+2*4)
-        endif
-      endif
-
-  endif
-
-  endif ! end of (.not. USE_EXTERNAL_MESH)
-
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
-  if (USE_EXTERNAL_MESH) then
   allocate(valence_external_mesh(NGLOB_AB))
   allocate(ispec_is_surface_external_mesh(NSPEC_AB))
   allocate(iglob_is_surface_external_mesh(NGLOB_AB))
@@ -972,8 +786,7 @@
        buffer_send_scalar_i_ext_mesh,buffer_recv_scalar_i_ext_mesh, &
        ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-       request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
-       )
+       request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
   do ispec = 1, NSPEC_AB
     do k = 1, NGLLZ
@@ -1315,7 +1128,7 @@
 
 !!!! NL NL REGOLITH
 
-  endif
+!!!!!!!!!! DK DK   endif
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$ SOURCES $$$$$$$$$$$$$$$$$
 
@@ -1388,8 +1201,7 @@
           TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE, &
           PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
           NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
-          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
-          )
+          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
@@ -1660,19 +1472,11 @@
   call sync_all()
 
 ! the mass matrix needs to be assembled with MPI here once and for all
-  if (USE_EXTERNAL_MESH) then
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
+  call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
          buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
          ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
-         )
-  else
-  call assemble_MPI_scalar(rmass,iproc_xi,iproc_eta,addressing, &
-            iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-            buffer_send_faces_scalar,buffer_received_faces_scalar,npoin2D_xi,npoin2D_eta, &
-            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
-  endif
+         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
@@ -1955,6 +1759,14 @@
   endif
   close(27)
 
+! initialize Moho boundary index
+  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+    ispec2D_moho_top = 0
+    ispec2D_moho_bot = 0
+    k_top = 1
+    k_bot = NGLLZ
+  endif
+
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
@@ -1974,14 +1786,6 @@
     open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown')
     write(IOUT,*) 'starting time loop'
     close(IOUT)
-  endif
-
-! initialize Moho boundary index
-  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    ispec2D_moho_top = 0
-    ispec2D_moho_bot = 0
-    k_top = 1
-    k_bot = NGLLZ
   endif
 
 ! get MPI starting time
@@ -2067,1061 +1871,29 @@
     ispec2D_moho_bot = 0
   endif
 
-  if (.not. USE_EXTERNAL_MESH) then
-
-  do ispec = 1,NSPEC_AB
-
-    if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-      if (is_moho_top(ispec)) then
-        ispec2D_moho_top = ispec2D_moho_top + 1
-      else if (is_moho_bot(ispec)) then
-        ispec2D_moho_bot = ispec2D_moho_bot + 1
-      endif
-    endif
-
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-
-          tempx1l = 0.
-          tempx2l = 0.
-          tempx3l = 0.
-
-          tempy1l = 0.
-          tempy2l = 0.
-          tempy3l = 0.
-
-          tempz1l = 0.
-          tempz2l = 0.
-          tempz3l = 0.
-
-          if (SIMULATION_TYPE == 3) then
-            b_tempx1l = 0.
-            b_tempx2l = 0.
-            b_tempx3l = 0.
-
-            b_tempy1l = 0.
-            b_tempy2l = 0.
-            b_tempy3l = 0.
-
-            b_tempz1l = 0.
-            b_tempz2l = 0.
-            b_tempz3l = 0.
-          endif
-
-          do l=1,NGLLX
-            hp1 = hprime_xx(i,l)
-            iglob = ibool(l,j,k,ispec)
-            tempx1l = tempx1l + displ(1,iglob)*hp1
-            tempy1l = tempy1l + displ(2,iglob)*hp1
-            tempz1l = tempz1l + displ(3,iglob)*hp1
-            if (SIMULATION_TYPE == 3) then
-              b_tempx1l = b_tempx1l + b_displ(1,iglob)*hp1
-              b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
-              b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
-            endif
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-            hp2 = hprime_yy(j,l)
-            iglob = ibool(i,l,k,ispec)
-            tempx2l = tempx2l + displ(1,iglob)*hp2
-            tempy2l = tempy2l + displ(2,iglob)*hp2
-            tempz2l = tempz2l + displ(3,iglob)*hp2
-            if (SIMULATION_TYPE == 3) then
-              b_tempx2l = b_tempx2l + b_displ(1,iglob)*hp2
-              b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
-              b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
-            endif
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-            hp3 = hprime_zz(k,l)
-            iglob = ibool(i,j,l,ispec)
-            tempx3l = tempx3l + displ(1,iglob)*hp3
-            tempy3l = tempy3l + displ(2,iglob)*hp3
-            tempz3l = tempz3l + displ(3,iglob)*hp3
-            if (SIMULATION_TYPE == 3) then
-              b_tempx3l = b_tempx3l + b_displ(1,iglob)*hp3
-              b_tempy3l = b_tempy3l + b_displ(2,iglob)*hp3
-              b_tempz3l = b_tempz3l + b_displ(3,iglob)*hp3
-            endif
-          enddo
-
-!         get derivatives of ux, uy and uz with respect to x, y and z
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-          jacobianl = jacobian(i,j,k,ispec)
-
-          duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-          duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-          duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
-
-          duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-          duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-          duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
-
-          duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-          duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-          duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
-
-! save strain on the Moho boundary
-          if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-            if (is_moho_top(ispec)) then
-              dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
-              dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
-              dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
-              dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
-              dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
-              dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
-              dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
-              dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
-              dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
-            else if (is_moho_bot(ispec)) then
-              dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
-              dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
-              dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
-              dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
-              dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
-              dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
-              dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
-              dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
-              dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
-            endif
-          endif
-
-! precompute some sums to save CPU time
-          duxdxl_plus_duydyl = duxdxl + duydyl
-          duxdxl_plus_duzdzl = duxdxl + duzdzl
-          duydyl_plus_duzdzl = duydyl + duzdzl
-          duxdyl_plus_duydxl = duxdyl + duydxl
-          duzdxl_plus_duxdzl = duzdxl + duxdzl
-          duzdyl_plus_duydzl = duzdyl + duydzl
-
-          if (SIMULATION_TYPE == 3) then
-            dsxx = duxdxl
-            dsxy = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
-            dsxz = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
-            dsyy = duydyl
-            dsyz = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
-            dszz = duzdzl
-
-            b_duxdxl = xixl*b_tempx1l + etaxl*b_tempx2l + gammaxl*b_tempx3l
-            b_duxdyl = xiyl*b_tempx1l + etayl*b_tempx2l + gammayl*b_tempx3l
-            b_duxdzl = xizl*b_tempx1l + etazl*b_tempx2l + gammazl*b_tempx3l
-
-            b_duydxl = xixl*b_tempy1l + etaxl*b_tempy2l + gammaxl*b_tempy3l
-            b_duydyl = xiyl*b_tempy1l + etayl*b_tempy2l + gammayl*b_tempy3l
-            b_duydzl = xizl*b_tempy1l + etazl*b_tempy2l + gammazl*b_tempy3l
-
-            b_duzdxl = xixl*b_tempz1l + etaxl*b_tempz2l + gammaxl*b_tempz3l
-            b_duzdyl = xiyl*b_tempz1l + etayl*b_tempz2l + gammayl*b_tempz3l
-            b_duzdzl = xizl*b_tempz1l + etazl*b_tempz2l + gammazl*b_tempz3l
-
-            b_duxdxl_plus_duydyl = b_duxdxl + b_duydyl
-            b_duxdxl_plus_duzdzl = b_duxdxl + b_duzdzl
-            b_duydyl_plus_duzdzl = b_duydyl + b_duzdzl
-            b_duxdyl_plus_duydxl = b_duxdyl + b_duydxl
-            b_duzdxl_plus_duxdzl = b_duzdxl + b_duxdzl
-            b_duzdyl_plus_duydzl = b_duzdyl + b_duydzl
-
-            b_dsxx =  b_duxdxl
-            b_dsxy = 0.5_CUSTOM_REAL * b_duxdyl_plus_duydxl
-            b_dsxz = 0.5_CUSTOM_REAL * b_duzdxl_plus_duxdzl
-            b_dsyy =  b_duydyl
-            b_dsyz = 0.5_CUSTOM_REAL * b_duzdyl_plus_duydzl
-            b_dszz =  b_duzdzl
-
-            kappa_k = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
-            mu_k = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
-                  2 * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) - ONE_THIRD * kappa_k
-            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * kappa_k
-            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * deltat * mu_k
-
-            if (SAVE_MOHO_MESH) then
-              if (is_moho_top(ispec)) then
-                b_dsdx_top(1,1,i,j,k,ispec2D_moho_top) = b_duxdxl
-                b_dsdx_top(1,2,i,j,k,ispec2D_moho_top) = b_duxdyl
-                b_dsdx_top(1,3,i,j,k,ispec2D_moho_top) = b_duxdzl
-                b_dsdx_top(2,1,i,j,k,ispec2D_moho_top) = b_duydxl
-                b_dsdx_top(2,2,i,j,k,ispec2D_moho_top) = b_duydyl
-                b_dsdx_top(2,3,i,j,k,ispec2D_moho_top) = b_duydzl
-                b_dsdx_top(3,1,i,j,k,ispec2D_moho_top) = b_duzdxl
-                b_dsdx_top(3,2,i,j,k,ispec2D_moho_top) = b_duzdyl
-                b_dsdx_top(3,3,i,j,k,ispec2D_moho_top) = b_duzdzl
-              else if (is_moho_bot(ispec)) then
-                b_dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = b_duxdxl
-                b_dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = b_duxdyl
-                b_dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = b_duxdzl
-                b_dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = b_duydxl
-                b_dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = b_duydyl
-                b_dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = b_duydzl
-                b_dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = b_duzdxl
-                b_dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = b_duzdyl
-                b_dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = b_duzdzl
-              endif
-            endif
-
-          endif
-
-! precompute terms for attenuation if needed
-  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-
-! compute deviatoric strain
-    epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-    epsilondev_xx_loc(i,j,k) = duxdxl - epsilon_trace_over_3
-    epsilondev_yy_loc(i,j,k) = duydyl - epsilon_trace_over_3
-    epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
-    epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
-    epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
-
-   if (SIMULATION_TYPE == 3) then
-      b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
-      b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
-      b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
-      b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
-      b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
-      b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
-    endif
-
-! distinguish attenuation factors
-    if(flag_sediments(i,j,k,ispec)) then
-
-! use constant attenuation of Q = 90
-! or use scaling rule similar to Olsen et al. (2003)
-     if(USE_OLSEN_ATTENUATION) then
-       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-! use rule Q_mu = constant * v_s
-       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
-       int_Q_mu = 10 * nint(Q_mu / 10.)
-       if(int_Q_mu < 40) int_Q_mu = 40
-       if(int_Q_mu > 150) int_Q_mu = 150
-
-       if(int_Q_mu == 40) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
-       else if(int_Q_mu == 50) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
-       else if(int_Q_mu == 60) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
-       else if(int_Q_mu == 70) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
-       else if(int_Q_mu == 80) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
-       else if(int_Q_mu == 90) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
-       else if(int_Q_mu == 100) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
-       else if(int_Q_mu == 110) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
-       else if(int_Q_mu == 120) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
-       else if(int_Q_mu == 130) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
-       else if(int_Q_mu == 140) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
-       else if(int_Q_mu == 150) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
-       else
-         stop 'incorrect attenuation coefficient'
-       endif
-
-     else
-       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
-     endif
-
-      iselected = iattenuation_sediments
-    else
-      iselected = IATTENUATION_BEDROCK
-    endif
-
-    one_minus_sum_beta_use = one_minus_sum_beta(iselected)
-    minus_sum_beta =  one_minus_sum_beta_use - 1.
-
-  endif
-
-    kappal = kappastore(i,j,k,ispec)
-    mul = mustore(i,j,k,ispec)
-
-! For fully anisotropic case
-    if(ANISOTROPY_VAL) then
-       c11 = c11store(i,j,k,ispec)
-       c12 = c12store(i,j,k,ispec)
-       c13 = c13store(i,j,k,ispec)
-       c14 = c14store(i,j,k,ispec)
-       c15 = c15store(i,j,k,ispec)
-       c16 = c16store(i,j,k,ispec)
-       c22 = c22store(i,j,k,ispec)
-       c23 = c23store(i,j,k,ispec)
-       c24 = c24store(i,j,k,ispec)
-       c25 = c25store(i,j,k,ispec)
-       c26 = c26store(i,j,k,ispec)
-       c33 = c33store(i,j,k,ispec)
-       c34 = c34store(i,j,k,ispec)
-       c35 = c35store(i,j,k,ispec)
-       c36 = c36store(i,j,k,ispec)
-       c44 = c44store(i,j,k,ispec)
-       c45 = c45store(i,j,k,ispec)
-       c46 = c46store(i,j,k,ispec)
-       c55 = c55store(i,j,k,ispec)
-       c56 = c56store(i,j,k,ispec)
-       c66 = c66store(i,j,k,ispec)
-
-       !if(ATTENUATION_VAL.and. not_fully_in_bedrock(ispec)) then
-       !   mul = c44
-       !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
-       !   c12 = c12 - TWO_THIRDS * minus_sum_beta * mul
-       !   c13 = c13 - TWO_THIRDS * minus_sum_beta * mul
-       !   c22 = c22 + FOUR_THIRDS * minus_sum_beta * mul
-       !   c23 = c23 - TWO_THIRDS * minus_sum_beta * mul
-       !   c33 = c33 + FOUR_THIRDS * minus_sum_beta * mul
-       !   c44 = c44 + minus_sum_beta * mul
-       !   c55 = c55 + minus_sum_beta * mul
-       !   c66 = c66 + minus_sum_beta * mul
-       !endif
-
-       sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
-            c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
-
-       sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
-            c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
-
-       sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
-            c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
-
-       sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
-            c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
-
-       sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
-            c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
-
-       sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
-            c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
-
-       if (SIMULATION_TYPE == 3) then
-         b_sigma_xx = c11*b_duxdxl + c16*b_duxdyl_plus_duydxl + c12*b_duydyl + &
-               c15*b_duzdxl_plus_duxdzl + c14*b_duzdyl_plus_duydzl + c13*b_duzdzl
-
-         b_sigma_yy = c12*b_duxdxl + c26*b_duxdyl_plus_duydxl + c22*b_duydyl + &
-               c25*b_duzdxl_plus_duxdzl + c24*b_duzdyl_plus_duydzl + c23*b_duzdzl
-
-         b_sigma_zz = c13*b_duxdxl + c36*b_duxdyl_plus_duydxl + c23*b_duydyl + &
-               c35*b_duzdxl_plus_duxdzl + c34*b_duzdyl_plus_duydzl + c33*b_duzdzl
-
-         b_sigma_xy = c16*b_duxdxl + c66*b_duxdyl_plus_duydxl + c26*b_duydyl + &
-               c56*b_duzdxl_plus_duxdzl + c46*b_duzdyl_plus_duydzl + c36*b_duzdzl
-
-         b_sigma_xz = c15*b_duxdxl + c56*b_duxdyl_plus_duydxl + c25*b_duydyl + &
-               c55*b_duzdxl_plus_duxdzl + c45*b_duzdyl_plus_duydzl + c35*b_duzdzl
-
-         b_sigma_yz = c14*b_duxdxl + c46*b_duxdyl_plus_duydxl + c24*b_duydyl + &
-               c45*b_duzdxl_plus_duxdzl + c44*b_duzdyl_plus_duydzl + c34*b_duzdzl
-       endif
-    else
-! For isotropic case
-! use unrelaxed parameters if attenuation
-       if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
-
-       lambdalplus2mul = kappal + FOUR_THIRDS * mul
-       lambdal = lambdalplus2mul - 2.*mul
-
-! compute stress sigma
-       sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-       sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-       sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
-
-       sigma_xy = mul*duxdyl_plus_duydxl
-       sigma_xz = mul*duzdxl_plus_duxdzl
-       sigma_yz = mul*duzdyl_plus_duydzl
-
-       if (SIMULATION_TYPE == 3) then
-         b_sigma_xx = lambdalplus2mul*b_duxdxl + lambdal*b_duydyl_plus_duzdzl
-         b_sigma_yy = lambdalplus2mul*b_duydyl + lambdal*b_duxdxl_plus_duzdzl
-         b_sigma_zz = lambdalplus2mul*b_duzdzl + lambdal*b_duxdxl_plus_duydyl
-
-         b_sigma_xy = mul*b_duxdyl_plus_duydxl
-         b_sigma_xz = mul*b_duzdxl_plus_duxdzl
-         b_sigma_yz = mul*b_duzdyl_plus_duydzl
-       endif
-    endif
-
-! subtract memory variables if attenuation
-    if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-      do i_sls = 1,N_SLS
-        R_xx_val = R_xx(i,j,k,ispec,i_sls)
-        R_yy_val = R_yy(i,j,k,ispec,i_sls)
-        sigma_xx = sigma_xx - R_xx_val
-        sigma_yy = sigma_yy - R_yy_val
-        sigma_zz = sigma_zz + R_xx_val + R_yy_val
-        sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-        sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-        sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-        if (SIMULATION_TYPE == 3) then
-          b_R_xx_val = b_R_xx(i,j,k,ispec,i_sls)
-          b_R_yy_val = b_R_yy(i,j,k,ispec,i_sls)
-          b_sigma_xx = b_sigma_xx - b_R_xx_val
-          b_sigma_yy = b_sigma_yy - b_R_yy_val
-          b_sigma_zz = b_sigma_zz + b_R_xx_val + b_R_yy_val
-          b_sigma_xy = b_sigma_xy - b_R_xy(i,j,k,ispec,i_sls)
-          b_sigma_xz = b_sigma_xz - b_R_xz(i,j,k,ispec,i_sls)
-          b_sigma_yz = b_sigma_yz - b_R_yz(i,j,k,ispec,i_sls)
-        endif
-      enddo
-    endif
-
-! form dot product with test vector, symmetric form
-      tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
-      tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl)
-      tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl)
-
-      tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl)
-      tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl)
-      tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl)
-
-      tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl)
-      tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
-      tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
-
-      if (SIMULATION_TYPE == 3) then
-        b_tempx1(i,j,k) = jacobianl * (b_sigma_xx*xixl + b_sigma_xy*xiyl + b_sigma_xz*xizl)
-        b_tempy1(i,j,k) = jacobianl * (b_sigma_xy*xixl + b_sigma_yy*xiyl + b_sigma_yz*xizl)
-        b_tempz1(i,j,k) = jacobianl * (b_sigma_xz*xixl + b_sigma_yz*xiyl + b_sigma_zz*xizl)
-
-        b_tempx2(i,j,k) = jacobianl * (b_sigma_xx*etaxl + b_sigma_xy*etayl + b_sigma_xz*etazl)
-        b_tempy2(i,j,k) = jacobianl * (b_sigma_xy*etaxl + b_sigma_yy*etayl + b_sigma_yz*etazl)
-        b_tempz2(i,j,k) = jacobianl * (b_sigma_xz*etaxl + b_sigma_yz*etayl + b_sigma_zz*etazl)
-
-        b_tempx3(i,j,k) = jacobianl * (b_sigma_xx*gammaxl + b_sigma_xy*gammayl + b_sigma_xz*gammazl)
-        b_tempy3(i,j,k) = jacobianl * (b_sigma_xy*gammaxl + b_sigma_yy*gammayl + b_sigma_yz*gammazl)
-        b_tempz3(i,j,k) = jacobianl * (b_sigma_xz*gammaxl + b_sigma_yz*gammayl + b_sigma_zz*gammazl)
-      endif
-
-          enddo
-        enddo
-      enddo
-
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-
-          tempx1l = 0.
-          tempy1l = 0.
-          tempz1l = 0.
-
-          tempx2l = 0.
-          tempy2l = 0.
-          tempz2l = 0.
-
-          tempx3l = 0.
-          tempy3l = 0.
-          tempz3l = 0.
-
-          if (SIMULATION_TYPE == 3) then
-            b_tempx1l = 0.
-            b_tempy1l = 0.
-            b_tempz1l = 0.
-
-            b_tempx2l = 0.
-            b_tempy2l = 0.
-            b_tempz2l = 0.
-
-            b_tempx3l = 0.
-            b_tempy3l = 0.
-            b_tempz3l = 0.
-          endif
-
-          do l=1,NGLLX
-            fac1 = hprimewgll_xx(l,i)
-            tempx1l = tempx1l + tempx1(l,j,k)*fac1
-            tempy1l = tempy1l + tempy1(l,j,k)*fac1
-            tempz1l = tempz1l + tempz1(l,j,k)*fac1
-            if (SIMULATION_TYPE == 3) then
-              b_tempx1l = b_tempx1l + b_tempx1(l,j,k)*fac1
-              b_tempy1l = b_tempy1l + b_tempy1(l,j,k)*fac1
-              b_tempz1l = b_tempz1l + b_tempz1(l,j,k)*fac1
-            endif
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-            fac2 = hprimewgll_yy(l,j)
-            tempx2l = tempx2l + tempx2(i,l,k)*fac2
-            tempy2l = tempy2l + tempy2(i,l,k)*fac2
-            tempz2l = tempz2l + tempz2(i,l,k)*fac2
-            if (SIMULATION_TYPE == 3) then
-              b_tempx2l = b_tempx2l + b_tempx2(i,l,k)*fac2
-              b_tempy2l = b_tempy2l + b_tempy2(i,l,k)*fac2
-              b_tempz2l = b_tempz2l + b_tempz2(i,l,k)*fac2
-            endif
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-            fac3 = hprimewgll_zz(l,k)
-            tempx3l = tempx3l + tempx3(i,j,l)*fac3
-            tempy3l = tempy3l + tempy3(i,j,l)*fac3
-            tempz3l = tempz3l + tempz3(i,j,l)*fac3
-            if (SIMULATION_TYPE == 3) then
-              b_tempx3l = b_tempx3l + b_tempx3(i,j,l)*fac3
-              b_tempy3l = b_tempy3l + b_tempy3(i,j,l)*fac3
-              b_tempz3l = b_tempz3l + b_tempz3(i,j,l)*fac3
-            endif
-          enddo
-
-          fac1 = wgllwgll_yz(j,k)
-          fac2 = wgllwgll_xz(i,k)
-          fac3 = wgllwgll_xy(i,j)
-
-! sum contributions from each element to the global mesh
-
-  iglob = ibool(i,j,k,ispec)
-
-  accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
-  accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
-  accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
-  if (SIMULATION_TYPE == 3) then
-    b_accel(1,iglob) = b_accel(1,iglob) - (fac1*b_tempx1l + fac2*b_tempx2l + fac3*b_tempx3l)
-    b_accel(2,iglob) = b_accel(2,iglob) - (fac1*b_tempy1l + fac2*b_tempy2l + fac3*b_tempy3l)
-    b_accel(3,iglob) = b_accel(3,iglob) - (fac1*b_tempz1l + fac2*b_tempz2l + fac3*b_tempz3l)
-  endif
-
-! update memory variables based upon the Runge-Kutta scheme
-
-  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-
-! use Runge-Kutta scheme to march in time
-  do i_sls = 1,N_SLS
-
-! get coefficients for that standard linear solid
-
-  factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
-  alphaval_loc = alphaval(iselected,i_sls)
-  betaval_loc = betaval(iselected,i_sls)
-  gammaval_loc = gammaval(iselected,i_sls)
-
-! term in xx
-  Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in yy
-  Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in zz not computed since zero trace
-! This is because we only implement Q_\mu attenuation and not Q_\kappa.
-! Note that this does *NOT* imply that there is no attenuation for P waves
-! because for Q_\kappa = infinity one gets (see for instance Dahlen and Tromp (1998)
-! equation (9.59) page 350): Q_\alpha = Q_\mu * 3 * (V_p/V_s)^2 / 4
-! therefore Q_\alpha is not zero; for instance for V_p / V_s = sqrt(3)
-! we get Q_\alpha = (9 / 4) * Q_\mu = 2.25 * Q_\mu
-
-! term in xy
-  Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in xz
-  Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in yz
-  Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-  if (SIMULATION_TYPE == 3) then
-    b_alphaval_loc = b_alphaval(iselected,i_sls)
-    b_betaval_loc = b_betaval(iselected,i_sls)
-    b_gammaval_loc = b_gammaval(iselected,i_sls)
-
-! term in xx
-    b_Sn   = factor_loc * b_epsilondev_xx(i,j,k,ispec)
-    b_Snp1   = factor_loc * b_epsilondev_xx_loc(i,j,k)
-    b_R_xx(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xx(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-
-! term in yy
-    b_Sn   = factor_loc * b_epsilondev_yy(i,j,k,ispec)
-    b_Snp1   = factor_loc * b_epsilondev_yy_loc(i,j,k)
-    b_R_yy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yy(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-
-! term in zz not computed since zero trace
-
-! term in xy
-    b_Sn   = factor_loc * b_epsilondev_xy(i,j,k,ispec)
-    b_Snp1   = factor_loc * b_epsilondev_xy_loc(i,j,k)
-    b_R_xy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xy(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-
-! term in xz
-    b_Sn   = factor_loc * b_epsilondev_xz(i,j,k,ispec)
-    b_Snp1   = factor_loc * b_epsilondev_xz_loc(i,j,k)
-    b_R_xz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xz(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-
-! term in yz
-    b_Sn   = factor_loc * b_epsilondev_yz(i,j,k,ispec)
-    b_Snp1   = factor_loc * b_epsilondev_yz_loc(i,j,k)
-    b_R_yz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yz(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-
-  endif
-
-    enddo   ! end of loop on memory variables
-
-  endif  !  end attenuation
-
-        enddo
-      enddo
-    enddo
-
-! save deviatoric strain for Runge-Kutta scheme
-  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-    epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-    epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
-    epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
-    epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
-    epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
-    if (SIMULATION_TYPE == 3) then
-      b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
-      b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
-      b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
-      b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
-      b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
-    endif
-  endif
-
-  enddo   ! spectral element loop
-
-! add Stacey conditions
-
-  if(ABSORBING_CONDITIONS) then
-
-!   xmin
-    if (SIMULATION_TYPE == 3 .and. nspec2D_xmin > 0)  then
-      read(31,rec=NSTEP-it+1) reclen1,absorb_xmin,reclen2
-      if (reclen1 /= reclen_xmin .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_xmin')
-    endif
-    do ispec2D=1,nspec2D_xmin
-
-      ispec=ibelm_xmin(ispec2D)
-
-! exclude elements that are not on absorbing edges
-    if(nkmin_xi(1,ispec2D) == 0 .or. njmin(1,ispec2D) == 0) cycle
-
-      i=1
-      do k=nkmin_xi(1,ispec2D),NGLLZ
-        do j=njmin(1,ispec2D),njmax(1,ispec2D)
-          iglob=ibool(i,j,k,ispec)
-
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
-
-          nx=normal_xmin(1,j,k,ispec2D)
-          ny=normal_xmin(2,j,k,ispec2D)
-          nz=normal_xmin(3,j,k,ispec2D)
-
-          vn=vx*nx+vy*ny+vz*nz
-
-          tx=rho_vp(i,j,k,ispec)*vn*nx+rho_vs(i,j,k,ispec)*(vx-vn*nx)
-          ty=rho_vp(i,j,k,ispec)*vn*ny+rho_vs(i,j,k,ispec)*(vy-vn*ny)
-          tz=rho_vp(i,j,k,ispec)*vn*nz+rho_vs(i,j,k,ispec)*(vz-vn*nz)
-
-          weight=jacobian2D_xmin(j,k,ispec2D)*wgllwgll_yz(j,k)
-
-          accel(1,iglob)=accel(1,iglob) - tx*weight
-          accel(2,iglob)=accel(2,iglob) - ty*weight
-          accel(3,iglob)=accel(3,iglob) - tz*weight
-
-          if (SIMULATION_TYPE == 3) then
-            b_accel(1,iglob)=b_accel(1,iglob) - absorb_xmin(1,j,k,ispec2D)
-            b_accel(2,iglob)=b_accel(2,iglob) - absorb_xmin(2,j,k,ispec2D)
-            b_accel(3,iglob)=b_accel(3,iglob) - absorb_xmin(3,j,k,ispec2D)
-          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            absorb_xmin(1,j,k,ispec2D) = tx*weight
-            absorb_xmin(2,j,k,ispec2D) = ty*weight
-            absorb_xmin(3,j,k,ispec2D) = tz*weight
-          endif
-
-        enddo
-      enddo
-    enddo
-
-    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_xmin > 0 ) write(31,rec=it) reclen_xmin,absorb_xmin,reclen_xmin
-
-!   xmax
-    if (SIMULATION_TYPE == 3 .and. nspec2D_xmax > 0)  then
-      read(32,rec=NSTEP-it+1) reclen1,absorb_xmax,reclen2
-      if (reclen1 /= reclen_xmax .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_xmax')
-    endif
-    do ispec2D=1,nspec2D_xmax
-      ispec=ibelm_xmax(ispec2D)
-
-! exclude elements that are not on absorbing edges
-    if(nkmin_xi(2,ispec2D) == 0 .or. njmin(2,ispec2D) == 0) cycle
-
-      i=NGLLX
-      do k=nkmin_xi(2,ispec2D),NGLLZ
-        do j=njmin(2,ispec2D),njmax(2,ispec2D)
-          iglob=ibool(i,j,k,ispec)
-
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
-
-          nx=normal_xmax(1,j,k,ispec2D)
-          ny=normal_xmax(2,j,k,ispec2D)
-          nz=normal_xmax(3,j,k,ispec2D)
-
-          vn=vx*nx+vy*ny+vz*nz
-
-          tx=rho_vp(i,j,k,ispec)*vn*nx+rho_vs(i,j,k,ispec)*(vx-vn*nx)
-          ty=rho_vp(i,j,k,ispec)*vn*ny+rho_vs(i,j,k,ispec)*(vy-vn*ny)
-          tz=rho_vp(i,j,k,ispec)*vn*nz+rho_vs(i,j,k,ispec)*(vz-vn*nz)
-
-          weight=jacobian2D_xmax(j,k,ispec2D)*wgllwgll_yz(j,k)
-
-          accel(1,iglob)=accel(1,iglob) - tx*weight
-          accel(2,iglob)=accel(2,iglob) - ty*weight
-          accel(3,iglob)=accel(3,iglob) - tz*weight
-
-          if (SIMULATION_TYPE == 3) then
-            b_accel(1,iglob)=b_accel(1,iglob) - absorb_xmax(1,j,k,ispec2D)
-            b_accel(2,iglob)=b_accel(2,iglob) - absorb_xmax(2,j,k,ispec2D)
-            b_accel(3,iglob)=b_accel(3,iglob) - absorb_xmax(3,j,k,ispec2D)
-          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            absorb_xmax(1,j,k,ispec2D) = tx*weight
-            absorb_xmax(2,j,k,ispec2D) = ty*weight
-            absorb_xmax(3,j,k,ispec2D) = tz*weight
-          endif
-
-        enddo
-      enddo
-    enddo
-
-    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_xmax > 0 ) write(32,rec=it) reclen_xmax,absorb_xmax,reclen_xmax
-
-!   ymin
-    if (SIMULATION_TYPE == 3 .and. nspec2D_ymin > 0)  then
-      read(33,rec=NSTEP-it+1) reclen1,absorb_ymin,reclen2
-      if (reclen1 /= reclen_ymin .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_ymin')
-    endif
-    do ispec2D=1,nspec2D_ymin
-
-      ispec=ibelm_ymin(ispec2D)
-
-! exclude elements that are not on absorbing edges
-    if(nkmin_eta(1,ispec2D) == 0 .or. nimin(1,ispec2D) == 0) cycle
-
-      j=1
-      do k=nkmin_eta(1,ispec2D),NGLLZ
-        do i=nimin(1,ispec2D),nimax(1,ispec2D)
-          iglob=ibool(i,j,k,ispec)
-
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
-
-          nx=normal_ymin(1,i,k,ispec2D)
-          ny=normal_ymin(2,i,k,ispec2D)
-          nz=normal_ymin(3,i,k,ispec2D)
-
-          vn=vx*nx+vy*ny+vz*nz
-
-          tx=rho_vp(i,j,k,ispec)*vn*nx+rho_vs(i,j,k,ispec)*(vx-vn*nx)
-          ty=rho_vp(i,j,k,ispec)*vn*ny+rho_vs(i,j,k,ispec)*(vy-vn*ny)
-          tz=rho_vp(i,j,k,ispec)*vn*nz+rho_vs(i,j,k,ispec)*(vz-vn*nz)
-
-          weight=jacobian2D_ymin(i,k,ispec2D)*wgllwgll_xz(i,k)
-
-          accel(1,iglob)=accel(1,iglob) - tx*weight
-          accel(2,iglob)=accel(2,iglob) - ty*weight
-          accel(3,iglob)=accel(3,iglob) - tz*weight
-
-          if (SIMULATION_TYPE == 3) then
-            b_accel(1,iglob)=b_accel(1,iglob) - absorb_ymin(1,i,k,ispec2D)
-            b_accel(2,iglob)=b_accel(2,iglob) - absorb_ymin(2,i,k,ispec2D)
-            b_accel(3,iglob)=b_accel(3,iglob) - absorb_ymin(3,i,k,ispec2D)
-          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            absorb_ymin(1,i,k,ispec2D) = tx*weight
-            absorb_ymin(2,i,k,ispec2D) = ty*weight
-            absorb_ymin(3,i,k,ispec2D) = tz*weight
-          endif
-
-        enddo
-      enddo
-    enddo
-
-   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_ymin > 0 ) write(33,rec=it) reclen_ymin,absorb_ymin,reclen_ymin
-
-!   ymax
-    if (SIMULATION_TYPE == 3 .and. nspec2D_ymax > 0)  then
-      read(34,rec=NSTEP-it+1) reclen1,absorb_ymax,reclen2
-      if (reclen1 /= reclen_ymax .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_ymax')
-    endif
-    do ispec2D=1,nspec2D_ymax
-
-      ispec=ibelm_ymax(ispec2D)
-
-! exclude elements that are not on absorbing edges
-    if(nkmin_eta(2,ispec2D) == 0 .or. nimin(2,ispec2D) == 0) cycle
-
-      j=NGLLY
-      do k=nkmin_eta(2,ispec2D),NGLLZ
-        do i=nimin(2,ispec2D),nimax(2,ispec2D)
-          iglob=ibool(i,j,k,ispec)
-
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
-
-          nx=normal_ymax(1,i,k,ispec2D)
-          ny=normal_ymax(2,i,k,ispec2D)
-          nz=normal_ymax(3,i,k,ispec2D)
-
-          vn=vx*nx+vy*ny+vz*nz
-
-          tx=rho_vp(i,j,k,ispec)*vn*nx+rho_vs(i,j,k,ispec)*(vx-vn*nx)
-          ty=rho_vp(i,j,k,ispec)*vn*ny+rho_vs(i,j,k,ispec)*(vy-vn*ny)
-          tz=rho_vp(i,j,k,ispec)*vn*nz+rho_vs(i,j,k,ispec)*(vz-vn*nz)
-
-          weight=jacobian2D_ymax(i,k,ispec2D)*wgllwgll_xz(i,k)
-
-          accel(1,iglob)=accel(1,iglob) - tx*weight
-          accel(2,iglob)=accel(2,iglob) - ty*weight
-          accel(3,iglob)=accel(3,iglob) - tz*weight
-
-          if (SIMULATION_TYPE == 3) then
-            b_accel(1,iglob)=b_accel(1,iglob) - absorb_ymax(1,i,k,ispec2D)
-            b_accel(2,iglob)=b_accel(2,iglob) - absorb_ymax(2,i,k,ispec2D)
-            b_accel(3,iglob)=b_accel(3,iglob) - absorb_ymax(3,i,k,ispec2D)
-          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            absorb_ymax(1,i,k,ispec2D) = tx*weight
-            absorb_ymax(2,i,k,ispec2D) = ty*weight
-            absorb_ymax(3,i,k,ispec2D) = tz*weight
-          endif
-
-        enddo
-      enddo
-    enddo
-
-    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. nspec2D_ymax > 0) write(34,rec=it) reclen_ymax,absorb_ymax,reclen_ymax
-
-!   bottom (zmin)
-    if (SIMULATION_TYPE == 3 .and. NSPEC2D_BOTTOM > 0)  then
-      read(35,rec=NSTEP-it+1) reclen1,absorb_zmin,reclen2
-      if (reclen1 /= reclen_zmin .or. reclen1 /= reclen2)  call exit_mpi(myrank,'Error reading absorbing contribution absorb_zmin')
-    endif
-    do ispec2D=1,NSPEC2D_BOTTOM
-
-      ispec=ibelm_bottom(ispec2D)
-
-      k=1
-      do j=1,NGLLY
-        do i=1,NGLLX
-
-          iglob=ibool(i,j,k,ispec)
-
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
-
-          nx=normal_bottom(1,i,j,ispec2D)
-          ny=normal_bottom(2,i,j,ispec2D)
-          nz=normal_bottom(3,i,j,ispec2D)
-
-          vn=vx*nx+vy*ny+vz*nz
-
-          tx=rho_vp(i,j,k,ispec)*vn*nx+rho_vs(i,j,k,ispec)*(vx-vn*nx)
-          ty=rho_vp(i,j,k,ispec)*vn*ny+rho_vs(i,j,k,ispec)*(vy-vn*ny)
-          tz=rho_vp(i,j,k,ispec)*vn*nz+rho_vs(i,j,k,ispec)*(vz-vn*nz)
-
-          weight=jacobian2D_bottom(i,j,ispec2D)*wgllwgll_xy(i,j)
-
-          accel(1,iglob)=accel(1,iglob) - tx*weight
-          accel(2,iglob)=accel(2,iglob) - ty*weight
-          accel(3,iglob)=accel(3,iglob) - tz*weight
-
-          if (SIMULATION_TYPE == 3) then
-            b_accel(1,iglob)=b_accel(1,iglob) - absorb_zmin(1,i,j,ispec2D)
-            b_accel(2,iglob)=b_accel(2,iglob) - absorb_zmin(2,i,j,ispec2D)
-            b_accel(3,iglob)=b_accel(3,iglob) - absorb_zmin(3,i,j,ispec2D)
-          else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            absorb_zmin(1,i,j,ispec2D) = tx*weight
-            absorb_zmin(2,i,j,ispec2D) = ty*weight
-            absorb_zmin(3,i,j,ispec2D) = tz*weight
-          endif
-
-        enddo
-      enddo
-    enddo
-
-    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. NSPEC2D_BOTTOM > 0) write(35,rec=it) reclen_zmin,absorb_zmin,reclen_zmin
-
-  endif  ! end of Stacey conditions
-
-
-  if (SIMULATION_TYPE == 1) then
-
-! only one source for now if we use a force located at a grid point
-  if(USE_FORCE_POINT_SOURCE) NSOURCES = 1
-
-  do isource = 1,NSOURCES
-
-  if(USE_FORCE_POINT_SOURCE) then
-
-!   add the source (only if this proc carries the source)
-    if(myrank == islice_selected_source(isource)) then
-
-      iglob = ibool(nint(xi_source(isource)), &
-           nint(eta_source(isource)), &
-           nint(gamma_source(isource)), &
-           ispec_selected_source(isource))
-
-      f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-      t0 = 1.2d0/f0
-
-      if (it == 1 .and. myrank == 0) then
-        print *,'using a source of dominant frequency ',f0
-        print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-        print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-      endif
-
-! we use nu_source(:,3) here because we want a source normal to the surface.
-! This is the expression of a Ricker
-      accel(:,iglob) = accel(:,iglob) + &
-           sngl(nu_source(:,3,isource) * FACTOR_FORCE_SOURCE * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
-           exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
-
-    endif
-
-    else
-
-!   add the source (only if this proc carries the source)
-    if(myrank == islice_selected_source(isource)) then
-
-      stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
-
-!     distinguish between single and double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
-        stf_used = sngl(stf)
-      else
-        stf_used = stf
-      endif
-
-!     add source array
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec_selected_source(isource))
-            accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-          enddo
-        enddo
-      enddo
-
-    endif
-
-  endif ! end of if(USE_FORCE_POINT_SOURCE)
-
-  enddo
-
-  endif
-
-  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-
-    irec_local = 0
-    do irec = 1,nrec
-
-!   add the source (only if this proc carries the source)
-      if(myrank == islice_selected_rec(irec)) then
-
-        irec_local = irec_local + 1
-!     add source array
-        do k = 1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec_selected_rec(irec))
-            accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
-          enddo
-        enddo
-        enddo
-
-      endif
-
-    enddo
-
-  endif
-
-  if (SIMULATION_TYPE == 3) then
-    do isource = 1,NSOURCES
-
-!   add the source (only if this proc carries the source)
-    if(myrank == islice_selected_source(isource)) then
-
-      stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
-
-!     distinguish between single and double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
-        stf_used = sngl(stf)
-      else
-        stf_used = stf
-      endif
-
-!     add source array
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec_selected_source(isource))
-            b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-          enddo
-        enddo
-      enddo
-
-    endif
-
-  enddo
-
-  endif
-
-  endif ! if (.not. USE_EXTERNAL_MESH)
-
 ! assemble all the contributions between slices using MPI
-  if (USE_EXTERNAL_MESH) then
     call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt &
-         )
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
 
     call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,accel, &
          buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
          ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-         request_send_vector_ext_mesh,request_recv_vector_ext_mesh &
-         )
+         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt &
-         )
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
 
     call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
          buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
          ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-         request_send_vector_ext_mesh,request_recv_vector_ext_mesh &
-         )
-  else
-  call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
-            iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-            buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
-            NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
-  endif
+         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
   if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
           iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
           buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
@@ -3625,7 +2397,7 @@
 
  endif
 
-  if(USE_EXTERNAL_MESH .and. EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+  if(EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 ! get coordinates of surface mesh and surface displacement
     do ispec = 1,nfaces_surface_external_mesh
       if (USE_HIGHRES_FOR_MOVIES) then
