@@ -52,7 +52,7 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
-  
+
 ! communication overlap
   logical, dimension(NSPEC_AB) :: ispec_is_inner
   logical :: phase_is_inner
@@ -61,7 +61,7 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source  
+  double precision, dimension(3,3,NSOURCES) :: nu_source
   double precision, dimension(NSOURCES) :: hdur
   double precision :: dt
 
@@ -85,12 +85,12 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
-  
+
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
 
   integer :: isource
-  double precision :: t0,f0  
+  double precision :: t0,f0
 
 
   do ispec = 1,NSPEC_AB
@@ -273,15 +273,15 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
            nint(gamma_source(isource)), &
            ispec_selected_source(isource))
       f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-      t0 = 1.2d0/f0 
+      t0 = 1.2d0/f0
 if (it == 1 .and. myrank == 0) then
-     
+
 print *,'using a source of dominant frequency ',f0
 print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
 print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
 endif
-      
-      
+
+
       ! we use nu_source(:,3) here because we want a source normal to the surface.
       ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
       !accel(:,iglob) = accel(:,iglob) + &
@@ -292,7 +292,7 @@ accel(:,iglob) = accel(:,iglob) + &
            exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
 
     endif
-  endif    
+  endif
 
   endif
 

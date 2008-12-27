@@ -273,7 +273,7 @@
            array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
     enddo
   enddo
-      
+
   endif
 
   end subroutine assemble_MPI_scalar_ext_mesh
@@ -355,7 +355,7 @@
            array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
     enddo
   enddo
-      
+
 ! wait for communications completion (send)
   do iinterface = 1, ninterfaces_ext_mesh
     call wait_req(request_send_scalar_ext_mesh(iinterface))

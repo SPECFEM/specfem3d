@@ -129,7 +129,7 @@
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
   double precision, allocatable, dimension(:,:,:,:) :: nu_all
-  
+
   character(len=150) OUTPUT_FILES
 
 ! **************
@@ -278,12 +278,12 @@
       if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
   else
-   
+
     x_target(irec) = stutm_x(irec)
     y_target(irec) = stutm_y(irec)
     z_target(irec) = stbur(irec)
     if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
- 
+
   endif ! of if (.not. USE_EXTERNAL_MESH)
 
 ! examine top of the elements only (receivers always at the surface)
@@ -322,7 +322,7 @@
           do i = imin,imax
 
             iglob = ibool(i,j,k,ispec)
-            
+
             if (USE_EXTERNAL_MESH .and. (.not. RECVS_CAN_BE_BURIED_EXT_MESH)) then
               if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
                 cycle
@@ -478,7 +478,7 @@
 ! normalize vector w
     w_vector(:) = w_vector(:)/sqrt(w_vector(1)**2+w_vector(2)**2+w_vector(3)**2)
 
-! build the two other vectors for a direct base : we normalize u, and v=w^u    
+! build the two other vectors for a direct base: we normalize u, and v=w^u
     u_vector(:) = u_vector(:)/sqrt(u_vector(1)**2+u_vector(2)**2+u_vector(3)**2)
     v_vector(1) = w_vector(2)*u_vector(3) - w_vector(3)*u_vector(2)
     v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)
@@ -713,7 +713,7 @@
       write(IMAIN,*) 'nu3 = ',nu(3,:,irec)
     else
       write(IMAIN,*) ' at xi,eta,gamma coordinates = ',xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec)
-    endif 
+    endif
 
 ! add warning if estimate is poor
 ! (usually means receiver outside the mesh given by the user)

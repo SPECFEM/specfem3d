@@ -43,7 +43,7 @@
 
   integer NSPEC_AB
   integer NGLOB_AB
-  
+
   logical OCEANS
 
   character(len=150) LOCAL_PATH

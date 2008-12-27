@@ -58,9 +58,6 @@
 
   integer iproc,ipoin
 
-! GMT
-  double precision lat,long
-
 ! for sorting routine
   integer npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
   integer, dimension(:), allocatable :: iglob,loc,ireorder
@@ -180,7 +177,7 @@
   allocate(store_val_ux(ilocnum,0:NPROC-1))
   allocate(store_val_uy(ilocnum,0:NPROC-1))
   allocate(store_val_uz(ilocnum,0:NPROC-1))
-  
+
 
   print *,'1 = create files in OpenDX format'
   print *,'2 = create files in AVS UCD format with individual files'
@@ -384,7 +381,7 @@
                    (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
                    (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
                    .and. MUTE_SOURCE) then
-                
+
                 display(i,j) = 0.
               else
 
@@ -473,7 +470,7 @@
                    (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
                    (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
                    .and. MUTE_SOURCE) then
-                
+
                 display(i,j) = 0.
               else
 

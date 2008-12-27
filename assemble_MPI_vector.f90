@@ -278,7 +278,7 @@
   do iinterface = 1, ninterfaces_ext_mesh
     call wait_req(request_send_vector_ext_mesh(iinterface))
   enddo
-      
+
   endif
 
   end subroutine assemble_MPI_vector_ext_mesh
@@ -404,7 +404,7 @@
   do iinterface = 1, ninterfaces_ext_mesh
     call wait_req(request_send_vector_ext_mesh(iinterface))
   enddo
-      
+
   endif
 
   end subroutine assemble_MPI_vector_ext_mesh_w
