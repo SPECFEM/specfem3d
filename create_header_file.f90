@@ -96,7 +96,7 @@
   print *
   print *,'edit file OUTPUT_FILES/values_from_mesher.h to see some statistics about the mesh'
   print *
-  print *,'on NEC SX-5 and Earth Simulator, make sure "loopcnt=" parameter'
+  print *,'on NEC SX, make sure "loopcnt=" parameter'
   print *,'in Makefile is greater than max vector length = ',NGLOB_AB
 
   print *

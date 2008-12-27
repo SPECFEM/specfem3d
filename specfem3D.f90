@@ -159,27 +159,15 @@
   character(len=100) topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
-  integer, dimension(NSPEC2DMAX_XMIN_XMAX_VAL) :: ibelm_xmin,ibelm_xmax
-  integer, dimension(NSPEC2DMAX_YMIN_YMAX_VAL) :: ibelm_ymin,ibelm_ymax
-  integer, dimension(NSPEC2D_BOTTOM_VAL) :: ibelm_bottom
   integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX_VAL) :: jacobian2D_xmin,jacobian2D_xmax
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX_VAL) :: jacobian2D_ymin,jacobian2D_ymax
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_BOTTOM_VAL) :: jacobian2D_bottom
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX_VAL) :: normal_xmin,normal_xmax
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX_VAL) :: normal_ymin,normal_ymax
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM_VAL) :: normal_bottom
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: normal_top
 
 ! Moho mesh
   integer,dimension(NSPEC2D_MOHO_BOUN) :: ibelm_moho_top, ibelm_moho_bot
   real(CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: normal_moho
-  integer :: nspec2D_moho, njunk
-  logical, dimension(NSPEC_BOUN) :: is_moho_top, is_moho_bot
+  integer :: nspec2D_moho
 
 ! buffers for send and receive between faces of the slices and the chunks
-  real(kind=CUSTOM_REAL), dimension(NPOIN2DMAX_XY_VAL) :: buffer_send_faces_scalar,buffer_received_faces_scalar
   real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY_VAL) :: buffer_send_faces_vector,buffer_received_faces_vector
 
 ! -----------------
@@ -193,12 +181,6 @@
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         kappastore,mustore
-
-! material properties in case of a fully anisotropic material
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
-        c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
-        c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
-        c36store,c44store,c45store,c46store,c55store,c56store,c66store
 
 ! flag for sediments
   logical, dimension(:), allocatable :: not_fully_in_bedrock
@@ -222,69 +204,28 @@
 ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
 
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
-  real(kind=CUSTOM_REAL) duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
-  real(kind=CUSTOM_REAL) sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz
+  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
-  real(kind=CUSTOM_REAL) fac1,fac2,fac3
-
-  real(kind=CUSTOM_REAL) lambdal,kappal,mul,lambdalplus2mul
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
-    tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
-
 ! time scheme
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
 ! ADJOINT
-  real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp, kappa_k, mu_k
+  real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl
-  real(kind=CUSTOM_REAL) dsxx,dsxy,dsxz,dsyy,dsyz,dszz
-  real(kind=CUSTOM_REAL) b_duxdxl,b_duxdyl,b_duxdzl,b_duydxl,b_duydyl,b_duydzl,b_duzdxl,b_duzdyl,b_duzdzl
-  real(kind=CUSTOM_REAL) b_duxdxl_plus_duydyl,b_duxdxl_plus_duzdzl,b_duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL) b_duxdyl_plus_duydxl,b_duzdxl_plus_duxdzl,b_duzdyl_plus_duydzl
-  real(kind=CUSTOM_REAL) b_dsxx,b_dsxy,b_dsxz,b_dsyy,b_dsyz,b_dszz
-  real(kind=CUSTOM_REAL) b_sigma_xx,b_sigma_yy,b_sigma_zz,b_sigma_xy,b_sigma_xz,b_sigma_yz
-  real(kind=CUSTOM_REAL) b_tempx1l,b_tempx2l,b_tempx3l
-  real(kind=CUSTOM_REAL) b_tempy1l,b_tempy2l,b_tempy3l
-  real(kind=CUSTOM_REAL) b_tempz1l,b_tempz2l,b_tempz3l
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
-    b_tempx1,b_tempx2,b_tempx3,b_tempy1,b_tempy2,b_tempy3,b_tempz1,b_tempz2,b_tempz3
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: absorb_xmin, absorb_xmax, &
-    absorb_ymin, absorb_ymax, absorb_zmin ! for absorbing b.c.
-  integer reclen_xmin, reclen_xmax, reclen_ymin, reclen_ymax, reclen_zmin, reclen1, reclen2
   real(kind=CUSTOM_REAL) b_deltat, b_deltatover2, b_deltatsqover2
 ! ADJOINT
 
-! for attenuation
-  real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
-  real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
-    epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) epsilon_trace_over_3
-
-! ADJOINT
-  real(kind=CUSTOM_REAL) b_R_xx_val,b_R_yy_val
-  real(kind=CUSTOM_REAL) b_alphaval_loc,b_betaval_loc,b_gammaval_loc,b_Sn,b_Snp1
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_epsilondev_xx_loc, &
-    b_epsilondev_yy_loc, b_epsilondev_xy_loc, b_epsilondev_xz_loc, b_epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) b_epsilon_trace_over_3
-! ADJOINT
-
   integer l
-  integer i_SLS
-  real(kind=CUSTOM_REAL) one_minus_sum_beta_use,minus_sum_beta,vs_val,Q_mu
-  integer iselected,iattenuation_sediments,int_Q_mu
+  real(kind=CUSTOM_REAL) vs_val,Q_mu
+  integer iattenuation_sediments,int_Q_mu
 
 ! Moho kernel
   integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
@@ -298,7 +239,6 @@
   integer it,isource
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
   integer yr,jda,ho,mi
-  real(kind=CUSTOM_REAL) stf_used
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
   double precision, dimension(:,:,:), allocatable :: nu_source
@@ -313,7 +253,7 @@
   double precision, dimension(:), allocatable :: t_cmt,hdur,hdur_gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
-  double precision :: t0,f0
+  double precision :: t0
 
 ! receiver information
   character(len=150) rec_filename,filtered_rec_filename,dummystring
@@ -365,14 +305,13 @@
 
 ! for addressing of the slices
   integer, dimension(0:NPROC_XI_VAL-1,0:NPROC_ETA_VAL) :: addressing
-  integer, dimension(0:NPROC_VAL-1) :: iproc_xi_slice,iproc_eta_slice
 
 ! proc numbers for MPI
   integer myrank,sizeprocs
 
   integer npoin2D_xi,npoin2D_eta
 
-  integer iproc_xi,iproc_eta,iproc,iproc_read
+  integer iproc_xi,iproc_eta
 
 ! maximum of the norm of the displacement
   real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all
@@ -422,9 +361,7 @@
 
 ! Stacey conditions put back
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,ispec2D
-  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX_VAL) :: nimin,nimax,nkmin_eta
-  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX_VAL) :: njmin,njmax,nkmin_xi
-  real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,weight
+  real(kind=CUSTOM_REAL) nx,ny,nz
 
 ! to save movie frames
   integer ipoin, nmovie_points, iloc, iorderi(NGNOD2D), iorderj(NGNOD2D)
@@ -703,36 +640,10 @@
       enddo
     enddo
 
-  else
-
-! read arrays created by the mesher
-  call read_arrays_solver(myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
-            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-            flag_sediments,not_fully_in_bedrock,rho_vp,rho_vs,ANISOTROPY, &
-            c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
-            c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
-            c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
-            kappastore,mustore,ibool,idoubling,rmass,rmass_ocean_load,LOCAL_PATH,OCEANS)
-
-! check that the number of points in this slice is correct
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
-      call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal NGLOB')
-
-! read 2-D addressing for summation between slices with MPI
-  call read_arrays_buffers_solver(myrank,iboolleft_xi, &
-     iboolright_xi,iboolleft_eta,iboolright_eta, &
-     npoin2D_xi,npoin2D_eta, &
-     NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,LOCAL_PATH)
-
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   if(myrank == 0) then
     write(IMAIN,*) '******************************************'
-    write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
-    write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
-    write(IMAIN,*)
-    write(IMAIN,*) 'There are ',NPROC_XI,' slices along xi'
-    write(IMAIN,*) 'There are ',NPROC_ETA,' slices along eta'
     write(IMAIN,*) 'There is a total of ',NPROC,' slices'
     write(IMAIN,*) '******************************************'
     write(IMAIN,*)
@@ -1889,9 +1800,8 @@
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
 
     call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
-         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-         ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+         buffer_recv_vector_ext_mesh,ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
          request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
   if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &

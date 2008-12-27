@@ -170,6 +170,7 @@ LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
 @COND_PYRE_FALSE@	create_movie_AVS_DX \
 @COND_PYRE_FALSE@	create_movie_GMT \
 @COND_PYRE_FALSE@	meshfem3D \
+@COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 # default targets for the Pyrized version

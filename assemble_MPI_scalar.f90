@@ -229,7 +229,6 @@
   integer, dimension(ninterfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
 
   integer ipoin,iinterface
-  integer sender,receiver
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -311,7 +310,6 @@
   integer, dimension(ninterfaces_ext_mesh) :: request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
 
   integer ipoin,iinterface
-  integer sender,receiver
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

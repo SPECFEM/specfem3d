@@ -229,7 +229,6 @@
   integer, dimension(ninterfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   integer ipoin,iinterface
-  integer sender,receiver
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -312,7 +311,6 @@
   integer, dimension(ninterfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   integer ipoin,iinterface
-  integer sender,receiver
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -350,11 +348,9 @@
 
 
   subroutine assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,array_val, &
-            buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-            ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-            request_send_vector_ext_mesh,request_recv_vector_ext_mesh &
-            )
+            buffer_recv_vector_ext_mesh,ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+            request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
   implicit none
 
@@ -370,15 +366,14 @@
   integer :: NGLOB_AB
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh) :: &
-       buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
+       buffer_recv_vector_ext_mesh
 
   integer :: ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh
-  integer, dimension(ninterfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
+  integer, dimension(ninterfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   integer, dimension(ninterfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   integer ipoin,iinterface
-  integer sender,receiver
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
