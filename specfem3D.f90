@@ -288,7 +288,7 @@
   double precision, dimension(NGLLZ) :: zigll,wzgll
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
@@ -480,6 +480,10 @@
 ! and decomposed with METIS or SCOTCH)
   if (.not. USE_EXTERNAL_MESH) stop 'SPECFEM3D_SESAME is for external meshes only'
 
+! check that optimized routines from Deville et al. (2002) can be used
+  if(NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
+    stop 'optimized routines from Deville et al. (2002) such as mxm_m1_m2_5points can only be used if NGLL = 5'
+
 ! info about external mesh simulation
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
   NPROC = sizeprocs
@@ -654,6 +658,14 @@
          hprime_xx,hprime_yy,hprime_zz, &
          hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
+
+! define transpose of derivation matrix
+  do j = 1,NGLLY
+    do i = 1,NGLLX
+      hprime_xxT(j,i) = hprime_xx(i,j)
+      hprimewgll_xxT(j,i) = hprimewgll_xx(i,j)
+    enddo
+  enddo
 
 ! allocate 1-D Lagrange interpolators and derivatives
   allocate(hxir(NGLLX))
@@ -1784,7 +1796,7 @@
 
 ! assemble all the contributions between slices using MPI
     call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
 
@@ -1795,7 +1807,7 @@
          request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
 
