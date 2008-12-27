@@ -487,7 +487,7 @@
 
 !!!! NL NL REGOLITH : regolith layer for asteroid
 !!$  double precision, external :: materials_ext_mesh
-!!$  logical, dimension(:), allocatable :: ispec_is_regolith  
+!!$  logical, dimension(:), allocatable :: ispec_is_regolith
 !!!! NL NL REGOLITH
 
 ! ************** PROGRAM STARTS HERE **************
@@ -710,7 +710,7 @@
     close(27)
 
 ! locate inner and outer elements
-    allocate(ispec_is_inner_ext_mesh(NSPEC_AB))  
+    allocate(ispec_is_inner_ext_mesh(NSPEC_AB))
     allocate(iglob_is_inner_ext_mesh(NGLOB_AB))
     ispec_is_inner_ext_mesh(:) = .true.
     iglob_is_inner_ext_mesh(:) = .true.
@@ -728,11 +728,11 @@
             ispec_is_inner_ext_mesh(ispec) = iglob_is_inner_ext_mesh(iglob) .and. ispec_is_inner_ext_mesh(ispec)
           enddo
         enddo
-      enddo 
+      enddo
     enddo
 
   else
-    
+
 ! read arrays created by the mesher
   call read_arrays_solver(myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
@@ -939,7 +939,7 @@
       endif
 
   endif
-  
+
   endif ! end of (.not. USE_EXTERNAL_MESH)
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
@@ -962,9 +962,9 @@
     enddo
     enddo
     enddo
-    
-  enddo 
- 
+
+  enddo
+
   allocate(buffer_send_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
   allocate(buffer_recv_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
 
@@ -974,7 +974,7 @@
        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh &
        )
-  
+
   do ispec = 1, NSPEC_AB
     do k = 1, NGLLZ
     do j = 1, NGLLY
@@ -987,7 +987,7 @@
         iglob = ibool(i,j,k,ispec)
         if (valence_external_mesh(iglob) == 1) then
           ispec_is_surface_external_mesh(ispec) = .true.
-        
+
           if (k == 1 .or. k == NGLLZ) then
             do jj = 1, NGLLY
             do ii = 1, NGLLX
@@ -1015,7 +1015,7 @@
     enddo
     enddo
     enddo
-   
+
   enddo
 
   if (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
@@ -1058,7 +1058,7 @@
       allocate(store_val_ux_external_mesh(NGLLX*NGLLY*1))
       allocate(store_val_uy_external_mesh(NGLLX*NGLLY*1))
       allocate(store_val_uz_external_mesh(NGLLX*NGLLY*1))
-      else 
+      else
       allocate(faces_surface_external_mesh(NGNOD2D,1))
       allocate(store_val_x_external_mesh(NGNOD2D*1))
       allocate(store_val_y_external_mesh(NGNOD2D*1))
@@ -1105,7 +1105,7 @@
     endif
     endif
     call gather_all_i(nfaces_surface_external_mesh,1,nfaces_perproc_surface_ext_mesh,1,NPROC)
-    
+
     faces_surface_offset_ext_mesh(1) = 0
     do i = 2, NPROC
       faces_surface_offset_ext_mesh(i) = sum(nfaces_perproc_surface_ext_mesh(1:i-1))
@@ -1227,14 +1227,14 @@
               faces_surface_external_mesh(4,nfaces_surface_external_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
               endif
         endif
-        
+
       endif
     enddo
 
     if (myrank == 0) then
       print *, nfaces_perproc_surface_ext_mesh
       print *, nfaces_surface_glob_ext_mesh
- 
+
     endif
 
   endif
@@ -1267,7 +1267,7 @@
 !!$                  4.d0*materials_ext_mesh(3,2)*materials_ext_mesh(3,2)/3.d0)
 !!$             mustore(i,j,k,ispec) = materials_ext_mesh(1,2)*materials_ext_mesh(3,2)*&
 !!$                  materials_ext_mesh(3,2)
-!!$             
+!!$
 !!$          enddo
 !!$        enddo
 !!$      enddo
@@ -1312,7 +1312,7 @@
 !!$  enddo
 !!$  enddo
 
-  
+
 !!!! NL NL REGOLITH
 
   endif
@@ -1991,7 +1991,6 @@
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
 ! *********************************************************
 
-
   do it = 1,NSTEP
 
 ! compute the maximum of the norm of the displacement
@@ -2053,18 +2052,14 @@
   endif
 
 ! update displacement using finite difference time scheme
-  do i=1,NGLOB_AB
-    displ(:,i) = displ(:,i) + deltat*veloc(:,i) + deltatsqover2*accel(:,i)
-    veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
-    accel(:,i) = 0._CUSTOM_REAL
-  enddo
+  displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
+  veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+  accel(:,:) = 0._CUSTOM_REAL
 
   if (SIMULATION_TYPE == 3) then
-    do i=1,NGLOB_AB
-      b_displ(:,i) = b_displ(:,i) + b_deltat*b_veloc(:,i) + b_deltatsqover2*b_accel(:,i)
-      b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
-      b_accel(:,i) = 0._CUSTOM_REAL
-    enddo
+    b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
+    b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+    b_accel(:,:) = 0._CUSTOM_REAL
   endif
 
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
@@ -2377,6 +2372,7 @@
        c55 = c55store(i,j,k,ispec)
        c56 = c56store(i,j,k,ispec)
        c66 = c66store(i,j,k,ispec)
+
        !if(ATTENUATION_VAL.and. not_fully_in_bedrock(ispec)) then
        !   mul = c44
        !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
@@ -2987,14 +2983,14 @@
            ispec_selected_source(isource))
 
       f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-      t0 = 1.2d0/f0 
+      t0 = 1.2d0/f0
 
       if (it == 1 .and. myrank == 0) then
         print *,'using a source of dominant frequency ',f0
         print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
         print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
       endif
-      
+
 ! we use nu_source(:,3) here because we want a source normal to the surface.
 ! This is the expression of a Ricker
       accel(:,iglob) = accel(:,iglob) + &
@@ -3099,7 +3095,7 @@
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt &
-         )    
+         )
 
     call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,accel, &
          buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
@@ -3112,7 +3108,7 @@
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt &
-         )    
+         )
 
     call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
          buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
@@ -3132,18 +3128,14 @@
           NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
 ! multiply by the inverse of the mass matrix
-  do i=1,NGLOB_AB
-    accel(1,i) = accel(1,i)*rmass(i)
-    accel(2,i) = accel(2,i)*rmass(i)
-    accel(3,i) = accel(3,i)*rmass(i)
-  enddo
+  accel(1,:) = accel(1,:)*rmass(:)
+  accel(2,:) = accel(2,:)*rmass(:)
+  accel(3,:) = accel(3,:)*rmass(:)
 
   if (SIMULATION_TYPE == 3) then
-    do i=1,NGLOB_AB
-      b_accel(1,i) = b_accel(1,i)*rmass(i)
-      b_accel(2,i) = b_accel(2,i)*rmass(i)
-      b_accel(3,i) = b_accel(3,i)*rmass(i)
-    enddo
+    b_accel(1,:) = b_accel(1,:)*rmass(:)
+    b_accel(2,:) = b_accel(2,:)*rmass(:)
+    b_accel(3,:) = b_accel(3,:)*rmass(:)
   endif
 
   if(OCEANS) then
@@ -3206,14 +3198,9 @@
     enddo
   endif
 
-  do i=1,NGLOB_AB
-    veloc(:,i) = veloc(:,i) + deltatover2*accel(:,i)
-  enddo
-  if (SIMULATION_TYPE == 3) then
-    do i=1,NGLOB_AB
-      b_veloc(:,i) = b_veloc(:,i) + b_deltatover2*b_accel(:,i)
-    enddo
-  endif
+  veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+
+  if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
 ! write the seismograms with time shift
   if (nrec_local > 0) then
@@ -3236,7 +3223,7 @@
       axd = dble(accel(1,iglob))
       ayd = dble(accel(2,iglob))
       azd = dble(accel(3,iglob))
-     
+
     else
 
     dxd = ZERO
@@ -3250,6 +3237,7 @@
     axd = ZERO
     ayd = ZERO
     azd = ZERO
+
     if (SIMULATION_TYPE == 1)  then
 
       do k = 1,NGLLZ
@@ -3280,8 +3268,6 @@
           enddo
         enddo
       enddo
-
-      
 
     else if (SIMULATION_TYPE == 2) then
 
@@ -3367,10 +3353,7 @@
         seismograms_a(:,irec_local,it) = (nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd)
       endif
 
-      if (SIMULATION_TYPE == 2) then
-        seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
-      endif
-
+      if (SIMULATION_TYPE == 2) seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
 
   enddo
 
@@ -3524,62 +3507,62 @@
 
       enddo
     else
-      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = &
            max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1), &
            sqrt(displ(1,faces_surface_external_mesh(1,ispec))**2 + &
            displ(2,faces_surface_external_mesh(1,ispec))**2 + &
            displ(3,faces_surface_external_mesh(1,ispec))**2))
-      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = &
            max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+2), &
            sqrt(displ(1,faces_surface_external_mesh(2,ispec))**2 + &
            displ(2,faces_surface_external_mesh(2,ispec))**2 + &
            displ(3,faces_surface_external_mesh(2,ispec))**2))
-      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+3) = & 
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+3) = &
            max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+3), &
            sqrt(displ(1,faces_surface_external_mesh(3,ispec))**2 + &
            displ(2,faces_surface_external_mesh(3,ispec))**2 + &
            displ(3,faces_surface_external_mesh(3,ispec))**2))
-      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+4) = & 
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+4) = &
            max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+4), &
            sqrt(displ(1,faces_surface_external_mesh(4,ispec))**2 + &
            displ(2,faces_surface_external_mesh(4,ispec))**2 + &
            displ(3,faces_surface_external_mesh(4,ispec))**2))
-     store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+     store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = &
            max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1), &
            sqrt(veloc(1,faces_surface_external_mesh(1,ispec))**2 + &
            veloc(2,faces_surface_external_mesh(1,ispec))**2 + &
            veloc(3,faces_surface_external_mesh(1,ispec))**2))
-      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = &
            max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+2), &
            sqrt(veloc(1,faces_surface_external_mesh(2,ispec))**2 + &
            veloc(2,faces_surface_external_mesh(2,ispec))**2 + &
            veloc(3,faces_surface_external_mesh(2,ispec))**2))
-      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+3) = & 
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+3) = &
            max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+3), &
            sqrt(veloc(1,faces_surface_external_mesh(3,ispec))**2 + &
            veloc(2,faces_surface_external_mesh(3,ispec))**2 + &
            veloc(3,faces_surface_external_mesh(3,ispec))**2))
-      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+4) = & 
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+4) = &
            max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+4), &
            sqrt(veloc(1,faces_surface_external_mesh(4,ispec))**2 + &
            veloc(2,faces_surface_external_mesh(4,ispec))**2 + &
            veloc(3,faces_surface_external_mesh(4,ispec))**2))
-     store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+     store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = &
            max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1), &
            sqrt(accel(1,faces_surface_external_mesh(1,ispec))**2 + &
            accel(2,faces_surface_external_mesh(1,ispec))**2 + &
            accel(3,faces_surface_external_mesh(1,ispec))**2))
-      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = & 
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = &
            max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+2), &
            sqrt(accel(1,faces_surface_external_mesh(2,ispec))**2 + &
            accel(2,faces_surface_external_mesh(2,ispec))**2 + &
            accel(3,faces_surface_external_mesh(2,ispec))**2))
-      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3) = & 
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3) = &
            max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3), &
            sqrt(accel(1,faces_surface_external_mesh(3,ispec))**2 + &
            accel(2,faces_surface_external_mesh(3,ispec))**2 + &
            accel(3,faces_surface_external_mesh(3,ispec))**2))
-      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4) = & 
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4) = &
            max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4), &
            sqrt(accel(1,faces_surface_external_mesh(4,ispec))**2 + &
            accel(2,faces_surface_external_mesh(4,ispec))**2 + &
@@ -3637,7 +3620,7 @@
       write(IOUT) store_val_uy_all_external_mesh
       write(IOUT) store_val_uz_all_external_mesh
       close(IOUT)
-    endif      
+    endif
     endif
 
  endif
@@ -3678,10 +3661,10 @@
       store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = veloc(3,faces_surface_external_mesh(1,ispec))
       store_val_uz_external_mesh(NGNOD2D*(ispec-1)+2) = veloc(3,faces_surface_external_mesh(2,ispec))
       store_val_uz_external_mesh(NGNOD2D*(ispec-1)+3) = veloc(3,faces_surface_external_mesh(3,ispec))
-      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4) = veloc(3,faces_surface_external_mesh(4,ispec))      
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+4) = veloc(3,faces_surface_external_mesh(4,ispec))
       endif
     enddo
-    
+
     if (USE_HIGHRES_FOR_MOVIES) then
     call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
@@ -3785,7 +3768,7 @@
        enddo
      enddo ! ispec_top
    endif
-   
+
     ispec = nmovie_points
 
     call gather_all_cr(store_val_x,ispec,store_val_x_all,ispec,NPROC)
@@ -4159,3 +4142,4 @@
 !!$
 !!$  end function materials_ext_mesh
 !!!! NL NL REGOLITH
+
