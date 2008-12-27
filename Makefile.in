@@ -487,7 +487,7 @@ $O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
 
 $O/compute_forces.o: constants.h compute_forces.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_forces.o compute_forces.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces.o compute_forces.f90
 
 $O/combine_vol_data.o: constants.h combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90

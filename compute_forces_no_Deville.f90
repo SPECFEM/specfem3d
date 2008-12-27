@@ -24,7 +24,7 @@
 !=====================================================================
 
 subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-     hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+     hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
      kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
 
@@ -45,13 +45,12 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
+  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
-    newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
 
 ! communication overlap
   logical, dimension(NSPEC_AB) :: ispec_is_inner
@@ -69,7 +68,7 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   integer ispec,iglob
-  integer i,j,k
+  integer i,j,k,l
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
@@ -79,7 +78,12 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
 
   real(kind=CUSTOM_REAL) sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz
 
+  real(kind=CUSTOM_REAL) hp1,hp2,hp3
   real(kind=CUSTOM_REAL) fac1,fac2,fac3
+
+  real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
+  real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
+  real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
 
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
@@ -95,29 +99,42 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            dummyx_loc(i,j,k) = displ(1,iglob)
-            dummyy_loc(i,j,k) = displ(2,iglob)
-            dummyz_loc(i,j,k) = displ(3,iglob)
-        enddo
-      enddo
-    enddo
 
-!! DK DK subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! DK DK for incompressible fluid flow, Cambridge University Press (2002),
-!! DK DK pages 386 and 389 and Figure 8.3.1
-  call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
+          tempx1l = 0.
+          tempx2l = 0.
+          tempx3l = 0.
 
-  do k = 1,NGLLX
-    call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
-           hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
-  enddo
+          tempy1l = 0.
+          tempy2l = 0.
+          tempy3l = 0.
 
-  call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,hprime_xxT,tempx3,tempy3,tempz3)
+          tempz1l = 0.
+          tempz2l = 0.
+          tempz3l = 0.
 
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+          do l=1,NGLLX
+            hp1 = hprime_xx(i,l)
+            iglob = ibool(l,j,k,ispec)
+            tempx1l = tempx1l + displ(1,iglob)*hp1
+            tempy1l = tempy1l + displ(2,iglob)*hp1
+            tempz1l = tempz1l + displ(3,iglob)*hp1
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+            hp2 = hprime_yy(j,l)
+            iglob = ibool(i,l,k,ispec)
+            tempx2l = tempx2l + displ(1,iglob)*hp2
+            tempy2l = tempy2l + displ(2,iglob)*hp2
+            tempz2l = tempz2l + displ(3,iglob)*hp2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+            hp3 = hprime_zz(k,l)
+            iglob = ibool(i,j,l,ispec)
+            tempx3l = tempx3l + displ(1,iglob)*hp3
+            tempy3l = tempy3l + displ(2,iglob)*hp3
+            tempz3l = tempz3l + displ(3,iglob)*hp3
+          enddo
 
 !         get derivatives of ux, uy and uz with respect to x, y and z
           xixl = xix(i,j,k,ispec)
@@ -131,17 +148,17 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
           gammazl = gammaz(i,j,k,ispec)
           jacobianl = jacobian(i,j,k,ispec)
 
-          duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
-          duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
-          duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
+          duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+          duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+          duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-          duydxl = xixl*tempy1(i,j,k) + etaxl*tempy2(i,j,k) + gammaxl*tempy3(i,j,k)
-          duydyl = xiyl*tempy1(i,j,k) + etayl*tempy2(i,j,k) + gammayl*tempy3(i,j,k)
-          duydzl = xizl*tempy1(i,j,k) + etazl*tempy2(i,j,k) + gammazl*tempy3(i,j,k)
+          duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+          duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+          duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
 
-          duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
-          duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
-          duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
+          duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+          duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+          duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
 ! precompute some sums to save CPU time
           duxdxl_plus_duydyl = duxdxl + duydyl
@@ -183,31 +200,54 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
       enddo
     enddo
 
-!! DK DK subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! DK DK for incompressible fluid flow, Cambridge University Press (2002),
-!! DK DK pages 386 and 389 and Figure 8.3.1
-  call mxm_m1_m2_5points(hprimewgll_xxT,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1)
-
-  do k = 1,NGLLX
-    call mxm_m1_m1_5points(tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k), &
-          hprimewgll_xx,newtempx2(1,1,k),newtempy2(1,1,k),newtempz2(1,1,k))
-  enddo
-
-  call mxm_m2_m1_5points(tempx3,tempy3,tempz3,hprimewgll_xx,newtempx3,newtempy3,newtempz3)
-
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
+
+          tempx1l = 0.
+          tempy1l = 0.
+          tempz1l = 0.
+
+          tempx2l = 0.
+          tempy2l = 0.
+          tempz2l = 0.
+
+          tempx3l = 0.
+          tempy3l = 0.
+          tempz3l = 0.
+
+          do l=1,NGLLX
+            fac1 = hprimewgll_xx(l,i)
+            tempx1l = tempx1l + tempx1(l,j,k)*fac1
+            tempy1l = tempy1l + tempy1(l,j,k)*fac1
+            tempz1l = tempz1l + tempz1(l,j,k)*fac1
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+            fac2 = hprimewgll_yy(l,j)
+            tempx2l = tempx2l + tempx2(i,l,k)*fac2
+            tempy2l = tempy2l + tempy2(i,l,k)*fac2
+            tempz2l = tempz2l + tempz2(i,l,k)*fac2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+            fac3 = hprimewgll_zz(l,k)
+            tempx3l = tempx3l + tempx3(i,j,l)*fac3
+            tempy3l = tempy3l + tempy3(i,j,l)*fac3
+            tempz3l = tempz3l + tempz3(i,j,l)*fac3
+          enddo
 
           fac1 = wgllwgll_yz(j,k)
           fac2 = wgllwgll_xz(i,k)
           fac3 = wgllwgll_xy(i,j)
 
-! sum contributions from each element to the global mesh using indirect addressing
+! sum contributions from each element to the global mesh
+
           iglob = ibool(i,j,k,ispec)
-          accel(1,iglob) = accel(1,iglob) - (fac1*newtempx1(i,j,k) + fac2*newtempx2(i,j,k) + fac3*newtempx3(i,j,k))
-          accel(2,iglob) = accel(2,iglob) - (fac1*newtempy1(i,j,k) + fac2*newtempy2(i,j,k) + fac3*newtempy3(i,j,k))
-          accel(3,iglob) = accel(3,iglob) - (fac1*newtempz1(i,j,k) + fac2*newtempz2(i,j,k) + fac3*newtempz3(i,j,k))
+
+          accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
+          accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
+          accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
 
         enddo
       enddo
@@ -257,127 +297,4 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
   enddo
 
 end subroutine compute_forces
-
-
-!! DK DK subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! DK DK for incompressible fluid flow, Cambridge University Press (2002),
-!! DK DK pages 386 and 389 and Figure 8.3.1
-
-  subroutine mxm_m1_m2_5points(A,B1,B2,B3,C1,C2,C3)
-
-  implicit none
-
-  include "constants.h"
-
-  real(kind=CUSTOM_REAL), dimension(m1,NGLLX) :: A
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1,B2,B3
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1,C2,C3
-
-  integer :: i,j
-
-  do j=1,m2
-    do i=1,m1
-
-      C1(i,j) = A(i,1)*B1(1,j) + &
-                A(i,2)*B1(2,j) + &
-                A(i,3)*B1(3,j) + &
-                A(i,4)*B1(4,j) + &
-                A(i,5)*B1(5,j)
-
-      C2(i,j) = A(i,1)*B2(1,j) + &
-                A(i,2)*B2(2,j) + &
-                A(i,3)*B2(3,j) + &
-                A(i,4)*B2(4,j) + &
-                A(i,5)*B2(5,j)
-
-      C3(i,j) = A(i,1)*B3(1,j) + &
-                A(i,2)*B3(2,j) + &
-                A(i,3)*B3(3,j) + &
-                A(i,4)*B3(4,j) + &
-                A(i,5)*B3(5,j)
-
-    enddo
-  enddo
-
-  end subroutine mxm_m1_m2_5points
-
-!---------
-
-  subroutine mxm_m1_m1_5points(A1,A2,A3,B,C1,C2,C3)
-
-  implicit none
-
-  include "constants.h"
-
-  real(kind=CUSTOM_REAL), dimension(m1,NGLLX) :: A1,A2,A3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m1) :: B
-  real(kind=CUSTOM_REAL), dimension(m1,m1) :: C1,C2,C3
-
-  integer :: i,j
-
-  do j=1,m1
-    do i=1,m1
-
-      C1(i,j) = A1(i,1)*B(1,j) + &
-                A1(i,2)*B(2,j) + &
-                A1(i,3)*B(3,j) + &
-                A1(i,4)*B(4,j) + &
-                A1(i,5)*B(5,j)
-
-      C2(i,j) = A2(i,1)*B(1,j) + &
-                A2(i,2)*B(2,j) + &
-                A2(i,3)*B(3,j) + &
-                A2(i,4)*B(4,j) + &
-                A2(i,5)*B(5,j)
-
-      C3(i,j) = A3(i,1)*B(1,j) + &
-                A3(i,2)*B(2,j) + &
-                A3(i,3)*B(3,j) + &
-                A3(i,4)*B(4,j) + &
-                A3(i,5)*B(5,j)
-
-    enddo
-  enddo
-
-  end subroutine mxm_m1_m1_5points
-
-!---------
-
-  subroutine mxm_m2_m1_5points(A1,A2,A3,B,C1,C2,C3)
-
-  implicit none
-
-  include "constants.h"
-
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: A1,A2,A3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m1) :: B
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: C1,C2,C3
-
-  integer :: i,j
-
-  do j=1,m1
-    do i=1,m2
-
-      C1(i,j) = A1(i,1)*B(1,j) + &
-                A1(i,2)*B(2,j) + &
-                A1(i,3)*B(3,j) + &
-                A1(i,4)*B(4,j) + &
-                A1(i,5)*B(5,j)
-
-      C2(i,j) = A2(i,1)*B(1,j) + &
-                A2(i,2)*B(2,j) + &
-                A2(i,3)*B(3,j) + &
-                A2(i,4)*B(4,j) + &
-                A2(i,5)*B(5,j)
-
-      C3(i,j) = A3(i,1)*B(1,j) + &
-                A3(i,2)*B(2,j) + &
-                A3(i,3)*B(3,j) + &
-                A3(i,4)*B(4,j) + &
-                A3(i,5)*B(5,j)
-
-    enddo
-  enddo
-
-  end subroutine mxm_m2_m1_5points
 
