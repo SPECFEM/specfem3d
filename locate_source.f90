@@ -211,7 +211,7 @@
 !     Vertical
       nu_source(3,1,isource) = 0.d0
       nu_source(3,2,isource) = 0.d0
-      nu_source(3,3,isource) = 1.d0  
+      nu_source(3,3,isource) = 1.d0
 
   if (.not. USE_EXTERNAL_MESH) then
 
@@ -261,7 +261,7 @@
   if(myrank == 0) write(IOVTK,*) x_target_source,y_target_source,z_target_source
 
   else
-   
+
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
     z_target_source = depth(isource)
@@ -306,7 +306,7 @@
           do i = imin,imax
 
             iglob = ibool(i,j,k,ispec)
-            
+
             if (USE_EXTERNAL_MESH .and. (.not. SOURCES_CAN_BE_BURIED_EXT_MESH)) then
               if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
                 cycle
@@ -462,7 +462,7 @@
 ! normalize vector w
     w_vector(:) = w_vector(:)/sqrt(w_vector(1)**2+w_vector(2)**2+w_vector(3)**2)
 
-! build the two other vectors for a disourcet base : we normalize u, and v=w^u    
+! build the two other vectors for a direct base: we normalize u, and v=w^u
     u_vector(:) = u_vector(:)/sqrt(u_vector(1)**2+u_vector(2)**2+u_vector(3)**2)
     v_vector(1) = w_vector(2)*u_vector(3) - w_vector(3)*u_vector(2)
     v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)

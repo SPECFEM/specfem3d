@@ -446,9 +446,6 @@
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
 
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ier
 
   call MPI_ISSEND(sendbuf(1),sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
@@ -472,9 +469,6 @@
 
   integer recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
-
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
 
   integer ier
 
@@ -500,9 +494,6 @@
   integer sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ier
 
   call MPI_ISSEND(sendbuf(1),sendcount,MPI_INTEGER,dest,sendtag, &
@@ -526,9 +517,6 @@
 
   integer recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
-
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
 
   integer ier
 
@@ -555,5 +543,5 @@
   integer :: ier
 
   call mpi_wait(req,req_mpi_status,ier)
-  
+
   end subroutine wait_req

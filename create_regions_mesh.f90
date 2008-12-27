@@ -1158,16 +1158,12 @@ enddo
 !
 
   subroutine create_regions_mesh_ext_mesh(ibool, &
-           xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,nspec, &
-           volume_local,area_local_bottom,area_local_top, &
-           NGLOB_AB,npointot, &
-           myrank,LOCAL_PATH, &
+           xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
            nnodes_ext_mesh,nelmnts_ext_mesh, &
            nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh, &
            ninterface_ext_mesh,max_interface_size_ext_mesh, &
            my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
-           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh &
-           )
+           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh)
 
 ! create the different regions of the mesh
 
@@ -1178,19 +1174,12 @@ enddo
 ! number of spectral elements in each block
   integer nspec
 
-  integer npx,npy
   integer npointot
 
   character(len=150) LOCAL_PATH
 
 ! arrays with the mesh
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-
-  double precision xstore_local(NGLLX,NGLLY,NGLLZ)
-  double precision ystore_local(NGLLX,NGLLY,NGLLZ)
-  double precision zstore_local(NGLLX,NGLLY,NGLLZ)
-
-  double precision xmesh,ymesh,zmesh
 
   integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
@@ -1207,7 +1196,7 @@ enddo
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
   integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh
 
-! for MPI buffers  
+! for MPI buffers
   integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
@@ -1243,15 +1232,13 @@ enddo
 
 ! check area and volume of the final mesh
   double precision weight
-  double precision area_local_bottom,area_local_top
-  double precision volume_local
 
 ! variables for creating array ibool (some arrays also used for AVS or DX files)
   integer, dimension(:), allocatable :: iglob,locval
   logical, dimension(:), allocatable :: ifseg
   double precision, dimension(:), allocatable :: xp,yp,zp
 
-  integer nglob,NGLOB_AB
+  integer nglob
   integer ieoff,ilocnum
   integer ier
   integer iinterface
@@ -1264,14 +1251,7 @@ enddo
 ! name of the database file
   character(len=150) prname
 
-  integer i,j,k,ia,ispec,iglobnum,itype_element
-  integer iproc_xi,iproc_eta
-
-  double precision rho,vp,vs
-  double precision c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-
-! for the harvard 3D salton sea model
-  double precision :: umesh, vmesh, wmesh, vp_st, vs_st, rho_st
+  integer i,j,k,ia,ispec,iglobnum
 
 ! mask to sort ibool
   integer, dimension(:), allocatable :: mask_ibool
@@ -1354,7 +1334,7 @@ enddo
           gammaxstore,gammaystore,gammazstore,jacobianstore, &
           xstore,ystore,zstore, &
           xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
-     
+
   enddo
 
 ! kappastore and mustore
@@ -1431,7 +1411,7 @@ enddo
   enddo
 
   deallocate(copy_ibool_ori,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'  
+  deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'
 
   allocate(xstore_dummy(nglob))
   allocate(ystore_dummy(nglob))
@@ -1446,7 +1426,7 @@ enddo
         enddo
      enddo
   enddo
-  
+
   do ispec = 1, nspec
      do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -1493,7 +1473,7 @@ enddo
       enddo
     enddo
   enddo
-  enddo  
+  enddo
 
   call prepare_assemble_MPI (nelmnts_ext_mesh,ibool, &
        elmnts_ext_mesh, ESIZE, &
@@ -1502,13 +1482,13 @@ enddo
        my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
        ibool_interfaces_ext_mesh, &
        nibool_interfaces_ext_mesh &
-       )  
+       )
 
 ! sort ibool comm buffers lexicographically
   allocate(nibool_interfaces_ext_mesh_true(ninterface_ext_mesh))
 
   do iinterface = 1, ninterface_ext_mesh
-     
+
     allocate(xp(nibool_interfaces_ext_mesh(iinterface)))
     allocate(yp(nibool_interfaces_ext_mesh(iinterface)))
     allocate(zp(nibool_interfaces_ext_mesh(iinterface)))
@@ -1519,19 +1499,19 @@ enddo
     allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
     allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
     allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))  
+    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
 
     do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
       xp(ilocnum) = xstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
       yp(ilocnum) = ystore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
       zp(ilocnum) = zstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
-    enddo     
+    enddo
 
     call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
          ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
          reorder_interface_ext_mesh,locval,ifseg,nibool_interfaces_ext_mesh_true(iinterface), &
-         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)    
-    
+         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)
+
     deallocate(xp)
     deallocate(yp)
     deallocate(zp)
@@ -1545,7 +1525,7 @@ enddo
     deallocate(work_ext_mesh)
 
   enddo
-  
+
 ! save the binary files
   call create_name_database(prname,myrank,LOCAL_PATH)
   open(unit=IOUT,file=prname(1:len_trim(prname))//'external_mesh.bin',status='unknown',action='write',form='unformatted')
@@ -1565,7 +1545,7 @@ enddo
   write(IOUT) jacobianstore
   write(IOUT) kappastore
   write(IOUT) mustore
-  
+
   write(IOUT) rmass
 
   write(IOUT) ibool
@@ -1594,7 +1574,7 @@ enddo
   double precision function materials_ext_mesh(i,j)
 
     implicit none
-    
+
     integer :: i,j
 
     select case (j)
@@ -1606,7 +1586,7 @@ enddo
             materials_ext_mesh = 3000.d0
           case (3)
             materials_ext_mesh = 1732.051d0
-          case default 
+          case default
             call stop_all()
           end select
       case (2)
@@ -1617,13 +1597,13 @@ enddo
             materials_ext_mesh = 900.d0
           case (3)
             materials_ext_mesh = 500.d0
-          case default 
+          case default
             call stop_all()
           end select
       case default
         call stop_all()
     end select
-       
+
   end function materials_ext_mesh
 
 !
@@ -1710,8 +1690,8 @@ subroutine prepare_assemble_MPI (nelmnts,ibool, &
 
      end do
      nibool_interfaces_asteroid(num_interface) = npoin_interface_asteroid
-   
-     
+
+
   end do
 
 end subroutine prepare_assemble_MPI
@@ -1730,7 +1710,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
   integer, dimension(ngnode), intent(in)  :: n
   integer, intent(in)  :: type, e1, e2, e3, e4
   integer, intent(out)  :: ixmin, ixmax, iymin, iymax, izmin, izmax
-  
+
   integer, dimension(4) :: en
   integer :: valence, i
 
@@ -1840,7 +1820,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = 1
               izmax = NGLLZ
            end if
-           
+
         end if
         if ( e1 == n(3) ) then
            ixmin = NGLLX
@@ -1962,14 +1942,14 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               izmax = NGLLZ
            end if
         end if
-        
+
      else
         if (type == 4) then
            en(1) = e1
            en(2) = e2
            en(3) = e3
            en(4) = e4
-           
+
            valence = 0
            do i = 1, 4
               if ( en(i) == n(1)) then
@@ -1993,7 +1973,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = NGLLY
               izmax = 1
            endif
-           
+
            valence = 0
            do i = 1, 4
               if ( en(i) == n(1)) then
@@ -2017,7 +1997,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = 1
               izmax = NGLLZ
            endif
-           
+
            valence = 0
            do i = 1, 4
               if ( en(i) == n(2)) then
@@ -2041,7 +2021,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = NGLLZ
               izmax = NGLLZ
            endif
-           
+
            valence = 0
            do i = 1, 4
               if ( en(i) == n(3)) then
@@ -2065,7 +2045,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = NGLLY
               izmax = NGLLZ
            endif
-           
+
            valence = 0
            do i = 1, 4
               if ( en(i) == n(1)) then
@@ -2089,7 +2069,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = NGLLY
               izmax = NGLLZ
            endif
-           
+
            valence = 0
            do i = 1, 4
               if ( en(i) == n(5)) then
@@ -2113,11 +2093,11 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
               iymax = NGLLY
               izmax = NGLLZ
            endif
-           
+
         else
            stop 'ERROR get_edge'
         endif
-        
+
      end if
   end if
 

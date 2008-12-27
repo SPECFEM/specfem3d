@@ -240,8 +240,6 @@
   integer, dimension(:), allocatable  :: my_nelmnts_neighbours_ext_mesh
   integer, dimension(:,:,:), allocatable  :: my_interfaces_ext_mesh
   integer, dimension(:,:), allocatable  :: ibool_interfaces_ext_mesh
-  integer, dimension(:,:), allocatable  :: ibool_interfaces_ext_mesh_dummy
-  integer, dimension(:), allocatable  :: ibool_interface_ext_mesh_dummy
   integer, dimension(:), allocatable  :: nibool_interfaces_ext_mesh
   double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
   integer, dimension(:,:), allocatable :: elmnts_ext_mesh
@@ -356,7 +354,7 @@
       write(IMAIN,'(a1)',advance='yes') ' '
     enddo
   endif
-  
+
   endif ! end of (.not. USE_EXTERNAL_MESH)
 
   if(myrank == 0) then
@@ -530,7 +528,7 @@
   endif
 
   if (.not. USE_EXTERNAL_MESH) then
-  
+
 ! get addressing for this process
   iproc_xi = iproc_xi_slice(myrank)
   iproc_eta = iproc_eta_slice(myrank)
@@ -723,14 +721,14 @@
 ! read databases about external mesh simulation
 ! nlegoff --
   if (USE_EXTERNAL_MESH) then
-    call create_name_database(prname,myrank,LOCAL_PATH)    
+    call create_name_database(prname,myrank,LOCAL_PATH)
     open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted')
     read(IIN,*) nnodes_ext_mesh
     allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
     do inode = 1, nnodes_ext_mesh
       read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
     enddo
-    
+
     read(IIN,*) nelmnts_ext_mesh
     allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
     allocate(mat_ext_mesh(nelmnts_ext_mesh))
@@ -782,16 +780,13 @@
 ! create all the regions of the mesh
   if (USE_EXTERNAL_MESH) then
   call create_regions_mesh_ext_mesh(ibool, &
-           xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,nspec, &
-           volume_local,area_local_bottom,area_local_top, &
-           NGLOB_AB,npointot, &
-           myrank,LOCAL_PATH, &
+           xstore,ystore,zstore,nspec, &
+           npointot,myrank,LOCAL_PATH, &
            nnodes_ext_mesh,nelmnts_ext_mesh, &
            nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh, &
            ninterface_ext_mesh,max_interface_size_ext_mesh, &
            my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
-           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh &
-           )
+           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh)
 
   else
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
