@@ -30,7 +30,7 @@ case $FC in
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
             # standard options (leave option -ftz, which is *critical* for performance)
-            FLAGS_NO_CHECK="-O3 -xP -vec-report0 -e03 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
+            FLAGS_NO_CHECK="-fast -vec-report0 -e03 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
         fi
         #MPI_LIBS = -Vaxlib
         ;;
