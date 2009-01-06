@@ -466,12 +466,12 @@
 ! for shaking map, norm of U stored in ux, V in uy and A in uz
           if(plot_shaking_map) then
 !!!! NL NL mute value near source
-              if ( (sqrt(((x(i,j) - (X_SOURCE_EXT_MESH))**2 + &
-                   (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
-                   (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
+              if ( (sqrt(((dble(xcoord) - (X_SOURCE_EXT_MESH))**2 + &
+                   (dble(ycoord) - (Y_SOURCE_EXT_MESH))**2 + &
+                   (dble(zcoord) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
                    .and. MUTE_SOURCE) then
 
-                display(i,j) = 0.
+                field_display(ilocnum+ieoff) = 0. 
               else
 
 
