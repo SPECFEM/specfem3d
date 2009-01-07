@@ -425,6 +425,7 @@
 !!!! NL NL REGOLITH : regolith layer for asteroid
 !!$  double precision, external :: materials_ext_mesh
 !!$  logical, dimension(:), allocatable :: ispec_is_regolith
+!!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
 !!!! NL NL REGOLITH
 
 ! ************** PROGRAM STARTS HERE **************
@@ -2206,7 +2207,7 @@
            sqrt(displ(1,faces_surface_external_mesh(1,ispec))**2 + &
            displ(2,faces_surface_external_mesh(1,ispec))**2 + &
            displ(3,faces_surface_external_mesh(1,ispec))**2))
-      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+1) = &
+      store_val_ux_external_mesh(NGNOD2D*(ispec-1)+2) = &
            max(store_val_ux_external_mesh(NGNOD2D*(ispec-1)+2), &
            sqrt(displ(1,faces_surface_external_mesh(2,ispec))**2 + &
            displ(2,faces_surface_external_mesh(2,ispec))**2 + &
@@ -2226,7 +2227,7 @@
            sqrt(veloc(1,faces_surface_external_mesh(1,ispec))**2 + &
            veloc(2,faces_surface_external_mesh(1,ispec))**2 + &
            veloc(3,faces_surface_external_mesh(1,ispec))**2))
-      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+1) = &
+      store_val_uy_external_mesh(NGNOD2D*(ispec-1)+2) = &
            max(store_val_uy_external_mesh(NGNOD2D*(ispec-1)+2), &
            sqrt(veloc(1,faces_surface_external_mesh(2,ispec))**2 + &
            veloc(2,faces_surface_external_mesh(2,ispec))**2 + &
@@ -2246,7 +2247,7 @@
            sqrt(accel(1,faces_surface_external_mesh(1,ispec))**2 + &
            accel(2,faces_surface_external_mesh(1,ispec))**2 + &
            accel(3,faces_surface_external_mesh(1,ispec))**2))
-      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+1) = &
+      store_val_uz_external_mesh(NGNOD2D*(ispec-1)+2) = &
            max(store_val_uz_external_mesh(NGNOD2D*(ispec-1)+2), &
            sqrt(accel(1,faces_surface_external_mesh(2,ispec))**2 + &
            accel(2,faces_surface_external_mesh(2,ispec))**2 + &
