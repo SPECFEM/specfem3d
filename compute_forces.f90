@@ -205,9 +205,9 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
 
 ! sum contributions from each element to the global mesh using indirect addressing
           iglob = ibool(i,j,k,ispec)
-          accel(1,iglob) = accel(1,iglob) - (fac1*newtempx1(i,j,k) + fac2*newtempx2(i,j,k) + fac3*newtempx3(i,j,k))
-          accel(2,iglob) = accel(2,iglob) - (fac1*newtempy1(i,j,k) + fac2*newtempy2(i,j,k) + fac3*newtempy3(i,j,k))
-          accel(3,iglob) = accel(3,iglob) - (fac1*newtempz1(i,j,k) + fac2*newtempz2(i,j,k) + fac3*newtempz3(i,j,k))
+          accel(1,iglob) = accel(1,iglob) - fac1*newtempx1(i,j,k) - fac2*newtempx2(i,j,k) - fac3*newtempx3(i,j,k)
+          accel(2,iglob) = accel(2,iglob) - fac1*newtempy1(i,j,k) - fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
+          accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
         enddo
       enddo
