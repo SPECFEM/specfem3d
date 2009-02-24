@@ -246,8 +246,8 @@
      dist2 = dsqrt((xelm(2) - xelm(8))**2 + (yelm(2) - yelm(8))**2 + (zelm(2) - zelm(8))**2)
      dist3 = dsqrt((xelm(3) - xelm(5))**2 + (yelm(3) - yelm(5))**2 + (zelm(3) - zelm(5))**2)
      dist4 = dsqrt((xelm(4) - xelm(6))**2 + (yelm(4) - yelm(6))**2 + (zelm(4) - zelm(6))**2)
-     distmin = dmin1(distmin,dist1,dist2,dist3,dist4)
-     distmax = dmax1(distmax,dist1,dist2,dist3,dist4)
+     distmin = dmin1(dist1,dist2,dist3,dist4)
+     distmax = dmax1(dist1,dist2,dist3,dist4)
      diagonal_aspect_ratio = distmax / distmin
 
 ! write mesh quality information for each element
