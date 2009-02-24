@@ -977,9 +977,6 @@ enddo
 ! create AVS or DX mesh data for the slice, edges and faces
   if(SAVE_MESH_FILES) then
     call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-! It might be not necessary to save the ansotropic perturbation mesh data (c11store ...), so I just keep as it was
-    call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
-                   kappastore,mustore,rhostore)
     call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
               idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
     call write_AVS_DX_surface_data(myrank,prname,nspec,iboun,ibool, &
