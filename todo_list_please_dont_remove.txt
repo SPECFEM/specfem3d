@@ -2,6 +2,24 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
+- Regarding domain decomposition we should forget about both
+METIS and ParMETIS, which are both inefficient
+for very large meshes. Pieyre has done detailed tests (Pieyre,
+could you please send the Excel file to all of us with a few lines
+of description of the figures?).
+SCOTCH (serial) and PT-SCOTCH (parallel) is much better.
+(faster, uses far less memory etc.)
+Because of that, we have removed support for METIS in SESAME.
+It can still be called indirectly from SCOTCH (there is an option
+in SCOTCH to call METIS instead). But this is a bad idea because
+the partition obtained is worse. 
+
+- Regarding memory size (getting an estimate of memory consumption in SESAME),
+somebody should just cut and paste my SPECFEM3D_GLOBE routine
+"SPECFEM3D_GLOBE/version41_beta/src/memory_eval.f90", which
+I call from "SPECFEM3D_GLOBE/version41_beta/src/create_header_file.f90".
+It would work for SESAME as well (with minor modifications).
+
 - re-add the kernel calculations
 
 - add SOURCESOLUTION in addition to CMTSOLUTION, to choose between a CMT source and a force source
