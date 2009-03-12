@@ -1,0 +1,53 @@
+# A run using an external mesh is divided in five steps.
+#
+#
+# 1- we provide three files describing the model. There is an example of those in model_asteroid_subdivide. 
+#     - nodes_coords : this file contains the number of nodes on the first line, followed by the (x,y,z) coordinates for each node in meters.
+#     - mesh : this file contains the number of elements on the first line, followed by the list of nodes (8 per element) that compose those elements. The ordering is the same as in specfem3D.
+#     - mat : this file associates an element with its material (an integer).
+#
+# Those files were based on HOMO_3D_lisse_300, which is the abaqus export of a CUBIT mesh courtesy of Celine Blitz (celine.blitz<AT>univ-pau<DOT>fr) representing the EROS asteroid, and extracted using tail, head, and awk commands.
+#
+# A code named sub.f90 can be used to subdivide the mesh. It should ultimately be included in meshfem3D (see TODO list), as if the decimation is done prior to partitioning, METIS will have a hard time partioning it (NSUB in file constants.h is the number by which we decimate in all deirections).
+# Be careful with constants provided in constants_pre_meshfem3D.h, nsize and max_neighbour. There is currently no check as to whether the given mesh will be within those bounds. We should adress this issue shortly.
+#
+#
+# 2- we partition this mesh using the METIS software. pre_meshfem_asteroid_subdivide contains a stand alone program that makes the call to METIS, and extracts the faces/edges/nodes which NGLL points will fill the communication buffers. This should ultimately be done inside meshfem3D (see TODO list).
+# Compile with :
+# $ ./compil_all_sh
+# Run with :
+# $ ./a.out
+#
+# It writes files in OUTPUT_FILES named after the rank of the MPI process that will process this part. Those files must be copied into the OUTPUT_FILES where xmeshfem3D will be run.
+# In pre_meshfem3D.f90, the number of partitions should be indicated (nparts), and the path where resides the mesh, nodes_coords and mat files.
+#
+#
+# 3- we compile and run xmeshfem3D. The (rho,vp,vs) for the materials are hard written in create_region_mesh.f90, and should be modified accordingly. This would be better if it were read from a file (see TODO list). Prior to compilation, a close attention should be paid to the constants.h file. Several parameters are set inside this file, while they should better be read from a Par_file (see TODO list). To get to those parameters, look for string "nlegoff". There is a description for each of those parameters. A constants.h file is provided with parameters set for the asteroid simulation.
+#
+# Compile with :
+# $ ./configure FC= MPIFC=
+# $ make 
+# Run with :
+# $ mpirun -n 96 ./xmeshfem3D
+#
+#
+# 4- we compile and run xspecfem3D. Again, A DATA/CMTSOLUTION file, a DATA/STATION and a DATA/PAr_file are provided for the asteroid run, while the format of those files should be changed.
+#     - CMTSOLUTION : only four parameters are used : half duration is the main frequency (we run Ricker sources at the moment), latitude is y, longitude is x, depth is z (all three in meters).
+#     - STATIONS : for each station, there is the station name, the network, y, x, a dummy value and z (x,y,z in meters).
+#     - Par_file : practically no parameters are read from that file, except for NTSTEP_BETWEEN_FRAMES, USE_HIGHRES_FOR_MOVIES, LOCAL_PATH, NTSTEP_BETWEEN_OUTPUT_INFO. Others must be put to false in case of a run using an external mesh. It should really changed, and a new Par_file should gather info from the od Par_file along with the parametrs defined in constants.h.
+#
+# Compile with :
+# $ make xspecfem3D
+# Run with :
+# $ mpirun -n 96 ./xspecfem3D
+#
+#
+# 5- We create an OpenDX movie/shakemap using ./xcreate_movie_AVS_DX. Some parameters must be specified inside the file (prior to compilation).
+#     - POWER_SCALING should be fixed to whatever suits the user. 0.13 was a good value for the asteroid shakemap, but 0.20 looked better for the movie.
+#     - MUTE_SOURCE is used because we realized that the asteroid shakemap looked really bad due to the higher than average values near the source.
+#     - RADIUS_TO_MUTE is the distance from the source below which the shakemap is nullified.
+#     - X/Y/Z_SOURCE_EXT_MESH are the coordinates of the source.
+#     - NSPEC_SURFACE_EXT_MESH is the number faces of elements that compose the envelope. Is printed as an output of specfem3D.
+#
+# Again, those parameters should be read from a PAr_file.
+#
