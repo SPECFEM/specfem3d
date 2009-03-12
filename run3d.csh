@@ -7,7 +7,7 @@ set OUTDIR="SEM"
 sleep 1
 make clean
 sleep 1
-make meshfem3D
+make generate_databases
 sleep 10
 go_mesher
 

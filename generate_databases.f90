@@ -26,7 +26,7 @@
 ! United States Government Sponsorship Acknowledged.
 !
 
-  subroutine meshfem3D
+  subroutine generate_databases
 
   implicit none
 
@@ -34,7 +34,7 @@
 
 !=============================================================================!
 !                                                                             !
-!  meshfem3D produces a spectral element grid for a local or regional model.  !
+!  generate_databases produces a spectral element grid for a local or regional model.  !
 !  The mesher uses the UTM projection                                         !
 !                                                                             !
 !=============================================================================!
@@ -116,7 +116,7 @@
 !
 ! MPI v. 1.4 Dimitri Komatitsch, University of Pau, Qinya Liu and others, Caltech, September 2006:
 !  better adjoint and kernel calculations, faster and better I/Os
-!  on very large systems, new Pyre version, many small improvements and bug fixes
+!  on very large systems, many small improvements and bug fixes
 ! MPI v. 1.3 Dimitri Komatitsch, University of Pau, and Qinya Liu, Caltech, July 2005:
 !  serial version, regular mesh, adjoint and kernel calculations, ParaView support
 ! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
@@ -964,5 +964,5 @@
 ! synchronize all the processes to make sure everybody has finished
   call sync_all()
 
-  end subroutine meshfem3D
+  end subroutine generate_databases
 
