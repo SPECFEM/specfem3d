@@ -2,6 +2,13 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
+- we should keep and modify the old mesher from SPECFEM3D_BASIN in order
+to be able to quickly generate an analytical mesh for a simple basin without
+using CUBIT, because many users may still want to be able to use the old and
+simple mesher and not the (more complex) CUBIT package, and/or they might not
+have access to CUBIT. Therefore the old mesher should be modified to save its
+files in CUBIT/Abaqus format so that they can be used as input to "decompose_mesh".
+
 - Regarding domain decomposition we should forget about both
 METIS and ParMETIS, which are both inefficient
 for very large meshes. Pieyre has done detailed tests (Pieyre,

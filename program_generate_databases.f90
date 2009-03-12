@@ -23,13 +23,13 @@
 !
 !=====================================================================
 
-  program xmeshfem3D
+  program xgenerate_databases
 
   call init()
 
 ! run the main program
-  call meshfem3D
+  call generate_databases
 
   call finalize()
 
-  end program xmeshfem3D
+  end program xgenerate_databases

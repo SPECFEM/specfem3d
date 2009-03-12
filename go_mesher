@@ -49,11 +49,11 @@ echo " "
 
 #### use this on Beowulf
 set MPIRUN="mpirun"
-$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xmeshfem3D
+$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xgenerate_databases
 
 #### use this on SGI
-# mpirun -np $numprocessors xmeshfem3D
+# mpirun -np $numprocessors xgenerate_databases
 
 #### use this on Compaq Dec Alpha
-# dmpirun -np $numprocessors xmeshfem3D
+# dmpirun -np $numprocessors xgenerate_databases
 

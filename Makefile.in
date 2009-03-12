@@ -53,27 +53,7 @@ AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
 
-# extra defines for the Pyrized version
-@COND_PYRE_TRUE@MPICC = @MPICC@
-@COND_PYRE_TRUE@FCLIBS = @FCLIBS@
-@COND_PYRE_TRUE@PYTHON = @PYTHON@
-@COND_PYRE_TRUE@PYTHON_CFLAGS = $(PYTHON_EGG_CFLAGS) $(PYTHON_CPPFLAGS)
-@COND_PYRE_TRUE@PYTHON_CPPFLAGS = $(PYTHON_EGG_CPPFLAGS) -I@PYTHON_INCDIR@
-@COND_PYRE_TRUE@PYTHON_LDFLAGS = $(PYTHON_EGG_LDFLAGS) @PYTHON_LDFLAGS@ @PYTHON_LINKFORSHARED@ @PYTHON_BLDLIBRARY@ @PYTHON_LIBS@ @PYTHON_MODLIBS@ @PYTHON_SYSLIBS@ @PYTHON_LDLAST@
-@COND_PYRE_TRUE@OUTPUT_DIR = OUTPUT_FILES
-@COND_PYRE_TRUE@PYTHON_EGG_CFLAGS = @PYTHON_EGG_CFLAGS@
-@COND_PYRE_TRUE@PYTHON_EGG_CPPFLAGS = @PYTHON_EGG_CPPFLAGS@
-@COND_PYRE_TRUE@PYTHON_EGG_LDFLAGS = @PYTHON_EGG_LDFLAGS@
-
-
 O = obj
-
-# objects toggled between the pure Fortran and Pyrized version
-@COND_PYRE_TRUE@PYRE_EXTRA_OBJECTS = $O/misc.o $O/trampoline.o $O/PyxMeshfem.o
-@COND_PYRE_TRUE@COND_PYRE_OBJECTS = $O/PyxParameters.o $(PYRE_EXTRA_OBJECTS)
-
-# objects toggled between the pure Fortran and Pyrized version
-@COND_PYRE_FALSE@COND_PYRE_OBJECTS = $O/read_value_parameters.o $O/get_value_parameters.o
 
 libspecfem_a_OBJECTS = \
 	$O/aniso_model.o \
@@ -110,7 +90,7 @@ libspecfem_a_OBJECTS = \
 	$O/locate_receivers.o \
 	$O/locate_source.o \
 	$O/mesh_vertical.o \
-	$O/meshfem3D.o \
+	$O/generate_databases.o \
 	$O/netlib_specfun_erf.o \
 	$O/read_arrays_buffers_solver.o \
 	$O/read_topo_bathy_file.o \
@@ -146,16 +126,11 @@ SOLVER_ARRAY_OBJECTS = \
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
 @COND_MPI_FALSE@COND_MPI_OBJECTS = $O/serial.o
 
-LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
+LIBSPECFEM = $O/libspecfem.a
 
 # objects for the pure Fortran version
-@COND_PYRE_FALSE@XMESHFEM_OBJECTS = $O/program_meshfem3D.o $(LIBSPECFEM)
+@COND_PYRE_FALSE@XGENERATE_DATABASES_OBJECTS = $O/program_generate_databases.o $(LIBSPECFEM)
 @COND_PYRE_FALSE@XSPECFEM_OBJECTS = $O/program_specfem3D.o $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM)
-
-# objects for the Pyrized version
-@COND_PYRE_TRUE@XMESHFEM_OBJECTS = $(LIBSPECFEM)
-@COND_PYRE_TRUE@XSPECFEM_OBJECTS = $O/PyxSpecfem.o $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM)
-
 
 ####
 #### targets
@@ -169,13 +144,9 @@ LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
 @COND_PYRE_FALSE@	convolve_source_timefunction \
 @COND_PYRE_FALSE@	create_movie_AVS_DX \
 @COND_PYRE_FALSE@	create_movie_GMT \
-@COND_PYRE_FALSE@	meshfem3D \
+@COND_PYRE_FALSE@	generate_databases \
 @COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
-
-# default targets for the Pyrized version
-@COND_PYRE_TRUE@DEFAULT = specfem3D
-
 
 default: $(DEFAULT)
 
@@ -186,7 +157,7 @@ backup:
 
 bak: backup
 
-meshfem3D: xmeshfem3D
+generate_databases: xgenerate_databases
 
 specfem3D: xspecfem3D
 
@@ -196,25 +167,13 @@ specfem3D: xspecfem3D
 ####
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xmeshfem3D: $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_FALSE@	${FCLINK} -o xgenerate_databases $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 @COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
 @COND_PYRE_FALSE@	${FCLINK} -o xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
-
-# rules for the Pyrized version
-@COND_PYRE_TRUE@xspecfem3D: pyspecfem3D
-@COND_PYRE_TRUE@
-@COND_PYRE_TRUE@pyspecfem3D: main.c $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_TRUE@	${MPICC} -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) main.c \
-@COND_PYRE_TRUE@		$(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
-@COND_PYRE_TRUE@
-@COND_PYRE_TRUE@$(OUTPUT_DIR)/pyspecfem3D: main.c $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_TRUE@	${MPICC} -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) -DUSE_MPI -DWITH_SOLVER main.c \
-@COND_PYRE_TRUE@		$(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)$(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
-
 
 check_buffers_2D: xcheck_buffers_2D
 check_mesh_quality_AVS_DX: xcheck_mesh_quality_AVS_DX
@@ -225,7 +184,6 @@ create_movie_AVS_DX: xcreate_movie_AVS_DX
 create_movie_GMT: xcreate_movie_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
-
 
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 	${FCCOMPILE_CHECK} -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
@@ -255,7 +213,7 @@ xcreate_movie_GMT:  $O/create_movie_GMT.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcreate_movie_GMT  $O/create_movie_GMT.o $(LIBSPECFEM)
 
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT
+	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xgenerate_databases xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT
 
 ###
 ### rule for the archive library
@@ -300,11 +258,11 @@ $O/serial.o: constants.h exit_mpi.f90
 $O/program_specfem3D.o: program_specfem3D.f90
 	${FCCOMPILE_CHECK} -c -o $O/program_specfem3D.o program_specfem3D.f90
 
-$O/program_meshfem3D.o: program_meshfem3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/program_meshfem3D.o program_meshfem3D.f90
+$O/program_generate_databases.o: program_generate_databases.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_generate_databases.o program_generate_databases.f90
 
-$O/meshfem3D.o: constants.h meshfem3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/meshfem3D.o meshfem3D.f90
+$O/generate_databases.o: constants.h generate_databases.f90
+	${FCCOMPILE_CHECK} -c -o $O/generate_databases.o generate_databases.f90
 
 $O/locate_source.o: constants.h locate_source.f90
 	${FCCOMPILE_CHECK} -c -o $O/locate_source.o locate_source.f90
@@ -512,28 +470,3 @@ $O/create_movie_GMT.o: constants.h create_movie_GMT.f90
 $O/write_c_binary.o: write_c_binary.c
 	cc -c -o $O/write_c_binary.o write_c_binary.c
 
-###
-### additional rules for the Pyrized version
-###
-
-$O/misc.o: misc.c config.h
-	${MPICC} $(CFLAGS) -c $(PYTHON_CPPFLAGS) -o $O/misc.o misc.c
-
-$O/PyxParameters.o: PyxParameters.c config.h
-	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxParameters.o PyxParameters.c
-
-$O/PyxMeshfem.o: PyxMeshfem.c config.h
-	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxMeshfem.o PyxMeshfem.c
-
-$O/PyxSpecfem.o: PyxSpecfem.c config.h
-	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxSpecfem.o PyxSpecfem.c
-
-$O/trampoline.o: trampoline.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/trampoline.o ${FCFLAGS_f90} trampoline.f90
-
-# target to update the Pyrex-generated code
-# requires Pyrex:  http://www.cosc.canterbury.ac.nz/~greg/python/Pyrex/
-pyrex:
-	pyrexc PyxParameters.pyx -o PyxParameters.c
-	pyrexc PyxMeshfem.pyx -o PyxMeshfem.c
-	pyrexc PyxSpecfem.pyx -o PyxSpecfem.c
