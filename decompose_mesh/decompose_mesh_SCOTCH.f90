@@ -1,10 +1,10 @@
 
-  program decompose_mesh
+  program decompose_mesh_SCOTCH
 
-  use part_decompose_mesh
+  use part_decompose_mesh_SCOTCH
   implicit none
 
-  include './constants_decompose_mesh.h'
+  include './constants_decompose_mesh_SCOTCH.h'
   include "./scotchf.h"
 
   integer, parameter :: nparts = 8
@@ -248,5 +248,5 @@
 
   enddo
 
-  end program decompose_mesh
+  end program decompose_mesh_SCOTCH
 

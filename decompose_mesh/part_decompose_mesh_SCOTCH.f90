@@ -1,4 +1,4 @@
-module part_decompose_mesh
+module part_decompose_mesh_SCOTCH
 
   implicit none
 
@@ -10,7 +10,7 @@ contains
   subroutine mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, &
  nnodes_elmnts, nodes_elmnts, max_neighbour, ncommonnodes)
 
-    include './constants_decompose_mesh.h'
+    include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts
     integer, intent(in)  :: nnodes
@@ -118,7 +118,7 @@ contains
   !--------------------------------------------------
   subroutine Construct_glob2loc_elmnts(nelmnts, part, nparts, glob2loc_elmnts)
 
-    include './constants_decompose_mesh.h'
+    include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts
     integer, intent(in)  :: nparts
@@ -154,7 +154,7 @@ contains
   subroutine Construct_glob2loc_nodes(nelmnts, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, nparts, &
        glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes)
 
-    include './constants_decompose_mesh.h'
+    include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts, nsize
     integer, intent(in)  :: nnodes, nparts
@@ -241,7 +241,7 @@ contains
    subroutine Construct_interfaces(nelmnts, nparts, sup_neighbour, part, elmnts, xadj, adjncy, &
      tab_interfaces, tab_size_interfaces, ninterfaces, nb_materials, cs_material, num_material)
 
-     include './constants_decompose_mesh.h'
+     include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: nparts
     integer(long), intent(in)  :: nelmnts, sup_neighbour
@@ -407,7 +407,7 @@ contains
   subroutine write_partition_database(IIN_database, iproc, nspec, nelmnts, elmnts, glob2loc_elmnts, glob2loc_nodes_nparts, &
      glob2loc_nodes_parts, glob2loc_nodes, part, num_modele, ngnod, num_phase)
 
-    include './constants_decompose_mesh.h'
+    include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: num_phase, iproc
@@ -618,5 +618,5 @@ contains
 
  end subroutine write_interfaces_database
 
-end module part_decompose_mesh
+end module part_decompose_mesh_SCOTCH
 
