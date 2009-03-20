@@ -47,11 +47,11 @@
 ! double precision, parameter :: delta_t = 1.d-3
 ! double precision, parameter :: VP_MAX = 3000.d0
 
-! character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
-! integer, parameter :: NPOIN = 4050696, NSPEC = 3410265, NGNOD = 8
-! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-! double precision, parameter :: delta_t = 3.d-4
-! double precision, parameter :: VP_MAX = 3000.d0
+  character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
+  integer, parameter :: NPOIN = 4050696, NSPEC = 3410265, NGNOD = 8
+  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+  double precision, parameter :: delta_t = 3.d-4
+  double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
 
 ! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 3882, NSPEC = 3744, NGNOD = 4
@@ -71,11 +71,11 @@
 ! double precision, parameter :: delta_t = 1.5d-4
 ! double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
 
-  character(len=100), parameter :: cubit_mesh_file = 'david_mesh_doubl_500_900_6layers.inp'
-  integer, parameter :: NPOIN = 4513255, NSPEC = 4379190, NGNOD = 8
-  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-  double precision, parameter :: delta_t = 1.5d-4
-  double precision, parameter :: VP_MAX = 3000.d0
+! character(len=100), parameter :: cubit_mesh_file = 'david_mesh_doubl_500_900_6layers.inp'
+! integer, parameter :: NPOIN = 4513255, NSPEC = 4379190, NGNOD = 8
+! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+! double precision, parameter :: delta_t = 1.5d-4
+! double precision, parameter :: VP_MAX = 3000.d0
 
   double precision, dimension(NPOIN) :: x,y,z
 
@@ -92,7 +92,7 @@
   double precision :: distmin,distmax
 
 ! for stability
-  double precision :: stability,stability_min,stability_max
+  double precision :: stability,stability_min,stability_max,max_CFL_stability_limit
 
 ! for histogram
   integer, parameter :: NCLASS = 20
@@ -283,9 +283,29 @@
   print *,'max stability = ',stability_max
 ! print *,'min stability = ',stability_min
 
-! create statistics about mesh quality
+! max stability CFL value is different in 2D and in 3D
+  if(NGNOD == 8) then
+    max_CFL_stability_limit = 0.48d0
+  else if(NGNOD == 4) then
+    max_CFL_stability_limit = 0.68d0
+  else
+    stop 'NGNOD must be 4 or 8'
+  endif
 
+  if(stability_max >= max_CFL_stability_limit) then
+    print *,'*********************************************'
+    print *,'*********************************************'
+    print *,' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
+    print *,'therefore the run should be unstable'
+    print *,'*********************************************'
+    print *,'*********************************************'
+  else
+    print *,'that value is below the upper CFL limit of ',max_CFL_stability_limit
+    print *,'therefore the run should be stable'
+  endif
   print *
+
+! create statistics about mesh quality
   print *,'creating histogram and statistics of mesh quality'
 
 ! erase histogram of skewness
