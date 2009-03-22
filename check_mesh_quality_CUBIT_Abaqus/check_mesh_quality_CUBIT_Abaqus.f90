@@ -47,11 +47,17 @@
 ! double precision, parameter :: delta_t = 1.d-3
 ! double precision, parameter :: VP_MAX = 3000.d0
 
-  character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
-  integer, parameter :: NPOIN = 4050696, NSPEC = 3410265, NGNOD = 8
-  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+! character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
+! integer, parameter :: NPOIN = 4050696, NSPEC = 3410265, NGNOD = 8
+! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+! double precision, parameter :: delta_t = 3.d-4
+! double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
+
+  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
+  integer, parameter :: NPOIN = 5924713, NSPEC = 5797440, NGNOD = 8
+  logical, parameter :: IGNORE_OTHER_HEADERS = .true.
   double precision, parameter :: delta_t = 3.d-4
-  double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
+  double precision, parameter :: VP_MAX = 3000.d0 ! 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
 
 ! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 3882, NSPEC = 3744, NGNOD = 4
@@ -183,8 +189,14 @@
                  .and. i == 28429) read(10,*)
 
       read(10,*) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i)
+
     else if(NGNOD == 8) then
+
+      if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'rego3d_70_disp.inp' &
+                 .and. i == 252929) read(10,*)
+
       read(10,*) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i),ibool(5,i),ibool(6,i),ibool(7,i),ibool(8,i)
+
     endif
 
     if(iread /= i) then

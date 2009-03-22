@@ -20,8 +20,11 @@
 ! character(len=100), parameter :: cubit_mesh_file = 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp'
 ! integer, parameter :: NPOIN = 57807
 
-  character(len=100), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
-  integer, parameter :: NPOIN = 32536
+! character(len=100), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
+! integer, parameter :: NPOIN = 32536
+
+  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
+  integer, parameter :: NPOIN = 5924713
 
   real, dimension(NPOIN) :: x,y,z
 
