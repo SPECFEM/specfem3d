@@ -53,11 +53,23 @@
 ! double precision, parameter :: delta_t = 3.d-4
 ! double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
 
-  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
-  integer, parameter :: NPOIN = 5924713, NSPEC = 5797440, NGNOD = 8
-  logical, parameter :: IGNORE_OTHER_HEADERS = .true.
+! character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
+! integer, parameter :: NPOIN = 5924713, NSPEC = 5797440, NGNOD = 8
+! logical, parameter :: IGNORE_OTHER_HEADERS = .true.
+! double precision, parameter :: delta_t = 3.d-4
+! double precision, parameter :: VP_MAX = 3000.d0
+
+! character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp_regolith_only.inp'
+! integer, parameter :: NPOIN = 5924713, NSPEC = 252928, NGNOD = 8
+! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+! double precision, parameter :: delta_t = 3.d-4
+! double precision, parameter :: VP_MAX = 900.d0 ! because only regolith, no bedrock
+
+  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp_bedrock_only.inp'
+  integer, parameter :: NPOIN = 5924713, NSPEC = 5797440 - 252928, NGNOD = 8
+  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
   double precision, parameter :: delta_t = 3.d-4
-  double precision, parameter :: VP_MAX = 3000.d0 ! 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
+  double precision, parameter :: VP_MAX = 3000.d0
 
 ! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 3882, NSPEC = 3744, NGNOD = 4
@@ -197,6 +209,10 @@
 
       read(10,*) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i),ibool(5,i),ibool(6,i),ibool(7,i),ibool(8,i)
 
+! if we analyze only the second layer of the mesh and ignore the first, shift iread
+! so that it conforms with i
+      if(cubit_mesh_file == 'rego3d_70_disp_bedrock_only.inp') iread = iread - 252928
+
     endif
 
     if(iread /= i) then
@@ -293,6 +309,7 @@
 ! print *,'min diagonal aspect ratio = ',diagonal_aspect_ratio_min
   print *
   print *,'max stability = ',stability_max
+  print *,'computed using VP_MAX = ',VP_MAX
 ! print *,'min stability = ',stability_min
 
 ! max stability CFL value is different in 2D and in 3D
