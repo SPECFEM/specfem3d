@@ -35,7 +35,7 @@ USE_OLSEN_ATTENUATION           = .false.
 ABSORBING_CONDITIONS            = .true.
 
 # record length in seconds
-RECORD_LENGTH_IN_SECONDS        = 2.0
+RECORD_LENGTH_IN_SECONDS        = 30.0
 
 # save AVS or OpenDX movies
 MOVIE_SURFACE                   = .false.
@@ -47,7 +47,7 @@ USE_HIGHRES_FOR_MOVIES          = .false.
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .true.
+SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = /scratch/komatits/DATABASES_MPI
