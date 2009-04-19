@@ -23,7 +23,7 @@
 !
 !=====================================================================
 !
-! United States Government Sponsorship Acknowledged.
+! United States and French Government Sponsorship Acknowledged.
 !
 
   subroutine meshfem3D
