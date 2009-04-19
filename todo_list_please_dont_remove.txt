@@ -37,11 +37,9 @@ It would work for SESAME as well (with minor modifications).
 - automatic detection (coloring / flags) of the free surface and of the PML absorbing elements in CUBIT;
 read this from input files in the solver
 
-- should add C-PML following Roland's 2D implementation
+- Pieyre should add C-PML following Roland's 2D implementation
 
 - should add support for parMETIS or PT-Scotch (i.e. decompose the mesh in parallel rather than serial; this will be required for very large meshes, too large to fit on a serial machine)
-
-- recopier toutes les modifs importantes du code GLOBE vers ce code : Makefile with better options etc
 
 - etudier comment lire un maillage CUBIT stocke au format natif de CUBIT (Exodus, base sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si necessaire d'après Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
 
