@@ -2,11 +2,7 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
-- Nicolas should add C-PML following Elise Delavaud's implementation
-
-- Nicolas should add support for CUBIT meshes decomposed by parMETIS or PT-Scotch, based on his existing implementation in the 2D code
-
-- recopier toutes les modifs importantes du code GLOBE vers ce code : Makefile with better options etc
+- Pieyre should add C-PML following Elise Delavaud's implementation
 
 - etudier comment lire un maillage CUBIT stocké au format natif de CUBIT (Exodus, basé sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si nécessaire d'après Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
 
@@ -20,6 +16,7 @@ Things to add later to the manual:
 - Add the description of using basin_slice_number.pl and basin_normal.pl to
   get the slice numbers to combine for a specific source/receiver pair 
   (LQY, Jan 9, 2008)
+
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
