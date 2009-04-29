@@ -46,7 +46,7 @@
   integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
   integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
 
-  logical USE_OPENDX,USE_AVS,UNIQUE_FILE,plot_shaking_map
+  logical USE_OPENDX,USE_AVS,plot_shaking_map
 
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: x,y,z,display
   real(kind=CUSTOM_REAL) xcoord,ycoord,zcoord
@@ -180,30 +180,25 @@
 
 
   print *,'1 = create files in OpenDX format'
-  print *,'2 = create files in AVS UCD format with individual files'
-  print *,'3 = create files in AVS UCD format with one time-dependent file'
-  print *,'4 = create files in GMT xyz Ascii long/lat/Uz format'
+  print *,'2 = create files in AVS UCD format'
+  print *,'3 = create files in GMT xyz Ascii long/lat/Uz format'
   print *,'any other value = exit'
   print *
+
   print *,'enter value:'
   read(5,*) iformat
-  if(iformat<1 .or. iformat>4) stop 'exiting...'
+
+  if(iformat < 1 .or. iformat > 3) stop 'exiting...'
+
   if(iformat == 1) then
     USE_OPENDX = .true.
     USE_AVS = .false.
-    UNIQUE_FILE = .false.
   else if(iformat == 2) then
     USE_OPENDX = .false.
     USE_AVS = .true.
-    UNIQUE_FILE = .false.
-  else if(iformat == 3) then
-    USE_OPENDX = .false.
-    USE_AVS = .true.
-    UNIQUE_FILE = .true.
   else
     USE_OPENDX = .false.
     USE_AVS = .false.
-    UNIQUE_FILE = .false.
   endif
 
   print *,'movie frames have been saved every ',NTSTEP_BETWEEN_FRAMES,' time steps'
@@ -603,10 +598,12 @@
 
 !--- ****** create AVS file using sorted list ******
 
+  if(.not. plot_shaking_map) then
   if(inumber == 1) then
     ivalue = iframe
   else
     ivalue = it
+  endif
   endif
 
 ! create file name and open file
@@ -617,7 +614,6 @@
       open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
     else if(USE_AVS) then
-      if(UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
       write(outputname,"('/AVS_shaking_map.inp')")
       open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
@@ -632,17 +628,9 @@
       open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
       write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
     else if(USE_AVS) then
-      if(UNIQUE_FILE .and. iframe == 1) then
-        open(unit=11,file=trim(OUTPUT_FILES)//'/AVS_movie_all.inp',status='unknown')
-        write(11,*) nframes
-        write(11,*) 'data'
-        write(11,"('step',i1,' image',i1)") 1,1
-        write(11,*) nglob,' ',nspectot_AVS_max
-      else if(.not. UNIQUE_FILE) then
-        write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
-        open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
-        write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
-      endif
+      write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
+      open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
+      write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
     else
       stop 'wrong output format selected'
     endif
@@ -652,9 +640,6 @@
   if(.false.) then
 
   else
-
-! if unique file, output geometry only once
-  if(.not. UNIQUE_FILE .or. iframe == 1) then
 
 ! output list of points
     mask_point = .false.
@@ -668,10 +653,10 @@
           ipoin = ipoin + 1
           ireorder(ibool_number) = ipoin
           if(USE_OPENDX) then
-            write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
+            write(11,*) xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
           else if(USE_AVS) then
-            write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
-                sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
+            write(11,*) ireorder(ibool_number),xp_save(ilocnum+ieoff), &
+                yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
           endif
         endif
         mask_point(ibool_number) = .true.
@@ -699,28 +684,11 @@
       endif
     enddo
 
-  endif
-
   if(USE_OPENDX) then
     write(11,*) 'attribute "element type" string "quads"'
     write(11,*) 'attribute "ref" string "positions"'
     write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
   else
-    if(UNIQUE_FILE) then
-! step number for AVS multistep file
-      if(iframe > 1) then
-        if(iframe < 10) then
-          write(11,"('step',i1,' image',i1)") iframe,iframe
-        else if(iframe < 100) then
-          write(11,"('step',i2,' image',i2)") iframe,iframe
-        else if(iframe < 1000) then
-          write(11,"('step',i3,' image',i3)") iframe,iframe
-        else
-          write(11,"('step',i4,' image',i4)") iframe,iframe
-        endif
-      endif
-      write(11,*) '1 0'
-    endif
 ! dummy text for labels
     write(11,*) '1 1'
     write(11,*) 'a, b'
@@ -767,13 +735,11 @@
 ! end of test for GMT format
   endif
 
-  if(.not. UNIQUE_FILE) close(11)
+  close(11)
 
 ! end of loop and test on all the time steps for all the movie images
   endif
   enddo
-
-  if(UNIQUE_FILE) close(11)
 
   print *
   print *,'done creating movie or shaking map'
