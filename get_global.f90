@@ -30,7 +30,7 @@
 
 ! non-structured global numbering software provided by Paul F. Fischer
 
-! leave sorting subroutines in same source file to allow for inlining
+! leave the sorting subroutines in the same source file to allow for inlining
 
   implicit none
 
@@ -195,6 +195,7 @@
    ENDIF
    IND(I)=INDX
   goto 100
+
   end subroutine rank
 
 ! ------------------------------------------------------------------
