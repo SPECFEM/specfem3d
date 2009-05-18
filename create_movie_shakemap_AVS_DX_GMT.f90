@@ -466,7 +466,7 @@
                    (dble(zcoord) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
                    .and. MUTE_SOURCE) then
 
-                field_display(ilocnum+ieoff) = 0. 
+                field_display(ilocnum+ieoff) = 0.
               else
 
 
