@@ -34,6 +34,9 @@
 ! include values created by the mesher
   include "OUTPUT_FILES/values_from_mesher.h"
 
+! standard include of the MPI library
+  include 'mpif.h'
+
 !=============================================================================!
 !                                                                             !
 !  specfem3D is a 3-D spectral-element solver for a local or regional model.  !
@@ -145,10 +148,11 @@
 
 ! ADJOINT
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: b_alphaval, b_betaval, b_gammaval
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) :: &
-             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL) ::  b_epsilondev_xx, &
-             b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
+!! DK DK array not created yet for CUBIT
+! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) :: &
+!            b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
+! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL) ::  b_epsilondev_xx, &
+!            b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
 ! ADJOINT
 
   integer NPOIN2DMAX_XY
@@ -159,16 +163,19 @@
   character(len=100) topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
-  integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: normal_top
+!! DK DK array not created yet for CUBIT
+! integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
+! real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: normal_top
 
+!! DK DK array not created yet for CUBIT
 ! Moho mesh
-  integer,dimension(NSPEC2D_MOHO_BOUN) :: ibelm_moho_top, ibelm_moho_bot
-  real(CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: normal_moho
+! integer,dimension(NSPEC2D_MOHO_BOUN) :: ibelm_moho_top, ibelm_moho_bot
+! real(CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: normal_moho
   integer :: nspec2D_moho
 
+!! DK DK array not created yet for CUBIT
 ! buffers for send and receive between faces of the slices and the chunks
-  real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY_VAL) :: buffer_send_faces_vector,buffer_received_faces_vector
+! real(kind=CUSTOM_REAL), dimension(NDIM,NPOIN2DMAX_XY_VAL) :: buffer_send_faces_vector,buffer_received_faces_vector
 
 ! -----------------
 
@@ -217,9 +224,10 @@
 
 ! ADJOINT
   real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
-    rhop_kl, beta_kl, alpha_kl
+!! DK DK array not created yet for CUBIT
+! real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
+! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
+!   rhop_kl, beta_kl, alpha_kl
   real(kind=CUSTOM_REAL) b_deltat, b_deltatover2, b_deltatsqover2
 ! ADJOINT
 
@@ -229,8 +237,9 @@
 
 ! Moho kernel
   integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
-  real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO_BOUN) :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: moho_kl
+!! DK DK array not created yet for CUBIT
+! real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO_BOUN) :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
+! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: moho_kl
   real(kind=CUSTOM_REAL) :: kernel_moho_top, kernel_moho_bot
 
 ! --------
@@ -300,11 +309,11 @@
   double precision, dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
 
 ! 2-D addressing and buffers for summation between slices
-  integer, dimension(NPOIN2DMAX_XMIN_XMAX_VAL) :: iboolleft_xi,iboolright_xi
-  integer, dimension(NPOIN2DMAX_YMIN_YMAX_VAL) :: iboolleft_eta,iboolright_eta
+! integer, dimension(NPOIN2DMAX_XMIN_XMAX_VAL) :: iboolleft_xi,iboolright_xi
+! integer, dimension(NPOIN2DMAX_YMIN_YMAX_VAL) :: iboolleft_eta,iboolright_eta
 
 ! for addressing of the slices
-  integer, dimension(0:NPROC_XI_VAL-1,0:NPROC_ETA_VAL) :: addressing
+! integer, dimension(0:NPROC_XI_VAL-1,0:NPROC_ETA_VAL) :: addressing
 
 ! proc numbers for MPI
   integer myrank,sizeprocs
@@ -427,6 +436,12 @@
 !!$  logical, dimension(:), allocatable :: ispec_is_regolith
 !!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
 !!!! NL NL REGOLITH
+
+!! DK DK May 2009: added this to print the minimum and maximum number of elements
+!! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
+  integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
+  integer :: NGLOB_AB_global_min,NGLOB_AB_global_max
+  integer :: ier
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -1543,18 +1558,19 @@
 ! put negligible initial value to avoid very slow underflow trapping
   if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
 
-  if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
 
-  open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
-  read(27) b_displ
-  read(27) b_veloc
-  read(27) b_accel
+! open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
+! read(27) b_displ
+! read(27) b_veloc
+! read(27) b_accel
 
-  rho_kl(:,:,:,:) = 0._CUSTOM_REAL
-  mu_kl(:,:,:,:) = 0._CUSTOM_REAL
-  kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+! rho_kl(:,:,:,:) = 0._CUSTOM_REAL
+! mu_kl(:,:,:,:) = 0._CUSTOM_REAL
+! kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
 
-  endif
+! endif
 
 ! allocate files to save movies and shaking map
   if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
@@ -1667,18 +1683,19 @@
       R_yz(:,:,:,:,:) = VERYSMALLVAL
     endif
 
-    if (SIMULATION_TYPE == 3) then
-      read(27) b_R_xx
-      read(27) b_R_yy
-      read(27) b_R_xy
-      read(27) b_R_xz
-      read(27) b_R_yz
-      read(27) b_epsilondev_xx
-      read(27) b_epsilondev_yy
-      read(27) b_epsilondev_xy
-      read(27) b_epsilondev_xz
-      read(27) b_epsilondev_yz
-    endif
+!! DK DK array not created yet for CUBIT
+!   if (SIMULATION_TYPE == 3) then
+!     read(27) b_R_xx
+!     read(27) b_R_yy
+!     read(27) b_R_xy
+!     read(27) b_R_xz
+!     read(27) b_R_yz
+!     read(27) b_epsilondev_xx
+!     read(27) b_epsilondev_yy
+!     read(27) b_epsilondev_xy
+!     read(27) b_epsilondev_xz
+!     read(27) b_epsilondev_yz
+!   endif
 
   endif
   close(27)
@@ -1689,6 +1706,29 @@
     ispec2D_moho_bot = 0
     k_top = 1
     k_bot = NGLLZ
+  endif
+
+!! DK DK May 2009: added this to print the minimum and maximum number of elements
+!! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
+  call MPI_REDUCE(NSPEC_AB,NSPEC_AB_global_min,1,MPI_INTEGER,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call MPI_REDUCE(NSPEC_AB,NSPEC_AB_global_max,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,ier)
+  call MPI_REDUCE(NSPEC_AB,NSPEC_AB_global_sum,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  call MPI_REDUCE(NGLOB_AB,NGLOB_AB_global_min,1,MPI_INTEGER,MPI_MIN,0,MPI_COMM_WORLD,ier)
+  call MPI_REDUCE(NGLOB_AB,NGLOB_AB_global_max,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'minimum and maximum number of elements'
+    write(IMAIN,*) 'and points in the CUBIT + SCOTCH mesh:'
+    write(IMAIN,*)
+    write(IMAIN,*) 'NSPEC_AB_global_min = ',NSPEC_AB_global_min
+    write(IMAIN,*) 'NSPEC_AB_global_max = ',NSPEC_AB_global_max
+    write(IMAIN,*) 'NSPEC_AB_global_mean = ',NSPEC_AB_global_sum / float(sizeprocs)
+    write(IMAIN,*)
+    write(IMAIN,*) 'NGLOB_AB_global_min = ',NGLOB_AB_global_min
+    write(IMAIN,*) 'NGLOB_AB_global_max = ',NGLOB_AB_global_max
+    write(IMAIN,*)
   endif
 
 !
@@ -1732,10 +1772,12 @@
 ! compute the maximum of the maxima for all the slices using an MPI reduction
     call max_all_cr(Usolidnorm,Usolidnorm_all)
 
-    if (SIMULATION_TYPE == 3) then
-      b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
-      call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
-    endif
+!! DK DK array not created yet for CUBIT
+!   if (SIMULATION_TYPE == 3) then
+!     b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
+!     call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
+!   endif
+
     if(myrank == 0) then
 
       write(IMAIN,*) 'Time step # ',it
@@ -1784,11 +1826,12 @@
   veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
   accel(:,:) = 0._CUSTOM_REAL
 
-  if (SIMULATION_TYPE == 3) then
-    b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
-    b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
-    b_accel(:,:) = 0._CUSTOM_REAL
-  endif
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3) then
+!   b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
+!   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+!   b_accel(:,:) = 0._CUSTOM_REAL
+! endif
 
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
     ispec2D_moho_top = 0
@@ -1796,10 +1839,17 @@
   endif
 
 ! assemble all the contributions between slices using MPI
-    call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+    if(USE_DEVILLE_PRODUCTS) then
+      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+    else
+      call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+    endif
 
     call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,accel, &
          buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
@@ -1807,33 +1857,48 @@
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
          request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-    call compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+    if(USE_DEVILLE_PRODUCTS) then
+      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+    else
+      call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+    endif
 
     call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
          buffer_recv_vector_ext_mesh,ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
          request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-  if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
-          iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-          buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
-          NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
+!! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
+!! DK DK May 2009: has a different number of spectral elements and therefore
+!! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
+!! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
+!! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
+! if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
+!         iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
+!         buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
+!         NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
 ! multiply by the inverse of the mass matrix
   accel(1,:) = accel(1,:)*rmass(:)
   accel(2,:) = accel(2,:)*rmass(:)
   accel(3,:) = accel(3,:)*rmass(:)
 
-  if (SIMULATION_TYPE == 3) then
-    b_accel(1,:) = b_accel(1,:)*rmass(:)
-    b_accel(2,:) = b_accel(2,:)*rmass(:)
-    b_accel(3,:) = b_accel(3,:)*rmass(:)
-  endif
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3) then
+!   b_accel(1,:) = b_accel(1,:)*rmass(:)
+!   b_accel(2,:) = b_accel(2,:)*rmass(:)
+!   b_accel(3,:) = b_accel(3,:)*rmass(:)
+! endif
 
   if(OCEANS) then
+
+    stop 'DK DK oceans have been removed for now because we need a flag to detect the surface elements'
 
 !   initialize the updates
     updated_dof_ocean_load(:) = .false.
@@ -1841,7 +1906,7 @@
 ! for surface elements exactly at the top of the model (ocean bottom)
     do ispec2D = 1,NSPEC2D_TOP
 
-      ispec = ibelm_top(ispec2D)
+!! DK DK array not created yet for CUBIT      ispec = ibelm_top(ispec2D)
 
 ! only for DOFs exactly at the top of the model (ocean bottom)
       k = NGLLZ
@@ -1856,9 +1921,9 @@
           if(.not. updated_dof_ocean_load(iglob)) then
 
 ! get normal
-            nx = normal_top(1,i,j,ispec2D)
-            ny = normal_top(2,i,j,ispec2D)
-            nz = normal_top(3,i,j,ispec2D)
+!! DK DK array not created yet for CUBIT            nx = normal_top(1,i,j,ispec2D)
+!! DK DK array not created yet for CUBIT            ny = normal_top(2,i,j,ispec2D)
+!! DK DK array not created yet for CUBIT            nz = normal_top(3,i,j,ispec2D)
 
 ! make updated component of right-hand side
 ! we divide by rmass() which is 1 / M
@@ -1873,14 +1938,16 @@
             accel(3,iglob) = accel(3,iglob) + additional_term * nz
 
             if (SIMULATION_TYPE == 3) then
-              b_force_normal_comp = (b_accel(1,iglob)*nx + &
-                    b_accel(2,iglob)*ny + b_accel(3,iglob)*nz) / rmass(iglob)
+!! DK DK array not created yet for CUBIT
+!             b_force_normal_comp = (b_accel(1,iglob)*nx + &
+!                   b_accel(2,iglob)*ny + b_accel(3,iglob)*nz) / rmass(iglob)
 
               b_additional_term = (rmass_ocean_load(iglob) - rmass(iglob)) * b_force_normal_comp
 
-              b_accel(1,iglob) = b_accel(1,iglob) + b_additional_term * nx
-              b_accel(2,iglob) = b_accel(2,iglob) + b_additional_term * ny
-              b_accel(3,iglob) = b_accel(3,iglob) + b_additional_term * nz
+!! DK DK array not created yet for CUBIT
+!             b_accel(1,iglob) = b_accel(1,iglob) + b_additional_term * nx
+!             b_accel(2,iglob) = b_accel(2,iglob) + b_additional_term * ny
+!             b_accel(3,iglob) = b_accel(3,iglob) + b_additional_term * nz
             endif
 
 !           done with this point
@@ -1895,7 +1962,8 @@
 
   veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
 
-  if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
 ! write the seismograms with time shift
   if (nrec_local > 0) then
@@ -2019,15 +2087,16 @@
 
           hlagrange = hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
 
-          dxd = dxd + dble(b_displ(1,iglob))*hlagrange
-          dyd = dyd + dble(b_displ(2,iglob))*hlagrange
-          dzd = dzd + dble(b_displ(3,iglob))*hlagrange
-          vxd = vxd + dble(b_veloc(1,iglob))*hlagrange
-          vyd = vyd + dble(b_veloc(2,iglob))*hlagrange
-          vzd = vzd + dble(b_veloc(3,iglob))*hlagrange
-          axd = axd + dble(b_accel(1,iglob))*hlagrange
-          ayd = ayd + dble(b_accel(2,iglob))*hlagrange
-          azd = azd + dble(b_accel(3,iglob))*hlagrange
+!! DK DK array not created yet for CUBIT
+!         dxd = dxd + dble(b_displ(1,iglob))*hlagrange
+!         dyd = dyd + dble(b_displ(2,iglob))*hlagrange
+!         dzd = dzd + dble(b_displ(3,iglob))*hlagrange
+!         vxd = vxd + dble(b_veloc(1,iglob))*hlagrange
+!         vyd = vyd + dble(b_veloc(2,iglob))*hlagrange
+!         vzd = vzd + dble(b_veloc(3,iglob))*hlagrange
+!         axd = axd + dble(b_accel(1,iglob))*hlagrange
+!         ayd = ayd + dble(b_accel(2,iglob))*hlagrange
+!         azd = azd + dble(b_accel(3,iglob))*hlagrange
         enddo
       enddo
       enddo
@@ -2074,19 +2143,20 @@
   if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
     write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it
     open(unit=27,file=trim(prname_Q)//trim(outputname),status='old',action='read',form='unformatted')
-    read(27) b_displ
-    read(27) b_veloc
-    read(27) b_accel
-    read(27) b_R_xx
-    read(27) b_R_yy
-    read(27) b_R_xy
-    read(27) b_R_xz
-    read(27) b_R_yz
-    read(27) b_epsilondev_xx
-    read(27) b_epsilondev_yy
-    read(27) b_epsilondev_xy
-    read(27) b_epsilondev_xz
-    read(27) b_epsilondev_yz
+!! DK DK array not created yet for CUBIT
+!   read(27) b_displ
+!   read(27) b_veloc
+!   read(27) b_accel
+!   read(27) b_R_xx
+!   read(27) b_R_yy
+!   read(27) b_R_xy
+!   read(27) b_R_xz
+!   read(27) b_R_yz
+!   read(27) b_epsilondev_xx
+!   read(27) b_epsilondev_yy
+!   read(27) b_epsilondev_xy
+!   read(27) b_epsilondev_xz
+!   read(27) b_epsilondev_yz
     close(27)
   else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. mod(it,NSTEP_Q_SAVE) == 0) then
     write(outputname,"('save_Q_arrays_',i6.6,'.bin')") it
@@ -2107,49 +2177,6 @@
     close(27)
   endif
   endif
-
-! kernel calculations
-  if (SIMULATION_TYPE == 3) then
-    do ispec = 1, NSPEC_AB
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
-          enddo
-        enddo
-      enddo
-    enddo
-
-    if (SAVE_MOHO_MESH) then
-      do ispec2D = 1, nspec2D_moho
-        ispec_top = ibelm_moho_top(ispec2D)
-        ispec_bot = ibelm_moho_bot(ispec2D)
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob_top = ibool(i,j,k_top,ispec_top)
-
-            call compute_boundary_kernel(kernel_moho_top, &
-                       mustore(i,j,k_top,ispec_top), kappastore(i,j,k_top,ispec_top), rho_vs(i,j,k_top,ispec_top), &
-                       accel(:,iglob_top),b_displ(:,iglob_top),dsdx_top(:,:,i,j,k_top,ispec2D), b_dsdx_top(:,:,i,j,k_top,ispec2D), &
-                       normal_moho(:,i,j,ispec2D))
-
-            iglob_bot = ibool(i,j,k_bot,ispec_bot)
-            ! iglob_top == iglob_bot!
-
-            call compute_boundary_kernel(kernel_moho_bot, &
-                       mustore(i,j,k_bot,ispec_bot), kappastore(i,j,k_bot,ispec_bot), rho_vs(i,j,k_bot,ispec_bot), &
-                       accel(:,iglob_bot),b_displ(:,iglob_bot),dsdx_bot(:,:,i,j,k_bot,ispec2D), b_dsdx_bot(:,:,i,j,k_bot,ispec2D), &
-                       normal_moho(:,i,j,ispec2D))
-
-            moho_kl(i,j,ispec2D) = moho_kl(i,j,ispec2D) + (kernel_moho_top - kernel_moho_bot) * deltat
-
-          enddo
-        enddo
-      enddo
-    endif
-  endif
-
 
   if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
     if (it == 1) then
@@ -2416,13 +2443,15 @@
 ! save MOVIE on the SURFACE
   if(MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 
+    stop 'DK DK MOVIE_SURFACE has been removed for now because we need a flag to detect the surface elements'
+
 ! get coordinates of surface mesh and surface displacement
     ipoin = 0
 
    k = NGLLZ
    if (USE_HIGHRES_FOR_MOVIES) then
      do ispec2D = 1,NSPEC2D_TOP
-       ispec = ibelm_top(ispec2D)
+!! DK DK array not created yet for CUBIT       ispec = ibelm_top(ispec2D)
        do j = 1,NGLLY
          do i = 1,NGLLX
            ipoin = ipoin + 1
@@ -2444,7 +2473,7 @@
      enddo ! ispec_top
    else
      do ispec2D = 1,NSPEC2D_TOP
-       ispec = ibelm_top(ispec2D)
+!! DK DK array not created yet for CUBIT       ispec = ibelm_top(ispec2D)
        do iloc = 1, NGNOD2D
          ipoin = ipoin + 1
          iglob = ibool(iorderi(iloc),iorderj(iloc),k,ispec)
@@ -2491,6 +2520,8 @@
 ! compute SHAKING INTENSITY MAP
  if(CREATE_SHAKEMAP) then
 
+    stop 'DK DK CREATE_SHAKEMAP has been removed for now because we need a flag to detect the surface elements'
+
     ipoin = 0
     k = NGLLZ
 
@@ -2498,7 +2529,7 @@
     if(USE_HIGHRES_FOR_MOVIES) then
 
     do ispec2D = 1,NSPEC2D_TOP
-      ispec = ibelm_top(ispec2D)
+!! DK DK array not created yet for CUBIT      ispec = ibelm_top(ispec2D)
 
 ! loop on all the points inside the element
       do j = 1,NGLLY
@@ -2517,7 +2548,7 @@
 
     else
       do ispec2D = 1,NSPEC2D_TOP
-        ispec = ibelm_top(ispec2D)
+!! DK DK array not created yet for CUBIT        ispec = ibelm_top(ispec2D)
         do iloc = 1, NGNOD2D
           ipoin = ipoin + 1
           iglob = ibool(iorderi(iloc),iorderj(iloc),k,ispec)
@@ -2700,49 +2731,8 @@
   else if (SIMULATION_TYPE == 3) then
 
     ! rhop, beta, alpha kernels
-    do ispec = 1, NSPEC_AB
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-            rho_kl(i,j,k,ispec) = - rho_vs(i,j,k,ispec) **2  * rho_kl(i,j,k,ispec) / mustore(i,j,k,ispec)
-            mu_kl(i,j,k,ispec) = - mustore(i,j,k,ispec) * mu_kl(i,j,k,ispec)
-            kappa_kl(i,j,k,ispec) = - kappastore(i,j,k,ispec) * kappa_kl(i,j,k,ispec)
-            rhop_kl(i,j,k,ispec) = rho_kl(i,j,k,ispec) + kappa_kl(i,j,k,ispec) + mu_kl(i,j,k,ispec)
-            beta_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (mu_kl(i,j,k,ispec) - 4._CUSTOM_REAL * mustore(i,j,k,ispec) &
-                  / (3._CUSTOM_REAL * kappastore(i,j,k,ispec)) * kappa_kl(i,j,k,ispec))
-            alpha_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (1._CUSTOM_REAL + &
-                  4._CUSTOM_REAL * mustore(i,j,k,ispec)/ (3._CUSTOM_REAL * kappastore(i,j,k,ispec))) &
-                  * kappa_kl(i,j,k,ispec)
-          enddo
-        enddo
-      enddo
-    enddo
-
 ! save kernels to binary files
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted')
-    write(27) rho_kl
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'mu_kernel.bin',status='unknown',form='unformatted')
-    write(27) mu_kl
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kernel.bin',status='unknown',form='unformatted')
-    write(27) kappa_kl
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kernel.bin',status='unknown',form='unformatted')
-    write(27) rhop_kl
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'beta_kernel.bin',status='unknown',form='unformatted')
-    write(27) beta_kl
-    close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted')
-    write(27) alpha_kl
-    close(27)
-    if (SAVE_MOHO_MESH) then
-      open(unit=27,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted')
-      write(27) moho_kl
-      close(27)
-    endif
+!! DK DK removed kernels from here because not supported for CUBIT + SCOTCH yet
 
   endif
 

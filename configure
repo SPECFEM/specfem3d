@@ -4988,7 +4988,7 @@ fi
 
 
 if test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x; then
-    LOCAL_PATH_IS_ALSO_GLOBAL=false
+    LOCAL_PATH_IS_ALSO_GLOBAL=true
 fi
 
 

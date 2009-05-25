@@ -59,15 +59,29 @@
   write(IOUT,*) '! mesh statistics:'
   write(IOUT,*) '! ---------------'
   write(IOUT,*) '!'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK these statistics are now INCORRECT'
+  write(IOUT,*) '! DK DK because the CUBIT + SCOTCH mesh has'
+  write(IOUT,*) '! DK DK a different number of mesh elements and points in each slice'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '!'
   write(IOUT,*) '! number of processors = ',NPROC
   write(IOUT,*) '!'
   write(IOUT,*) '! number of ES nodes = ',real(NPROC)/8.
   write(IOUT,*) '! percentage of total 640 ES nodes = ',100.*(real(NPROC)/8.)/640.,' %'
   write(IOUT,*) '! total memory available on these ES nodes (Gb) = ',16.*real(NPROC)/8.
 
-  write(IOUT,*) 'integer, parameter ::  NPROC_VAL = ',NPROC
-  write(IOUT,*) 'integer, parameter :: NPROC_XI_VAL = ', NPROC_XI
-  write(IOUT,*) 'integer, parameter :: NPROC_ETA_VAL = ', NPROC_ETA
+! write(IOUT,*) 'integer, parameter ::  NPROC_VAL = ',NPROC
+! write(IOUT,*) 'integer, parameter :: NPROC_XI_VAL = ', NPROC_XI
+! write(IOUT,*) 'integer, parameter :: NPROC_ETA_VAL = ', NPROC_ETA
 
   write(IOUT,*) '!'
   write(IOUT,*) '! max points per processor = max vector length = ',NGLOB_AB
@@ -104,16 +118,12 @@
   write(IOUT,*) '! average distance between points along X in m = ',sngl(UTM_X_MAX-UTM_X_MIN)/real(NEX_XI*(NGLLX-1))
   write(IOUT,*) '! average distance between points along Y in m = ',sngl(UTM_Y_MAX-UTM_Y_MIN)/real(NEX_ETA*(NGLLY-1))
   write(IOUT,*) '!'
-  write(IOUT,*)
-  write(IOUT,*) 'integer, parameter :: NSPEC_AB_VAL = ',NSPEC_AB
-  write(IOUT,*) 'integer, parameter :: NGLOB_AB_VAL = ',NGLOB_AB
-  write(IOUT,*)
-  write(IOUT,*) '!'
   write(IOUT,*) '! number of time steps = ',NSTEP
   write(IOUT,*) '!'
 
 ! if attenuation is off, set dummy size of arrays to one
   if(ATTENUATION) then
+    stop 'ATTENUATION not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
     write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .true.'
   else
@@ -124,6 +134,7 @@
 
 ! anisotropy
   if(ANISOTROPY) then
+    stop 'ANISOTROPY not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
     write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ',NSPEC_AB
     write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .true.'
   else
@@ -133,41 +144,45 @@
 
   write(IOUT,*)
 
+!! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
+!! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
+!! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
+
 ! strain/attenuation
   if (ATTENUATION .and. SIMULATION_TYPE == 3) then
-    write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', NSPEC_AB
+!   write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', NSPEC_AB
   else
-    write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', 1
+!   write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', 1
   endif
 
   ! adjoint
   if (SIMULATION_TYPE == 3) then
-    write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', NSPEC_AB
-    write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', NGLOB_AB
+!   write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', NSPEC_AB
+!   write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', NGLOB_AB
   else
-    write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', 1
-    write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', 1
+!   write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', 1
+!   write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', 1
   endif
 
   write(IOUT,*)
 
-  write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_XMIN_XMAX_VAL = ', NSPEC2DMAX_XMIN_XMAX
-  write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_YMIN_YMAX_VAL = ', NSPEC2DMAX_YMIN_YMAX
-  write(IOUT,*) 'integer, parameter :: NSPEC2D_BOTTOM_VAL = ', NSPEC2D_BOTTOM
-  write(IOUT,*) 'integer, parameter :: NSPEC2D_TOP_VAL = ', NSPEC2D_TOP
-  write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_XMIN_XMAX_VAL = ', NPOIN2DMAX_XMIN_XMAX
-  write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_YMIN_YMAX_VAL = ', NPOIN2DMAX_YMIN_YMAX
-  write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_XY_VAL = ', NPOIN2DMAX_XY
+! write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_XMIN_XMAX_VAL = ', NSPEC2DMAX_XMIN_XMAX
+! write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_YMIN_YMAX_VAL = ', NSPEC2DMAX_YMIN_YMAX
+! write(IOUT,*) 'integer, parameter :: NSPEC2D_BOTTOM_VAL = ', NSPEC2D_BOTTOM
+! write(IOUT,*) 'integer, parameter :: NSPEC2D_TOP_VAL = ', NSPEC2D_TOP
+! write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_XMIN_XMAX_VAL = ', NPOIN2DMAX_XMIN_XMAX
+! write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_YMIN_YMAX_VAL = ', NPOIN2DMAX_YMIN_YMAX
+! write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_XY_VAL = ', NPOIN2DMAX_XY
 
   write(IOUT,*)
 
 ! Moho boundary
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', NSPEC2D_BOTTOM
-    write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', NSPEC_AB
+!   write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', NSPEC2D_BOTTOM
+!   write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', NSPEC_AB
   else
-    write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', 1
-    write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', 1
+!   write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', 1
+!   write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', 1
   endif
 
   close(IOUT)

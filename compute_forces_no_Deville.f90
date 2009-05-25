@@ -23,7 +23,7 @@
 !
 !=====================================================================
 
-subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+subroutine compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
      hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
      kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
@@ -296,5 +296,5 @@ subroutine compute_forces(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,et
 
   enddo
 
-end subroutine compute_forces
+end subroutine compute_forces_no_Deville
 
