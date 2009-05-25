@@ -109,7 +109,8 @@ libspecfem_a_OBJECTS = \
 	$O/write_AVS_DX_surface_data.o \
 	$O/write_seismograms.o \
 	$O/compute_boundary_kernel.o \
-	$O/compute_forces.o \
+	$O/compute_forces_no_Deville.o \
+	$O/compute_forces_with_Deville.o \
 	$(EMPTY_MACRO)
 
 # solver objects with statically allocated arrays; dependent upon
@@ -427,8 +428,11 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 $O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
 
-$O/compute_forces.o: constants.h compute_forces.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces.o compute_forces.f90
+$O/compute_forces_no_Deville.o: constants.h compute_forces_no_Deville.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_no_Deville.o compute_forces_no_Deville.f90
+
+$O/compute_forces_with_Deville.o: constants.h compute_forces_with_Deville.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_with_Deville.o compute_forces_with_Deville.f90
 
 $O/combine_vol_data.o: constants.h combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90

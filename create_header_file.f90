@@ -96,8 +96,11 @@
   print *
   print *,'edit file OUTPUT_FILES/values_from_mesher.h to see some statistics about the mesh'
   print *
-  print *,'on NEC SX, make sure "loopcnt=" parameter'
-  print *,'in Makefile is greater than max vector length = ',NGLOB_AB
+!! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
+!! DK DK May 2009: has a different number of spectral elements and therefore the
+!! DK DK May 2009: value below should be the max() for all the slices
+! print *,'on NEC SX, make sure "loopcnt=" parameter'
+! print *,'in Makefile is greater than max vector length = ',NGLOB_AB
 
   print *
   print *,'done'
