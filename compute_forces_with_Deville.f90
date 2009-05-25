@@ -84,6 +84,35 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
 
+! manually inline the calls to the Deville et al. (2002) routines
+  real(kind=4), dimension(NGLLX,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
+  real(kind=4), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
+  real(kind=4), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
+
+  equivalence(dummyx_loc,B1_m1_m2_5points)
+  equivalence(dummyy_loc,B2_m1_m2_5points)
+  equivalence(dummyz_loc,B3_m1_m2_5points)
+  equivalence(tempx1,C1_m1_m2_5points)
+  equivalence(tempy1,C2_m1_m2_5points)
+  equivalence(tempz1,C3_m1_m2_5points)
+  equivalence(newtempx1,E1_m1_m2_5points)
+  equivalence(newtempy1,E2_m1_m2_5points)
+  equivalence(newtempz1,E3_m1_m2_5points)
+
+  real(kind=4), dimension(m2,NGLLX) :: A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
+  real(kind=4), dimension(m2,m1) :: C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
+  real(kind=4), dimension(m2,m1) :: E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
+
+  equivalence(dummyx_loc,A1_mxm_m2_m1_5points)
+  equivalence(dummyy_loc,A2_mxm_m2_m1_5points)
+  equivalence(dummyz_loc,A3_mxm_m2_m1_5points)
+  equivalence(tempx3,C1_mxm_m2_m1_5points)
+  equivalence(tempy3,C2_mxm_m2_m1_5points)
+  equivalence(tempz3,C3_mxm_m2_m1_5points)
+  equivalence(newtempx3,E1_mxm_m2_m1_5points)
+  equivalence(newtempy3,E2_mxm_m2_m1_5points)
+  equivalence(newtempz3,E3_mxm_m2_m1_5points)
+
   integer :: isource
   double precision :: t0,f0
 
@@ -102,17 +131,81 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz
       enddo
     enddo
 
-!! DK DK subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! DK DK for incompressible fluid flow, Cambridge University Press (2002),
-!! DK DK pages 386 and 389 and Figure 8.3.1
-  call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
+! call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
+  do j=1,m2
+    do i=1,m1
+      C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
+                              hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
+                              hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
+                              hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
+                              hprime_xx(i,5)*B1_m1_m2_5points(5,j)
 
-  do k = 1,NGLLX
-    call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
-           hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
+      C2_m1_m2_5points(i,j) = hprime_xx(i,1)*B2_m1_m2_5points(1,j) + &
+                              hprime_xx(i,2)*B2_m1_m2_5points(2,j) + &
+                              hprime_xx(i,3)*B2_m1_m2_5points(3,j) + &
+                              hprime_xx(i,4)*B2_m1_m2_5points(4,j) + &
+                              hprime_xx(i,5)*B2_m1_m2_5points(5,j)
+
+      C3_m1_m2_5points(i,j) = hprime_xx(i,1)*B3_m1_m2_5points(1,j) + &
+                              hprime_xx(i,2)*B3_m1_m2_5points(2,j) + &
+                              hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
+                              hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
+                              hprime_xx(i,5)*B3_m1_m2_5points(5,j)
+    enddo
   enddo
 
-  call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,hprime_xxT,tempx3,tempy3,tempz3)
+!   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
+!          hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
+  do j=1,m1
+    do i=1,m1
+! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
+      do k = 1,NGLLX
+        tempx2(i,j,k) = dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
+                        dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
+                        dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
+                        dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
+                        dummyx_loc(i,5,k)*hprime_xxT(5,j)
+
+        tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
+                        dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
+                        dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
+                        dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
+                        dummyy_loc(i,5,k)*hprime_xxT(5,j)
+
+        tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
+                        dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
+                        dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
+                        dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
+                        dummyz_loc(i,5,k)*hprime_xxT(5,j)
+      enddo
+    enddo
+  enddo
+
+! call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,tempx3,tempy3,tempz3)
+  do j=1,m1
+    do i=1,m2
+      C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+                                  A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                  A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                  A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                  A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+
+      C2_mxm_m2_m1_5points(i,j) = A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+                                  A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                  A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                  A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                  A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+
+      C3_mxm_m2_m1_5points(i,j) = A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+                                  A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                  A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                  A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                  A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+    enddo
+  enddo
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -182,17 +275,81 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz
       enddo
     enddo
 
-!! DK DK subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! DK DK for incompressible fluid flow, Cambridge University Press (2002),
-!! DK DK pages 386 and 389 and Figure 8.3.1
-  call mxm_m1_m2_5points(hprimewgll_xxT,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1)
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
+! call mxm_m1_m2_5points(hprimewgll_xxT,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1)
+  do j=1,m2
+    do i=1,m1
+      E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
+                              hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
+                              hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
+                              hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
+                              hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
 
-  do k = 1,NGLLX
-    call mxm_m1_m1_5points(tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k), &
-          hprimewgll_xx,newtempx2(1,1,k),newtempy2(1,1,k),newtempz2(1,1,k))
+      E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_5points(1,j) + &
+                              hprimewgll_xxT(i,2)*C2_m1_m2_5points(2,j) + &
+                              hprimewgll_xxT(i,3)*C2_m1_m2_5points(3,j) + &
+                              hprimewgll_xxT(i,4)*C2_m1_m2_5points(4,j) + &
+                              hprimewgll_xxT(i,5)*C2_m1_m2_5points(5,j)
+
+      E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_5points(1,j) + &
+                              hprimewgll_xxT(i,2)*C3_m1_m2_5points(2,j) + &
+                              hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
+                              hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
+                              hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
+    enddo
   enddo
 
-  call mxm_m2_m1_5points(tempx3,tempy3,tempz3,hprimewgll_xx,newtempx3,newtempy3,newtempz3)
+!   call mxm_m1_m1_5points(tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k), &
+!         hprimewgll_xx,newtempx2(1,1,k),newtempy2(1,1,k),newtempz2(1,1,k))
+  do i=1,m1
+    do j=1,m1
+! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
+      do k = 1,NGLLX
+        newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
+                           tempx2(i,2,k)*hprimewgll_xx(2,j) + &
+                           tempx2(i,3,k)*hprimewgll_xx(3,j) + &
+                           tempx2(i,4,k)*hprimewgll_xx(4,j) + &
+                           tempx2(i,5,k)*hprimewgll_xx(5,j)
+
+        newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
+                           tempy2(i,2,k)*hprimewgll_xx(2,j) + &
+                           tempy2(i,3,k)*hprimewgll_xx(3,j) + &
+                           tempy2(i,4,k)*hprimewgll_xx(4,j) + &
+                           tempy2(i,5,k)*hprimewgll_xx(5,j)
+
+        newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
+                           tempz2(i,2,k)*hprimewgll_xx(2,j) + &
+                           tempz2(i,3,k)*hprimewgll_xx(3,j) + &
+                           tempz2(i,4,k)*hprimewgll_xx(4,j) + &
+                           tempz2(i,5,k)*hprimewgll_xx(5,j)
+      enddo
+    enddo
+  enddo
+
+! call mxm_m2_m1_5points(tempx3,tempy3,tempz3,hprimewgll_xx,newtempx3,newtempy3,newtempz3)
+  do j=1,m1
+    do i=1,m2
+      E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+                                  C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                  C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                  C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                  C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+
+      E2_mxm_m2_m1_5points(i,j) = C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+                                  C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                  C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                  C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                  C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+
+      E3_mxm_m2_m1_5points(i,j) = C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+                                  C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                  C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                  C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                  C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+    enddo
+  enddo
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -257,20 +414,23 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz
 
 end subroutine compute_forces_with_Deville
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-!! DK DK subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! DK DK for incompressible fluid flow, Cambridge University Press (2002),
-!! DK DK pages 386 and 389 and Figure 8.3.1
+! subroutines adapted from Deville, Fischer and Mund, High-order methods
+! for incompressible fluid flow, Cambridge University Press (2002),
+! pages 386 and 389 and Figure 8.3.1
 
-  subroutine mxm_m1_m2_5points(A,B1,B2,B3,C1,C2,C3)
+  subroutine old_mxm_m1_m2_5points(A,B1,B2,B3,C1,C2,C3)
 
   implicit none
 
   include "constants.h"
 
-  real(kind=CUSTOM_REAL), dimension(m1,NGLLX) :: A
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1,B2,B3
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1,C2,C3
+  real(kind=4), dimension(m1,NGLLX) :: A
+  real(kind=4), dimension(NGLLX,m2) :: B1,B2,B3
+  real(kind=4), dimension(m1,m2) :: C1,C2,C3
 
   integer :: i,j
 
@@ -298,19 +458,19 @@ end subroutine compute_forces_with_Deville
     enddo
   enddo
 
-  end subroutine mxm_m1_m2_5points
+  end subroutine old_mxm_m1_m2_5points
 
 !---------
 
-  subroutine mxm_m1_m1_5points(A1,A2,A3,B,C1,C2,C3)
+  subroutine old_mxm_m1_m1_5points(A1,A2,A3,B,C1,C2,C3)
 
   implicit none
 
   include "constants.h"
 
-  real(kind=CUSTOM_REAL), dimension(m1,NGLLX) :: A1,A2,A3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m1) :: B
-  real(kind=CUSTOM_REAL), dimension(m1,m1) :: C1,C2,C3
+  real(kind=4), dimension(m1,NGLLX) :: A1,A2,A3
+  real(kind=4), dimension(NGLLX,m1) :: B
+  real(kind=4), dimension(m1,m1) :: C1,C2,C3
 
   integer :: i,j
 
@@ -338,19 +498,19 @@ end subroutine compute_forces_with_Deville
     enddo
   enddo
 
-  end subroutine mxm_m1_m1_5points
+  end subroutine old_mxm_m1_m1_5points
 
 !---------
 
-  subroutine mxm_m2_m1_5points(A1,A2,A3,B,C1,C2,C3)
+  subroutine old_mxm_m2_m1_5points(A1,A2,A3,B,C1,C2,C3)
 
   implicit none
 
   include "constants.h"
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: A1,A2,A3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m1) :: B
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: C1,C2,C3
+  real(kind=4), dimension(m2,NGLLX) :: A1,A2,A3
+  real(kind=4), dimension(NGLLX,m1) :: B
+  real(kind=4), dimension(m2,m1) :: C1,C2,C3
 
   integer :: i,j
 
@@ -378,5 +538,5 @@ end subroutine compute_forces_with_Deville
     enddo
   enddo
 
-  end subroutine mxm_m2_m1_5points
+  end subroutine old_mxm_m2_m1_5points
 
