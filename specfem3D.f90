@@ -155,7 +155,7 @@
 !            b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
 ! ADJOINT
 
-  integer NPOIN2DMAX_XY
+! integer NPOIN2DMAX_XY
 
 ! use integer array to store topography values
   integer NX_TOPO,NY_TOPO
@@ -171,7 +171,7 @@
 ! Moho mesh
 ! integer,dimension(NSPEC2D_MOHO_BOUN) :: ibelm_moho_top, ibelm_moho_bot
 ! real(CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: normal_moho
-  integer :: nspec2D_moho
+! integer :: nspec2D_moho
 
 !! DK DK array not created yet for CUBIT
 ! buffers for send and receive between faces of the slices and the chunks
@@ -236,11 +236,11 @@
   integer iattenuation_sediments,int_Q_mu
 
 ! Moho kernel
-  integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
+! integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
 !! DK DK array not created yet for CUBIT
 ! real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO_BOUN) :: dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
 ! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_MOHO_BOUN) :: moho_kl
-  real(kind=CUSTOM_REAL) :: kernel_moho_top, kernel_moho_bot
+! real(kind=CUSTOM_REAL) :: kernel_moho_top, kernel_moho_bot
 
 ! --------
 
@@ -318,14 +318,14 @@
 ! proc numbers for MPI
   integer myrank,sizeprocs
 
-  integer npoin2D_xi,npoin2D_eta
+! integer npoin2D_xi,npoin2D_eta
 
-  integer iproc_xi,iproc_eta
+! integer iproc_xi,iproc_eta
 
 ! maximum of the norm of the displacement
   real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all
 ! ADJOINT
-  real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
+! real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
 ! ADJOINT
 
 ! timer MPI
@@ -1701,12 +1701,12 @@
   close(27)
 
 ! initialize Moho boundary index
-  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    ispec2D_moho_top = 0
-    ispec2D_moho_bot = 0
-    k_top = 1
-    k_bot = NGLLZ
-  endif
+! if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+!   ispec2D_moho_top = 0
+!   ispec2D_moho_bot = 0
+!   k_top = 1
+!   k_bot = NGLLZ
+! endif
 
 !! DK DK May 2009: added this to print the minimum and maximum number of elements
 !! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
@@ -1793,8 +1793,8 @@
       write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
       write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
       write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
-      if (SIMULATION_TYPE == 3) write(IMAIN,*) &
-            'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
+!     if (SIMULATION_TYPE == 3) write(IMAIN,*) &
+!           'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
       write(IMAIN,*)
 
 ! write time stamp file to give information about progression of simulation
@@ -1806,8 +1806,8 @@
       write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
       write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
       write(IOUT,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
-      if (SIMULATION_TYPE == 3) write(IOUT,*) &
-            'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
+!     if (SIMULATION_TYPE == 3) write(IOUT,*) &
+!           'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
       close(IOUT)
 
 ! check stability of the code, exit if unstable
@@ -1815,8 +1815,8 @@
 ! than the greatest possible floating-point number of the machine
       if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0) &
         call exit_MPI(myrank,'forward simulation became unstable and blew up')
-      if(SIMULATION_TYPE == 3 .and. (b_Usolidnorm_all > STABILITY_THRESHOLD .or. b_Usolidnorm_all < 0)) &
-        call exit_MPI(myrank,'backward simulation became unstable and blew up')
+!     if(SIMULATION_TYPE == 3 .and. (b_Usolidnorm_all > STABILITY_THRESHOLD .or. b_Usolidnorm_all < 0)) &
+!       call exit_MPI(myrank,'backward simulation became unstable and blew up')
 
     endif
   endif
@@ -1833,10 +1833,10 @@
 !   b_accel(:,:) = 0._CUSTOM_REAL
 ! endif
 
-  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-    ispec2D_moho_top = 0
-    ispec2D_moho_bot = 0
-  endif
+! if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+!   ispec2D_moho_top = 0
+!   ispec2D_moho_bot = 0
+! endif
 
 ! assemble all the contributions between slices using MPI
     if(USE_DEVILLE_PRODUCTS) then
