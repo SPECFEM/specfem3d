@@ -223,7 +223,7 @@ $O/libspecfem.a: $(libspecfem_a_OBJECTS)
 ###
 
 $O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
 
 $O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
