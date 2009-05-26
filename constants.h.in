@@ -33,6 +33,10 @@
   integer, parameter :: SIZE_REAL = 4
   integer, parameter :: SIZE_DOUBLE = 8
 
+! usually the size of integer and logical variables is the same as regular single-precision real variable
+  integer, parameter :: SIZE_INTEGER = SIZE_REAL
+  integer, parameter :: SIZE_LOGICAL = SIZE_REAL
+
 ! set to SIZE_REAL to run in single precision
 ! set to SIZE_DOUBLE to run in double precision (increases memory size by 2)
   integer, parameter :: CUSTOM_REAL = @CUSTOM_REAL@
