@@ -204,6 +204,9 @@
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
   integer NER
 
+! static memory size that will be needed by the solver
+  double precision :: static_memory_size
+
 ! this for all the regions
   integer NSPEC_AB,NGLOB_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
@@ -783,7 +786,7 @@
            xstore,ystore,zstore,nspec, &
            npointot,myrank,LOCAL_PATH, &
            nnodes_ext_mesh,nelmnts_ext_mesh, &
-           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh, &
+           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh,static_memory_size, &
            ninterface_ext_mesh,max_interface_size_ext_mesh, &
            my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
            ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh)
@@ -895,7 +898,7 @@
 ! copy number of elements and points in an include file for the solver
   call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP, &
-             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE)
+             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
 
   call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
   call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')

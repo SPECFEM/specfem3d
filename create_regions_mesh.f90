@@ -1157,7 +1157,7 @@ enddo
   subroutine create_regions_mesh_ext_mesh(ibool, &
            xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
            nnodes_ext_mesh,nelmnts_ext_mesh, &
-           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh, &
+           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh,max_static_memory_size, &
            ninterface_ext_mesh,max_interface_size_ext_mesh, &
            my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
            ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh)
@@ -1179,6 +1179,9 @@ enddo
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
 
   integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+
+! static memory size needed by the solver
+  double precision :: static_memory_size,max_static_memory_size 
 
 ! data from the external mesh
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
@@ -1562,6 +1565,10 @@ enddo
   enddo
   write(IOUT) ibool_interfaces_ext_mesh_dummy
   close(IOUT)
+
+! compute the approximate amount of static memory needed to run the solver
+  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh,static_memory_size)
+  call max_all_dp(static_memory_size, max_static_memory_size)
 
   end subroutine create_regions_mesh_ext_mesh
 

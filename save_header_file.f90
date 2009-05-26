@@ -27,7 +27,7 @@
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP, &
-             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE)
+             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
 
   implicit none
 
@@ -39,6 +39,8 @@
   logical ATTENUATION,ANISOTROPY
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
+
+  double precision :: static_memory_size
 
   character(len=150) HEADER_FILE
 
@@ -145,6 +147,19 @@
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
+
+  write(IOUT,*) '! approximate static memory needed by the solver:'
+  write(IOUT,*) '! ----------------------------------------------'
+  write(IOUT,*) '!'
+  write(IOUT,*) '! size of static arrays for the biggest slice = ',static_memory_size/1048576.d0,' MB'
+  write(IOUT,*) '!                                             = ',static_memory_size/1073741824.d0,' GB'
+  write(IOUT,*) '!'
+  write(IOUT,*) '!   (should be below and typically equal to 80% of 1.5 GB = 1.2 GB on pangu'
+  write(IOUT,*) '!    at Caltech, and below and typically equal to 85% of 2 GB = 1.7 GB'
+  write(IOUT,*) '!    on Marenostrum in Barcelona)'
+  write(IOUT,*) '!   (if significantly more, the job will not run by lack of memory)'
+  write(IOUT,*) '!   (if significantly less, you waste a significant amount of memory)'
+  write(IOUT,*) '!'
 
 ! strain/attenuation
   if (ATTENUATION .and. SIMULATION_TYPE == 3) then

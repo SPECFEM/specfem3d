@@ -111,6 +111,7 @@ libspecfem_a_OBJECTS = \
 	$O/compute_boundary_kernel.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
+	$O/memory_eval.o \
 	$(EMPTY_MACRO)
 
 # solver objects with statically allocated arrays; dependent upon
@@ -259,6 +260,9 @@ $O/locate_source.o: constants.h locate_source.f90
 
 $O/locate_receivers.o: constants.h locate_receivers.f90
 	${FCCOMPILE_CHECK} -c -o $O/locate_receivers.o locate_receivers.f90
+
+$O/memory_eval.o: constants.h memory_eval.f90
+	${FCCOMPILE_CHECK} -c -o $O/memory_eval.o memory_eval.f90
 
 $O/exit_mpi.o: constants.h exit_mpi.f90
 	${FCCOMPILE_CHECK} -c -o $O/exit_mpi.o exit_mpi.f90
