@@ -592,12 +592,22 @@
   double precision stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME) station_name
   character(len=MAX_LENGTH_NETWORK_NAME) network_name
+  character(len=150) dummystring
 
+  nrec = 0
   nrec_filtered = 0
 
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   if (ios /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
-  read(IIN, *) nrec
+  !read(IIN, *) nrec
+  do while(ios == 0)
+     read(IIN,"(a)",iostat = ios) dummystring
+     if(ios == 0) nrec = nrec + 1
+  enddo
+  close(IIN)
+
+
+  open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   do irec = 1, nrec
     read(IIN, *) station_name, network_name, stlat, stlon, stele, stbur
     if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
@@ -608,8 +618,8 @@
   if (myrank == 0) then
     open(unit=IIN,file=trim(filename),status='old',action='read')
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
-    read(IIN,*) nrec
-    write(IOUT,*) nrec_filtered
+    !read(IIN,*) nrec
+    !write(IOUT,*) nrec_filtered
     do irec = 1,nrec
       read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
       if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
