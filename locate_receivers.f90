@@ -848,7 +848,6 @@
   if (myrank == 0) then
     open(unit=IIN,file=trim(filename),status='old',action='read')
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
-    read(IIN,*) nrec
     write(IOUT,*) nrec_filtered
     do irec = 1,nrec
       read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
