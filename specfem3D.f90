@@ -1180,7 +1180,7 @@
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_ADJOINT_FILTERED')
     call station_filter(myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
-    if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one source')
+    if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one receiver')
     call sync_all()
   endif
 
