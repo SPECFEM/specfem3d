@@ -129,9 +129,6 @@
 ! nlegoff -- Variables that should be read/computed elsewhere.
 !            Temporarily declared here.
 !------------------------------------------------------
-! whether or not an external mesh is used (provided by CUBIT for example)
-  logical, parameter :: USE_EXTERNAL_MESH = .true.
-
 ! no lagrange interpolation on seismograms (we take the value on one NGLL point)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 

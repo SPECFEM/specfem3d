@@ -201,7 +201,7 @@
 
 ! convert station location to UTM
     call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM, &
-         (SUPPRESS_UTM_PROJECTION .or. USE_EXTERNAL_MESH))
+         .true.)
 
 ! compute horizontal distance between source and receiver in km
     horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 + (stutm_x(irec)-utm_x_source)**2) / 1000.
@@ -231,60 +231,13 @@
       nu(3,2,irec) = 0.d0
       nu(3,3,irec) = 1.d0
 
-  if (.not. USE_EXTERNAL_MESH) then
-! compute elevation of topography at the receiver location
-! we assume that receivers are always at the surface i.e. not buried
-  if(TOPOGRAPHY) then
 
-! get coordinate of corner in bathy/topo model
-    icornerlong = int((stlon(irec) - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-    icornerlat = int((stlat(irec) - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-
-! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
-
-! compute coordinates of corner
-    long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
-    lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
-
-! compute ratio for interpolation
-    ratio_xi = (stlon(irec) - long_corner) / DEGREES_PER_CELL_TOPO
-    ratio_eta = (stlat(irec) - lat_corner) / DEGREES_PER_CELL_TOPO
-
-! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate elevation at current point
-    elevation = &
-      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-
-  else
-    elevation(irec) = 0.d0
-  endif
-
-! compute the Cartesian position of the receiver
       x_target(irec) = stutm_x(irec)
       y_target(irec) = stutm_y(irec)
-      z_target(irec) = elevation(irec) - stbur(irec)
+      z_target(irec) = stbur(irec)
       if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
-  else
-
-    x_target(irec) = stutm_x(irec)
-    y_target(irec) = stutm_y(irec)
-    z_target(irec) = stbur(irec)
-    if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
-
-  endif ! of if (.not. USE_EXTERNAL_MESH)
+  
 
 ! examine top of the elements only (receivers always at the surface)
 !      k = NGLLZ
@@ -323,7 +276,7 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            if (USE_EXTERNAL_MESH .and. (.not. RECVS_CAN_BE_BURIED_EXT_MESH)) then
+            if (.not. RECVS_CAN_BE_BURIED_EXT_MESH) then
               if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
                 cycle
               endif
@@ -366,7 +319,7 @@
   endif
 
 ! get normal to the face of the hexaedra if receiver is on the surface
-  if (USE_EXTERNAL_MESH .and. (.not. RECVS_CAN_BE_BURIED_EXT_MESH) .and. &
+  if ((.not. RECVS_CAN_BE_BURIED_EXT_MESH) .and. &
        .not. (ispec_selected_rec(irec) == 0)) then
     pt0_ix = -1
     pt0_iy = -1
@@ -517,7 +470,7 @@
       nu(3,3,irec) = 1.d0
       endif
 
-  endif ! of if (USE_EXTERNAL_MESH .and. (.not. RECVS_CAN_BE_BURIED_EXT_MESH))
+  endif ! of if (.not. RECVS_CAN_BE_BURIED_EXT_MESH)
 
 ! end of loop on all the stations
   enddo

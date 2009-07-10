@@ -1,3 +1,6 @@
+! Number of slices for mesh partitioning
+integer, parameter  :: nparts = 2  
+
 ! Useful kind types
 integer ,parameter :: short = SELECTED_INT_KIND(4), long = SELECTED_INT_KIND(18)
 

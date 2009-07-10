@@ -109,8 +109,6 @@ libspecfem_a_OBJECTS = \
 	$O/write_AVS_DX_surface_data.o \
 	$O/write_seismograms.o \
 	$O/compute_boundary_kernel.o \
-	$O/compute_forces_no_Deville.o \
-	$O/compute_forces_with_Deville.o \
 	$O/memory_eval.o \
 	$(EMPTY_MACRO)
 
@@ -120,6 +118,8 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/assemble_MPI_scalar.o \
 	$O/assemble_MPI_vector.o \
 	$O/read_arrays_solver.o \
+	$O/compute_forces_no_Deville.o \
+	$O/compute_forces_with_Deville.o \
 	$O/specfem3D.o \
 	$(EMPTY_MACRO)
 

@@ -235,10 +235,11 @@
   character(len=150) prname
   integer :: dummy_node
   integer :: dummy_elmnt
-  integer :: ispec, inode, num_interface, ie
+  integer :: ispec, inode, num_interface, ie,imat !pll
   integer :: nnodes_ext_mesh, nelmnts_ext_mesh
   integer  :: ninterface_ext_mesh
   integer  :: max_interface_size_ext_mesh
+  integer  :: nmat_ext_mesh, nundefMat_ext_mesh   !pll
   integer, dimension(:), allocatable  :: my_neighbours_ext_mesh
   integer, dimension(:), allocatable  :: my_nelmnts_neighbours_ext_mesh
   integer, dimension(:,:,:), allocatable  :: my_interfaces_ext_mesh
@@ -246,7 +247,14 @@
   integer, dimension(:), allocatable  :: nibool_interfaces_ext_mesh
   double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
   integer, dimension(:,:), allocatable :: elmnts_ext_mesh
-  integer, dimension(:), allocatable :: mat_ext_mesh
+  integer, dimension(:,:), allocatable :: mat_ext_mesh
+
+  ! pll
+  double precision, dimension(:,:), allocatable :: materials_ext_mesh
+  integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top  
+  integer  :: ispec2D, boundary_number
+  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
+  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -304,61 +312,10 @@
 
 ! info about external mesh simulation
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
-  if (USE_EXTERNAL_MESH) then
-    NPROC = sizeprocs
-  endif
+  NPROC = sizeprocs
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
-
-  if (.not. USE_EXTERNAL_MESH) then
-! dynamic allocation of mesh arrays
-  allocate(rns(0:2*NER))
-
-  allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
-  allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
-  allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
-
-  allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1))
-  allocate(iproc_xi_slice(0:NPROC-1))
-  allocate(iproc_eta_slice(0:NPROC-1))
-
-! clear arrays
-  xgrid(:,:,:) = 0.
-  ygrid(:,:,:) = 0.
-  zgrid(:,:,:) = 0.
-
-  iproc_xi_slice(:) = 0
-  iproc_eta_slice(:) = 0
-
-! create global slice addressing for solver
-  if(myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/addressing.txt',status='unknown')
-    write(IMAIN,*) 'creating global slice addressing'
-    write(IMAIN,*)
-  endif
-    do iproc_eta=0,NPROC_ETA-1
-      do iproc_xi=0,NPROC_XI-1
-        iprocnum = iproc_eta * NPROC_XI + iproc_xi
-        iproc_xi_slice(iprocnum) = iproc_xi
-        iproc_eta_slice(iprocnum) = iproc_eta
-        addressing(iproc_xi,iproc_eta) = iprocnum
-        if(myrank == 0) write(IOUT,*) iprocnum,iproc_xi,iproc_eta
-      enddo
-    enddo
-  if(myrank == 0) close(IOUT)
-
-  if (myrank == 0) then
-    write(IMAIN,*) 'Spatial distribution of slice numbers:'
-    do iproc_eta = NPROC_ETA-1, 0, -1
-      do iproc_xi = 0, NPROC_XI-1, 1
-        write(IMAIN,'(i5)',advance='no') addressing(iproc_xi,iproc_eta)
-      enddo
-      write(IMAIN,'(a1)',advance='yes') ' '
-    enddo
-  endif
-
-  endif ! end of (.not. USE_EXTERNAL_MESH)
 
   if(myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
@@ -390,30 +347,6 @@
 
 ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
-
-  if (.not. USE_EXTERNAL_MESH) then
-! check that Poisson's ratio in Gocad block is fine
-  if(VP_VS_RATIO_GOCAD_TOP < sqrt(2.) .or. VP_VS_RATIO_GOCAD_BOTTOM < sqrt(2.))&
-    call exit_MPI(myrank,'vp/vs ratio in Gocad block is too small')
-
-! check that number of slices is at least 1 in each direction
-  if(NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
-  if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
-
-! check that mesh can be cut into the right number of slices
-! also check that mesh can be coarsened in depth twice (block size multiple of 8)
-  if(USE_REGULAR_MESH) then
-    if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
-    if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
-  else
-    if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8 for a non-regular mesh')
-    if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8 for a non-regular mesh')
-
-    if(mod(NEX_XI/8,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI for a non-regular mesh')
-    if(mod(NEX_ETA/8,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA for a non-regular mesh')
-  endif
-
-  endif ! end of (.not. USE_EXTERNAL_MESH)
 
   if(myrank == 0) then
 
@@ -530,184 +463,6 @@
     close(55)
   endif
 
-  if (.not. USE_EXTERNAL_MESH) then
-
-! get addressing for this process
-  iproc_xi = iproc_xi_slice(myrank)
-  iproc_eta = iproc_eta_slice(myrank)
-
-! number of elements in each slice
-  npx = 2*NEX_PER_PROC_XI
-  npy = 2*NEX_PER_PROC_ETA
-
-  min_elevation = +HUGEVAL
-  max_elevation = -HUGEVAL
-
-! fill the region between the cutoff depth and the free surface
-  do iy=0,npy
-  do ix=0,npx
-
-!   define the mesh points on the top and the bottom
-
-    xin=dble(ix)/dble(npx)
-    x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
-
-    etan=dble(iy)/dble(npy)
-    y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
-
-! define model between topography surface and fictitious bottom
-    if(TOPOGRAPHY) then
-
-! project x and y in UTM back to long/lat since topo file is in long/lat
-  call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-
-! get coordinate of corner in bathy/topo model
-    icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-    icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-
-! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
-
-! compute coordinates of corner
-    long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
-    lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
-
-! compute ratio for interpolation
-    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
-    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
-
-! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate elevation at current point
-    elevation = &
-      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-
-    else
-
-      elevation = 0.d0
-
-    endif
-
-    z_top = Z_SURFACE + elevation
-    z_bot = - dabs(Z_DEPTH_BLOCK)
-
-! compute global min and max of elevation
-  min_elevation = dmin1(min_elevation,elevation)
-  max_elevation = dmax1(max_elevation,elevation)
-
-! create vertical point distribution at current horizontal point
-  if(BASEMENT_MAP) then
-
-! get coordinate of corner in bathy/topo model
-    icorner_x = int((x_current - ORIG_X_BASEMENT) / SPACING_X_BASEMENT) + 1
-    icorner_y = int((y_current - ORIG_Y_BASEMENT) / SPACING_Y_BASEMENT) + 1
-
-! avoid edge effects and extend with identical point if outside model
-    if(icorner_x < 1) icorner_x = 1
-    if(icorner_x > NX_BASEMENT-1) icorner_x = NX_BASEMENT-1
-    if(icorner_y < 1) icorner_y = 1
-    if(icorner_y > NY_BASEMENT-1) icorner_y = NY_BASEMENT-1
-
-! compute coordinates of corner
-    x_corner = ORIG_X_BASEMENT + (icorner_x-1)*SPACING_X_BASEMENT
-    y_corner = ORIG_Y_BASEMENT + (icorner_y-1)*SPACING_Y_BASEMENT
-
-! compute ratio for interpolation
-    ratio_xi = (x_current - x_corner) / SPACING_X_BASEMENT
-    ratio_eta = (y_current - y_corner) / SPACING_Y_BASEMENT
-
-! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate basement surface at current point
-    Z_BASEMENT_SURFACE = &
-      z_basement(icorner_x,icorner_y)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      z_basement(icorner_x+1,icorner_y)*ratio_xi*(1.-ratio_eta) + &
-      z_basement(icorner_x+1,icorner_y+1)*ratio_xi*ratio_eta + &
-      z_basement(icorner_x,icorner_y+1)*(1.-ratio_xi)*ratio_eta
-
-  else
-    Z_BASEMENT_SURFACE = DEPTH_5p5km_SOCAL
-  endif
-
-! honor Lupei Zhu's Moho map
-  if(MOHO_MAP_LUPEI) then
-
-! project x and y in UTM back to long/lat since topo file is in long/lat
-    call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-
-! get coordinate of corner in Moho map
-    icornerlong = int((long - ORIG_LONG_MOHO) / DEGREES_PER_CELL_MOHO) + 1
-    icornerlat = int((lat - ORIG_LAT_MOHO) / DEGREES_PER_CELL_MOHO) + 1
-
-! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_MOHO-1) icornerlong = NX_MOHO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_MOHO-1) icornerlat = NY_MOHO-1
-
-! compute coordinates of corner
-    long_corner = ORIG_LONG_MOHO + (icornerlong-1)*DEGREES_PER_CELL_MOHO
-    lat_corner = ORIG_LAT_MOHO + (icornerlat-1)*DEGREES_PER_CELL_MOHO
-
-! compute ratio for interpolation
-    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_MOHO
-    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_MOHO
-
-! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate Moho depth at current point
-    Z_DEPTH_MOHO = &
-     - (imoho_depth(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-        imoho_depth(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-        imoho_depth(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-        imoho_depth(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta)
-
-  else
-    Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
-  endif
-
-! define vertical spacing of the mesh in case of a non-regular mesh with mesh doublings
-  if(.not. USE_REGULAR_MESH) call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
-                     NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-!! DK DK UGLY modif z_top by Emmanuel Chaljub here
-!! DK DK UGLY modif Manu removed                     z_top, &
-                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
-
-!   fill the volume
-    do ir = 0,2*NER
-      if(USE_REGULAR_MESH) then
-        rn = dble(ir) / dble(2*NER)
-      else
-        rn = rns(ir)
-      endif
-      xgrid(ir,ix,iy) = x_current
-      ygrid(ir,ix,iy) = y_current
-      zgrid(ir,ix,iy) = z_bot*(ONE-rn) + z_top*rn
-    enddo
-
-  enddo
-  enddo
-
-  endif ! end of (.not. USE_EXTERNAL_MESH)
-
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
@@ -722,44 +477,104 @@
   area_local_top = ZERO
 
 ! read databases about external mesh simulation
-! nlegoff --
-  if (USE_EXTERNAL_MESH) then
-    call create_name_database(prname,myrank,LOCAL_PATH)
-    open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted')
-    read(IIN,*) nnodes_ext_mesh
-    allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
-    do inode = 1, nnodes_ext_mesh
-      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
-    enddo
+  
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted')
+  read(IIN,*) nnodes_ext_mesh
+  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
+  do inode = 1, nnodes_ext_mesh
+     read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
+  enddo
+  
+! read materials' physical properties    
+  read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh 
+  allocate(materials_ext_mesh(5,nmat_ext_mesh))
+  allocate(undef_mat_prop(5,nundefMat_ext_mesh))
+  do imat = 1, nmat_ext_mesh
+     read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
+          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
+  end do
+  
+  do imat = 1, nundefMat_ext_mesh
+     read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
+          undef_mat_prop(5,imat)
+  end do
 
-    read(IIN,*) nelmnts_ext_mesh
-    allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
-    allocate(mat_ext_mesh(nelmnts_ext_mesh))
-    do ispec = 1, nelmnts_ext_mesh
-      read(IIN,*) dummy_elmnt, mat_ext_mesh(ispec), &
-           elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
-           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
-    enddo
-    NSPEC_AB = nelmnts_ext_mesh
+  read(IIN,*) nelmnts_ext_mesh
+  allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
+  allocate(mat_ext_mesh(2,nelmnts_ext_mesh))
+  do ispec = 1, nelmnts_ext_mesh
+     read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
+          elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
+          elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
+  enddo
+  NSPEC_AB = nelmnts_ext_mesh
+  
+! read boundaries
+  read(IIN,*) boundary_number ,nspec2D_xmin
+  if(boundary_number /= 1) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_xmax
+  if(boundary_number /= 2) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_ymin
+  if(boundary_number /= 3) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_ymax
+  if(boundary_number /= 4) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_bottom_ext
+  if(boundary_number /= 5) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_top_ext
+  if(boundary_number /= 6) stop "Error : invalid database file"
+  NSPEC2DMAX_XMIN_XMAX = max(nspec2D_xmin,nspec2D_xmax)
+  NSPEC2DMAX_YMIN_YMAX = max(nspec2D_ymin,nspec2D_ymax)
+  NSPEC2D_BOTTOM = nspec2D_bottom_ext
+  NSPEC2D_TOP = nspec2D_top_ext  
+  
+  allocate(ibelm_xmin(nspec2D_xmin))
+  do ispec2D = 1,nspec2D_xmin
+     read(IIN,*) ibelm_xmin(ispec2D)
+  end do
+  
+  allocate(ibelm_xmax(nspec2D_xmax))
+  do ispec2D = 1,nspec2D_xmax
+     read(IIN,*) ibelm_xmax(ispec2D)
+  end do
+  
+  allocate(ibelm_ymin(nspec2D_ymin))
+  do ispec2D = 1,nspec2D_ymin
+     read(IIN,*) ibelm_ymin(ispec2D)
+  end do
+  
+  allocate(ibelm_ymax(nspec2D_ymax))
+  do ispec2D = 1,nspec2D_ymax
+     read(IIN,*) ibelm_ymax(ispec2D)
+  end do
+  
+  allocate(ibelm_bottom(nspec2D_bottom_ext))
+  do ispec2D = 1,nspec2D_bottom_ext
+     read(IIN,*) ibelm_bottom(ispec2D)
+  end do
 
-    read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
-    allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
-    allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
-    allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,ninterface_ext_mesh))
-    allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh))
-    allocate(nibool_interfaces_ext_mesh(ninterface_ext_mesh))
-    do num_interface = 1, ninterface_ext_mesh
-      read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
-      do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
+  allocate(ibelm_top(nspec2D_top_ext))
+  do ispec2D = 1,nspec2D_top_ext
+     read(IIN,*) ibelm_top(ispec2D)
+  end do
+  
+  read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
+  allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
+  allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,ninterface_ext_mesh))
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh))
+  allocate(nibool_interfaces_ext_mesh(ninterface_ext_mesh))
+  do num_interface = 1, ninterface_ext_mesh
+     read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
+     do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
         read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
              my_interfaces_ext_mesh(3,ie,num_interface), my_interfaces_ext_mesh(4,ie,num_interface), &
              my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
-      enddo
-    enddo
+     enddo
+  enddo
+  
+  close(IIN)
 
-    close(IIN)
-
-  endif
 
 ! assign theoretical number of elements
   nspec = NSPEC_AB
@@ -781,35 +596,18 @@
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! create all the regions of the mesh
-  if (USE_EXTERNAL_MESH) then
   call create_regions_mesh_ext_mesh(ibool, &
-           xstore,ystore,zstore,nspec, &
-           npointot,myrank,LOCAL_PATH, &
-           nnodes_ext_mesh,nelmnts_ext_mesh, &
-           nodes_coords_ext_mesh,elmnts_ext_mesh,mat_ext_mesh,static_memory_size, &
-           ninterface_ext_mesh,max_interface_size_ext_mesh, &
-           my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
-           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh)
+       xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
+       nnodes_ext_mesh,nelmnts_ext_mesh, &
+       nodes_coords_ext_mesh,elmnts_ext_mesh,static_memory_size,mat_ext_mesh,materials_ext_mesh, &
+       nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ninterface_ext_mesh,max_interface_size_ext_mesh, &
+       my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
+       ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
+       nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
+       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+       ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
+  
 
-  else
-  call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
-         xstore,ystore,zstore,npx,npy, &
-         iproc_xi,iproc_eta,nspec, &
-         volume_local,area_local_bottom,area_local_top, &
-         NGLOB_AB,npointot, &
-         NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
-         NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-         NSPEC2DMAX_XMIN_XMAX, &
-         NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-         HARVARD_3D_GOCAD_MODEL,NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-         NSPEC2D_A_ETA,NSPEC2D_B_ETA,myrank,LOCAL_PATH, &
-         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,UTM_PROJECTION_ZONE, &
-         HAUKSSON_REGIONAL_MODEL,OCEANS, &
-         VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-         IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,MOHO_MAP_LUPEI, &
-         ANISOTROPY,SAVE_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
-         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
-  endif
 ! print min and max of topography included
   if(TOPOGRAPHY) then
 
@@ -900,50 +698,52 @@
              UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP, &
              NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
 
-  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
-  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+!  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
+!  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
 
 ! get total number of stations
-  open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
-  nrec = 0
-  do while(ios == 0)
-    read(IIN,"(a)",iostat=ios) dummystring
-    if(ios == 0) nrec = nrec + 1
-  enddo
-  close(IIN)
+! open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
+! nrec = 0
+! do while(ios == 0)
+!   read(IIN,"(a)",iostat=ios) dummystring
+!   if(ios == 0) nrec = nrec + 1
+! enddo
+! close(IIN)
 
 ! filter list of stations, only retain stations that are in the model
-  nrec_filtered = 0
-  open(unit=IIN,file=rec_filename,status='old',action='read')
-  do irec = 1,nrec
-    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-         .or. USE_EXTERNAL_MESH) &
-      nrec_filtered = nrec_filtered + 1
-  enddo
-  close(IIN)
+!  nrec_filtered = 0
+!  open(unit=IIN,file=rec_filename,status='old',action='read')
+!  do irec = 1,nrec
+!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+!         .or. USE_EXTERNAL_MESH) &
+!      nrec_filtered = nrec_filtered + 1
+!  enddo
+!  close(IIN)
 
-  write(IMAIN,*)
-  write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(rec_filename)
-  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_rec_filename)
-  write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
-  write(IMAIN,*)
+!  write(IMAIN,*)
+!  write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(rec_filename)
+!  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_rec_filename)
+!  write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
+!  write(IMAIN,*)
 
-  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the model')
+!  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the model')
 
-  open(unit=IIN,file=rec_filename,status='old',action='read')
-  open(unit=IOUT,file=filtered_rec_filename,status='unknown')
+!  if(nrec < 1) call exit_MPI(myrank,'need at least one station in the model')
 
-  do irec = 1,nrec
-    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-         .or. USE_EXTERNAL_MESH) &
-      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
-              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
-  enddo
+!  open(unit=IIN,file=rec_filename,status='old',action='read')
+!  open(unit=IOUT,file=filtered_rec_filename,status='unknown')
 
-  close(IIN)
-  close(IOUT)
+!  do irec = 1,nrec
+!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+!         .or. USE_EXTERNAL_MESH) &
+!      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
+!              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
+!  enddo
+
+!  close(IIN)
+!  close(IOUT)
 
   endif   ! end of section executed by main process only
 
