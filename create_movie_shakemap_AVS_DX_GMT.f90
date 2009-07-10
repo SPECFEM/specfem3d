@@ -157,20 +157,13 @@
   endif
   print *
 
-  if (USE_EXTERNAL_MESH) then
-    NPROC = 1
-    if(USE_HIGHRES_FOR_MOVIES) then
-      ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
-    else
-      ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_AVS_DX
-    endif
+  NPROC = 1
+  if(USE_HIGHRES_FOR_MOVIES) then
+     ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
   else
-    if(USE_HIGHRES_FOR_MOVIES) then
-      ilocnum = NGLLSQUARE*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
-    else
-      ilocnum = NGNOD2D_AVS_DX*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
-    endif
+     ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_AVS_DX
   endif
+  
   allocate(store_val_x(ilocnum,0:NPROC-1))
   allocate(store_val_y(ilocnum,0:NPROC-1))
   allocate(store_val_z(ilocnum,0:NPROC-1))
@@ -261,20 +254,12 @@
   endif
 
 ! define the total number of elements at the surface
-  if (USE_EXTERNAL_MESH) then
-    if(USE_HIGHRES_FOR_MOVIES) then
-      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH * (NGLLX-1) * (NGLLY-1)
-    else
-      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH
-    endif
+  if(USE_HIGHRES_FOR_MOVIES) then
+     nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH * (NGLLX-1) * (NGLLY-1)
   else
-    if(USE_HIGHRES_FOR_MOVIES) then
-      nspectot_AVS_max = NEX_XI * NEX_ETA * (NGLLX-1) * (NGLLY-1)
-    else
-      nspectot_AVS_max = NEX_XI * NEX_ETA
-    endif
+     nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH
   endif
-
+  
   print *
   print *,'there are a total of ',nspectot_AVS_max,' elements at the surface'
   print *
@@ -389,12 +374,8 @@
               endif
             endif
             else
-              if (USE_EXTERNAL_MESH) then
                 display(i,j) = sqrt(vectorz**2+vectory**2+vectorx**2)
-              else
-                display(i,j) = vectorz
-              endif
-            endif
+             endif
 
           enddo
         enddo
@@ -479,11 +460,7 @@
             endif
             endif
           else
-            if (USE_EXTERNAL_MESH) then
               field_display(ilocnum+ieoff) =sqrt(vectorz**2+vectory**2+vectorx**2)
-            else
-              field_display(ilocnum+ieoff) = dble(vectorz)
-            endif
           endif
 
         enddo
@@ -500,12 +477,8 @@
 
 !--- sort the list based upon coordinates to get rid of multiples
   print *,'sorting list of points'
-  if (USE_EXTERNAL_MESH) then
-    call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot, &
-         dble(minval(store_val_x(:,0))),dble(maxval(store_val_x(:,0))))
-  else
-    call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
-  endif
+  call get_global_AVS(nspectot_AVS_max,xp,yp,zp,iglob,loc,ifseg,nglob,npointot, &
+       dble(minval(store_val_x(:,0))),dble(maxval(store_val_x(:,0))))
 
 !--- print total number of points found
   print *

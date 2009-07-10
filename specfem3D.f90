@@ -141,10 +141,13 @@
   integer iattenuation
   double precision scale_factor
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION,N_SLS) :: &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
     R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION) :: &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+
+  integer :: NSPEC_ATTENUATION_AB
+  integer, dimension(:,:,:,:),allocatable :: iflag_attenuation_store
 
 ! ADJOINT
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: b_alphaval, b_betaval, b_gammaval
@@ -155,13 +158,25 @@
 !            b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
 ! ADJOINT
 
-! integer NPOIN2DMAX_XY
-
 ! use integer array to store topography values
   integer NX_TOPO,NY_TOPO
   double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   character(len=100) topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
+
+  integer :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
+  integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax
+  integer, dimension(:), allocatable :: ibelm_ymin,ibelm_ymax
+  integer, dimension(:), allocatable :: ibelm_bottom
+  integer, dimension(:), allocatable :: ibelm_top
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_xmin,jacobian2D_xmax
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_ymin,jacobian2D_ymax
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_bottom
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable  :: jacobian2D_top
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_xmin,normal_xmax
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_ymin,normal_ymax
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_bottom
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_top
 
 !! DK DK array not created yet for CUBIT
 ! integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
@@ -228,12 +243,14 @@
 ! real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
 ! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
 !   rhop_kl, beta_kl, alpha_kl
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: absorb_xmin, absorb_xmax, &  
+!       absorb_ymin, absorb_ymax, absorb_zmin ! for absorbing b.c.
+!  integer reclen_xmin, reclen_xmax, reclen_ymin, reclen_ymax, reclen_zmin
+
   real(kind=CUSTOM_REAL) b_deltat, b_deltatover2, b_deltatsqover2
 ! ADJOINT
 
   integer l
-  real(kind=CUSTOM_REAL) vs_val,Q_mu
-  integer iattenuation_sediments,int_Q_mu
 
 ! Moho kernel
 ! integer ispec2D_moho_top, ispec2D_moho_bot, k_top, k_bot, ispec_top, ispec_bot, iglob_top, iglob_bot
@@ -371,6 +388,8 @@
 ! Stacey conditions put back
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,ispec2D
   real(kind=CUSTOM_REAL) nx,ny,nz
+  integer, dimension(:,:),allocatable :: nimin,nimax,nkmin_eta
+  integer, dimension(:,:),allocatable :: njmin,njmax,nkmin_xi
 
 ! to save movie frames
   integer ipoin, nmovie_points, iloc, iorderi(NGNOD2D), iorderj(NGNOD2D)
@@ -491,11 +510,6 @@
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
-! check that we use an external mesh, because this new version of the solver
-! (SPECFEM3D_SESAME) is for external meshes only (created for instance using CUBIT
-! and decomposed with METIS or SCOTCH)
-  if (.not. USE_EXTERNAL_MESH) stop 'SPECFEM3D_SESAME is for external meshes only'
-
 ! check that optimized routines from Deville et al. (2002) can be used
   if(NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
     stop 'optimized routines from Deville et al. (2002) such as mxm_m1_m2_5points can only be used if NGLL = 5'
@@ -509,6 +523,8 @@
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
   read(27) NSPEC_AB
   read(27) NGLOB_AB
+  !pll
+  NSPEC_ATTENUATION_AB = NSPEC_AB
   close(27)
 
 ! open main output file, only written to by process 0
@@ -594,6 +610,7 @@
   allocate(displ(NDIM,NGLOB_AB))
   allocate(veloc(NDIM,NGLOB_AB))
   allocate(accel(NDIM,NGLOB_AB))
+  allocate(iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
 ! info about external mesh simulation
 ! nlegoff -- should be put in read_arrays_solver and read_arrays_buffer_solver for clarity
@@ -611,6 +628,23 @@
     read(27) gammay
     read(27) gammaz
     read(27) jacobian
+    
+    !pll
+    read(27) rho_vp
+    read(27) rho_vs
+    read(27) iflag_attenuation_store
+    read(27) NSPEC2DMAX_XMIN_XMAX_ext 
+    read(27) NSPEC2DMAX_YMIN_YMAX_ext
+    allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX_ext),nimax(2,NSPEC2DMAX_YMIN_YMAX_ext),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX_ext))
+    allocate(njmin(2,NSPEC2DMAX_XMIN_XMAX_ext),njmax(2,NSPEC2DMAX_XMIN_XMAX_ext),nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX_ext))
+    read(27) nimin
+    read(27) nimax
+    read(27) njmin
+    read(27) njmax
+    read(27) nkmin_xi 
+    read(27) nkmin_eta
+    !end pll
+
     read(27) kappastore
     read(27) mustore
     read(27) rmass
@@ -618,6 +652,51 @@
     read(27) xstore
     read(27) ystore
     read(27) zstore
+
+    !pll
+    read(27) nspec2D_xmin
+    read(27) nspec2D_xmax
+    read(27) nspec2D_ymin
+    read(27) nspec2D_ymax
+    read(27) NSPEC2D_BOTTOM
+    read(27) NSPEC2D_TOP    
+    allocate(ibelm_xmin(nspec2D_xmin))
+    allocate(ibelm_xmax(nspec2D_xmax))
+    allocate(ibelm_ymin(nspec2D_ymin))
+    allocate(ibelm_ymax(nspec2D_ymax))
+    allocate(ibelm_bottom(NSPEC2D_BOTTOM))
+    allocate(ibelm_top(NSPEC2D_TOP))
+    allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin))
+    allocate(jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax))
+    allocate(jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin))
+    allocate(jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax))
+    allocate(jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM))
+    allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
+    allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
+    allocate(normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
+    allocate(normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
+    allocate(normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
+    allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
+    allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
+    read(27) ibelm_xmin
+    read(27) ibelm_xmax
+    read(27) ibelm_ymin
+    read(27) ibelm_ymax
+    read(27) ibelm_bottom
+    read(27) ibelm_top
+    read(27) normal_xmin
+    read(27) normal_xmax
+    read(27) normal_ymin
+    read(27) normal_ymax
+    read(27) normal_bottom
+    read(27) normal_top
+    read(27) jacobian2D_xmin
+    read(27) jacobian2D_xmax
+    read(27) jacobian2D_ymin
+    read(27) jacobian2D_ymax
+    read(27) jacobian2D_bottom
+    read(27) jacobian2D_top
+    !end pll
 
     read(27) ninterfaces_ext_mesh
     read(27) max_nibool_interfaces_ext_mesh
@@ -1162,17 +1241,16 @@
 !$$$$$$$$$$$$$$$$$$ RECEIVERS $$$$$$$$$$$$$$$$$$$$$
 
   if (SIMULATION_TYPE == 1) then
-    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+    call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
 
 ! get total number of stations
-    open(unit=IIN,file=filtered_rec_filename,iostat=ios,status='old',action='read')
+    open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
     nrec = 0
     do while(ios == 0)
       read(IIN,"(a)",iostat=ios) dummystring
       if(ios == 0) nrec = nrec + 1
     enddo
     close(IIN)
-
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
   else
@@ -1208,7 +1286,7 @@
 
 ! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
-            xstore,ystore,zstore,xigll,yigll,zigll,filtered_rec_filename, &
+            xstore,ystore,zstore,xigll,yigll,zigll,rec_filename, &
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
@@ -1457,73 +1535,86 @@
 
 ! rescale shear modulus according to attenuation model
 
+!pll 
+!   do ispec = 1,NSPEC_AB
+!    if(not_fully_in_bedrock(ispec)) then
+!      do k=1,NGLLZ
+!        do j=1,NGLLY
+!          do i=1,NGLLX
+!
+!! distinguish attenuation factors
+!   if(flag_sediments(i,j,k,ispec)) then
+!
+!! use constant attenuation of Q = 90
+!! or use scaling rule similar to Olsen et al. (2003)
+!! We might need to fix the attenuation part for the anisotropy case
+!! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
+!     if(USE_OLSEN_ATTENUATION) then
+!       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+!! use rule Q_mu = constant * v_s
+!       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
+!       int_Q_mu = 10 * nint(Q_mu / 10.)
+!       if(int_Q_mu < 40) int_Q_mu = 40
+!       if(int_Q_mu > 150) int_Q_mu = 150
+!
+!       if(int_Q_mu == 40) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
+!       else if(int_Q_mu == 50) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
+!       else if(int_Q_mu == 60) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
+!       else if(int_Q_mu == 70) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
+!       else if(int_Q_mu == 80) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
+!       else if(int_Q_mu == 90) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+!       else if(int_Q_mu == 100) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
+!       else if(int_Q_mu == 110) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
+!       else if(int_Q_mu == 120) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
+!       else if(int_Q_mu == 130) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
+!       else if(int_Q_mu == 140) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
+!       else if(int_Q_mu == 150) then
+!         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
+!       else
+!         stop 'incorrect attenuation coefficient'
+!       endif
+!
+!     else
+!       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+!     endif
+!
+!     scale_factor = factor_scale(iattenuation_sediments)
+!   else
+!     scale_factor = factor_scale(IATTENUATION_BEDROCK)
+!   endif
+!
+!      mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
+!
+!          enddo
+!        enddo
+!      enddo
+!    endif
+!    enddo
+
+    !pll
     do ispec = 1,NSPEC_AB
-    if(not_fully_in_bedrock(ispec)) then
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-
-! distinguish attenuation factors
-   if(flag_sediments(i,j,k,ispec)) then
-
-! use constant attenuation of Q = 90
-! or use scaling rule similar to Olsen et al. (2003)
-! We might need to fix the attenuation part for the anisotropy case
-! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
-     if(USE_OLSEN_ATTENUATION) then
-       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-! use rule Q_mu = constant * v_s
-       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
-       int_Q_mu = 10 * nint(Q_mu / 10.)
-       if(int_Q_mu < 40) int_Q_mu = 40
-       if(int_Q_mu > 150) int_Q_mu = 150
-
-       if(int_Q_mu == 40) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
-       else if(int_Q_mu == 50) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
-       else if(int_Q_mu == 60) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
-       else if(int_Q_mu == 70) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
-       else if(int_Q_mu == 80) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
-       else if(int_Q_mu == 90) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
-       else if(int_Q_mu == 100) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
-       else if(int_Q_mu == 110) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
-       else if(int_Q_mu == 120) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
-       else if(int_Q_mu == 130) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
-       else if(int_Q_mu == 140) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
-       else if(int_Q_mu == 150) then
-         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
-       else
-         stop 'incorrect attenuation coefficient'
-       endif
-
-     else
-       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
-     endif
-
-     scale_factor = factor_scale(iattenuation_sediments)
-   else
-     scale_factor = factor_scale(IATTENUATION_BEDROCK)
-   endif
-
-      mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
-
+       do k=1,NGLLZ
+          do j=1,NGLLY
+             do i=1,NGLLX
+                scale_factor = factor_scale(iflag_attenuation_store(i,j,k,ispec))
+                mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
+             enddo
           enddo
-        enddo
-      enddo
-    endif
+       enddo
     enddo
-
-  endif
+    
+ endif
 
 ! allocate seismogram array
   if (nrec_local > 0) then
@@ -1659,9 +1750,22 @@
     endif
   endif
 
+
+  !pll, to put elsewhere
+  allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+  allocate(R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+  allocate(R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+  allocate(R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+  allocate(R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+  allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
+  allocate(epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
+  allocate(epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
+  allocate(epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
+  allocate(epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
+
 ! clear memory variables if attenuation
   if(ATTENUATION) then
-
+  
    ! initialize memory variables for attenuation
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
@@ -1839,11 +1943,22 @@
 ! endif
 
 ! assemble all the contributions between slices using MPI
+
+
     if(USE_DEVILLE_PRODUCTS) then
-      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
+         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
+         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
+         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
+         ABSORBING_CONDITIONS,SAVE_FORWARD,NSTEP,SIMULATION_TYPE, &
+         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
+         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
+         nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
+         veloc,rho_vp,rho_vs,jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom, &
+         normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom) 
     else
       call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -1858,10 +1973,19 @@
          request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     if(USE_DEVILLE_PRODUCTS) then
-      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
+         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
+         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
+         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
+         ABSORBING_CONDITIONS,SAVE_FORWARD,NSTEP,SIMULATION_TYPE, &
+         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
+         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
+         nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
+         veloc,rho_vp,rho_vs,jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom, &
+         normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom)
     else
       call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &

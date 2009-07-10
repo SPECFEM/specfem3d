@@ -167,14 +167,6 @@
 ! loop on all the sources
   do isource = 1,NSOURCES
 
-  if (.not. USE_EXTERNAL_MESH) then
-! check that the current source is inside the model
-  if(lat(isource) < LATITUDE_MIN .or. lat(isource) > LATITUDE_MAX .or. long(isource) < LONGITUDE_MIN &
-       .or. long(isource) > LONGITUDE_MAX)  call exit_MPI(myrank,'the current source is outside the model')
-
-  if(depth(isource) >= dabs(Z_DEPTH_BLOCK/1000.d0)) &
-    call exit_MPI(myrank,'the current source is below the bottom of the model')
-  endif
 !
 ! r -> z, theta -> -y, phi -> x
 !
@@ -194,7 +186,7 @@
   Mxy(isource) = - moment_tensor(6,isource)
 
   call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource), &
-                   UTM_PROJECTION_ZONE,ILONGLAT2UTM,(SUPPRESS_UTM_PROJECTION .or. USE_EXTERNAL_MESH))
+                   UTM_PROJECTION_ZONE,ILONGLAT2UTM,.true.)
 
 ! orientation consistent with the UTM projection
 
@@ -213,61 +205,11 @@
       nu_source(3,2,isource) = 0.d0
       nu_source(3,3,isource) = 1.d0
 
-  if (.not. USE_EXTERNAL_MESH) then
-
-! compute elevation of topography at the epicenter
-  if(TOPOGRAPHY) then
-
-! get coordinate of corner in bathy/topo model
-    icornerlong = int((long(isource) - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-    icornerlat = int((lat(isource) - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-
-! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
-
-! compute coordinates of corner
-    long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
-    lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
-
-! compute ratio for interpolation
-    ratio_xi = (long(isource) - long_corner) / DEGREES_PER_CELL_TOPO
-    ratio_eta = (lat(isource) - lat_corner) / DEGREES_PER_CELL_TOPO
-
-! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate elevation at current point
-    elevation(isource) = &
-      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-
-  else
-    elevation = 0.d0
-  endif
-
-! compute the Cartesian position of the source
-! take elevation of the surface into account
-  x_target_source = utm_x_source(isource)
-  y_target_source = utm_y_source(isource)
-  z_target_source = - depth(isource)*1000.0d0 + elevation(isource)
-  if(myrank == 0) write(IOVTK,*) x_target_source,y_target_source,z_target_source
-
-  else
-
-    x_target_source = utm_x_source(isource)
-    y_target_source = utm_y_source(isource)
-    z_target_source = depth(isource)
-    if (myrank == 0) write(IOVTK,*) x_target_source, y_target_source, z_target_source
-
-  endif ! of if (.not. USE_EXTERNAL_MESH)
+      x_target_source = utm_x_source(isource)
+      y_target_source = utm_y_source(isource)
+      z_target_source = depth(isource)
+      if (myrank == 0) write(IOVTK,*) x_target_source, y_target_source, z_target_source
+      
 
 ! set distance to huge initial value
   distmin = HUGEVAL
@@ -278,7 +220,7 @@
 
 
 ! define the interval in which we look for points
-      if(USE_FORCE_POINT_SOURCE .and. USE_EXTERNAL_MESH) then
+      if(USE_FORCE_POINT_SOURCE) then
         imin = 1
         imax = NGLLX
 
@@ -307,7 +249,7 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            if (USE_EXTERNAL_MESH .and. (.not. SOURCES_CAN_BE_BURIED_EXT_MESH)) then
+            if (.not. SOURCES_CAN_BE_BURIED_EXT_MESH) then
               if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
                 cycle
               endif
@@ -350,7 +292,7 @@
   endif
 
 ! get normal to the face of the hexaedra if receiver is on the surface
-  if (USE_EXTERNAL_MESH .and. (.not. SOURCES_CAN_BE_BURIED_EXT_MESH) .and. &
+  if ((.not. SOURCES_CAN_BE_BURIED_EXT_MESH) .and. &
        .not. (ispec_selected_source(isource) == 0)) then
     pt0_ix = -1
     pt0_iy = -1
@@ -484,7 +426,7 @@
       nu_source(3,2,isource) = v_vector(3)
       nu_source(3,3,isource) = w_vector(3)
 
-  endif ! of if (USE_EXTERNAL_MESH .and. (.not. RECEIVERS_CAN_BE_BURIED_EXT_MESH))
+  endif ! of if (.not. RECEIVERS_CAN_BE_BURIED_EXT_MESH)
 
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source

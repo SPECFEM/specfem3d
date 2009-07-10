@@ -123,7 +123,6 @@
 
 ! if attenuation is off, set dummy size of arrays to one
   if(ATTENUATION) then
-    stop 'ATTENUATION not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
     write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .true.'
   else
