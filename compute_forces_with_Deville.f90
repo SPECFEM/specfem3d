@@ -31,7 +31,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & !pll
      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-     ABSORBING_CONDITIONS,SAVE_FORWARD,NSTEP,SIMULATION_TYPE, &
+     ABSORBING_CONDITIONS, &
      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext,&
      ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
      nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
@@ -152,8 +152,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   
 ! Stacey conditions
-  logical  :: ABSORBING_CONDITIONS,SAVE_FORWARD
-  integer  :: NSTEP,SIMULATION_TYPE
+  logical  :: ABSORBING_CONDITIONS
   integer  :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM
   integer  :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
   integer, dimension(nspec2D_xmin) :: ibelm_xmin

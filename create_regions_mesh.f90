@@ -146,6 +146,8 @@
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
   double precision, dimension(:,:,:,:), allocatable :: dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top
 
+  integer  :: ispec2D
+  integer :: iflag, flag_below, flag_above
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
   integer  :: NSPEC2DMAX_XMIN_XMAX 
   integer  :: NSPEC2DMAX_YMIN_YMAX
@@ -159,11 +161,6 @@
   integer, dimension(2,NSPEC2DMAX_XMIN_XMAX) :: njmin,njmax 
   integer, dimension(2,NSPEC2DMAX_XMIN_XMAX) :: nkmin_xi
   integer, dimension(2,NSPEC2DMAX_YMIN_YMAX) :: nkmin_eta
-
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: ibedrock
-
-  integer  :: ispec2D
-  integer :: iflag, flag_below, flag_above
 
   ! 2-D jacobians and normals
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: &
@@ -204,7 +201,7 @@
 ! ! for Piero Basini's model this is the resolution in meters of the topo file
 !   double precision, parameter :: DEGREES_PER_CELL_TOPO = 250.d0
 
-
+!real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: ibedrock
 
 
 ! **************
