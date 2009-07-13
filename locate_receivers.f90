@@ -31,8 +31,7 @@
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
-                 TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                 NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+                 TOPOGRAPHY,UTM_PROJECTION_ZONE, &
                  iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
                  )
 
@@ -40,9 +39,9 @@
 
   include "constants.h"
 
-  integer NPROC,UTM_PROJECTION_ZONE,NX_TOPO,NY_TOPO
+  logical TOPOGRAPHY
 
-  logical TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
+  integer NPROC,UTM_PROJECTION_ZONE
 
   integer nrec,myrank
 
@@ -50,14 +49,8 @@
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
-  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
-
 ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
-
-! use integer array to store topography values
-  integer itopo_bathy(NX_TOPO,NY_TOPO)
-  double precision long_corner,lat_corner,ratio_xi,ratio_eta
 
 ! for surface locating and normal computing with external mesh
   integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
@@ -78,7 +71,6 @@
   integer irec
   integer i,j,k,ispec,iglob,imin,imax,jmin,jmax,kmin,kmax
 
-  integer icornerlong,icornerlat
   double precision utm_x_source,utm_y_source
   double precision dist
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta,dgamma

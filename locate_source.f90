@@ -33,10 +33,8 @@
                  NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
-                 LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-                 TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE, &
-                 PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
-                 NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+                 TOPOGRAPHY,UTM_PROJECTION_ZONE, &
+                 PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
                  )
 
@@ -45,18 +43,13 @@
   include "constants.h"
 
   integer NPROC,UTM_PROJECTION_ZONE
-  integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES,NX_TOPO,NY_TOPO
+  integer NSTEP,NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
+  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION
 
-  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK
-  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  double precision DT
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-! use integer array to store topography values
-  integer itopo_bathy(NX_TOPO,NY_TOPO)
-  double precision long_corner,lat_corner,ratio_xi,ratio_eta
 
   integer myrank
 
@@ -122,7 +115,6 @@
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(3,3,NSOURCES) :: nu_source
 
-  integer icornerlong,icornerlat
   double precision, dimension(NSOURCES) :: lat,long,depth,elevation
   double precision moment_tensor(6,NSOURCES)
 

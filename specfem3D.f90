@@ -1215,10 +1215,8 @@
           NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,Z_DEPTH_BLOCK, &
-          TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE, &
-          PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION, &
-          NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+          TOPOGRAPHY,UTM_PROJECTION_ZONE, &
+          PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
@@ -1290,8 +1288,7 @@
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
-            TOPOGRAPHY,itopo_bathy,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-            NX_TOPO,NY_TOPO,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+            TOPOGRAPHY,UTM_PROJECTION_ZONE, &
             iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
 )
 
@@ -1952,8 +1949,7 @@
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
          hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
          one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
-         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-         ABSORBING_CONDITIONS,SAVE_FORWARD,NSTEP,SIMULATION_TYPE, &
+         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
          ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
          nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
@@ -1979,8 +1975,7 @@
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
          hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
          one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
-         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-         ABSORBING_CONDITIONS,SAVE_FORWARD,NSTEP,SIMULATION_TYPE, &
+         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
          ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
          nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &

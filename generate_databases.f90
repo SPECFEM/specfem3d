@@ -129,16 +129,8 @@
 ! number of spectral elements in each block
   integer nspec,npointot
 
-! meshing parameters
-  double precision, dimension(:), allocatable :: rns
-
 ! auxiliary variables to generate the mesh
-  integer ix,iy,ir
-
-  double precision xin,etan,rn
-  double precision x_current,y_current,z_top,z_bot
-
-  double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
+  integer ix,iy
 
 ! parameters needed to store the radii of the grid points
   integer, dimension(:), allocatable :: idoubling
@@ -155,16 +147,9 @@
   double precision area_local_top,area_total_top
   double precision volume_local,volume_total
 
-  integer iprocnum,npx,npy
-
-! for loop on all the slices
-  integer iproc_xi,iproc_eta
-  integer, dimension(:,:), allocatable :: addressing
-
 ! use integer array to store topography values
-  integer icornerlat,icornerlong,NX_TOPO,NY_TOPO
-  double precision lat,long,elevation,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
-  double precision long_corner,lat_corner,ratio_xi,ratio_eta
+  integer NX_TOPO,NY_TOPO
+  double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   character(len=100) topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
@@ -175,9 +160,6 @@
   double precision, external :: wtime
   double precision time_start,tCPU
 
-! addressing for all the slices
-  integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
-
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
@@ -185,7 +167,7 @@
   integer NSOURCES
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
-  double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
+  double precision Z_DEPTH_BLOCK
   double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
   double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
@@ -218,18 +200,16 @@
   double precision min_elevation_all,max_elevation_all
 
 ! for tapered basement map
-  integer icorner_x,icorner_y
   integer iz_basement
-  double precision x_corner,y_corner
   double precision z_basement(NX_BASEMENT,NY_BASEMENT)
   character(len=150) BASEMENT_MAP_FILE
 
 ! to filter list of stations
-  integer irec,nrec,nrec_filtered,ios
-  double precision stlat,stlon,stele,stbur
-  character(len=MAX_LENGTH_STATION_NAME) station_name
-  character(len=MAX_LENGTH_NETWORK_NAME) network_name
-  character(len=150) rec_filename,filtered_rec_filename,dummystring
+!   integer nrec,nrec_filtered
+!   double precision stlat,stlon,stele,stbur
+!   character(len=MAX_LENGTH_STATION_NAME) station_name
+!   character(len=MAX_LENGTH_NETWORK_NAME) network_name
+!   character(len=150) rec_filename!,filtered_rec_filename
 
 ! for Databases of external meshes
   character(len=150) prname
