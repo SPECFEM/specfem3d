@@ -1,0 +1,1 @@
+gfortran -ffixed-line-length-132 -O3 -o xmeshfem3D tokyo_generate.f endw1.f endw2.f gammaf.f hdgll.f jacg.f jacobf.f pndleg.f pnleg.f pnormj.f zwgjd.f zwgljd.f
