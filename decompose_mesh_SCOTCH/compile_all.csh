@@ -11,5 +11,5 @@ gfortran -Wall -c decompose_mesh_SCOTCH.f90
 #gfortran decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.o ~/utils/metis-4.0/libmetis.a
 #gfortran decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.o ~/utils/scotch_5.1/lib/libscotchmetis.a ~/utils/scotch_5.1/lib/libscotch.a ~/utils/scotch_5.1/lib/libscotcherr.a
 #gfortran decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.o ~/utils/scotch_5.1/lib/libscotch.a ~/utils/scotch_5.1/lib/libscotcherr.a
-gfortran -Wall decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.o ~/Download/scotch_5.1/lib/libscotch.a ~/Download/scotch_5.1/lib/libscotcherr.a
+gfortran -Wall decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.o /scratch/network/SCOTCH/lib/libscotch.a /scratch/network/SCOTCH/lib/libscotcherr.a
 

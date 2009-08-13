@@ -19,14 +19,6 @@ program pre_meshfem3D
   integer, dimension(:), allocatable  :: nnodes_elmnts
   integer, dimension(:), allocatable  :: nodes_elmnts
 
-!  Old Metis variables
-!  integer  :: wgtflag
-!  integer  :: num_start
-!  integer  :: edgecut
-!  integer, dimension(:), allocatable  :: vwgt
-!  integer, dimension(:), allocatable  :: adjwgt
-!  integer, dimension(5)  :: metis_options
-
   integer, dimension(:), pointer  :: glob2loc_elmnts
   integer, dimension(:), pointer  :: glob2loc_nodes_nparts
   integer, dimension(:), pointer  :: glob2loc_nodes_parts
@@ -72,8 +64,11 @@ program pre_meshfem3D
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
 
+
+  ! sets number of nodes per element
   ngnod = esize
 
+  ! reads mesh elements
   open(unit=98, file='./OUTPUT_FILES/mesh_file', status='old', form='formatted')
   read(98,*) nspec
   allocate(elmnts(esize,nspec))
@@ -233,30 +228,12 @@ program pre_meshfem3D
        nodes_elmnts, max_neighbour, 1)
   print*, 'max_neighbour = ',max_neighbour
 
- ! elmnts(:,:) = elmnts(:,:) + 1
- ! adjncy(:) = adjncy(:) + 1
- ! xadj(:) = xadj(:) + 1
- ! allocate(vwgt(0:nspec-1))
   nb_edges = xadj(nspec+1)
-!   allocate(adjwgt(0:nb_edges-1))
-!   vwgt(:) = 1
-!   adjwgt(:) = 1
 
-!   metis_options(1) = 0
-!   metis_options(2) = 3
-!   metis_options(3) = 1
-!   metis_options(4) = 1
-!   metis_options(5) = 0
-  
-  
-!   num_start = 0
-!   wgtflag = 0
-
+  ! allocates & initializes partioning of elements
   allocate(part(1:nspec))
+  part(:) = -1
 
-! Old metis partitioning
-!   call METIS_PartGraphRecursive(nspec, xadj(1), adjncy(1), vwgt(0), adjwgt(0), wgtflag, num_start, nparts, &
-!        metis_options, edgecut, part(1));
 
 ! SCOTCH partitioning
     call scotchfstratinit (scotchstrat(1), ierr)
@@ -317,7 +294,7 @@ program pre_meshfem3D
 
      write(prname, "(i6.6,'_Database')") ipart
      open(unit=15,file='./OUTPUT_FILES/proc'//prname,status='unknown', action='write', form='formatted')
-     
+ 
      call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
           glob2loc_nodes, nnodes, 1)
      call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, glob2loc_elmnts, glob2loc_nodes_nparts, &
@@ -354,7 +331,4 @@ program pre_meshfem3D
 
   
 end program pre_meshfem3D
-
-
-
 

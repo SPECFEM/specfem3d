@@ -31,17 +31,12 @@ contains
     integer  :: connectivity
 
 
-    !allocate(xadj(0:nelmnts))
+    ! initializes
     xadj(:) = 0
-    !allocate(adjncy(0:max_neighbour*nelmnts-1))
     adjncy(:) = 0
-    !allocate(nnodes_elmnts(0:nnodes-1))
     nnodes_elmnts(:) = 0
-    !allocate(nodes_elmnts(0:nsize*nnodes-1))
     nodes_elmnts(:) = 0
-
     nb_edges = 0
-
 
     ! list of elements per node
     do i = 0, esize*nelmnts-1
@@ -49,8 +44,6 @@ contains
        nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
 
     end do
-
-    !print *, 'nnodes_elmnts'
 
     ! checking which elements are neighbours ('ncommonnodes' criteria)
     do j = 0, nnodes-1
@@ -127,19 +120,21 @@ contains
     integer  :: num_glob, num_part
     integer, dimension(0:nparts-1)  :: num_loc
 
-
+    ! allocates local numbering array
     allocate(glob2loc_elmnts(0:nelmnts-1))
 
+    ! initializes number of local points per partition
     do num_part = 0, nparts-1
        num_loc(num_part) = 0
-
     end do
 
+    ! local numbering
     do num_glob = 0, nelmnts-1
+       ! gets partition
        num_part = part(num_glob)
+       ! increments local numbering of elements (starting with 0,1,2,...)
        glob2loc_elmnts(num_glob) = num_loc(num_part)
        num_loc(num_part) = num_loc(num_part) + 1
-
     end do
 
 
@@ -174,9 +169,7 @@ contains
     allocate(glob2loc_nodes_nparts(0:nnodes))
 
     size_glob2loc_nodes = 0
-
     parts_node(:) = 0
-
 
     do num_node = 0, nnodes-1
        glob2loc_nodes_nparts(num_node) = size_glob2loc_nodes
@@ -477,6 +470,7 @@ contains
     integer  :: loc_nspec2D_xmin,loc_nspec2D_xmax,loc_nspec2D_ymin,loc_nspec2D_ymax,loc_nspec2D_bottom,loc_nspec2D_top 
   
     
+    ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
     loc_nspec2D_xmin = 0
     do i=1,nspec2D_xmin  
        if(part(ibelm_xmin(i)) == iproc) then
@@ -520,6 +514,11 @@ contains
     end do
     write(IIN_database,*) 6, loc_nspec2D_top
 
+    ! outputs element index and element node indices
+    ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
+    !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
+    !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus 
+    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1 )
     do i=1,nspec2D_xmin  
        if(part(ibelm_xmin(i)) == iproc) then
           do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmin(1,i))-1
@@ -568,7 +567,7 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_xmax(i))+1, loc_node1, loc_node2, loc_node3, loc_node4  
+          write(IIN_database,*) glob2loc_elmnts(ibelm_xmax(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4  
        end if
     end do
 
@@ -594,7 +593,7 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_ymin(i))+1, loc_node1, loc_node2, loc_node3, loc_node4  
+          write(IIN_database,*) glob2loc_elmnts(ibelm_ymin(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4  
        end if
     end do
     
@@ -620,7 +619,7 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_ymax(i))+1, loc_node1, loc_node2, loc_node3, loc_node4  
+          write(IIN_database,*) glob2loc_elmnts(ibelm_ymax(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4  
        end if
     end do
 
@@ -646,7 +645,7 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_bottom(i))+1, loc_node1, loc_node2, loc_node3, loc_node4  
+          write(IIN_database,*) glob2loc_elmnts(ibelm_bottom(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4  
        end if
     end do
 
@@ -672,8 +671,9 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_top(i))+1, loc_node1, loc_node2, loc_node3, loc_node4  
+          write(IIN_database,*) glob2loc_elmnts(ibelm_top(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4  
        end if
+
     end do
 
 

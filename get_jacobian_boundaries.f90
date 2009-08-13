@@ -251,13 +251,15 @@
   endif
 
   enddo
+	write(42,*)'TNM: ispecb6,NSPEC2D_TOP',myrank,ispecb6,NSPEC2D_TOP
 
 ! check theoretical value of elements at the bottom
   if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
 
 ! check theoretical value of elements at the top
-  if(ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
-
+  if(ispecb6 /= NSPEC2D_TOP) then
+	call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
+  endif
   nspec2D_xmin = ispecb1
   nspec2D_xmax = ispecb2
   nspec2D_ymin = ispecb3
