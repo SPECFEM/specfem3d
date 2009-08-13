@@ -25,20 +25,20 @@
 
 ! save header file OUTPUT_FILES/values_from_mesher.h
 
-  subroutine save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
-             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP, &
+  subroutine save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
+             ATTENUATION,ANISOTROPY,NSTEP,DT, &
              NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
 
   implicit none
 
   include "constants.h"
 
-  integer NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC,NSTEP, &
+  integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP, &
              NPOIN2DMAX_XY,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE
 
   logical ATTENUATION,ANISOTROPY
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
+  double precision DT
 
   double precision :: static_memory_size
 
@@ -84,46 +84,41 @@
 ! write(IOUT,*) 'integer, parameter :: NPROC_ETA_VAL = ', NPROC_ETA
 
   write(IOUT,*) '!'
-  write(IOUT,*) '! max points per processor = max vector length = ',NGLOB_AB
+!  write(IOUT,*) '! max points per processor = max vector length = ',NGLOB_AB
   write(IOUT,*) '! min vector length = ',NGLLSQUARE
   write(IOUT,*) '! min critical vector length = ',NGLLSQUARE_NDIM
   write(IOUT,*) '!'
-  write(IOUT,*) '! on ES and SX-5, make sure "loopcnt=" parameter'
-  write(IOUT,*) '! in Makefile is greater than ',NGLOB_AB
-  write(IOUT,*) '!'
+!  write(IOUT,*) '! on ES and SX-5, make sure "loopcnt=" parameter'
+!  write(IOUT,*) '! in Makefile is greater than ',NGLOB_AB
+!  write(IOUT,*) '!'
 
-  write(IOUT,*) '! total elements per AB slice = ',NSPEC_AB
-  write(IOUT,*) '! total points per AB slice = ',NGLOB_AB
+!  write(IOUT,*) '! total elements per AB slice = ',NSPEC_AB
+!  write(IOUT,*) '! total points per AB slice = ',NGLOB_AB
+  write(IOUT,*) '! total elements per AB slice = (will be read in external file)'
+  write(IOUT,*) '! total points per AB slice = (will be read in external file)'
   write(IOUT,*) '!'
 
   write(IOUT,*) '! total for full mesh:'
   write(IOUT,*) '! -------------------'
   write(IOUT,*) '!'
-  write(IOUT,*) '! exact total number of spectral elements in entire mesh = '
-  write(IOUT,*) '! ',NPROC*NSPEC_AB
-  write(IOUT,*) '! approximate total number of points in entire mesh = '
-  write(IOUT,*) '! ',dble(NPROC)*dble(NGLOB_AB)
+!  write(IOUT,*) '! exact total number of spectral elements in entire mesh = '
+!  write(IOUT,*) '! ',NPROC*NSPEC_AB
+!  write(IOUT,*) '! approximate total number of points in entire mesh = '
+!  write(IOUT,*) '! ',dble(NPROC)*dble(NGLOB_AB)
 ! there are 3 DOFs in solid regions
-  write(IOUT,*) '! approximate total number of degrees of freedom in entire mesh = '
-  write(IOUT,*) '! ',3.d0*dble(NPROC)*dble(NGLOB_AB)
-  write(IOUT,*) '!'
+!  write(IOUT,*) '! approximate total number of degrees of freedom in entire mesh = '
+!  write(IOUT,*) '! ',3.d0*dble(NPROC)*dble(NGLOB_AB)
+!  write(IOUT,*) '!'
 
-  write(IOUT,*) '! resolution of the mesh at the surface:'
-  write(IOUT,*) '! -------------------------------------'
-  write(IOUT,*) '!'
-  write(IOUT,*) '! spectral elements along X = ',NEX_XI
-  write(IOUT,*) '! spectral elements along Y = ',NEX_ETA
-  write(IOUT,*) '! GLL points along X = ',NEX_XI*(NGLLX-1) + 1
-  write(IOUT,*) '! GLL points along Y = ',NEX_ETA*(NGLLY-1) + 1
-  write(IOUT,*) '! average distance between points along X in m = ',sngl(UTM_X_MAX-UTM_X_MIN)/real(NEX_XI*(NGLLX-1))
-  write(IOUT,*) '! average distance between points along Y in m = ',sngl(UTM_Y_MAX-UTM_Y_MIN)/real(NEX_ETA*(NGLLY-1))
   write(IOUT,*) '!'
   write(IOUT,*) '! number of time steps = ',NSTEP
+  write(IOUT,*) '!'
+  write(IOUT,*) '! time step = ',DT
   write(IOUT,*) '!'
 
 ! if attenuation is off, set dummy size of arrays to one
   if(ATTENUATION) then
-    write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
+!    write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .true.'
   else
     write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', 1
@@ -134,7 +129,7 @@
 ! anisotropy
   if(ANISOTROPY) then
     stop 'ANISOTROPY not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
-    write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ',NSPEC_AB
+ !   write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ',NSPEC_AB
     write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .true.'
   else
     write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ', 1

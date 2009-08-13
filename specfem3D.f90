@@ -351,35 +351,25 @@
   double precision time_start,tCPU
 
 ! parameters read from parameter file
-  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
-             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
+  integer NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer NSOURCES
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
   double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
-  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
-  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
-          OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
+  logical TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
+          OCEANS,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,prname,prname_Q,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH,prname,prname_Q
 
 ! parameters deduced from parameters read from file
-  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer NER
+  integer NPROC
 
-  integer NSPEC2D_A_XI,NSPEC2D_B_XI, &
-               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX, &
+  integer NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                NSPEC_AB, NGLOB_AB
 
 ! names of the data files for all the processors in MPI
@@ -473,18 +463,15 @@
   call world_rank(myrank)
 
 ! read the parameter file
-  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+  call read_parameter_file( &
+        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
+        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
@@ -498,15 +485,6 @@
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
 ! LQY -- note: kernel simulations with attenuation turned on has been implemented
 
-! compute other parameters based upon values read
-  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
-
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
@@ -517,10 +495,13 @@
 ! info about external mesh simulation
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
   NPROC = sizeprocs
-  DT = DT_ext_mesh
-  NSTEP = NSTEP_ext_mesh
+! chris: DT_ext_mesh & NSTE_ext_mesh were in constants.h, I suppressed it, now it is Par_file & read in 
+! read_parameters_file.f90
+!  DT = DT_ext_mesh
+!  NSTEP = NSTEP_ext_mesh
   call create_name_database(prname,myrank,LOCAL_PATH)
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+
   read(27) NSPEC_AB
   read(27) NGLOB_AB
   !pll
@@ -547,9 +528,6 @@
   write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
   write(IMAIN,*)
 
-  write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
-  write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
-  write(IMAIN,*)
   write(IMAIN,*) 'There are ',NPROC_XI,' slices along xi'
   write(IMAIN,*) 'There are ',NPROC_ETA,' slices along eta'
   write(IMAIN,*) 'There is a total of ',NPROC,' slices'
@@ -1444,20 +1422,6 @@
     write(IMAIN,*) 'incorporating surface topography'
   else
     write(IMAIN,*) 'no surface topography'
-  endif
-
-  write(IMAIN,*)
-  if(SUPPRESS_UTM_PROJECTION) then
-    write(IMAIN,*) 'suppressing UTM projection'
-  else
-    write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
-  endif
-
-  write(IMAIN,*)
-  if(HARVARD_3D_GOCAD_MODEL) then
-    write(IMAIN,*) 'incorporating 3-D lateral variations'
-  else
-    write(IMAIN,*) 'no 3-D lateral variations'
   endif
 
   write(IMAIN,*)

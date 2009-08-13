@@ -130,7 +130,7 @@
   integer nspec,npointot
 
 ! auxiliary variables to generate the mesh
-  integer ix,iy
+!  integer ix,iy
 
 ! parameters needed to store the radii of the grid points
   integer, dimension(:), allocatable :: idoubling
@@ -142,11 +142,6 @@
 ! proc numbers for MPI
   integer myrank,sizeprocs,ier
 
-! check area and volume of the final mesh
-  double precision area_local_bottom,area_total_bottom
-  double precision area_local_top,area_total_top
-  double precision volume_local,volume_total
-
 ! use integer array to store topography values
   integer NX_TOPO,NY_TOPO
   double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
@@ -154,44 +149,36 @@
   integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! use integer array to store Moho depth
-  integer imoho_depth(NX_MOHO,NY_MOHO)
+!  integer imoho_depth(NX_MOHO,NY_MOHO)
 
 ! timer MPI
   double precision, external :: wtime
   double precision time_start,tCPU
 
 ! parameters read from parameter file
-  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
-             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
+  integer NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE,UTM_PROJECTION_ZONE
   integer NSOURCES
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
-  double precision Z_DEPTH_BLOCK
-  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
-  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
+  double precision DT,HDUR_MOVIE
 
-  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
-          OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
-  logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
+  logical TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
+          OCEANS, SAVE_FORWARD
+  logical ANISOTROPY,ABSORBING_CONDITIONS,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH
 
 ! parameters deduced from parameters read from file
-  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer NER
+  integer NPROC
 
 ! static memory size that will be needed by the solver
   double precision :: static_memory_size
 
 ! this for all the regions
-  integer NSPEC_AB,NGLOB_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+  integer NSPEC_AB,NGLOB_AB, &
                NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
                NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
@@ -200,9 +187,9 @@
   double precision min_elevation_all,max_elevation_all
 
 ! for tapered basement map
-  integer iz_basement
-  double precision z_basement(NX_BASEMENT,NY_BASEMENT)
-  character(len=150) BASEMENT_MAP_FILE
+!  integer iz_basement
+!  double precision z_basement(NX_BASEMENT,NY_BASEMENT)
+!  character(len=150) BASEMENT_MAP_FILE
 
 ! to filter list of stations
 !   integer nrec,nrec_filtered
@@ -264,34 +251,35 @@
   endif
 
 ! read the parameter file
-  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+  call read_parameter_file( &
+        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
+        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
   endif
 
-! compute other parameters based upon values read
-  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
-
 ! info about external mesh simulation
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
+! chris -- once the steps in decompose_mesh_SCOTCH are integrated into generate_database.f90,
+! NPROC will be known
+
+! TNM + DP: Need to initialize NPROC_AB, put this call back in as a result
+! compute other parameters based upon values read
+!  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+!      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+!      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+!      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+!      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+
   NPROC = sizeprocs
 
 ! check that the code is running with the requested nb of processes
@@ -302,11 +290,6 @@
     write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
     write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
     write(IMAIN,*)
-    write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
-    write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
-    write(IMAIN,*)
-    write(IMAIN,*) 'There are ',NPROC_XI,' slices along xi'
-    write(IMAIN,*) 'There are ',NPROC_ETA,' slices along eta'
     write(IMAIN,*) 'There is a total of ',NPROC,' slices'
     write(IMAIN,*)
     write(IMAIN,*) 'NGLLX = ',NGLLX
@@ -329,30 +312,8 @@
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
 
   if(myrank == 0) then
-
-  write(IMAIN,*) 'region selected:'
-  write(IMAIN,*)
-  write(IMAIN,*) 'latitude min = ',LATITUDE_MIN
-  write(IMAIN,*) 'latitude max = ',LATITUDE_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'longitude min = ',LONGITUDE_MIN
-  write(IMAIN,*) 'longitude max = ',LONGITUDE_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'this is mapped to UTM in region ',UTM_PROJECTION_ZONE
-  write(IMAIN,*)
-  write(IMAIN,*) 'UTM X min = ',UTM_X_MIN
-  write(IMAIN,*) 'UTM X max = ',UTM_X_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'UTM Y min = ',UTM_Y_MIN
-  write(IMAIN,*) 'UTM Y max = ',UTM_Y_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'UTM size of model along X is ',(UTM_X_MAX-UTM_X_MIN)/1000.,' km'
-  write(IMAIN,*) 'UTM size of model along Y is ',(UTM_Y_MAX-UTM_Y_MIN)/1000.,' km'
-  write(IMAIN,*)
-  write(IMAIN,*) 'Bottom of the mesh is at a depth of ',dabs(Z_DEPTH_BLOCK)/1000.,' km'
-  write(IMAIN,*)
-
-
+! chris: I am not sure if we should suppress the following. topography should appear in the external mesh
+! leave it for now
   write(IMAIN,*)
   if(TOPOGRAPHY) then
     write(IMAIN,*) 'incorporating surface topography'
@@ -365,13 +326,6 @@
     write(IMAIN,*) 'suppressing UTM projection'
   else
     write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
-  endif
-
-  write(IMAIN,*)
-  if(HARVARD_3D_GOCAD_MODEL) then
-    write(IMAIN,*) 'incorporating 3-D lateral variations'
-  else
-    write(IMAIN,*) 'no 3-D lateral variations'
   endif
 
   write(IMAIN,*)
@@ -420,28 +374,18 @@
 
   endif
 
-! read Moho map
-  if(MOHO_MAP_LUPEI) then
-    call read_moho_map(imoho_depth)
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'regional Moho depth read ranges in m from ',minval(imoho_depth),' to ',maxval(imoho_depth)
-      write(IMAIN,*)
-    endif
-  endif
-
-! read basement map
-  if(BASEMENT_MAP) then
-    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
-    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
-    do ix=1,NX_BASEMENT
-      do iy=1,NY_BASEMENT
-        read(55,*) iz_basement
-        z_basement(ix,iy) = dble(iz_basement)
-      enddo
-    enddo
-    close(55)
-  endif
+!! read basement map
+!  if(BASEMENT_MAP) then
+!    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
+!    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
+!    do ix=1,NX_BASEMENT
+!      do iy=1,NY_BASEMENT
+!        read(55,*) iz_basement
+!        z_basement(ix,iy) = dble(iz_basement)
+!      enddo
+!    enddo
+!    close(55)
+!  endif
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -450,11 +394,6 @@
     write(IMAIN,*) '**************************'
     write(IMAIN,*)
   endif
-
-! volume of bottom and top area of the slice
-  volume_local = ZERO
-  area_local_bottom = ZERO
-  area_local_top = ZERO
 
 ! read databases about external mesh simulation
   
@@ -466,6 +405,9 @@
      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
   enddo
   
+! TNM + DP: define NGLOB_AB
+  NGLOB_AB = nnodes_ext_mesh
+
 ! read materials' physical properties    
   read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh 
   allocate(materials_ext_mesh(5,nmat_ext_mesh))
@@ -603,45 +545,10 @@
   endif
 
 
-! use MPI reduction to compute total area and volume
-  area_total_bottom   = ZERO
-  area_total_top   = ZERO
-  call sum_all_dp(area_local_bottom,area_total_bottom)
-  call sum_all_dp(area_local_top,area_total_top)
-  call sum_all_dp(volume_local,volume_total)
-
-  if(myrank == 0) then
-
-!   check volume, and bottom and top area
-
-      write(IMAIN,*)
-      write(IMAIN,*) '   calculated top area: ',area_total_top
-
-! compare to exact theoretical value
-    if(.not. TOPOGRAPHY) &
-          write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
-
-      write(IMAIN,*)
-      write(IMAIN,*) 'calculated bottom area: ',area_total_bottom
-
-! compare to exact theoretical value (bottom is always flat)
-      write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
-
-  endif
 
 ! make sure everybody is synchronized
   call sync_all()
 
-  if(myrank == 0) then
-! check volume
-      write(IMAIN,*)
-      write(IMAIN,*) 'calculated volume: ',volume_total
-! take the central cube into account
-   if(.not. TOPOGRAPHY) &
-      write(IMAIN,*) '     exact volume: ', &
-        (UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)*dabs(Z_DEPTH_BLOCK)
-
-  endif
 
 !--- print number of points and elements in the mesh
 
@@ -674,8 +581,8 @@
   write(IMAIN,*)
 
 ! copy number of elements and points in an include file for the solver
-  call save_header_file(NSPEC_AB,NGLOB_AB,NEX_XI,NEX_ETA,NPROC, &
-             UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,ATTENUATION,ANISOTROPY,NSTEP, &
+  call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
+             ATTENUATION,ANISOTROPY,NSTEP,DT, &
              NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
 
 !  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
