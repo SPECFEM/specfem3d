@@ -27,13 +27,13 @@
   subroutine create_regions_mesh_ext_mesh(ibool, &
            xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
            nnodes_ext_mesh,nelmnts_ext_mesh, &
-           nodes_coords_ext_mesh,elmnts_ext_mesh,max_static_memory_size,mat_ext_mesh,materials_ext_mesh, &
-           nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ninterface_ext_mesh,max_interface_size_ext_mesh, &
-           my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
-           ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
+           nodes_coords_ext_mesh, elmnts_ext_mesh, max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
+           nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, ninterface_ext_mesh, max_interface_size_ext_mesh, &
+           my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+           ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
            nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
-           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-           ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
+           NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX, &
+           ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
 
 ! create the different regions of the mesh
 

@@ -18,7 +18,6 @@ if [ -z $USER ]; then
 	echo "could not run go_solver_...bash as no USER env is set"
 	exit 2
 fi
-BASEMPIDIR=/home/cmorency/SPECFEM3D_SESAME/OUTPUT_FILES
 
 # script to run the mesher and the solver
 # read DATA/Par_file to get information about the run
@@ -29,8 +28,8 @@ NPROC_ETA=`grep NPROC_ETA DATA/Par_file | cut -d = -f 2`
 # total number of nodes is the product of the values read
 numnodes=$(( $NPROC_XI * $NPROC_ETA ))
 
-#rm -r -f OUTPUT_FILES
-#mkdir OUTPUT_FILES
+rm -r -f OUTPUT_FILES
+mkdir OUTPUT_FILES
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/

@@ -251,7 +251,6 @@
   endif
 
   enddo
-	write(42,*)'TNM: ispecb6,NSPEC2D_TOP',myrank,ispecb6,NSPEC2D_TOP
 
 ! check theoretical value of elements at the bottom
   if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
