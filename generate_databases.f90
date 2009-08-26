@@ -175,7 +175,7 @@
   integer NPROC
 
 ! static memory size that will be needed by the solver
-  double precision :: static_memory_size
+  double precision :: max_static_memory_size
 
 ! this for all the regions
   integer NSPEC_AB,NGLOB_AB, &
@@ -270,7 +270,7 @@
 ! chris -- once the steps in decompose_mesh_SCOTCH are integrated into generate_database.f90,
 ! NPROC will be known
 
-! TNM + DP: Need to initialize NPROC_AB, put this call back in as a result
+! Need to initialize NPROC_AB, put this call back in as a result
 ! compute other parameters based upon values read
 !  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
 !      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
@@ -405,7 +405,7 @@
      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
   enddo
   
-! TNM + DP: define NGLOB_AB
+! defines global number of nodes in model 
   NGLOB_AB = nnodes_ext_mesh
 
 ! read materials' physical properties    
@@ -519,23 +519,23 @@
 
 ! create all the regions of the mesh
   call create_regions_mesh_ext_mesh(ibool, &
-       xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
-       nnodes_ext_mesh,nelmnts_ext_mesh, &
-       nodes_coords_ext_mesh,elmnts_ext_mesh,static_memory_size,mat_ext_mesh,materials_ext_mesh, &
-       nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ninterface_ext_mesh,max_interface_size_ext_mesh, &
-       my_neighbours_ext_mesh,my_nelmnts_neighbours_ext_mesh,my_interfaces_ext_mesh, &
-       ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
+       xstore, ystore, zstore, nspec, npointot, myrank, LOCAL_PATH, &
+       nnodes_ext_mesh, nelmnts_ext_mesh, &
+       nodes_coords_ext_mesh, elmnts_ext_mesh, max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
+       nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, ninterface_ext_mesh, max_interface_size_ext_mesh, &
+       my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+       ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
        nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
-       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-       ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
+       NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX, &
+       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
   
 
 ! print min and max of topography included
   if(TOPOGRAPHY) then
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
-      call min_all_dp(min_elevation,min_elevation_all)
-      call max_all_dp(max_elevation,max_elevation_all)
+    call min_all_dp(min_elevation,min_elevation_all)
+    call max_all_dp(max_elevation,max_elevation_all)
 
     if(myrank == 0) then
       write(IMAIN,*)
@@ -583,7 +583,7 @@
 ! copy number of elements and points in an include file for the solver
   call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
              ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
+             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,max_static_memory_size)
 
 !  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
 !  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')

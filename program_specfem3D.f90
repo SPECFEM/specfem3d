@@ -25,11 +25,13 @@
 
   program xspecfem3D
 
+! mpi initialization
   call init()
 
 ! run the main program
   call specfem3D
 
+! mpi finish
   call finalize()
 
   end program xspecfem3D

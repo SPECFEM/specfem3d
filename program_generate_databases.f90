@@ -25,11 +25,13 @@
 
   program xgenerate_databases
 
+! mpi initialization
   call init()
 
 ! run the main program
   call generate_databases
 
+! mpi finish
   call finalize()
 
   end program xgenerate_databases

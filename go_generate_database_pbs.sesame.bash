@@ -18,7 +18,6 @@ if [ -z $USER ]; then
 	echo "could not run go_mesher_...bash as no USER env is set"
 	exit 2
 fi
-BASEMPIDIR=/home/cmorency/SPECFEM3D_SESAME/OUTPUT_FILES
 
 # script to run the mesher and the solver
 # read DATA/Par_file to get information about the run

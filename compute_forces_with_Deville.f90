@@ -724,12 +724,12 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
 ! adding source
   do isource = 1,NSOURCES
 
-  if (ispec_is_inner(ispec_selected_source(isource)) .eqv. phase_is_inner) then
+    !   add the source (only if this proc carries the source)
+    if(myrank == islice_selected_source(isource)) then
 
-     if(USE_FORCE_POINT_SOURCE) then
+      if (ispec_is_inner(ispec_selected_source(isource)) .eqv. phase_is_inner) then
 
-        !   add the source (only if this proc carries the source)
-        if(myrank == islice_selected_source(isource)) then
+        if(USE_FORCE_POINT_SOURCE) then
            
            iglob = ibool(nint(xi_source(isource)), &
                 nint(eta_source(isource)), &
@@ -753,11 +753,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
                 sngl(nu_source(:,3,isource) * 1.d10 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
                 exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
            
-        endif
-
-     else   
-        !   add the source (only if this proc carries the source)
-        if(myrank == islice_selected_source(isource)) then
+        else   
            
            stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
 
@@ -778,12 +774,11 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
               enddo
            enddo
 
-        endif
-     endif
-     
-  endif
+        endif ! USE_FORCE_POINT_SOURCE
+      endif ! ispec_is_inner     
+    endif ! myrank
   
- enddo
+  enddo
 
 end subroutine compute_forces_with_Deville
 
