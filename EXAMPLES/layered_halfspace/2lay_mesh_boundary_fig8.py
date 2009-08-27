@@ -65,13 +65,13 @@ cubit.cmd('mesh volume 5')
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
-boundary_definition.entities=['surface','face']
+boundary_definition.entities=['face']
 boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
 cubit.cmd('block 1 attribute count 5')
-cubit.cmd('block 1 attribute index 1 2  ')
+cubit.cmd('block 1 attribute index 1 1  ')
 cubit.cmd('block 1 attribute index 2 2800 ')
 cubit.cmd('block 1 attribute index 3 1500 ')
 cubit.cmd('block 1 attribute index 4 2300 ')
