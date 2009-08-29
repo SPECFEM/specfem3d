@@ -165,8 +165,7 @@ LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
 @COND_PYRE_FALSE@	check_mesh_quality_AVS_DX \
 @COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
-@COND_PYRE_FALSE@	create_movie_AVS_DX \
-@COND_PYRE_FALSE@	create_movie_GMT \
+@COND_PYRE_FALSE@	create_movie_shakemap_AVS_DX_GMT \
 @COND_PYRE_FALSE@	meshfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
@@ -218,8 +217,7 @@ check_mesh_quality_AVS_DX: xcheck_mesh_quality_AVS_DX
 combine_AVS_DX: xcombine_AVS_DX
 convolve_source_timefunction: xconvolve_source_timefunction
 create_header_file: xcreate_header_file
-create_movie_AVS_DX: xcreate_movie_AVS_DX
-create_movie_GMT: xcreate_movie_GMT
+create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
 
@@ -230,8 +228,8 @@ xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
 
-@COND_PYRE_FALSE@xcreate_movie_AVS_DX: $O/create_movie_AVS_DX.o $(LIBSPECFEM)
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_AVS_DX $O/create_movie_AVS_DX.o $(LIBSPECFEM)
+@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
+@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
 
 xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBSPECFEM)
@@ -248,11 +246,8 @@ xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o
 xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o
 	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o
 
-xcreate_movie_GMT:  $O/create_movie_GMT.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o xcreate_movie_GMT  $O/create_movie_GMT.o $(LIBSPECFEM)
-
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT
+	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
 
 ###
 ### rule for the archive library
@@ -375,8 +370,8 @@ $O/get_MPI_cutplanes_eta.o: constants.h get_MPI_cutplanes_eta.f90
 $O/get_cmt.o: constants.h get_cmt.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90
 
-$O/create_movie_AVS_DX.o: constants.h create_movie_AVS_DX.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_AVS_DX.o create_movie_AVS_DX.f90
+$O/create_movie_shakemap_AVS_DX_GMT.o: constants.h create_movie_shakemap_AVS_DX_GMT.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o create_movie_shakemap_AVS_DX_GMT.f90
 
 $O/get_global.o: constants.h get_global.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
@@ -485,9 +480,6 @@ $O/combine_vol_data.o: constants.h combine_vol_data.f90
 
 $O/combine_surf_data.o: constants.h combine_surf_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
-
-$O/create_movie_GMT.o: constants.h create_movie_GMT.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_GMT.o create_movie_GMT.f90
 
 ###
 ### rule for the header file
