@@ -34,12 +34,66 @@
 
 !=============================================================================!
 !                                                                             !
-!  generate_databases produces a spectral element grid for a local or regional model.  !
+!  generate_databases produces a spectral element grid                        !
+!  for a local or regional model.                                             !
 !  The mesher uses the UTM projection                                         !
 !                                                                             !
 !=============================================================================!
 !
-! If you use this code for your own research, please cite some of these articles:
+! If you use this code for your own research, please cite at least one article
+! written by the developers of the package, for instance:
+!
+! @ARTICLE{TrKoLi08,
+! author = {Jeroen Tromp and Dimitri Komatitsch and Qinya Liu},
+! title = {Spectral-Element and Adjoint Methods in Seismology},
+! journal = {Communications in Computational Physics},
+! year = {2008},
+! volume = {3},
+! pages = {1-32},
+! number = {1}}
+!
+! or
+!
+! @ARTICLE{LiPoKoTr04,
+! author = {Qinya Liu and Jascha Polet and Dimitri Komatitsch and Jeroen Tromp},
+! title = {Spectral-element moment tensor inversions for earthquakes in {S}outhern {C}alifornia},
+! journal={Bull. Seismol. Soc. Am.},
+! year = {2004},
+! volume = {94},
+! pages = {1748-1761},
+! number = {5},
+! doi = {10.1785/012004038}}
+!
+! @INCOLLECTION{ChKoViCaVaFe07,
+! author = {Emmanuel Chaljub and Dimitri Komatitsch and Jean-Pierre Vilotte and
+! Yann Capdeville and Bernard Valette and Gaetano Festa},
+! title = {Spectral Element Analysis in Seismology},
+! booktitle = {Advances in Wave Propagation in Heterogeneous Media},
+! publisher = {Elsevier - Academic Press},
+! year = {2007},
+! editor = {Ru-Shan Wu and Val\'erie Maupin},
+! volume = {48},
+! series = {Advances in Geophysics},
+! pages = {365-419}}
+!
+! @ARTICLE{KoVi98,
+! author={D. Komatitsch and J. P. Vilotte},
+! title={The spectral-element method: an efficient tool to simulate the seismic response of 2{D} and 3{D} geological structures},
+! journal={Bull. Seismol. Soc. Am.},
+! year=1998,
+! volume=88,
+! number=2,
+! pages={368-392}}
+!
+! @ARTICLE{KoTr99,
+! author={D. Komatitsch and J. Tromp},
+! year=1999,
+! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
+! journal={Geophys. J. Int.},
+! volume=139,
+! number=3,
+! pages={806-822},
+! doi={10.1046/j.1365-246x.1999.00967.x}}
 !
 ! @ARTICLE{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
@@ -52,26 +106,22 @@
 ! number=1,
 ! pages={187-206}}
 !
-! @ARTICLE{KoTr99,
-! author={D. Komatitsch and J. Tromp},
-! year=1999,
-! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
-! journal={Geophys. J. Int.},
-! volume=139,
-! number=3,
-! pages={806-822},
-! doi={10.1046/j.1365-246x.1999.00967.x}}
+! and/or another article from http://web.univ-pau.fr/~dkomati1/publications.html
 !
-! @ARTICLE{KoVi98,
-! author={D. Komatitsch and J. P. Vilotte},
-! title={The spectral-element method: an efficient tool to simulate the seismic response of 2{D} and 3{D} geological structures},
-! journal={Bull. Seismol. Soc. Am.},
-! year=1998,
-! volume=88,
-! number=2,
-! pages={368-392}}
 !
-! If you use the kernel capabilities of the code, please cite
+! If you use the kernel capabilities of the code, please cite at least one article
+! written by the developers of the package, for instance:
+!
+! @ARTICLE{TrKoLi08,
+! author = {Jeroen Tromp and Dimitri Komatitsch and Qinya Liu},
+! title = {Spectral-Element and Adjoint Methods in Seismology},
+! journal = {Communications in Computational Physics},
+! year = {2008},
+! volume = {3},
+! pages = {1-32},
+! number = {1}}
+!
+! or
 !
 ! @ARTICLE{LiTr06,
 ! author={Qinya Liu and Jeroen Tromp},
@@ -82,6 +132,7 @@
 ! number=6,
 ! pages={2383-2397},
 ! doi={10.1785/0120060041}}
+!
 !
 ! Reference frame - convention:
 ! ----------------------------
@@ -108,23 +159,33 @@
 !  - Z axis is up
 !
 ! To report bugs or suggest improvements to the code, please send an email
-! to Jeroen Tromp <jtromp AT caltech.edu> and/or use our online
+! to Jeroen Tromp <jtromp AT princeton.edu> and/or use our online
 ! bug tracking system at http://www.geodynamics.org/roundup .
 !
 ! Evolution of the code:
 ! ---------------------
 !
+! MPI v. 2.0 "SESAME" (Spectral ElementS on Any MEsh), Fall 2009:
+! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
+! Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
+! and Emanuele Casarotti, INGV Roma, Italy:
+!  support for CUBIT meshes decomposed by SCOTCH, METIS or ZOLTAN;
+!  much faster solver using Michel Deville's inlined matrix products.
+!
 ! MPI v. 1.4 Dimitri Komatitsch, University of Pau, Qinya Liu and others, Caltech, September 2006:
 !  better adjoint and kernel calculations, faster and better I/Os
 !  on very large systems, many small improvements and bug fixes
+!
 ! MPI v. 1.3 Dimitri Komatitsch, University of Pau, and Qinya Liu, Caltech, July 2005:
 !  serial version, regular mesh, adjoint and kernel calculations, ParaView support
+!
 ! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
 !  full anisotropy, volume movie
+!
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
-! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
-!                        based on global code
+!
+! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
 
 ! number of spectral elements in each block
   integer nspec,npointot
@@ -218,7 +279,7 @@
 
   ! pll
   double precision, dimension(:,:), allocatable :: materials_ext_mesh
-  integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top  
+  integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer  :: ispec2D, boundary_number
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
@@ -396,7 +457,7 @@
   endif
 
 ! read databases about external mesh simulation
-  
+
   call create_name_database(prname,myrank,LOCAL_PATH)
   open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted')
   read(IIN,*) nnodes_ext_mesh
@@ -404,19 +465,19 @@
   do inode = 1, nnodes_ext_mesh
      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
   enddo
-  
-! defines global number of nodes in model 
+
+! defines global number of nodes in model
   NGLOB_AB = nnodes_ext_mesh
 
-! read materials' physical properties    
-  read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh 
+! read materials' physical properties
+  read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
   allocate(materials_ext_mesh(5,nmat_ext_mesh))
   allocate(undef_mat_prop(5,nundefMat_ext_mesh))
   do imat = 1, nmat_ext_mesh
      read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
           materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
   end do
-  
+
   do imat = 1, nundefMat_ext_mesh
      read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat)
@@ -431,7 +492,7 @@
           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
   enddo
   NSPEC_AB = nelmnts_ext_mesh
-  
+
 ! read boundaries
   read(IIN,*) boundary_number ,nspec2D_xmin
   if(boundary_number /= 1) stop "Error : invalid database file"
@@ -448,28 +509,28 @@
   NSPEC2DMAX_XMIN_XMAX = max(nspec2D_xmin,nspec2D_xmax)
   NSPEC2DMAX_YMIN_YMAX = max(nspec2D_ymin,nspec2D_ymax)
   NSPEC2D_BOTTOM = nspec2D_bottom_ext
-  NSPEC2D_TOP = nspec2D_top_ext  
-  
+  NSPEC2D_TOP = nspec2D_top_ext
+
   allocate(ibelm_xmin(nspec2D_xmin))
   do ispec2D = 1,nspec2D_xmin
      read(IIN,*) ibelm_xmin(ispec2D)
   end do
-  
+
   allocate(ibelm_xmax(nspec2D_xmax))
   do ispec2D = 1,nspec2D_xmax
      read(IIN,*) ibelm_xmax(ispec2D)
   end do
-  
+
   allocate(ibelm_ymin(nspec2D_ymin))
   do ispec2D = 1,nspec2D_ymin
      read(IIN,*) ibelm_ymin(ispec2D)
   end do
-  
+
   allocate(ibelm_ymax(nspec2D_ymax))
   do ispec2D = 1,nspec2D_ymax
      read(IIN,*) ibelm_ymax(ispec2D)
   end do
-  
+
   allocate(ibelm_bottom(nspec2D_bottom_ext))
   do ispec2D = 1,nspec2D_bottom_ext
      read(IIN,*) ibelm_bottom(ispec2D)
@@ -479,7 +540,7 @@
   do ispec2D = 1,nspec2D_top_ext
      read(IIN,*) ibelm_top(ispec2D)
   end do
-  
+
   read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
   allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
   allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
@@ -494,7 +555,7 @@
              my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
      enddo
   enddo
-  
+
   close(IIN)
 
 
@@ -528,7 +589,7 @@
        nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
        NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX, &
        ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
-  
+
 
 ! print min and max of topography included
   if(TOPOGRAPHY) then
