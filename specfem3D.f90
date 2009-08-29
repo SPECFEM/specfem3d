@@ -44,7 +44,60 @@
 !                                                                             !
 !=============================================================================!
 !
-! If you use this code for your own research, please cite some of these articles:
+! If you use this code for your own research, please cite at least one article
+! written by the developers of the package, for instance:
+!
+! @ARTICLE{TrKoLi08,
+! author = {Jeroen Tromp and Dimitri Komatitsch and Qinya Liu},
+! title = {Spectral-Element and Adjoint Methods in Seismology},
+! journal = {Communications in Computational Physics},
+! year = {2008},
+! volume = {3},
+! pages = {1-32},
+! number = {1}}
+!
+! or
+!
+! @ARTICLE{LiPoKoTr04,
+! author = {Qinya Liu and Jascha Polet and Dimitri Komatitsch and Jeroen Tromp},
+! title = {Spectral-element moment tensor inversions for earthquakes in {S}outhern {C}alifornia},
+! journal={Bull. Seismol. Soc. Am.},
+! year = {2004},
+! volume = {94},
+! pages = {1748-1761},
+! number = {5},
+! doi = {10.1785/012004038}}
+!
+! @INCOLLECTION{ChKoViCaVaFe07,
+! author = {Emmanuel Chaljub and Dimitri Komatitsch and Jean-Pierre Vilotte and
+! Yann Capdeville and Bernard Valette and Gaetano Festa},
+! title = {Spectral Element Analysis in Seismology},
+! booktitle = {Advances in Wave Propagation in Heterogeneous Media},
+! publisher = {Elsevier - Academic Press},
+! year = {2007},
+! editor = {Ru-Shan Wu and Val\'erie Maupin},
+! volume = {48},
+! series = {Advances in Geophysics},
+! pages = {365-419}}
+!
+! @ARTICLE{KoVi98,
+! author={D. Komatitsch and J. P. Vilotte},
+! title={The spectral-element method: an efficient tool to simulate the seismic response of 2{D} and 3{D} geological structures},
+! journal={Bull. Seismol. Soc. Am.},
+! year=1998,
+! volume=88,
+! number=2,
+! pages={368-392}}
+!
+! @ARTICLE{KoTr99,
+! author={D. Komatitsch and J. Tromp},
+! year=1999,
+! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
+! journal={Geophys. J. Int.},
+! volume=139,
+! number=3,
+! pages={806-822},
+! doi={10.1046/j.1365-246x.1999.00967.x}}
 !
 ! @ARTICLE{KoLiTrSuStSh04,
 ! author={Dimitri Komatitsch and Qinya Liu and Jeroen Tromp and Peter S\"{u}ss
@@ -57,26 +110,22 @@
 ! number=1,
 ! pages={187-206}}
 !
-! @ARTICLE{KoTr99,
-! author={D. Komatitsch and J. Tromp},
-! year=1999,
-! title={Introduction to the spectral-element method for 3-{D} seismic wave propagation},
-! journal={Geophys. J. Int.},
-! volume=139,
-! number=3,
-! pages={806-822},
-! doi={10.1046/j.1365-246x.1999.00967.x}}
+! and/or another article from http://web.univ-pau.fr/~dkomati1/publications.html
 !
-! @ARTICLE{KoVi98,
-! author={D. Komatitsch and J. P. Vilotte},
-! title={The spectral-element method: an efficient tool to simulate the seismic response of 2{D} and 3{D} geological structures},
-! journal={Bull. Seismol. Soc. Am.},
-! year=1998,
-! volume=88,
-! number=2,
-! pages={368-392}}
 !
-! If you use the kernel capabilities of the code, please cite
+! If you use the kernel capabilities of the code, please cite at least one article
+! written by the developers of the package, for instance:
+!
+! @ARTICLE{TrKoLi08,
+! author = {Jeroen Tromp and Dimitri Komatitsch and Qinya Liu},
+! title = {Spectral-Element and Adjoint Methods in Seismology},
+! journal = {Communications in Computational Physics},
+! year = {2008},
+! volume = {3},
+! pages = {1-32},
+! number = {1}}
+!
+! or
 !
 ! @ARTICLE{LiTr06,
 ! author={Qinya Liu and Jeroen Tromp},
@@ -87,6 +136,7 @@
 ! number=6,
 ! pages={2383-2397},
 ! doi={10.1785/0120060041}}
+!
 !
 ! Reference frame - convention:
 ! ----------------------------
@@ -113,23 +163,33 @@
 !  - Z axis is up
 !
 ! To report bugs or suggest improvements to the code, please send an email
-! to Jeroen Tromp <jtromp AT caltech.edu> and/or use our online
+! to Jeroen Tromp <jtromp AT princeton.edu> and/or use our online
 ! bug tracking system at http://www.geodynamics.org/roundup .
 !
 ! Evolution of the code:
 ! ---------------------
 !
+! MPI v. 2.0 "SESAME" (Spectral ElementS on Any MEsh), Fall 2009:
+! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
+! Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
+! and Emanuele Casarotti, INGV Roma, Italy:
+!  support for CUBIT meshes decomposed by SCOTCH, METIS or ZOLTAN;
+!  much faster solver using Michel Deville's inlined matrix products.
+!
 ! MPI v. 1.4 Dimitri Komatitsch, University of Pau, Qinya Liu and others, Caltech, September 2006:
 !  better adjoint and kernel calculations, faster and better I/Os
 !  on very large systems, many small improvements and bug fixes
+!
 ! MPI v. 1.3 Dimitri Komatitsch, University of Pau, and Qinya Liu, Caltech, July 2005:
 !  serial version, regular mesh, adjoint and kernel calculations, ParaView support
+!
 ! MPI v. 1.2 Min Chen and Dimitri Komatitsch, Caltech, July 2004:
 !  full anisotropy, volume movie
+!
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
-! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version
-!                        based on global code
+!
+! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
 
 ! memory variables and standard linear solids for attenuation
   double precision, dimension(N_SLS) :: tau_mu_dble,tau_sigma_dble,beta_dble
@@ -243,7 +303,7 @@
 ! real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
 ! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
 !   rhop_kl, beta_kl, alpha_kl
-!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: absorb_xmin, absorb_xmax, &  
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: absorb_xmin, absorb_xmax, &
 !       absorb_ymin, absorb_ymax, absorb_zmin ! for absorbing b.c.
 !  integer reclen_xmin, reclen_xmax, reclen_ymin, reclen_ymax, reclen_zmin
 
@@ -498,7 +558,7 @@
 ! info about external mesh simulation
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
   NPROC = sizeprocs
-! chris: DT_ext_mesh & NSTE_ext_mesh were in constants.h, I suppressed it, now it is Par_file & read in 
+! chris: DT_ext_mesh & NSTE_ext_mesh were in constants.h, I suppressed it, now it is Par_file & read in
 ! read_parameters_file.f90
 !  DT = DT_ext_mesh
 !  NSTEP = NSTEP_ext_mesh
@@ -614,12 +674,12 @@
     read(27) gammay
     read(27) gammaz
     read(27) jacobian
-    
+
     !pll
     read(27) rho_vp
     read(27) rho_vs
     read(27) iflag_attenuation_store
-    read(27) NSPEC2DMAX_XMIN_XMAX_ext 
+    read(27) NSPEC2DMAX_XMIN_XMAX_ext
     read(27) NSPEC2DMAX_YMIN_YMAX_ext
     allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX_ext),nimax(2,NSPEC2DMAX_YMIN_YMAX_ext),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX_ext))
     allocate(njmin(2,NSPEC2DMAX_XMIN_XMAX_ext),njmax(2,NSPEC2DMAX_XMIN_XMAX_ext),nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX_ext))
@@ -627,7 +687,7 @@
     read(27) nimax
     read(27) njmin
     read(27) njmax
-    read(27) nkmin_xi 
+    read(27) nkmin_xi
     read(27) nkmin_eta
     !end pll
 
@@ -645,7 +705,7 @@
     read(27) nspec2D_ymin
     read(27) nspec2D_ymax
     read(27) NSPEC2D_BOTTOM
-    read(27) NSPEC2D_TOP    
+    read(27) NSPEC2D_TOP
     allocate(ibelm_xmin(nspec2D_xmin))
     allocate(ibelm_xmax(nspec2D_xmax))
     allocate(ibelm_ymin(nspec2D_ymin))
@@ -1509,7 +1569,7 @@
 
 ! rescale shear modulus according to attenuation model
 
-!pll 
+!pll
 !   do ispec = 1,NSPEC_AB
 !    if(not_fully_in_bedrock(ispec)) then
 !      do k=1,NGLLZ
@@ -1587,7 +1647,7 @@
           enddo
        enddo
     enddo
-    
+
  endif
 
 ! allocate seismogram array
@@ -1739,7 +1799,7 @@
 
 ! clear memory variables if attenuation
   if(ATTENUATION) then
-  
+
    ! initialize memory variables for attenuation
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
@@ -1847,7 +1907,7 @@
   do i=1,3
     Usolidnorm = maxval(abs(displ(i,:)))
     Usolidnorm_index = maxloc(abs(displ(i,:)))
-    if(Usolidnorm > 1.e+15 ) then        
+    if(Usolidnorm > 1.e+15 ) then
       print*,' stability issue:',myrank
       print*,'  norm: ',Usolidnorm,displ(i,Usolidnorm_index(1)),i
       print*,'  index: ',Usolidnorm_index(1)
@@ -1856,7 +1916,7 @@
       call exit_MPI(myrank,'forward simulation became unstable and blew up')
     endif
   enddo
-  
+
 ! compute the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
 ! and output timestamp file to check that simulation is running fine
@@ -1946,14 +2006,14 @@
          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
-         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
+         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, &
          one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
          epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
          ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
          nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
          veloc,rho_vp,rho_vs,jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom, &
-         normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom) 
+         normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom)
     else
       call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -1972,7 +2032,7 @@
          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
-         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
+         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, &
          one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
          epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
