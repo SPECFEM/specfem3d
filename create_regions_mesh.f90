@@ -655,25 +655,25 @@
   rmass(:) = 0._CUSTOM_REAL
 
   do ispec=1,nspec
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
-        weight=wxgll(i)*wygll(j)*wzgll(k)
-        iglobnum=ibool(i,j,k,ispec)
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          weight=wxgll(i)*wygll(j)*wzgll(k)
+          iglobnum=ibool(i,j,k,ispec)
 
-        jacobianl=jacobianstore(i,j,k,ispec)
+          jacobianl=jacobianstore(i,j,k,ispec)
 
 ! distinguish between single and double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
-      rmass(iglobnum) = rmass(iglobnum) + &
-          sngl((dble(rhostore(i,j,k,ispec)))  * dble(jacobianl) * weight)
-    else
-       rmass(iglobnum) = rmass(iglobnum) + rhostore(i,j,k,ispec) * jacobianl * weight
-    endif
+          if(CUSTOM_REAL == SIZE_REAL) then
+            rmass(iglobnum) = rmass(iglobnum) + &
+                sngl((dble(rhostore(i,j,k,ispec)))  * dble(jacobianl) * weight)
+          else
+             rmass(iglobnum) = rmass(iglobnum) + rhostore(i,j,k,ispec) * jacobianl * weight
+          endif
 
+        enddo
       enddo
     enddo
-  enddo
   enddo  
 
  
@@ -724,6 +724,23 @@
        nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM)
 
+
+! create AVS or DX mesh data for the slice, edges and faces
+!  if(SAVE_MESH_FILES) then
+! check: no idoubling
+!    call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+!    call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
+!                   kappastore,mustore,rhostore)
+! check: no iMPIcut_xi,iMPIcut_eta,idoubling
+!    call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
+!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+! check: no idoubling
+!    call write_AVS_DX_surface_data(myrank,prname,nspec,iboun,ibool, &
+!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+!  endif
+
+
+
 ! sort ibool comm buffers lexicographically
   allocate(nibool_interfaces_ext_mesh_true(ninterface_ext_mesh))
 
@@ -765,6 +782,8 @@
     deallocate(work_ext_mesh)
 
   enddo
+
+
 
 ! save the binary files
   call create_name_database(prname,myrank,LOCAL_PATH)
