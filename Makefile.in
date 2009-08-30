@@ -114,13 +114,25 @@ libspecfem_a_OBJECTS = \
 
 # solver objects with statically allocated arrays; dependent upon
 # values_from_mesher.h
+#daniel: added files
 SOLVER_ARRAY_OBJECTS = \
 	$O/assemble_MPI_scalar.o \
 	$O/assemble_MPI_vector.o \
 	$O/read_arrays_solver.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
+	$O/specfem3D_par.o \
 	$O/specfem3D.o \
+	$O/initialize_simulation.o \
+	$O/read_mesh_databases.o \
+	$O/setup_GLL_points.o \
+	$O/detect_mesh_surfaces.o \
+	$O/setup_movie_meshes.o \
+	$O/read_topography_bathymetry.o \
+	$O/setup_sources_receivers.o \
+	$O/prepare_timerun.o \
+	$O/iterate_time.o \
+	$O/finalize_simulation.o \
 	$(EMPTY_MACRO)
 
 # objects toggled between the parallel and serial version
@@ -203,8 +215,9 @@ xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o
 xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o
 	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o
 
+
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xgenerate_databases xspecfem3D xcombine_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
+	rm -f $O/* *.o *.gnu *.mod OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xgenerate_databases xspecfem3D xcombine_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
 
 ###
 ### rule for the archive library
@@ -225,6 +238,39 @@ $O/libspecfem.a: $(libspecfem_a_OBJECTS)
 
 $O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
 	${MPIFCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
+
+$O/specfem3D_par.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D_par.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/specfem3D_par.o specfem3D_par.f90
+
+$O/initialize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h initialize_simulation.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/initialize_simulation.o initialize_simulation.f90
+
+$O/read_mesh_databases.o: constants.h OUTPUT_FILES/values_from_mesher.h read_mesh_databases.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/read_mesh_databases.o read_mesh_databases.f90
+
+$O/setup_GLL_points.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_GLL_points.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/setup_GLL_points.o setup_GLL_points.f90
+
+$O/detect_mesh_surfaces.o: constants.h OUTPUT_FILES/values_from_mesher.h detect_mesh_surfaces.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/detect_mesh_surfaces.o detect_mesh_surfaces.f90
+
+$O/setup_movie_meshes.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_movie_meshes.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/setup_movie_meshes.o setup_movie_meshes.f90
+
+$O/read_topography_bathymetry.o: constants.h OUTPUT_FILES/values_from_mesher.h read_topography_bathymetry.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/read_topography_bathymetry.o read_topography_bathymetry.f90
+
+$O/setup_sources_receivers.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_sources_receivers.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/setup_sources_receivers.o setup_sources_receivers.f90
+
+$O/prepare_timerun.o: constants.h OUTPUT_FILES/values_from_mesher.h prepare_timerun.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/prepare_timerun.o prepare_timerun.f90
+
+$O/iterate_time.o: constants.h OUTPUT_FILES/values_from_mesher.h iterate_time.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/iterate_time.o iterate_time.f90
+
+$O/finalize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h finalize_simulation.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
 
 $O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
