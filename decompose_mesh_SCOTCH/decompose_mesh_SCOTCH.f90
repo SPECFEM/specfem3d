@@ -73,8 +73,8 @@ program pre_meshfem3D
   read(98,*) nspec
   allocate(elmnts(esize,nspec))
    do ispec = 1, nspec
-     read(98,*) num_elmnt, elmnts(1,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(4,num_elmnt), &
-          elmnts(5,num_elmnt), elmnts(6,num_elmnt), elmnts(7,num_elmnt), elmnts(8,num_elmnt)
+     read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
+          elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
      if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
   end do
   close(98)
