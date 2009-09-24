@@ -256,8 +256,11 @@ module specfem_par
 
 ! timer MPI
   double precision, external :: wtime
-  integer ihours,iminutes,iseconds,int_tCPU
-  double precision time_start,tCPU
+  integer :: ihours,iminutes,iseconds,int_tCPU, &
+             ihours_remain,iminutes_remain,iseconds_remain,int_t_remain, &
+             ihours_total,iminutes_total,iseconds_total,int_t_total
+  double precision :: time_start,tCPU,t_remain,t_total
+
 
 ! parameters read from parameter file
   integer NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE

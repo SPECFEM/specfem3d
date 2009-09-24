@@ -474,6 +474,7 @@
   allocate(materials_ext_mesh(5,nmat_ext_mesh))
   allocate(undef_mat_prop(5,nundefMat_ext_mesh))
   do imat = 1, nmat_ext_mesh
+     ! format:        # rho   # vp  # vs  # Q_flag  # 0   
      read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
           materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
   end do

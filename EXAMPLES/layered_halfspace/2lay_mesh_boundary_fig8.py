@@ -71,25 +71,25 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
 cubit.cmd('block 1 attribute count 5')
-cubit.cmd('block 1 attribute index 1 1  ')
-cubit.cmd('block 1 attribute index 2 2800 ')
-cubit.cmd('block 1 attribute index 3 1500 ')
-cubit.cmd('block 1 attribute index 4 2300 ')
-cubit.cmd('block 1 attribute index 5 100000. ')
+cubit.cmd('block 1 attribute index 1 1  ')      # volume 1
+cubit.cmd('block 1 attribute index 2 2800 ')   # vp 
+cubit.cmd('block 1 attribute index 3 1500 ')   # vs 
+cubit.cmd('block 1 attribute index 4 2300 ')   # rho 
+cubit.cmd('block 1 attribute index 5 1 ')       # Q_flag
 
 cubit.cmd('block 2 attribute count 5')
-cubit.cmd('block 2 attribute index 1 2  ')
+cubit.cmd('block 2 attribute index 1 2  ')      # volume 2
 cubit.cmd('block 2 attribute index 2 7500 ')
 cubit.cmd('block 2 attribute index 3 4300 ')
 cubit.cmd('block 2 attribute index 4 3200 ')
-cubit.cmd('block 2 attribute index 5 100000. ')
+cubit.cmd('block 2 attribute index 5 1 ')
 
 cubit.cmd('block 3 attribute count 5')
-cubit.cmd('block 3 attribute index 1 2  ')
+cubit.cmd('block 3 attribute index 1 2  ')      # same properties as for volume 2
 cubit.cmd('block 3 attribute index 2 7500 ')
 cubit.cmd('block 3 attribute index 3 4300 ')
 cubit.cmd('block 3 attribute index 4 3200 ')
-cubit.cmd('block 3 attribute index 5 100000. ')
+cubit.cmd('block 3 attribute index 5 1 ')
 
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
 cubit.cmd('save as "meshing.cub" overwrite')

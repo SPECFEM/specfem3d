@@ -86,7 +86,7 @@ def define_absorbing_surf():
 #            if dz <= 0.001 and dn < 0.2:
 #                top_surf.append(k)
 
-#daniel
+    #box lengths
     x_len = abs( xmax_box - xmin_box)
     y_len = abs( ymax_box - ymin_box)
     z_len = abs( zmax_box - zmin_box)
@@ -280,8 +280,6 @@ def build_block_side(surf_list,name,obj='surface'):
     id_nodeset=cubit.get_next_nodeset_id()
     id_block=cubit.get_next_block_id()
 
-    #daniel
-    #print "##next nodeset: "+ str(id_nodeset) + " block: " + str(id_block)
     
     if obj == 'hex':
         txt='hex in node in surface'
@@ -300,7 +298,7 @@ def build_block_side(surf_list,name,obj='surface'):
         txt2 = "block "+str(id_block)+" name '"+name+"'"
     else:
         txt1=''
-        #daniel: do not execute as block id might be wrong
+        # do not execute: block id might be wrong
         print "##block "+str(id_block)+" name '"+name+"_notsupported (only hex,face,edge,node)'"
         txt2=''
 
@@ -312,7 +310,6 @@ def define_bc(*args,**keys):
     parallel=keys.get('parallel',True)
     closed=keys.get('closed',False)
     if not closed:
-        #dp
         print "##open region"
 
         if parallel:
@@ -324,7 +321,6 @@ def define_bc(*args,**keys):
         entities=args[0]
         print entities
         for entity in entities:
-            #dp
             print "##entity: "+str(entity)
             
             build_block_side(topo,entity+'_topo',obj=entity)
@@ -336,7 +332,6 @@ def define_bc(*args,**keys):
                 build_block_side(ymax,entity+'_abs_ymax',obj=entity)
                 build_block_side(bottom,entity+'_abs_bottom',obj=entity)
     else:
-        #dp
         print "##closed region"
         
         surf=define_absorbing_surf_sphere()

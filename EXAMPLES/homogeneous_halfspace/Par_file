@@ -38,7 +38,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = /scratch/lustre/dpeter/SPECFEM3D_SESAME/DATABASES_MPI.block
+LOCAL_PATH                      = /scratch/lustre/dpeter/SPECFEM3D_SESAME/DATABASES_MPI.hom
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
