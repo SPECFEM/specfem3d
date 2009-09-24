@@ -78,6 +78,7 @@ program pre_meshfem3D
      if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
   end do
   close(98)
+  print*, 'total number of spectral elements:'
   print*, 'nspec = ', nspec
 
   open(unit=98, file='./OUTPUT_FILES/materials_file', status='old', form='formatted')
@@ -98,12 +99,14 @@ program pre_meshfem3D
      !if(num_node /= inode)  stop "ERROR : Invalid nodes_coords file."
   end do
   close(98)
+  print*, 'total number of nodes: '
   print*, 'nnodes = ', nnodes 
 
   count_def_mat = 0
   count_undef_mat = 0
   open(unit=98, file='./OUTPUT_FILES/nummaterial_velocity_file', status='old', form='formatted')
   read(98,*,iostat=ierr) num_mat
+  print *,'materials:'
   do while (ierr == 0)
      print*, 'num_mat = ',num_mat
      if(num_mat /= -1) then 
@@ -115,14 +118,21 @@ program pre_meshfem3D
   end do
   close(98)
  
-  print*, count_def_mat, count_undef_mat
+  print*, 'defined = ',count_def_mat, 'undefined = ',count_undef_mat
   allocate(mat_prop(5,count_def_mat))
   allocate(undef_mat_prop(5,count_undef_mat))
   
   open(unit=98, file='./OUTPUT_FILES/nummaterial_velocity_file', status='old', form='formatted')
   do imat=1,count_def_mat
+     ! format:# material_id  # rho                           # vp                             # vs                            # Q_flag                      # 0 
      read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
      if(num_mat < 0 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
+
+     !checks attenuation flag with integer range as defined in constants.h like IATTENUATION_SEDIMENTS_40, ....
+     if( int(mat_prop(4,num_mat)) > 13 ) then
+        stop 'wrong attenuation flag in mesh: too large, not supported yet - check with constants.h'
+     endif
+
   end do
   do imat=1,count_undef_mat
      read(98,'(5A30)') undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
@@ -140,6 +150,7 @@ program pre_meshfem3D
           nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)
   end do
   close(98)
+  print*, 'absorbing boundaries:'
   print*, 'nspec2D_xmin = ', nspec2D_xmin 
 
   open(unit=98, file='./OUTPUT_FILES/absorbing_surface_file_xmax', status='old', form='formatted')
@@ -207,7 +218,8 @@ program pre_meshfem3D
       used_nodes_elmnts(elmnts(inode,ispec)) = used_nodes_elmnts(elmnts(inode,ispec)) + 1
     enddo
   enddo
-  print *, minval(used_nodes_elmnts(:)), maxval(used_nodes_elmnts(:))
+  print *, 'nodes valence: '
+  print *, 'min = ',minval(used_nodes_elmnts(:)),'max = ', maxval(used_nodes_elmnts(:))
   do inode = 1, nnodes
     if (.not. mask_nodes_elmnts(inode)) then
       stop 'ERROR : nodes not used.'
@@ -226,6 +238,7 @@ program pre_meshfem3D
   
   call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
        nodes_elmnts, max_neighbour, 1)
+  print*, 'mesh2dual: '
   print*, 'max_neighbour = ',max_neighbour
 
   nb_edges = xadj(nspec+1)
@@ -328,7 +341,11 @@ program pre_meshfem3D
      close(15)
      
   end do
-
+  print*, 'partitions: '
+  print*, 'num = ',nparts
+  print*, 'files in directory: OUTPUT_FILES/'
+  print*
+  print*, 'finished successfully'
   
 end program pre_meshfem3D
 

@@ -114,7 +114,6 @@ libspecfem_a_OBJECTS = \
 
 # solver objects with statically allocated arrays; dependent upon
 # values_from_mesher.h
-#daniel: added files
 SOLVER_ARRAY_OBJECTS = \
 	$O/assemble_MPI_scalar.o \
 	$O/assemble_MPI_vector.o \

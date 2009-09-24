@@ -421,6 +421,7 @@ contains
 
     write(IIN_database,*)  count_def_mat,count_undef_mat 
     do i = 1, count_def_mat
+      ! format:                          # rho                  # vp                    # vs                    # Q_flag             # 0     
        write(IIN_database,*) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), mat_prop(4,i), mat_prop(5,i)
     end do
     do i = 1, count_undef_mat

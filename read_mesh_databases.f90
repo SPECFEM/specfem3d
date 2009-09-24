@@ -52,6 +52,19 @@
     read(27) rho_vp
     read(27) rho_vs
     read(27) iflag_attenuation_store
+
+    ! checks attenuation flags: see integers defined in constants.h
+    if( ATTENUATION ) then
+      if( minval(iflag_attenuation_store(:,:,:,:)) < 1 ) then
+        close(27)
+        call exit_MPI(myrank,'something is wrong with the mesh attenuation: flag entry is invalid')
+      endif
+      if( maxval(iflag_attenuation_store(:,:,:,:)) > NUM_REGIONS_ATTENUATION ) then
+        close(27)
+        call exit_MPI(myrank,'something is wrong with the mesh attenuation: flag entry exceeds number of defined attenuation flags in constants.h')
+      endif
+    endif        
+    
     read(27) NSPEC2DMAX_XMIN_XMAX_ext 
     read(27) NSPEC2DMAX_YMIN_YMAX_ext
     allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX_ext),nimax(2,NSPEC2DMAX_YMIN_YMAX_ext),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX_ext))

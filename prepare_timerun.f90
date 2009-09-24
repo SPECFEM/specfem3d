@@ -298,6 +298,8 @@
 
 
   !pll, to put elsewhere
+  ! note: currently, they need to be defined here, as they are used in the routine arguments 
+  !          for compute_forces_with_Deville()
   allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
   allocate(R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
   allocate(R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))

@@ -117,12 +117,16 @@
   write(IOUT,*) '!'
 
 ! if attenuation is off, set dummy size of arrays to one
+! both parameters are obsolete for specfem3D
+! they are only used in ampuero_implicit_ABC_specfem3D.f90
+  write(IOUT,*) '! only needed for ampuero_implicit_ABC_specfem3D.f90 compilation: '
+  write(IOUT,*) '! (uncomment next line) '
   if(ATTENUATION) then
-!    write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
-    write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .true.'
+    write(IOUT,*) '! integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
+!    write(IOUT,*) '! logical, parameter :: ATTENUATION_VAL = .true.'
   else
-    write(IOUT,*) 'integer, parameter :: NSPEC_ATTENUATION = ', 1
-    write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .false.'
+    write(IOUT,*) '! integer, parameter :: NSPEC_ATTENUATION = ', 1
+!    write(IOUT,*) '! logical, parameter :: ATTENUATION_VAL = .false.'
   endif
   write(IOUT,*)
 

@@ -339,6 +339,7 @@
         do i = 1, NGLLX
 ! check if the material is known or unknown
            if (mat_ext_mesh(1,ispec) > 0) then
+              ! materials_ext_mesh format: #index1 = rho #index2 = vp #index3 = vs #index4 = Q_flag #index5 = 0 
               rhostore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(1,ispec))
               vpstore(i,j,k,ispec) = materials_ext_mesh(2,mat_ext_mesh(1,ispec))
               vsstore(i,j,k,ispec) = materials_ext_mesh(3,mat_ext_mesh(1,ispec))

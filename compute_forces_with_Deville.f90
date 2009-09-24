@@ -23,13 +23,13 @@
 !
 !=====================================================================
 
-subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,accel, &
+subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel, &
      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
      kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & !pll
-     one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
+     one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
      ABSORBING_CONDITIONS, &
      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext,&
@@ -142,13 +142,14 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
   real(kind=CUSTOM_REAL) epsilon_trace_over_3
   
-  logical :: ATTENUATION_VAL
+  logical :: ATTENUATION
+  integer :: NSPEC_ATTENUATION_AB
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, alphaval,betaval,gammaval
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB,N_SLS) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
        R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   
 ! Stacey conditions
@@ -309,7 +310,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
           kappal = kappastore(i,j,k,ispec)
           mul = mustore(i,j,k,ispec)
          
-          if(ATTENUATION_VAL) then
+          if(ATTENUATION) then
              ! compute deviatoric strain
              epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
              epsilondev_xx_loc(i,j,k) = duxdxl - epsilon_trace_over_3
@@ -335,7 +336,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
           sigma_yz = mul*duzdyl_plus_duydzl
 
           ! subtract memory variables if attenuation
-          if(ATTENUATION_VAL) then
+          if(ATTENUATION) then
              do i_sls = 1,N_SLS
                 R_xx_val = R_xx(i,j,k,ispec,i_sls)
                 R_yy_val = R_yy(i,j,k,ispec,i_sls)
@@ -347,6 +348,8 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
                 sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
              enddo
           endif
+    
+
 
 ! form dot product with test vector, symmetric form
           tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
@@ -456,7 +459,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
           accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
            !  update memory variables based upon the Runge-Kutta scheme
-          if(ATTENUATION_VAL) then
+          if(ATTENUATION) then
              
              ! use Runge-Kutta scheme to march in time
              do i_sls = 1,N_SLS
@@ -504,7 +507,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION_VAL,displ,a
     enddo
 
     ! save deviatoric strain for Runge-Kutta scheme
-    if(ATTENUATION_VAL) then
+    if(ATTENUATION) then
        epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
        epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
        epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)

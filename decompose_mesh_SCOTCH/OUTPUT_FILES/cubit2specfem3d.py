@@ -104,7 +104,7 @@
 #############################################################################
 
 
-
+import cubit
 
 
 class mtools(object):
@@ -371,9 +371,17 @@ class mesh(object,mesh_tools):
                         if nattrib >= 3:
                             vs=cubit.get_block_attribute_value(block,2)
                             if nattrib >= 4:
-                                rho=vs=cubit.get_block_attribute_value(block,3)
+                                #density
+                                rho=cubit.get_block_attribute_value(block,3)
                                 if nattrib == 5:
-                                    q=vs=cubit.get_block_attribute_value(block,4)
+                                    #Q_flag
+                                    q=cubit.get_block_attribute_value(block,4)
+                                    # for q to be valid: it must be an integer flag between 1 and 13 
+                                    # (see constants.h for IATTENUATION_SEDIMENT_40, etc. )
+                                    if q < 0 or q > 13:
+                                      print 'error, q flag invalid:', q
+                                      print '  check with constants.h for IATTENUATION flags'
+                                      break
                     elif flag < 0:
                         vel=name
                         attrib=cubit.get_block_attribute_value(block,1)
@@ -447,7 +455,8 @@ class mesh(object,mesh_tools):
                 rho=(1.6612*vp-0.472*vp**2+0.0671*vp**3-0.0043*vp**4+0.000106*vp**4)*m2km
                 txt='%3i %20f %20f %20f %1i %1i\n' % (properties[0],rho,vel,vel/(3**.5),0,0)     
             elif type(vel) != str:   
-                txt='%3i %20f %20f %20f %1i %1i\n' % (properties[0],properties[3],properties[1],properties[2],0,0)
+                #format nummaterials file: #material_id #rho #vp #vs #Q_flag #0
+                txt='%3i %20f %20f %20f %2i %1i\n' % (properties[0],properties[3],properties[1],properties[2],properties[4],0)
             else:
                 txt='%3i %s \n' % (properties[0],properties[1])
         elif flag < 0:

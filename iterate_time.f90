@@ -58,21 +58,7 @@
 ! *********************************************************
 
   do it = 1,NSTEP
-
-
-!check stability
-  do i=1,3
-    Usolidnorm = maxval(abs(displ(i,:)))
-    Usolidnorm_index = maxloc(abs(displ(i,:)))
-    if(Usolidnorm > 1.e+15 ) then        
-      print*,' stability issue:',myrank
-      print*,'  norm: ',Usolidnorm,displ(i,Usolidnorm_index(1)),i
-      print*,'  index: ',Usolidnorm_index(1)
-      print*,'  x/y/z: ',xstore(Usolidnorm_index(1)),ystore(Usolidnorm_index(1)),zstore(Usolidnorm_index(1))
-      print*,'  time step: ',it
-      call exit_MPI(myrank,'forward simulation became unstable and blew up')
-    endif
-  enddo
+  
 ! compute the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
 ! and output timestamp file to check that simulation is running fine
@@ -107,7 +93,39 @@
       write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
 !     if (SIMULATION_TYPE == 3) write(IMAIN,*) &
 !           'Max norm displacement vector U (backward) in all slices (m) = ',b_Usolidnorm_all
+
+! compute estimated remaining simulation time
+      t_remain = (NSTEP - it) * (tCPU/dble(it))
+      int_t_remain = int(t_remain)
+      ihours_remain = int_t_remain / 3600
+      iminutes_remain = (int_t_remain - 3600*ihours_remain) / 60
+      iseconds_remain = int_t_remain - 3600*ihours_remain - 60*iminutes_remain
+      write(IMAIN,*) 'Time steps done = ',it,' out of ',NSTEP
+      write(IMAIN,*) 'Time steps remaining = ',NSTEP - it
+      write(IMAIN,*) 'Estimated remaining time in seconds = ',t_remain
+      write(IMAIN,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+               ihours_remain,iminutes_remain,iseconds_remain
+
+! compute estimated total simulation time
+      t_total = t_remain + tCPU
+      int_t_total = int(t_total)
+      ihours_total = int_t_total / 3600
+      iminutes_total = (int_t_total - 3600*ihours_total) / 60
+      iseconds_total = int_t_total - 3600*ihours_total - 60*iminutes_total
+      write(IMAIN,*) 'Estimated total run time in seconds = ',t_total
+      write(IMAIN,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+               ihours_total,iminutes_total,iseconds_total
+      write(IMAIN,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
+
+      if(it < 100) then
+        write(IMAIN,*) '************************************************************'
+        write(IMAIN,*) '**** BEWARE: the above time estimates are not reliable'
+        write(IMAIN,*) '**** because fewer than 100 iterations have been performed'
+        write(IMAIN,*) '************************************************************'
+      endif
       write(IMAIN,*)
+
+
 
 ! write time stamp file to give information about progression of simulation
       write(outputname,"('/timestamp',i6.6)") it
@@ -163,7 +181,7 @@
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
          hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
-         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
+         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
          epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
          ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
@@ -189,7 +207,7 @@
          kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
          hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
-         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,R_xx,R_yy,R_xy,R_xz,R_yz, &
+         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
          epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
          ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &

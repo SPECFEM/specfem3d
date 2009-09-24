@@ -79,9 +79,15 @@
 
   read(27) NSPEC_AB
   read(27) NGLOB_AB
-  !pll
-  NSPEC_ATTENUATION_AB = NSPEC_AB
   close(27)
+
+  if( ATTENUATION ) then
+    !pll
+    NSPEC_ATTENUATION_AB = NSPEC_AB
+  else
+    ! if attenuation is off, set dummy size of arrays to one
+    NSPEC_ATTENUATION_AB = 1
+  endif
 
 ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &

@@ -49,6 +49,8 @@ def define_absorbing_surf():
     absorbing_surf_ymax=[]
     absorbing_surf_bottom=[]
     top_surf=[]
+    
+    
     list_vol=cubit.parse_cubit_list("volume","all")
     init_n_vol=len(list_vol)
     zmax_box=cubit.get_total_bounding_box("volume",list_vol)[7]
@@ -58,31 +60,73 @@ def define_absorbing_surf():
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
     ymax_box=cubit.get_total_bounding_box("volume",list_vol)[4]
     list_surf=cubit.parse_cubit_list("surface","all")
+#    for k in list_surf:
+#        center_point = cubit.get_center_point("surface", k)
+#        if abs((center_point[0] - xmin_box)/xmin_box) <= 0.005:
+#             absorbing_surf_xmin.append(k)
+#             absorbing_surf.append(k)
+#        elif abs((center_point[0] - xmax_box)/xmax_box) <= 0.005:
+#             absorbing_surf_xmax.append(k)
+#             absorbing_surf.append(k)
+#        elif abs((center_point[1] - ymin_box)/ymin_box) <= 0.005:
+#             absorbing_surf_ymin.append(k)
+#             absorbing_surf.append(k)
+#        elif abs((center_point[1] - ymax_box)/ymax_box) <= 0.005:
+#             absorbing_surf_ymax.append(k)
+#             absorbing_surf.append(k)
+#        elif abs((center_point[2] - zmin_box)/zmin_box) <= 0.005:
+#             absorbing_surf_bottom.append(k)
+#             absorbing_surf.append(k)
+#        else:
+#            sbox=cubit.get_bounding_box('surface',k)
+#            dz=abs((sbox[7] - zmax_box)/zmax_box)
+#            normal=cubit.get_surface_normal(k)
+#            zn=normal[2]
+#            dn=abs(zn-1)
+#            if dz <= 0.001 and dn < 0.2:
+#                top_surf.append(k)
+
+    #box lengths
+    x_len = abs( xmax_box - xmin_box)
+    y_len = abs( ymax_box - ymin_box)
+    z_len = abs( zmax_box - zmin_box)
+    
+    print '##boundary box: '
+    print '##  x length: ' + str(x_len)
+    print '##  y length: ' + str(y_len)
+    print '##  z length: ' + str(z_len)
+    
+    # tolerance parameters 
+    absorbing_surface_distance_tolerance=0.005
+    topographic_surface_distance_tolerance=0.001
+    topographic_surface_normal_tolerance=0.2
+        
     for k in list_surf:
         center_point = cubit.get_center_point("surface", k)
-        if abs((center_point[0] - xmin_box)/xmin_box) <= 0.005:
+        if abs((center_point[0] - xmin_box)/x_len) <= absorbing_surface_distance_tolerance:
              absorbing_surf_xmin.append(k)
              absorbing_surf.append(k)
-        elif abs((center_point[0] - xmax_box)/xmax_box) <= 0.005:
+        elif abs((center_point[0] - xmax_box)/x_len) <= absorbing_surface_distance_tolerance:
              absorbing_surf_xmax.append(k)
              absorbing_surf.append(k)
-        elif abs((center_point[1] - ymin_box)/ymin_box) <= 0.005:
+        elif abs((center_point[1] - ymin_box)/y_len) <= absorbing_surface_distance_tolerance:
              absorbing_surf_ymin.append(k)
              absorbing_surf.append(k)
-        elif abs((center_point[1] - ymax_box)/ymax_box) <= 0.005:
+        elif abs((center_point[1] - ymax_box)/y_len) <= absorbing_surface_distance_tolerance:
              absorbing_surf_ymax.append(k)
              absorbing_surf.append(k)
-        elif abs((center_point[2] - zmin_box)/zmin_box) <= 0.005:
+        elif abs((center_point[2] - zmin_box)/z_len) <= absorbing_surface_distance_tolerance:
              absorbing_surf_bottom.append(k)
              absorbing_surf.append(k)
         else:
             sbox=cubit.get_bounding_box('surface',k)
-            dz=abs((sbox[7] - zmax_box)/zmax_box)
+            dz=abs((sbox[7] - zmax_box)/z_len)
             normal=cubit.get_surface_normal(k)
             zn=normal[2]
             dn=abs(zn-1)
-            if dz <= 0.001 and dn < 0.2:
+            if dz <= topographic_surface_distance_tolerance and dn < topographic_surface_normal_tolerance:
                 top_surf.append(k)
+
     return absorbing_surf,absorbing_surf_xmin,absorbing_surf_xmax,absorbing_surf_ymin,absorbing_surf_ymax,absorbing_surf_bottom,top_surf
 
 def define_absorbing_surf_nopar():
@@ -235,6 +279,8 @@ def build_block_side(surf_list,name,obj='surface'):
                 sys.exit()
     id_nodeset=cubit.get_next_nodeset_id()
     id_block=cubit.get_next_block_id()
+
+    
     if obj == 'hex':
         txt='hex in node in surface'
         txt1='block '+str(id_block)+ ' '+ txt +' '+str(list(surf_list))
@@ -252,7 +298,11 @@ def build_block_side(surf_list,name,obj='surface'):
         txt2 = "block "+str(id_block)+" name '"+name+"'"
     else:
         txt1=''
-        txt2="block "+str(id_block)+" name '"+name+"_notsupported (only hex,face,edge,node)'"
+        # do not execute: block id might be wrong
+        print "##block "+str(id_block)+" name '"+name+"_notsupported (only hex,face,edge,node)'"
+        txt2=''
+
+    
     cubit.cmd(txt1)
     cubit.cmd(txt2)
 
@@ -260,6 +310,8 @@ def define_bc(*args,**keys):
     parallel=keys.get('parallel',True)
     closed=keys.get('closed',False)
     if not closed:
+        print "##open region"
+
         if parallel:
             surf,xmin,xmax,ymin,ymax,bottom,topo=define_absorbing_surf()
         else:
@@ -269,6 +321,8 @@ def define_bc(*args,**keys):
         entities=args[0]
         print entities
         for entity in entities:
+            print "##entity: "+str(entity)
+            
             build_block_side(topo,entity+'_topo',obj=entity)
             build_block_side(surf,entity+'_abs',obj=entity)
             if parallel: 
@@ -278,6 +332,8 @@ def define_bc(*args,**keys):
                 build_block_side(ymax,entity+'_abs_ymax',obj=entity)
                 build_block_side(bottom,entity+'_abs_bottom',obj=entity)
     else:
+        print "##closed region"
+        
         surf=define_absorbing_surf_sphere()
         v_list,name_list=define_block()
         build_block(v_list,name_list)
@@ -291,8 +347,11 @@ def define_bc(*args,**keys):
 #define_bc(entities,parallel=True)
 #define_bc(entities,parallel=False)
 #define_bc(entities,parallel=False,closed=True)
-entities=['surface','face']
-define_bc(entities,parallel=True)
+
+
+# call
+#entities=['surface','face']
+#define_bc(entities,parallel=True)
 
 #block 1  attribute count 5
 #block 2  attribute count 0
