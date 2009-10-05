@@ -56,52 +56,41 @@ RANLIB = ranlib
 O = obj
 
 libspecfem_a_OBJECTS = \
-	$O/aniso_model.o \
 	$O/calc_jacobian.o \
+	$O/check_mesh_resolution.o \
 	$O/comp_source_time_function.o \
 	$O/compute_arrays_source.o \
 	$O/compute_parameters.o \
-	$O/compute_rho_estimate.o \
 	$O/create_header_file.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
-	$O/define_subregions.o \
-	$O/define_subregions_heuristic.o \
 	$O/exit_mpi.o \
 	$O/get_MPI_cutplanes_eta.o \
 	$O/get_MPI_cutplanes_xi.o \
 	$O/get_absorb.o \
 	$O/get_attenuation_model.o \
 	$O/get_cmt.o \
-	$O/get_flags_boundaries.o \
 	$O/get_global.o \
 	$O/get_jacobian_boundaries.o \
 	$O/get_shape2D.o \
 	$O/get_shape3D.o \
 	$O/get_value_parameters.o \
 	$O/gll_library.o \
-	$O/hauksson_model.o \
 	$O/hex_nodes.o \
-	$O/interpolate_gocad_block_HR.o \
-	$O/interpolate_gocad_block_MR.o \
 	$O/lagrange_poly.o \
 	$O/locate_receivers.o \
 	$O/locate_source.o \
-	$O/mesh_vertical.o \
 	$O/generate_databases.o \
 	$O/netlib_specfun_erf.o \
 	$O/read_arrays_buffers_solver.o \
 	$O/read_topo_bathy_file.o \
-	$O/read_moho_map.o \
 	$O/read_parameter_file.o \
 	$O/read_value_parameters.o \
 	$O/recompute_jacobian.o \
-	$O/salton_trough_gocad.o \
 	$O/save_arrays_solver.o \
 	$O/save_header_file.o \
-	$O/socal_model.o \
 	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
 	$O/write_AVS_DX_global_data.o \
@@ -112,16 +101,32 @@ libspecfem_a_OBJECTS = \
 	$O/memory_eval.o \
 	$(EMPTY_MACRO)
 
+###
+###--obsolete routines
+###
+#	$O/aniso_model.o \
+#	$O/compute_rho_estimate.o \
+#	$O/define_subregions.o \
+#	$O/define_subregions_heuristic.o \
+#	$O/get_flags_boundaries.o \
+#	$O/hauksson_model.o \
+#	$O/interpolate_gocad_block_HR.o \
+#	$O/interpolate_gocad_block_MR.o \
+#	$O/mesh_vertical.o \
+#	$O/read_moho_map.o \
+#	$O/salton_trough_gocad.o \
+#	$O/socal_model.o \
+
+
+
 # solver objects with statically allocated arrays; dependent upon
 # values_from_mesher.h
 SOLVER_ARRAY_OBJECTS = \
 	$O/assemble_MPI_scalar.o \
 	$O/assemble_MPI_vector.o \
-	$O/read_arrays_solver.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
 	$O/specfem3D_par.o \
-	$O/specfem3D.o \
 	$O/initialize_simulation.o \
 	$O/read_mesh_databases.o \
 	$O/setup_GLL_points.o \
@@ -132,7 +137,14 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/prepare_timerun.o \
 	$O/iterate_time.o \
 	$O/finalize_simulation.o \
+	$O/specfem3D.o \
 	$(EMPTY_MACRO)
+
+###
+###--obsolete routines
+###
+#	$O/read_arrays_solver.o \
+
 
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
@@ -235,41 +247,38 @@ $O/libspecfem.a: $(libspecfem_a_OBJECTS)
 ### optimized flags and dependence on values from mesher
 ###
 
-$O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
-
 $O/specfem3D_par.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D_par.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/specfem3D_par.o specfem3D_par.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D_par.o specfem3D_par.f90
 
 $O/initialize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h initialize_simulation.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/initialize_simulation.o initialize_simulation.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/initialize_simulation.o initialize_simulation.f90
 
 $O/read_mesh_databases.o: constants.h OUTPUT_FILES/values_from_mesher.h read_mesh_databases.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/read_mesh_databases.o read_mesh_databases.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/read_mesh_databases.o read_mesh_databases.f90
 
 $O/setup_GLL_points.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_GLL_points.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/setup_GLL_points.o setup_GLL_points.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_GLL_points.o setup_GLL_points.f90
 
 $O/detect_mesh_surfaces.o: constants.h OUTPUT_FILES/values_from_mesher.h detect_mesh_surfaces.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/detect_mesh_surfaces.o detect_mesh_surfaces.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/detect_mesh_surfaces.o detect_mesh_surfaces.f90
 
 $O/setup_movie_meshes.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_movie_meshes.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/setup_movie_meshes.o setup_movie_meshes.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_movie_meshes.o setup_movie_meshes.f90
 
 $O/read_topography_bathymetry.o: constants.h OUTPUT_FILES/values_from_mesher.h read_topography_bathymetry.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/read_topography_bathymetry.o read_topography_bathymetry.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/read_topography_bathymetry.o read_topography_bathymetry.f90
 
 $O/setup_sources_receivers.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_sources_receivers.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/setup_sources_receivers.o setup_sources_receivers.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_sources_receivers.o setup_sources_receivers.f90
 
 $O/prepare_timerun.o: constants.h OUTPUT_FILES/values_from_mesher.h prepare_timerun.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/prepare_timerun.o prepare_timerun.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/prepare_timerun.o prepare_timerun.f90
 
 $O/iterate_time.o: constants.h OUTPUT_FILES/values_from_mesher.h iterate_time.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/iterate_time.o iterate_time.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/iterate_time.o iterate_time.f90
 
 $O/finalize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h finalize_simulation.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
 
 $O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
@@ -321,9 +330,6 @@ $O/program_create_header_file.o: program_create_header_file.f90
 $O/create_header_file.o: create_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_header_file.o create_header_file.f90
 
-$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_arrays_solver.o read_arrays_solver.f90
-
 $O/combine_AVS_DX.o: constants.h combine_AVS_DX.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_AVS_DX.o combine_AVS_DX.f90
 
@@ -350,6 +356,9 @@ $O/compute_parameters.o: constants.h compute_parameters.f90
 
 $O/calc_jacobian.o: constants.h calc_jacobian.f90
 	${FCCOMPILE_CHECK} -c -o $O/calc_jacobian.o calc_jacobian.f90
+
+$O/check_mesh_resolution.o: constants.h check_mesh_resolution.f90
+	${FCCOMPILE_CHECK} -c -o $O/check_mesh_resolution.o check_mesh_resolution.f90
 
 $O/gll_library.o: constants.h gll_library.f90
 	${FCCOMPILE_CHECK} -c -o $O/gll_library.o gll_library.f90
@@ -396,35 +405,11 @@ $O/get_shape2D.o: constants.h get_shape2D.f90
 $O/hex_nodes.o: constants.h hex_nodes.f90
 	${FCCOMPILE_CHECK} -c -o $O/hex_nodes.o hex_nodes.f90
 
-$O/mesh_vertical.o: constants.h mesh_vertical.f90
-	${FCCOMPILE_CHECK} -c -o $O/mesh_vertical.o mesh_vertical.f90
-
 $O/netlib_specfun_erf.o: netlib_specfun_erf.f90
 	${FCCOMPILE_CHECK} -c -o $O/netlib_specfun_erf.o netlib_specfun_erf.f90
 
-$O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90
-	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_MR.o interpolate_gocad_block_MR.f90
-
-$O/interpolate_gocad_block_HR.o: constants.h interpolate_gocad_block_HR.f90
-	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_HR.o interpolate_gocad_block_HR.f90
-
-$O/salton_trough_gocad.o: constants.h salton_trough_gocad.f90
-	${FCCOMPILE_CHECK} -c -o $O/salton_trough_gocad.o salton_trough_gocad.f90
-
-$O/socal_model.o: constants.h socal_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/socal_model.o socal_model.f90
-
 $O/sort_array_coordinates.o: constants.h sort_array_coordinates.f90
 	${FCCOMPILE_CHECK} -c -o $O/sort_array_coordinates.o sort_array_coordinates.f90
-
-$O/aniso_model.o: constants.h aniso_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
-
-$O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_rho_estimate.o compute_rho_estimate.f90
-
-$O/hauksson_model.o: constants.h hauksson_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/hauksson_model.o hauksson_model.f90
 
 $O/save_arrays_solver.o: constants.h save_arrays_solver.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_arrays_solver.o save_arrays_solver.f90
@@ -434,9 +419,6 @@ $O/comp_source_time_function.o: constants.h comp_source_time_function.f90
 
 $O/read_topo_bathy_file.o: constants.h read_topo_bathy_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o read_topo_bathy_file.f90
-
-$O/read_moho_map.o: constants.h read_moho_map.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_moho_map.o read_moho_map.f90
 
 $O/write_seismograms.o: constants.h write_seismograms.f90
 	${FCCOMPILE_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
@@ -456,12 +438,6 @@ $O/create_name_database.o: constants.h create_name_database.f90
 $O/create_serial_name_database.o: constants.h create_serial_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_serial_name_database.o create_serial_name_database.f90
 
-$O/define_subregions.o: constants.h define_subregions.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90
-
-$O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
-
 $O/read_arrays_buffers_solver.o: constants.h read_arrays_buffers_solver.f90
 	${FCCOMPILE_CHECK} -c -o $O/read_arrays_buffers_solver.o read_arrays_buffers_solver.f90
 
@@ -477,17 +453,76 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 $O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
 
+$O/combine_vol_data.o: constants.h combine_vol_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90
+
+$O/combine_surf_data.o: constants.h combine_surf_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
+
+### compilation with optimization
+
+$O/specfem3D.o: constants.h specfem3D.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
+
 $O/compute_forces_no_Deville.o: constants.h compute_forces_no_Deville.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_no_Deville.o compute_forces_no_Deville.f90
 
 $O/compute_forces_with_Deville.o: constants.h compute_forces_with_Deville.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_with_Deville.o compute_forces_with_Deville.f90
 
-$O/combine_vol_data.o: constants.h combine_vol_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90
 
-$O/combine_surf_data.o: constants.h combine_surf_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
+###
+### all obsolete files ?
+###
+#--obsolete 
+#$O/mesh_vertical.o: constants.h mesh_vertical.f90
+#	${FCCOMPILE_CHECK} -c -o $O/mesh_vertical.o mesh_vertical.f90
+
+#--obsolete 
+#$O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90
+#	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_MR.o interpolate_gocad_block_MR.f90
+
+#--obsolete 
+#$O/interpolate_gocad_block_HR.o: constants.h interpolate_gocad_block_HR.f90
+#	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_HR.o interpolate_gocad_block_HR.f90
+
+#--obsolete 
+#$O/socal_model.o: constants.h socal_model.f90
+#	${FCCOMPILE_CHECK} -c -o $O/socal_model.o socal_model.f90
+
+# --obsolete
+#$O/define_subregions.o: constants.h define_subregions.f90
+#	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90
+
+# --obsolete
+#$O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
+#	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
+
+#--obsolete 
+#$O/read_moho_map.o: constants.h read_moho_map.f90
+#	${FCCOMPILE_CHECK} -c -o $O/read_moho_map.o read_moho_map.f90
+
+#--obsolete 
+#$O/aniso_model.o: constants.h aniso_model.f90
+#	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
+
+#--obsolete 
+#$O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
+#	${FCCOMPILE_CHECK} -c -o $O/compute_rho_estimate.o compute_rho_estimate.f90
+
+#--obsolete 
+#$O/hauksson_model.o: constants.h hauksson_model.f90
+#	${FCCOMPILE_CHECK} -c -o $O/hauksson_model.o hauksson_model.f90
+
+#--obsolete 
+#$O/salton_trough_gocad.o: constants.h salton_trough_gocad.f90
+#	${FCCOMPILE_CHECK} -c -o $O/salton_trough_gocad.o salton_trough_gocad.f90
+
+#--obsolete
+#$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
+#	${FCCOMPILE_CHECK} -c -o $O/read_arrays_solver.o read_arrays_solver.f90
+
+
 
 ###
 ### rule for the header file

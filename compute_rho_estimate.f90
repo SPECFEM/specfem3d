@@ -30,7 +30,8 @@
 
   implicit none
 
-  include "constants.h"
+!  include "constants.h"
+  include "constants_gocad.h"
 
   double precision rho,vp
 

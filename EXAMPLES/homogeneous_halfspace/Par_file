@@ -12,7 +12,7 @@ NPROC_XI                        = 2
 NPROC_ETA                       = 2
 
 # time step parameters
-NSTEP                           = 7500
+NSTEP                           = 5000
 DT                              = 0.0065d0
 
 # parameters describing the model

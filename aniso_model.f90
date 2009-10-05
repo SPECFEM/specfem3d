@@ -35,7 +35,8 @@
   implicit none
 
   include "constants.h"
-
+  include "constants_gocad.h"
+  
 !------------------------------------------------------------------------------
 ! for anisotropy simulations in a halfspace model
 

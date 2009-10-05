@@ -164,27 +164,27 @@
 
 ! allocate seismogram array
   if (nrec_local > 0) then
-  allocate(seismograms_d(NDIM,nrec_local,NSTEP))
-  allocate(seismograms_v(NDIM,nrec_local,NSTEP))
-  allocate(seismograms_a(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_d(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_v(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_a(NDIM,nrec_local,NSTEP))
 ! initialize seismograms
-  seismograms_d(:,:,:) = 0._CUSTOM_REAL
-  seismograms_v(:,:,:) = 0._CUSTOM_REAL
-  seismograms_a(:,:,:) = 0._CUSTOM_REAL
-  if (SIMULATION_TYPE == 2) then
+    seismograms_d(:,:,:) = 0._CUSTOM_REAL
+    seismograms_v(:,:,:) = 0._CUSTOM_REAL
+    seismograms_a(:,:,:) = 0._CUSTOM_REAL
+    if (SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
-    allocate(Mxx_der(nrec_local),Myy_der(nrec_local),Mzz_der(nrec_local),Mxy_der(nrec_local), &
+      allocate(Mxx_der(nrec_local),Myy_der(nrec_local),Mzz_der(nrec_local),Mxy_der(nrec_local), &
                Mxz_der(nrec_local),Myz_der(nrec_local), sloc_der(NDIM,nrec_local))
-    Mxx_der = 0._CUSTOM_REAL
-    Myy_der = 0._CUSTOM_REAL
-    Mzz_der = 0._CUSTOM_REAL
-    Mxy_der = 0._CUSTOM_REAL
-    Mxz_der = 0._CUSTOM_REAL
-    Myz_der = 0._CUSTOM_REAL
-    sloc_der = 0._CUSTOM_REAL
-    allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
-    seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-  endif
+      Mxx_der = 0._CUSTOM_REAL
+      Myy_der = 0._CUSTOM_REAL
+      Mzz_der = 0._CUSTOM_REAL
+      Mxy_der = 0._CUSTOM_REAL
+      Mxz_der = 0._CUSTOM_REAL
+      Myz_der = 0._CUSTOM_REAL
+      sloc_der = 0._CUSTOM_REAL
+      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
+      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
+    endif
   endif
 
 ! initialize arrays to zero
@@ -360,28 +360,6 @@
 !   k_bot = NGLLZ
 ! endif
 
-!! DK DK May 2009: added this to print the minimum and maximum number of elements
-!! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
-  call MPI_REDUCE(NSPEC_AB,NSPEC_AB_global_min,1,MPI_INTEGER,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call MPI_REDUCE(NSPEC_AB,NSPEC_AB_global_max,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,ier)
-  call MPI_REDUCE(NSPEC_AB,NSPEC_AB_global_sum,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,ier)
-
-  call MPI_REDUCE(NGLOB_AB,NGLOB_AB_global_min,1,MPI_INTEGER,MPI_MIN,0,MPI_COMM_WORLD,ier)
-  call MPI_REDUCE(NGLOB_AB,NGLOB_AB_global_max,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,ier)
-
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'minimum and maximum number of elements'
-    write(IMAIN,*) 'and points in the CUBIT + SCOTCH mesh:'
-    write(IMAIN,*)
-    write(IMAIN,*) 'NSPEC_AB_global_min = ',NSPEC_AB_global_min
-    write(IMAIN,*) 'NSPEC_AB_global_max = ',NSPEC_AB_global_max
-    write(IMAIN,*) 'NSPEC_AB_global_mean = ',NSPEC_AB_global_sum / float(sizeprocs)
-    write(IMAIN,*)
-    write(IMAIN,*) 'NGLOB_AB_global_min = ',NGLOB_AB_global_min
-    write(IMAIN,*) 'NGLOB_AB_global_max = ',NGLOB_AB_global_max
-    write(IMAIN,*)
-  endif
 
 
   end subroutine

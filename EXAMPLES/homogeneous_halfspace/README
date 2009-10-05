@@ -11,9 +11,7 @@ step-by-step tutorial:
      > claro
      
      then run meshing script: 
-     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "2lay_mesh_boundary_fig8.py"
-    
-     (or select: "2lay_mesh_boundary_fig8-nodoubling.py" for regular mesh without doubling layer)
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
     
      this creates all the mesh files in subdirectory MESH/
      
@@ -43,10 +41,6 @@ step-by-step tutorial:
      
     - submit job script:
       > qsub go_generate_database_pbs.sesame.bash
-
-    (note: if execution fails due to memory shortage - most likely fails when calling routine to 
-           create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
-
       
 4. run simulation:
 
@@ -57,6 +51,7 @@ step-by-step tutorial:
       > qsub go_solver_pbs.sesame.bash
 
 
+seismogram outputs:
 
-    
-    
+    Reference solutions can be found in subdirectory REF_SEIS/      
+      

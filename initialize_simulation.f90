@@ -29,6 +29,8 @@
 
   use specfem_par
   
+  integer :: sizeprocs
+  
 ! sizeprocs returns number of processes started
 ! (should be equal to NPROC)
 ! myrank is the rank of each process, between 0 and sizeprocs-1.
@@ -51,6 +53,10 @@
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
   endif
+  
+! check that the code is running with the requested nb of processes
+  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+  !NPROC = sizeprocs  
 
 ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
@@ -67,9 +73,7 @@
   if(NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
     stop 'optimized routines from Deville et al. (2002) such as mxm_m1_m2_5points can only be used if NGLL = 5'
 
-! info about external mesh simulation
-! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
-  NPROC = sizeprocs
+  
 ! chris: DT_ext_mesh & NSTE_ext_mesh were in constants.h, I suppressed it, now it is Par_file & read in 
 ! read_parameters_file.f90
 !  DT = DT_ext_mesh
@@ -105,7 +109,7 @@
   if(FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
 
   write(IMAIN,*)
-  write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
+  write(IMAIN,*) 'There are ',NPROC,' MPI processes'
   write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
   write(IMAIN,*)
 
@@ -133,8 +137,6 @@
 
   endif
 
-! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
 
 ! check that we have at least one source
   if(NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
@@ -170,7 +172,5 @@
   allocate(accel(NDIM,NGLOB_AB))
   allocate(iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
-
-
-
   end subroutine
+  

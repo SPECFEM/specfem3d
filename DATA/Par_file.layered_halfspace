@@ -12,8 +12,8 @@ NPROC_XI                        = 2
 NPROC_ETA                       = 2
 
 # time step parameters
-NSTEP                           = 10
-DT                              = 0.0026d0
+NSTEP                           = 7500
+DT                              = 0.0065d0
 
 # parameters describing the model
 OCEANS                          = .false.
@@ -35,16 +35,16 @@ USE_HIGHRES_FOR_MOVIES          = .false.
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./OUTPUT_FILES
+LOCAL_PATH                      = /scratch/lustre/dpeter/SPECFEM3D_SESAME/DATABASES_MPI.FIG8
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 200
+NTSTEP_BETWEEN_OUTPUT_INFO      = 500
 
 # interval in time steps for writing of seismograms
-NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 200
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
