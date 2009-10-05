@@ -4,6 +4,7 @@
   implicit none
 
   include "../../constants.h"
+  include "../../constants_gocad.h"
 
 ! size of Gocad t-surf surface file for basement
  integer, parameter :: NX=144,NY=161

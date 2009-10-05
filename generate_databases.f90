@@ -194,7 +194,7 @@
 !  integer ix,iy
 
 ! parameters needed to store the radii of the grid points
-  integer, dimension(:), allocatable :: idoubling
+!  integer, dimension(:), allocatable :: idoubling
   integer, dimension(:,:,:,:), allocatable :: ibool
 
 ! arrays with the mesh in double precision
@@ -236,7 +236,7 @@
   integer NPROC
 
 ! static memory size that will be needed by the solver
-  double precision :: max_static_memory_size
+  double precision :: max_static_memory_size,max_static_memory_size_request
 
 ! this for all the regions
   integer NSPEC_AB,NGLOB_AB, &
@@ -283,6 +283,11 @@
   integer  :: ispec2D, boundary_number
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+    
+! number of points per spectral element
+  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
+! for vectorization of loops 
+!  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -341,10 +346,12 @@
 !      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
 !      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
 
-  NPROC = sizeprocs
-
 ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+  if(sizeprocs /= NPROC) then
+    write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
+    write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
+    call exit_MPI(myrank,'wrong number of MPI processes')
+  endif
 
   if(myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
@@ -375,40 +382,40 @@
   if(myrank == 0) then
 ! chris: I am not sure if we should suppress the following. topography should appear in the external mesh
 ! leave it for now
-  write(IMAIN,*)
-  if(TOPOGRAPHY) then
-    write(IMAIN,*) 'incorporating surface topography'
-  else
-    write(IMAIN,*) 'no surface topography'
-  endif
-
-  write(IMAIN,*)
-  if(SUPPRESS_UTM_PROJECTION) then
-    write(IMAIN,*) 'suppressing UTM projection'
-  else
-    write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
-  endif
-
-  write(IMAIN,*)
-  if(ATTENUATION) then
-    write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
-    if(USE_OLSEN_ATTENUATION) then
-      write(IMAIN,*) 'using Olsen''s attenuation'
+    write(IMAIN,*)
+    if(TOPOGRAPHY) then
+      write(IMAIN,*) 'incorporating surface topography'
     else
-      write(IMAIN,*) 'not using Olsen''s attenuation'
+      write(IMAIN,*) 'no surface topography'
     endif
-  else
-    write(IMAIN,*) 'no attenuation'
-  endif
 
-  write(IMAIN,*)
-  if(OCEANS) then
-    write(IMAIN,*) 'incorporating the oceans using equivalent load'
-  else
-    write(IMAIN,*) 'no oceans'
-  endif
+    write(IMAIN,*)
+    if(SUPPRESS_UTM_PROJECTION) then
+      write(IMAIN,*) 'suppressing UTM projection'
+    else
+      write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
+    endif
 
-  write(IMAIN,*)
+    write(IMAIN,*)
+    if(ATTENUATION) then
+      write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+      if(USE_OLSEN_ATTENUATION) then
+        write(IMAIN,*) 'using Olsen''s attenuation'
+      else
+        write(IMAIN,*) 'not using Olsen''s attenuation'
+      endif
+    else
+      write(IMAIN,*) 'no attenuation'
+    endif
+
+    write(IMAIN,*)
+    if(OCEANS) then
+      write(IMAIN,*) 'incorporating the oceans using equivalent load'
+    else
+      write(IMAIN,*) 'no oceans'
+    endif
+
+    write(IMAIN,*)
 
   endif
 
@@ -459,7 +466,12 @@
 ! read databases about external mesh simulation
 
   call create_name_database(prname,myrank,LOCAL_PATH)
-  open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted')
+  open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted',iostat=ier)
+  if( ier /= 0 ) then
+    write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database'
+    write(IMAIN,*) 'make sure file exists'
+    call exit_mpi(myrank,'error opening database file')
+  endif
   read(IIN,*) nnodes_ext_mesh
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
   do inode = 1, nnodes_ext_mesh
@@ -468,6 +480,11 @@
 
 ! defines global number of nodes in model
   NGLOB_AB = nnodes_ext_mesh
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  global points: ',NGLOB_AB
+  endif
+  call sync_all()
 
 ! read materials' physical properties
   read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
@@ -479,10 +496,21 @@
           materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
   end do
 
+  if(myrank == 0) then
+    write(IMAIN,*) '  defined materials: ',nmat_ext_mesh
+  endif
+  call sync_all()
+
   do imat = 1, nundefMat_ext_mesh
      read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat)
   end do
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  undefined materials: ',nundefMat_ext_mesh
+  endif
+  call sync_all()
+
 
   read(IIN,*) nelmnts_ext_mesh
   allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
@@ -493,6 +521,12 @@
           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
   enddo
   NSPEC_AB = nelmnts_ext_mesh
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  spectral elements: ',NSPEC_AB
+  endif
+  call sync_all()
+
 
 ! read boundaries
   read(IIN,*) boundary_number ,nspec2D_xmin
@@ -542,6 +576,15 @@
      read(IIN,*) ibelm_top(ispec2D)
   end do
 
+  if(myrank == 0) then
+    write(IMAIN,*) '  absorbing boundaries: '
+    write(IMAIN,*) '    xmin,xmax: ',nspec2D_xmin,nspec2D_xmax
+    write(IMAIN,*) '    ymin,ymax: ',nspec2D_ymin,nspec2D_ymax
+    write(IMAIN,*) '    bottom,top: ',nspec2D_bottom_ext,nspec2D_top_ext
+    write(IMAIN,*) '    xmin_xmax,ymin_ymax: ',NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX
+  endif
+  call sync_all()
+
   read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
   allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
   allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
@@ -556,8 +599,12 @@
              my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
      enddo
   enddo
-
   close(IIN)
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  partition interfaces: ',ninterface_ext_mesh
+  endif
+  call sync_all()
 
 
 ! assign theoretical number of elements
@@ -570,7 +617,7 @@
   call sync_all()
 
 ! use dynamic allocation to allocate memory for arrays
-  allocate(idoubling(nspec))
+!  allocate(idoubling(nspec))
   allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
@@ -579,7 +626,39 @@
 ! exit if there is not enough memory to allocate all the arrays
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
+! memory usage, in generate_database() routine so far
+  max_static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
+        + NDIM*nnodes_ext_mesh*8 + ESIZE*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
+        + 5*nmat_ext_mesh*8 + 3*ninterface_ext_mesh + 6*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
+        + NGLLX*NGLLX*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
+        + nspec2D_xmin*4 + nspec2D_xmax*4 + nspec2D_ymin*4 + nspec2D_ymax*4 + nspec2D_bottom*4 + nspec2D_top*4 
+
+! memory usage, in create_regions_mesh_ext_mesh() routine requested approximately
+  max_static_memory_size_request = 2*2*nspec2dmax_ymin_ymax*4 + 2*2*nspec2dmax_xmin_xmax*4 &
+        + 3*NGNOD*8 + NGLLX*NGLLY*NGLLZ*nspec*4 + 6*nspec*1 + 6*NGLLX*8 &
+        + NGNOD*NGLLX*NGLLY*NGLLZ*8 + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*8 &
+        + 4*NGNOD2D*NGLLY*NGLLZ*8 + 4*NDIM2D*NGNOD2D*NGLLX*NGLLY*8 &
+        + 17*NGLLX*NGLLY*NGLLY*nspec*CUSTOM_REAL &
+        + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmin*CUSTOM_REAL + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmax*CUSTOM_REAL &
+        + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymin*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymax*CUSTOM_REAL &
+        + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*CUSTOM_REAL &
+        + 2*npointot*4 + npointot + 3*npointot*8 
+
+  call sync_all()
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '  minimum memory used so far     : ',max_static_memory_size / 1024. / 1024.,&
+                   'MB per process'            
+    write(IMAIN,*) '  minimum total memory requested : ',(max_static_memory_size+max_static_memory_size_request)/1024./1024.,&
+                   'MB per process'
+    write(IMAIN,*)            
+  endif
+  max_static_memory_size = max_static_memory_size_request    
+
 ! create all the regions of the mesh
+  if(myrank == 0) then
+    write(IMAIN,*) 'create regions: '
+  endif
   call create_regions_mesh_ext_mesh(ibool, &
        xstore, ystore, zstore, nspec, npointot, myrank, LOCAL_PATH, &
        nnodes_ext_mesh, nelmnts_ext_mesh, &
@@ -606,7 +685,7 @@
     endif
   endif
 
-
+  deallocate(ibool,xstore,ystore,zstore)
 
 ! make sure everybody is synchronized
   call sync_all()

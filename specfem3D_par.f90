@@ -35,7 +35,7 @@ module specfem_par
   include "OUTPUT_FILES/values_from_mesher.h"
 
 ! standard include of the MPI library
-  include 'mpif.h'
+!  include 'mpif.h'
 
 
 
@@ -241,7 +241,7 @@ module specfem_par
 ! integer, dimension(0:NPROC_XI_VAL-1,0:NPROC_ETA_VAL) :: addressing
 
 ! proc numbers for MPI
-  integer myrank,sizeprocs
+  integer :: myrank
 
 ! integer npoin2D_xi,npoin2D_eta
 
@@ -352,16 +352,16 @@ module specfem_par
   logical, dimension(:), allocatable :: iglob_is_inner_ext_mesh
   integer :: iinterface
 
+!daniel
+!  integer, dimension(:),allocatable :: spec_inner, spec_outer
+!  integer :: nspec_inner,nspec_outer
+  
+
 !!!! NL NL REGOLITH : regolith layer for asteroid
 !!$  double precision, external :: materials_ext_mesh
 !!$  logical, dimension(:), allocatable :: ispec_is_regolith
 !!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
 !!!! NL NL REGOLITH
 
-!! DK DK May 2009: added this to print the minimum and maximum number of elements
-!! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
-  integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
-  integer :: NGLOB_AB_global_min,NGLOB_AB_global_max
-  integer :: ier
   
 end module

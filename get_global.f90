@@ -36,6 +36,7 @@
 
   include "constants.h"
 
+
   integer npointot
   integer nspec,nglob
   integer iglob(npointot),loc(npointot)
@@ -43,7 +44,7 @@
   double precision xp(npointot),yp(npointot),zp(npointot)
   double precision UTM_X_MIN,UTM_X_MAX
 
-  integer ispec,i,j
+  integer ispec,i,j,ier
   integer ieoff,ilocnum,nseg,ioff,iseg,ig
 
   integer, dimension(:), allocatable :: ind,ninseg,iwork
@@ -53,14 +54,21 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision SMALLVALTOL
 
+! number of points per spectral element
+  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
+! for vectorization of loops 
+!  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
+
+
 ! define geometrical tolerance based upon typical size of the model
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
 
 ! dynamically allocate arrays
-  allocate(ind(npointot))
-  allocate(ninseg(npointot))
-  allocate(iwork(npointot))
-  allocate(work(npointot))
+  allocate(ind(npointot), &
+          ninseg(npointot), &
+          iwork(npointot), &
+          work(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays'
 
 ! establish initial pointers
   do ispec=1,nspec

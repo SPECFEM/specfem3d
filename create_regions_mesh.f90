@@ -42,25 +42,34 @@
   include "constants.h"
 
 ! number of spectral elements in each block
-  integer nspec
-
-  integer npointot
-
-  character(len=150) LOCAL_PATH
+  integer :: nspec
 
 ! arrays with the mesh
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
 
-  integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+  integer :: npointot
 
-! static memory size needed by the solver
-  double precision :: static_memory_size,max_static_memory_size 
+! proc numbers for MPI
+  integer :: myrank
+
+  character(len=150) :: LOCAL_PATH
 
 ! data from the external mesh
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
   integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
+
+! static memory size needed by the solver
+  double precision :: max_static_memory_size 
+  
   integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
+
+!pll
+  integer :: nmat_ext_mesh,nundefMat_ext_mesh 
+  double precision, dimension(5,nmat_ext_mesh) :: materials_ext_mesh  
+  character (len=30), dimension(5,nundefMat_ext_mesh):: undef_mat_prop
+  
 !  double precision, external :: materials_ext_mesh
   integer :: ninterface_ext_mesh,max_interface_size_ext_mesh
   integer, dimension(ninterface_ext_mesh) :: my_neighbours_ext_mesh
@@ -68,15 +77,28 @@
   integer, dimension(6,max_interface_size_ext_mesh,ninterface_ext_mesh) :: my_interfaces_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
   integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh
-!pll
-  integer :: nmat_ext_mesh,nundefMat_ext_mesh 
-  double precision, dimension(5,nmat_ext_mesh) :: materials_ext_mesh  
-  character (len=30), dimension(5,nundefMat_ext_mesh):: undef_mat_prop
+
+! absorbing boundaries
+  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
+  integer  :: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+  integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
+  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
+  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
+  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
+  integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
+  integer, dimension(NSPEC2D_TOP)  :: ibelm_top
+
+!-------------------------------------------------------------------------------------------------
+! local parameters
+!-----------------------    
+
+  integer, dimension(:,:), allocatable :: nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta
+  integer  :: ispec2D,iflag,flag_below,flag_above
 
 ! for MPI buffers
   integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
-  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+  !integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
   double precision, dimension(:), allocatable :: work_ext_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
@@ -90,12 +112,13 @@
   double precision, dimension(:,:,:,:), allocatable :: shape3D
   double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
 
-  double precision xelm(NGNOD)
-  double precision yelm(NGNOD)
-  double precision zelm(NGNOD)
+  double precision, dimension(:), allocatable :: xelm,yelm,zelm
+
+! static memory size needed by the solver
+  double precision :: static_memory_size
 
 ! the jacobian
-  real(kind=CUSTOM_REAL) jacobianl
+  real(kind=CUSTOM_REAL) :: jacobianl
 
 ! arrays with mesh parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
@@ -105,33 +128,25 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore,vpstore,vsstore 
 
 ! attenuation 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: iflag_attenuation_store
-
-! proc numbers for MPI
-  integer myrank
+  integer, dimension(:,:,:,:), allocatable :: iflag_attenuation_store
 
 ! check area and volume of the final mesh
-  double precision weight
+  double precision :: weight
 
 ! variables for creating array ibool (some arrays also used for AVS or DX files)
   integer, dimension(:), allocatable :: iglob,locval
   logical, dimension(:), allocatable :: ifseg
   double precision, dimension(:), allocatable :: xp,yp,zp
 
-  integer nglob
-  integer ieoff,ilocnum
-  integer ier
-  integer iinterface
+  integer :: nglob,ieoff,ilocnum,ier,iinterface
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
-! ---------------------------
-
 ! name of the database file
   character(len=150) prname
 
-  integer i,j,k,ia,ispec,iglobnum
+  integer :: i,j,k,ia,ispec,iglobnum
 
 ! mask to sort ibool
   integer, dimension(:), allocatable :: mask_ibool
@@ -146,21 +161,6 @@
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
   double precision, dimension(:,:,:,:), allocatable :: dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top
 
-  integer  :: ispec2D
-  integer :: iflag, flag_below, flag_above
-  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
-  integer  :: NSPEC2DMAX_XMIN_XMAX 
-  integer  :: NSPEC2DMAX_YMIN_YMAX
-  integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
-  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
-  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
-  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
-  integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
-  integer, dimension(NSPEC2D_TOP)  :: ibelm_top
-  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX) :: nimin,nimax
-  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX) :: njmin,njmax 
-  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX) :: nkmin_xi
-  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX) :: nkmin_eta
 
   ! 2-D jacobians and normals
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: &
@@ -172,6 +172,8 @@
   
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
+! memory test
+  logical,dimension(:),allocatable :: test_mem 
 
 
 ! For Piero Basini :
@@ -206,70 +208,83 @@
 
 ! **************
 
+
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) 
+    write(IMAIN,*) '  ...allocating arrays '
+  endif
+
+! tests memory availability (including some small buffer of 10*1024 byte)
+  allocate( test_mem(int(max_static_memory_size)+10*1024),stat=ier)
+  if(ier /= 0) then
+    write(IMAIN,*) 'error: try to increase the available process stack size by'
+    write(IMAIN,*) '       ulimit -s **** '
+    call exit_MPI(myrank,'not enough memory to allocate arrays')
+  endif
+  test_mem(:) = .true.
+  deallocate( test_mem, stat=ier) 
+  if(ier /= 0) call exit_MPI(myrank,'error to allocate arrays')
+  call sync_all()
+
+! allocates arrays for Stacey boundaries
+  allocate( nimin(2,NSPEC2DMAX_YMIN_YMAX),nimax(2,NSPEC2DMAX_YMIN_YMAX), &
+          njmin(2,NSPEC2DMAX_XMIN_XMAX),njmax(2,NSPEC2DMAX_XMIN_XMAX), &
+          nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+          
+  allocate( xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+  allocate( iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
 ! create the name for the database of the current slide and region
   call create_name_database(prname,myrank,LOCAL_PATH)
 
 ! Gauss-Lobatto-Legendre points of integration
-  allocate(xigll(NGLLX))
-  allocate(yigll(NGLLY))
-  allocate(zigll(NGLLZ))
+  allocate(xigll(NGLLX),yigll(NGLLY),zigll(NGLLZ))
 
 ! Gauss-Lobatto-Legendre weights of integration
-  allocate(wxgll(NGLLX))
-  allocate(wygll(NGLLY))
-  allocate(wzgll(NGLLZ))
+  allocate(wxgll(NGLLX),wygll(NGLLY),wzgll(NGLLZ))
 
 ! 3D shape functions and their derivatives
-  allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ))
-  allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+  allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! pll 2D shape functions and their derivatives
-  allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ))
-  allocate(shape2D_y(NGNOD2D,NGLLX,NGLLZ))
-  allocate(shape2D_bottom(NGNOD2D,NGLLX,NGLLY))
-  allocate(shape2D_top(NGNOD2D,NGLLX,NGLLY))
-  allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ))
-  allocate(dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ))
-  allocate(dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY))
-  allocate(dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY))
+  allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ),shape2D_y(NGNOD2D,NGLLX,NGLLZ), &
+          shape2D_bottom(NGNOD2D,NGLLX,NGLLY),shape2D_top(NGNOD2D,NGLLX,NGLLY), &
+          dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ),dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ), &
+          dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY),dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! pll Stacey
-  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec),rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with model density
-  allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(vpstore(NGLLX,NGLLY,NGLLZ,nspec)) !pll
-  allocate(vsstore(NGLLX,NGLLY,NGLLZ,nspec)) !pll
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec),kappastore(NGLLX,NGLLY,NGLLZ,nspec),mustore(NGLLX,NGLLY,NGLLZ,nspec), &
+          vpstore(NGLLX,NGLLY,NGLLZ,nspec),vsstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) !pll
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! arrays with mesh parameters
-  allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec),xiystore(NGLLX,NGLLY,NGLLZ,nspec),xizstore(NGLLX,NGLLY,NGLLZ,nspec), &
+          etaxstore(NGLLX,NGLLY,NGLLZ,nspec),etaystore(NGLLX,NGLLY,NGLLZ,nspec),etazstore(NGLLX,NGLLY,NGLLZ,nspec), &
+          gammaxstore(NGLLX,NGLLY,NGLLZ,nspec),gammaystore(NGLLX,NGLLY,NGLLZ,nspec),gammazstore(NGLLX,NGLLY,NGLLZ,nspec), &
+          jacobianstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! pll 2-D jacobians and normals
-  allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin))
-  allocate(jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax))
-  allocate(jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin))
-  allocate(jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax))
-  allocate(jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM))
-  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
+  allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin),jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax), &
+          jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin),jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax), &
+          jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM),jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
-  allocate(normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
-  allocate(normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
-  allocate(normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
-  allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
-  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
+  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin),normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax), &
+          normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin),normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax), &
+          normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM),normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! set up coordinates of the Gauss-Lobatto-Legendre points
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -291,14 +306,18 @@
   call get_shape2D(myrank,shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY)
 
 ! allocate memory for arrays
-  allocate(iglob(npointot))
-  allocate(locval(npointot))
-  allocate(ifseg(npointot))
-  allocate(xp(npointot))
-  allocate(yp(npointot))
-  allocate(zp(npointot))
+  allocate(iglob(npointot), &
+          locval(npointot), &
+          ifseg(npointot), &
+          xp(npointot),yp(npointot),zp(npointot),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 !---
+
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...calculating jacobian '
+  endif
 
   xstore(:,:,:,:) = 0.d0
   ystore(:,:,:,:) = 0.d0
@@ -331,6 +350,12 @@
 !  ! broadcast the information read on the master to the nodes
 !  ! call MPI_BCAST(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT,MPI_REAL,0,MPI_COMM_WORLD,ier)
 ! call bcast_all_cr(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT)
+
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...determining kappa and mu parameters'
+  endif
+
 
 ! kappastore and mustore
   do ispec = 1, nspec
@@ -595,56 +620,40 @@
 
   inumber = 0
   do ispec=1,nspec
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
-        if(mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          if(mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
 ! create a new point
-          inumber = inumber + 1
-          ibool(i,j,k,ispec) = inumber
-          mask_ibool(copy_ibool_ori(i,j,k,ispec)) = inumber
-        else
+            inumber = inumber + 1
+            ibool(i,j,k,ispec) = inumber
+            mask_ibool(copy_ibool_ori(i,j,k,ispec)) = inumber
+          else
 ! use an existing point created previously
-          ibool(i,j,k,ispec) = mask_ibool(copy_ibool_ori(i,j,k,ispec))
-        endif
+            ibool(i,j,k,ispec) = mask_ibool(copy_ibool_ori(i,j,k,ispec))
+          endif
+        enddo
       enddo
     enddo
-  enddo
   enddo
 
   deallocate(copy_ibool_ori,stat=ier); if(ier /= 0) stop 'error in deallocate'
   deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'
 
-  allocate(xstore_dummy(nglob))
-  allocate(ystore_dummy(nglob))
-  allocate(zstore_dummy(nglob))
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...coordinating points'
+  endif
+
+  allocate(xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  
   do ispec = 1, nspec
      do k = 1, NGLLZ
         do j = 1, NGLLY
            do i = 1, NGLLX
               iglobnum = ibool(i,j,k,ispec)
               xstore_dummy(iglobnum) = xstore(i,j,k,ispec)
-           enddo
-        enddo
-     enddo
-  enddo
-
-  do ispec = 1, nspec
-     do k = 1, NGLLZ
-        do j = 1, NGLLY
-           do i = 1, NGLLX
-              iglobnum = ibool(i,j,k,ispec)
               ystore_dummy(iglobnum) = ystore(i,j,k,ispec)
-           enddo
-        enddo
-     enddo
-  enddo
-
-  do ispec = 1, nspec
-     do k = 1, NGLLZ
-        do j = 1, NGLLY
-           do i = 1, NGLLX
-              iglobnum = ibool(i,j,k,ispec)
               zstore_dummy(iglobnum) = zstore(i,j,k,ispec)
            enddo
         enddo
@@ -652,7 +661,12 @@
   enddo
 
 ! creating mass matrix (will be fully assembled with MPI in the solver)
-  allocate(rmass(nglob))
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...creating mass matrix '
+  endif
+
+  allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
   rmass(:) = 0._CUSTOM_REAL
 
   do ispec=1,nspec
@@ -677,7 +691,11 @@
     enddo
   enddo  
 
- 
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...setting boundaries '
+  endif
+  
   iboun(:,:) = .false. 
   do ispec2D = 1, nspec2D_xmin 
      iboun(1,ibelm_xmin(ispec2D)) = .true. 
@@ -784,96 +802,44 @@
 
   enddo
 
-
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...saving databases'
+  endif
 
 ! save the binary files
   call create_name_database(prname,myrank,LOCAL_PATH)
-  open(unit=IOUT,file=prname(1:len_trim(prname))//'external_mesh.bin',status='unknown',action='write',form='unformatted')
-  write(IOUT) nspec
-  write(IOUT) nglob
+  call save_arrays_solver_ext_mesh(nspec,nglob, &
+            xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
+            jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
+            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
+            kappastore,mustore,rmass,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+            normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom,normal_top, &
+            jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom,jacobian2D_top,&
+            ninterface_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+            max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &        
+            prname)
 
-  write(IOUT) xixstore
-  write(IOUT) xiystore
-  write(IOUT) xizstore
-  write(IOUT) etaxstore
-  write(IOUT) etaystore
-  write(IOUT) etazstore
-  write(IOUT) gammaxstore
-  write(IOUT) gammaystore
-  write(IOUT) gammazstore
 
-  write(IOUT) jacobianstore
-
-  !pll Stacey 
-  write(IOUT) rho_vp
-  write(IOUT) rho_vs
-  write(IOUT) iflag_attenuation_store
-  write(IOUT) NSPEC2DMAX_XMIN_XMAX 
-  write(IOUT) NSPEC2DMAX_YMIN_YMAX
-  write(IOUT) nimin
-  write(IOUT) nimax
-  write(IOUT) njmin
-  write(IOUT) njmax
-  write(IOUT) nkmin_xi 
-  write(IOUT) nkmin_eta
-  !end pll
-
-  write(IOUT) kappastore
-  write(IOUT) mustore
-
-  write(IOUT) rmass
-
-  write(IOUT) ibool
-
-  write(IOUT) xstore_dummy
-  write(IOUT) ystore_dummy
-  write(IOUT) zstore_dummy
-
-! boundary parameters
-  write(IOUT) nspec2D_xmin
-  write(IOUT) nspec2D_xmax
-  write(IOUT) nspec2D_ymin
-  write(IOUT) nspec2D_ymax
-  write(IOUT) NSPEC2D_BOTTOM
-  write(IOUT) NSPEC2D_TOP
-
-  write(IOUT) ibelm_xmin
-  write(IOUT) ibelm_xmax
-  write(IOUT) ibelm_ymin
-  write(IOUT) ibelm_ymax
-  write(IOUT) ibelm_bottom
-  write(IOUT) ibelm_top
-
-  write(IOUT) normal_xmin
-  write(IOUT) normal_xmax
-  write(IOUT) normal_ymin
-  write(IOUT) normal_ymax
-  write(IOUT) normal_bottom
-  write(IOUT) normal_top
-
-  write(IOUT) jacobian2D_xmin
-  write(IOUT) jacobian2D_xmax
-  write(IOUT) jacobian2D_ymin
-  write(IOUT) jacobian2D_ymax
-  write(IOUT) jacobian2D_bottom
-  write(IOUT) jacobian2D_top
-
-! end boundary parameters
-
-  write(IOUT) ninterface_ext_mesh
-  write(IOUT) maxval(nibool_interfaces_ext_mesh)
-  write(IOUT) my_neighbours_ext_mesh
-  write(IOUT) nibool_interfaces_ext_mesh
-  allocate(ibool_interfaces_ext_mesh_dummy(maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh))
-  do i = 1, ninterface_ext_mesh
-     ibool_interfaces_ext_mesh_dummy = ibool_interfaces_ext_mesh(1:maxval(nibool_interfaces_ext_mesh),:)
-  enddo
-  write(IOUT) ibool_interfaces_ext_mesh_dummy
-  close(IOUT)
-
+  deallocate(xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore)
+  deallocate(jacobianstore,iflag_attenuation_store)
+  deallocate(normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom,normal_top)
+  
 ! compute the approximate amount of static memory needed to run the solver
   call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh,static_memory_size)
   call max_all_dp(static_memory_size, max_static_memory_size)
+
+
+! check the mesh, stability and resolved period 
+  call check_mesh_resolution(myrank,nspec,nglob,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                    kappastore,mustore,rho_vp,rho_vs, &
+                                    -1.0d0 )
+
+
+  deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
+  deallocate(kappastore,mustore,rho_vp,rho_vs)
 
   end subroutine create_regions_mesh_ext_mesh
 
@@ -911,7 +877,7 @@ subroutine prepare_assemble_MPI (nelmnts,ibool, &
   integer  :: num_interface
   integer  :: ispec_interface
 
-  logical, dimension(npoin)  :: mask_ibool_asteroid
+  logical, dimension(:),allocatable  :: mask_ibool_asteroid
 
   integer  :: ixmin, ixmax
   integer  :: iymin, iymax
@@ -924,8 +890,9 @@ subroutine prepare_assemble_MPI (nelmnts,ibool, &
   integer  :: k
   integer  :: npoin_interface_asteroid
 
-  integer  :: ix,iy,iz
+  integer  :: ix,iy,iz,ier
 
+  allocate( mask_ibool_asteroid(npoin), stat=ier); if( ier /= 0) stop 'error allocating array'
 
   ibool_interfaces_asteroid(:,:) = 0
   nibool_interfaces_asteroid(:) = 0
@@ -966,6 +933,8 @@ subroutine prepare_assemble_MPI (nelmnts,ibool, &
 
   end do
 
+  deallocate( mask_ibool_asteroid )
+  
 end subroutine prepare_assemble_MPI
 
 !

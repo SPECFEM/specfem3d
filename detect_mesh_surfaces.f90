@@ -102,8 +102,10 @@
     enddo ! nspec
 
     ! handles movies and shakemaps
-    call setup_movie_meshes()
-
+    if (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
+      call setup_movie_meshes()
+    endif
+    
   endif ! .not. RECVS_CAN_BE_BURIED_EXT_MESH
 
 !!!! NL NL REGOLITH : runs at cines for asteroid simulations. Elements in contact with surface are part of the regolith layer.

@@ -36,21 +36,30 @@
   include 'constants.h'
   include 'OUTPUT_FILES/values_from_mesher.h'
 
-  integer i,j,k,ispec, ios, it
-  integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
-  integer np, ne, npp, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
-  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8, iglob
-  logical mask_ibool(NGLOB_AB)
-  real(kind=CUSTOM_REAL) data(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
-  real x, y, z, dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  character(len=150) :: sline, arg(5), filename, indir, outdir, prname
+! comment next line if using old basin version
+  integer :: NSPEC_AB, NGLOB_AB
+  
+! parameters  
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: data
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
+
+  integer, dimension(:,:,:,:),allocatable :: ibool
+  logical, dimension(:),allocatable :: mask_ibool
+  integer,dimension(:),allocatable :: num_ibool
+  real,dimension(:,:,:,:),allocatable :: dat
+    
+  integer :: numpoin, iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8, iglob
+  integer :: i,j,k,ispec, ios, it
+  integer :: iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
+  integer :: np, ne, npp, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
+  
+  real :: x, y, z
+  character(len=150) :: sline, arg(6), filename, indir, outdir, prname
   character(len=150) :: mesh_file, local_point_file, local_element_file, local_file, local_data_file, local_ibool_file
-  integer :: num_ibool(NGLOB_AB)
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 
+! checks given arguments
   print *
   print *,'Recombining ParaView data for slices'
   print *
@@ -58,8 +67,10 @@
   do i = 1, 6
     call getarg(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
-      print *, 'Usage: xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
-      print *, '    or xcombine_data slice_list filename input_dir output_dir high/low-resolution'
+      print *, 'Usage: '
+      print *, '        xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
+      print *, '    or '
+      print *, '        xcombine_data slice_list filename input_dir output_dir high/low-resolution'
       print *, ' possible filenames are '
       print *, '   rho_vp, rho_vs, kappastore, mustore etc'
       print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,nspec)  '
@@ -116,14 +127,51 @@
   ! open paraview output mesh file
   mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
   call open_file(trim(mesh_file)//char(0))
-
-  nspec = NSPEC_AB
-  nglob = NGLOB_AB
-
+  
   np = 0
+  npp = 0
+  nee = 0
+  
+  ! total number of points (all slices)
+  if( USE_EXTERNAL_MESH ) then
+    do it = 1, num_node
+      iproc = node_list(it)
+      write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
+      open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+      read(27) NSPEC_AB
+      read(27) NGLOB_AB 
+      close(27)   
+      nspec = NSPEC_AB
+      nglob = NGLOB_AB
+      ! total number of global points
+      npp = npp + nglob
 
-  ! write point and scalar information
+      ! total number of elements
+      nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) ! each spectral elements gets subdivided by GLL points, which form (NGLLX-1)**3 sub-elements
+      nee = nee + nelement
+    enddo
+  else
+    ! old version uses values_from_mesher.h
+    nspec = NSPEC_AB
+    nglob = NGLOB_AB
+    
+    ! total number of global points
+    npp = nglob * num_node
+    
+    ! total number of elements
+    nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
+    nee = nelement * num_node
+    
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
+    allocate(num_ibool(NGLOB_AB))    
+  endif
 
+
+  ! write point and scalar information  
   do it = 1, num_node
 
     iproc = node_list(it)
@@ -132,7 +180,25 @@
     print *, 'Reading slice ', iproc
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
-  ! data file
+    if( USE_EXTERNAL_MESH ) then
+      open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+      read(27) NSPEC_AB
+      read(27) NGLOB_AB 
+      close(27)   
+      nspec = NSPEC_AB
+      nglob = NGLOB_AB
+
+      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(mask_ibool(NGLOB_AB))
+      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
+      allocate(num_ibool(NGLOB_AB))      
+    endif
+    
+    npoint = nglob
+
+  ! data file  
     local_data_file = trim(prname) // trim(filename) // '.bin'
     open(unit = 27,file = trim(local_data_file),status='old',action='read', iostat = ios,form ='unformatted')
     if (ios /= 0) then
@@ -156,11 +222,13 @@
     close(28)
     print *, trim(local_ibool_file)
 
-     mask_ibool(:) = .false.
-     numpoin = 0
+    mask_ibool(:) = .false.
+    numpoin = 0
 
     if (.not. HIGH_RESOLUTION_MESH) then
 
+      if( USE_EXTERNAL_MESH ) stop 'low-resolution not implement yet'
+      
       local_point_file = trim(prname) // 'AVS_DXpoints.txt'
       open(unit = 25, file = trim(local_point_file), status = 'old', iostat = ios)
       if (ios /= 0) then
@@ -262,8 +330,7 @@
     else  ! high resolution
 
       if (it == 1) then
-        npp = nglob * num_node
-        npoint = nglob
+        !npoint = nglob
         call write_integer(npp)
       endif
 
@@ -317,25 +384,56 @@
     if (numpoin /= npoint) stop 'Error: number of points are not consistent'
     np = np + npoint
 
+    if( USE_EXTERNAL_MESH ) then
+      deallocate(ibool,mask_ibool,data,dat,xstore,ystore,zstore,num_ibool)
+    endif
+    
   enddo  ! all slices for points
 
- if (np /=  npp) stop 'Error: Number of total points are not consistent'
- print *, 'Total number of points: ', np
- print *, ' '
+  if (np /=  npp) stop 'Error: Number of total points are not consistent'
+  print *, 'Total number of points: ', np
+  print *, ' '
 
 
- ne = 0
+  ne = 0
+  np = 0
 ! write element information
- do it = 1, num_node
+  do it = 1, num_node
 
     iproc = node_list(it)
 
     print *, 'Reading slice ', iproc
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
-    np = npoint * (it-1)
+    if( USE_EXTERNAL_MESH ) then
+      open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+      read(27) NSPEC_AB
+      read(27) NGLOB_AB 
+      close(27)   
+      nspec = NSPEC_AB
+      nglob = NGLOB_AB
+      npoint = nglob
+      
+      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(mask_ibool(NGLOB_AB))
+      allocate(num_ibool(NGLOB_AB))
+
+      ! ibool file
+      local_ibool_file = trim(prname) // 'ibool' // '.bin'
+      open(unit = 28,file = trim(local_ibool_file),status='old',action='read', iostat = ios, form='unformatted')
+      if (ios /= 0) then
+        print *,'Error opening ',trim(local_data_file)
+        stop
+      endif
+      read(28) ibool
+      close(28)
+    else
+      np = npoint * (it-1)    
+    endif
 
     if (.not. HIGH_RESOLUTION_MESH) then
+
+      if( USE_EXTERNAL_MESH ) stop 'low-resolution not implement yet'
 
       local_element_file = trim(prname) // 'AVS_DXelements.txt'
       open(unit = 26, file = trim(local_element_file), status = 'old', iostat = ios)
@@ -375,8 +473,8 @@
     else ! high resolution mesh
 
       if (it == 1) then
-        nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
-        nee = nelement * num_node
+        !nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
+        !nee = nelement * num_node
         call write_integer(nee)
       endif
 
@@ -429,7 +527,13 @@
           enddo
         enddo
       enddo
-
+      
+      if( USE_EXTERNAL_MESH ) then
+        nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) 
+        np = np + nglob
+            
+        deallocate(ibool,mask_ibool,num_ibool)
+      endif
     endif
     ne = ne + nelement
 

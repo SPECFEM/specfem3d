@@ -781,7 +781,7 @@ subroutine compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel
       endif ! ispec_is_inner     
     endif ! myrank
   
-  enddo
+  enddo ! NSOURCES
 
 end subroutine compute_forces_with_Deville
 

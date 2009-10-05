@@ -472,3 +472,219 @@
 
   end subroutine save_arrays_solver
 
+!=============================================================
+
+! external mesh routine
+
+  subroutine save_arrays_solver_ext_mesh(nspec,nglob, &
+            xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
+            jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
+            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
+            kappastore,mustore,rmass,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+            normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom,normal_top, &
+            jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom,jacobian2D_top,&
+            ninterface_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+            max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &        
+            prname)
+
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: nspec,nglob
+  
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xixstore,xiystore,xizstore, &
+    etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp,rho_vs
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: iflag_attenuation_store
+
+  integer  :: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX) :: nimin,nimax,nkmin_eta
+  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX) :: njmin,njmax,nkmin_xi
+
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: kappastore,mustore
+  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  
+  integer  :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP
+  integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
+  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
+  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
+  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
+  integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
+  integer, dimension(NSPEC2D_TOP)  :: ibelm_top
+  
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmin) :: normal_xmin
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmax) :: normal_xmax
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLZ,nspec2D_ymin) :: normal_ymin
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLZ,nspec2D_ymax) :: normal_ymax
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM) :: normal_bottom
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_TOP) :: normal_top
+  
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmin) :: jacobian2D_xmin
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmax) :: jacobian2D_xmax
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymin) :: jacobian2D_ymin
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymax) :: jacobian2D_ymax
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,nspec2D_bottom) :: jacobian2D_bottom
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,nspec2D_top) :: jacobian2D_top
+
+  integer :: ninterface_ext_mesh
+  integer, dimension(ninterface_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh
+
+  integer :: max_interface_size_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
+
+  character(len=150) prname
+  
+! local parameters
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
+  real(kind=CUSTOM_REAL) :: minimum(1)
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+  integer :: ier,i  
+
+! saves mesh file
+  open(unit=IOUT,file=prname(1:len_trim(prname))//'external_mesh.bin',status='unknown',action='write',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
+  
+  write(IOUT) nspec
+  write(IOUT) nglob
+
+  write(IOUT) xixstore
+  write(IOUT) xiystore
+  write(IOUT) xizstore
+  write(IOUT) etaxstore
+  write(IOUT) etaystore
+  write(IOUT) etazstore
+  write(IOUT) gammaxstore
+  write(IOUT) gammaystore
+  write(IOUT) gammazstore
+  write(IOUT) jacobianstore
+
+  !pll Stacey 
+  write(IOUT) rho_vp
+  write(IOUT) rho_vs
+  write(IOUT) iflag_attenuation_store
+  write(IOUT) NSPEC2DMAX_XMIN_XMAX 
+  write(IOUT) NSPEC2DMAX_YMIN_YMAX
+  write(IOUT) nimin
+  write(IOUT) nimax
+  write(IOUT) njmin
+  write(IOUT) njmax
+  write(IOUT) nkmin_xi 
+  write(IOUT) nkmin_eta
+  !end pll
+
+  write(IOUT) kappastore
+  write(IOUT) mustore
+
+  write(IOUT) rmass
+  write(IOUT) ibool
+
+  write(IOUT) xstore_dummy
+  write(IOUT) ystore_dummy
+  write(IOUT) zstore_dummy
+
+! boundary parameters
+  write(IOUT) nspec2D_xmin
+  write(IOUT) nspec2D_xmax
+  write(IOUT) nspec2D_ymin
+  write(IOUT) nspec2D_ymax
+  write(IOUT) NSPEC2D_BOTTOM
+  write(IOUT) NSPEC2D_TOP
+
+  write(IOUT) ibelm_xmin
+  write(IOUT) ibelm_xmax
+  write(IOUT) ibelm_ymin
+  write(IOUT) ibelm_ymax
+  write(IOUT) ibelm_bottom
+  write(IOUT) ibelm_top
+
+  write(IOUT) normal_xmin
+  write(IOUT) normal_xmax
+  write(IOUT) normal_ymin
+  write(IOUT) normal_ymax
+  write(IOUT) normal_bottom
+  write(IOUT) normal_top
+
+  write(IOUT) jacobian2D_xmin
+  write(IOUT) jacobian2D_xmax
+  write(IOUT) jacobian2D_ymin
+  write(IOUT) jacobian2D_ymax
+  write(IOUT) jacobian2D_bottom
+  write(IOUT) jacobian2D_top
+
+! end boundary parameters
+
+  write(IOUT) ninterface_ext_mesh
+  write(IOUT) maxval(nibool_interfaces_ext_mesh)
+  write(IOUT) my_neighbours_ext_mesh
+  write(IOUT) nibool_interfaces_ext_mesh
+
+  allocate(ibool_interfaces_ext_mesh_dummy(maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array'
+  
+  do i = 1, ninterface_ext_mesh
+     ibool_interfaces_ext_mesh_dummy = ibool_interfaces_ext_mesh(1:maxval(nibool_interfaces_ext_mesh),:)
+  enddo
+  write(IOUT) ibool_interfaces_ext_mesh_dummy
+
+  close(IOUT)
+
+  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
+
+! mesh arrays used in combine_vol_data.f90
+!--- x coordinate
+  open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
+  write(27) xstore_dummy
+  close(27)
+
+!--- y coordinate
+  open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
+  write(27) ystore_dummy
+  close(27)
+
+!--- z coordinate
+  open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
+  write(27) zstore_dummy
+  close(27)
+
+! ibool
+  open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
+  write(27) ibool
+  close(27)
+
+  allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
+
+! vp (for checking the mesh and model)  
+  minimum = minval( abs(rho_vp) )
+  if( minimum(1) /= 0.0 ) then
+    v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+  else
+    v_tmp = 0.0
+  endif  
+  open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted')
+  write(27) v_tmp
+  close(27)
+
+! vs (for checking the mesh and model)
+  minimum = minval( abs(rho_vs) )
+  if( minimum(1) /= 0.0 ) then
+    v_tmp = mustore / rho_vs
+  else  
+    v_tmp = 0.0
+  endif
+  open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted')
+  write(27) v_tmp
+  close(27)
+
+  deallocate(v_tmp,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
+
+  end subroutine save_arrays_solver_ext_mesh

@@ -33,6 +33,10 @@
 
   include "constants.h"
 
+! number of points per surface element
+  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
+  integer, parameter :: NGLLSQUARE_NDIM = NGLLSQUARE * NDIM
+
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP, &
              NPOIN2DMAX_XY,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE
 
@@ -188,13 +192,13 @@
   write(IOUT,*)
 
 ! Moho boundary
-  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+!  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
 !   write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', NSPEC2D_BOTTOM
 !   write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', NSPEC_AB
-  else
+!  else
 !   write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', 1
 !   write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', 1
-  endif
+!  endif
 
   close(IOUT)
 

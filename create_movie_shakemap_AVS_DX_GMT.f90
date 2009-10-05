@@ -34,6 +34,12 @@
 
   include "constants.h"
 
+! number of points in each AVS or OpenDX quadrangular cell for movies
+  integer, parameter :: NGNOD2D_AVS_DX = 4
+
+! number of points per surface element
+  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
+
 ! threshold in percent of the maximum below which we cut the amplitude
   logical, parameter :: APPLY_THRESHOLD = .true.
   real(kind=CUSTOM_REAL), parameter :: THRESHOLD = 1._CUSTOM_REAL / 100._CUSTOM_REAL

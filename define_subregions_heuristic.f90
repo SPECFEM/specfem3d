@@ -48,6 +48,13 @@
   integer iaddy(NGNOD)
   integer iaddz(NGNOD)
 
+! type of elements for heuristic rule
+  integer, parameter :: ITYPE_UNUSUAL_1  = 1
+  integer, parameter :: ITYPE_UNUSUAL_1p = 2
+  integer, parameter :: ITYPE_UNUSUAL_4  = 3
+  integer, parameter :: ITYPE_UNUSUAL_4p = 4
+
+
 ! **************
 
   if(isubregion == 8) then
