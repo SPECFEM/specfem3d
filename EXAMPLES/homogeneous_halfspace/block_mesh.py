@@ -14,6 +14,7 @@ cubit.cmd('volume 1 move x 67000 y 67000 z -30000')
 
 # Meshing the volumes
 elementsize = 3750.0
+
 cubit.cmd('volume 1 size '+str(elementsize))
 cubit.cmd('mesh volume 1')
 

@@ -51,8 +51,8 @@ cubit.cmd('imprint all')
 
 # Meshing the volumes
 #elementsize = 1196.4
-elementsize = 1500.0 # mid-resolution
-#elementsize = 3000.0 # low-resolution
+#elementsize = 1500.0 # mid-resolution
+elementsize = 3000.0 # low-resolution
 
 cubit.cmd('volume 3 size '+str(elementsize))
 cubit.cmd('mesh volume 3')

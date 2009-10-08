@@ -18,6 +18,29 @@ step-by-step tutorial:
      this creates all the mesh files in subdirectory MESH/
      
 
+  - optional:
+        if you want to check mesh quality (element skewdness, stability criteria) 
+        using check_mesh_quality_CUBIT_Abaqus/check_mesh_quality_CUBIT_Abaqus.f90, 
+        then Export to Abacus (*.inp) file: 
+        claro -> Menu "File" -> "Export..." and select Abaqus (*.inp)
+        
+        e.g. export as "layered_halfspace_mesh.inp"
+        
+        note: only output blocks for volumes, i.e. block ids 1,2,3 for this example here,
+              not for faces
+        
+        save number of nodes and number of elements and edit in header of
+        check_mesh_quality_CUBIT_Abaqus.f90: 
+        
+            character(len=100), parameter :: cubit_mesh_file = 'layered_halfspace_mesh.inp'
+            integer, parameter :: NPOIN = 44436                   ! number of nodes
+            integer, parameter :: NSPEC = 40500                   ! number of elements (only volumes, i.e. block ids 1,2,3 )
+            integer, parameter :: NGNOD = 8                        ! hexahedral elements
+            logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+            double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
+            double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3 
+        
+
 2. decompose mesh files:
 
     - copy to directory OUTPUT_FILES/ in decompose_mesh_SCOTCH directory 
