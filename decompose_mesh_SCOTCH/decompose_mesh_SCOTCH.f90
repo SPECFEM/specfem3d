@@ -57,58 +57,81 @@ program pre_meshfem3D
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
   character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
   integer  :: ierr
+  !integer :: i
   
   !pll
   double precision , dimension(:,:), allocatable :: mat_prop
   integer :: count_def_mat,count_undef_mat,imat
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
-
-
-  ! sets number of nodes per element
+! sets number of nodes per element
   ngnod = esize
 
-  ! reads mesh elements
+! reads node coordinates
+  open(unit=98, file='./OUTPUT_FILES/nodes_coords_file', status='old', form='formatted')
+  read(98,*) nnodes
+  allocate(nodes_coords(3,nnodes))
+  do inode = 1, nnodes
+    ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
+    read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
+    !if(num_node /= inode)  stop "ERROR : Invalid nodes_coords file."
+  end do
+  close(98)
+  print*, 'total number of nodes: '
+  print*, '  nnodes = ', nnodes 
+
+! reads mesh elements connectivity
   open(unit=98, file='./OUTPUT_FILES/mesh_file', status='old', form='formatted')
   read(98,*) nspec
   allocate(elmnts(esize,nspec))
-   do ispec = 1, nspec
-     read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
+  do ispec = 1, nspec
+    ! format: # element_id  #id_node1 ... #id_node8
+    ! note: be aware of the different node ordering between mesh_file and spectral elements array elmnts(:,:);
+    !          spectral elements starts ordering first at the bottom of the element, anticlock-wise, i.e. 
+    !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
+    !          then top (positive z-direction) of element 
+    !             point 1 = (0,0,1), point 2 = (0,1,1), point 3 = (1,1,1), point 4 = (1,0,1)
+    read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
           elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
-     if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
+    if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
+    
+    !outputs info for each element for check of ordering
+    !print*,'ispec: ',ispec
+    !print*,'  ',num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
+    !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)    
+    !print*,'elem:',num_elmnt
+    !do i=1,8
+    !  print*,' i ',i,'val :',elmnts(i,num_elmnt),&
+    !    nodes_coords(1,elmnts(i,num_elmnt)),nodes_coords(2,elmnts(i,num_elmnt)),nodes_coords(3,elmnts(i,num_elmnt))
+    !enddo
+    !print*
   end do
   close(98)
   print*, 'total number of spectral elements:'
-  print*, 'nspec = ', nspec
+  print*, '  nspec = ', nspec
 
+! reads material associations
   open(unit=98, file='./OUTPUT_FILES/materials_file', status='old', form='formatted')
   allocate(mat(2,nspec))
-   do ispec = 1, nspec
-      read(98,*) num_mat, mat(1,ispec)!, mat(2,ispec) 
-       if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
+  do ispec = 1, nspec
+    ! format: # id_element #flag
+    ! note: be aware that elements may not be sorted in materials_file
+    read(98,*) num_mat,mat(1,num_mat) !mat(1,ispec)!, mat(2,ispec) 
+    if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
   end do
   close(98)
 !must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
   mat(2,:) = 1
   
-  open(unit=98, file='./OUTPUT_FILES/nodes_coords_file', status='old', form='formatted')
-  read(98,*) nnodes
-  allocate(nodes_coords(3,nnodes))
-  do inode = 1, nnodes
-     read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
-     !if(num_node /= inode)  stop "ERROR : Invalid nodes_coords file."
-  end do
-  close(98)
-  print*, 'total number of nodes: '
-  print*, 'nnodes = ', nnodes 
-
+! reads material definitions
   count_def_mat = 0
   count_undef_mat = 0
   open(unit=98, file='./OUTPUT_FILES/nummaterial_velocity_file', status='old', form='formatted')
   read(98,*,iostat=ierr) num_mat
   print *,'materials:'
+  ! counts materials (defined/undefined)
   do while (ierr == 0)
-     print*, 'num_mat = ',num_mat
+     print*, '  num_mat = ',num_mat
      if(num_mat /= -1) then 
         count_def_mat = count_def_mat + 1        
      else
@@ -117,14 +140,20 @@ program pre_meshfem3D
      read(98,*,iostat=ierr) num_mat
   end do
   close(98)
- 
-  print*, 'defined = ',count_def_mat, 'undefined = ',count_undef_mat
+  print*, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
+  ! check with material flags
+  if( count_def_mat > 0 .and. maxval(mat(1,:)) > count_def_mat ) then
+    print*,'error material definitions:'
+    print*,'  materials associated in materials_file:',maxval(mat(1,:))
+    print*,'  bigger than defined materials in nummaterial_velocity_file:',count_def_mat
+    stop 'error materials'
+  endif
   allocate(mat_prop(5,count_def_mat))
   allocate(undef_mat_prop(5,count_undef_mat))
-  
+  ! reads in defined material properties
   open(unit=98, file='./OUTPUT_FILES/nummaterial_velocity_file', status='old', form='formatted')
   do imat=1,count_def_mat
-     ! format:# material_id  # rho                           # vp                             # vs                            # Q_flag                      # 0 
+     ! format:# material_id  # rho    # vp      # vs      # Q_flag     # 0 
      read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
      if(num_mat < 0 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
 
@@ -132,82 +161,106 @@ program pre_meshfem3D
      if( int(mat_prop(4,num_mat)) > 13 ) then
         stop 'wrong attenuation flag in mesh: too large, not supported yet - check with constants.h'
      endif
-
   end do
+  ! reads in undefined material properties
   do imat=1,count_undef_mat
      read(98,'(5A30)') undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat)
   end do
   close(98)
 
-  !boundary files
+! reads in absorbing boundary files
   open(unit=98, file='./OUTPUT_FILES/absorbing_surface_file_xmin', status='old', form='formatted')
   read(98,*) nspec2D_xmin
   allocate(ibelm_xmin(nspec2D_xmin))
   allocate(nodes_ibelm_xmin(4,nspec2D_xmin))
-   do ispec2D = 1,nspec2D_xmin 
-     read(98,*) ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
+  do ispec2D = 1,nspec2D_xmin 
+    ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
+    ! note: ordering starts on top, rear, then bottom, rear, bottom, front, and finally top, front i.e.: 
+    !          point 1 = (0,1,1), point 2 = (0,1,0), point 3 = (0,0,0), point 4 = (0,0,1)
+    read(98,*) ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
           nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)
+
+    !outputs info for each element for check of ordering          
+    !print*,'ispec2d:',ispec2d
+    !print*,'  xmin:', ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
+    !      nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)     
+    !do i=1,4
+    !  print*,'i',i,'val:',ibelm_xmin(ispec2d),nodes_coords(1,nodes_ibelm_xmin(i,ispec2D)), &
+    !      nodes_coords(2,nodes_ibelm_xmin(i,ispec2D)),nodes_coords(3,nodes_ibelm_xmin(i,ispec2D))
+    !enddo
+    !print*
   end do
   close(98)
   print*, 'absorbing boundaries:'
-  print*, 'nspec2D_xmin = ', nspec2D_xmin 
+  print*, '  nspec2D_xmin = ', nspec2D_xmin 
 
+! reads in absorbing boundary files
   open(unit=98, file='./OUTPUT_FILES/absorbing_surface_file_xmax', status='old', form='formatted')
   read(98,*) nspec2D_xmax
   allocate(ibelm_xmax(nspec2D_xmax))
   allocate(nodes_ibelm_xmax(4,nspec2D_xmax))
-   do ispec2D = 1,nspec2D_xmax
-     read(98,*) ibelm_xmax(ispec2D), nodes_ibelm_xmax(1,ispec2D), nodes_ibelm_xmax(2,ispec2D), &
+  do ispec2D = 1,nspec2D_xmax
+    ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
+    read(98,*) ibelm_xmax(ispec2D), nodes_ibelm_xmax(1,ispec2D), nodes_ibelm_xmax(2,ispec2D), &
           nodes_ibelm_xmax(3,ispec2D), nodes_ibelm_xmax(4,ispec2D)
   end do
   close(98)
-  print*, 'nspec2D_xmax = ', nspec2D_xmax
+  print*, '  nspec2D_xmax = ', nspec2D_xmax
 
+! reads in absorbing boundary files
   open(unit=98, file='./OUTPUT_FILES/absorbing_surface_file_ymin', status='old', form='formatted')
   read(98,*) nspec2D_ymin
   allocate(ibelm_ymin(nspec2D_ymin))
   allocate(nodes_ibelm_ymin(4,nspec2D_ymin))
-   do ispec2D = 1,nspec2D_ymin 
-     read(98,*) ibelm_ymin(ispec2D), nodes_ibelm_ymin(1,ispec2D), nodes_ibelm_ymin(2,ispec2D),  &
+  do ispec2D = 1,nspec2D_ymin 
+    ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face   
+    read(98,*) ibelm_ymin(ispec2D), nodes_ibelm_ymin(1,ispec2D), nodes_ibelm_ymin(2,ispec2D),  &
           nodes_ibelm_ymin(3,ispec2D), nodes_ibelm_ymin(4,ispec2D)
   end do
   close(98)
-  print*, 'nspec2D_ymin = ', nspec2D_ymin 
+  print*, '  nspec2D_ymin = ', nspec2D_ymin 
 
+! reads in absorbing boundary files
   open(unit=98, file='./OUTPUT_FILES/absorbing_surface_file_ymax', status='old', form='formatted')
   read(98,*) nspec2D_ymax
   allocate(ibelm_ymax(nspec2D_ymax))
   allocate(nodes_ibelm_ymax(4,nspec2D_ymax))
   do ispec2D = 1,nspec2D_ymax 
-     read(98,*) ibelm_ymax(ispec2D), nodes_ibelm_ymax(1,ispec2D), nodes_ibelm_ymax(2,ispec2D),  &
+    ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face  
+    read(98,*) ibelm_ymax(ispec2D), nodes_ibelm_ymax(1,ispec2D), nodes_ibelm_ymax(2,ispec2D),  &
           nodes_ibelm_ymax(3,ispec2D), nodes_ibelm_ymax(4,ispec2D)
   end do
   close(98)
-  print*, 'nspec2D_ymax = ', nspec2D_ymax
+  print*, '  nspec2D_ymax = ', nspec2D_ymax
 
+! reads in absorbing boundary files
   open(unit=98, file='./OUTPUT_FILES/absorbing_surface_file_bottom', status='old', form='formatted')
   read(98,*) nspec2D_bottom
   allocate(ibelm_bottom(nspec2D_bottom))
   allocate(nodes_ibelm_bottom(4,nspec2D_bottom))
-   do ispec2D = 1,nspec2D_bottom 
-     read(98,*) ibelm_bottom(ispec2D), nodes_ibelm_bottom(1,ispec2D), nodes_ibelm_bottom(2,ispec2D), &
+  do ispec2D = 1,nspec2D_bottom 
+    ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face   
+    read(98,*) ibelm_bottom(ispec2D), nodes_ibelm_bottom(1,ispec2D), nodes_ibelm_bottom(2,ispec2D), &
           nodes_ibelm_bottom(3,ispec2D), nodes_ibelm_bottom(4,ispec2D)
   end do
   close(98)
-  print*, 'nspec2D_bottom = ', nspec2D_bottom 
+  print*, '  nspec2D_bottom = ', nspec2D_bottom 
 
+! reads in free_surface boundary files
   open(unit=98, file='./OUTPUT_FILES/free_surface_file', status='old', form='formatted')
   read(98,*) nspec2D_top
   allocate(ibelm_top(nspec2D_top))
   allocate(nodes_ibelm_top(4,nspec2D_top))
-   do ispec2D = 1,nspec2D_top 
-      read(98,*) ibelm_top(ispec2D), nodes_ibelm_top(1,ispec2D), nodes_ibelm_top(2,ispec2D), &
+  do ispec2D = 1,nspec2D_top 
+    ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
+    read(98,*) ibelm_top(ispec2D), nodes_ibelm_top(1,ispec2D), nodes_ibelm_top(2,ispec2D), &
            nodes_ibelm_top(3,ispec2D), nodes_ibelm_top(4,ispec2D)
   end do
   close(98)
-  print*, 'nspec2D_top = ', nspec2D_top
+  print*, '  nspec2D_top = ', nspec2D_top
 
+! checks valence of nodes
   allocate(mask_nodes_elmnts(nnodes))
   allocate(used_nodes_elmnts(nnodes))
   mask_nodes_elmnts(:) = .false.
@@ -219,7 +272,7 @@ program pre_meshfem3D
     enddo
   enddo
   print *, 'nodes valence: '
-  print *, 'min = ',minval(used_nodes_elmnts(:)),'max = ', maxval(used_nodes_elmnts(:))
+  print *, '  min = ',minval(used_nodes_elmnts(:)),'max = ', maxval(used_nodes_elmnts(:))
   do inode = 1, nnodes
     if (.not. mask_nodes_elmnts(inode)) then
       stop 'ERROR : nodes not used.'
@@ -227,7 +280,7 @@ program pre_meshfem3D
   enddo
   nsize = maxval(used_nodes_elmnts(:))
   sup_neighbour = ngnod * nsize - (ngnod + (ngnod/2 - 1)*nfaces)
-  print*, 'nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
+  print*, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
 
   elmnts(:,:) = elmnts(:,:) - 1
 
@@ -239,11 +292,11 @@ program pre_meshfem3D
   call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
        nodes_elmnts, max_neighbour, 1)
   print*, 'mesh2dual: '
-  print*, 'max_neighbour = ',max_neighbour
+  print*, '  max_neighbour = ',max_neighbour
 
   nb_edges = xadj(nspec+1)
 
-  ! allocates & initializes partioning of elements
+! allocates & initializes partioning of elements
   allocate(part(1:nspec))
   part(:) = -1
 
@@ -342,10 +395,11 @@ program pre_meshfem3D
      
   end do
   print*, 'partitions: '
-  print*, 'num = ',nparts
-  print*, 'files in directory: OUTPUT_FILES/'
+  print*, '  num = ',nparts
   print*
+  print*, 'files in directory: OUTPUT_FILES/'
   print*, 'finished successfully'
+  print*
   
 end program pre_meshfem3D
 

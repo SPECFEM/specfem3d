@@ -289,6 +289,8 @@
 ! for vectorization of loops 
 !  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
 
+  integer :: nglob,nglob_total,nspec_total
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! sizeprocs returns number of processes started (should be equal to NPROC).
@@ -478,11 +480,9 @@
      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
   enddo
 
-! defines global number of nodes in model
-  NGLOB_AB = nnodes_ext_mesh
 
   if(myrank == 0) then
-    write(IMAIN,*) '  global points: ',NGLOB_AB
+    write(IMAIN,*) '  external mesh points: ',nnodes_ext_mesh
   endif
   call sync_all()
 
@@ -668,8 +668,11 @@
        ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
        nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
        NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX, &
-       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
+       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
+       SAVE_MESH_FILES,nglob)
 
+! defines global number of nodes in model
+  NGLOB_AB = nglob
 
 ! print min and max of topography included
   if(TOPOGRAPHY) then
@@ -692,7 +695,9 @@
 
 
 !--- print number of points and elements in the mesh
-
+  call sum_all_i(NGLOB_AB,nglob_total)
+  call sum_all_i(NSPEC_AB,nspec_total)
+  
   if(myrank == 0) then
 
   write(IMAIN,*)
@@ -700,13 +705,11 @@
   write(IMAIN,*) '-----------------------'
   write(IMAIN,*)
   write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
-  write(IMAIN,*)
   write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
-
   write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
-  write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
-  write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
+  write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total     ! NSPEC_AB*NPROC
+  write(IMAIN,*) 'total number of points in entire mesh: ',nglob_total        !NGLOB_AB*NPROC
+  write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*NDIM   !NGLOB_AB*NPROC*NDIM
   write(IMAIN,*)
   write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
   write(IMAIN,*)

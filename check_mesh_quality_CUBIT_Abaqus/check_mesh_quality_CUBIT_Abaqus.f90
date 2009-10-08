@@ -38,6 +38,9 @@
 
   include "constants.h"
 
+!------------------------------------------------------------------------------------------------
+! EDIT YOUR PARAMETERS BELOW HERE
+
 ! number of points and of hex or quad elements
 ! number of points of a hex or quad element
 
@@ -65,11 +68,11 @@
 ! double precision, parameter :: delta_t = 3.d-4
 ! double precision, parameter :: VP_MAX = 900.d0 ! because only regolith, no bedrock
 
-  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp_bedrock_only.inp'
-  integer, parameter :: NPOIN = 5924713, NSPEC = 5797440 - 252928, NGNOD = 8
-  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-  double precision, parameter :: delta_t = 3.d-4
-  double precision, parameter :: VP_MAX = 3000.d0
+!  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp_bedrock_only.inp'
+!  integer, parameter :: NPOIN = 5924713, NSPEC = 5797440 - 252928, NGNOD = 8
+!  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+!  double precision, parameter :: delta_t = 3.d-4
+!  double precision, parameter :: VP_MAX = 3000.d0
 
 ! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
 ! integer, parameter :: NPOIN = 3882, NSPEC = 3744, NGNOD = 4
@@ -95,12 +98,24 @@
 ! double precision, parameter :: delta_t = 1.5d-4
 ! double precision, parameter :: VP_MAX = 3000.d0
 
+! example: layered_halfspace
+!                 Cubit -> File -> Export... Abacus (*.inp)
+  character(len=100), parameter :: cubit_mesh_file = 'layered_halfspace_mesh.inp'
+  integer, parameter :: NPOIN = 44436                   ! number of nodes
+  integer, parameter :: NSPEC = 40500                   ! number of elements (only volumes, i.e. block ids 1,2,3 )
+  integer, parameter :: NGNOD = 8                        ! hexahedral elements
+  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+  double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
+  double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3 
+
+!------------------------------------------------------------------------------------------------
+
   double precision, dimension(NPOIN) :: x,y,z
 
   integer, dimension(NGNOD,NSPEC) :: ibool
 
   integer :: i,ispec,iread,iformat,ispec_min_edge_length,ispec_max_edge_length, &
-             ispec_begin,ispec_end,ispec_to_output
+             ispec_begin,ispec_end,ispec_to_output,ier
 
 ! for quality of mesh
   double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
@@ -121,6 +136,8 @@
 ! to export elements that have a certain skewness range to OpenDX
   integer :: ntotspecAVS_DX
   logical :: USE_OPENDX
+
+  character(len=256):: line
 
   if(NGNOD /= 4 .and. NGNOD /= 8) stop 'NGNOD should be 4 or 8'
 
@@ -177,18 +194,25 @@
   read(10,*)
 
 ! read the points
+  iread = 0
   do i = 1,NPOIN
-    read(10,*) iread,x(i),y(i),z(i)
+    read(10,*,iostat=ier) iread,x(i),y(i),z(i)
+    if(ier /= 0 ) then
+      print *,'error read:',iread
+      stop 'error read points'
+    endif
     if(iread /= i) then
       print *,'error at i,iread = ',i,iread
       stop 'wrong input for a point'
     endif
   enddo
-
+  print*,'points: ',iread
+  
 ! skip the header
   read(10,*)
 
 ! read the elements
+  iread = 0
   do i = 1,NSPEC
 
     if(NGNOD == 4) then
@@ -200,14 +224,28 @@
       if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
                  .and. i == 28429) read(10,*)
 
-      read(10,*) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i)
+      read(10,*,iostat=ier) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i)
+      if(ier /= 0 ) then
+        print *,'error read:',iread
+        stop 'error read elements'
+      endif
 
     else if(NGNOD == 8) then
 
       if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'rego3d_70_disp.inp' &
                  .and. i == 252929) read(10,*)
 
-      read(10,*) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i),ibool(5,i),ibool(6,i),ibool(7,i),ibool(8,i)
+      ! checks line
+      read(10,'(a256)',iostat=ier) line
+      if( line(1:1) == "*" ) then
+        ! skips comment line and goes to next line
+        read(10,'(a256)',iostat=ier) line
+      endif
+      read(line,*,iostat=ier) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i),ibool(5,i),ibool(6,i),ibool(7,i),ibool(8,i)
+      if(ier /= 0 ) then
+        print *,'error read:',iread
+        stop 'error read elements'
+      endif
 
 ! if we analyze only the second layer of the mesh and ignore the first, shift iread
 ! so that it conforms with i
@@ -222,6 +260,8 @@
 
   enddo
   close(10)
+  print*,'elements:',iread
+
 
   print *,'done reading the CUBIT file'
   print *

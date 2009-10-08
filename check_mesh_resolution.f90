@@ -226,12 +226,13 @@
 ! outputs infos  
   if ( myrank == 0 ) then
     write(IMAIN,*)
+    write(IMAIN,*) '********'
     write(IMAIN,*) 'minimum and maximum number of elements'
     write(IMAIN,*) 'and points in the CUBIT + SCOTCH mesh:'
     write(IMAIN,*)
     write(IMAIN,*) 'NSPEC_AB_global_min = ',NSPEC_AB_global_min
     write(IMAIN,*) 'NSPEC_AB_global_max = ',NSPEC_AB_global_max    
-    write(IMAIN,*) 'NSPEC_AB_global_mean = ',NSPEC_AB_global_sum / float(sizeprocs)
+    !write(IMAIN,*) 'NSPEC_AB_global_mean = ',NSPEC_AB_global_sum / float(sizeprocs)
     write(IMAIN,*) 'NSPEC_AB_global_sum = ',NSPEC_AB_global_sum
     write(IMAIN,*)
     write(IMAIN,*) 'NGLOB_AB_global_min = ',NGLOB_AB_global_min

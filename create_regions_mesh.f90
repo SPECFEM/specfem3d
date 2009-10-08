@@ -33,7 +33,8 @@
            ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
            nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
            NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX, &
-           ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top)
+           ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
+           SAVE_MESH_FILES,nglob)
 
 ! create the different regions of the mesh
 
@@ -88,6 +89,8 @@
   integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
   integer, dimension(NSPEC2D_TOP)  :: ibelm_top
 
+  logical :: SAVE_MESH_FILES
+  integer :: nglob
 !-------------------------------------------------------------------------------------------------
 ! local parameters
 !-----------------------    
@@ -138,7 +141,7 @@
   logical, dimension(:), allocatable :: ifseg
   double precision, dimension(:), allocatable :: xp,yp,zp
 
-  integer :: nglob,ieoff,ilocnum,ier,iinterface
+  integer :: ieoff,ilocnum,ier,iinterface
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
@@ -174,6 +177,8 @@
 
 ! memory test
   logical,dimension(:),allocatable :: test_mem 
+
+  character(len=150) prname_file
 
 
 ! For Piero Basini :
@@ -324,14 +329,14 @@
   zstore(:,:,:,:) = 0.d0
 
   do ispec = 1, nspec
-     !call get_xyzelm(xelm, yelm, zelm, ispec, elmnts_ext_mesh, nodes_coords_ext_mesh, nspec, nnodes_ext_mesh)
-     do ia = 1,NGNOD
-     xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
-     yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
-     zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
-     enddo
+    !call get_xyzelm(xelm, yelm, zelm, ispec, elmnts_ext_mesh, nodes_coords_ext_mesh, nspec, nnodes_ext_mesh)
+    do ia = 1,NGNOD
+      xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
+      yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
+      zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
+    enddo
 
-     call calc_jacobian(myrank,xixstore,xiystore,xizstore, &
+    call calc_jacobian(myrank,xixstore,xiystore,xizstore, &
           etaxstore,etaystore,etazstore, &
           gammaxstore,gammaystore,gammazstore,jacobianstore, &
           xstore,ystore,zstore, &
@@ -368,7 +373,7 @@
               rhostore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(1,ispec))
               vpstore(i,j,k,ispec) = materials_ext_mesh(2,mat_ext_mesh(1,ispec))
               vsstore(i,j,k,ispec) = materials_ext_mesh(3,mat_ext_mesh(1,ispec))
-              iflag_attenuation_store(i,j,k,ispec) = materials_ext_mesh(4,mat_ext_mesh(1,ispec))
+              iflag_attenuation_store(i,j,k,ispec) = materials_ext_mesh(4,mat_ext_mesh(1,ispec))                            
               !change for piero :
               !if(mat_ext_mesh(1,ispec) == 1) then
               !   iflag_attenuation_store(i,j,k,ispec) = 1
@@ -410,6 +415,7 @@
         enddo
       enddo
     enddo
+    !print*,myrank,'ispec:',ispec,'rho:',rhostore(1,1,1,ispec),'vp:',vpstore(1,1,1,ispec),'vs:',vsstore(1,1,1,ispec)    
   enddo
 
 
@@ -820,8 +826,22 @@
             jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom,jacobian2D_top,&
             ninterface_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
             max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &        
-            prname)
+            prname,SAVE_MESH_FILES)
 
+  if( SAVE_MESH_FILES ) then
+    ! saves material flag in vtk file 
+    prname_file = prname(1:len_trim(prname))//'material_flag'
+    call save_arrays_solver_ext_mesh_material_vtk(nspec,nglob, &
+            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+            mat_ext_mesh,prname_file)
+
+    ! saves attenuation flag in vtk file 
+    prname_file = prname(1:len_trim(prname))//'attenuation_flag'
+    call save_arrays_solver_ext_mesh_glldata_vtk(nspec,nglob, &
+            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+            iflag_attenuation_store,prname_file)
+
+  endif
 
   deallocate(xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore)
   deallocate(jacobianstore,iflag_attenuation_store)

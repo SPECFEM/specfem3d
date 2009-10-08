@@ -487,7 +487,7 @@
             jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom,jacobian2D_top,&
             ninterface_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
             max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &        
-            prname)
+            prname,SAVE_MESH_FILES)
 
 
   implicit none
@@ -543,6 +543,7 @@
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
 
   character(len=150) prname
+  logical :: SAVE_MESH_FILES
   
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -640,51 +641,209 @@
 
   deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
 
+  if( SAVE_MESH_FILES ) then
 ! mesh arrays used in combine_vol_data.f90
 !--- x coordinate
-  open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
-  write(27) xstore_dummy
-  close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
+    write(27) xstore_dummy
+    close(27)
 
 !--- y coordinate
-  open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
-  write(27) ystore_dummy
-  close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
+    write(27) ystore_dummy
+    close(27)
 
 !--- z coordinate
-  open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
-  write(27) zstore_dummy
-  close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
+    write(27) zstore_dummy
+    close(27)
 
 ! ibool
-  open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
-  write(27) ibool
-  close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
+    write(27) ibool
+    close(27)
 
-  allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
+    allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
 
 ! vp (for checking the mesh and model)  
-  minimum = minval( abs(rho_vp) )
-  if( minimum(1) /= 0.0 ) then
-    v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-  else
-    v_tmp = 0.0
-  endif  
-  open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted')
-  write(27) v_tmp
-  close(27)
+    minimum = minval( abs(rho_vp) )
+    if( minimum(1) /= 0.0 ) then
+      v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+    else
+      v_tmp = 0.0
+    endif  
+    open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted')
+    write(27) v_tmp
+    close(27)
 
 ! vs (for checking the mesh and model)
-  minimum = minval( abs(rho_vs) )
-  if( minimum(1) /= 0.0 ) then
-    v_tmp = mustore / rho_vs
-  else  
-    v_tmp = 0.0
-  endif
-  open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted')
-  write(27) v_tmp
-  close(27)
+    minimum = minval( abs(rho_vs) )
+    if( minimum(1) /= 0.0 ) then
+      v_tmp = mustore / rho_vs
+    else  
+      v_tmp = 0.0
+    endif
+    open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted')
+    write(27) v_tmp
+    close(27)
 
-  deallocate(v_tmp,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
+    deallocate(v_tmp,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
+  endif
 
   end subroutine save_arrays_solver_ext_mesh
+  
+  
+  
+!=============================================================
+
+! external mesh routine for saving vtk file holding material flag for each element
+
+  subroutine save_arrays_solver_ext_mesh_material_vtk(nspec,nglob, &
+            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+            mat_ext_mesh,prname_file)
+
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: nspec,nglob
+  
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+
+  integer, dimension(2,nspec) :: mat_ext_mesh  
+  integer :: ispec,i
+
+  character(len=150) prname_file
+
+  ! write source and receiver VTK files for Paraview
+  write(IMAIN,*) '  vtk file: ',prname_file(1:len_trim(prname_file))//'.vtk'
+  
+  open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOVTK,'(a)') 'material model VTK file'
+  write(IOVTK,'(a)') 'ASCII'
+  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOVTK, '(a,i,a)') 'POINTS ', nglob, ' float'
+  do i=1,nglob
+    write(IOVTK,'(3f)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+  enddo
+  write(IOVTK,*) ""
+
+  ! note: indices for vtk start at 0
+  write(IOVTK,'(a,i,i)') "CELLS ",nspec,nspec*9
+  do ispec=1,nspec
+    write(IOVTK,'(9i)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+          ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
+  enddo
+  write(IOVTK,*) ""
+  
+  ! type: hexahedrons
+  write(IOVTK,'(a,i)') "CELL_TYPES ",nspec
+  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,*) ""
+  
+  write(IOVTK,'(a,i)') "CELL_DATA ",nspec
+  write(IOVTK,'(a)') "SCALARS material_flag integer"
+  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  do ispec = 1,nspec
+    if (mat_ext_mesh(1,ispec) > 0) then
+      write(IOVTK,*) mat_ext_mesh(1,ispec)
+    else 
+      write(IOVTK,*) mat_ext_mesh(2,ispec)
+    endif
+  enddo
+  write(IOVTK,*) ""
+  close(IOVTK)
+
+
+  end subroutine save_arrays_solver_ext_mesh_material_vtk
+  
+  
+!=============================================================
+
+! external mesh routine for saving vtk files 
+
+  subroutine save_arrays_solver_ext_mesh_glldata_vtk(nspec,nglob, &
+            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+            gll_data,prname_file)
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: nspec,nglob
+  
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
+
+  real, dimension(:),allocatable :: flag_val
+  logical, dimension(:),allocatable :: mask_ibool
+  
+  integer :: ispec,i,j,k,ier,iglob
+
+  character(len=150) prname_file
+
+  ! write source and receiver VTK files for Paraview
+  write(IMAIN,*) '  vtk file: ',prname_file(1:len_trim(prname_file))//'.vtk'
+  
+  open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOVTK,'(a)') 'material model VTK file'
+  write(IOVTK,'(a)') 'ASCII'
+  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOVTK, '(a,i,a)') 'POINTS ', nglob, ' float'
+  do i=1,nglob
+    write(IOVTK,'(3f)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+  enddo
+  write(IOVTK,*) ""
+
+  ! note: indices for vtk start at 0
+  write(IOVTK,'(a,i,i)') "CELLS ",nspec,nspec*9
+  do ispec=1,nspec
+    write(IOVTK,'(9i)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+          ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
+  enddo
+  write(IOVTK,*) ""
+  
+  ! type: hexahedrons
+  write(IOVTK,'(a,i)') "CELL_TYPES ",nspec
+  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,*) ""
+    
+  ! iflag field on global nodeset
+  allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocating mask'
+  
+  mask_ibool = .false.
+  do ispec=1,nspec
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          iglob = ibool(i,j,k,ispec)
+          if( .not. mask_ibool(iglob) ) then   
+            flag_val(iglob) = gll_data(i,j,k,ispec)
+            mask_ibool(iglob) = .true.
+          endif
+        enddo
+      enddo
+    enddo
+  enddo
+
+  write(IOVTK,'(a,i)') "POINT_DATA ",nglob
+  write(IOVTK,'(a)') "SCALARS gll_data float"
+  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  do i = 1,nglob    
+      write(IOVTK,*) flag_val(i)
+  enddo
+  write(IOVTK,*) ""
+
+  close(IOVTK)
+
+
+  end subroutine save_arrays_solver_ext_mesh_glldata_vtk
+    
+  
