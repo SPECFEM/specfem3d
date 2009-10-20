@@ -72,6 +72,7 @@ libspecfem_a_OBJECTS = \
 	$O/get_absorb.o \
 	$O/get_attenuation_model.o \
 	$O/get_cmt.o \
+	$O/get_element_face.o \
 	$O/get_global.o \
 	$O/get_jacobian_boundaries.o \
 	$O/get_shape2D.o \
@@ -84,7 +85,7 @@ libspecfem_a_OBJECTS = \
 	$O/locate_source.o \
 	$O/generate_databases.o \
 	$O/netlib_specfun_erf.o \
-	$O/read_arrays_buffers_solver.o \
+	$O/prepare_assemble_MPI.o \
 	$O/read_topo_bathy_file.o \
 	$O/read_parameter_file.o \
 	$O/read_value_parameters.o \
@@ -113,6 +114,7 @@ libspecfem_a_OBJECTS = \
 #	$O/interpolate_gocad_block_HR.o \
 #	$O/interpolate_gocad_block_MR.o \
 #	$O/mesh_vertical.o \
+#	$O/read_arrays_buffers_solver.o \
 #	$O/read_moho_map.o \
 #	$O/salton_trough_gocad.o \
 #	$O/socal_model.o \
@@ -122,11 +124,9 @@ libspecfem_a_OBJECTS = \
 # solver objects with statically allocated arrays; dependent upon
 # values_from_mesher.h
 SOLVER_ARRAY_OBJECTS = \
-	$O/assemble_MPI_scalar.o \
-	$O/assemble_MPI_vector.o \
+	$O/specfem3D_par.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
-	$O/specfem3D_par.o \
 	$O/initialize_simulation.o \
 	$O/read_mesh_databases.o \
 	$O/setup_GLL_points.o \
@@ -138,6 +138,8 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/iterate_time.o \
 	$O/finalize_simulation.o \
 	$O/specfem3D.o \
+	$O/assemble_MPI_scalar.o \
+	$O/assemble_MPI_vector.o \
 	$(EMPTY_MACRO)
 
 ###
@@ -384,6 +386,9 @@ $O/get_cmt.o: constants.h get_cmt.f90
 $O/create_movie_shakemap_AVS_DX_GMT.o: constants.h create_movie_shakemap_AVS_DX_GMT.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o create_movie_shakemap_AVS_DX_GMT.f90
 
+$O/get_element_face.o: constants.h get_element_face.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_element_face.o get_element_face.f90
+
 $O/get_global.o: constants.h get_global.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
 
@@ -438,9 +443,6 @@ $O/create_name_database.o: constants.h create_name_database.f90
 $O/create_serial_name_database.o: constants.h create_serial_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_serial_name_database.o create_serial_name_database.f90
 
-$O/read_arrays_buffers_solver.o: constants.h read_arrays_buffers_solver.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_arrays_buffers_solver.o read_arrays_buffers_solver.f90
-
 $O/define_derivation_matrices.o: constants.h define_derivation_matrices.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_derivation_matrices.o define_derivation_matrices.f90
 
@@ -458,6 +460,9 @@ $O/combine_vol_data.o: constants.h combine_vol_data.f90
 
 $O/combine_surf_data.o: constants.h combine_surf_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
+
+$O/prepare_assemble_MPI.o: constants.h prepare_assemble_MPI.f90
+	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o prepare_assemble_MPI.f90
 
 ### compilation with optimization
 
@@ -522,6 +527,9 @@ $O/compute_forces_with_Deville.o: constants.h compute_forces_with_Deville.f90
 #$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
 #	${FCCOMPILE_CHECK} -c -o $O/read_arrays_solver.o read_arrays_solver.f90
 
+#--obsolete
+#$O/read_arrays_buffers_solver.o: constants.h read_arrays_buffers_solver.f90
+#	${FCCOMPILE_CHECK} -c -o $O/read_arrays_buffers_solver.o read_arrays_buffers_solver.f90
 
 
 ###

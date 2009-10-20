@@ -64,6 +64,7 @@ program pre_meshfem3D
   integer :: count_def_mat,count_undef_mat,imat
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
+
 ! sets number of nodes per element
   ngnod = esize
 
@@ -80,22 +81,32 @@ program pre_meshfem3D
   print*, 'total number of nodes: '
   print*, '  nnodes = ', nnodes 
 
-! reads mesh elements connectivity
+! reads mesh elements indexing 
+!(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in 
+! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
   open(unit=98, file='./OUTPUT_FILES/mesh_file', status='old', form='formatted')
   read(98,*) nspec
   allocate(elmnts(esize,nspec))
   do ispec = 1, nspec
     ! format: # element_id  #id_node1 ... #id_node8
-    ! note: be aware of the different node ordering between mesh_file and spectral elements array elmnts(:,:);
-    !          spectral elements starts ordering first at the bottom of the element, anticlock-wise, i.e. 
+
+    ! note: be aware that here we can have different node ordering for a cube element;
+    !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
+    !         
+    !          guess here it assumes that spectral elements ordering is like first at the bottom of the element, anticlock-wise, i.e. 
     !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
     !          then top (positive z-direction) of element 
-    !             point 1 = (0,0,1), point 2 = (0,1,1), point 3 = (1,1,1), point 4 = (1,0,1)
+    !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
     read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
           elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
+
+    !    read(98,*) num_elmnt, elmnts(1,num_elmnt), elmnts(2,num_elmnt),elmnts(3,num_elmnt), elmnts(4,num_elmnt), &
+    !          elmnts(5,num_elmnt), elmnts(6,num_elmnt), elmnts(7,num_elmnt), elmnts(8,num_elmnt)
+
     if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
-    
-    !outputs info for each element for check of ordering
+
+      
+    !outputs info for each element to see ordering
     !print*,'ispec: ',ispec
     !print*,'  ',num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
     !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)    
@@ -105,6 +116,7 @@ program pre_meshfem3D
     !    nodes_coords(1,elmnts(i,num_elmnt)),nodes_coords(2,elmnts(i,num_elmnt)),nodes_coords(3,elmnts(i,num_elmnt))
     !enddo
     !print*
+        
   end do
   close(98)
   print*, 'total number of spectral elements:'
@@ -120,7 +132,9 @@ program pre_meshfem3D
     if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
   end do
   close(98)
-!must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
+
+! TODO:
+! must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
   mat(2,:) = 1
   
 ! reads material definitions
@@ -176,7 +190,11 @@ program pre_meshfem3D
   allocate(nodes_ibelm_xmin(4,nspec2D_xmin))
   do ispec2D = 1,nspec2D_xmin 
     ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-    ! note: ordering starts on top, rear, then bottom, rear, bottom, front, and finally top, front i.e.: 
+    ! note: ordering for CUBIT seems such that the normal of the face points outward of the element the face belongs to;
+    !         in other words, nodes are in increasing order such that when looking from within the element outwards, 
+    !         they are ordered clockwise
+    !
+    !          doesn't necessarily have to start on top-rear, then bottom-rear, bottom-front, and finally top-front i.e.: 
     !          point 1 = (0,1,1), point 2 = (0,1,0), point 3 = (0,0,0), point 4 = (0,0,1)
     read(98,*) ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
           nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)

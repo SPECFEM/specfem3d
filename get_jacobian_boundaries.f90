@@ -23,266 +23,196 @@
 !
 !=====================================================================
 
-  subroutine get_jacobian_boundaries(myrank,iboun,nspec,xstore,ystore,zstore, &
-    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-              jacobian2D_xmin,jacobian2D_xmax, &
-              jacobian2D_ymin,jacobian2D_ymax, &
-              jacobian2D_bottom,jacobian2D_top, &
-              normal_xmin,normal_xmax, &
-              normal_ymin,normal_ymax, &
-              normal_bottom,normal_top, &
-              NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-              NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
+  
+  subroutine get_jacobian_boundary_face(myrank,nspec, & 
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
+              ispec,iface,jacobian2D_face,normal_face,NGLLA,NGLLB)
+
+! returns jacobian2D_face and normal_face (pointing outwards of element)
 
   implicit none
 
   include "constants.h"
 
-  integer nspec,myrank
-  integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+  integer nspec,myrank,nglob
 
-  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
-  integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
-  integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
-  integer ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP)
-
-  logical iboun(6,nspec)
-
-  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
-  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
-  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
-
-  real(kind=CUSTOM_REAL) jacobian2D_xmin(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_xmax(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_ymin(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_ymax(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM)
-  real(kind=CUSTOM_REAL) jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP)
-
-  real(kind=CUSTOM_REAL) normal_xmin(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) normal_xmax(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) normal_ymin(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM)
-  real(kind=CUSTOM_REAL) normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP)
+! arrays with the mesh
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  
+!  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
+!  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
+!  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
+  
+! absorbing boundaries 
+  integer :: iface,ispec,NGLLA,NGLLB
+  real(kind=CUSTOM_REAL) jacobian2D_face(NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)  
 
   double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
   double precision dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ)
   double precision dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY)
   double precision dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY)
 
-! global element numbering
-  integer ispec
-
-! counters to keep track of number of elements on each of the boundaries
-  integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
+  double precision, dimension(NGLLX,NGLLY) :: wgllwgll_xy
+  double precision, dimension(NGLLX,NGLLZ) :: wgllwgll_xz
+  double precision, dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
+
+! element numbering
+!  integer i,j
 
 ! check that the parameter file is correct
   if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
   if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes')
 
-  ispecb1 = 0
-  ispecb2 = 0
-  ispecb3 = 0
-  ispecb4 = 0
-  ispecb5 = 0
-  ispecb6 = 0
+  select case ( iface )
+  ! on reference face: xmin
+  case(1)
+    xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
+    yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
+    zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
+    xelm(2)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
+    yelm(2)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
+    zelm(2)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
+    xelm(3)=xstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    yelm(3)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    zelm(3)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    xelm(4)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
+    yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
+    zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-  do ispec=1,nspec
-
-! determine if the element falls on a boundary
-
-! on boundary: xmin
-
-  if(iboun(1,ispec)) then
-
-    ispecb1=ispecb1+1
-    ibelm_xmin(ispecb1)=ispec
-
-!   specify the 4 nodes for the 2-D boundary element
-    xelm(1)=xstore(1,1,1,ispec)
-    yelm(1)=ystore(1,1,1,ispec)
-    zelm(1)=zstore(1,1,1,ispec)
-    xelm(2)=xstore(1,NGLLY,1,ispec)
-    yelm(2)=ystore(1,NGLLY,1,ispec)
-    zelm(2)=zstore(1,NGLLY,1,ispec)
-    xelm(3)=xstore(1,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(1,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(1,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(1,1,NGLLZ,ispec)
-    yelm(4)=ystore(1,1,NGLLZ,ispec)
-    zelm(4)=zstore(1,1,NGLLZ,ispec)
-
-    call compute_jacobian_2D(myrank,ispecb1,xelm,yelm,zelm,dershape2D_x, &
-                  jacobian2D_xmin,normal_xmin,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-
-  endif
-
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
+                  dershape2D_x,wgllwgll_yz, &
+                  jacobian2D_face,normal_face,NGLLY,NGLLZ)
+                  
 ! on boundary: xmax
+  case(2)
+    xelm(1)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
+    yelm(1)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
+    zelm(1)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
+    xelm(2)=xstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    yelm(2)=ystore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    zelm(2)=zstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    xelm(4)=xstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    yelm(4)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    zelm(4)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
 
-  if(iboun(2,ispec)) then
-
-    ispecb2=ispecb2+1
-    ibelm_xmax(ispecb2)=ispec
-
-!   specify the 4 nodes for the 2-D boundary element
-    xelm(1)=xstore(NGLLX,1,1,ispec)
-    yelm(1)=ystore(NGLLX,1,1,ispec)
-    zelm(1)=zstore(NGLLX,1,1,ispec)
-    xelm(2)=xstore(NGLLX,NGLLY,1,ispec)
-    yelm(2)=ystore(NGLLX,NGLLY,1,ispec)
-    zelm(2)=zstore(NGLLX,NGLLY,1,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(NGLLX,1,NGLLZ,ispec)
-    yelm(4)=ystore(NGLLX,1,NGLLZ,ispec)
-    zelm(4)=zstore(NGLLX,1,NGLLZ,ispec)
-
-    call compute_jacobian_2D(myrank,ispecb2,xelm,yelm,zelm,dershape2D_x, &
-                  jacobian2D_xmax,normal_xmax,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-
-  endif
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
+                  dershape2D_x,wgllwgll_yz, &
+                  jacobian2D_face,normal_face,NGLLY,NGLLZ)
 
 ! on boundary: ymin
+  case(3)
+    xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
+    yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
+    zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
+    xelm(2)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
+    yelm(2)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
+    zelm(2)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
+    xelm(3)=xstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    yelm(3)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    zelm(3)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    xelm(4)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
+    yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
+    zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-  if(iboun(3,ispec)) then
-
-    ispecb3=ispecb3+1
-    ibelm_ymin(ispecb3)=ispec
-
-!   specify the 4 nodes for the 2-D boundary element
-    xelm(1)=xstore(1,1,1,ispec)
-    yelm(1)=ystore(1,1,1,ispec)
-    zelm(1)=zstore(1,1,1,ispec)
-    xelm(2)=xstore(NGLLX,1,1,ispec)
-    yelm(2)=ystore(NGLLX,1,1,ispec)
-    zelm(2)=zstore(NGLLX,1,1,ispec)
-    xelm(3)=xstore(NGLLX,1,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,1,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,1,NGLLZ,ispec)
-    xelm(4)=xstore(1,1,NGLLZ,ispec)
-    yelm(4)=ystore(1,1,NGLLZ,ispec)
-    zelm(4)=zstore(1,1,NGLLZ,ispec)
-
-    call compute_jacobian_2D(myrank,ispecb3,xelm,yelm,zelm,dershape2D_y, &
-                  jacobian2D_ymin,normal_ymin,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-
-  endif
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
+                  dershape2D_y,wgllwgll_xz, &
+                  jacobian2D_face,normal_face,NGLLX,NGLLZ)
 
 ! on boundary: ymax
+  case(4)
+    xelm(1)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
+    yelm(1)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
+    zelm(1)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
+    xelm(2)=xstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    yelm(2)=ystore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    zelm(2)=zstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    xelm(4)=xstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-  if(iboun(4,ispec)) then
-
-    ispecb4=ispecb4+1
-    ibelm_ymax(ispecb4)=ispec
-
-!   specify the 4 nodes for the 2-D boundary element
-    xelm(1)=xstore(1,NGLLY,1,ispec)
-    yelm(1)=ystore(1,NGLLY,1,ispec)
-    zelm(1)=zstore(1,NGLLY,1,ispec)
-    xelm(2)=xstore(NGLLX,NGLLY,1,ispec)
-    yelm(2)=ystore(NGLLX,NGLLY,1,ispec)
-    zelm(2)=zstore(NGLLX,NGLLY,1,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec)
-    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec)
-    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
-
-    call compute_jacobian_2D(myrank,ispecb4,xelm,yelm,zelm,dershape2D_y, &
-                  jacobian2D_ymax,normal_ymax,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-
-  endif
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
+                  dershape2D_y, wgllwgll_xz, &
+                  jacobian2D_face,normal_face,NGLLX,NGLLZ)
+                  
 
 ! on boundary: bottom
-
-  if(iboun(5,ispec)) then
-
-    ispecb5=ispecb5+1
-    ibelm_bottom(ispecb5)=ispec
-
-    xelm(1)=xstore(1,1,1,ispec)
-    yelm(1)=ystore(1,1,1,ispec)
-    zelm(1)=zstore(1,1,1,ispec)
-    xelm(2)=xstore(NGLLX,1,1,ispec)
-    yelm(2)=ystore(NGLLX,1,1,ispec)
-    zelm(2)=zstore(NGLLX,1,1,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,1,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,1,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,1,ispec)
-    xelm(4)=xstore(1,NGLLY,1,ispec)
-    yelm(4)=ystore(1,NGLLY,1,ispec)
-    zelm(4)=zstore(1,NGLLY,1,ispec)
-
-    call compute_jacobian_2D(myrank,ispecb5,xelm,yelm,zelm,dershape2D_bottom, &
-                  jacobian2D_bottom,normal_bottom,NGLLX,NGLLY,NSPEC2D_BOTTOM)
-
-  endif
+  case(5)
+    xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
+    yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
+    zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
+    xelm(2)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
+    yelm(2)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
+    zelm(2)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
+    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+    xelm(4)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
+    yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
+    zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
+    
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
+                  dershape2D_bottom,wgllwgll_xy, &
+                  jacobian2D_face,normal_face,NGLLX,NGLLY)
 
 ! on boundary: top
+  case(6)
+    xelm(1)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
+    yelm(1)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
+    zelm(1)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
+    xelm(2)=xstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    yelm(2)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    zelm(2)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+    xelm(4)=xstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+    zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-  if(iboun(6,ispec)) then
-
-    ispecb6=ispecb6+1
-    ibelm_top(ispecb6)=ispec
-
-    xelm(1)=xstore(1,1,NGLLZ,ispec)
-    yelm(1)=ystore(1,1,NGLLZ,ispec)
-    zelm(1)=zstore(1,1,NGLLZ,ispec)
-    xelm(2)=xstore(NGLLX,1,NGLLZ,ispec)
-    yelm(2)=ystore(NGLLX,1,NGLLZ,ispec)
-    zelm(2)=zstore(NGLLX,1,NGLLZ,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec)
-    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec)
-    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
-
-    call compute_jacobian_2D(myrank,ispecb6,xelm,yelm,zelm,dershape2D_top, &
-                  jacobian2D_top,normal_top,NGLLX,NGLLY,NSPEC2D_TOP)
-
-  endif
-
-  enddo
-
-! check theoretical value of elements at the bottom
-  if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
-
-! check theoretical value of elements at the top
-  if(ispecb6 /= NSPEC2D_TOP) then
-	call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
-  endif
-  nspec2D_xmin = ispecb1
-  nspec2D_xmax = ispecb2
-  nspec2D_ymin = ispecb3
-  nspec2D_ymax = ispecb4
-
-  end subroutine get_jacobian_boundaries
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
+                  dershape2D_top, wgllwgll_xy, &
+                  jacobian2D_face,normal_face,NGLLX,NGLLY)
+                  
+  case default
+    stop 'error 2D jacobian'
+  end select
+   
+  end subroutine get_jacobian_boundary_face
+  
 
 ! -------------------------------------------------------
 
-  subroutine compute_jacobian_2D(myrank,ispecb,xelm,yelm,zelm,dershape2D,jacobian2D,normal,NGLLA,NGLLB,NSPEC2DMAX_AB)
+  subroutine compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
+                                dershape2D,wgllwgll, &
+                                jacobian2D_face,normal_face,NGLLA,NGLLB)
 
   implicit none
 
   include "constants.h"
 
 ! generic routine that accepts any polynomial degree in each direction
+! returns 2D jacobian and normal for this face only
 
-  integer ispecb,NGLLA,NGLLB,NSPEC2DMAX_AB,myrank
+  integer NGLLA,NGLLB,myrank
 
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
   double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
-
-  real(kind=CUSTOM_REAL) jacobian2D(NGLLA,NGLLB,NSPEC2DMAX_AB)
-  real(kind=CUSTOM_REAL) normal(3,NGLLA,NGLLB,NSPEC2DMAX_AB)
+  double precision wgllwgll(NGLLA,NGLLB)
+  
+  real(kind=CUSTOM_REAL) jacobian2D_face(NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
 
   integer i,j,ia
   double precision xxi,xeta,yxi,yeta,zxi,zeta
@@ -313,23 +243,857 @@
     jacobian=dsqrt(unx**2+uny**2+unz**2)
     if(jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
-!   normalize normal vector and store surface jacobian
+!   normalize normal vector and store weighted surface jacobian
 
 ! distinguish if single or double precision for reals
     if(CUSTOM_REAL == SIZE_REAL) then
-      jacobian2D(i,j,ispecb)=sngl(jacobian)
-      normal(1,i,j,ispecb)=sngl(unx/jacobian)
-      normal(2,i,j,ispecb)=sngl(uny/jacobian)
-      normal(3,i,j,ispecb)=sngl(unz/jacobian)
+      jacobian2D_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
+      normal_face(1,i,j)=sngl(unx/jacobian)
+      normal_face(2,i,j)=sngl(uny/jacobian)
+      normal_face(3,i,j)=sngl(unz/jacobian)
     else
-      jacobian2D(i,j,ispecb)=jacobian
-      normal(1,i,j,ispecb)=unx/jacobian
-      normal(2,i,j,ispecb)=uny/jacobian
-      normal(3,i,j,ispecb)=unz/jacobian
+      jacobian2D_face(i,j) = jacobian * wgllwgll(i,j)
+      normal_face(1,i,j)=unx/jacobian
+      normal_face(2,i,j)=uny/jacobian
+      normal_face(3,i,j)=unz/jacobian
     endif
 
     enddo
   enddo
 
-  end subroutine compute_jacobian_2D
+  end subroutine compute_jacobian_2D_face
+  
+  
+! This subroutine recompute the 3D jacobian for one element 
+! based upon 125 GLL points 
+! Hejun Zhu OCT16,2009
 
+! input: myrank,
+!        xstore,ystore,zstore ----- input position
+!        xigll,yigll,zigll ----- gll points position
+!        ispec,nspec       ----- element number       
+!        ACTUALLY_STORE_ARRAYS   ------ save array or not
+
+! output: xixstore,xiystore,xizstore, 
+!         etaxstore,etaystore,etazstore,
+!         gammaxstore,gammaystore,gammazstore ------ parameters used for calculating jacobian 
+
+
+  subroutine recalc_jacobian_gll2D(myrank,xstore,ystore,zstore, &
+                                  xigll,yigll,wgllwgll,NGLLA,NGLLB, &
+                                  ispec,nspec,jacobian2D_face,normal_face)
+
+  implicit none
+
+  include "constants.h"
+
+  ! input parameter
+  integer::myrank,ispec,nspec
+  double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
+  
+  integer :: NGLLA,NGLLB
+  double precision, dimension(NGLLA):: xigll
+  double precision, dimension(NGLLB):: yigll
+  double precision:: wgllwgll(NGLLA,NGLLB)
+
+  real(kind=CUSTOM_REAL) jacobian2D_face(NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
+
+  ! other parameters for this subroutine
+  integer:: i,j,k,i1,j1,k1
+  double precision:: xxi,xeta,yxi,yeta,zxi,zeta
+  double precision:: xi,eta
+  double precision,dimension(NGLLA):: hxir,hpxir
+  double precision,dimension(NGLLB):: hetar,hpetar
+  double precision:: hlagrange,hlagrange_xi,hlagrange_eta
+  double precision:: jacobian
+  double precision:: unx,uny,unz
+
+
+
+  ! test parameters which can be deleted
+  double precision:: xmesh,ymesh,zmesh
+  double precision:: sumshape,sumdershapexi,sumdershapeeta
+
+  ! first go over all gll points on face
+  k=1
+  do j=1,NGLLB
+    do i=1,NGLLA
+            
+      xxi = 0.0
+      xeta = 0.0
+      yxi = 0.0
+      yeta = 0.0
+      zxi = 0.0
+      zeta = 0.0
+
+      xi = xigll(i)
+      eta = yigll(j)
+
+      ! calculate lagrange polynomial and its derivative 
+      call lagrange_any(xi,NGLLA,xigll,hxir,hpxir)
+      call lagrange_any(eta,NGLLB,yigll,hetar,hpetar)
+
+      ! test parameters
+      sumshape = 0.0
+      sumdershapexi = 0.0
+      sumdershapeeta = 0.0
+      xmesh = 0.0
+      ymesh = 0.0
+      zmesh = 0.0
+
+      k1=1
+      do j1 = 1,NGLLB
+        do i1 = 1,NGLLA
+         hlagrange = hxir(i1)*hetar(j1)
+         hlagrange_xi = hpxir(i1)*hetar(j1)
+         hlagrange_eta = hxir(i1)*hpetar(j1)
+
+                       
+         xxi = xxi + xstore(i1,j1,k1,ispec)*hlagrange_xi
+         xeta = xeta + xstore(i1,j1,k1,ispec)*hlagrange_eta
+
+         yxi = yxi + ystore(i1,j1,k1,ispec)*hlagrange_xi
+         yeta = yeta + ystore(i1,j1,k1,ispec)*hlagrange_eta
+
+         zxi = zxi + zstore(i1,j1,k1,ispec)*hlagrange_xi
+         zeta = zeta + zstore(i1,j1,k1,ispec)*hlagrange_eta
+
+         ! test the lagrange polynomial and its derivate 
+         xmesh = xmesh + xstore(i1,j1,k1,ispec)*hlagrange
+         ymesh = ymesh + ystore(i1,j1,k1,ispec)*hlagrange
+         zmesh = zmesh + zstore(i1,j1,k1,ispec)*hlagrange
+         sumshape = sumshape + hlagrange
+         sumdershapexi = sumdershapexi + hlagrange_xi
+         sumdershapeeta = sumdershapeeta + hlagrange_eta 
+         
+         end do 
+      end do 
+
+      ! Check the lagrange polynomial and its derivative 
+      if (xmesh /=xstore(i,j,k,ispec).or.ymesh/=ystore(i,j,k,ispec).or.zmesh/=zstore(i,j,k,ispec)) then
+        call exit_MPI(myrank,'new mesh positions are wrong in recalc_jacobian_gall3D.f90')
+      end if 
+      if(abs(sumshape-one) >  TINYVAL) then
+        call exit_MPI(myrank,'error shape functions in recalc_jacobian_gll3D.f90')
+      end if 
+      if(abs(sumdershapexi) >  TINYVAL) then 
+        call exit_MPI(myrank,'error derivative xi shape functions in recalc_jacobian_gll3D.f90')
+      end if 
+      if(abs(sumdershapeeta) >  TINYVAL) then 
+        call exit_MPI(myrank,'error derivative eta shape functions in recalc_jacobian_gll3D.f90')
+      end if 
+
+!   calculate the unnormalized normal to the boundary
+      unx=yxi*zeta-yeta*zxi
+      uny=zxi*xeta-zeta*xxi
+      unz=xxi*yeta-xeta*yxi
+      jacobian=dsqrt(unx**2+uny**2+unz**2)
+      if(jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+
+!   normalize normal vector and store weighted surface jacobian
+
+! distinguish if single or double precision for reals
+      if(CUSTOM_REAL == SIZE_REAL) then
+        jacobian2D_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
+        normal_face(1,i,j)=sngl(unx/jacobian)
+        normal_face(2,i,j)=sngl(uny/jacobian)
+        normal_face(3,i,j)=sngl(unz/jacobian)
+      else
+        jacobian2D_face(i,j) = jacobian * wgllwgll(i,j)
+        normal_face(1,i,j)=unx/jacobian
+        normal_face(2,i,j)=uny/jacobian
+        normal_face(3,i,j)=unz/jacobian
+      endif
+
+    enddo
+  enddo
+
+  end subroutine recalc_jacobian_gll2D
+
+!
+!------------------------------------------------------------------------------------------------
+!
+!
+!  subroutine get_jacobian_boundaries(myrank,iboun,nspec, & 
+!              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+!              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+!              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
+!              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+!              xcoord_iboun,ycoord_iboun,zcoord_iboun, &
+!              nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+!              jacobian2D_xmin,jacobian2D_xmax, &
+!              jacobian2D_ymin,jacobian2D_ymax, &
+!              jacobian2D_bottom,jacobian2D_top, &
+!              normal_xmin,normal_xmax, &
+!              normal_ymin,normal_ymax, &
+!              normal_bottom,normal_top, &
+!              NSPEC2D_BOTTOM,NSPEC2D_TOP)
+!
+!  implicit none
+!
+!  include "constants.h"
+!
+!  integer nspec,myrank,nglob
+!
+!! arrays with the mesh
+!  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+!  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+!
+!  
+!! absorbing boundaries 
+!! (careful with array bounds, no need for NSPEC2DMAX_XMIN_XMAX & NSPEC2DMAX_YMIN_YMAX  anymore)
+!  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
+!  integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
+!  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
+!  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
+!  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
+!  integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
+!  integer, dimension(NSPEC2D_TOP)  :: ibelm_top
+!
+!  logical iboun(6,nspec)
+!  real(kind=CUSTOM_REAL), dimension(NGNOD2D,6,nspec) :: xcoord_iboun,ycoord_iboun,zcoord_iboun
+!  
+!!  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
+!!  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
+!!  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
+!
+!  real(kind=CUSTOM_REAL) jacobian2D_xmin(NGLLY,NGLLZ,NSPEC2D_xmin)
+!  real(kind=CUSTOM_REAL) jacobian2D_xmax(NGLLY,NGLLZ,NSPEC2D_xmax)
+!  real(kind=CUSTOM_REAL) jacobian2D_ymin(NGLLX,NGLLZ,NSPEC2D_ymin)
+!  real(kind=CUSTOM_REAL) jacobian2D_ymax(NGLLX,NGLLZ,NSPEC2D_ymax)
+!  real(kind=CUSTOM_REAL) jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM)
+!  real(kind=CUSTOM_REAL) jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP)
+!
+!  real(kind=CUSTOM_REAL) normal_xmin(NDIM,NGLLY,NGLLZ,NSPEC2D_xmin)
+!  real(kind=CUSTOM_REAL) normal_xmax(NDIM,NGLLY,NGLLZ,NSPEC2D_xmax)
+!  real(kind=CUSTOM_REAL) normal_ymin(NDIM,NGLLX,NGLLZ,NSPEC2D_ymin)
+!  real(kind=CUSTOM_REAL) normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2D_ymax)  
+!  real(kind=CUSTOM_REAL) normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM)
+!  real(kind=CUSTOM_REAL) normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP)
+!
+!  double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
+!  double precision dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ)
+!  double precision dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY)
+!  double precision dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY)
+!
+!  double precision, dimension(NGLLX,NGLLY) :: wgllwgll_xy
+!  double precision, dimension(NGLLX,NGLLZ) :: wgllwgll_xz
+!  double precision, dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+!
+!  double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
+!
+!! element numbering
+!  integer ispec,i,j
+!
+!! counters to keep track of number of elements on each of the boundaries
+!  integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
+!
+!
+!! check that the parameter file is correct
+!  if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
+!  if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes')
+!
+!  ispecb1 = 0
+!  ispecb2 = 0
+!  ispecb3 = 0
+!  ispecb4 = 0
+!  ispecb5 = 0
+!  ispecb6 = 0
+!
+!  do ispec=1,nspec
+!
+!! determine if the element falls on a boundary
+!
+!! on boundary: xmin
+!
+!  if(iboun(1,ispec)) then
+!
+!    ispecb1=ispecb1+1
+!    ibelm_xmin(ispecb1)=ispec
+!
+!!   specify the 4 nodes for the 2-D boundary element
+!!   i.e. face (0,0,0),(0,1,0),(0,1,1),(0,0,1)
+!
+!! careful: these points may not be on the xmin face for unstructured grids
+!!    xelm(1)=xstore(1,1,1,ispec)
+!!    yelm(1)=ystore(1,1,1,ispec)
+!!    zelm(1)=zstore(1,1,1,ispec)
+!!    xelm(2)=xstore(1,NGLLY,1,ispec)
+!!    yelm(2)=ystore(1,NGLLY,1,ispec)
+!!    zelm(2)=zstore(1,NGLLY,1,ispec)
+!!    xelm(3)=xstore(1,NGLLY,NGLLZ,ispec)
+!!    yelm(3)=ystore(1,NGLLY,NGLLZ,ispec)
+!!    zelm(3)=zstore(1,NGLLY,NGLLZ,ispec)
+!!    xelm(4)=xstore(1,1,NGLLZ,ispec)
+!!    yelm(4)=ystore(1,1,NGLLZ,ispec)
+!!    zelm(4)=zstore(1,1,NGLLZ,ispec)
+!
+!    xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
+!    yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
+!    zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
+!    xelm(2)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
+!    yelm(2)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
+!    zelm(2)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
+!    xelm(3)=xstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+!    yelm(3)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+!    zelm(3)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+!    xelm(4)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
+!    yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
+!    zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
+!
+!! takes coordinates from boundary faces
+!!    do i=1,NGNOD2D
+!!      xelm(i) = xcoord_iboun(i,1,ispec)
+!!      yelm(i) = ycoord_iboun(i,1,ispec)
+!!      zelm(i) = zcoord_iboun(i,1,ispec)
+!!    enddo
+!
+!    !daniel
+!    ! checks points for layered_halfspace model: 
+!    ! xmin = zero, xmax = 134000.0, etc...
+!    !if( myrank == 0 ) then 
+!    !  ! print*,'xmin: ',xelm(4),yelm(4),zelm(4)
+!    !  if( abs(xelm(1) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(1),yelm(1),zelm(1)
+!    !  if( abs(xelm(2) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(2),yelm(2),zelm(2)
+!    !  if( abs(xelm(3) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(3),yelm(3),zelm(3)
+!    !  if( abs(xelm(4) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(4),yelm(4),zelm(4)
+!    !endif
+!    
+!    call compute_jacobian_2D(myrank,ispecb1,xelm,yelm,zelm, &
+!                  dershape2D_x,wgllwgll_yz, &
+!                  jacobian2D_xmin,normal_xmin,NGLLY,NGLLZ,NSPEC2D_xmin)
+!                  
+!    ! normal convention: points away from element
+!    ! switches normal direction if necessary
+!    do i=1,NGLLY
+!      do j=1,NGLLZ
+!        call get_element_face_normal(ispecb1, 1, xelm,yelm,zelm, &
+!                                ibool,nspec,nglob, &
+!                                xstore_dummy,ystore_dummy,zstore_dummy, &
+!                                normal_xmin(:,i,j,ispecb1) )
+!      enddo
+!    enddo
+!                  
+!    !daniel          
+!    ! checks: layered halfspace
+!    ! checks normal:
+!    ! for boundary on xmin, outward direction must be (-1,0,0)
+!    !if( myrank == 0 ) then
+!    !i=1; j=1
+!    !do i=1,NGLLY
+!    !  do j=1,NGLLZ
+!    !    if( abs(normal_xmin(1,i,j,ispecb1) + 1.0 ) > 0.1 ) then
+!    !      print*,'error normal xmin',myrank,ispecb1
+!    !      print*,sngl(normal_xmin(:,i,j,ispecb1))
+!    !      !stop
+!    !    endif
+!    !  enddo
+!    !enddo
+!    !  print*,'normal xmin 1:',sngl(normal_xmin(:,1,1,ispecb1)),'jac',sngl(jacobian2D_xmin(1,1,ispecb1))
+!    !  print*,'normal xmin 2:',sngl(normal_xmin(:,2,2,ispecb1)),'jac',sngl(jacobian2D_xmin(2,2,ispecb1))
+!    !  print*,'normal xmin 3:',sngl(normal_xmin(:,3,3,ispecb1)),'jac',sngl(jacobian2D_xmin(3,3,ispecb1))      
+!    !endif
+!
+!  endif
+!
+!! on boundary: xmax
+!
+!  if(iboun(2,ispec)) then
+!
+!    ispecb2=ispecb2+1
+!    ibelm_xmax(ispecb2)=ispec
+!
+!! careful...
+!!   specify the 4 nodes for the 2-D boundary element
+!!    xelm(1)=xstore(NGLLX,1,1,ispec)
+!!    yelm(1)=ystore(NGLLX,1,1,ispec)
+!!    zelm(1)=zstore(NGLLX,1,1,ispec)
+!!    xelm(2)=xstore(NGLLX,NGLLY,1,ispec)
+!!    yelm(2)=ystore(NGLLX,NGLLY,1,ispec)
+!!    zelm(2)=zstore(NGLLX,NGLLY,1,ispec)
+!!    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    xelm(4)=xstore(NGLLX,1,NGLLZ,ispec)
+!!    yelm(4)=ystore(NGLLX,1,NGLLZ,ispec)
+!!    zelm(4)=zstore(NGLLX,1,NGLLZ,ispec)
+!
+!    xelm(1)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
+!    yelm(1)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
+!    zelm(1)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
+!    xelm(2)=xstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    yelm(2)=ystore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    zelm(2)=zstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+!    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+!    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+!    xelm(4)=xstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+!    yelm(4)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+!    zelm(4)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+!
+!! takes coordinates from boundary faces
+!!    do i=1,NGNOD2D
+!!      xelm(i) = xcoord_iboun(i,2,ispec)
+!!      yelm(i) = ycoord_iboun(i,2,ispec)
+!!      zelm(i) = zcoord_iboun(i,2,ispec)
+!!    enddo
+!
+!    !daniel
+!    ! checks: for halfspace model
+!    !if( myrank == 0 ) then
+!    !  ! print*,'xmax: ',xelm(4),yelm(4),zelm(4)
+!    !  if( abs(xelm(4) - 134000.0) > 0.1) print*,'error xmax:',myrank,ispec,ispecb2,xelm(4)
+!    !endif
+!
+!    call compute_jacobian_2D(myrank,ispecb2,xelm,yelm,zelm, &
+!                  dershape2D_x,wgllwgll_yz, &
+!                  jacobian2D_xmax,normal_xmax,NGLLY,NGLLZ,NSPEC2D_xmax)
+!
+!    ! normal convention: points away from element
+!    ! switch normal direction if necessary
+!    do i=1,NGLLY
+!      do j=1,NGLLZ
+!        call get_element_face_normal(ispecb2, 2, xelm,yelm,zelm, &
+!                                ibool,nspec,nglob, &
+!                                xstore_dummy,ystore_dummy,zstore_dummy, &
+!                                normal_xmax(:,i,j,ispecb2) )
+!      enddo
+!    enddo
+!                  
+!    !daniel
+!    ! checks: layered halfspace
+!    ! checks normal:
+!    ! for boundary on xmax, outward direction must be (1,0,0)    
+!    !if( myrank == 0 ) then
+!    !    do i=1,NGLLY
+!    !      do j=1,NGLLZ
+!    i=1; j=1
+!        if( abs(normal_xmax(1,i,j,ispecb2) - 1.0 ) > 0.1 ) then
+!          print*,'error normal xmax',myrank,ispecb2
+!          print*,sngl(normal_xmax(:,i,j,ispecb2))
+!          !stop
+!        endif
+!    !      enddo
+!    !    enddo    
+!    !  print*,'normal xmax 1:',sngl(normal_xmax(:,1,1,ispecb2)),'jac',sngl(jacobian2D_xmax(1,1,ispecb2))
+!    !  print*,'normal xmax 2:',sngl(normal_xmax(:,2,2,ispecb2)),'jac',sngl(jacobian2D_xmax(2,2,ispecb2))
+!    !  print*,'normal xmax 3:',sngl(normal_xmax(:,3,3,ispecb2)),'jac',sngl(jacobian2D_xmax(3,3,ispecb2))
+!    !endif
+!
+!  endif
+!
+!! on boundary: ymin
+!
+!  if(iboun(3,ispec)) then
+!
+!    ispecb3=ispecb3+1
+!    ibelm_ymin(ispecb3)=ispec
+!
+!! careful...
+!!   specify the 4 nodes for the 2-D boundary element
+!!    xelm(1)=xstore(1,1,1,ispec)
+!!    yelm(1)=ystore(1,1,1,ispec)
+!!    zelm(1)=zstore(1,1,1,ispec)
+!!    xelm(2)=xstore(NGLLX,1,1,ispec)
+!!    yelm(2)=ystore(NGLLX,1,1,ispec)
+!!    zelm(2)=zstore(NGLLX,1,1,ispec)
+!!    xelm(3)=xstore(NGLLX,1,NGLLZ,ispec)
+!!    yelm(3)=ystore(NGLLX,1,NGLLZ,ispec)
+!!    zelm(3)=zstore(NGLLX,1,NGLLZ,ispec)
+!!    xelm(4)=xstore(1,1,NGLLZ,ispec)
+!!    yelm(4)=ystore(1,1,NGLLZ,ispec)
+!!    zelm(4)=zstore(1,1,NGLLZ,ispec)
+!
+!    xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
+!    yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
+!    zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
+!    xelm(2)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
+!    yelm(2)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
+!    zelm(2)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
+!    xelm(3)=xstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+!    yelm(3)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+!    zelm(3)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
+!    xelm(4)=xstore_dummy( ibool(1,1,NGLLZ,ispec) )
+!    yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
+!    zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
+!
+!! takes coordinates from boundary faces
+!!    do i=1,NGNOD2D
+!!      xelm(i) = xcoord_iboun(i,3,ispec)
+!!      yelm(i) = ycoord_iboun(i,3,ispec)
+!!      zelm(i) = zcoord_iboun(i,3,ispec)
+!!    enddo
+!
+!    !daniel
+!    ! checks: for layered halfspace
+!    !if( myrank == 0 ) then
+!    !  ! print*,'ymin: ',xelm(4),yelm(4),zelm(4)
+!    !  if( abs(yelm(4) - 0.0) > 0.1) print*,'error ymin:',myrank,ispec,ispecb3,yelm(4)
+!    !endif
+!
+!    call compute_jacobian_2D(myrank,ispecb3,xelm,yelm,zelm, &
+!                  dershape2D_y,wgllwgll_xz, &
+!                  jacobian2D_ymin,normal_ymin,NGLLX,NGLLZ,NSPEC2D_ymin)
+!
+!    ! normal convention: points away from element
+!    ! switch normal direction if necessary
+!    do i=1,NGLLX
+!      do j=1,NGLLZ
+!        call get_element_face_normal(ispecb3, 3, xelm,yelm,zelm, &
+!                                ibool,nspec,nglob, &
+!                                xstore_dummy,ystore_dummy,zstore_dummy, &
+!                                normal_ymin(:,i,j,ispecb3) )
+!      enddo
+!    enddo
+!                  
+!    !daniel              
+!    ! checks: layered halfspace
+!    ! checks normal:
+!    ! for boundary on ymin, outward direction must be (0,-1,0)    
+!    !if( myrank == 0 ) then
+!    !    do i=1,NGLLX
+!    !      do j=1,NGLLZ
+!    !i=1; j=1
+!    !    if( abs(normal_ymin(2,i,j,ispecb3) + 1.0 ) > 0.1 ) then
+!    !      print*,'error normal ymin',myrank,ispecb3
+!    !      print*,sngl(normal_ymin(:,i,j,ispecb3))
+!    !      !stop
+!    !    endif
+!    !      enddo
+!    !    enddo    
+!    !  print*,'normal ymin 1:',sngl(normal_ymin(:,1,1,ispecb3)),'jac',sngl(jacobian2D_ymin(1,1,ispecb3))
+!    !  print*,'normal ymin 2:',sngl(normal_ymin(:,2,2,ispecb3)),'jac',sngl(jacobian2D_ymin(2,2,ispecb3))
+!    !  print*,'normal ymin 3:',sngl(normal_ymin(:,3,3,ispecb3)),'jac',sngl(jacobian2D_ymin(3,3,ispecb3))      
+!    !endif
+!
+!  endif
+!
+!! on boundary: ymax
+!
+!  if(iboun(4,ispec)) then
+!
+!    ispecb4=ispecb4+1
+!    ibelm_ymax(ispecb4)=ispec
+!
+!!careful...
+!!   specify the 4 nodes for the 2-D boundary element
+!!    xelm(1)=xstore(1,NGLLY,1,ispec)
+!!    yelm(1)=ystore(1,NGLLY,1,ispec)
+!!    zelm(1)=zstore(1,NGLLY,1,ispec)
+!!    xelm(2)=xstore(NGLLX,NGLLY,1,ispec)
+!!    yelm(2)=ystore(NGLLX,NGLLY,1,ispec)
+!!    zelm(2)=zstore(NGLLX,NGLLY,1,ispec)
+!!    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec)
+!!    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec)
+!!    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
+!
+!    xelm(1)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
+!    yelm(1)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
+!    zelm(1)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
+!    xelm(2)=xstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    yelm(2)=ystore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    zelm(2)=zstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+!    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+!    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,NGLLZ,ispec) )
+!    xelm(4)=xstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+!    yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+!    zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
+!
+!! takes coordinates from boundary faces
+!!    do i=1,NGNOD2D
+!!      xelm(i) = xcoord_iboun(i,4,ispec)
+!!      yelm(i) = ycoord_iboun(i,4,ispec)
+!!      zelm(i) = zcoord_iboun(i,4,ispec)
+!!    enddo
+!
+!    !daniel
+!    ! checks: for layered halfspace
+!    !if( myrank == 0 ) then 
+!    !  !print*,'ymax: ',xelm(4),yelm(4),zelm(4)
+!    !  if( abs(yelm(4) -134000.0) > 0.1 ) print*,'error ymax:',myrank,ispec,ispecb4,yelm(4)
+!    !endif
+!    
+!    call compute_jacobian_2D(myrank,ispecb4,xelm,yelm,zelm, &
+!                  dershape2D_y, wgllwgll_xz, &
+!                  jacobian2D_ymax,normal_ymax,NGLLX,NGLLZ,NSPEC2D_ymax)
+!                  
+!    ! normal convention: points away from element
+!    ! switch normal direction if necessary
+!    do i=1,NGLLX
+!      do j=1,NGLLZ
+!        call get_element_face_normal(ispecb4, 4, xelm,yelm,zelm, &
+!                                ibool,nspec,nglob, &
+!                                xstore_dummy,ystore_dummy,zstore_dummy, &
+!                                normal_ymax(:,i,j,ispecb4) )
+!      enddo
+!    enddo
+!                  
+!    !daniel
+!    ! checks: layered halfspace
+!    ! checks normal:
+!    ! for boundary on ymax, outward direction must be (0,1,0)    
+!    !if( myrank == 0 ) then
+!    !    do i=1,NGLLX
+!    !      do j=1,NGLLZ
+!    i=1; j=1
+!        if( abs(normal_ymax(2,i,j,ispecb4) - 1.0 ) > 0.1 ) then
+!          print*,'error normal ymax',myrank,ispecb4
+!          print*,sngl(normal_ymax(:,i,j,ispecb4))
+!          !stop
+!        endif
+!    !      enddo
+!    !    enddo    
+!    !  print*,'normal ymax 1:',sngl(normal_ymax(:,1,1,ispecb4)),'jac',sngl(jacobian2D_ymax(1,1,ispecb4))
+!    !  print*,'normal ymax 2:',sngl(normal_ymax(:,2,2,ispecb4)),'jac',sngl(jacobian2D_ymax(2,2,ispecb4))
+!    !  print*,'normal ymax 3:',sngl(normal_ymax(:,3,3,ispecb4)),'jac',sngl(jacobian2D_ymax(3,3,ispecb4))
+!    !endif
+!
+!  endif
+!
+!! on boundary: bottom
+!
+!  if(iboun(5,ispec)) then
+!
+!    ispecb5=ispecb5+1
+!    ibelm_bottom(ispecb5)=ispec
+!
+!! careful...
+!! for bottom, this might be actually working... when mesh is oriented along z direction...
+!!    xelm(1)=xstore(1,1,1,ispec)
+!!    yelm(1)=ystore(1,1,1,ispec)
+!!    zelm(1)=zstore(1,1,1,ispec)
+!!    xelm(2)=xstore(NGLLX,1,1,ispec)
+!!    yelm(2)=ystore(NGLLX,1,1,ispec)
+!!    zelm(2)=zstore(NGLLX,1,1,ispec)
+!!    xelm(3)=xstore(NGLLX,NGLLY,1,ispec)
+!!    yelm(3)=ystore(NGLLX,NGLLY,1,ispec)
+!!    zelm(3)=zstore(NGLLX,NGLLY,1,ispec)
+!!    xelm(4)=xstore(1,NGLLY,1,ispec)
+!!    yelm(4)=ystore(1,NGLLY,1,ispec)
+!!    zelm(4)=zstore(1,NGLLY,1,ispec)
+!
+!    xelm(1)=xstore_dummy( ibool(1,1,1,ispec) )
+!    yelm(1)=ystore_dummy( ibool(1,1,1,ispec) )
+!    zelm(1)=zstore_dummy( ibool(1,1,1,ispec) )
+!    xelm(2)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
+!    yelm(2)=ystore_dummy( ibool(NGLLX,1,1,ispec) )
+!    zelm(2)=zstore_dummy( ibool(NGLLX,1,1,ispec) )
+!    xelm(3)=xstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    yelm(3)=ystore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    zelm(3)=zstore_dummy( ibool(NGLLX,NGLLY,1,ispec) )
+!    xelm(4)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
+!    yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
+!    zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
+!    
+!
+!! takes coordinates from boundary faces
+!!    do i=1,NGNOD2D
+!!      xelm(i) = xcoord_iboun(i,5,ispec)
+!!      yelm(i) = ycoord_iboun(i,5,ispec)
+!!      zelm(i) = zcoord_iboun(i,5,ispec)
+!!    enddo
+!
+!    !daniel
+!    ! checks: layered halfspace
+!    !if( myrank == 0 ) then
+!    !  !print*,'bottom: ',xelm(4),yelm(4),zelm(4)
+!    !  if( abs(zelm(4) + 60000.0) > 0.1) print*,'error bottom:',myrank,ispec,ispecb5,zelm(4)
+!    !endif
+!
+!    call compute_jacobian_2D(myrank,ispecb5,xelm,yelm,zelm,&
+!                  dershape2D_bottom,wgllwgll_xy, &
+!                  jacobian2D_bottom,normal_bottom,NGLLX,NGLLY,NSPEC2D_BOTTOM)
+!
+!    ! normal convention: points away from element
+!    ! switch normal direction if necessary
+!    do i=1,NGLLX
+!      do j=1,NGLLY
+!        call get_element_face_normal(ispecb5, 5, xelm,yelm,zelm, &
+!                                ibool,nspec,nglob, &
+!                                xstore_dummy,ystore_dummy,zstore_dummy, &
+!                                normal_bottom(:,i,j,ispecb5) )
+!      enddo
+!    enddo
+!
+!    !daniel
+!    ! checks: layered halfspace
+!    ! checks normal:
+!    ! for boundary on bottom, outward direction must be (0,0,-1)    
+!    !if( myrank == 0 ) then
+!    !    do i=1,NGLLX
+!    !      do j=1,NGLLY
+!    i=1; j=1
+!        if( abs(normal_bottom(3,i,j,ispecb5) + 1.0 ) > 0.1 ) then
+!          print*,'error normal bottom',myrank,ispecb5
+!          print*,sngl(normal_bottom(:,i,j,ispecb5))
+!          !stop
+!        endif
+!    !      enddo
+!    !    enddo        
+!    !  print*,'normal bottom 1:',sngl(normal_bottom(:,1,1,ispecb5)),'jac',sngl(jacobian2D_bottom(1,1,ispecb5))
+!    !  print*,'normal bottom 2:',sngl(normal_bottom(:,2,2,ispecb5)),'jac',sngl(jacobian2D_bottom(2,2,ispecb5))
+!    !  print*,'normal bottom 3:',sngl(normal_bottom(:,3,3,ispecb5)),'jac',sngl(jacobian2D_bottom(3,3,ispecb5))
+!    !endif                  
+!    
+!  endif
+!
+!! on boundary: top
+!
+!  if(iboun(6,ispec)) then
+!
+!    ispecb6=ispecb6+1
+!    ibelm_top(ispecb6)=ispec
+!
+!! careful...
+!! for top, this might be working as well ... when mesh is oriented along z direction...
+!!    xelm(1)=xstore(1,1,NGLLZ,ispec) 
+!!    yelm(1)=ystore(1,1,NGLLZ,ispec) 
+!!    zelm(1)=zstore(1,1,NGLLZ,ispec) 
+!!    xelm(2)=xstore(NGLLX,1,NGLLZ,ispec) 
+!!    yelm(2)=ystore(NGLLX,1,NGLLZ,ispec) 
+!!    zelm(2)=zstore(NGLLX,1,NGLLZ,ispec) 
+!!    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec) 
+!!    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec) 
+!!    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec) 
+!!    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec) 
+!!    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec) 
+!!    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
+!
+!
+!! takes coordinates from boundary faces
+!!    do i=1,NGNOD2D
+!!      xelm(i) = xcoord_iboun(i,6,ispec)
+!!      yelm(i) = ycoord_iboun(i,6,ispec)
+!!      zelm(i) = zcoord_iboun(i,6,ispec)
+!!    enddo
+!
+!    !daniel
+!    ! checks: layered halfspace
+!    !if( myrank == 0 ) then 
+!    !  !print*,'top: ',xelm(4),yelm(4),zelm(4)
+!    !if( abs(zelm(4) - 0.0) > 0.1 ) print*,'error top:',myrank,ispec,ispecb6,zelm(4)
+!    !endif
+!
+!    call compute_jacobian_2D(myrank,ispecb6,xelm,yelm,zelm,&
+!                  dershape2D_top, wgllwgll_xy, &
+!                  jacobian2D_top,normal_top,NGLLX,NGLLY,NSPEC2D_TOP)
+!    
+!    ! normal convention: points away from element
+!    ! switch normal direction if necessary
+!    do i=1,NGLLX
+!      do j=1,NGLLY
+!        call get_element_face_normal(ispecb6, 6, xelm,yelm,zelm, &
+!                                ibool,nspec,nglob, &
+!                                xstore_dummy,ystore_dummy,zstore_dummy, &
+!                                normal_top(:,i,j,ispecb6) )
+!      enddo
+!    enddo
+!
+!    !daniel
+!    ! checks: layered halfspace
+!    ! checks normal:
+!    ! for boundary on top, outward direction must be (0,0,1)    
+!    !if( myrank == 0 ) then
+!    !    do i=1,NGLLX
+!    !      do j=1,NGLLY
+!    i=1; j=1
+!        if( abs(normal_top(3,i,j,ispecb6) - 1.0 ) > 0.1 ) then
+!          print*,'error normal top',myrank,ispecb6
+!          print*,sngl(normal_top(:,i,j,ispecb6))
+!          stop
+!        endif
+!    !      enddo
+!    !    enddo    
+!    !endif
+!    
+!  endif
+!
+!  enddo
+!
+!! check theoretical value of elements 
+!!  if(ispecb1 /= NSPEC2D_xmin) call exit_MPI(myrank,'ispecb1 should equal NSPEC2D_xmin')
+!!  if(ispecb2 /= NSPEC2D_xmax) call exit_MPI(myrank,'ispecb2 should equal NSPEC2D_xmax')
+!!  if(ispecb3 /= NSPEC2D_ymin) call exit_MPI(myrank,'ispecb3 should equal NSPEC2D_ymin')
+!!  if(ispecb4 /= NSPEC2D_ymax) call exit_MPI(myrank,'ispecb4 should equal NSPEC2D_ymax')
+!!  if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
+!!  if(ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
+!
+!  end subroutine get_jacobian_boundaries
+!
+!! -------------------------------------------------------
+!
+!  subroutine compute_jacobian_2D(myrank,ispecb,xelm,yelm,zelm, &
+!                                dershape2D,wgllwgll, &
+!                                jacobian2D,normal, &
+!                                NGLLA,NGLLB,NSPEC2DMAX_AB)
+!
+!  implicit none
+!
+!  include "constants.h"
+!
+!! generic routine that accepts any polynomial degree in each direction
+!
+!  integer ispecb,NGLLA,NGLLB,NSPEC2DMAX_AB,myrank
+!
+!  double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
+!  double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
+!  double precision wgllwgll
+!  
+!  real(kind=CUSTOM_REAL) jacobian2D(NGLLA,NGLLB,NSPEC2DMAX_AB)
+!  real(kind=CUSTOM_REAL) normal(3,NGLLA,NGLLB,NSPEC2DMAX_AB)
+!
+!  integer i,j,ia
+!  double precision xxi,xeta,yxi,yeta,zxi,zeta
+!  double precision unx,uny,unz,jacobian
+!
+!  do j=1,NGLLB
+!    do i=1,NGLLA
+!
+!    xxi=ZERO
+!    xeta=ZERO
+!    yxi=ZERO
+!    yeta=ZERO
+!    zxi=ZERO
+!    zeta=ZERO
+!    do ia=1,NGNOD2D
+!      xxi=xxi+dershape2D(1,ia,i,j)*xelm(ia)
+!      xeta=xeta+dershape2D(2,ia,i,j)*xelm(ia)
+!      yxi=yxi+dershape2D(1,ia,i,j)*yelm(ia)
+!      yeta=yeta+dershape2D(2,ia,i,j)*yelm(ia)
+!      zxi=zxi+dershape2D(1,ia,i,j)*zelm(ia)
+!      zeta=zeta+dershape2D(2,ia,i,j)*zelm(ia)
+!    enddo
+!
+!!   calculate the unnormalized normal to the boundary
+!    unx=yxi*zeta-yeta*zxi
+!    uny=zxi*xeta-zeta*xxi
+!    unz=xxi*yeta-xeta*yxi
+!    jacobian=dsqrt(unx**2+uny**2+unz**2)
+!    if(jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+!
+!!   normalize normal vector and store weighted surface jacobian
+!
+!! distinguish if single or double precision for reals
+!    if(CUSTOM_REAL == SIZE_REAL) then
+!      jacobian2D(i,j,ispecb) = sngl(jacobian * wgllwgll(i,j) )
+!      normal(1,i,j,ispecb)=sngl(unx/jacobian)
+!      normal(2,i,j,ispecb)=sngl(uny/jacobian)
+!      normal(3,i,j,ispecb)=sngl(unz/jacobian)
+!    else
+!      jacobian2D(i,j,ispecb) = jacobian * wgllwgll(i,j)
+!      normal(1,i,j,ispecb)=unx/jacobian
+!      normal(2,i,j,ispecb)=uny/jacobian
+!      normal(3,i,j,ispecb)=unz/jacobian
+!    endif
+!
+!    enddo
+!  enddo
+!
+!  end subroutine compute_jacobian_2D
+!
+  

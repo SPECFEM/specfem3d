@@ -32,7 +32,6 @@
 ! start reading the databasesa
 
 ! info about external mesh simulation
-! nlegoff -- should be put in read_arrays_solver and read_arrays_buffer_solver for clarity
   call create_name_database(prname,myrank,LOCAL_PATH)
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
   read(27) NSPEC_AB
@@ -65,16 +64,16 @@
     endif
   endif        
   
-  read(27) NSPEC2DMAX_XMIN_XMAX_ext 
-  read(27) NSPEC2DMAX_YMIN_YMAX_ext
-  allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX_ext),nimax(2,NSPEC2DMAX_YMIN_YMAX_ext),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX_ext))
-  allocate(njmin(2,NSPEC2DMAX_XMIN_XMAX_ext),njmax(2,NSPEC2DMAX_XMIN_XMAX_ext),nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX_ext))
-  read(27) nimin
-  read(27) nimax
-  read(27) njmin
-  read(27) njmax
-  read(27) nkmin_xi 
-  read(27) nkmin_eta
+!  read(27) NSPEC2DMAX_XMIN_XMAX_ext 
+!  read(27) NSPEC2DMAX_YMIN_YMAX_ext
+!  allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX_ext),nimax(2,NSPEC2DMAX_YMIN_YMAX_ext),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX_ext))
+!  allocate(njmin(2,NSPEC2DMAX_XMIN_XMAX_ext),njmax(2,NSPEC2DMAX_XMIN_XMAX_ext),nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX_ext))
+!  read(27) nimin
+!  read(27) nimax
+!  read(27) njmin
+!  read(27) njmax
+!  read(27) nkmin_xi 
+!  read(27) nkmin_eta
   !end pll
 
   read(27) kappastore
@@ -85,51 +84,89 @@
   read(27) ystore
   read(27) zstore
 
+! absorbing boundaries
   !pll
-  read(27) nspec2D_xmin
-  read(27) nspec2D_xmax
-  read(27) nspec2D_ymin
-  read(27) nspec2D_ymax
-  read(27) NSPEC2D_BOTTOM
-  read(27) NSPEC2D_TOP    
-  allocate(ibelm_xmin(nspec2D_xmin))
-  allocate(ibelm_xmax(nspec2D_xmax))
-  allocate(ibelm_ymin(nspec2D_ymin))
-  allocate(ibelm_ymax(nspec2D_ymax))
-  allocate(ibelm_bottom(NSPEC2D_BOTTOM))
-  allocate(ibelm_top(NSPEC2D_TOP))
-  allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin))
-  allocate(jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax))
-  allocate(jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin))
-  allocate(jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax))
-  allocate(jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM))
-  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
-  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
-  allocate(normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
-  allocate(normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
-  allocate(normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
-  allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
-  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
-  read(27) ibelm_xmin
-  read(27) ibelm_xmax
-  read(27) ibelm_ymin
-  read(27) ibelm_ymax
-  read(27) ibelm_bottom
-  read(27) ibelm_top
-  read(27) normal_xmin
-  read(27) normal_xmax
-  read(27) normal_ymin
-  read(27) normal_ymax
-  read(27) normal_bottom
-  read(27) normal_top
-  read(27) jacobian2D_xmin
-  read(27) jacobian2D_xmax
-  read(27) jacobian2D_ymin
-  read(27) jacobian2D_ymax
-  read(27) jacobian2D_bottom
-  read(27) jacobian2D_top
-  !end pll
+!  read(27) nspec2D_xmin
+!  read(27) nspec2D_xmax
+!  read(27) nspec2D_ymin
+!  read(27) nspec2D_ymax
+!  read(27) NSPEC2D_BOTTOM
+!  read(27) NSPEC2D_TOP    
+!  allocate(ibelm_xmin(nspec2D_xmin))
+!  allocate(ibelm_xmax(nspec2D_xmax))
+!  allocate(ibelm_ymin(nspec2D_ymin))
+!  allocate(ibelm_ymax(nspec2D_ymax))
+!  allocate(ibelm_bottom(NSPEC2D_BOTTOM))  
+!  allocate(ibelm_top(NSPEC2D_TOP))
+!
+!  allocate(ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin))
+!  allocate(ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax))
+!  allocate(ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin))
+!  allocate(ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax))
+!  allocate(ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom))
+!  allocate(ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top))
+!              
+!  allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin))
+!  allocate(jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax))
+!  allocate(jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin))
+!  allocate(jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax))
+!  allocate(jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM))
+!  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
+!  
+!  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
+!  allocate(normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
+!  allocate(normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
+!  allocate(normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
+!  allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
+!  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
+!  read(27) ibelm_xmin
+!  read(27) ibelm_xmax
+!  read(27) ibelm_ymin
+!  read(27) ibelm_ymax
+!  read(27) ibelm_bottom
+!  read(27) ibelm_top
+!  
+!  read(27) ibelm_gll_xmin
+!  read(27) ibelm_gll_xmax
+!  read(27) ibelm_gll_ymin
+!  read(27) ibelm_gll_ymax
+!  read(27) ibelm_gll_bottom
+!  read(27) ibelm_gll_top
+!  
+!  read(27) normal_xmin
+!  read(27) normal_xmax
+!  read(27) normal_ymin
+!  read(27) normal_ymax
+!  read(27) normal_bottom
+!  read(27) normal_top
+!  read(27) jacobian2D_xmin
+!  read(27) jacobian2D_xmax
+!  read(27) jacobian2D_ymin
+!  read(27) jacobian2D_ymax
+!  read(27) jacobian2D_bottom
+!  read(27) jacobian2D_top
+!  !end pll
 
+  read(27) num_absorbing_boundary_faces
+  allocate(absorbing_boundary_ispec(num_absorbing_boundary_faces))
+  allocate(absorbing_boundary_ijk(3,NGLLSQUARE,num_absorbing_boundary_faces))
+  allocate(absorbing_boundary_jacobian2D(NGLLSQUARE,num_absorbing_boundary_faces))
+  allocate(absorbing_boundary_normal(NDIM,NGLLSQUARE,num_absorbing_boundary_faces))
+  read(27) absorbing_boundary_ispec
+  read(27) absorbing_boundary_ijk
+  read(27) absorbing_boundary_jacobian2D
+  read(27) absorbing_boundary_normal
+
+! free surface 
+  read(27) NSPEC2D_TOP    
+  allocate(ibelm_top(NSPEC2D_TOP))
+  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
+  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
+  read(27) ibelm_top
+  read(27) jacobian2D_top
+  read(27) normal_top
+  
+! MPI interfaces
   read(27) ninterfaces_ext_mesh
   read(27) max_nibool_interfaces_ext_mesh
   allocate(my_neighbours_ext_mesh(ninterfaces_ext_mesh))
@@ -171,7 +208,6 @@
     enddo
   enddo
 
-!daniel
 ! counts inner and outer elements
 !    nspec_inner = 0
 !    nspec_outer = 0
@@ -183,7 +219,7 @@
 !      endif
 !    enddo
 
-! stores indices of inner and outer elements for faster compute_forces_with_Deville routine
+! stores indices of inner and outer elements for faster(?) compute_forces_with_Deville routine
 !    if( nspec_inner > 0 ) allocate( spec_inner(nspec_inner))
 !    if( nspec_outer > 0 ) allocate( spec_outer(nspec_outer))
 !    nspec_inner = 0

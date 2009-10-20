@@ -72,19 +72,38 @@ module specfem_par
   character(len=100) topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
-  integer :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
-  integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax
-  integer, dimension(:), allocatable :: ibelm_ymin,ibelm_ymax
-  integer, dimension(:), allocatable :: ibelm_bottom
+! absorbing boundaries
+!  integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax
+!  integer, dimension(:), allocatable :: ibelm_ymin,ibelm_ymax
+!  integer, dimension(:), allocatable :: ibelm_bottom
+!  integer, dimension(:), allocatable :: ibelm_top
+!!  integer :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
+!  ! local indices i,j,k of all GLL points on xmin boundary in the element
+!  integer,dimension(:,:,:,:),allocatable :: ibelm_gll_xmin,ibelm_gll_xmax, &
+!                                          ibelm_gll_ymin,ibelm_gll_ymax, &
+!                                          ibelm_gll_bottom,ibelm_gll_top  
+!  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_xmin,jacobian2D_xmax
+!  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_ymin,jacobian2D_ymax
+!  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_bottom
+!  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable  :: jacobian2D_top
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_xmin,normal_xmax
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_ymin,normal_ymax
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_bottom
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_top
+
+! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: absorbing_boundary_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: absorbing_boundary_jacobian2D
+  integer, dimension(:,:,:), allocatable :: absorbing_boundary_ijk
+  integer, dimension(:), allocatable :: absorbing_boundary_ispec
+  integer :: num_absorbing_boundary_faces
+
+! free surface  
+  integer :: nspec2D_top,ispec2D
   integer, dimension(:), allocatable :: ibelm_top
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_xmin,jacobian2D_xmax
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_ymin,jacobian2D_ymax
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_bottom
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable  :: jacobian2D_top
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_xmin,normal_xmax
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_ymin,normal_ymax
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_bottom
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable  :: normal_top
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable  :: jacobian2D_top
+  real(kind=CUSTOM_REAL) :: nx,ny,nz
 
 !! DK DK array not created yet for CUBIT
 ! integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
@@ -281,17 +300,19 @@ module specfem_par
 ! parameters deduced from parameters read from file
   integer NPROC
 
-  integer NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NSPEC_AB, NGLOB_AB
+  !integer :: NSPEC2D_BOTTOM
+  !integer :: NSPEC2D_TOP
+  
+  integer :: NSPEC_AB, NGLOB_AB
 
 ! names of the data files for all the processors in MPI
   character(len=150) outputname
 
 ! Stacey conditions put back
-  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,ispec2D
-  real(kind=CUSTOM_REAL) nx,ny,nz
-  integer, dimension(:,:),allocatable :: nimin,nimax,nkmin_eta
-  integer, dimension(:,:),allocatable :: njmin,njmax,nkmin_xi
+  !integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,ispec2D
+  !real(kind=CUSTOM_REAL) nx,ny,nz
+  !integer, dimension(:,:),allocatable :: nimin,nimax,nkmin_eta
+  !integer, dimension(:,:),allocatable :: njmin,njmax,nkmin_xi
 
 ! to save movie frames
   integer ipoin, nmovie_points, iloc, iorderi(NGNOD2D), iorderj(NGNOD2D)
@@ -352,7 +373,6 @@ module specfem_par
   logical, dimension(:), allocatable :: iglob_is_inner_ext_mesh
   integer :: iinterface
 
-!daniel
 !  integer, dimension(:),allocatable :: spec_inner, spec_outer
 !  integer :: nspec_inner,nspec_outer
   

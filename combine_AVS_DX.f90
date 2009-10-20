@@ -117,6 +117,8 @@
 
 ! ************** PROGRAM STARTS HERE **************
 
+! only for old regular meshes!
+
   print *
   print *,'Recombining all AVS or DX files for slices'
   print *

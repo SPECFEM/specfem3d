@@ -23,13 +23,15 @@
 !
 !=====================================================================
 
-  program combine_paraview_data
+  program combine_paraview_data_ext_mesh
 
 ! puts the output of SPECFEM3D in ParaView format.
 ! see http://www.paraview.org for details
 
 ! combines the database files on several slices.
 ! the local database file needs to have been collected onto the frontend (copy_local_database.pl)
+
+! works for external, unregular meshes
 
   implicit none
 
@@ -130,27 +132,7 @@
   ! counts total number of points (all slices)
   npp = 0
   nee = 0
-  if( USE_EXTERNAL_MESH ) then
-    call combine_vol_data_count_totals_ext_mesh(num_node,node_list,indir,npp,nee,HIGH_RESOLUTION_MESH)    
-  else
-    ! old version uses values_from_mesher.h
-    nspec = NSPEC_AB
-    nglob = NGLOB_AB
-    
-    ! total number of global points
-    npp = nglob * num_node
-    
-    ! total number of elements
-    nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
-    nee = nelement * num_node
-    
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(mask_ibool(NGLOB_AB))
-    allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
-    allocate(num_ibool(NGLOB_AB))    
-  endif ! USE_EXTERNAL_MESH
+  call combine_vol_data_count_totals_ext_mesh(num_node,node_list,indir,npp,nee,HIGH_RESOLUTION_MESH)    
 
 
   ! write point and scalar information  
@@ -163,24 +145,19 @@
     print *, 'Reading slice ', iproc
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
-    if( USE_EXTERNAL_MESH ) then
-      open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
-      read(27) NSPEC_AB
-      read(27) NGLOB_AB 
-      close(27)   
-      nspec = NSPEC_AB
-      nglob = NGLOB_AB
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB 
+    close(27)   
+    nspec = NSPEC_AB
+    nglob = NGLOB_AB
 
-      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(mask_ibool(NGLOB_AB))
-      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
-    endif
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
     
-    ! stores number of points supposed to write out
-    if( .not. USE_EXTERNAL_MESH ) npoint = nglob
-
     ! data file  
     local_data_file = trim(prname) // trim(filename) // '.bin'
     open(unit = 27,file = trim(local_data_file),status='old',action='read', iostat = ios,form ='unformatted')
@@ -218,20 +195,13 @@
                                             xstore,ystore,zstore,dat,&
                                             it,npp,prname,numpoin)
     endif
-
-    ! checks number of points written
-    if( .not. USE_EXTERNAL_MESH ) then
-      if (numpoin /= npoint) stop 'Error: number of points are not consistent'
-    endif
     
     print*,'  points:',np,numpoin
     
     ! stores total number of points written
     np = np + numpoin
 
-    if( USE_EXTERNAL_MESH ) then
-      deallocate(ibool,mask_ibool,data,dat,xstore,ystore,zstore)
-    endif
+    deallocate(ibool,mask_ibool,data,dat,xstore,ystore,zstore)
     
   enddo  ! all slices for points
 
@@ -250,20 +220,16 @@
     print *, 'Reading slice ', iproc
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
-    if( USE_EXTERNAL_MESH ) then
-      open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
-      read(27) NSPEC_AB
-      read(27) NGLOB_AB 
-      close(27)   
-      nspec = NSPEC_AB
-      nglob = NGLOB_AB
-      
-      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(mask_ibool(NGLOB_AB))
-      allocate(num_ibool(NGLOB_AB))
-    else
-      np = npoint * (it-1)    
-    endif
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB 
+    close(27)   
+    nspec = NSPEC_AB
+    nglob = NGLOB_AB
+    
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(num_ibool(NGLOB_AB))
 
     ! ibool file
     local_ibool_file = trim(prname) // 'ibool' // '.bin'
@@ -292,9 +258,7 @@
     
     ne = ne + nelement
 
-    if( USE_EXTERNAL_MESH ) then
-      deallocate(ibool,mask_ibool,num_ibool)
-    endif
+    deallocate(ibool,mask_ibool,num_ibool)
 
   enddo ! num_node
   
@@ -432,44 +396,31 @@
   character(len=150) :: local_file
 
 ! corner locations  
-  if( USE_EXTERNAL_MESH ) then
-    ! reads in coordinate files
-    local_file = trim(prname)//'x.bin'
-    open(unit = 27,file = trim(prname)//'x.bin',status='old',action='read', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
-      print *,'Error opening ',trim(local_file)
-      stop
-    endif
-    read(27) xstore
-    close(27)
-    local_file = trim(prname)//'y.bin'
-    open(unit = 27,file = trim(prname)//'y.bin',status='old',action='read', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
-      print *,'Error opening ',trim(local_file)
-      stop
-    endif
-    read(27) ystore
-    close(27)
-    local_file = trim(prname)//'z.bin'
-    open(unit = 27,file = trim(prname)//'z.bin',status='old',action='read', iostat = ios,form ='unformatted')
-    if (ios /= 0) then
-      print *,'Error opening ',trim(local_file)
-      stop
-    endif
-    read(27) zstore
-    close(27)  
-  else
-    open(unit = 25, file = trim(prname) // 'AVS_DXpoints.txt', status = 'old', iostat = ios)
-    if (ios /= 0) then
-      print *,'Error opening ',trim(prname) // 'AVS_DXpoints.txt'
-      stop
-    endif
-    read(25,*) npoint
-
-    if (it == 1) then
-      npp = npoint * num_node
-    endif
+  ! reads in coordinate files
+  local_file = trim(prname)//'x.bin'
+  open(unit = 27,file = trim(prname)//'x.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  if (ios /= 0) then
+    print *,'Error opening ',trim(local_file)
+    stop
   endif
+  read(27) xstore
+  close(27)
+  local_file = trim(prname)//'y.bin'
+  open(unit = 27,file = trim(prname)//'y.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  if (ios /= 0) then
+    print *,'Error opening ',trim(local_file)
+    stop
+  endif
+  read(27) ystore
+  close(27)
+  local_file = trim(prname)//'z.bin'
+  open(unit = 27,file = trim(prname)//'z.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  if (ios /= 0) then
+    print *,'Error opening ',trim(local_file)
+    stop
+  endif
+  read(27) zstore
+  close(27)  
 
   ! writes out total number of points
   if (it == 1) then
@@ -491,13 +442,9 @@
 
     if(.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob1)
-        y = ystore(iglob1)
-        z = zstore(iglob1)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob1)
+      y = ystore(iglob1)
+      z = zstore(iglob1)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -506,13 +453,9 @@
     endif
     if(.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob2)
-        y = ystore(iglob2)
-        z = zstore(iglob2)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob2)
+      y = ystore(iglob2)
+      z = zstore(iglob2)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -521,13 +464,9 @@
     endif
     if(.not. mask_ibool(iglob3)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob3)
-        y = ystore(iglob3)
-        z = zstore(iglob3)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob3)
+      y = ystore(iglob3)
+      z = zstore(iglob3)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -536,13 +475,9 @@
     endif
     if(.not. mask_ibool(iglob4)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob4)
-        y = ystore(iglob4)
-        z = zstore(iglob4)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob4)
+      y = ystore(iglob4)
+      z = zstore(iglob4)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -551,13 +486,9 @@
     endif
     if(.not. mask_ibool(iglob5)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob5)
-        y = ystore(iglob5)
-        z = zstore(iglob5)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob5)
+      y = ystore(iglob5)
+      z = zstore(iglob5)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -566,13 +497,9 @@
     endif
     if(.not. mask_ibool(iglob6)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob6)
-        y = ystore(iglob6)
-        z = zstore(iglob6)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob6)
+      y = ystore(iglob6)
+      z = zstore(iglob6)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -581,13 +508,9 @@
     endif
     if(.not. mask_ibool(iglob7)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob7)
-        y = ystore(iglob7)
-        z = zstore(iglob7)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob7)
+      y = ystore(iglob7)
+      z = zstore(iglob7)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -596,13 +519,9 @@
     endif
     if(.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
-      if( USE_EXTERNAL_MESH ) then
-        x = xstore(iglob8)
-        y = ystore(iglob8)
-        z = zstore(iglob8)
-      else
-        read(25,*) njunk, x, y, z
-      endif
+      x = xstore(iglob8)
+      y = ystore(iglob8)
+      z = zstore(iglob8)
       call write_real(x)
       call write_real(y)
       call write_real(z)
@@ -610,9 +529,7 @@
       mask_ibool(iglob8) = .true.
     endif
   enddo ! ispec
-  
-  if( .not. USE_EXTERNAL_MESH ) close(25)
-  
+    
   end subroutine combine_vol_data_write_corners
 
 
@@ -723,134 +640,95 @@
   character(len=150) :: local_element_file
 
 
-  if( USE_EXTERNAL_MESH ) then
+  ! outputs total number of elements for all slices
+  if (it == 1) then
+    call write_integer(nee)
+  end if
 
-    ! outputs total number of elements for all slices
-    if (it == 1) then
-      call write_integer(nee)
-    end if
+  num_ibool(:) = 0
+  mask_ibool(:) = .false.
+  numpoin = 0
+  
+  do ispec=1,nspec
+    ! gets corner indices
+    iglob1=ibool(1,1,1,ispec)
+    iglob2=ibool(NGLLX,1,1,ispec)
+    iglob3=ibool(NGLLX,NGLLY,1,ispec)
+    iglob4=ibool(1,NGLLY,1,ispec)
+    iglob5=ibool(1,1,NGLLZ,ispec)
+    iglob6=ibool(NGLLX,1,NGLLZ,ispec)
+    iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
+    iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
-    num_ibool(:) = 0
-    mask_ibool(:) = .false.
-    numpoin = 0
-    
-    do ispec=1,nspec
-      ! gets corner indices
-      iglob1=ibool(1,1,1,ispec)
-      iglob2=ibool(NGLLX,1,1,ispec)
-      iglob3=ibool(NGLLX,NGLLY,1,ispec)
-      iglob4=ibool(1,NGLLY,1,ispec)
-      iglob5=ibool(1,1,NGLLZ,ispec)
-      iglob6=ibool(NGLLX,1,NGLLZ,ispec)
-      iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
-      iglob8=ibool(1,NGLLY,NGLLZ,ispec)
-
-      ! sets increasing numbering
-      if(.not. mask_ibool(iglob1)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob1) = numpoin
-        mask_ibool(iglob1) = .true.          
-      endif
-      if(.not. mask_ibool(iglob2)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob2) = numpoin
-        mask_ibool(iglob2) = .true.        
-      endif
-      if(.not. mask_ibool(iglob3)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob3) = numpoin
-        mask_ibool(iglob3) = .true.        
-      endif
-      if(.not. mask_ibool(iglob4)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob4) = numpoin
-        mask_ibool(iglob4) = .true.        
-      endif
-      if(.not. mask_ibool(iglob5)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob5) = numpoin
-        mask_ibool(iglob5) = .true.        
-      endif
-      if(.not. mask_ibool(iglob6)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob6) = numpoin
-        mask_ibool(iglob6) = .true.        
-      endif
-      if(.not. mask_ibool(iglob7)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob7) = numpoin
-        mask_ibool(iglob7) = .true.        
-      endif
-      if(.not. mask_ibool(iglob8)) then
-        numpoin = numpoin + 1
-        num_ibool(iglob8) = numpoin
-        mask_ibool(iglob8) = .true.        
-      endif
-    
-      ! outputs corner indices (starting with 0 )
-      n1 = num_ibool(iglob1) -1 + np 
-      n2 = num_ibool(iglob2) -1 + np 
-      n3 = num_ibool(iglob3) -1 + np 
-      n4 = num_ibool(iglob4) -1 + np 
-      n5 = num_ibool(iglob5) -1 + np 
-      n6 = num_ibool(iglob6) -1 + np 
-      n7 = num_ibool(iglob7) -1 + np 
-      n8 = num_ibool(iglob8) -1 + np 
-      
-      call write_integer(n1)
-      call write_integer(n2)
-      call write_integer(n3)
-      call write_integer(n4)
-      call write_integer(n5)
-      call write_integer(n6)
-      call write_integer(n7)
-      call write_integer(n8)
-
-    enddo
-
-    ! elements written
-    nelement = nspec
-    
-    ! updates points written
-    np = np + numpoin
-    
-  else
-    local_element_file = trim(prname) // 'AVS_DXelements.txt'
-    open(unit = 26, file = trim(local_element_file), status = 'old', iostat = ios)
-    if (ios /= 0) then
-      print *,'Error opening ',trim(local_element_file)
-      stop
+    ! sets increasing numbering
+    if(.not. mask_ibool(iglob1)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob1) = numpoin
+      mask_ibool(iglob1) = .true.          
     endif
-    print *, trim(local_element_file)
+    if(.not. mask_ibool(iglob2)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob2) = numpoin
+      mask_ibool(iglob2) = .true.        
+    endif
+    if(.not. mask_ibool(iglob3)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob3) = numpoin
+      mask_ibool(iglob3) = .true.        
+    endif
+    if(.not. mask_ibool(iglob4)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob4) = numpoin
+      mask_ibool(iglob4) = .true.        
+    endif
+    if(.not. mask_ibool(iglob5)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob5) = numpoin
+      mask_ibool(iglob5) = .true.        
+    endif
+    if(.not. mask_ibool(iglob6)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob6) = numpoin
+      mask_ibool(iglob6) = .true.        
+    endif
+    if(.not. mask_ibool(iglob7)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob7) = numpoin
+      mask_ibool(iglob7) = .true.        
+    endif
+    if(.not. mask_ibool(iglob8)) then
+      numpoin = numpoin + 1
+      num_ibool(iglob8) = numpoin
+      mask_ibool(iglob8) = .true.        
+    endif
+  
+    ! outputs corner indices (starting with 0 )
+    n1 = num_ibool(iglob1) -1 + np 
+    n2 = num_ibool(iglob2) -1 + np 
+    n3 = num_ibool(iglob3) -1 + np 
+    n4 = num_ibool(iglob4) -1 + np 
+    n5 = num_ibool(iglob5) -1 + np 
+    n6 = num_ibool(iglob6) -1 + np 
+    n7 = num_ibool(iglob7) -1 + np 
+    n8 = num_ibool(iglob8) -1 + np 
+    
+    call write_integer(n1)
+    call write_integer(n2)
+    call write_integer(n3)
+    call write_integer(n4)
+    call write_integer(n5)
+    call write_integer(n6)
+    call write_integer(n7)
+    call write_integer(n8)
 
-    read(26, *) nelement
-    if (it == 1) then
-      nee = nelement * num_node
-      call write_integer(nee)
-    end if
+  enddo
 
-    do i = 1, nelement
-      read(26,*) njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
-      n1 = n1+np-1
-      n2 = n2+np-1
-      n3 = n3+np-1
-      n4 = n4+np-1
-      n5 = n5+np-1
-      n6 = n6+np-1
-      n7 = n7+np-1
-      n8 = n8+np-1
-      call write_integer(n1)
-      call write_integer(n2)
-      call write_integer(n3)
-      call write_integer(n4)
-      call write_integer(n5)
-      call write_integer(n6)
-      call write_integer(n7)
-      call write_integer(n8)
-    enddo
-    close(26)
-  endif
-
+  ! elements written
+  nelement = nspec
+  
+  ! updates points written
+  np = np + numpoin
+    
   end subroutine combine_vol_data_write_corner_elements
   
   
@@ -938,8 +816,6 @@
   nelement = nspec * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) 
   
   ! updates points written
-  if( USE_EXTERNAL_MESH ) then
-    np = np + numpoin
-  endif
+  np = np + numpoin
 
   end subroutine combine_vol_data_write_GLL_elements

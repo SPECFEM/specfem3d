@@ -38,8 +38,8 @@
 ! parameters to be computed based upon parameters above read from file
   integer NPROC
 
-  integer NSPEC_AB, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
+  integer NSPEC_AB, NGLOB_AB
+   !   NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,
 
   double precision DT,HDUR_MOVIE
 
@@ -73,7 +73,7 @@
 ! create include file for the solver
   call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
              ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,0.d0)
+             SIMULATION_TYPE,0.d0)
   print *
   print *,'edit file OUTPUT_FILES/values_from_mesher.h to see some statistics about the mesh'
   print *

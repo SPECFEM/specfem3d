@@ -27,18 +27,17 @@
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
              ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,static_memory_size)
+             SIMULATION_TYPE,static_memory_size)
 
   implicit none
 
   include "constants.h"
 
 ! number of points per surface element
-  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
   integer, parameter :: NGLLSQUARE_NDIM = NGLLSQUARE * NDIM
 
-  integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP, &
-             NPOIN2DMAX_XY,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE
+  integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
+           !  NPOIN2DMAX_XY,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,
 
   logical ATTENUATION,ANISOTROPY
 
@@ -52,7 +51,7 @@
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', 'OUTPUT_FILES/values_from_mesher.h')
 
 ! define maximum size for message buffers
-  NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
+  !NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
 
   open(unit=IOUT,file=HEADER_FILE,status='unknown')
   write(IOUT,*)
@@ -98,6 +97,7 @@
 
 !  write(IOUT,*) '! total elements per AB slice = ',NSPEC_AB
 !  write(IOUT,*) '! total points per AB slice = ',NGLOB_AB
+  write(IOUT,*) '! not valid for external mesh files: total points per AB slice = ',NGLOB_AB
   write(IOUT,*) '! total elements per AB slice = (will be read in external file)'
   write(IOUT,*) '! total points per AB slice = (will be read in external file)'
   write(IOUT,*) '!'
@@ -132,6 +132,7 @@
     write(IOUT,*) '! integer, parameter :: NSPEC_ATTENUATION = ', 1
 !    write(IOUT,*) '! logical, parameter :: ATTENUATION_VAL = .false.'
   endif
+  
   write(IOUT,*)
 
 ! anisotropy

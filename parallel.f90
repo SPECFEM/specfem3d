@@ -584,7 +584,6 @@
 
   integer recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
-
   integer ier
 
   call MPI_IRECV(recvbuf(1),recvcount,MPI_INTEGER,dest,recvtag, &
@@ -592,6 +591,91 @@
 
   end subroutine irecv_i
 
+
+!
+!----
+!
+
+  subroutine recv_i(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  integer recvbuf,recvcount,dest,recvtag
+  integer req(MPI_STATUS_SIZE)
+  integer ier
+  
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag,MPI_COMM_WORLD,req,ier)
+
+  end subroutine recv_i
+
+!
+!----
+!
+
+  subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  include "constants.h"
+  include "precision.h"
+  
+  integer recvcount,dest,recvtag
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+  integer req(MPI_STATUS_SIZE)
+  integer ier
+  
+  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag,MPI_COMM_WORLD,req,ier)
+
+
+  end subroutine recvv_cr
+
+
+!
+!----
+!
+
+  subroutine send_i(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  integer sendbuf,sendcount,dest,sendtag
+  integer ier
+  
+  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,MPI_COMM_WORLD,ier)
+
+  end subroutine send_i
+
+
+!
+!----
+!
+
+  subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  include "constants.h"
+  include "precision.h"
+
+  integer sendcount,dest,sendtag
+  real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
+  integer ier
+
+  call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,MPI_COMM_WORLD,ier)
+
+  end subroutine sendv_cr
 !
 !----
 !

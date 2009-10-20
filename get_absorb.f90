@@ -157,7 +157,9 @@
   end subroutine get_absorb
 
 
-
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine get_absorb_ext_mesh(myrank,iboun,nspec, &
         nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &

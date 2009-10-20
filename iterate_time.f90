@@ -88,18 +88,20 @@
 ! update acceleration 
 ! shared points between processors only
     if(USE_DEVILLE_PRODUCTS) then    
-      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
-         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
-         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
-         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
-         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
-         nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
-         veloc,rho_vp,rho_vs,jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom, &
-         normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom) 
+      call compute_forces_with_Deville( .false. ,NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,&
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                      kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh, &
+                      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                      xi_source,eta_source,gamma_source,nu_source, &
+                      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
+                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
+                      ABSORBING_CONDITIONS, &
+                      absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
+                      absorbing_boundary_ijk,absorbing_boundary_ispec, &
+                      num_absorbing_boundary_faces, &                      
+                      veloc,rho_vp,rho_vs) 
     else
       call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -117,18 +119,20 @@
 ! update acceleration 
 ! points inside processor's partition only
     if(USE_DEVILLE_PRODUCTS) then
-      call compute_forces_with_Deville(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source, &
-         hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
-         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-         epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,ABSORBING_CONDITIONS, &
-         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext, &
-         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom, &
-         nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
-         veloc,rho_vp,rho_vs,jacobian2D_xmin,jacobian2D_xmax,jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom, &
-         normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom)
+      call compute_forces_with_Deville( .true., NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,&
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                      kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh, &
+                      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                      xi_source,eta_source,gamma_source,nu_source, &
+                      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
+                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
+                      ABSORBING_CONDITIONS, &
+                      absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
+                      absorbing_boundary_ijk,absorbing_boundary_ispec, &
+                      num_absorbing_boundary_faces, &
+                      veloc,rho_vp,rho_vs)
     else
       call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
          hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -190,12 +194,12 @@
 
 ! shakemap creation
     if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
-      call setup_movie_meshes_create_shakemap()
+      call iterate_time_create_shakemap_ext_mesh()
     endif 
 
 ! movie file creation
     if(EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-      call setup_movie_meshes_create_movie_surface()
+      call iterate_time_create_movie_surface_ext_mesh()
     endif
 
 ! save MOVIE on the SURFACE
@@ -333,7 +337,6 @@
   subroutine iterate_time_ocean_load()
   
   use specfem_par
-    
 
 !   initialize the updates
   updated_dof_ocean_load(:) = .false.
@@ -636,7 +639,7 @@
 
 ! creation of shapemap file
   
-  subroutine iterate_time_create_shakemap()
+  subroutine iterate_time_create_shakemap_ext_mesh()
   
   use specfem_par
 
@@ -811,7 +814,7 @@
     endif
   endif
   
-  end subroutine iterate_time_create_shakemap
+  end subroutine iterate_time_create_shakemap_ext_mesh
   
   
 !================================================================
@@ -819,7 +822,7 @@
   
 ! creation of moviedata files  
 
-  subroutine iterate_time_create_movie_surface()
+  subroutine iterate_time_create_movie_surface_ext_mesh()
   use specfem_par
   
 ! get coordinates of surface mesh and surface displacement
@@ -913,7 +916,7 @@
     close(IOUT)
   endif
   
-  end subroutine iterate_time_create_movie_surface
+  end subroutine iterate_time_create_movie_surface_ext_mesh
 
     
 !=====================================================================

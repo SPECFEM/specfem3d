@@ -87,5 +87,53 @@
 
   end subroutine memory_eval
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! compute the approximate amount of static memory needed to run the mesher
+
+ subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,ninterface_ext_mesh, &
+              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top,&
+              static_memory_size_request)
+
+  implicit none
+
+  include "constants.h"
+  
+  integer :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,ninterface_ext_mesh, &
+           max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top
+
+  integer :: static_memory_size_request
+  
+  integer :: static_memory_size
+  
+! memory usage, in generate_database() routine so far
+  static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
+        + NDIM*nnodes_ext_mesh*8 + ESIZE*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
+        + 5*nmat_ext_mesh*8 + 3*ninterface_ext_mesh + 6*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
+        + NGLLX*NGLLX*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
+        + nspec2D_xmin*20 + nspec2D_xmax*20 + nspec2D_ymin*20 + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20 
+
+! memory usage, in create_regions_mesh_ext_mesh() routine requested approximately
+  static_memory_size_request =   &
+        + 3*NGNOD*8 + NGLLX*NGLLY*NGLLZ*nspec*4 + 6*nspec*1 + 6*NGLLX*8 &
+        + NGNOD*NGLLX*NGLLY*NGLLZ*8 + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*8 &
+        + 4*NGNOD2D*NGLLY*NGLLZ*8 + 4*NDIM2D*NGNOD2D*NGLLX*NGLLY*8 &
+        + 17*NGLLX*NGLLY*NGLLY*nspec*CUSTOM_REAL &
+        + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmin*CUSTOM_REAL + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmax*CUSTOM_REAL &
+        + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymin*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymax*CUSTOM_REAL &
+        + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*CUSTOM_REAL &
+        + 2*npointot*4 + npointot + 3*npointot*8 
+
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '  minimum memory used so far     : ',static_memory_size / 1024. / 1024.,&
+                   'MB per process'            
+    write(IMAIN,*) '  minimum total memory requested : ',(static_memory_size+static_memory_size_request)/1024./1024.,&
+                   'MB per process'
+    write(IMAIN,*)            
+  endif
 
 
+  end subroutine memory_eval_mesher
