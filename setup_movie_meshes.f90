@@ -244,9 +244,10 @@
     endif
   enddo ! NSPEC_AB
 
-  if (myrank == 0) then
-    print *, nfaces_perproc_surface_ext_mesh
-    print *, nfaces_surface_glob_ext_mesh
+  if (myrank == 0) then 
+    write(IMAIN,*) 'movie:  nfaces_surface_external_mesh   = ',nfaces_surface_external_mesh
+    write(IMAIN,*) 'movie: nfaces_perproc_surface_ext_mesh = ',nfaces_perproc_surface_ext_mesh
+    write(IMAIN,*) 'movie: nfaces_surface_glob_ext_mesh    = ',nfaces_surface_glob_ext_mesh
   endif
 
   

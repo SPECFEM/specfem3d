@@ -56,6 +56,9 @@
   integer, parameter :: NGLLY = NGLLX
   integer, parameter :: NGLLZ = NGLLX
 
+! number of points per surface element
+  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
+
 ! for optimized routines by Deville et al. (2002)
   integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
 
@@ -85,6 +88,15 @@
 ! was found by trial and error
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
+! decide if master process writes all the seismograms or if all processes do it in parallel
+  logical, parameter :: WRITE_SEISMOGRAMS_BY_MASTER = .false.
+
+! use directory OUTPUT_FILES/ for seismogram output  
+  logical,parameter :: USE_OUTPUT_FILES_PATH = .true.
+
+! absorb top surface ( defined in mesh as 'free_surface_file' )
+  logical,parameter :: ABSORB_FREE_SURFACE = .false.
+
 ! ---------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily,
 !        we need to move them to Par_file at a proper time
@@ -105,8 +117,6 @@
 ! nlegoff -- Variables that should be read/computed elsewhere.
 !            Temporarily declared here.
 !------------------------------------------------------
-! whether or not an external mesh is used (provided by CUBIT for example)
-  logical, parameter :: USE_EXTERNAL_MESH = .true.
 
 ! no lagrange interpolation on seismograms (we take the value on one NGLL point)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
@@ -268,4 +278,8 @@
 !  double precision, parameter :: ORIG_Y_BASEMENT = 3655000.
 !  double precision, parameter :: SPACING_X_BASEMENT = 1000.
 !  double precision, parameter :: SPACING_Y_BASEMENT = 1000.
+!
+! SPECFEM3D_SESAME needs external mesh from now on...
+! whether or not an external mesh is used (provided by CUBIT for example)
+!  logical, parameter :: USE_EXTERNAL_MESH = .true.
 

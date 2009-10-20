@@ -70,9 +70,22 @@
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
 ! check that optimized routines from Deville et al. (2002) can be used
-  if(NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
-    stop 'optimized routines from Deville et al. (2002) such as mxm_m1_m2_5points can only be used if NGLL = 5'
+  if( USE_DEVILLE_PRODUCTS) then
+    if(NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
+      stop 'optimized routines from Deville et al. (2002) such as mxm_m1_m2_5points can only be used if NGLL = 5'
+  endif
+  
+! absorbing surfaces
+ if( ABSORBING_CONDITIONS ) then
+    if( .not. USE_DEVILLE_PRODUCTS ) stop 'ABSORPTION only implemented for USE_DEVILLE_PRODUCTS routine'
 
+    ! for arbitrary orientation of elements, which face belongs to xmin... -
+    ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
+    ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
+    ! just to be sure for now..
+    if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
+        stop 'must have NGLLX = NGLLY = NGLLZ'  
+  endif
   
 ! chris: DT_ext_mesh & NSTE_ext_mesh were in constants.h, I suppressed it, now it is Par_file & read in 
 ! read_parameters_file.f90

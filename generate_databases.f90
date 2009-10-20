@@ -25,13 +25,6 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 !
-
-  subroutine generate_databases
-
-  implicit none
-
-  include "constants.h"
-
 !=============================================================================!
 !                                                                             !
 !  generate_databases produces a spectral element grid                        !
@@ -187,11 +180,18 @@
 !
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  module generate_databases_par
+
+  implicit none
+
+  include "constants.h"
+
 ! number of spectral elements in each block
   integer nspec,npointot
-
-! auxiliary variables to generate the mesh
-!  integer ix,iy
 
 ! parameters needed to store the radii of the grid points
 !  integer, dimension(:), allocatable :: idoubling
@@ -239,10 +239,12 @@
   double precision :: max_static_memory_size,max_static_memory_size_request
 
 ! this for all the regions
-  integer NSPEC_AB,NGLOB_AB, &
-               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
+  integer NSPEC_AB,NGLOB_AB
+  
+  integer NSPEC2D_BOTTOM,NSPEC2D_TOP
+  
+!  integer NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX, &
+!          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
 
   double precision min_elevation,max_elevation
   double precision min_elevation_all,max_elevation_all
@@ -278,9 +280,13 @@
   integer, dimension(:,:), allocatable :: mat_ext_mesh
 
   ! pll
-  double precision, dimension(:,:), allocatable :: materials_ext_mesh
+  double precision, dimension(:,:), allocatable :: materials_ext_mesh  
   integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
-  integer  :: ispec2D, boundary_number
+  integer, dimension(:,:), allocatable  :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
+              nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
+
+
+  integer  :: ispec2D, boundary_number,j
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
     
@@ -291,8 +297,19 @@
 
   integer :: nglob,nglob_total,nspec_total
 
-! ************** PROGRAM STARTS HERE **************
+! auxiliary variables to generate the mesh
+!  integer ix,iy
+  
+  end module
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine generate_databases
+
+  use generate_databases_par
+  
 ! sizeprocs returns number of processes started (should be equal to NPROC).
 ! myrank is the rank of each process, between 0 and NPROC-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything
@@ -329,134 +346,12 @@
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
 
-  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
-    stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
-  endif
-
-! info about external mesh simulation
-! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
-! chris -- once the steps in decompose_mesh_SCOTCH are integrated into generate_database.f90,
-! NPROC will be known
-
-! Need to initialize NPROC_AB, put this call back in as a result
-! compute other parameters based upon values read
-!  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-!      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-!      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-!      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-!      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-!      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-!      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
-
-! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
-    write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
-    call exit_MPI(myrank,'wrong number of MPI processes')
-  endif
-
-  if(myrank == 0) then
-    write(IMAIN,*) 'This is process ',myrank
-    write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
-    write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
-    write(IMAIN,*)
-    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
-    write(IMAIN,*)
-    write(IMAIN,*) 'NGLLX = ',NGLLX
-    write(IMAIN,*) 'NGLLY = ',NGLLY
-    write(IMAIN,*) 'NGLLZ = ',NGLLZ
-
-    write(IMAIN,*)
-    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
-    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
-    write(IMAIN,*)
-  endif
-
-! check that reals are either 4 or 8 bytes
-  if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
-
-  if(NGNOD /= 8) call exit_MPI(myrank,'number of control nodes must be 8')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 points should have NGNOD2D = 4')
-
-! for the number of standard linear solids for attenuation
-  if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
-
-  if(myrank == 0) then
-! chris: I am not sure if we should suppress the following. topography should appear in the external mesh
-! leave it for now
-    write(IMAIN,*)
-    if(TOPOGRAPHY) then
-      write(IMAIN,*) 'incorporating surface topography'
-    else
-      write(IMAIN,*) 'no surface topography'
-    endif
-
-    write(IMAIN,*)
-    if(SUPPRESS_UTM_PROJECTION) then
-      write(IMAIN,*) 'suppressing UTM projection'
-    else
-      write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
-    endif
-
-    write(IMAIN,*)
-    if(ATTENUATION) then
-      write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
-      if(USE_OLSEN_ATTENUATION) then
-        write(IMAIN,*) 'using Olsen''s attenuation'
-      else
-        write(IMAIN,*) 'not using Olsen''s attenuation'
-      endif
-    else
-      write(IMAIN,*) 'no attenuation'
-    endif
-
-    write(IMAIN,*)
-    if(OCEANS) then
-      write(IMAIN,*) 'incorporating the oceans using equivalent load'
-    else
-      write(IMAIN,*) 'no oceans'
-    endif
-
-    write(IMAIN,*)
-
-  endif
-
-! read topography and bathymetry file
-  if(TOPOGRAPHY .or. OCEANS) then
-
-! for Southern California
-    NX_TOPO = NX_TOPO_SOCAL
-    NY_TOPO = NY_TOPO_SOCAL
-    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-    topo_file = TOPO_FILE_SOCAL
-
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
-
-    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
-
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
-      write(IMAIN,*)
-    endif
-
-  endif
-
-!! read basement map
-!  if(BASEMENT_MAP) then
-!    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
-!    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
-!    do ix=1,NX_BASEMENT
-!      do iy=1,NY_BASEMENT
-!        read(55,*) iz_basement
-!        z_basement(ix,iy) = dble(iz_basement)
-!      enddo
-!    enddo
-!    close(55)
-!  endif
-
+! checks user input parameters for mesher to run
+  call generate_databases_check_parameters()
+  
+! reads topography and bathymetry file
+  call generate_databases_read_topography()
+  
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
@@ -465,269 +360,46 @@
     write(IMAIN,*)
   endif
 
-! read databases about external mesh simulation
+! reads Databases files
+  call generate_databases_read_partition_files()
 
-  call create_name_database(prname,myrank,LOCAL_PATH)
-  open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted',iostat=ier)
-  if( ier /= 0 ) then
-    write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database'
-    write(IMAIN,*) 'make sure file exists'
-    call exit_mpi(myrank,'error opening database file')
-  endif
-  read(IIN,*) nnodes_ext_mesh
-  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
-  do inode = 1, nnodes_ext_mesh
-     read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), nodes_coords_ext_mesh(3,inode)
-  enddo
-
-
-  if(myrank == 0) then
-    write(IMAIN,*) '  external mesh points: ',nnodes_ext_mesh
-  endif
-  call sync_all()
-
-! read materials' physical properties
-  read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
-  allocate(materials_ext_mesh(5,nmat_ext_mesh))
-  allocate(undef_mat_prop(5,nundefMat_ext_mesh))
-  do imat = 1, nmat_ext_mesh
-     ! format:        # rho   # vp  # vs  # Q_flag  # 0   
-     read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
-          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
-  end do
-
-  if(myrank == 0) then
-    write(IMAIN,*) '  defined materials: ',nmat_ext_mesh
-  endif
-  call sync_all()
-
-  do imat = 1, nundefMat_ext_mesh
-     read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
-          undef_mat_prop(5,imat)
-  end do
-
-  if(myrank == 0) then
-    write(IMAIN,*) '  undefined materials: ',nundefMat_ext_mesh
-  endif
-  call sync_all()
-
-
-  read(IIN,*) nelmnts_ext_mesh
-  allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
-  allocate(mat_ext_mesh(2,nelmnts_ext_mesh))
-  do ispec = 1, nelmnts_ext_mesh
-     read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
-          elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
-          elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
-  enddo
-  NSPEC_AB = nelmnts_ext_mesh
-
-  if(myrank == 0) then
-    write(IMAIN,*) '  spectral elements: ',NSPEC_AB
-  endif
-  call sync_all()
-
-
-! read boundaries
-  read(IIN,*) boundary_number ,nspec2D_xmin
-  if(boundary_number /= 1) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_xmax
-  if(boundary_number /= 2) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_ymin
-  if(boundary_number /= 3) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_ymax
-  if(boundary_number /= 4) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_bottom_ext
-  if(boundary_number /= 5) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_top_ext
-  if(boundary_number /= 6) stop "Error : invalid database file"
-  NSPEC2DMAX_XMIN_XMAX = max(nspec2D_xmin,nspec2D_xmax)
-  NSPEC2DMAX_YMIN_YMAX = max(nspec2D_ymin,nspec2D_ymax)
-  NSPEC2D_BOTTOM = nspec2D_bottom_ext
-  NSPEC2D_TOP = nspec2D_top_ext
-
-  allocate(ibelm_xmin(nspec2D_xmin))
-  do ispec2D = 1,nspec2D_xmin
-     read(IIN,*) ibelm_xmin(ispec2D)
-  end do
-
-  allocate(ibelm_xmax(nspec2D_xmax))
-  do ispec2D = 1,nspec2D_xmax
-     read(IIN,*) ibelm_xmax(ispec2D)
-  end do
-
-  allocate(ibelm_ymin(nspec2D_ymin))
-  do ispec2D = 1,nspec2D_ymin
-     read(IIN,*) ibelm_ymin(ispec2D)
-  end do
-
-  allocate(ibelm_ymax(nspec2D_ymax))
-  do ispec2D = 1,nspec2D_ymax
-     read(IIN,*) ibelm_ymax(ispec2D)
-  end do
-
-  allocate(ibelm_bottom(nspec2D_bottom_ext))
-  do ispec2D = 1,nspec2D_bottom_ext
-     read(IIN,*) ibelm_bottom(ispec2D)
-  end do
-
-  allocate(ibelm_top(nspec2D_top_ext))
-  do ispec2D = 1,nspec2D_top_ext
-     read(IIN,*) ibelm_top(ispec2D)
-  end do
-
-  if(myrank == 0) then
-    write(IMAIN,*) '  absorbing boundaries: '
-    write(IMAIN,*) '    xmin,xmax: ',nspec2D_xmin,nspec2D_xmax
-    write(IMAIN,*) '    ymin,ymax: ',nspec2D_ymin,nspec2D_ymax
-    write(IMAIN,*) '    bottom,top: ',nspec2D_bottom_ext,nspec2D_top_ext
-    write(IMAIN,*) '    xmin_xmax,ymin_ymax: ',NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX
-  endif
-  call sync_all()
-
-  read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
-  allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
-  allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,ninterface_ext_mesh))
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh))
-  allocate(nibool_interfaces_ext_mesh(ninterface_ext_mesh))
-  do num_interface = 1, ninterface_ext_mesh
-     read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
-     do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
-        read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
-             my_interfaces_ext_mesh(3,ie,num_interface), my_interfaces_ext_mesh(4,ie,num_interface), &
-             my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
-     enddo
-  enddo
-  close(IIN)
-
-  if(myrank == 0) then
-    write(IMAIN,*) '  partition interfaces: ',ninterface_ext_mesh
-  endif
-  call sync_all()
-
-
-! assign theoretical number of elements
-  nspec = NSPEC_AB
-
-! compute maximum number of points
-  npointot = nspec * NGLLCUBE
-
-! make sure everybody is synchronized
-  call sync_all()
-
-! use dynamic allocation to allocate memory for arrays
-!  allocate(idoubling(nspec))
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-
-! exit if there is not enough memory to allocate all the arrays
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
-! memory usage, in generate_database() routine so far
-  max_static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
-        + NDIM*nnodes_ext_mesh*8 + ESIZE*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
-        + 5*nmat_ext_mesh*8 + 3*ninterface_ext_mesh + 6*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
-        + NGLLX*NGLLX*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
-        + nspec2D_xmin*4 + nspec2D_xmax*4 + nspec2D_ymin*4 + nspec2D_ymax*4 + nspec2D_bottom*4 + nspec2D_top*4 
-
-! memory usage, in create_regions_mesh_ext_mesh() routine requested approximately
-  max_static_memory_size_request = 2*2*nspec2dmax_ymin_ymax*4 + 2*2*nspec2dmax_xmin_xmax*4 &
-        + 3*NGNOD*8 + NGLLX*NGLLY*NGLLZ*nspec*4 + 6*nspec*1 + 6*NGLLX*8 &
-        + NGNOD*NGLLX*NGLLY*NGLLZ*8 + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*8 &
-        + 4*NGNOD2D*NGLLY*NGLLZ*8 + 4*NDIM2D*NGNOD2D*NGLLX*NGLLY*8 &
-        + 17*NGLLX*NGLLY*NGLLY*nspec*CUSTOM_REAL &
-        + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmin*CUSTOM_REAL + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmax*CUSTOM_REAL &
-        + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymin*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymax*CUSTOM_REAL &
-        + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*CUSTOM_REAL &
-        + 2*npointot*4 + npointot + 3*npointot*8 
-
-  call sync_all()
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) '  minimum memory used so far     : ',max_static_memory_size / 1024. / 1024.,&
-                   'MB per process'            
-    write(IMAIN,*) '  minimum total memory requested : ',(max_static_memory_size+max_static_memory_size_request)/1024./1024.,&
-                   'MB per process'
-    write(IMAIN,*)            
-  endif
-  max_static_memory_size = max_static_memory_size_request    
-
-! create all the regions of the mesh
-  if(myrank == 0) then
-    write(IMAIN,*) 'create regions: '
-  endif
-  call create_regions_mesh_ext_mesh(ibool, &
-       xstore, ystore, zstore, nspec, npointot, myrank, LOCAL_PATH, &
-       nnodes_ext_mesh, nelmnts_ext_mesh, &
-       nodes_coords_ext_mesh, elmnts_ext_mesh, max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
-       nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, ninterface_ext_mesh, max_interface_size_ext_mesh, &
-       my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-       ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
-       nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP,&
-       NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX, &
-       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
-       SAVE_MESH_FILES,nglob)
-
-! defines global number of nodes in model
-  NGLOB_AB = nglob
-
-! print min and max of topography included
-  if(TOPOGRAPHY) then
-
-! compute the maximum of the maxima for all the slices using an MPI reduction
-    call min_all_dp(min_elevation,min_elevation_all)
-    call max_all_dp(max_elevation,max_elevation_all)
-
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
-      write(IMAIN,*)
-    endif
-  endif
-
-  deallocate(ibool,xstore,ystore,zstore)
-
-! make sure everybody is synchronized
-  call sync_all()
-
+! external mesh creation
+  call generate_databases_setup_mesh()
 
 !--- print number of points and elements in the mesh
   call sum_all_i(NGLOB_AB,nglob_total)
   call sum_all_i(NSPEC_AB,nspec_total)
-  
+  call sync_all()  
   if(myrank == 0) then
 
-  write(IMAIN,*)
-  write(IMAIN,*) 'Repartition of elements:'
-  write(IMAIN,*) '-----------------------'
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
-  write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total     ! NSPEC_AB*NPROC
-  write(IMAIN,*) 'total number of points in entire mesh: ',nglob_total        !NGLOB_AB*NPROC
-  write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*NDIM   !NGLOB_AB*NPROC*NDIM
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
-  write(IMAIN,*)
+    write(IMAIN,*)
+    write(IMAIN,*) 'Repartition of elements:'
+    write(IMAIN,*) '-----------------------'
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
+    write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total     ! NSPEC_AB*NPROC
+    write(IMAIN,*) 'total number of points in entire mesh: ',nglob_total        !NGLOB_AB*NPROC
+    write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*NDIM   !NGLOB_AB*NPROC*NDIM
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
+    write(IMAIN,*)
 
-! write information about precision used for floating-point operations
-  if(CUSTOM_REAL == SIZE_REAL) then
-    write(IMAIN,*) 'using single precision for the calculations'
-  else
-    write(IMAIN,*) 'using double precision for the calculations'
-  endif
-  write(IMAIN,*)
-  write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
-  write(IMAIN,*)
+    ! write information about precision used for floating-point operations
+    if(CUSTOM_REAL == SIZE_REAL) then
+      write(IMAIN,*) 'using single precision for the calculations'
+    else
+      write(IMAIN,*) 'using double precision for the calculations'
+    endif
+    write(IMAIN,*)
+    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
+    write(IMAIN,*)
 
-! copy number of elements and points in an include file for the solver
-  call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
-             ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,SIMULATION_TYPE,max_static_memory_size)
+    ! copy number of elements and points in an include file for the solver
+    call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
+               ATTENUATION,ANISOTROPY,NSTEP,DT, &
+               SIMULATION_TYPE,max_static_memory_size)
 
 !  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
 !  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
@@ -798,4 +470,403 @@
   call sync_all()
 
   end subroutine generate_databases
+  
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine generate_databases_check_parameters
+
+! checks user input parameters
+
+  use generate_databases_par
+
+  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
+    stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+  endif
+
+! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
+! just to be sure for now..
+  if( ABSORBING_CONDITIONS ) then
+    if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
+      stop 'must have NGLLX = NGLLY = NGLLZ for external meshes'  
+  endif
+
+! info about external mesh simulation
+! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
+! chris -- once the steps in decompose_mesh_SCOTCH are integrated into generate_database.f90,
+! NPROC will be known
+
+! Need to initialize NPROC_AB, put this call back in as a result
+! compute other parameters based upon values read
+!  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+!      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+!      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+!      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+!      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+
+! check that the code is running with the requested nb of processes
+  if(sizeprocs /= NPROC) then
+    write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
+    write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
+    call exit_MPI(myrank,'wrong number of MPI processes')
+  endif
+
+  if(myrank == 0) then
+    write(IMAIN,*) 'This is process ',myrank
+    write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
+    write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
+    write(IMAIN,*)
+    write(IMAIN,*) 'There is a total of ',NPROC,' slices'
+    write(IMAIN,*)
+    write(IMAIN,*) 'NGLLX = ',NGLLX
+    write(IMAIN,*) 'NGLLY = ',NGLLY
+    write(IMAIN,*) 'NGLLZ = ',NGLLZ
+
+    write(IMAIN,*)
+    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
+    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
+    write(IMAIN,*)
+  endif
+
+! check that reals are either 4 or 8 bytes
+  if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
+    call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
+
+  if(NGNOD /= 8) call exit_MPI(myrank,'number of control nodes must be 8')
+  if(NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 points should have NGNOD2D = 4')
+
+! for the number of standard linear solids for attenuation
+  if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
+
+  if(myrank == 0) then
+! chris: I am not sure if we should suppress the following. topography should appear in the external mesh
+! leave it for now
+    write(IMAIN,*)
+    if(TOPOGRAPHY) then
+      write(IMAIN,*) 'incorporating surface topography'
+    else
+      write(IMAIN,*) 'no surface topography'
+    endif
+
+    write(IMAIN,*)
+    if(SUPPRESS_UTM_PROJECTION) then
+      write(IMAIN,*) 'suppressing UTM projection'
+    else
+      write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
+    endif
+
+    write(IMAIN,*)
+    if(ATTENUATION) then
+      write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+      if(USE_OLSEN_ATTENUATION) then
+        write(IMAIN,*) 'using Olsen''s attenuation'
+      else
+        write(IMAIN,*) 'not using Olsen''s attenuation'
+      endif
+    else
+      write(IMAIN,*) 'no attenuation'
+    endif
+
+    write(IMAIN,*)
+    if(OCEANS) then
+      write(IMAIN,*) 'incorporating the oceans using equivalent load'
+    else
+      write(IMAIN,*) 'no oceans'
+    endif
+
+    write(IMAIN,*)
+
+  endif
+
+  end subroutine generate_databases_check_parameters
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine generate_databases_read_topography
+
+! reads in topography files
+
+  use generate_databases_par
+
+  if(TOPOGRAPHY .or. OCEANS) then
+
+! for Southern California
+    NX_TOPO = NX_TOPO_SOCAL
+    NY_TOPO = NY_TOPO_SOCAL
+    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+    topo_file = TOPO_FILE_SOCAL
+
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+
+    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
+
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
+      write(IMAIN,*)
+    endif
+
+  endif
+
+!! read basement map
+!  if(BASEMENT_MAP) then
+!    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
+!    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
+!    do ix=1,NX_BASEMENT
+!      do iy=1,NY_BASEMENT
+!        read(55,*) iz_basement
+!        z_basement(ix,iy) = dble(iz_basement)
+!      enddo
+!    enddo
+!    close(55)
+!  endif
+
+  end subroutine generate_databases_read_topography
+  
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine generate_databases_read_partition_files
+
+! reads in proc***_Databases files
+
+  use generate_databases_par
+
+! read databases about external mesh simulation
+! global node coordinates
+  call create_name_database(prname,myrank,LOCAL_PATH)
+  open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted',iostat=ier)
+  if( ier /= 0 ) then
+    write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database'
+    write(IMAIN,*) 'make sure file exists'
+    call exit_mpi(myrank,'error opening database file')
+  endif
+  read(IIN,*) nnodes_ext_mesh
+  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
+  do inode = 1, nnodes_ext_mesh
+     read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), &
+                nodes_coords_ext_mesh(3,inode)
+  enddo
+
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  external mesh points: ',nnodes_ext_mesh
+  endif
+  call sync_all()
+
+! read materials' physical properties
+  read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
+  allocate(materials_ext_mesh(5,nmat_ext_mesh))
+  allocate(undef_mat_prop(5,nundefMat_ext_mesh))
+  do imat = 1, nmat_ext_mesh
+     ! format:        # rho   # vp  # vs  # Q_flag  # 0   
+     read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
+          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
+  end do
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  defined materials: ',nmat_ext_mesh
+  endif
+  call sync_all()
+
+  do imat = 1, nundefMat_ext_mesh
+     read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
+          undef_mat_prop(5,imat)
+  end do
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  undefined materials: ',nundefMat_ext_mesh
+  endif
+  call sync_all()
+
+! element indexing
+  read(IIN,*) nelmnts_ext_mesh
+  allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
+  allocate(mat_ext_mesh(2,nelmnts_ext_mesh))
+  do ispec = 1, nelmnts_ext_mesh
+     read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
+          elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
+          elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
+  enddo
+  NSPEC_AB = nelmnts_ext_mesh
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  spectral elements: ',NSPEC_AB
+  endif
+  call sync_all()
+
+
+! read boundaries
+  read(IIN,*) boundary_number ,nspec2D_xmin
+  if(boundary_number /= 1) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_xmax
+  if(boundary_number /= 2) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_ymin
+  if(boundary_number /= 3) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_ymax
+  if(boundary_number /= 4) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_bottom_ext
+  if(boundary_number /= 5) stop "Error : invalid database file"
+  read(IIN,*) boundary_number ,nspec2D_top_ext
+  if(boundary_number /= 6) stop "Error : invalid database file"
+
+  NSPEC2D_BOTTOM = nspec2D_bottom_ext
+  NSPEC2D_TOP = nspec2D_top_ext
+
+!  NSPEC2DMAX_XMIN_XMAX = max(nspec2D_xmin,nspec2D_xmax)
+!  NSPEC2DMAX_YMIN_YMAX = max(nspec2D_ymin,nspec2D_ymax)
+
+  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(4,nspec2D_xmin))
+  do ispec2D = 1,nspec2D_xmin
+     read(IIN,*) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
+  end do
+
+  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(4,nspec2D_xmax))
+  do ispec2D = 1,nspec2D_xmax
+     read(IIN,*) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,4)
+  end do
+
+  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(4,nspec2D_ymin))
+  do ispec2D = 1,nspec2D_ymin
+     read(IIN,*) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,4)
+  end do
+
+  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(4,nspec2D_ymax))
+  do ispec2D = 1,nspec2D_ymax
+     read(IIN,*) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,4)
+  end do
+
+  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(4,nspec2D_bottom_ext))
+  do ispec2D = 1,nspec2D_bottom_ext
+     read(IIN,*) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,4)
+  end do
+
+  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(4,nspec2D_top_ext))
+  do ispec2D = 1,nspec2D_top_ext
+     read(IIN,*) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,4)
+  end do
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  absorbing boundaries: '
+    write(IMAIN,*) '    xmin,xmax: ',nspec2D_xmin,nspec2D_xmax
+    write(IMAIN,*) '    ymin,ymax: ',nspec2D_ymin,nspec2D_ymax
+    write(IMAIN,*) '    bottom,top: ',nspec2D_bottom_ext,nspec2D_top_ext
+    !write(IMAIN,*) '    xmin_xmax,ymin_ymax: ',NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX
+  endif
+  call sync_all()
+
+! MPI interfaces between different partitions
+  read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
+  allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
+  allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,ninterface_ext_mesh))
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh))
+  allocate(nibool_interfaces_ext_mesh(ninterface_ext_mesh))
+  do num_interface = 1, ninterface_ext_mesh
+     read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
+     do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
+        read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
+             my_interfaces_ext_mesh(3,ie,num_interface), my_interfaces_ext_mesh(4,ie,num_interface), &
+             my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
+     enddo
+  enddo
+  close(IIN)
+
+  if(myrank == 0) then
+    write(IMAIN,*) '  number of MPI partition interfaces: ',ninterface_ext_mesh
+  endif
+  call sync_all()
+  
+  end subroutine generate_databases_read_partition_files
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine generate_databases_setup_mesh
+
+! mesh creation for static solver
+
+  use generate_databases_par
+
+! assign theoretical number of elements
+  nspec = NSPEC_AB
+
+! compute maximum number of points
+  npointot = nspec * NGLLCUBE
+
+! use dynamic allocation to allocate memory for arrays
+!  allocate(idoubling(nspec))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) 
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+  call memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh,&
+              nelmnts_ext_mesh,nmat_ext_mesh,ninterface_ext_mesh, &
+              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,&
+              nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top,&
+              max_static_memory_size_request)
+                            
+  max_static_memory_size = max_static_memory_size_request    
+
+! make sure everybody is synchronized
+  call sync_all()
+
+! main working routine to create all the regions of the mesh
+  if(myrank == 0) then
+    write(IMAIN,*) 'create regions: '
+  endif
+  
+  call create_regions_mesh_ext_mesh(ibool, &
+                xstore, ystore, zstore, nspec, npointot, myrank, LOCAL_PATH, &
+                nnodes_ext_mesh, nelmnts_ext_mesh, &
+                nodes_coords_ext_mesh, elmnts_ext_mesh, &
+                max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
+                nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
+                ninterface_ext_mesh, max_interface_size_ext_mesh, &
+                my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
+                my_interfaces_ext_mesh, &
+                ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
+                nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
+                NSPEC2D_BOTTOM, NSPEC2D_TOP,&
+                ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
+                nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
+                nodes_ibelm_bottom,nodes_ibelm_top, &
+                SAVE_MESH_FILES,nglob)
+
+  call sync_all()
+
+! defines global number of nodes in model
+  NGLOB_AB = nglob
+
+! print min and max of topography included
+  if(TOPOGRAPHY) then
+
+! compute the maximum of the maxima for all the slices using an MPI reduction
+    call min_all_dp(min_elevation,min_elevation_all)
+    call max_all_dp(max_elevation,max_elevation_all)
+
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
+      write(IMAIN,*)
+    endif
+  endif
+
+  deallocate(ibool,xstore,ystore,zstore)
+
+! make sure everybody is synchronized
+  call sync_all()
+
+  end subroutine generate_databases_setup_mesh

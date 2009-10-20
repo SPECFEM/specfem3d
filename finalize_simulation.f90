@@ -60,11 +60,11 @@
   endif
 
   if(ABSORBING_CONDITIONS .and. (SIMULATION_TYPE == 3 .or. (SIMULATION_TYPE == 1 .and. SAVE_FORWARD))) then
-    if (nspec2D_xmin > 0) close(31)
-    if (nspec2D_xmax > 0) close(32)
-    if (nspec2D_ymin > 0) close(33)
-    if (nspec2D_ymax > 0) close(34)
-    if (NSPEC2D_BOTTOM > 0) close(35)
+    !if (nspec2D_xmin > 0) close(31)
+    !if (nspec2D_xmax > 0) close(32)
+    !if (nspec2D_ymin > 0) close(33)
+    !if (nspec2D_ymax > 0) close(34)
+    !if (NSPEC2D_BOTTOM > 0) close(35)
   endif
 
   if (nrec_local > 0) then

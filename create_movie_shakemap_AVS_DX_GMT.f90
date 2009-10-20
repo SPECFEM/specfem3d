@@ -37,9 +37,6 @@
 ! number of points in each AVS or OpenDX quadrangular cell for movies
   integer, parameter :: NGNOD2D_AVS_DX = 4
 
-! number of points per surface element
-  integer, parameter :: NGLLSQUARE = NGLLX * NGLLY
-
 ! threshold in percent of the maximum below which we cut the amplitude
   logical, parameter :: APPLY_THRESHOLD = .true.
   real(kind=CUSTOM_REAL), parameter :: THRESHOLD = 1._CUSTOM_REAL / 100._CUSTOM_REAL
@@ -66,6 +63,7 @@
 
 ! for sorting routine
   integer npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
+!  integer k
   integer, dimension(:), allocatable :: iglob,loc,ireorder
   logical, dimension(:), allocatable :: ifseg,mask_point
   double precision, dimension(:), allocatable :: xp,yp,zp,xp_save,yp_save,zp_save,field_display
@@ -76,44 +74,69 @@
          store_val_ux,store_val_uy,store_val_uz
 
 ! parameters read from parameter file
-  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
-             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
+!  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
+!             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA
+             
+  integer NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer NSOURCES
 
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+!  logical USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-  double precision DT,LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,HDUR_MOVIE
-  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
+!  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
+  double precision DT
+!  double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
+  double precision HDUR_MOVIE
+!  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,&
+!            VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
-  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
-          OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS,SAVE_FORWARD
+!  logical HARVARD_3D_GOCAD_MODEL,
+  logical TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
+          OCEANS
+!  logical IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
+!          BASEMENT_MAP,MOHO_MAP_LUPEI,
+  logical ABSORBING_CONDITIONS,SAVE_FORWARD
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
+  character(len=150) OUTPUT_FILES,LOCAL_PATH
+!  character(len=150) MODEL
 
 ! parameters deduced from parameters read from file
-  integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer NER
+  integer NPROC
+!  integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA
+!  integer NER
 
-  integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
+!  integer NSPEC_AB
+!  integer NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!               NSPEC2D_A_ETA,NSPEC2D_B_ETA              
+!  integer NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+!               NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
+!  integer NGLOB_AB
 
+!--------------------------------------------
 !!!! NL NL for external meshes
+!--------------------------------------------
+  ! muting source region
   real(kind=CUSTOM_REAL), parameter :: RADIUS_TO_MUTE = 1000._CUSTOM_REAL
   logical, parameter :: MUTE_SOURCE = .true.
   real(kind=CUSTOM_REAL), parameter :: X_SOURCE_EXT_MESH = -9023.021484375
   real(kind=CUSTOM_REAL), parameter :: Y_SOURCE_EXT_MESH = 6123.611328125
   real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
-  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 15808*4
 
+  ! movie arrays (store_val_x_all_external_mesh) size
+!  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 15808*4
+
+  ! total number of spectral elements at surface
+  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 7650  ! movie: nfaces_surface_glob_ext_mesh
+  
+  ! order of points representing the 2D square element
+  integer,dimension(NGNOD2D_AVS_DX),parameter :: iorder = (/1,3,2,4/)
+  integer,dimension(NGNOD2D_AVS_DX),parameter :: iorder2 = (/1,3,4,2/)
+  
+!--------------------------------------------
 !!!! NL NL
 
 ! ************** PROGRAM STARTS HERE **************
@@ -127,28 +150,41 @@
   print *
 
 ! read the parameter file
-  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-        OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+  !call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+  !      UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+  !      NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
+  !      NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
+  !      ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+  !      THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+  !      OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
+  !      BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
+  !      MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+  !      NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+  !      SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+  !      NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
+
+  call read_parameter_file( &
+        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
+        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
+
 
 ! compute other parameters based upon values read
-  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
-
+!  if( .not. USE_EXTERNAL_MESH ) then
+!    call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+!        NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+!        NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+!        NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!        NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+!        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!        NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+!  endif
+  
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
@@ -164,6 +200,7 @@
   print *
 
   NPROC = 1
+  
   if(USE_HIGHRES_FOR_MOVIES) then
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
   else
@@ -243,6 +280,7 @@
   endif
 
   iscaling_shake = 0
+
   if(plot_shaking_map) then
     print *
     print *,'norm to display in shaking map:'
@@ -250,13 +288,16 @@
     print *
     read(5,*) inorm
     if(inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
-
     print *
     print *,'apply non-linear scaling to shaking map:'
     print *,'1=non-linear  2=no scaling'
     print *
     read(5,*) iscaling_shake
     if(iscaling_shake < 1 .or. iscaling_shake > 2) stop 'incorrect value of iscaling_shake'
+  else
+    print *
+    print *,'movie data:'
+    print *,'  norm of velocity vector will be displayed'
   endif
 
 ! define the total number of elements at the surface
@@ -371,17 +412,17 @@
                 display(i,j) = 0.
               else
 
-              if(inorm == 1) then
-                display(i,j) = vectorx
-              else if(inorm == 2) then
-                display(i,j) = vectory
-              else
-                display(i,j) = vectorz
+                if(inorm == 1) then
+                  display(i,j) = vectorx
+                else if(inorm == 2) then
+                  display(i,j) = vectory
+                else
+                  display(i,j) = vectorz
+                endif
               endif
-            endif
             else
-                display(i,j) = sqrt(vectorz**2+vectory**2+vectorx**2)
-             endif
+              display(i,j) = sqrt(vectorz**2+vectory**2+vectorx**2)
+            endif
 
           enddo
         enddo
@@ -394,6 +435,8 @@
           do i = 1,NGLLX-1
             ieoff = NGNOD2D_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
             do ilocnum = 1,NGNOD2D_AVS_DX
+!            do k = 1,NGNOD2D_AVS_DX
+
 
               if(ilocnum == 1) then
                 xp(ieoff+ilocnum) = dble(x(i,j))
@@ -401,15 +444,30 @@
                 zp(ieoff+ilocnum) = dble(z(i,j))
                 field_display(ieoff+ilocnum) = dble(display(i,j))
               elseif(ilocnum == 2) then
-                xp(ieoff+ilocnum) = dble(x(i+1,j))
-                yp(ieoff+ilocnum) = dble(y(i+1,j))
-                zp(ieoff+ilocnum) = dble(z(i+1,j))
-                field_display(ieoff+ilocnum) = dble(display(i+1,j))
-              elseif(ilocnum == 3) then
+
+! accounts for different ordering of square points
                 xp(ieoff+ilocnum) = dble(x(i+1,j+1))
                 yp(ieoff+ilocnum) = dble(y(i+1,j+1))
                 zp(ieoff+ilocnum) = dble(z(i+1,j+1))
                 field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
+
+!                xp(ieoff+ilocnum) = dble(x(i+1,j))
+!                yp(ieoff+ilocnum) = dble(y(i+1,j))
+!                zp(ieoff+ilocnum) = dble(z(i+1,j))
+!                field_display(ieoff+ilocnum) = dble(display(i+1,j))
+
+              elseif(ilocnum == 3) then
+
+! accounts for different ordering of square points
+                xp(ieoff+ilocnum) = dble(x(i+1,j))
+                yp(ieoff+ilocnum) = dble(y(i+1,j))
+                zp(ieoff+ilocnum) = dble(z(i+1,j))
+                field_display(ieoff+ilocnum) = dble(display(i+1,j))
+
+!                xp(ieoff+ilocnum) = dble(x(i+1,j+1))
+!                yp(ieoff+ilocnum) = dble(y(i+1,j+1))
+!                zp(ieoff+ilocnum) = dble(z(i+1,j+1))
+!                field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
               else
                 xp(ieoff+ilocnum) = dble(x(i,j+1))
                 yp(ieoff+ilocnum) = dble(y(i,j+1))
@@ -418,6 +476,14 @@
               endif
 
             enddo
+            
+            !if( j==1 .and. ispec==1) then
+            !print*,'p1',xp(ieoff+1),yp(ieoff+1),zp(ieoff+1)
+            !print*,'p2',xp(ieoff+2),yp(ieoff+2),zp(ieoff+2)
+            !print*,'p3',xp(ieoff+3),yp(ieoff+3),zp(ieoff+3)
+            !print*,'p4',xp(ieoff+4),yp(ieoff+4),zp(ieoff+4)
+            !endif
+            
           enddo
         enddo
 
@@ -427,8 +493,11 @@
         ieoff = NGNOD2D_AVS_DX*(ispec-1)
 
 ! four points for each element
-        do ilocnum = 1,NGNOD2D_AVS_DX
+        do i = 1,NGNOD2D_AVS_DX
 
+          ! accounts for different ordering of square points
+          ilocnum = iorder(i)
+          
           ipoin = ipoin + 1
 
           xcoord = store_val_x(ipoin,iproc)
@@ -439,6 +508,7 @@
           vectory = store_val_uy(ipoin,iproc)
           vectorz = store_val_uz(ipoin,iproc)
 
+
           xp(ilocnum+ieoff) = dble(xcoord)
           yp(ilocnum+ieoff) = dble(ycoord)
           zp(ilocnum+ieoff) = dble(zcoord)
@@ -448,25 +518,23 @@
 ! for shaking map, norm of U stored in ux, V in uy and A in uz
           if(plot_shaking_map) then
 !!!! NL NL mute value near source
-              if ( (sqrt(((dble(xcoord) - (X_SOURCE_EXT_MESH))**2 + &
+            if ( (sqrt(((dble(xcoord) - (X_SOURCE_EXT_MESH))**2 + &
                    (dble(ycoord) - (Y_SOURCE_EXT_MESH))**2 + &
                    (dble(zcoord) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
                    .and. MUTE_SOURCE) then
-
                 field_display(ilocnum+ieoff) = 0.
-              else
-
-
-            if(inorm == 1) then
-              field_display(ilocnum+ieoff) = dble(vectorx)
-            else if(inorm == 2) then
-              field_display(ilocnum+ieoff) = dble(vectory)
             else
-              field_display(ilocnum+ieoff) = dble(vectorz)
-            endif
+              if(inorm == 1) then
+                field_display(ilocnum+ieoff) = dble(vectorx)
+              else if(inorm == 2) then
+                field_display(ilocnum+ieoff) = dble(vectory)
+              else
+                field_display(ilocnum+ieoff) = dble(vectorz)
+              endif
             endif
           else
-              field_display(ilocnum+ieoff) =sqrt(vectorz**2+vectory**2+vectorx**2)
+            ! takes norm of velocity vector
+            field_display(ilocnum+ieoff) =sqrt(vectorz**2+vectory**2+vectorx**2)
           endif
 
         enddo
@@ -509,14 +577,14 @@
   if(plot_shaking_map) then
 
 ! compute min and max of data value to normalize
-  min_field_current = minval(field_display(:))
-  max_field_current = maxval(field_display(:))
+    min_field_current = minval(field_display(:))
+    max_field_current = maxval(field_display(:))
 
 ! print minimum and maximum amplitude in current snapshot
-  print *
-  print *,'minimum amplitude in current snapshot after removal = ',min_field_current
-  print *,'maximum amplitude in current snapshot after removal = ',max_field_current
-  print *
+    print *
+    print *,'minimum amplitude in current snapshot after removal = ',min_field_current
+    print *,'maximum amplitude in current snapshot after removal = ',max_field_current
+    print *
 
   endif
 
@@ -530,34 +598,34 @@
 ! this assumption works only for fields that can be negative
 ! would not work for norm of vector for instance
 ! (we would lose half of the color palette if no negative values)
-  max_absol = max(abs(min_field_current),abs(max_field_current))
-  min_field_current = - max_absol
-  max_field_current = + max_absol
+    max_absol = max(abs(min_field_current),abs(max_field_current))
+    min_field_current = - max_absol
+    max_field_current = + max_absol
 
 ! normalize field to [0:1]
-  field_display(:) = (field_display(:) - min_field_current) / (max_field_current - min_field_current)
+    field_display(:) = (field_display(:) - min_field_current) / (max_field_current - min_field_current)
 
 ! rescale to [-1,1]
-  field_display(:) = 2.*field_display(:) - 1.
+    field_display(:) = 2.*field_display(:) - 1.
 
 ! apply threshold to normalized field
-  if(APPLY_THRESHOLD) &
-    where(abs(field_display(:)) <= THRESHOLD) field_display = 0.
+    if(APPLY_THRESHOLD) &
+      where(abs(field_display(:)) <= THRESHOLD) field_display = 0.
 
 ! apply non linear scaling to normalized field if needed
-  if(NONLINEAR_SCALING) then
-    where(field_display(:) >= 0.)
-      field_display = field_display ** POWER_SCALING
-    elsewhere
-      field_display = - abs(field_display) ** POWER_SCALING
-    endwhere
-  endif
+    if(NONLINEAR_SCALING) then
+      where(field_display(:) >= 0.)
+        field_display = field_display ** POWER_SCALING
+      elsewhere
+        field_display = - abs(field_display) ** POWER_SCALING
+      endwhere
+    endif
 
 ! map back to [0,1]
-  field_display(:) = (field_display(:) + 1.) / 2.
+    field_display(:) = (field_display(:) + 1.) / 2.
 
 ! map field to [0:255] for AVS color scale
-  field_display(:) = 255. * field_display(:)
+    field_display(:) = 255. * field_display(:)
 
 
 ! apply scaling only if selected for shaking map
@@ -565,24 +633,24 @@
   else if(NONLINEAR_SCALING .and. iscaling_shake == 1) then
 
 ! normalize field to [0:1]
-  field_display(:) = field_display(:) / max_field_current
+    field_display(:) = field_display(:) / max_field_current
 
 ! apply non linear scaling to normalized field
-  field_display = field_display ** POWER_SCALING
+    field_display = field_display ** POWER_SCALING
 
 ! map field to [0:255] for AVS color scale
-  field_display(:) = 255. * field_display(:)
+    field_display(:) = 255. * field_display(:)
 
   endif
 
 !--- ****** create AVS file using sorted list ******
 
   if(.not. plot_shaking_map) then
-  if(inumber == 1) then
-    ivalue = iframe
-  else
-    ivalue = it
-  endif
+    if(inumber == 1) then
+      ivalue = iframe
+    else
+      ivalue = it
+    endif
   endif
 
 ! create file name and open file
@@ -634,7 +702,7 @@
           if(USE_OPENDX) then
             write(11,*) xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
           else if(USE_AVS) then
-            write(11,*) ireorder(ibool_number),xp_save(ilocnum+ieoff), &
+            write(11,'(i,3f)') ireorder(ibool_number),xp_save(ilocnum+ieoff), &
                 yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
           endif
         endif
@@ -663,53 +731,53 @@
       endif
     enddo
 
-  if(USE_OPENDX) then
-    write(11,*) 'attribute "element type" string "quads"'
-    write(11,*) 'attribute "ref" string "positions"'
-    write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
-  else
+    if(USE_OPENDX) then
+      write(11,*) 'attribute "element type" string "quads"'
+      write(11,*) 'attribute "ref" string "positions"'
+      write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
+    else
 ! dummy text for labels
-    write(11,*) '1 1'
-    write(11,*) 'a, b'
-  endif
+      write(11,*) '1 1'
+      write(11,*) 'a, b'
+    endif
 
 ! output data values
-  mask_point = .false.
+    mask_point = .false.
 
 ! output point data
-  do ispec=1,nspectot_AVS_max
-    ieoff = NGNOD2D_AVS_DX*(ispec-1)
+    do ispec=1,nspectot_AVS_max
+      ieoff = NGNOD2D_AVS_DX*(ispec-1)
 ! four points for each element
-    do ilocnum = 1,NGNOD2D_AVS_DX
-      ibool_number = iglob(ilocnum+ieoff)
-      if(.not. mask_point(ibool_number)) then
-        if(USE_OPENDX) then
-          if(plot_shaking_map) then
-            write(11,*) sngl(field_display(ilocnum+ieoff))
+      do ilocnum = 1,NGNOD2D_AVS_DX
+        ibool_number = iglob(ilocnum+ieoff)
+        if(.not. mask_point(ibool_number)) then
+          if(USE_OPENDX) then
+            if(plot_shaking_map) then
+              write(11,*) sngl(field_display(ilocnum+ieoff))
+            else
+              write(11,"(f7.2)") field_display(ilocnum+ieoff)
+            endif
           else
-            write(11,"(f7.2)") field_display(ilocnum+ieoff)
-          endif
-        else
-          if(plot_shaking_map) then
-            write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
-          else
-            write(11,"(i10,1x,f7.2)") ireorder(ibool_number),field_display(ilocnum+ieoff)
+            if(plot_shaking_map) then
+              write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
+            else
+              write(11,"(i10,1x,f7.2)") ireorder(ibool_number),field_display(ilocnum+ieoff)
+            endif
           endif
         endif
-      endif
-      mask_point(ibool_number) = .true.
+        mask_point(ibool_number) = .true.
+      enddo
     enddo
-   enddo
 
 ! define OpenDX field
-  if(USE_OPENDX) then
-    write(11,*) 'attribute "dep" string "positions"'
-    write(11,*) 'object "irregular positions irregular connections" class field'
-    write(11,*) 'component "positions" value 1'
-    write(11,*) 'component "connections" value 2'
-    write(11,*) 'component "data" value 3'
-    write(11,*) 'end'
-  endif
+    if(USE_OPENDX) then
+      write(11,*) 'attribute "dep" string "positions"'
+      write(11,*) 'object "irregular positions irregular connections" class field'
+      write(11,*) 'component "positions" value 1'
+      write(11,*) 'component "connections" value 2'
+      write(11,*) 'component "data" value 3'
+      write(11,*) 'end'
+    endif
 
 ! end of test for GMT format
   endif
@@ -718,7 +786,7 @@
 
 ! end of loop and test on all the time steps for all the movie images
   endif
-  enddo
+  enddo ! it
 
   print *
   print *,'done creating movie or shaking map'
@@ -768,6 +836,9 @@
   implicit none
 
   include "constants.h"
+
+! number of points in each AVS or OpenDX quadrangular cell for movies
+  integer, parameter :: NGNOD2D_AVS_DX = 4
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! small value for double precision and to avoid sensitivity to roundoff
