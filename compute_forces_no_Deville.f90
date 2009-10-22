@@ -23,10 +23,25 @@
 !
 !=====================================================================
 
-subroutine compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-     hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-     kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
-     NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
+subroutine compute_forces_no_Deville( phase_is_inner, &
+                      NSPEC_AB,NGLOB_AB,displ,accel,&
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      hprime_xx,hprime_yy,hprime_zz,&
+                      hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                      wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                      kappastore,mustore,jacobian,ibool,&
+                      ispec_is_inner,&
+                      ATTENUATION,USE_OLSEN_ATTENUATION,&
+                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
+                      NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                      epsilondev_xx,epsilondev_yy,epsilondev_xy,&
+                      epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
+                      rho_vs)
+                      
+!                      NSOURCES,myrank,islice_selected_source,&
+!                      ispec_selected_source,xi_source,eta_source,&
+!                      gamma_source,nu_source,hdur,dt)
+ 
 
   implicit none
 
@@ -56,14 +71,30 @@ subroutine compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,e
   logical, dimension(NSPEC_AB) :: ispec_is_inner
   logical :: phase_is_inner
 
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source
-  double precision, dimension(NSOURCES) :: hdur
-  double precision :: dt
+! memory variables and standard linear solids for attenuation    
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
+  integer :: NSPEC_ATTENUATION_AB
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
+  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
+  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
+       R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
+       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vs
+
+! source
+!  integer :: NSOURCES,myrank,it
+!  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
+!  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
+!  double precision, dimension(3,3,NSOURCES) :: nu_source
+!  double precision, dimension(NSOURCES) :: hdur
+!  double precision :: dt
+!  integer :: isource
+!  double precision :: t0,f0
+
+! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
@@ -88,213 +119,371 @@ subroutine compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,e
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
 
-  integer :: isource
-  double precision :: t0,f0
+! local attenuation parameters
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
+       epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
+  real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
+  real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
+  real(kind=CUSTOM_REAL) epsilon_trace_over_3
+  real(kind=CUSTOM_REAL) vs_val
+
+  integer i_SLS,iselected
 
 
   do ispec = 1,NSPEC_AB
 
-  if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
 
-          tempx1l = 0.
-          tempx2l = 0.
-          tempx3l = 0.
+            tempx1l = 0.
+            tempx2l = 0.
+            tempx3l = 0.
 
-          tempy1l = 0.
-          tempy2l = 0.
-          tempy3l = 0.
+            tempy1l = 0.
+            tempy2l = 0.
+            tempy3l = 0.
 
-          tempz1l = 0.
-          tempz2l = 0.
-          tempz3l = 0.
+            tempz1l = 0.
+            tempz2l = 0.
+            tempz3l = 0.
 
-          do l=1,NGLLX
-            hp1 = hprime_xx(i,l)
-            iglob = ibool(l,j,k,ispec)
-            tempx1l = tempx1l + displ(1,iglob)*hp1
-            tempy1l = tempy1l + displ(2,iglob)*hp1
-            tempz1l = tempz1l + displ(3,iglob)*hp1
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+            do l=1,NGLLX
+              hp1 = hprime_xx(i,l)
+              iglob = ibool(l,j,k,ispec)
+              tempx1l = tempx1l + displ(1,iglob)*hp1
+              tempy1l = tempy1l + displ(2,iglob)*hp1
+              tempz1l = tempz1l + displ(3,iglob)*hp1
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-            hp2 = hprime_yy(j,l)
-            iglob = ibool(i,l,k,ispec)
-            tempx2l = tempx2l + displ(1,iglob)*hp2
-            tempy2l = tempy2l + displ(2,iglob)*hp2
-            tempz2l = tempz2l + displ(3,iglob)*hp2
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+              hp2 = hprime_yy(j,l)
+              iglob = ibool(i,l,k,ispec)
+              tempx2l = tempx2l + displ(1,iglob)*hp2
+              tempy2l = tempy2l + displ(2,iglob)*hp2
+              tempz2l = tempz2l + displ(3,iglob)*hp2
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-            hp3 = hprime_zz(k,l)
-            iglob = ibool(i,j,l,ispec)
-            tempx3l = tempx3l + displ(1,iglob)*hp3
-            tempy3l = tempy3l + displ(2,iglob)*hp3
-            tempz3l = tempz3l + displ(3,iglob)*hp3
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+              hp3 = hprime_zz(k,l)
+              iglob = ibool(i,j,l,ispec)
+              tempx3l = tempx3l + displ(1,iglob)*hp3
+              tempy3l = tempy3l + displ(2,iglob)*hp3
+              tempz3l = tempz3l + displ(3,iglob)*hp3
+            enddo
+
+  !         get derivatives of ux, uy and uz with respect to x, y and z
+            xixl = xix(i,j,k,ispec)
+            xiyl = xiy(i,j,k,ispec)
+            xizl = xiz(i,j,k,ispec)
+            etaxl = etax(i,j,k,ispec)
+            etayl = etay(i,j,k,ispec)
+            etazl = etaz(i,j,k,ispec)
+            gammaxl = gammax(i,j,k,ispec)
+            gammayl = gammay(i,j,k,ispec)
+            gammazl = gammaz(i,j,k,ispec)
+            jacobianl = jacobian(i,j,k,ispec)
+
+            duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+            duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+            duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+            duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+            duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+            duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+            duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+            duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
+  ! precompute some sums to save CPU time
+            duxdxl_plus_duydyl = duxdxl + duydyl
+            duxdxl_plus_duzdzl = duxdxl + duzdzl
+            duydyl_plus_duzdzl = duydyl + duzdzl
+            duxdyl_plus_duydxl = duxdyl + duydxl
+            duzdxl_plus_duxdzl = duzdxl + duxdzl
+            duzdyl_plus_duydzl = duzdyl + duydzl
+
+            kappal = kappastore(i,j,k,ispec)
+            mul = mustore(i,j,k,ispec)
+
+            if(ATTENUATION) then
+              ! compute deviatoric strain
+              epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+              epsilondev_xx_loc(i,j,k) = duxdxl - epsilon_trace_over_3
+              epsilondev_yy_loc(i,j,k) = duydyl - epsilon_trace_over_3
+              epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
+              epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
+              epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+                              
+              !if (SIMULATION_TYPE == 3) then
+              ! b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
+              ! b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
+              ! b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
+              ! b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
+              ! b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
+              ! b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
+              !endif
+
+              ! uses scaling rule similar to Olsen et al. (2003) or mesh flag
+              if(USE_OLSEN_ATTENUATION) then
+                vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+                call get_attenuation_model_Olsen_sediment( vs_val, iselected )
+              else
+                ! iflag from (CUBIT) mesh      
+                iselected = iflag_attenuation_store(i,j,k,ispec)                
+              endif
+
+              ! use unrelaxed parameters if attenuation
+              mul = mul * one_minus_sum_beta(iselected)
+               
+            endif
+
+            lambdalplus2mul = kappal + FOUR_THIRDS * mul
+            lambdal = lambdalplus2mul - 2.*mul
+
+  ! compute stress sigma
+            sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+            sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+            sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+
+            sigma_xy = mul*duxdyl_plus_duydxl
+            sigma_xz = mul*duzdxl_plus_duxdzl
+            sigma_yz = mul*duzdyl_plus_duydzl
+
+            ! subtract memory variables if attenuation
+            if(ATTENUATION) then
+               do i_sls = 1,N_SLS
+                  R_xx_val = R_xx(i,j,k,ispec,i_sls)
+                  R_yy_val = R_yy(i,j,k,ispec,i_sls)
+                  sigma_xx = sigma_xx - R_xx_val
+                  sigma_yy = sigma_yy - R_yy_val
+                  sigma_zz = sigma_zz + R_xx_val + R_yy_val
+                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
+                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
+                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
+               enddo
+            endif
+
+  ! form dot product with test vector, symmetric form
+            tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
+            tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl)
+            tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl)
+
+            tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl)
+            tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl)
+            tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl)
+
+            tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl)
+            tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
+            tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
+
           enddo
-
-!         get derivatives of ux, uy and uz with respect to x, y and z
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-          jacobianl = jacobian(i,j,k,ispec)
-
-          duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-          duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-          duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
-
-          duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-          duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-          duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
-
-          duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-          duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-          duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
-
-! precompute some sums to save CPU time
-          duxdxl_plus_duydyl = duxdxl + duydyl
-          duxdxl_plus_duzdzl = duxdxl + duzdzl
-          duydyl_plus_duzdzl = duydyl + duzdzl
-          duxdyl_plus_duydxl = duxdyl + duydxl
-          duzdxl_plus_duxdzl = duzdxl + duxdzl
-          duzdyl_plus_duydzl = duzdyl + duydzl
-
-          kappal = kappastore(i,j,k,ispec)
-          mul = mustore(i,j,k,ispec)
-
-          lambdalplus2mul = kappal + FOUR_THIRDS * mul
-          lambdal = lambdalplus2mul - 2.*mul
-
-! compute stress sigma
-          sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-          sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-          sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
-
-          sigma_xy = mul*duxdyl_plus_duydxl
-          sigma_xz = mul*duzdxl_plus_duxdzl
-          sigma_yz = mul*duzdyl_plus_duydzl
-
-! form dot product with test vector, symmetric form
-          tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
-          tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl)
-          tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl)
-
-          tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl)
-          tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl)
-          tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl)
-
-          tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl)
-          tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
-          tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
-
         enddo
       enddo
-    enddo
 
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
 
-          tempx1l = 0.
-          tempy1l = 0.
-          tempz1l = 0.
+            tempx1l = 0.
+            tempy1l = 0.
+            tempz1l = 0.
 
-          tempx2l = 0.
-          tempy2l = 0.
-          tempz2l = 0.
+            tempx2l = 0.
+            tempy2l = 0.
+            tempz2l = 0.
 
-          tempx3l = 0.
-          tempy3l = 0.
-          tempz3l = 0.
+            tempx3l = 0.
+            tempy3l = 0.
+            tempz3l = 0.
 
-          do l=1,NGLLX
-            fac1 = hprimewgll_xx(l,i)
-            tempx1l = tempx1l + tempx1(l,j,k)*fac1
-            tempy1l = tempy1l + tempy1(l,j,k)*fac1
-            tempz1l = tempz1l + tempz1(l,j,k)*fac1
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+            do l=1,NGLLX
+              fac1 = hprimewgll_xx(l,i)
+              tempx1l = tempx1l + tempx1(l,j,k)*fac1
+              tempy1l = tempy1l + tempy1(l,j,k)*fac1
+              tempz1l = tempz1l + tempz1(l,j,k)*fac1
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-            fac2 = hprimewgll_yy(l,j)
-            tempx2l = tempx2l + tempx2(i,l,k)*fac2
-            tempy2l = tempy2l + tempy2(i,l,k)*fac2
-            tempz2l = tempz2l + tempz2(i,l,k)*fac2
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+              fac2 = hprimewgll_yy(l,j)
+              tempx2l = tempx2l + tempx2(i,l,k)*fac2
+              tempy2l = tempy2l + tempy2(i,l,k)*fac2
+              tempz2l = tempz2l + tempz2(i,l,k)*fac2
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-            fac3 = hprimewgll_zz(l,k)
-            tempx3l = tempx3l + tempx3(i,j,l)*fac3
-            tempy3l = tempy3l + tempy3(i,j,l)*fac3
-            tempz3l = tempz3l + tempz3(i,j,l)*fac3
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+              fac3 = hprimewgll_zz(l,k)
+              tempx3l = tempx3l + tempx3(i,j,l)*fac3
+              tempy3l = tempy3l + tempy3(i,j,l)*fac3
+              tempz3l = tempz3l + tempz3(i,j,l)*fac3
+            enddo
+
+            fac1 = wgllwgll_yz(j,k)
+            fac2 = wgllwgll_xz(i,k)
+            fac3 = wgllwgll_xy(i,j)
+
+  ! sum contributions from each element to the global mesh
+
+            iglob = ibool(i,j,k,ispec)
+
+            accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
+            accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
+            accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
+
+            !  update memory variables based upon the Runge-Kutta scheme
+            if(ATTENUATION) then
+               
+               ! use Runge-Kutta scheme to march in time
+               do i_sls = 1,N_SLS
+
+                  ! get coefficients for that standard linear solid
+                  if( USE_OLSEN_ATTENUATION ) then
+                    vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+                    call get_attenuation_model_Olsen_sediment( vs_val, iselected )
+                  else
+                    iselected = iflag_attenuation_store(i,j,k,ispec)
+                  endif
+                  
+                  factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
+                  alphaval_loc = alphaval(iselected,i_sls)
+                  betaval_loc = betaval(iselected,i_sls)
+                  gammaval_loc = gammaval(iselected,i_sls)
+                  
+                  ! term in xx
+                  Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
+                  Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
+                  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
+    
+                  ! term in yy
+                  Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
+                  Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
+                  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
+
+                  ! term in zz not computed since zero trace
+                  
+                  ! term in xy
+                  Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
+                  Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
+                  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
+                
+                  ! term in xz
+                  Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
+                  Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
+                  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
+
+                  ! term in yz
+                  Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
+                  Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
+                  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
+                  
+                  !if (SIMULATION_TYPE == 3) then
+                  !  b_alphaval_loc = b_alphaval(iselected,i_sls)
+                  !  b_betaval_loc = b_betaval(iselected,i_sls)
+                  !  b_gammaval_loc = b_gammaval(iselected,i_sls)
+                  !  ! term in xx
+                  !  b_Sn   = factor_loc * b_epsilondev_xx(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_xx_loc(i,j,k)
+                  !  b_R_xx(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xx(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in yy
+                  !  b_Sn   = factor_loc * b_epsilondev_yy(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_yy_loc(i,j,k)
+                  !  b_R_yy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yy(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in zz not computed since zero trace
+                  !  ! term in xy
+                  !  b_Sn   = factor_loc * b_epsilondev_xy(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_xy_loc(i,j,k)
+                  !  b_R_xy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xy(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in xz
+                  !  b_Sn   = factor_loc * b_epsilondev_xz(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_xz_loc(i,j,k)
+                  !  b_R_xz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xz(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in yz
+                  !  b_Sn   = factor_loc * b_epsilondev_yz(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_yz_loc(i,j,k)
+                  !  b_R_yz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yz(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !endif
+
+               enddo   ! end of loop on memory variables
+
+            endif  !  end attenuation
+
+
           enddo
-
-          fac1 = wgllwgll_yz(j,k)
-          fac2 = wgllwgll_xz(i,k)
-          fac3 = wgllwgll_xy(i,j)
-
-! sum contributions from each element to the global mesh
-
-          iglob = ibool(i,j,k,ispec)
-
-          accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
-          accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
-          accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
-
         enddo
       enddo
-    enddo
 
-  endif ! if (ispec_is_inner(ispec) .eqv. phase_is_inner)
+      ! save deviatoric strain for Runge-Kutta scheme
+      if(ATTENUATION) then
+        epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
+        epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
+        epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
+        epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
+        epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+        !if (SIMULATION_TYPE == 3) then
+        !  b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
+        !  b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
+        !  b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
+        !  b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
+        !  b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
+        !endif         
+      endif
+
+    endif ! if (ispec_is_inner(ispec) .eqv. phase_is_inner)
 
   enddo  ! spectral element loop
 
-! adding source
-  do isource = 1,NSOURCES
-
-  if (ispec_is_inner(ispec_selected_source(isource)) .eqv. phase_is_inner) then
-
-  if(USE_FORCE_POINT_SOURCE) then
-
-!   add the source (only if this proc carries the source)
-    if(myrank == islice_selected_source(isource)) then
-
-      iglob = ibool(nint(xi_source(isource)), &
-           nint(eta_source(isource)), &
-           nint(gamma_source(isource)), &
-           ispec_selected_source(isource))
-      f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-      t0 = 1.2d0/f0
-
-  if (it == 1 .and. myrank == 0) then
-    print *,'using a source of dominant frequency ',f0
-    print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-    print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-  endif
-
-      ! we use nu_source(:,3) here because we want a source normal to the surface.
-      ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-      !accel(:,iglob) = accel(:,iglob) + &
-      !     sngl(nu_source(:,3,isource) * 10000000.d0 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
-      !     exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
-    accel(:,iglob) = accel(:,iglob) + &
-           sngl(nu_source(:,3,isource) * 1.d10 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
-           exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
-
-    endif
-  endif
-
-  endif
-
-  enddo
+! forces in elastic media calculated in compute_forces_elastic...
+!! adding source
+!  do isource = 1,NSOURCES
+!
+!  if (ispec_is_inner(ispec_selected_source(isource)) .eqv. phase_is_inner) then
+!
+!  if(USE_FORCE_POINT_SOURCE) then
+!
+!!   add the source (only if this proc carries the source)
+!    if(myrank == islice_selected_source(isource)) then
+!
+!      iglob = ibool(nint(xi_source(isource)), &
+!           nint(eta_source(isource)), &
+!           nint(gamma_source(isource)), &
+!           ispec_selected_source(isource))
+!      f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
+!      t0 = 1.2d0/f0
+!
+!  if (it == 1 .and. myrank == 0) then
+!    print *,'using a source of dominant frequency ',f0
+!    print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+!    print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+!  endif
+!
+!      ! we use nu_source(:,3) here because we want a source normal to the surface.
+!      ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
+!      !accel(:,iglob) = accel(:,iglob) + &
+!      !     sngl(nu_source(:,3,isource) * 10000000.d0 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
+!      !     exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
+!    accel(:,iglob) = accel(:,iglob) + &
+!           sngl(nu_source(:,3,isource) * 1.d10 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
+!           exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
+!
+!    endif
+!  endif
+!
+!  endif
+!
+!  enddo
 
 end subroutine compute_forces_no_Deville
 

@@ -25,19 +25,29 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-module specfem_par
-
-  implicit none
+module constants
 
   include "constants.h"
+
+end module constants
+
+!=====================================================================
+
+module specfem_par
+
+! main parameter module for specfem simulations
+
+  use constants
+  
+  implicit none
+
+!  include "constants.h"
 
 ! include values created by the mesher
   include "OUTPUT_FILES/values_from_mesher.h"
 
 ! standard include of the MPI library
 !  include 'mpif.h'
-
-
 
 ! memory variables and standard linear solids for attenuation
   double precision, dimension(N_SLS) :: tau_mu_dble,tau_sigma_dble,beta_dble
@@ -132,17 +142,12 @@ module specfem_par
         kappastore,mustore
 
 ! flag for sediments
-  logical, dimension(:), allocatable :: not_fully_in_bedrock
-  logical, dimension(:,:,:,:), allocatable :: flag_sediments
+!  logical, dimension(:), allocatable :: not_fully_in_bedrock
+!  logical, dimension(:,:,:,:), allocatable :: flag_sediments
 
-! Stacey
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
 ! local to global mapping
-  integer, dimension(:), allocatable :: idoubling
-
-! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
+!  integer, dimension(:), allocatable :: idoubling
 
 ! additional mass matrix for ocean load
 ! ocean load mass matrix is always allocated statically even if no oceans
@@ -150,24 +155,12 @@ module specfem_par
   logical, dimension(:), allocatable :: updated_dof_ocean_load
   real(kind=CUSTOM_REAL) additional_term,force_normal_comp
 
-! displacement, velocity, acceleration
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
-
-  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
-
-  real(kind=CUSTOM_REAL) hp1,hp2,hp3
-
-  real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
-  real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
-  real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
-
 ! time scheme
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
 ! ADJOINT
   real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp
 !! DK DK array not created yet for CUBIT
-! real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
 ! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
 !   rhop_kl, beta_kl, alpha_kl
 !  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: absorb_xmin, absorb_xmax, &  
@@ -266,20 +259,12 @@ module specfem_par
 
 ! integer iproc_xi,iproc_eta
 
-! maximum of the norm of the displacement
-  real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all
-  integer:: Usolidnorm_index(1)
-! ADJOINT
-! real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
-! ADJOINT
-
 ! timer MPI
   double precision, external :: wtime
   integer :: ihours,iminutes,iseconds,int_tCPU, &
              ihours_remain,iminutes_remain,iseconds_remain,int_t_remain, &
              ihours_total,iminutes_total,iseconds_total,int_t_total
   double precision :: time_start,tCPU,t_remain,t_total
-
 
 ! parameters read from parameter file
   integer NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
@@ -314,22 +299,9 @@ module specfem_par
   !integer, dimension(:,:),allocatable :: nimin,nimax,nkmin_eta
   !integer, dimension(:,:),allocatable :: njmin,njmax,nkmin_xi
 
-! to save movie frames
-  integer ipoin, nmovie_points, iloc, iorderi(NGNOD2D), iorderj(NGNOD2D)
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
-      store_val_x,store_val_y,store_val_z, &
-      store_val_ux,store_val_uy,store_val_uz, &
-      store_val_norm_displ,store_val_norm_veloc,store_val_norm_accel
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: &
-      store_val_x_all,store_val_y_all,store_val_z_all, &
-      store_val_ux_all,store_val_uy_all,store_val_uz_all
-
-! to save full 3D snapshot of velocity
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
 
 ! for assembling in case of external mesh
-  integer :: ninterfaces_ext_mesh
+  integer :: num_interfaces_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:), allocatable :: my_neighbours_ext_mesh
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh
@@ -344,16 +316,98 @@ module specfem_par
   integer, dimension(:), allocatable :: request_recv_vector_ext_mesh
 
 ! for detecting surface receivers and source in case of external mesh
-  integer, dimension(:), allocatable :: valence_external_mesh
   logical, dimension(:), allocatable :: iglob_is_surface_external_mesh
   logical, dimension(:), allocatable :: ispec_is_surface_external_mesh
-  integer, dimension(:,:), allocatable :: buffer_send_scalar_i_ext_mesh
-  integer, dimension(:,:), allocatable :: buffer_recv_scalar_i_ext_mesh
+  !integer, dimension(:), allocatable :: valence_external_mesh
+  !integer, dimension(:,:), allocatable :: buffer_send_scalar_i_ext_mesh
+  !integer, dimension(:,:), allocatable :: buffer_recv_scalar_i_ext_mesh
   integer :: nfaces_surface_external_mesh
   integer :: nfaces_surface_glob_ext_mesh
   integer,dimension(:),allocatable :: nfaces_perproc_surface_ext_mesh
   integer,dimension(:),allocatable :: faces_surface_offset_ext_mesh
   integer,dimension(:,:),allocatable :: faces_surface_external_mesh
+
+  integer :: ii,jj,kk
+
+! model surface 
+  logical, dimension(:), allocatable :: ispec_is_inner_ext_mesh
+  logical, dimension(:), allocatable :: iglob_is_inner_ext_mesh
+  integer :: iinterface
+
+!  integer, dimension(:),allocatable :: spec_inner, spec_outer
+!  integer :: nspec_inner,nspec_outer
+  
+!!!! NL NL REGOLITH : regolith layer for asteroid
+!!$  double precision, external :: materials_ext_mesh
+!!$  logical, dimension(:), allocatable :: ispec_is_regolith
+!!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
+!!!! NL NL REGOLITH
+  
+end module specfem_par
+
+
+!=====================================================================
+
+module specfem_par_elastic
+
+! parameter module for elastic solver
+
+  use constants,only: CUSTOM_REAL
+  implicit none
+
+! displacement, velocity, acceleration
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
+
+! ADJOINT
+!! DK DK array not created yet for CUBIT
+! real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
+
+! mass matrix
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
+
+! Stacey
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
+
+! maximum of the norm of the displacement
+  real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all
+  integer:: Usolidnorm_index(1)
+
+! ADJOINT
+! real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
+! ADJOINT
+
+! attenuation Olsen
+  real(kind=CUSTOM_REAL):: vs_val
+  integer :: iselected
+
+
+end module specfem_par_elastic
+
+
+!=====================================================================
+
+module specfem_par_movie
+
+! parameter module for movies/shakemovies
+
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D
+
+  implicit none
+
+! to save movie frames
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
+      store_val_x,store_val_y,store_val_z, &
+      store_val_ux,store_val_uy,store_val_uz, &
+      store_val_norm_displ,store_val_norm_veloc,store_val_norm_accel
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: &
+      store_val_x_all,store_val_y_all,store_val_z_all, &
+      store_val_ux_all,store_val_uy_all,store_val_uz_all
+
+! to save full 3D snapshot of velocity (movie volume
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
+
+! shakemovies  
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_external_mesh
@@ -366,22 +420,17 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all_external_mesh
-  integer :: ii,jj,kk
 
-! for communications overlapping
-  logical, dimension(:), allocatable :: ispec_is_inner_ext_mesh
-  logical, dimension(:), allocatable :: iglob_is_inner_ext_mesh
-  integer :: iinterface
+! movie volume
+  real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 
-!  integer, dimension(:),allocatable :: spec_inner, spec_outer
-!  integer :: nspec_inner,nspec_outer
-  
+  real(kind=CUSTOM_REAL) hp1,hp2,hp3
 
-!!!! NL NL REGOLITH : regolith layer for asteroid
-!!$  double precision, external :: materials_ext_mesh
-!!$  logical, dimension(:), allocatable :: ispec_is_regolith
-!!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
-!!!! NL NL REGOLITH
+  real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
+  real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
+  real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
 
-  
-end module
+  integer ipoin, nmovie_points, iloc, iorderi(NGNOD2D), iorderj(NGNOD2D)
+
+end module specfem_par_movie
+

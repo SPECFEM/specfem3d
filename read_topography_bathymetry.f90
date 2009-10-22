@@ -28,6 +28,7 @@
   subroutine read_topography_bathymetry()
 
   use specfem_par
+  implicit none
 
 ! read topography and bathymetry file
   if(TOPOGRAPHY .or. OCEANS) then

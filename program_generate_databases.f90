@@ -29,7 +29,7 @@
   call init()
 
 ! run the main program
-  call generate_databases
+  call generate_databases()
 
 ! mpi finish
   call finalize()

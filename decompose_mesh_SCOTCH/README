@@ -1,0 +1,41 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+
+decompose mesh files:
+
+
+****
+you will need SCOTCH libraries to be installed on your system
+(http://gforge.inria.fr/projects/scotch/) 
+
+to compile this executable xdecompose_mesh_SCOTCH for partitioning your mesh files
+****
+
+  1. create mesh using CUBIT and scripts boundary_definity.py and
+     cubit2specfem3D.py to generate all mesh files 
+
+  2. compile executable "xdecompose_mesh_SCOTCH" in this directory decompose_mesh_SCOTCH/:
+  
+     make sure, you have the right location of your SCOTCH library defined
+     in the Makefile (SCOTCH_LIBS), then type:
+       
+      > make
+      
+  3. create Database files for the number of partitions/processes you want SPECFEM
+     to run on. These Database files will be needed later for the "xgenerate_databases" executable:     
+       
+      > ./xdecompose_mesh_SCOTCH n input_dir output_dir 
+            
+      where 
+        - n is the number of partitions (i.e. parallel processes),
+        - input_dir is the directory containing the mesh files (i.e. "nodes_coord_file","mesh_file",...)
+        - output_dir is the directory to hold the new "proc****_Database" files
+        
+      for example, a call could look like:  
+      
+       > ./xdecompose_mesh_SCOTCH 4 ../EXAMPLES/homogeneous_halfspace/MESH/ ../DATABASES_MPI/ 
+
+
+      

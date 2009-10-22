@@ -34,7 +34,7 @@
             absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
             absorbing_boundary_ijk,absorbing_boundary_ispec, &
             num_absorbing_boundary_faces, &
-            ninterface_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+            num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
             max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
             prname,SAVE_MESH_FILES)
 
@@ -98,11 +98,11 @@
 !  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX) :: njmin,njmax,nkmin_xi
 
 ! MPI interfaces
-  integer :: ninterface_ext_mesh
-  integer, dimension(ninterface_ext_mesh) :: my_neighbours_ext_mesh
-  integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh
+  integer :: num_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
 
 ! file name
   character(len=150) prname
@@ -206,15 +206,15 @@
   write(IOUT) normal_top
 
 !MPI interfaces
-  write(IOUT) ninterface_ext_mesh
+  write(IOUT) num_interfaces_ext_mesh
   write(IOUT) maxval(nibool_interfaces_ext_mesh)
   write(IOUT) my_neighbours_ext_mesh
   write(IOUT) nibool_interfaces_ext_mesh
 
-  allocate(ibool_interfaces_ext_mesh_dummy(maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh),stat=ier)
+  allocate(ibool_interfaces_ext_mesh_dummy(maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array'
   
-  do i = 1, ninterface_ext_mesh
+  do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy = ibool_interfaces_ext_mesh(1:maxval(nibool_interfaces_ext_mesh),:)
   enddo
   write(IOUT) ibool_interfaces_ext_mesh_dummy

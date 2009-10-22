@@ -28,7 +28,7 @@
   subroutine setup_sources_receivers()
 
   use specfem_par
-
+  implicit none
 
 ! write source and receiver VTK files for Paraview
   if (myrank == 0) then
@@ -284,40 +284,9 @@
     else
       write(IMAIN,*) 'this total is okay'
     endif
-  endif
-
-  if(myrank == 0) then
-
+    
     if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
-
-    write(IMAIN,*)
-    if(TOPOGRAPHY) then
-      write(IMAIN,*) 'incorporating surface topography'
-    else
-      write(IMAIN,*) 'no surface topography'
-    endif
-
-    write(IMAIN,*)
-    if(ATTENUATION) then
-      write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
-      if(USE_OLSEN_ATTENUATION) then
-        write(IMAIN,*) 'using Olsen''s attenuation'
-      else
-        write(IMAIN,*) 'not using Olsen''s attenuation'
-      endif
-    else
-      write(IMAIN,*) 'no attenuation'
-    endif
-
-    write(IMAIN,*)
-    if(OCEANS) then
-      write(IMAIN,*) 'incorporating the oceans using equivalent load'
-    else
-      write(IMAIN,*) 'no oceans'
-    endif
-
+    
   endif
-
-
 
   end subroutine

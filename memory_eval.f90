@@ -28,7 +28,7 @@
 
 ! compute the approximate amount of static memory needed to run the solver
 
- subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh,static_memory_size)
+ subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,static_memory_size)
 
   implicit none
 
@@ -37,7 +37,7 @@
 ! input
 !  logical, intent(in) :: ATTENUATION
   integer, intent(in) :: NSPEC_AB,NGLOB_AB
-  integer, intent(in) :: max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh
+  integer, intent(in) :: max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh
 
 ! output
   double precision, intent(out) :: static_memory_size
@@ -70,19 +70,19 @@
   static_memory_size = static_memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
 
 ! my_neighbours_ext_mesh,nibool_interfaces_ext_mesh
-  static_memory_size = static_memory_size + 2.d0*ninterfaces_ext_mesh*dble(SIZE_INTEGER)
+  static_memory_size = static_memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
 ! ibool_interfaces_ext_mesh
- static_memory_size = static_memory_size + max_nibool_interfaces_ext_mesh*ninterfaces_ext_mesh*dble(SIZE_INTEGER)
+ static_memory_size = static_memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
 ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh  
- static_memory_size = static_memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*ninterfaces_ext_mesh*dble(CUSTOM_REAL)
+ static_memory_size = static_memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
 
 ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh 
- static_memory_size = static_memory_size + 2.d0*max_nibool_interfaces_ext_mesh*ninterfaces_ext_mesh*dble(CUSTOM_REAL)
+ static_memory_size = static_memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
 
 ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh,request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh 
- static_memory_size = static_memory_size + 4.d0*ninterfaces_ext_mesh*dble(SIZE_INTEGER)
+ static_memory_size = static_memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
 
   end subroutine memory_eval
@@ -93,7 +93,7 @@
 
 ! compute the approximate amount of static memory needed to run the mesher
 
- subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,ninterface_ext_mesh, &
+ subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
               max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top,&
               static_memory_size_request)
 
@@ -101,7 +101,7 @@
 
   include "constants.h"
   
-  integer :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,ninterface_ext_mesh, &
+  integer :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
            max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top
 
   integer :: static_memory_size_request
@@ -111,8 +111,8 @@
 ! memory usage, in generate_database() routine so far
   static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
         + NDIM*nnodes_ext_mesh*8 + ESIZE*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
-        + 5*nmat_ext_mesh*8 + 3*ninterface_ext_mesh + 6*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
-        + NGLLX*NGLLX*max_interface_size_ext_mesh*ninterface_ext_mesh*4 &
+        + 5*nmat_ext_mesh*8 + 3*num_interfaces_ext_mesh + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
+        + NGLLX*NGLLX*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
         + nspec2D_xmin*20 + nspec2D_xmax*20 + nspec2D_ymin*20 + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20 
 
 ! memory usage, in create_regions_mesh_ext_mesh() routine requested approximately

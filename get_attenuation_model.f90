@@ -215,3 +215,64 @@
 
   end subroutine get_attenuation_model
 
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_attenuation_model_Olsen_sediment( vs_val, iselected )
+
+! uses scaling rule similar to Olsen et al. (2003) to determine attenuation medium
+!
+! returns: selected sediment iselected
+  
+  implicit none
+  
+  include "constants.h"
+  
+  real(kind=CUSTOM_REAL) :: vs_val  
+  integer :: iselected
+
+!local parameters
+  real(kind=CUSTOM_REAL) :: Q_mu
+  integer :: int_Q_mu,iattenuation_sediments
+  
+  ! use rule Q_mu = constant * v_s
+  Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
+  int_Q_mu = 10 * nint(Q_mu / 10.)
+  
+  if(int_Q_mu < 40) int_Q_mu = 40
+  if(int_Q_mu > 150) int_Q_mu = 150
+
+  if(int_Q_mu == 40) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_40
+  else if(int_Q_mu == 50) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_50
+  else if(int_Q_mu == 60) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_60
+  else if(int_Q_mu == 70) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_70
+  else if(int_Q_mu == 80) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_80
+  else if(int_Q_mu == 90) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+  else if(int_Q_mu == 100) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_100
+  else if(int_Q_mu == 110) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_110
+  else if(int_Q_mu == 120) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_120
+  else if(int_Q_mu == 130) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_130
+  else if(int_Q_mu == 140) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_140
+  else if(int_Q_mu == 150) then
+    iattenuation_sediments = IATTENUATION_SEDIMENTS_150
+  else
+    stop 'incorrect attenuation coefficient'
+  endif
+  
+  ! return sediment number
+  iselected = iattenuation_sediments  
+  
+  end subroutine get_attenuation_model_Olsen_sediment

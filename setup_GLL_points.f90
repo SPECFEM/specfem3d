@@ -28,7 +28,7 @@
   subroutine setup_GLL_points()
 
   use specfem_par
-
+  implicit none
 
   if(myrank == 0) then
     write(IMAIN,*) '******************************************'

@@ -28,6 +28,7 @@
   subroutine iterate_time()
 
   use specfem_par
+  implicit none
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
@@ -59,115 +60,20 @@
 
   do it = 1,NSTEP
   
-! compute the maximum of the norm of the displacement
-! in all the slices using an MPI reduction
-! and output timestamp file to check that simulation is running fine
+! simulation status output and stability check
     if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5) then
       call iterate_time_check_stability()    
     endif
-
-
-! update displacement using finite difference time scheme
-    displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
-    veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-    accel(:,:) = 0._CUSTOM_REAL
-
-!! DK DK array not created yet for CUBIT
-! if (SIMULATION_TYPE == 3) then
-!   b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
-!   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
-!   b_accel(:,:) = 0._CUSTOM_REAL
-! endif
-
-! if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-!   ispec2D_moho_top = 0
-!   ispec2D_moho_bot = 0
-! endif
-
-
-! update acceleration 
-! shared points between processors only
-    if(USE_DEVILLE_PRODUCTS) then    
-      call compute_forces_with_Deville( .false. ,NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,&
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                      kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh, &
-                      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                      xi_source,eta_source,gamma_source,nu_source, &
-                      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
-                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
-                      ABSORBING_CONDITIONS, &
-                      absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                      absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                      num_absorbing_boundary_faces, &                      
-                      veloc,rho_vp,rho_vs) 
-    else
-      call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.false., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
-    endif
-
-! assemble all the contributions between slices using MPI
-    call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,accel, &
-        buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-        ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-        request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-
-! update acceleration 
-! points inside processor's partition only
-    if(USE_DEVILLE_PRODUCTS) then
-      call compute_forces_with_Deville( .true., NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel,&
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                      kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh, &
-                      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                      xi_source,eta_source,gamma_source,nu_source, &
-                      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, & 
-                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
-                      ABSORBING_CONDITIONS, &
-                      absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                      absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                      num_absorbing_boundary_faces, &
-                      veloc,rho_vp,rho_vs)
-    else
-      call compute_forces_no_Deville(NSPEC_AB,NGLOB_AB,displ,accel,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-         hprime_xx,hprime_yy,hprime_zz,hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-         kappastore,mustore,jacobian,ibool,ispec_is_inner_ext_mesh,.true., &
-         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,xi_source,eta_source,gamma_source,nu_source,hdur,dt)
-    endif
-
-! assemble all the contributions between slices using MPI
-    call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
-         buffer_recv_vector_ext_mesh,ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-
-!! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
-!! DK DK May 2009: has a different number of spectral elements and therefore
-!! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
-!! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
-!! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
-! if (SIMULATION_TYPE == 3) call assemble_MPI_vector(b_accel,iproc_xi,iproc_eta,addressing, &
-!         iboolleft_xi,iboolright_xi,iboolleft_eta,iboolright_eta, &
-!         buffer_send_faces_vector,buffer_received_faces_vector,npoin2D_xi,npoin2D_eta, &
-!         NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
+    
+! update displacement using Newark time scheme
+    call iterate_time_update_displacement_scheme()
+      
+! elastic solver
+    call compute_forces_elastic()
 
 ! multiply by the inverse of the mass matrix
-    accel(1,:) = accel(1,:)*rmass(:)
-    accel(2,:) = accel(2,:)*rmass(:)
-    accel(3,:) = accel(3,:)*rmass(:)
-
-!! DK DK array not created yet for CUBIT
-! if (SIMULATION_TYPE == 3) then
-!   b_accel(1,:) = b_accel(1,:)*rmass(:)
-!   b_accel(2,:) = b_accel(2,:)*rmass(:)
-!   b_accel(3,:) = b_accel(3,:)*rmass(:)
-! endif
-
+    call iterate_time_update_acceleration()
+    
 ! updates acceleration with ocean load term
     if(OCEANS) then
 
@@ -177,11 +83,8 @@
     endif
 
 ! updates velocity
-    veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-
-!! DK DK array not created yet for CUBIT
-! if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
-
+    call iterate_time_update_velocity()
+    
 ! write the seismograms with time shift
     if (nrec_local > 0) then
       call iterate_time_write_seismograms()
@@ -230,17 +133,20 @@
 
   end subroutine iterate_time
 
-
   
-
 !=====================================================================
 
-! simulation status output and stability check  
-
   subroutine iterate_time_check_stability()
+
+! computes the maximum of the norm of the displacement
+! in all the slices using an MPI reduction
+! and output timestamp file to check that simulation is running fine
   
   use specfem_par
-
+  use specfem_par_elastic
+  
+  implicit none
+  
 ! compute maximum of norm of displacement in each slice
   Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
 
@@ -328,15 +234,83 @@
   
   end subroutine iterate_time_check_stability
   
+
+!=====================================================================
+
+  subroutine iterate_time_update_displacement_scheme()
+
+! Newark finite-difference time scheme
   
+  use specfem_par
+  use specfem_par_elastic
+  
+  implicit none
+
+! updates elastic displacement and velocity
+  displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
+  veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+  accel(:,:) = 0._CUSTOM_REAL
+
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3) then
+!   b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
+!   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+!   b_accel(:,:) = 0._CUSTOM_REAL
+! endif
+
+
+  end subroutine iterate_time_update_displacement_scheme
   
 !=====================================================================
 
-! updates acceleration with ocean load term  
+  subroutine iterate_time_update_acceleration()
 
-  subroutine iterate_time_ocean_load()
+! updates acceleration
+  
+  use specfem_par_elastic
+  
+  implicit none
+
+  accel(1,:) = accel(1,:)*rmass(:)
+  accel(2,:) = accel(2,:)*rmass(:)
+  accel(3,:) = accel(3,:)*rmass(:)
+
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3) then
+!   b_accel(1,:) = b_accel(1,:)*rmass(:)
+!   b_accel(2,:) = b_accel(2,:)*rmass(:)
+!   b_accel(3,:) = b_accel(3,:)*rmass(:)
+! endif
+
+  end subroutine iterate_time_update_acceleration
+
+!=====================================================================
+
+  subroutine iterate_time_update_velocity()
+
+! updates velocities
   
   use specfem_par
+  use specfem_par_elastic
+  
+  implicit none
+
+  veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+
+!! DK DK array not created yet for CUBIT
+! if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+
+  end subroutine iterate_time_update_velocity
+!=====================================================================
+
+  subroutine iterate_time_ocean_load()
+
+! updates acceleration with ocean load term  
+  
+  use specfem_par
+  use specfem_par_elastic
+  
+  implicit none
 
 !   initialize the updates
   updated_dof_ocean_load(:) = .false.
@@ -397,18 +371,18 @@
     enddo ! NGLLY
   enddo ! NSPEC2D_TOP
 
-
   end subroutine iterate_time_ocean_load
-  
-  
-  
+      
 !=====================================================================
 
-! write the seismograms with time shift
-
   subroutine iterate_time_write_seismograms()
+
+! writes the seismograms with time shift
   
   use specfem_par
+  use specfem_par_elastic
+  
+  implicit none
 
   do irec_local = 1,nrec_local
 
@@ -582,14 +556,16 @@
   end subroutine iterate_time_write_seismograms
 
 
-
 !================================================================
+  
+  subroutine iterate_time_store_attenuation_arrays()
 
 ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
   
-  subroutine iterate_time_store_attenuation_arrays()
-  
   use specfem_par
+  use specfem_par_elastic
+  
+  implicit none
 
   if( it > 1 .and. it < NSTEP) then
     if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
@@ -630,19 +606,19 @@
     endif ! SIMULATION_TYPE
   endif ! it
 
-
   end subroutine iterate_time_store_attenuation_arrays
-
-
   
 !================================================================
+  
+  subroutine iterate_time_create_shakemap_ext_mesh()
 
 ! creation of shapemap file
   
-  subroutine iterate_time_create_shakemap_ext_mesh()
-  
   use specfem_par
-
+  use specfem_par_elastic
+  use specfem_par_movie
+  
+  implicit none
 
 ! initializes arrays
   if (it == 1) then
@@ -819,11 +795,15 @@
   
 !================================================================
 
-  
+  subroutine iterate_time_create_movie_surface_ext_mesh()
+
 ! creation of moviedata files  
 
-  subroutine iterate_time_create_movie_surface_ext_mesh()
   use specfem_par
+  use specfem_par_elastic
+  use specfem_par_movie
+  
+  implicit none
   
 ! get coordinates of surface mesh and surface displacement
   do ispec = 1,nfaces_surface_external_mesh
@@ -921,12 +901,16 @@
     
 !=====================================================================
 
-! outputs moviedata files  
-
   subroutine iterate_time_movie_surface_output_obsolete()
+
+! outputs moviedata files  
   
   use specfem_par
-
+  use specfem_par_elastic
+  use specfem_par_movie
+  
+  implicit none
+  
 ! get coordinates of surface mesh and surface displacement
   ipoin = 0
 
@@ -997,17 +981,20 @@
     close(IOUT)
   endif
 
-
   end subroutine iterate_time_movie_surface_output_obsolete
   
   
 !=====================================================================
 
-! outputs shakemap file 
-
   subroutine iterate_time_create_shakemap_obsolete()
+
+! outputs shakemap file 
   
   use specfem_par
+  use specfem_par_elastic
+  use specfem_par_movie
+  
+  implicit none
 
   ipoin = 0
   k = NGLLZ
@@ -1076,15 +1063,19 @@
   endif ! NTSTEP
 
   end subroutine iterate_time_create_shakemap_obsolete
-  
-  
+
+    
 !=====================================================================
 
-! outputs movie files for div, curl and velocity  
-
   subroutine iterate_time_movie_volume_output()
+
+! outputs movie files for div, curl and velocity  
   
   use specfem_par
+  use specfem_par_elastic
+  use specfem_par_movie
+  
+  implicit none
 
 ! save velocity here to avoid static offset on displacement for movies
 
@@ -1194,5 +1185,5 @@
   write(27) veloc
   close(27)
 
-  end subroutine
+  end subroutine iterate_time_movie_volume_output
   

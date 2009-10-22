@@ -267,7 +267,7 @@
   integer :: dummy_elmnt
   integer :: ispec, inode, num_interface, ie,imat !pll
   integer :: nnodes_ext_mesh, nelmnts_ext_mesh
-  integer  :: ninterface_ext_mesh
+  integer  :: num_interfaces_ext_mesh
   integer  :: max_interface_size_ext_mesh
   integer  :: nmat_ext_mesh, nundefMat_ext_mesh   !pll
   integer, dimension(:), allocatable  :: my_neighbours_ext_mesh
@@ -278,7 +278,9 @@
   double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
   integer, dimension(:,:), allocatable :: elmnts_ext_mesh
   integer, dimension(:,:), allocatable :: mat_ext_mesh
-
+  integer :: max_nibool_interfaces_ext_mesh
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+  
   ! pll
   double precision, dimension(:,:), allocatable :: materials_ext_mesh  
   integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
@@ -300,6 +302,10 @@
 ! auxiliary variables to generate the mesh
 !  integer ix,iy
   
+  integer,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
+  integer :: nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh
+  integer :: i
+  
   end module
 
 !
@@ -309,6 +315,7 @@
   subroutine generate_databases
 
   use generate_databases_par
+  implicit none
   
 ! sizeprocs returns number of processes started (should be equal to NPROC).
 ! myrank is the rank of each process, between 0 and NPROC-1.
@@ -336,18 +343,10 @@
   endif
 
 ! read the parameter file
-  call read_parameter_file( &
-        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
-        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
-        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
-
-! checks user input parameters for mesher to run
-  call generate_databases_check_parameters()
+  call generate_databases_read_parameters()
+      
+! makes sure processes are synchronized  
+  call sync_all()
   
 ! reads topography and bathymetry file
   call generate_databases_read_topography()
@@ -366,122 +365,34 @@
 ! external mesh creation
   call generate_databases_setup_mesh()
 
-!--- print number of points and elements in the mesh
-  call sum_all_i(NGLOB_AB,nglob_total)
-  call sum_all_i(NSPEC_AB,nspec_total)
-  call sync_all()  
-  if(myrank == 0) then
-
-    write(IMAIN,*)
-    write(IMAIN,*) 'Repartition of elements:'
-    write(IMAIN,*) '-----------------------'
-    write(IMAIN,*)
-    write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
-    write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
-    write(IMAIN,*)
-    write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total     ! NSPEC_AB*NPROC
-    write(IMAIN,*) 'total number of points in entire mesh: ',nglob_total        !NGLOB_AB*NPROC
-    write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*NDIM   !NGLOB_AB*NPROC*NDIM
-    write(IMAIN,*)
-    write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
-    write(IMAIN,*)
-
-    ! write information about precision used for floating-point operations
-    if(CUSTOM_REAL == SIZE_REAL) then
-      write(IMAIN,*) 'using single precision for the calculations'
-    else
-      write(IMAIN,*) 'using double precision for the calculations'
-    endif
-    write(IMAIN,*)
-    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
-    write(IMAIN,*)
-
-    ! copy number of elements and points in an include file for the solver
-    call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
-               ATTENUATION,ANISOTROPY,NSTEP,DT, &
-               SIMULATION_TYPE,max_static_memory_size)
-
-!  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
-!  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-
-! get total number of stations
-! open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
-! nrec = 0
-! do while(ios == 0)
-!   read(IIN,"(a)",iostat=ios) dummystring
-!   if(ios == 0) nrec = nrec + 1
-! enddo
-! close(IIN)
-
-! filter list of stations, only retain stations that are in the model
-!  nrec_filtered = 0
-!  open(unit=IIN,file=rec_filename,status='old',action='read')
-!  do irec = 1,nrec
-!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-!         .or. USE_EXTERNAL_MESH) &
-!      nrec_filtered = nrec_filtered + 1
-!  enddo
-!  close(IIN)
-
-!  write(IMAIN,*)
-!  write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(rec_filename)
-!  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_rec_filename)
-!  write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
-!  write(IMAIN,*)
-
-!  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the model')
-
-!  if(nrec < 1) call exit_MPI(myrank,'need at least one station in the model')
-
-!  open(unit=IIN,file=rec_filename,status='old',action='read')
-!  open(unit=IOUT,file=filtered_rec_filename,status='unknown')
-
-!  do irec = 1,nrec
-!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-!         .or. USE_EXTERNAL_MESH) &
-!      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
-!              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
-!  enddo
-
-!  close(IIN)
-!  close(IOUT)
-
-  endif   ! end of section executed by main process only
-
-! elapsed time since beginning of mesh generation
-  if(myrank == 0) then
-    tCPU = wtime() - time_start
-    write(IMAIN,*)
-    write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
-    write(IMAIN,*) 'End of mesh generation'
-    write(IMAIN,*)
-  endif
-
-! close main output file
-  if(myrank == 0) then
-    write(IMAIN,*) 'done'
-    write(IMAIN,*)
-    close(IMAIN)
-  endif
-
-! synchronize all the processes to make sure everybody has finished
-  call sync_all()
-
+! finalize mesher
+  call generate_databases_finalize()
+  
   end subroutine generate_databases
   
-
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine generate_databases_check_parameters
+  subroutine generate_databases_read_parameters
 
-! checks user input parameters
+! reads and checks user input parameters
 
   use generate_databases_par
+  implicit none
 
+! reads DATA/Par_file 
+  call read_parameter_file( &
+        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
+
+! checks user input parameters for mesher to run
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
   endif
@@ -582,7 +493,7 @@
 
   endif
 
-  end subroutine generate_databases_check_parameters
+  end subroutine generate_databases_read_parameters
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -593,6 +504,7 @@
 ! reads in topography files
 
   use generate_databases_par
+  implicit none
 
   if(TOPOGRAPHY .or. OCEANS) then
 
@@ -640,6 +552,7 @@
 ! reads in proc***_Databases files
 
   use generate_databases_par
+  implicit none
 
 ! read databases about external mesh simulation
 ! global node coordinates
@@ -765,13 +678,13 @@
   call sync_all()
 
 ! MPI interfaces between different partitions
-  read(IIN,*) ninterface_ext_mesh, max_interface_size_ext_mesh
-  allocate(my_neighbours_ext_mesh(ninterface_ext_mesh))
-  allocate(my_nelmnts_neighbours_ext_mesh(ninterface_ext_mesh))
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,ninterface_ext_mesh))
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh))
-  allocate(nibool_interfaces_ext_mesh(ninterface_ext_mesh))
-  do num_interface = 1, ninterface_ext_mesh
+  read(IIN,*) num_interfaces_ext_mesh, max_interface_size_ext_mesh
+  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh))
+  allocate(my_nelmnts_neighbours_ext_mesh(num_interfaces_ext_mesh))
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh))
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh))
+  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh))
+  do num_interface = 1, num_interfaces_ext_mesh
      read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
      do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
         read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
@@ -782,7 +695,7 @@
   close(IIN)
 
   if(myrank == 0) then
-    write(IMAIN,*) '  number of MPI partition interfaces: ',ninterface_ext_mesh
+    write(IMAIN,*) '  number of MPI partition interfaces: ',num_interfaces_ext_mesh
   endif
   call sync_all()
   
@@ -797,6 +710,7 @@
 ! mesh creation for static solver
 
   use generate_databases_par
+  implicit none
 
 ! assign theoretical number of elements
   nspec = NSPEC_AB
@@ -813,7 +727,7 @@
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh,&
-              nelmnts_ext_mesh,nmat_ext_mesh,ninterface_ext_mesh, &
+              nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
               max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,&
               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top,&
               max_static_memory_size_request)
@@ -834,7 +748,7 @@
                 nodes_coords_ext_mesh, elmnts_ext_mesh, &
                 max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
                 nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
-                ninterface_ext_mesh, max_interface_size_ext_mesh, &
+                num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
                 my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
                 my_interfaces_ext_mesh, &
                 ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
@@ -864,9 +778,150 @@
     endif
   endif
 
-  deallocate(ibool,xstore,ystore,zstore)
+  deallocate(xstore,ystore,zstore)
 
 ! make sure everybody is synchronized
   call sync_all()
 
   end subroutine generate_databases_setup_mesh
+  
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine generate_databases_finalize
+
+! checks user input parameters
+
+  use generate_databases_par
+  implicit none
+  
+!--- print number of points and elements in the mesh
+  call sum_all_i(NGLOB_AB,nglob_total)
+  call sum_all_i(NSPEC_AB,nspec_total)
+  call sync_all()  
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'Repartition of elements:'
+    write(IMAIN,*) '-----------------------'
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
+    write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of elements in entire mesh: ',nspec_total     ! NSPEC_AB*NPROC
+    write(IMAIN,*) 'total number of points in entire mesh: ',nglob_total        !NGLOB_AB*NPROC
+    write(IMAIN,*) 'total number of DOFs in entire mesh: ',nglob_total*NDIM   !NGLOB_AB*NPROC*NDIM
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
+    write(IMAIN,*)
+    ! write information about precision used for floating-point operations
+    if(CUSTOM_REAL == SIZE_REAL) then
+      write(IMAIN,*) 'using single precision for the calculations'
+    else
+      write(IMAIN,*) 'using double precision for the calculations'
+    endif
+    write(IMAIN,*)
+    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
+    write(IMAIN,*)
+  endif
+  
+! gets number of surface elements (for movie outputs)
+  allocate( ispec_is_surface_external_mesh(NSPEC_AB), &
+           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)  
+  if( ier /= 0 ) stop 'error allocating array'  
+  max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh)
+  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array'  
+  do i = 1, num_interfaces_ext_mesh
+     ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
+  enddo
+
+  call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
+                      ispec_is_surface_external_mesh, &
+                      iglob_is_surface_external_mesh, &
+                      nfaces_surface_external_mesh, &
+                      num_interfaces_ext_mesh, &
+                      max_nibool_interfaces_ext_mesh, &
+                      nibool_interfaces_ext_mesh, &
+                      my_neighbours_ext_mesh, &
+                      ibool_interfaces_ext_mesh_dummy )
+
+  deallocate(ibool)
+  deallocate(ispec_is_surface_external_mesh)
+  deallocate(iglob_is_surface_external_mesh)
+  deallocate(ibool_interfaces_ext_mesh_dummy)
+  
+! number of surface faces for all partitions together
+  call sum_all_i(nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh)
+
+  
+! copy number of elements and points in an include file for the solver
+  if( myrank == 0 ) then
+    call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
+               ATTENUATION,ANISOTROPY,NSTEP,DT, &
+               SIMULATION_TYPE,max_static_memory_size,nfaces_surface_glob_ext_mesh)
+  endif 
+  
+! filters stations file
+!  if( myrank == 0 ) then
+!  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
+!  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+! get total number of stations
+! open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
+! nrec = 0
+! do while(ios == 0)
+!   read(IIN,"(a)",iostat=ios) dummystring
+!   if(ios == 0) nrec = nrec + 1
+! enddo
+! close(IIN)
+! filter list of stations, only retain stations that are in the model
+!  nrec_filtered = 0
+!  open(unit=IIN,file=rec_filename,status='old',action='read')
+!  do irec = 1,nrec
+!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+!         .or. USE_EXTERNAL_MESH) &
+!      nrec_filtered = nrec_filtered + 1
+!  enddo
+!  close(IIN)
+!  write(IMAIN,*)
+!  write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(rec_filename)
+!  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_rec_filename)
+!  write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
+!  write(IMAIN,*)
+!  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the model')
+!  if(nrec < 1) call exit_MPI(myrank,'need at least one station in the model')
+!  open(unit=IIN,file=rec_filename,status='old',action='read')
+!  open(unit=IOUT,file=filtered_rec_filename,status='unknown')
+!  do irec = 1,nrec
+!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+!         .or. USE_EXTERNAL_MESH) &
+!      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
+!              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
+!  enddo
+!    close(IIN)
+!    close(IOUT)
+!  endif   ! end of section executed by main process only
+
+! elapsed time since beginning of mesh generation
+  if(myrank == 0) then
+    tCPU = wtime() - time_start
+    write(IMAIN,*)
+    write(IMAIN,*) 'Elapsed time for mesh generation and buffer creation in seconds = ',tCPU
+    write(IMAIN,*) 'End of mesh generation'
+    write(IMAIN,*)
+  endif
+
+! close main output file
+  if(myrank == 0) then
+    write(IMAIN,*) 'done'
+    write(IMAIN,*)
+    close(IMAIN)
+  endif
+
+! synchronize all the processes to make sure everybody has finished
+  call sync_all()
+  
+  end subroutine generate_databases_finalize
+  

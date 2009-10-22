@@ -73,7 +73,7 @@
 ! create include file for the solver
   call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
              ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             SIMULATION_TYPE,0.d0)
+             SIMULATION_TYPE,0.d0,0)
   print *
   print *,'edit file OUTPUT_FILES/values_from_mesher.h to see some statistics about the mesh'
   print *

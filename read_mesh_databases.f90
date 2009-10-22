@@ -28,6 +28,9 @@
   subroutine read_mesh_databases()
 
   use specfem_par
+  use specfem_par_elastic
+  
+  implicit none
 
 ! start reading the databasesa
 
@@ -167,23 +170,23 @@
   read(27) normal_top
   
 ! MPI interfaces
-  read(27) ninterfaces_ext_mesh
+  read(27) num_interfaces_ext_mesh
   read(27) max_nibool_interfaces_ext_mesh
-  allocate(my_neighbours_ext_mesh(ninterfaces_ext_mesh))
-  allocate(nibool_interfaces_ext_mesh(ninterfaces_ext_mesh))
-  allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh))
+  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh))
+  allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
   read(27) my_neighbours_ext_mesh
   read(27) nibool_interfaces_ext_mesh
   read(27) ibool_interfaces_ext_mesh
 
-  allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
-  allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
-  allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
-  allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
-  allocate(request_send_vector_ext_mesh(ninterfaces_ext_mesh))
-  allocate(request_recv_vector_ext_mesh(ninterfaces_ext_mesh))
-  allocate(request_send_scalar_ext_mesh(ninterfaces_ext_mesh))
-  allocate(request_recv_scalar_ext_mesh(ninterfaces_ext_mesh))
+  allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+  allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+  allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+  allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+  allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh))
+  allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh))
+  allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh))
+  allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh))
   close(27)
 
 ! locate inner and outer elements
@@ -191,7 +194,7 @@
   allocate(iglob_is_inner_ext_mesh(NGLOB_AB))
   ispec_is_inner_ext_mesh(:) = .true.
   iglob_is_inner_ext_mesh(:) = .true.
-  do iinterface = 1, ninterfaces_ext_mesh
+  do iinterface = 1, num_interfaces_ext_mesh
     do i = 1, nibool_interfaces_ext_mesh(iinterface)
       iglob = ibool_interfaces_ext_mesh(i,iinterface)
       iglob_is_inner_ext_mesh(iglob) = .false.

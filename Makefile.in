@@ -53,9 +53,11 @@ AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
 
+
 O = obj
 
 libspecfem_a_OBJECTS = \
+	$O/assemble_MPI_scalar.o \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
 	$O/comp_source_time_function.o \
@@ -66,6 +68,7 @@ libspecfem_a_OBJECTS = \
 	$O/create_regions_mesh.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
+	$O/detect_surface.o \
 	$O/exit_mpi.o \
 	$O/get_MPI_cutplanes_eta.o \
 	$O/get_MPI_cutplanes_xi.o \
@@ -127,6 +130,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
+  $O/compute_forces_elastic.o \
 	$O/initialize_simulation.o \
 	$O/read_mesh_databases.o \
 	$O/setup_GLL_points.o \
@@ -138,7 +142,6 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/iterate_time.o \
 	$O/finalize_simulation.o \
 	$O/specfem3D.o \
-	$O/assemble_MPI_scalar.o \
 	$O/assemble_MPI_vector.o \
 	$(EMPTY_MACRO)
 
@@ -213,8 +216,14 @@ xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
 
-@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
+#@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) OUTPUT_FILES/values_from_mesher.h
+#@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
+
+@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o OUTPUT_FILES/surface_from_mesher.h
+@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o
+
+
+
 
 xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBSPECFEM)
@@ -282,10 +291,10 @@ $O/iterate_time.o: constants.h OUTPUT_FILES/values_from_mesher.h iterate_time.f9
 $O/finalize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h finalize_simulation.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
 
-$O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
+$O/assemble_MPI_vector.o: constants.h assemble_MPI_vector.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
 
-$O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_scalar.f90
+$O/assemble_MPI_scalar.o: constants.h assemble_MPI_scalar.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_scalar.o assemble_MPI_scalar.f90
 
 ###
@@ -361,6 +370,9 @@ $O/calc_jacobian.o: constants.h calc_jacobian.f90
 
 $O/check_mesh_resolution.o: constants.h check_mesh_resolution.f90
 	${FCCOMPILE_CHECK} -c -o $O/check_mesh_resolution.o check_mesh_resolution.f90
+
+$O/detect_surface.o: constants.h detect_surface.f90
+	${FCCOMPILE_CHECK} -c -o $O/detect_surface.o detect_surface.f90
 
 $O/gll_library.o: constants.h gll_library.f90
 	${FCCOMPILE_CHECK} -c -o $O/gll_library.o gll_library.f90
@@ -474,6 +486,9 @@ $O/compute_forces_no_Deville.o: constants.h compute_forces_no_Deville.f90
 
 $O/compute_forces_with_Deville.o: constants.h compute_forces_with_Deville.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_with_Deville.o compute_forces_with_Deville.f90
+
+$O/compute_forces_elastic.o: constants.h compute_forces_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic.o compute_forces_elastic.f90
 
 
 ###
