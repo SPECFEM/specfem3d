@@ -2,6 +2,20 @@ module part_decompose_mesh_SCOTCH
 
   implicit none
 
+! Useful kind types
+  integer ,parameter :: short = SELECTED_INT_KIND(4), long = SELECTED_INT_KIND(18)
+
+! Number of nodes per elements.
+  integer, parameter  :: ESIZE = 8
+
+! Number of faces per element.
+  integer, parameter  :: nfaces = 6
+
+! very large and very small values
+  double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
+
+!  include './constants_decompose_mesh_SCOTCH.h'
+
 contains
 
   !-----------------------------------------------
@@ -10,7 +24,7 @@ contains
   subroutine mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, &
  nnodes_elmnts, nodes_elmnts, max_neighbour, ncommonnodes)
 
-    include './constants_decompose_mesh_SCOTCH.h'
+!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts
     integer, intent(in)  :: nnodes
@@ -109,15 +123,15 @@ contains
   !--------------------------------------------------
   ! construct local numbering for the elements in each partition
   !--------------------------------------------------
-  subroutine Construct_glob2loc_elmnts(nelmnts, part, glob2loc_elmnts)
+  subroutine Construct_glob2loc_elmnts(nelmnts, part, glob2loc_elmnts,nparts)
 
-    include './constants_decompose_mesh_SCOTCH.h'
+!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts
     integer, dimension(0:nelmnts-1), intent(in)  :: part
     integer, dimension(:), pointer  :: glob2loc_elmnts
-
-    integer  :: num_glob, num_part
+    
+    integer  :: num_glob, num_part, nparts
     integer, dimension(0:nparts-1)  :: num_loc
 
     ! allocates local numbering array
@@ -146,9 +160,9 @@ contains
   ! construct local numbering for the nodes in each partition
   !--------------------------------------------------
   subroutine Construct_glob2loc_nodes(nelmnts, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
-       glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes)
+       glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes,nparts)
 
-    include './constants_decompose_mesh_SCOTCH.h'
+!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts, nsize
     integer, intent(in)  :: nnodes
@@ -162,7 +176,7 @@ contains
     integer  :: num_node
     integer  :: el
     integer  ::  num_part
-    integer  ::  size_glob2loc_nodes
+    integer  ::  size_glob2loc_nodes,nparts
     integer, dimension(0:nparts-1)  :: parts_node
     integer, dimension(0:nparts-1)  :: num_parts
 
@@ -232,9 +246,10 @@ contains
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
    subroutine Construct_interfaces(nelmnts, sup_neighbour, part, elmnts, xadj, adjncy, &
-     tab_interfaces, tab_size_interfaces, ninterfaces, nb_materials, cs_material, num_material)
+                              tab_interfaces, tab_size_interfaces, ninterfaces, &
+                              nb_materials, cs_material, num_material,nparts)
 
-     include './constants_decompose_mesh_SCOTCH.h'
+!     include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts, sup_neighbour
     integer, dimension(0:nelmnts-1), intent(in)  :: part
@@ -245,7 +260,7 @@ contains
     integer, intent(out)  :: ninterfaces
     integer, dimension(1:nelmnts), intent(in)  :: num_material
     double precision, dimension(1:nb_materials), intent(in)  :: cs_material
-    integer, intent(in)  :: nb_materials
+    integer, intent(in)  :: nb_materials,nparts
 
 
     integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
@@ -441,7 +456,7 @@ contains
        nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, & 
        glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, part)
      
-    include './constants_decompose_mesh_SCOTCH.h'
+!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
@@ -684,10 +699,12 @@ contains
   !--------------------------------------------------
   ! Write elements (their nodes) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_partition_database(IIN_database, iproc, nspec, nelmnts, elmnts, glob2loc_elmnts, glob2loc_nodes_nparts, &
-     glob2loc_nodes_parts, glob2loc_nodes, part, num_modele, ngnod, num_phase)
+  subroutine write_partition_database(IIN_database, iproc, nspec, nelmnts, elmnts, &
+                                      glob2loc_elmnts, glob2loc_nodes_nparts, &
+                                      glob2loc_nodes_parts, glob2loc_nodes, &
+                                      part, num_modele, ngnod, num_phase)
 
-    include './constants_decompose_mesh_SCOTCH.h'
+!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: num_phase, iproc
@@ -744,13 +761,13 @@ contains
   !--------------------------------------------------
   subroutine write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, iproc, ninterfaces, &
        my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-       glob2loc_nodes, num_phase)
+       glob2loc_nodes, num_phase, nparts)
 
-    include './constants_decompose_mesh_SCOTCH.h'
+!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
-    integer, intent(in)  :: ninterfaces
+    integer, intent(in)  :: ninterfaces, nparts
     integer, intent(inout)  :: my_ninterface
     integer, dimension(:), pointer  :: tab_size_interfaces
     integer, dimension(:), pointer  :: tab_interfaces

@@ -23,156 +23,23 @@
 !
 !=====================================================================
 
-subroutine compute_forces_with_Deville(phase_is_inner,NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                      kappastore,mustore,jacobian,ibool,ispec_is_inner, &
-                      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                      xi_source,eta_source,gamma_source,nu_source, &
-                      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, &
-                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval, &
-                      NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-                      ABSORBING_CONDITIONS, &
-                      absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                      absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                      num_absorbing_boundary_faces, &
-                      veloc,rho_vp,rho_vs)
 
-  implicit none
-
-  include "constants.h"
-!  include values created by the mesher
-!  include "OUTPUT_FILES/values_from_mesher.h"
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,accel
-
-! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        kappastore,mustore,jacobian
-
-! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
-
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,t_cmt 
-  double precision :: dt
-  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays 
-
-!  integer :: isource
-  double precision :: t0 
-  double precision :: stf 
-
-! memory variables and standard linear solids for attenuation  
-  logical :: ATTENUATION
-  integer :: NSPEC_ATTENUATION_AB
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, alphaval,betaval,gammaval
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
-       R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
-       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
-  
-! Stacey conditions
-  logical  :: ABSORBING_CONDITIONS
-!  integer  :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,nspec2D_top
-!  integer  :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
-!  integer, dimension(nspec2D_xmin) :: ibelm_xmin
-!  integer, dimension(nspec2D_xmax) :: ibelm_xmax
-!  integer, dimension(nspec2D_ymin) :: ibelm_ymin
-!  integer, dimension(nspec2D_ymax) :: ibelm_ymax
-!  integer, dimension(nspec2D_bottom) :: ibelm_bottom
-!  integer, dimension(nspec2D_top) :: ibelm_top
-!  integer :: ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin),ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax), &
-!            ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin),ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax), &
-!            ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom),ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top)  
-!  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX_ext) :: nimin,nimax,nkmin_eta
-!  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX_ext) :: njmin,njmax,nkmin_xi
-
-
-
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: veloc
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
-  
-!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmin) :: jacobian2D_xmin
-!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmax) :: jacobian2D_xmax
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymin) :: jacobian2D_ymin
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymax) :: jacobian2D_ymax
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_BOTTOM) :: jacobian2D_bottom
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_top) :: jacobian2D_top
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmin) :: normal_xmin
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmax) :: normal_xmax
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_ymin) :: normal_ymin
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_ymax) :: normal_ymax
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM) :: normal_bottom
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_top) :: normal_top
-
-  integer :: num_absorbing_boundary_faces
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_normal
-  real(kind=CUSTOM_REAL), dimension(NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_jacobian2D
-  integer, dimension(3,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_ijk
-  integer, dimension(num_absorbing_boundary_faces) :: absorbing_boundary_ispec
-
-
-! computes elastic stiffness term
-  call compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel, &
-                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                                hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                                kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
-                                one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
-                                NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                                epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store )
-
-! adds absorbing boundary term to acceleration (Stacey conditions)
-  if(ABSORBING_CONDITIONS) then 
-    call compute_forces_add_elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, &
-                            ibool,ispec_is_inner,phase_is_inner, &
-                            absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                            absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                            num_absorbing_boundary_faces, &
-                            veloc,rho_vp,rho_vs)
-  endif
-
-! adds source term
-  call compute_forces_add_source_term( NSPEC_AB,NGLOB_AB,accel, &
-                            ibool,ispec_is_inner,phase_is_inner, &
-                            NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                            xi_source,eta_source,gamma_source,nu_source, &
-                            hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays )
-
-end subroutine compute_forces_with_Deville
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! elastic term
-
-subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,accel, &
+subroutine compute_forces_with_Deville( phase_is_inner ,NSPEC_AB,NGLOB_AB, &
+                                    displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                                    hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                                    kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
+                                    hprime_xx,hprime_xxT, &
+                                    hprimewgll_xx,hprimewgll_xxT, &
+                                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                                    kappastore,mustore,jacobian,ibool, &
+                                    ispec_is_inner, &
+                                    ATTENUATION,USE_OLSEN_ATTENUATION, &
                                     one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
                                     NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                                    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store )
+                                    epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                    epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
+                                    rho_vs )
+
+! computes elastic tensor term
 
   implicit none
 
@@ -203,7 +70,7 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
   logical :: phase_is_inner
 
 ! memory variables and standard linear solids for attenuation    
-  logical :: ATTENUATION
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
   integer :: NSPEC_ATTENUATION_AB
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
@@ -212,6 +79,8 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
        R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vs
 
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
@@ -249,11 +118,13 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
   equivalence(newtempy3,E2_mxm_m2_m1_5points)
   equivalence(newtempz3,E3_mxm_m2_m1_5points)
 
+! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
   real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
   real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
   real(kind=CUSTOM_REAL) epsilon_trace_over_3
+  real(kind=CUSTOM_REAL) vs_val
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
@@ -267,7 +138,7 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
 
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
-
+  
   integer i_SLS,iselected
 
   integer ispec,iglob
@@ -293,77 +164,77 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
   ! for incompressible fluid flow, Cambridge University Press (2002),
   ! pages 386 and 389 and Figure 8.3.1
   ! call mxm_m1_m2_5points(hprime_xx,dummyx_loc,dummyy_loc,dummyz_loc,tempx1,tempy1,tempz1)
-    do j=1,m2
-      do i=1,m1
-        C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
+      do j=1,m2
+        do i=1,m1
+          C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
                                 hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
                                 hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
                                 hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
                                 hprime_xx(i,5)*B1_m1_m2_5points(5,j)
 
-        C2_m1_m2_5points(i,j) = hprime_xx(i,1)*B2_m1_m2_5points(1,j) + &
+          C2_m1_m2_5points(i,j) = hprime_xx(i,1)*B2_m1_m2_5points(1,j) + &
                                 hprime_xx(i,2)*B2_m1_m2_5points(2,j) + &
                                 hprime_xx(i,3)*B2_m1_m2_5points(3,j) + &
                                 hprime_xx(i,4)*B2_m1_m2_5points(4,j) + &
                                 hprime_xx(i,5)*B2_m1_m2_5points(5,j)
 
-        C3_m1_m2_5points(i,j) = hprime_xx(i,1)*B3_m1_m2_5points(1,j) + &
+          C3_m1_m2_5points(i,j) = hprime_xx(i,1)*B3_m1_m2_5points(1,j) + &
                                 hprime_xx(i,2)*B3_m1_m2_5points(2,j) + &
                                 hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
                                 hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
                                 hprime_xx(i,5)*B3_m1_m2_5points(5,j)
+        enddo
       enddo
-    enddo
 
   !   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
   !          hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
-    do j=1,m1
-      do i=1,m1
+      do j=1,m1
+        do i=1,m1
   ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-        do k = 1,NGLLX
-          tempx2(i,j,k) = dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
+          do k = 1,NGLLX
+            tempx2(i,j,k) = dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
                           dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
                           dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
                           dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
                           dummyx_loc(i,5,k)*hprime_xxT(5,j)
 
-          tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
+            tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
                           dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
                           dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
                           dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
                           dummyy_loc(i,5,k)*hprime_xxT(5,j)
 
-          tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
+            tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
                           dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
                           dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
                           dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
                           dummyz_loc(i,5,k)*hprime_xxT(5,j)
+          enddo
         enddo
       enddo
-    enddo
 
   ! call mxm_m2_m1_5points(dummyx_loc,dummyy_loc,dummyz_loc,tempx3,tempy3,tempz3)
-    do j=1,m1
-      do i=1,m2
-        C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+      do j=1,m1
+        do i=1,m2
+          C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
                                     A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
                                     A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
                                     A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
                                     A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
 
-        C2_mxm_m2_m1_5points(i,j) = A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+          C2_mxm_m2_m1_5points(i,j) = A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
                                     A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
                                     A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
                                     A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
                                     A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
 
-        C3_mxm_m2_m1_5points(i,j) = A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+          C3_mxm_m2_m1_5points(i,j) = A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
                                     A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
                                     A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
                                     A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
                                     A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+        enddo
       enddo
-    enddo
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -405,16 +276,35 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
             mul = mustore(i,j,k,ispec)
            
             if(ATTENUATION) then
-               ! compute deviatoric strain
-               epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-               epsilondev_xx_loc(i,j,k) = duxdxl - epsilon_trace_over_3
-               epsilondev_yy_loc(i,j,k) = duydyl - epsilon_trace_over_3
-               epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
-               epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
-               epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+              ! compute deviatoric strain
+              epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+              epsilondev_xx_loc(i,j,k) = duxdxl - epsilon_trace_over_3
+              epsilondev_yy_loc(i,j,k) = duydyl - epsilon_trace_over_3
+              epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
+              epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
+              epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+                              
+              !if (SIMULATION_TYPE == 3) then
+              ! b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
+              ! b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
+              ! b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
+              ! b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
+              ! b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
+              ! b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
+              !endif
+
+              ! uses scaling rule similar to Olsen et al. (2003) or mesh flag
+              if(USE_OLSEN_ATTENUATION) then
+                vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+                call get_attenuation_model_Olsen_sediment( vs_val, iselected )
+              else
+                ! iflag from (CUBIT) mesh      
+                iselected = iflag_attenuation_store(i,j,k,ispec)                
+              endif
+
+              ! use unrelaxed parameters if attenuation
+              mul = mul * one_minus_sum_beta(iselected)
                
-               ! use unrelaxed parameters if attenuation
-               mul = mul * one_minus_sum_beta(iflag_attenuation_store(i,j,k,ispec))
             endif
 
             lambdalplus2mul = kappal + FOUR_THIRDS * mul
@@ -443,8 +333,6 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
                enddo
             endif
       
-
-
   ! form dot product with test vector, symmetric form
             tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
             tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl)
@@ -466,77 +354,77 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
   ! for incompressible fluid flow, Cambridge University Press (2002),
   ! pages 386 and 389 and Figure 8.3.1
   ! call mxm_m1_m2_5points(hprimewgll_xxT,tempx1,tempy1,tempz1,newtempx1,newtempy1,newtempz1)
-    do j=1,m2
-      do i=1,m1
-        E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
+      do j=1,m2
+        do i=1,m1
+          E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
                                 hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
                                 hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
                                 hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
                                 hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
 
-        E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_5points(1,j) + &
+          E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_5points(1,j) + &
                                 hprimewgll_xxT(i,2)*C2_m1_m2_5points(2,j) + &
                                 hprimewgll_xxT(i,3)*C2_m1_m2_5points(3,j) + &
                                 hprimewgll_xxT(i,4)*C2_m1_m2_5points(4,j) + &
                                 hprimewgll_xxT(i,5)*C2_m1_m2_5points(5,j)
 
-        E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_5points(1,j) + &
+          E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_5points(1,j) + &
                                 hprimewgll_xxT(i,2)*C3_m1_m2_5points(2,j) + &
                                 hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
                                 hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
                                 hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
+        enddo
       enddo
-    enddo
 
   !   call mxm_m1_m1_5points(tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k), &
   !         hprimewgll_xx,newtempx2(1,1,k),newtempy2(1,1,k),newtempz2(1,1,k))
-    do i=1,m1
-      do j=1,m1
+      do i=1,m1
+        do j=1,m1
   ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
-        do k = 1,NGLLX
-          newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
+          do k = 1,NGLLX
+            newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
                              tempx2(i,2,k)*hprimewgll_xx(2,j) + &
                              tempx2(i,3,k)*hprimewgll_xx(3,j) + &
                              tempx2(i,4,k)*hprimewgll_xx(4,j) + &
                              tempx2(i,5,k)*hprimewgll_xx(5,j)
 
-          newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
+            newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
                              tempy2(i,2,k)*hprimewgll_xx(2,j) + &
                              tempy2(i,3,k)*hprimewgll_xx(3,j) + &
                              tempy2(i,4,k)*hprimewgll_xx(4,j) + &
                              tempy2(i,5,k)*hprimewgll_xx(5,j)
 
-          newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
+            newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
                              tempz2(i,2,k)*hprimewgll_xx(2,j) + &
                              tempz2(i,3,k)*hprimewgll_xx(3,j) + &
                              tempz2(i,4,k)*hprimewgll_xx(4,j) + &
                              tempz2(i,5,k)*hprimewgll_xx(5,j)
+          enddo
         enddo
       enddo
-    enddo
 
   ! call mxm_m2_m1_5points(tempx3,tempy3,tempz3,hprimewgll_xx,newtempx3,newtempy3,newtempz3)
-    do j=1,m1
-      do i=1,m2
-        E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+      do j=1,m1
+        do i=1,m2
+          E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
                                     C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
                                     C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
                                     C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
                                     C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
 
-        E2_mxm_m2_m1_5points(i,j) = C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+          E2_mxm_m2_m1_5points(i,j) = C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
                                     C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
                                     C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
                                     C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
                                     C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
 
-        E3_mxm_m2_m1_5points(i,j) = C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+          E3_mxm_m2_m1_5points(i,j) = C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
                                     C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
                                     C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
                                     C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
                                     C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+        enddo
       enddo
-    enddo
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -548,18 +436,27 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
 
   ! sum contributions from each element to the global mesh using indirect addressing
             iglob = ibool(i,j,k,ispec)
-            accel(1,iglob) = accel(1,iglob) - fac1*newtempx1(i,j,k) - fac2*newtempx2(i,j,k) - fac3*newtempx3(i,j,k)
-            accel(2,iglob) = accel(2,iglob) - fac1*newtempy1(i,j,k) - fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
-            accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
+            accel(1,iglob) = accel(1,iglob) - fac1*newtempx1(i,j,k) - &
+                              fac2*newtempx2(i,j,k) - fac3*newtempx3(i,j,k)
+            accel(2,iglob) = accel(2,iglob) - fac1*newtempy1(i,j,k) - &
+                              fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
+            accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - &
+                              fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
-             !  update memory variables based upon the Runge-Kutta scheme
+            !  update memory variables based upon the Runge-Kutta scheme
             if(ATTENUATION) then
                
                ! use Runge-Kutta scheme to march in time
                do i_sls = 1,N_SLS
 
                   ! get coefficients for that standard linear solid
-                  iselected = iflag_attenuation_store(i,j,k,ispec)
+                  if( USE_OLSEN_ATTENUATION ) then
+                    vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+                    call get_attenuation_model_Olsen_sediment( vs_val, iselected )
+                  else
+                    iselected = iflag_attenuation_store(i,j,k,ispec)
+                  endif
+                  
                   factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
                   alphaval_loc = alphaval(iselected,i_sls)
                   betaval_loc = betaval(iselected,i_sls)
@@ -568,29 +465,66 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
                   ! term in xx
                   Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
                   Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-                  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+                  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
     
                   ! term in yy
                   Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
                   Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-                  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+                  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
 
                   ! term in zz not computed since zero trace
                   
                   ! term in xy
                   Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
                   Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-                  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+                  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
                 
                   ! term in xz
                   Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
                   Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-                  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+                  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
 
                   ! term in yz
                   Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
                   Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-                  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+                  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
+                  
+                  !if (SIMULATION_TYPE == 3) then
+                  !  b_alphaval_loc = b_alphaval(iselected,i_sls)
+                  !  b_betaval_loc = b_betaval(iselected,i_sls)
+                  !  b_gammaval_loc = b_gammaval(iselected,i_sls)
+                  !  ! term in xx
+                  !  b_Sn   = factor_loc * b_epsilondev_xx(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_xx_loc(i,j,k)
+                  !  b_R_xx(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xx(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in yy
+                  !  b_Sn   = factor_loc * b_epsilondev_yy(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_yy_loc(i,j,k)
+                  !  b_R_yy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yy(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in zz not computed since zero trace
+                  !  ! term in xy
+                  !  b_Sn   = factor_loc * b_epsilondev_xy(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_xy_loc(i,j,k)
+                  !  b_R_xy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xy(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in xz
+                  !  b_Sn   = factor_loc * b_epsilondev_xz(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_xz_loc(i,j,k)
+                  !  b_R_xz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xz(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !  ! term in yz
+                  !  b_Sn   = factor_loc * b_epsilondev_yz(i,j,k,ispec)
+                  !  b_Snp1   = factor_loc * b_epsilondev_yz_loc(i,j,k)
+                  !  b_R_yz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yz(i,j,k,ispec,i_sls) + &
+                  !                        b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
+                  !endif
 
                enddo   ! end of loop on memory variables
 
@@ -602,557 +536,27 @@ subroutine compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,ATTENUATION,displ,a
 
       ! save deviatoric strain for Runge-Kutta scheme
       if(ATTENUATION) then
-         epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-         epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
-         epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
-         epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
-         epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+        epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
+        epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
+        epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
+        epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
+        epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+        !if (SIMULATION_TYPE == 3) then
+        !  b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
+        !  b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
+        !  b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
+        !  b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
+        !  b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
+        !endif         
       endif
 
     endif ! if (ispec_is_inner(ispec) .eqv. phase_is_inner)
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_add_elastic_term
+end subroutine compute_forces_with_Deville
 
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-! absorbing boundary term for elastic media (Stacey conditions)
-
-subroutine compute_forces_add_elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, &
-                            ibool,ispec_is_inner,phase_is_inner, &
-                            absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                            absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                            num_absorbing_boundary_faces, &
-                            veloc,rho_vp,rho_vs)
-
-  implicit none
-
-  include "constants.h"
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-! acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-! array with derivatives of Lagrange polynomials and precalculated products
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
-  
-! Stacey conditions
-!  integer  :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,nspec2D_top
-!  integer  :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
-!  integer, dimension(nspec2D_xmin) :: ibelm_xmin
-!  integer, dimension(nspec2D_xmax) :: ibelm_xmax
-!  integer, dimension(nspec2D_ymin) :: ibelm_ymin
-!  integer, dimension(nspec2D_ymax) :: ibelm_ymax
-!  integer, dimension(nspec2D_bottom) :: ibelm_bottom
-!  integer, dimension(nspec2D_top) :: ibelm_top
-
-  ! local indices i,j,k of all GLL points on xmin boundary in the element
-!  integer :: ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin),ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax), &
-!            ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin),ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax), &
-!            ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom),ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top)  
-  
-!  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX_ext) :: nimin,nimax,nkmin_eta
-!  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX_ext) :: njmin,njmax,nkmin_xi
-
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: veloc
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
-
-!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmin) :: jacobian2D_xmin
-!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmax) :: jacobian2D_xmax
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymin) :: jacobian2D_ymin
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymax) :: jacobian2D_ymax
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_BOTTOM) :: jacobian2D_bottom
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_top) :: jacobian2D_top
-!  
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmin) :: normal_xmin
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmax) :: normal_xmax
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_ymin) :: normal_ymin
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_ymax) :: normal_ymax
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM) :: normal_bottom
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_top) :: normal_top
-
-  integer :: num_absorbing_boundary_faces
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_normal
-  real(kind=CUSTOM_REAL), dimension(NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_jacobian2D
-  integer, dimension(3,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_ijk
-  integer, dimension(num_absorbing_boundary_faces) :: absorbing_boundary_ispec
-
-
-! local parameters
-  real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw !weight,jacobianl
-  integer :: ispec,iglob,i,j,k,iface,igll
-  !integer :: num_gll !,igll_i,igll_j,ispec2D
-  
-
-! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
-  do iface=1,num_absorbing_boundary_faces
-
-    ispec = absorbing_boundary_ispec(iface)
-
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-
-      ! reference gll points on boundary face 
-      do igll = 1,NGLLSQUARE
-
-        ! gets local indices for GLL point
-        i = absorbing_boundary_ijk(1,igll,iface)
-        j = absorbing_boundary_ijk(2,igll,iface)
-        k = absorbing_boundary_ijk(3,igll,iface)
-
-        ! gets velocity
-        iglob=ibool(i,j,k,ispec)
-        vx=veloc(1,iglob)
-        vy=veloc(2,iglob)
-        vz=veloc(3,iglob)
-
-        ! gets associated normal
-        nx = absorbing_boundary_normal(1,igll,iface)
-        ny = absorbing_boundary_normal(2,igll,iface)
-        nz = absorbing_boundary_normal(3,igll,iface)             
-
-        ! velocity component in normal direction (normal points out of element)
-        vn = vx*nx + vy*ny + vz*nz
-           
-        ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-        tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-        ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-        tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-
-        ! gets associated, weighted jacobian 
-        jacobianw = absorbing_boundary_jacobian2D(igll,iface)
-        
-        ! adds stacey term (weak form)
-        accel(1,iglob) = accel(1,iglob) - tx*jacobianw
-        accel(2,iglob) = accel(2,iglob) - ty*jacobianw
-        accel(3,iglob) = accel(3,iglob) - tz*jacobianw
-
-       enddo
-       
-    endif    
-  enddo
-!
-!! old way: assumes box model with absorbing-boundary faces oriented with x,y,z planes
-!!   xmin  
-!  do ispec2D=1,nspec2D_xmin
-!
-!    ispec=ibelm_xmin(ispec2D)
-!
-!    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!
-!! old regular mesh
-!!       ! exclude elements that are not on absorbing edges
-!!       if(nkmin_xi(1,ispec2D) == 0 .or. njmin(1,ispec2D) == 0) cycle
-!!
-!!       i=1
-!!        do k=nkmin_xi(1,ispec2D),NGLLZ
-!!           do j=njmin(1,ispec2D),njmax(1,ispec2D)
-!
-!! new way, unregular element orientation
-!      ! reference gll points on boundary face 
-!      do igll_j = 1,NGLLZ
-!        do igll_i = 1,NGLLY
-!          ! gets local indices for GLL point
-!          i = ibelm_gll_xmin(1,igll_i,igll_j,ispec2D)
-!          j = ibelm_gll_xmin(2,igll_i,igll_j,ispec2D)
-!          k = ibelm_gll_xmin(3,igll_i,igll_j,ispec2D)
-!
-!          ! gets velocity
-!          iglob=ibool(i,j,k,ispec)
-!          vx=veloc(1,iglob)
-!          vy=veloc(2,iglob)
-!          vz=veloc(3,iglob)
-!
-!          ! gets associated normal
-!          nx = normal_xmin(1,igll_i,igll_j,ispec2D)
-!          ny = normal_xmin(2,igll_i,igll_j,ispec2D)
-!          nz = normal_xmin(3,igll_i,igll_j,ispec2D)             
-!          !   nx =  normal_xmin(1,j,k,ispec2D)
-!          !   ny =  normal_xmin(2,j,k,ispec2D)
-!          !   nz =  normal_xmin(3,j,k,ispec2D)
-!
-!          ! velocity component in normal direction (normal points out of element)
-!          vn = vx*nx + vy*ny + vz*nz
-!             
-!          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-!          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-!          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-!          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-!
-!          ! gets associated jacobian and 2D weights
-!          jacobianl = jacobian2D_xmin(igll_i,igll_j,ispec2D)
-!          weight = jacobianl*wgllwgll_yz(igll_i,igll_j)
-!
-!          ! adds stacey term (weak form)
-!          accel(1,iglob) = accel(1,iglob) - tx*weight
-!          accel(2,iglob) = accel(2,iglob) - ty*weight
-!          accel(3,iglob) = accel(3,iglob) - tz*weight
-!
-!          enddo
-!       enddo
-!    end if    
-!  enddo
-!
-!!   xmax
-!  do ispec2D=1,nspec2D_xmax
-!    
-!    ispec=ibelm_xmax(ispec2D)
-!    
-!    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!       
-!      ! reference gll points on boundary face 
-!      do igll_j = 1,NGLLZ
-!        do igll_i = 1,NGLLY
-!          ! gets local indices for GLL point
-!          i = ibelm_gll_xmax(1,igll_i,igll_j,ispec2D)
-!          j = ibelm_gll_xmax(2,igll_i,igll_j,ispec2D)
-!          k = ibelm_gll_xmax(3,igll_i,igll_j,ispec2D)
-!
-!          ! gets velocity
-!          iglob=ibool(i,j,k,ispec)
-!          vx=veloc(1,iglob)
-!          vy=veloc(2,iglob)
-!          vz=veloc(3,iglob)
-!
-!          ! gets associated normal
-!          nx = normal_xmax(1,igll_i,igll_j,ispec2D)
-!          ny = normal_xmax(2,igll_i,igll_j,ispec2D)
-!          nz = normal_xmax(3,igll_i,igll_j,ispec2D)             
-!
-!          ! velocity component in normal direction (normal points out of element)
-!          vn = vx*nx + vy*ny + vz*nz
-!             
-!          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-!          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-!          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-!          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-!
-!          ! gets associated jacobian and 2D weights
-!          jacobianl = jacobian2D_xmax(igll_i,igll_j,ispec2D)
-!          weight = jacobianl*wgllwgll_yz(igll_i,igll_j)
-!
-!          ! adds stacey term (weak form)
-!          accel(1,iglob) = accel(1,iglob) - tx*weight
-!          accel(2,iglob) = accel(2,iglob) - ty*weight
-!          accel(3,iglob) = accel(3,iglob) - tz*weight             
-!
-!        enddo
-!      enddo
-!    end if
-!  enddo
-!
-!!   ymin
-!  do ispec2D=1,nspec2D_ymin
-!    
-!    ispec=ibelm_ymin(ispec2D)
-!    
-!    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!       
-!      ! reference gll points on boundary face 
-!      do igll_j = 1,NGLLZ
-!        do igll_i = 1,NGLLX
-!          ! gets local indices for GLL point
-!          i = ibelm_gll_ymin(1,igll_i,igll_j,ispec2D)
-!          j = ibelm_gll_ymin(2,igll_i,igll_j,ispec2D)
-!          k = ibelm_gll_ymin(3,igll_i,igll_j,ispec2D)
-!
-!          ! gets velocity
-!          iglob=ibool(i,j,k,ispec)
-!          vx=veloc(1,iglob)
-!          vy=veloc(2,iglob)
-!          vz=veloc(3,iglob)
-!
-!          ! gets associated normal
-!          nx = normal_ymin(1,igll_i,igll_j,ispec2D)
-!          ny = normal_ymin(2,igll_i,igll_j,ispec2D)
-!          nz = normal_ymin(3,igll_i,igll_j,ispec2D)             
-!
-!          ! velocity component in normal direction (normal points out of element)
-!          vn = vx*nx + vy*ny + vz*nz
-!             
-!          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-!          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-!          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-!          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-!
-!          ! gets associated jacobian and 2D weights
-!          jacobianl = jacobian2D_ymin(igll_i,igll_j,ispec2D)
-!          weight = jacobianl*wgllwgll_xz(igll_i,igll_j)
-!
-!          ! adds stacey term (weak form)
-!          accel(1,iglob) = accel(1,iglob) - tx*weight
-!          accel(2,iglob) = accel(2,iglob) - ty*weight
-!          accel(3,iglob) = accel(3,iglob) - tz*weight             
-!
-!        enddo
-!      enddo
-!       
-!    endif
-!  enddo
-!
-!!   ymax
-!  do ispec2D=1,nspec2D_ymax
-!    
-!    ispec=ibelm_ymax(ispec2D)
-!
-!    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!
-!      ! reference gll points on boundary face 
-!      do igll_j = 1,NGLLZ
-!        do igll_i = 1,NGLLX
-!          ! gets local indices for GLL point
-!          i = ibelm_gll_ymax(1,igll_i,igll_j,ispec2D)
-!          j = ibelm_gll_ymax(2,igll_i,igll_j,ispec2D)
-!          k = ibelm_gll_ymax(3,igll_i,igll_j,ispec2D)
-!
-!          ! gets velocity
-!          iglob=ibool(i,j,k,ispec)
-!          vx=veloc(1,iglob)
-!          vy=veloc(2,iglob)
-!          vz=veloc(3,iglob)
-!
-!          ! gets associated normal
-!          nx = normal_ymax(1,igll_i,igll_j,ispec2D)
-!          ny = normal_ymax(2,igll_i,igll_j,ispec2D)
-!          nz = normal_ymax(3,igll_i,igll_j,ispec2D)             
-!
-!          ! velocity component in normal direction (normal points out of element)
-!          vn = vx*nx + vy*ny + vz*nz
-!             
-!          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-!          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-!          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-!          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-!
-!          ! gets associated jacobian and 2D weights
-!          jacobianl = jacobian2D_ymax(igll_i,igll_j,ispec2D)
-!          weight = jacobianl*wgllwgll_xz(igll_i,igll_j)
-!
-!          ! adds stacey term (weak form)
-!          accel(1,iglob) = accel(1,iglob) - tx*weight
-!          accel(2,iglob) = accel(2,iglob) - ty*weight
-!          accel(3,iglob) = accel(3,iglob) - tz*weight             
-!        enddo
-!      enddo
-!
-!    endif
-!  enddo
-!
-!!   bottom (zmin)
-!  do ispec2D=1,NSPEC2D_BOTTOM
-!    
-!    ispec=ibelm_bottom(ispec2D)
-!    
-!    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!
-!      ! reference gll points on boundary face 
-!      do igll_j = 1,NGLLY
-!        do igll_i = 1,NGLLX
-!          ! gets local indices for GLL point
-!          i = ibelm_gll_bottom(1,igll_i,igll_j,ispec2D)
-!          j = ibelm_gll_bottom(2,igll_i,igll_j,ispec2D)
-!          k = ibelm_gll_bottom(3,igll_i,igll_j,ispec2D)
-!
-!          ! gets velocity
-!          iglob=ibool(i,j,k,ispec)
-!          vx=veloc(1,iglob)
-!          vy=veloc(2,iglob)
-!          vz=veloc(3,iglob)
-!
-!          ! gets associated normal
-!          nx = normal_bottom(1,igll_i,igll_j,ispec2D)
-!          ny = normal_bottom(2,igll_i,igll_j,ispec2D)
-!          nz = normal_bottom(3,igll_i,igll_j,ispec2D)             
-!
-!          ! velocity component in normal direction (normal points out of element)
-!          vn = vx*nx + vy*ny + vz*nz
-!             
-!          ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-!          tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-!          ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-!          tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-!
-!          ! gets associated jacobian and 2D weights
-!          jacobianl = jacobian2D_bottom(igll_i,igll_j,ispec2D)
-!          weight = jacobianl*wgllwgll_xy(igll_i,igll_j)
-!
-!          ! adds stacey term (weak form)
-!          accel(1,iglob) = accel(1,iglob) - tx*weight
-!          accel(2,iglob) = accel(2,iglob) - ty*weight
-!          accel(3,iglob) = accel(3,iglob) - tz*weight             
-!
-!        enddo
-!      enddo
-!      
-!    endif
-!  enddo
-!
-!! absorbing at top surface - no free-surface?
-!  if( ABSORB_TOP_SURFACE ) then
-!    do ispec2D=1,NSPEC2D_TOP
-!      
-!      ispec=ibelm_top(ispec2D)
-!      
-!      if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!
-!        ! reference gll points on boundary face 
-!        do igll_j = 1,NGLLY
-!          do igll_i = 1,NGLLX
-!            ! gets local indices for GLL point
-!            i = ibelm_gll_top(1,igll_i,igll_j,ispec2D)
-!            j = ibelm_gll_top(2,igll_i,igll_j,ispec2D)
-!            k = ibelm_gll_top(3,igll_i,igll_j,ispec2D)
-!
-!            ! gets velocity
-!            iglob=ibool(i,j,k,ispec)
-!            vx=veloc(1,iglob)
-!            vy=veloc(2,iglob)
-!            vz=veloc(3,iglob)
-!
-!            ! gets associated normal
-!            nx = normal_top(1,igll_i,igll_j,ispec2D)
-!            ny = normal_top(2,igll_i,igll_j,ispec2D)
-!            nz = normal_top(3,igll_i,igll_j,ispec2D)             
-!
-!            ! velocity component in normal direction (normal points out of element)
-!            vn = vx*nx + vy*ny + vz*nz
-!               
-!            ! stacey term: velocity vector component * vp * rho in normal direction + vs * rho component tangential to it 
-!            tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
-!            ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
-!            tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
-!
-!            ! gets associated jacobian and 2D weights
-!            jacobianl = jacobian2D_top(igll_i,igll_j,ispec2D)
-!            weight = jacobianl*wgllwgll_xy(igll_i,igll_j)
-!
-!            ! adds stacey term (weak form)
-!            accel(1,iglob) = accel(1,iglob) - tx*weight
-!            accel(2,iglob) = accel(2,iglob) - ty*weight
-!            accel(3,iglob) = accel(3,iglob) - tz*weight             
-!
-!          enddo
-!        enddo
-!
-!      endif
-!    enddo
-!  endif
-  
-end subroutine compute_forces_add_elastic_absorbing_boundaries
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-subroutine compute_forces_add_source_term( NSPEC_AB,NGLOB_AB,accel, &
-                                  ibool,ispec_is_inner,phase_is_inner, &
-                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  xi_source,eta_source,gamma_source,nu_source, &
-                                  hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays )
-
-  implicit none
-
-  include "constants.h"
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-
-! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
-
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,t_cmt 
-  double precision :: dt
-  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays 
-
-  double precision, external :: comp_source_time_function 
-  
-! local parameters
-  double precision :: t0,f0
-  double precision :: stf 
-  real(kind=CUSTOM_REAL) stf_used 
-  integer :: isource,iglob,i,j,k
-  
-  do isource = 1,NSOURCES
-
-    !   add the source (only if this proc carries the source)
-    if(myrank == islice_selected_source(isource)) then
-
-      if (ispec_is_inner(ispec_selected_source(isource)) .eqv. phase_is_inner) then
-
-        if(USE_FORCE_POINT_SOURCE) then
-           
-           iglob = ibool(nint(xi_source(isource)), &
-                nint(eta_source(isource)), &
-                nint(gamma_source(isource)), &
-                ispec_selected_source(isource))
-           f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-           t0 = 1.2d0/f0
-           
-           if (it == 1 .and. myrank == 0) then
-              print *,'using a source of dominant frequency ',f0
-              print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-           endif
-           
-           ! we use nu_source(:,3) here because we want a source normal to the surface.
-           ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-           !accel(:,iglob) = accel(:,iglob) + &
-           !     sngl(nu_source(:,3,isource) * 10000000.d0 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
-           !     exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
-           accel(:,iglob) = accel(:,iglob) + &
-                sngl(nu_source(:,3,isource) * 1.d10 * (1.d0-2.d0*PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)) * &
-                exp(-PI*PI*f0*f0*(dble(it-1)*DT-t0)*(dble(it-1)*DT-t0)))
-           
-        else   
-           
-           stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
-
-           !     distinguish between single and double precision for reals
-           if(CUSTOM_REAL == SIZE_REAL) then
-              stf_used = sngl(stf)
-           else
-              stf_used = stf
-           endif
-
-           !     add source array
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    iglob = ibool(i,j,k,ispec_selected_source(isource))
-                    accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-                 enddo
-              enddo
-           enddo
-
-        endif ! USE_FORCE_POINT_SOURCE
-      endif ! ispec_is_inner     
-    endif ! myrank
-  
-  enddo ! NSOURCES
-
-end subroutine compute_forces_add_source_term
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1280,3 +684,136 @@ end subroutine compute_forces_add_source_term
 !
 !  end subroutine old_mxm_m2_m1_5points
 !
+
+
+!subroutine compute_forces_with_Deville(phase_is_inner,NSPEC_AB,NGLOB_AB,&
+!                      ATTENUATION,USE_OLSEN_ATTENUATION,displ,accel, &
+!                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+!                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+!                      kappastore,mustore,jacobian,ibool,ispec_is_inner, &
+!                      NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+!                      xi_source,eta_source,gamma_source,nu_source, &
+!                      hdur,hdur_gaussian,t_cmt,dt,stf,t0,sourcearrays, &
+!                      one_minus_sum_beta,factor_common,alphaval,betaval,gammaval, &
+!                      NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+!                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
+!                      ABSORBING_CONDITIONS, &
+!                      absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
+!                      absorbing_boundary_ijk,absorbing_boundary_ispec, &
+!                      num_absorbing_boundary_faces, &
+!                      veloc,rho_vp,rho_vs)
+!
+!  implicit none
+!
+!  include "constants.h"
+!!  include values created by the mesher
+!!  include "OUTPUT_FILES/values_from_mesher.h"
+!
+!  integer :: NSPEC_AB,NGLOB_AB
+!
+!! displacement and acceleration
+!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,accel
+!
+!! arrays with mesh parameters per slice
+!  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+!        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
+!        kappastore,mustore,jacobian
+!
+!! array with derivatives of Lagrange polynomials and precalculated products
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
+!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+!
+!! communication overlap
+!  logical, dimension(NSPEC_AB) :: ispec_is_inner
+!  logical :: phase_is_inner
+!
+!! source
+!  integer :: NSOURCES,myrank,it
+!  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
+!  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
+!  double precision, dimension(3,3,NSOURCES) :: nu_source
+!  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,t_cmt 
+!  double precision :: dt
+!  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays 
+!
+!!  integer :: isource
+!  double precision :: t0 
+!  double precision :: stf 
+!
+!! memory variables and standard linear solids for attenuation  
+!  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
+!  integer :: NSPEC_ATTENUATION_AB
+!  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
+!  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
+!  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, alphaval,betaval,gammaval
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
+!       R_xx,R_yy,R_xy,R_xz,R_yz
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
+!       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+!  
+!! Stacey conditions
+!  logical  :: ABSORBING_CONDITIONS
+!!  integer  :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,nspec2D_top
+!!  integer  :: NSPEC2DMAX_XMIN_XMAX_ext,NSPEC2DMAX_YMIN_YMAX_ext
+!!  integer, dimension(nspec2D_xmin) :: ibelm_xmin
+!!  integer, dimension(nspec2D_xmax) :: ibelm_xmax
+!!  integer, dimension(nspec2D_ymin) :: ibelm_ymin
+!!  integer, dimension(nspec2D_ymax) :: ibelm_ymax
+!!  integer, dimension(nspec2D_bottom) :: ibelm_bottom
+!!  integer, dimension(nspec2D_top) :: ibelm_top
+!!  integer :: ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin),ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax), &
+!!            ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin),ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax), &
+!!            ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom),ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top)  
+!!  integer, dimension(2,NSPEC2DMAX_YMIN_YMAX_ext) :: nimin,nimax,nkmin_eta
+!!  integer, dimension(2,NSPEC2DMAX_XMIN_XMAX_ext) :: njmin,njmax,nkmin_xi
+!
+!
+!
+!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: veloc
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vp,rho_vs
+!  
+!!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmin) :: jacobian2D_xmin
+!!  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ,nspec2D_xmax) :: jacobian2D_xmax
+!!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymin) :: jacobian2D_ymin
+!!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ,nspec2D_ymax) :: jacobian2D_ymax
+!!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_BOTTOM) :: jacobian2D_bottom
+!!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_top) :: jacobian2D_top
+!!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmin) :: normal_xmin
+!!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_xmax) :: normal_xmax
+!!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_ymin) :: normal_ymin
+!!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLY,NGLLZ,nspec2D_ymax) :: normal_ymax
+!!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM) :: normal_bottom
+!!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NSPEC2D_top) :: normal_top
+!
+!  integer :: num_absorbing_boundary_faces
+!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_normal
+!  real(kind=CUSTOM_REAL), dimension(NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_jacobian2D
+!  integer, dimension(3,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_ijk
+!  integer, dimension(num_absorbing_boundary_faces) :: absorbing_boundary_ispec
+!
+!
+!! computes elastic stiffness term
+!  call compute_forces_add_elastic_term(NSPEC_AB,NGLOB_AB,&
+!                                ATTENUATION,USE_OLSEN_ATTENUATION,displ,accel, &
+!                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+!                                hprime_xx,hprime_xxT,&
+!                                hprimewgll_xx,hprimewgll_xxT,&
+!                                wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+!                                kappastore,mustore,jacobian,ibool,ispec_is_inner,phase_is_inner, &
+!                                one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
+!                                NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+!                                epsilondev_xx,epsilondev_yy,epsilondev_xy,&
+!                                epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
+!                                rho_vs )
+!
+!
+!end subroutine compute_forces_with_Deville
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+

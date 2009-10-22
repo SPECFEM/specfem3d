@@ -30,35 +30,38 @@
   subroutine setup_movie_meshes()
 
   use specfem_par
+  use specfem_par_movie
+
+  implicit none
 
 ! initializes mesh arrays for movies and shakemaps
-  nfaces_surface_external_mesh = 0
-  do ispec = 1, NSPEC_AB
-    iglob = ibool(2,2,1,ispec)
-    if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-    endif
-    iglob = ibool(2,2,NGLLZ,ispec)
-    if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-    endif
-    iglob = ibool(2,1,2,ispec)
-    if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-    endif
-    iglob = ibool(2,NGLLY,2,ispec)
-    if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-    endif
-    iglob = ibool(1,2,2,ispec)
-    if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-    endif
-    iglob = ibool(NGLLX,2,2,ispec)
-    if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-    endif
-  enddo ! NSPEC_AB
+!  nfaces_surface_external_mesh = 0
+!  do ispec = 1, NSPEC_AB
+!    iglob = ibool(2,2,1,ispec)
+!    if (iglob_is_surface_external_mesh(iglob)) then
+!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+!    endif
+!    iglob = ibool(2,2,NGLLZ,ispec)
+!    if (iglob_is_surface_external_mesh(iglob)) then
+!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+!    endif
+!    iglob = ibool(2,1,2,ispec)
+!    if (iglob_is_surface_external_mesh(iglob)) then
+!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+!    endif
+!    iglob = ibool(2,NGLLY,2,ispec)
+!    if (iglob_is_surface_external_mesh(iglob)) then
+!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+!    endif
+!    iglob = ibool(1,2,2,ispec)
+!    if (iglob_is_surface_external_mesh(iglob)) then
+!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+!    endif
+!    iglob = ibool(NGLLX,2,2,ispec)
+!    if (iglob_is_surface_external_mesh(iglob)) then
+!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
+!    endif
+!  enddo ! NSPEC_AB
 
   allocate(nfaces_perproc_surface_ext_mesh(NPROC))
   allocate(faces_surface_offset_ext_mesh(NPROC))
@@ -99,7 +102,10 @@
       allocate(store_val_uz_external_mesh(NGNOD2D*nfaces_surface_external_mesh))
     endif
   endif
+
+! number of surface faces for all partitions together
   call sum_all_i(nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh)
+  
   if (myrank == 0) then
     if (USE_HIGHRES_FOR_MOVIES) then
       allocate(store_val_x_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
@@ -245,7 +251,7 @@
   enddo ! NSPEC_AB
 
   if (myrank == 0) then 
-    write(IMAIN,*) 'movie:  nfaces_surface_external_mesh   = ',nfaces_surface_external_mesh
+    write(IMAIN,*) 'movie: nfaces_surface_external_mesh   = ',nfaces_surface_external_mesh
     write(IMAIN,*) 'movie: nfaces_perproc_surface_ext_mesh = ',nfaces_perproc_surface_ext_mesh
     write(IMAIN,*) 'movie: nfaces_surface_glob_ext_mesh    = ',nfaces_surface_glob_ext_mesh
   endif

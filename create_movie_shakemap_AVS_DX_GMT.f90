@@ -33,7 +33,8 @@
   implicit none
 
   include "constants.h"
-
+  include "OUTPUT_FILES/surface_from_mesher.h"
+  
 ! number of points in each AVS or OpenDX quadrangular cell for movies
   integer, parameter :: NGNOD2D_AVS_DX = 4
 
@@ -125,19 +126,18 @@
   real(kind=CUSTOM_REAL), parameter :: X_SOURCE_EXT_MESH = -9023.021484375
   real(kind=CUSTOM_REAL), parameter :: Y_SOURCE_EXT_MESH = 6123.611328125
   real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
-
-  ! movie arrays (store_val_x_all_external_mesh) size
-!  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 15808*4
-
-  ! total number of spectral elements at surface
-  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 7650  ! movie: nfaces_surface_glob_ext_mesh
+!--------------------------------------------
+!!!! NL NL
   
   ! order of points representing the 2D square element
   integer,dimension(NGNOD2D_AVS_DX),parameter :: iorder = (/1,3,2,4/)
-  integer,dimension(NGNOD2D_AVS_DX),parameter :: iorder2 = (/1,3,4,2/)
+
+! obsolete, should be defined in OUTPUT_FILES/surface_from_mesher.h...
+! movie arrays (store_val_x_all_external_mesh) size
+!  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 15808*4
+! total number of spectral elements at surface
+!  integer, parameter :: NSPEC_SURFACE_EXT_MESH = 7650  ! movie: nfaces_surface_glob_ext_mesh
   
-!--------------------------------------------
-!!!! NL NL
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -172,7 +172,6 @@
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
-
 
 ! compute other parameters based upon values read
 !  if( .not. USE_EXTERNAL_MESH ) then

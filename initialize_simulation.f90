@@ -28,6 +28,10 @@
   subroutine initialize_simulation()
 
   use specfem_par
+  use specfem_par_elastic
+  !use specfem_par_movie
+  
+  implicit none
   
   integer :: sizeprocs
   
@@ -172,11 +176,11 @@
   allocate(zstore(NGLOB_AB))
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(not_fully_in_bedrock(NSPEC_AB))
-  allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+!  allocate(not_fully_in_bedrock(NSPEC_AB))
+!  allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(idoubling(NSPEC_AB))
+!  allocate(idoubling(NSPEC_AB))
   allocate(rmass(NGLOB_AB))
   allocate(rmass_ocean_load(NGLOB_AB))
   allocate(updated_dof_ocean_load(NGLOB_AB))

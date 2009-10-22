@@ -18,17 +18,14 @@ step-by-step tutorial:
 
 2. decompose mesh files:
 
-    - copy to directory OUTPUT_FILES/ in decompose_mesh_SCOTCH directory 
-    
-    - specify number of partitions (nparts, equals number of CPUs to run simulation with)
-      in file "constants_decompose_mesh_SCOTCH.h" 
-      
     - run decomposer in directory decompose_mesh_SCOTCH/:
-      > ./compile_all.csh
-      > ./a.out 
+      (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
+      
+      > make
+      > ./xdecompose_mesh_SCOTCH 4 ../EXAMPLES/homogeneous_halfspace/MESH/ ../DATABASES_MPI/ 
             
-    - copy mesh partitions "proc0000***_Database" to directory "LOCAL_PATH"  
-      specified in "Par_file"     
+      which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
+      you can then specify "DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"  
 
 
 3. generate databases:

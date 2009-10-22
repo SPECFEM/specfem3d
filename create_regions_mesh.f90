@@ -30,7 +30,7 @@
                     nodes_coords_ext_mesh, elmnts_ext_mesh, &
                     max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
                     nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
-                    ninterface_ext_mesh, max_interface_size_ext_mesh, &
+                    num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
                     my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
                     my_interfaces_ext_mesh, &
                     ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
@@ -77,12 +77,12 @@
   character (len=30), dimension(5,nundefMat_ext_mesh):: undef_mat_prop
   
 !  double precision, external :: materials_ext_mesh
-  integer :: ninterface_ext_mesh,max_interface_size_ext_mesh
-  integer, dimension(ninterface_ext_mesh) :: my_neighbours_ext_mesh
-  integer, dimension(ninterface_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
-  integer, dimension(6,max_interface_size_ext_mesh,ninterface_ext_mesh) :: my_interfaces_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh
+  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
 
 ! absorbing boundaries
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
@@ -457,7 +457,7 @@
                                     my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                                     ibool_interfaces_ext_mesh, &
                                     nibool_interfaces_ext_mesh, &
-                                    ninterface_ext_mesh,max_interface_size_ext_mesh, &
+                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                                     xstore_dummy,ystore_dummy,zstore_dummy)
 
 ! saves the binary files
@@ -477,12 +477,12 @@
                         absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
                         absorbing_boundary_ijk,absorbing_boundary_ispec, &
                         num_absorbing_boundary_faces, &
-                        ninterface_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                        num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         prname,SAVE_MESH_FILES)
 
 ! computes the approximate amount of static memory needed to run the solver
-  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),ninterface_ext_mesh,static_memory_size)
+  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh,static_memory_size)
   call max_all_dp(static_memory_size, max_static_memory_size)
 
 
@@ -1839,7 +1839,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of faces = ',iabs
     if( ABSORB_FREE_SURFACE ) then
-    write(IMAIN,*) 'absorbing boundary includes free surface'
+    write(IMAIN,*) '     absorbing boundary includes free surface'
     endif
   endif
 
@@ -1876,7 +1876,7 @@ subroutine create_regions_mesh_ext_mesh_prepare_MPI_interfaces(nglob,nspec,ibool
                                     my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                                     ibool_interfaces_ext_mesh, &
                                     nibool_interfaces_ext_mesh, &
-                                    ninterface_ext_mesh,max_interface_size_ext_mesh, &
+                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                                     xstore_dummy,ystore_dummy,zstore_dummy)
 
 ! sets up the MPI interface for communication between partitions
@@ -1892,13 +1892,13 @@ subroutine create_regions_mesh_ext_mesh_prepare_MPI_interfaces(nglob,nspec,ibool
   integer :: nelmnts_ext_mesh
   integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
   
-  integer :: ninterface_ext_mesh,max_interface_size_ext_mesh
+  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
   
-  integer, dimension(ninterface_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
-  integer, dimension(6,max_interface_size_ext_mesh,ninterface_ext_mesh) :: my_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
   
-  integer, dimension(ninterface_ext_mesh) :: nibool_interfaces_ext_mesh  
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,ninterface_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh  
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
   
@@ -1922,16 +1922,16 @@ subroutine create_regions_mesh_ext_mesh_prepare_MPI_interfaces(nglob,nspec,ibool
   call prepare_assemble_MPI (nelmnts_ext_mesh,ibool, &
                             elmnts_ext_mesh, ESIZE, &
                             nglob, &
-                            ninterface_ext_mesh, max_interface_size_ext_mesh, &
+                            num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
                             my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh &
                             )
 
-  allocate(nibool_interfaces_ext_mesh_true(ninterface_ext_mesh))
+  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh))
 
 ! sort ibool comm buffers lexicographically  
-  do iinterface = 1, ninterface_ext_mesh
+  do iinterface = 1, num_interfaces_ext_mesh
 
     allocate(xp(nibool_interfaces_ext_mesh(iinterface)))
     allocate(yp(nibool_interfaces_ext_mesh(iinterface)))

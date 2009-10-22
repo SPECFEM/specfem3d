@@ -28,85 +28,102 @@
   subroutine detect_mesh_surfaces()
 
   use specfem_par
+  implicit none
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
-  allocate(valence_external_mesh(NGLOB_AB))
+
+
   allocate(ispec_is_surface_external_mesh(NSPEC_AB))
   allocate(iglob_is_surface_external_mesh(NGLOB_AB))
+!  allocate(valence_external_mesh(NGLOB_AB))
 
   if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
-    valence_external_mesh(:) = 0
-    ispec_is_surface_external_mesh(:) = .false.
-    iglob_is_surface_external_mesh(:) = .false.
-    do ispec = 1, NSPEC_AB
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-            valence_external_mesh(iglob) = valence_external_mesh(iglob) + 1
-          enddo
-        enddo
-      enddo
-    enddo
 
-    allocate(buffer_send_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
-    allocate(buffer_recv_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,ninterfaces_ext_mesh))
+    ! returns surace points/elements
+    call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
+                      ispec_is_surface_external_mesh, &
+                      iglob_is_surface_external_mesh, &
+                      nfaces_surface_external_mesh, &
+                      num_interfaces_ext_mesh, &
+                      max_nibool_interfaces_ext_mesh, &
+                      nibool_interfaces_ext_mesh, &
+                      my_neighbours_ext_mesh, &
+                      ibool_interfaces_ext_mesh) 
 
-    call assemble_MPI_scalar_i_ext_mesh(NPROC,NGLOB_AB,valence_external_mesh, &
-         buffer_send_scalar_i_ext_mesh,buffer_recv_scalar_i_ext_mesh, &
-         ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
-
-    do ispec = 1, NSPEC_AB
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            if ( &
-             (k == 1 .or. k == NGLLZ) .and. (j /= 1 .and. j /= NGLLY) .and. (i /= 1 .and. i /= NGLLX) .or. &
-             (j == 1 .or. j == NGLLY) .and. (k /= 1 .and. k /= NGLLZ) .and. (i /= 1 .and. i /= NGLLX) .or. &
-             (i == 1 .or. i == NGLLX) .and. (k /= 1 .and. k /= NGLLZ) .and. (j /= 1 .and. j /= NGLLY) &
-             ) then
-              iglob = ibool(i,j,k,ispec)
-              if (valence_external_mesh(iglob) == 1) then
-                ispec_is_surface_external_mesh(ispec) = .true.
-
-                if (k == 1 .or. k == NGLLZ) then
-                  do jj = 1, NGLLY
-                    do ii = 1, NGLLX
-                      iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
-                    enddo
-                  enddo
-                endif
-                if (j == 1 .or. j == NGLLY) then
-                  do kk = 1, NGLLZ
-                    do ii = 1, NGLLX
-                      iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
-                    enddo
-                  enddo
-                endif
-                if (i == 1 .or. i == NGLLX) then
-                  do kk = 1, NGLLZ
-                    do jj = 1, NGLLY
-                      iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
-                    enddo
-                  enddo
-                endif
-              endif
-
-            endif
-          enddo
-        enddo
-      enddo
-
-    enddo ! nspec
-
-    ! handles movies and shakemaps
-    if (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
-      call setup_movie_meshes()
-    endif
+!
+!    valence_external_mesh(:) = 0
+!    ispec_is_surface_external_mesh(:) = .false.
+!    iglob_is_surface_external_mesh(:) = .false.
+!    do ispec = 1, NSPEC_AB
+!      do k = 1, NGLLZ
+!        do j = 1, NGLLY
+!          do i = 1, NGLLX
+!            iglob = ibool(i,j,k,ispec)
+!            valence_external_mesh(iglob) = valence_external_mesh(iglob) + 1
+!          enddo
+!        enddo
+!      enddo
+!    enddo
+!
+!    allocate(buffer_send_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+!    allocate(buffer_recv_scalar_i_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+!
+!    ! adds contributions from different partitions to valence_external_mesh
+!    call assemble_MPI_scalar_i_ext_mesh(NPROC,NGLOB_AB,valence_external_mesh, &
+!         buffer_send_scalar_i_ext_mesh,buffer_recv_scalar_i_ext_mesh, &
+!         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+!         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+!         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+!
+!    do ispec = 1, NSPEC_AB
+!      do k = 1, NGLLZ
+!        do j = 1, NGLLY
+!          do i = 1, NGLLX
+!            if ( &
+!             (k == 1 .or. k == NGLLZ) .and. (j /= 1 .and. j /= NGLLY) .and. (i /= 1 .and. i /= NGLLX) .or. &
+!             (j == 1 .or. j == NGLLY) .and. (k /= 1 .and. k /= NGLLZ) .and. (i /= 1 .and. i /= NGLLX) .or. &
+!             (i == 1 .or. i == NGLLX) .and. (k /= 1 .and. k /= NGLLZ) .and. (j /= 1 .and. j /= NGLLY) &
+!             ) then
+!              iglob = ibool(i,j,k,ispec)
+!              if (valence_external_mesh(iglob) == 1) then
+!                ispec_is_surface_external_mesh(ispec) = .true.
+!
+!                if (k == 1 .or. k == NGLLZ) then
+!                  do jj = 1, NGLLY
+!                    do ii = 1, NGLLX
+!                      iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
+!                    enddo
+!                  enddo
+!                endif
+!                if (j == 1 .or. j == NGLLY) then
+!                  do kk = 1, NGLLZ
+!                    do ii = 1, NGLLX
+!                      iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
+!                    enddo
+!                  enddo
+!                endif
+!                if (i == 1 .or. i == NGLLX) then
+!                  do kk = 1, NGLLZ
+!                    do jj = 1, NGLLY
+!                      iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
+!                    enddo
+!                  enddo
+!                endif
+!              endif
+!
+!            endif
+!          enddo
+!        enddo
+!      enddo
+!
+!    enddo ! nspec
     
-  endif ! .not. RECVS_CAN_BE_BURIED_EXT_MESH
+  endif 
+  
+  ! handles movies and shakemaps
+  if (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
+    call setup_movie_meshes()
+  endif
 
 !!!! NL NL REGOLITH : runs at cines for asteroid simulations. Elements in contact with surface are part of the regolith layer.
 !!$  allocate(ispec_is_regolith(NSPEC_AB))

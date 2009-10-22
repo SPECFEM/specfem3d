@@ -28,7 +28,41 @@
   subroutine prepare_timerun()
 
   use specfem_par
+  use specfem_par_elastic
+  use specfem_par_movie
+  
+  implicit none
 
+! user info
+  if(myrank == 0) then
+
+    write(IMAIN,*)
+    if(TOPOGRAPHY) then
+      write(IMAIN,*) 'incorporating surface topography'
+    else
+      write(IMAIN,*) 'no surface topography'
+    endif
+
+    write(IMAIN,*)
+    if(ATTENUATION) then
+      write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
+      if(USE_OLSEN_ATTENUATION) then
+        write(IMAIN,*) 'using Olsen''s attenuation'
+      else
+        write(IMAIN,*) 'not using Olsen''s attenuation'
+      endif
+    else
+      write(IMAIN,*) 'no attenuation'
+    endif
+
+    write(IMAIN,*)
+    if(OCEANS) then
+      write(IMAIN,*) 'incorporating the oceans using equivalent load'
+    else
+      write(IMAIN,*) 'no oceans'
+    endif
+
+  endif
 
 ! synchronize all the processes before assembling the mass matrix
 ! to make sure all the nodes have finished to read their databases
@@ -37,7 +71,7 @@
 ! the mass matrix needs to be assembled with MPI here once and for all
   call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
          buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
-         ninterfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
          nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
          request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
@@ -80,7 +114,33 @@
     enddo
 
 ! rescale shear modulus according to attenuation model
+    !pll
+    do ispec = 1,NSPEC_AB
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
 
+! use scaling rule similar to Olsen et al. (2003)          
+!! We might need to fix the attenuation part for the anisotropy case
+!! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
+            if(USE_OLSEN_ATTENUATION) then
+              vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+              call get_attenuation_model_Olsen_sediment( vs_val, iselected )
+            else                        
+! takes iflag set in (CUBIT) mesh         
+              iselected = iflag_attenuation_store(i,j,k,ispec)
+            endif
+            
+! scales only mu             
+            scale_factor = factor_scale(iselected)
+            mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
+            
+          enddo
+        enddo
+      enddo
+    enddo
+
+! obsolete, old way...
 !pll 
 !   do ispec = 1,NSPEC_AB
 !    if(not_fully_in_bedrock(ispec)) then
@@ -147,20 +207,8 @@
 !      enddo
 !    endif
 !    enddo
-
-    !pll
-    do ispec = 1,NSPEC_AB
-       do k=1,NGLLZ
-          do j=1,NGLLY
-             do i=1,NGLLX
-                scale_factor = factor_scale(iflag_attenuation_store(i,j,k,ispec))
-                mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
-             enddo
-          enddo
-       enddo
-    enddo
     
- endif
+  endif ! ATTENUATION
 
 ! allocate seismogram array
   if (nrec_local > 0) then
@@ -286,14 +334,14 @@
       deltat**3*tauinv(:,:)**3 / 6. + deltat**4*tauinv(:,:)**4 / 24.
     betaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 3. + deltat**3*tauinv(:,:)**2 / 8. + deltat**4*tauinv(:,:)**3 / 24.
     gammaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 6. + deltat**3*tauinv(:,:)**2 / 24.
-    if (SIMULATION_TYPE == 3) then
-      b_alphaval(:,:) = 1 + b_deltat*tauinv(:,:) + b_deltat**2*tauinv(:,:)**2 / 2. + &
-            b_deltat**3*tauinv(:,:)**3 / 6. + b_deltat**4*tauinv(:,:)**4 / 24.
-      b_betaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 3. + &
-            b_deltat**3*tauinv(:,:)**2 / 8. + b_deltat**4*tauinv(:,:)**3 / 24.
-      b_gammaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 6. + &
-            b_deltat**3*tauinv(:,:)**2 / 24.
-    endif
+    !if (SIMULATION_TYPE == 3) then
+    !  b_alphaval(:,:) = 1 + b_deltat*tauinv(:,:) + b_deltat**2*tauinv(:,:)**2 / 2. + &
+    !        b_deltat**3*tauinv(:,:)**3 / 6. + b_deltat**4*tauinv(:,:)**4 / 24.
+    !  b_betaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 3. + &
+    !        b_deltat**3*tauinv(:,:)**2 / 8. + b_deltat**4*tauinv(:,:)**3 / 24.
+    !  b_gammaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 6. + &
+    !        b_deltat**3*tauinv(:,:)**2 / 24.
+    !endif
   endif
 
 

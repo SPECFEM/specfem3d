@@ -27,7 +27,7 @@
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
              ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             SIMULATION_TYPE,static_memory_size)
+             SIMULATION_TYPE,static_memory_size,nfaces_surface_glob_ext_mesh)
 
   implicit none
 
@@ -47,6 +47,8 @@
 
   character(len=150) HEADER_FILE
 
+  integer :: nfaces_surface_glob_ext_mesh
+  
 ! copy number of elements and points in an include file for the solver
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', 'OUTPUT_FILES/values_from_mesher.h')
 
@@ -146,7 +148,7 @@
   endif
 
   write(IOUT,*)
-
+    
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
@@ -202,6 +204,25 @@
 !  endif
 
   close(IOUT)
+
+
+! copy number of surface elements in an include file for the movies
+  if( nfaces_surface_glob_ext_mesh > 0 ) then
+
+    call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', 'OUTPUT_FILES/surface_from_mesher.h')
+
+    open(unit=IOUT,file=HEADER_FILE,status='unknown')
+    write(IOUT,*) '!'
+    write(IOUT,*) '! this is the parameter file for static compilation for movie creation'
+    write(IOUT,*) '!'
+    write(IOUT,*) '! number of elements containing surface faces '
+    write(IOUT,*) '! ---------------'
+    write(IOUT,*)    
+    write(IOUT,*) 'integer,parameter :: NSPEC_SURFACE_EXT_MESH = ',nfaces_surface_glob_ext_mesh
+    write(IOUT,*)
+    close(IOUT)
+    
+  endif
 
   end subroutine save_header_file
 
