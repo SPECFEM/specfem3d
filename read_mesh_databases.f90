@@ -179,6 +179,33 @@
   read(27) nibool_interfaces_ext_mesh
   read(27) ibool_interfaces_ext_mesh
 
+  if( ANISOTROPY ) then
+    read(27) c11store
+    read(27) c12store
+    read(27) c13store
+    read(27) c14store
+    read(27) c15store
+    read(27) c16store
+    read(27) c22store
+    read(27) c23store
+    read(27) c24store
+    read(27) c25store
+    read(27) c26store
+    read(27) c33store
+    read(27) c34store
+    read(27) c35store
+    read(27) c36store
+    read(27) c44store
+    read(27) c45store
+    read(27) c46store
+    read(27) c55store
+    read(27) c56store
+    read(27) c66store  
+  endif
+  
+  close(27)
+
+! MPI communications
   allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
   allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
   allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
@@ -187,7 +214,6 @@
   allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh))
   allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh))
   allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh))
-  close(27)
 
 ! locate inner and outer elements
   allocate(ispec_is_inner_ext_mesh(NSPEC_AB))

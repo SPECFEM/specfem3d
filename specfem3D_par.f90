@@ -138,8 +138,11 @@ module specfem_par
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
 
+! material properties
+  ! isotropic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         kappastore,mustore
+
 
 ! flag for sediments
 !  logical, dimension(:), allocatable :: not_fully_in_bedrock
@@ -367,6 +370,14 @@ module specfem_par_elastic
 
 ! Stacey
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
+
+  ! anisotropic
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+            c11store,c12store,c13store,c14store,c15store,c16store,&
+            c22store,c23store,c24store,c25store,c26store,c33store,&
+            c34store,c35store,c36store,c44store,c45store,c46store,&
+            c55store,c56store,c66store
+  integer :: NSPEC_ANISO
 
 ! maximum of the norm of the displacement
   real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all

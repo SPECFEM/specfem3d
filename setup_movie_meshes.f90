@@ -35,34 +35,6 @@
   implicit none
 
 ! initializes mesh arrays for movies and shakemaps
-!  nfaces_surface_external_mesh = 0
-!  do ispec = 1, NSPEC_AB
-!    iglob = ibool(2,2,1,ispec)
-!    if (iglob_is_surface_external_mesh(iglob)) then
-!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-!    endif
-!    iglob = ibool(2,2,NGLLZ,ispec)
-!    if (iglob_is_surface_external_mesh(iglob)) then
-!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-!    endif
-!    iglob = ibool(2,1,2,ispec)
-!    if (iglob_is_surface_external_mesh(iglob)) then
-!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-!    endif
-!    iglob = ibool(2,NGLLY,2,ispec)
-!    if (iglob_is_surface_external_mesh(iglob)) then
-!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-!    endif
-!    iglob = ibool(1,2,2,ispec)
-!    if (iglob_is_surface_external_mesh(iglob)) then
-!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-!    endif
-!    iglob = ibool(NGLLX,2,2,ispec)
-!    if (iglob_is_surface_external_mesh(iglob)) then
-!      nfaces_surface_external_mesh = nfaces_surface_external_mesh + 1
-!    endif
-!  enddo ! NSPEC_AB
-
   allocate(nfaces_perproc_surface_ext_mesh(NPROC))
   allocate(faces_surface_offset_ext_mesh(NPROC))
   if (nfaces_surface_external_mesh == 0) then
@@ -135,6 +107,7 @@
     faces_surface_offset_ext_mesh(:) = faces_surface_offset_ext_mesh(:)*NGNOD2D
   endif
 
+! stores global indices of GLL points on the surface to array faces_surface_external_mesh
   nfaces_surface_external_mesh = 0
   do ispec = 1, NSPEC_AB
     if (ispec_is_surface_external_mesh(ispec)) then

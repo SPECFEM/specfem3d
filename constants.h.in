@@ -209,6 +209,10 @@
 ! number of standard linear solids in parallel for attenuation
   integer, parameter :: N_SLS = 3
 
+! define flag for regions for anisotropy
+  integer, parameter :: IANISOTROPY_MODEL1 = 1
+  integer, parameter :: IANISOTROPY_MODEL2 = 2  
+
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
 

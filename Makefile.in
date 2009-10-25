@@ -57,6 +57,7 @@ RANLIB = ranlib
 O = obj
 
 libspecfem_a_OBJECTS = \
+	$O/aniso_model.o \
 	$O/assemble_MPI_scalar.o \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
@@ -108,7 +109,6 @@ libspecfem_a_OBJECTS = \
 ###
 ###--obsolete routines
 ###
-#	$O/aniso_model.o \
 #	$O/compute_rho_estimate.o \
 #	$O/define_subregions.o \
 #	$O/define_subregions_heuristic.o \
@@ -307,6 +307,9 @@ $O/parallel.o: constants.h parallel.f90
 ###
 ### serial compilation without optimization
 ###
+
+$O/aniso_model.o: constants.h aniso_model.f90
+	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
 
 $O/serial.o: constants.h exit_mpi.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o serial.f90
@@ -521,10 +524,6 @@ $O/compute_forces_elastic.o: constants.h compute_forces_elastic.f90
 #--obsolete 
 #$O/read_moho_map.o: constants.h read_moho_map.f90
 #	${FCCOMPILE_CHECK} -c -o $O/read_moho_map.o read_moho_map.f90
-
-#--obsolete 
-#$O/aniso_model.o: constants.h aniso_model.f90
-#	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
 
 #--obsolete 
 #$O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
