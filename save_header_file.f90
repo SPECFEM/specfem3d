@@ -139,12 +139,14 @@
 
 ! anisotropy
   if(ANISOTROPY) then
-    stop 'ANISOTROPY not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
- !   write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ',NSPEC_AB
-    write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .true.'
+    !stop 'ANISOTROPY not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
+    !write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ',NSPEC_AB
+    !write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .true.'
+    write(IOUT,*) '! with anisotropy'
   else
-    write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ', 1
-    write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .false.'
+    !write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ', 1
+    !write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .false.'
+    write(IOUT,*) '! no anisotropy'
   endif
 
   write(IOUT,*)

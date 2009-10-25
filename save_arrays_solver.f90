@@ -27,16 +27,22 @@
 ! for external mesh 
 
   subroutine save_arrays_solver_ext_mesh(nspec,nglob, &
-            xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
-            jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
-            kappastore,mustore,rmass,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
-            NSPEC2D_TOP,ibelm_top,normal_top,jacobian2D_top, &
-            absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-            absorbing_boundary_ijk,absorbing_boundary_ispec, &
-            num_absorbing_boundary_faces, &
-            num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
-            max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-            prname,SAVE_MESH_FILES)
+                    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+                    gammaxstore,gammaystore,gammazstore, &
+                    jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
+                    kappastore,mustore,rmass,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                    NSPEC2D_TOP,ibelm_top,normal_top,jacobian2D_top, &
+                    absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
+                    absorbing_boundary_ijk,absorbing_boundary_ispec, &
+                    num_absorbing_boundary_faces, &
+                    num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                    max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
+                    prname,SAVE_MESH_FILES, &
+                    ANISOTROPY,NSPEC_ANISO, &
+                    c11store,c12store,c13store,c14store,c15store,c16store, &
+                    c22store,c23store,c24store,c25store,c26store,c33store, &
+                    c34store,c35store,c36store,c44store,c45store,c46store, &
+                    c55store,c56store,c66store)
 
 
   implicit none
@@ -107,6 +113,15 @@
 ! file name
   character(len=150) prname
   logical :: SAVE_MESH_FILES
+
+! anisotropy
+  logical :: ANISOTROPY
+  integer :: NSPEC_ANISO
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store, &
+            c34store,c35store,c36store,c44store,c45store,c46store, &
+            c55store,c56store,c66store
   
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -219,9 +234,35 @@
   enddo
   write(IOUT) ibool_interfaces_ext_mesh_dummy
 
+  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
+
+! anisotropy
+  if( ANISOTROPY ) then
+    write(IOUT) c11store
+    write(IOUT) c12store
+    write(IOUT) c13store
+    write(IOUT) c14store
+    write(IOUT) c15store
+    write(IOUT) c16store
+    write(IOUT) c22store
+    write(IOUT) c23store
+    write(IOUT) c24store
+    write(IOUT) c25store
+    write(IOUT) c26store
+    write(IOUT) c33store
+    write(IOUT) c34store
+    write(IOUT) c35store
+    write(IOUT) c36store
+    write(IOUT) c44store
+    write(IOUT) c45store
+    write(IOUT) c46store
+    write(IOUT) c55store
+    write(IOUT) c56store
+    write(IOUT) c66store
+  endif
+
   close(IOUT)
 
-  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
 
 
 ! mesh arrays used for example in combine_vol_data.f90

@@ -28,12 +28,13 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-cubit.cmd('block 1 attribute count 5')
+cubit.cmd('block 1 attribute count 6')
 cubit.cmd('block 1 attribute index 1 1') # flag for material properties: 1 for 1. volume 
-cubit.cmd('block 1 attribute index 2 2800') # vp
-cubit.cmd('block 1 attribute index 3 1500')  # vs
-cubit.cmd('block 1 attribute index 4 2300')  # rho
-cubit.cmd('block 1 attribute index 5 13')  # Q flag (see constants.h: IATTENUATION_ ... )
+cubit.cmd('block 1 attribute index 2 2800')   # vp
+cubit.cmd('block 1 attribute index 3 1500')   # vs
+cubit.cmd('block 1 attribute index 4 2300')   # rho
+cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
+cubit.cmd('block 1 attribute index 6 0 ')      # anisotropy_flag
 
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
 cubit.cmd('save as "meshing.cub" overwrite')

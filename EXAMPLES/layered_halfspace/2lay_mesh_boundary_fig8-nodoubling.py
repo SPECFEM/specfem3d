@@ -50,7 +50,7 @@ cubit.cmd('merge all')
 cubit.cmd('imprint all')
 
 # Meshing the volumes
-#elementsize = 1196.4
+#elementsize = 1196.4 #hi-resolution
 #elementsize = 1500.0 # mid-resolution
 elementsize = 3000.0 # low-resolution
 
@@ -73,26 +73,29 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-cubit.cmd('block 1 attribute count 5')
+cubit.cmd('block 1 attribute count 6')
 cubit.cmd('block 1 attribute index 1 1  ')     # volume 1
 cubit.cmd('block 1 attribute index 2 2800 ')  # vp
 cubit.cmd('block 1 attribute index 3 1500 ')  # vs
 cubit.cmd('block 1 attribute index 4 2300 ')  # rho
 cubit.cmd('block 1 attribute index 5 6 ')     # Q_flag  
+cubit.cmd('block 1 attribute index 6 1 ')     # anisotropy_flag
 
-cubit.cmd('block 2 attribute count 5')
+cubit.cmd('block 2 attribute count 6')
 cubit.cmd('block 2 attribute index 1 2  ')     # volume 2
-cubit.cmd('block 2 attribute index 2 7500 ')
-cubit.cmd('block 2 attribute index 3 4300 ')
-cubit.cmd('block 2 attribute index 4 3200 ')
-cubit.cmd('block 2 attribute index 5 6')
+cubit.cmd('block 2 attribute index 2 7500 ')  # vp
+cubit.cmd('block 2 attribute index 3 4300 ')  # vs
+cubit.cmd('block 2 attribute index 4 3200 ')  # rho
+cubit.cmd('block 2 attribute index 5 6')      # Q_flag 
+cubit.cmd('block 2 attribute index 6 0 ')     # anisotropy_flag
 
-cubit.cmd('block 3 attribute count 5')
+cubit.cmd('block 3 attribute count 6')
 cubit.cmd('block 3 attribute index 1 2  ')     # same material properties as for volume 2 
 cubit.cmd('block 3 attribute index 2 7500 ')
 cubit.cmd('block 3 attribute index 3 4300 ')
 cubit.cmd('block 3 attribute index 4 3200 ')
 cubit.cmd('block 3 attribute index 5 6')
+cubit.cmd('block 3 attribute index 6 0')
 
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
 cubit.cmd('save as "meshing.cub" overwrite')

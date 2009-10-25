@@ -306,7 +306,7 @@
   integer :: nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh
   integer :: i
   
-  end module
+  end module generate_databases_par
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -483,6 +483,13 @@
     endif
 
     write(IMAIN,*)
+    if(ANISOTROPY) then
+      write(IMAIN,*) 'incorporating anisotropy'
+    else
+      write(IMAIN,*) 'no anisotropy'
+    endif
+
+    write(IMAIN,*)
     if(OCEANS) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
     else
@@ -581,7 +588,7 @@
   allocate(materials_ext_mesh(5,nmat_ext_mesh))
   allocate(undef_mat_prop(5,nundefMat_ext_mesh))
   do imat = 1, nmat_ext_mesh
-     ! format:        # rho   # vp  # vs  # Q_flag  # 0   
+     ! format:        #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag   
      read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
           materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat)
   end do
@@ -757,7 +764,8 @@
                 ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
                 nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
                 nodes_ibelm_bottom,nodes_ibelm_top, &
-                SAVE_MESH_FILES,nglob)
+                SAVE_MESH_FILES,nglob, &
+                ANISOTROPY)
 
   call sync_all()
 
@@ -835,7 +843,8 @@
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
   enddo
-
+  call sync_all()
+  
   call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
                       ispec_is_surface_external_mesh, &
                       iglob_is_surface_external_mesh, &

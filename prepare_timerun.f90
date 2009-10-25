@@ -56,6 +56,13 @@
     endif
 
     write(IMAIN,*)
+    if(ANISOTROPY) then
+      write(IMAIN,*) 'incorporating anisotropy'
+    else
+      write(IMAIN,*) 'no anisotropy'
+    endif
+
+    write(IMAIN,*)
     if(OCEANS) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
     else

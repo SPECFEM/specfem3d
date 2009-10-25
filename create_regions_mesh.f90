@@ -39,7 +39,8 @@
                     ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
                     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
                     nodes_ibelm_bottom,nodes_ibelm_top, &
-                    SAVE_MESH_FILES,nglob)
+                    SAVE_MESH_FILES,nglob, &
+                    ANISOTROPY)
 
 ! create the different regions of the mesh
 
@@ -104,6 +105,8 @@
   logical :: SAVE_MESH_FILES
   integer :: nglob
 
+  logical :: ANISOTROPY
+
 ! local parameters
 !-----------------------    
 
@@ -135,7 +138,7 @@
     etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
 
 ! for model density
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore,vpstore,vsstore 
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore !,vpstore,vsstore 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
@@ -190,6 +193,15 @@
 ! name of the database file
   character(len=150) prname
   character(len=150) prname_file
+
+! anisotropy
+  integer :: NSPEC_ANISO
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+            c11store,c12store,c13store,c14store,c15store,c16store,&
+            c22store,c23store,c24store,c25store,c26store,c33store,&
+            c34store,c35store,c36store,c44store,c45store,c46store,&
+            c55store,c56store,c66store
+  
 
 ! mask to sort ibool
 !  integer, dimension(:), allocatable :: mask_ibool
@@ -297,9 +309,9 @@
 ! array with model density
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec), &
           kappastore(NGLLX,NGLLY,NGLLZ,nspec), &
-          mustore(NGLLX,NGLLY,NGLLZ,nspec), &
-          vpstore(NGLLX,NGLLY,NGLLZ,nspec), &
-          vsstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) !pll
+          mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) !pll
+          !vpstore(NGLLX,NGLLY,NGLLZ,nspec), &
+          !vsstore(NGLLX,NGLLY,NGLLZ,nspec),          
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! arrays with mesh parameters
@@ -356,6 +368,34 @@
            absorbing_boundary_normal(NDIM,NGLLSQUARE,num_absorbing_boundary_faces),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
+! array with anisotropy
+  if( ANISOTROPY ) then
+    NSPEC_ANISO = nspec
+  else
+    NSPEC_ANISO = 1
+  endif
+  allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
+          c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
 ! returns jacobianstore,xixstore,...gammazstore
@@ -378,15 +418,21 @@
 ! sets material velocities
   call sync_all()
   if( myrank == 0) then
-    write(IMAIN,*) '  ...determining kappa and mu parameters'
+    write(IMAIN,*) '  ...determining velocity model'
   endif
 
-  call create_regions_mesh_ext_mesh_determine_kappamu(nspec,mat_ext_mesh,nelmnts_ext_mesh,&
-                        materials_ext_mesh,nmat_ext_mesh,&
-                        undef_mat_prop,nundefMat_ext_mesh,&
-                        rhostore,kappastore,mustore,vpstore,vsstore,&
-                        iflag_attenuation_store,rho_vp,rho_vs)
-
+  call create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,nelmnts_ext_mesh, &
+                        materials_ext_mesh,nmat_ext_mesh, &
+                        undef_mat_prop,nundefMat_ext_mesh, &
+                        rhostore,kappastore,mustore, &
+                        iflag_attenuation_store,rho_vp,rho_vs, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
+                        c55store,c56store,c66store)
+                        !,vpstore,vsstore,
+                        
 ! creates ibool index array for projection from local to global points
   call sync_all()
   if( myrank == 0) then
@@ -479,7 +525,12 @@
                         num_absorbing_boundary_faces, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                        prname,SAVE_MESH_FILES)
+                        prname,SAVE_MESH_FILES, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
+                        c55store,c56store,c66store)
 
 ! computes the approximate amount of static memory needed to run the solver
   call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh,static_memory_size)
@@ -865,11 +916,17 @@ end subroutine create_regions_mesh_ext_mesh_setup_jacobian
 !----
 !
 
-subroutine create_regions_mesh_ext_mesh_determine_kappamu(nspec,mat_ext_mesh,nelmnts_ext_mesh,&
-                        materials_ext_mesh,nmat_ext_mesh,&
-                        undef_mat_prop,nundefMat_ext_mesh,&
-                        rhostore,kappastore,mustore,vpstore,vsstore,&
-                        iflag_attenuation_store,rho_vp,rho_vs)
+subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,nelmnts_ext_mesh, &
+                        materials_ext_mesh,nmat_ext_mesh, &
+                        undef_mat_prop,nundefMat_ext_mesh, &
+                        rhostore,kappastore,mustore, &
+                        iflag_attenuation_store,rho_vp,rho_vs, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
+                        c55store,c56store,c66store)
+                        ! vpstore,vsstore,                        
 
   implicit none
 
@@ -887,17 +944,32 @@ subroutine create_regions_mesh_ext_mesh_determine_kappamu(nspec,mat_ext_mesh,nel
   character (len=30), dimension(5,nundefMat_ext_mesh):: undef_mat_prop
 
 ! for model density
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore, &
-                                        kappastore,mustore,vpstore,vsstore 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: &
+                                                rhostore,kappastore,mustore !,vpstore,vsstore 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp,rho_vs
 
 ! attenuation 
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: iflag_attenuation_store
 
-! local parameters
-  integer :: ispec,i,j,k,iundef
-  integer  :: iflag,flag_below,flag_above
+! anisotropy
+  logical :: ANISOTROPY
+  integer :: NSPEC_ANISO
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store, &
+            c34store,c35store,c36store,c44store,c45store,c46store, &
+            c55store,c56store,c66store
+  
 
+! local parameters
+  real(kind=CUSTOM_REAL) :: vp,vs,rho  
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
+                        c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  
+  integer :: ispec,i,j,k,iundef,iflag_atten
+  integer :: iflag,flag_below,flag_above
+  integer :: iflag_aniso
+  
 ! !  Piero, read bedrock file
 !  allocate(ibedrock(NX_TOPO_ANT,NY_TOPO_ANT))              
 !  if(myrank == 0) then
@@ -909,25 +981,38 @@ subroutine create_regions_mesh_ext_mesh_determine_kappamu(nspec,mat_ext_mesh,nel
 !  ! broadcast the information read on the master to the nodes
 !  ! call MPI_BCAST(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT,MPI_REAL,0,MPI_COMM_WORLD,ier)
 ! call bcast_all_cr(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT)
-  
-! kappastore and mustore
+
+! material properties on all GLL points: taken from material values defined for 
+! each spectral element in input mesh
   do ispec = 1, nspec
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
 ! check if the material is known or unknown
            if (mat_ext_mesh(1,ispec) > 0) then
+              ! density    
               ! materials_ext_mesh format: #index1 = rho #index2 = vp #index3 = vs #index4 = Q_flag #index5 = 0 
-              rhostore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(1,ispec))
-              vpstore(i,j,k,ispec) = materials_ext_mesh(2,mat_ext_mesh(1,ispec))
-              vsstore(i,j,k,ispec) = materials_ext_mesh(3,mat_ext_mesh(1,ispec))
-              iflag_attenuation_store(i,j,k,ispec) = materials_ext_mesh(4,mat_ext_mesh(1,ispec))                            
+              !rhostore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(1,ispec))
+              rho = materials_ext_mesh(1,mat_ext_mesh(1,ispec))
+              
+              ! isotropic values: vp, vs              
+              !vpstore(i,j,k,ispec) = materials_ext_mesh(2,mat_ext_mesh(1,ispec))
+              !vsstore(i,j,k,ispec) = materials_ext_mesh(3,mat_ext_mesh(1,ispec))
+              vp = materials_ext_mesh(2,mat_ext_mesh(1,ispec))
+              vs = materials_ext_mesh(3,mat_ext_mesh(1,ispec))
+
+              ! attenuation
+              iflag_atten = materials_ext_mesh(4,mat_ext_mesh(1,ispec))                            
               !change for piero :
               !if(mat_ext_mesh(1,ispec) == 1) then
               !   iflag_attenuation_store(i,j,k,ispec) = 1
               !else
               !   iflag_attenuation_store(i,j,k,ispec) = 2
               !endif
+              
+              ! anisotropy
+              iflag_aniso = materials_ext_mesh(5,mat_ext_mesh(1,ispec))
+              
            else if (mat_ext_mesh(2,ispec) == 1) then
               stop 'material: interface not implemented yet'
               
@@ -939,30 +1024,71 @@ subroutine create_regions_mesh_ext_mesh_determine_kappamu(nspec,mat_ext_mesh,nel
               enddo
               !call interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
               iflag = 1
-              rhostore(i,j,k,ispec) = materials_ext_mesh(1,iflag)
-              vpstore(i,j,k,ispec) = materials_ext_mesh(2,iflag)
-              vsstore(i,j,k,ispec) = materials_ext_mesh(3,iflag)
-              iflag_attenuation_store(i,j,k,ispec) = materials_ext_mesh(4,iflag)
+              !rhostore(i,j,k,ispec) = materials_ext_mesh(1,iflag)
+              !vpstore(i,j,k,ispec) = materials_ext_mesh(2,iflag)
+              !vsstore(i,j,k,ispec) = materials_ext_mesh(3,iflag)
+              rho = materials_ext_mesh(1,iflag)
+              vp = materials_ext_mesh(2,iflag)
+              vs = materials_ext_mesh(3,iflag)
+              iflag_atten = materials_ext_mesh(4,iflag)
               !change for piero :
               !  if(iflag == 1) then
               !     iflag_attenuation_store(i,j,k,ispec) = 1
               !  else
               !     iflag_attenuation_store(i,j,k,ispec) = 2
               !  endif
+              iflag_aniso = 0
              else
               stop 'material: tomography not implemented yet'
              ! call tomography()
            end if
 
-           kappastore(i,j,k,ispec) = rhostore(i,j,k,ispec)* &
-                ( vpstore(i,j,k,ispec)*vpstore(i,j,k,ispec) &
-                - FOUR_THIRDS*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec) )
-                
-           mustore(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec)
-           
+! adds anisotropic perturbation to vp, vs
+           if( ANISOTROPY ) then
+             call aniso_model(iflag_aniso,rho,vp,vs,c11,c12,c13,c14,c15,c16, &
+                     c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66) 
+
+             c11store(i,j,k,ispec) = c11
+             c12store(i,j,k,ispec) = c12
+             c13store(i,j,k,ispec) = c13
+             c14store(i,j,k,ispec) = c14
+             c15store(i,j,k,ispec) = c15
+             c16store(i,j,k,ispec) = c16
+             c22store(i,j,k,ispec) = c22
+             c23store(i,j,k,ispec) = c23
+             c24store(i,j,k,ispec) = c24
+             c25store(i,j,k,ispec) = c25
+             c26store(i,j,k,ispec) = c26
+             c33store(i,j,k,ispec) = c33
+             c34store(i,j,k,ispec) = c34
+             c35store(i,j,k,ispec) = c35
+             c36store(i,j,k,ispec) = c36
+             c44store(i,j,k,ispec) = c44
+             c45store(i,j,k,ispec) = c45
+             c46store(i,j,k,ispec) = c46
+             c55store(i,j,k,ispec) = c55
+             c56store(i,j,k,ispec) = c56
+             c66store(i,j,k,ispec) = c66
+                     
+           endif
+! density
+           rhostore(i,j,k,ispec) = rho
+          
+! kappa, mu
+           !kappastore(i,j,k,ispec) = rhostore(i,j,k,ispec)* &
+           !     ( vpstore(i,j,k,ispec)*vpstore(i,j,k,ispec) &
+           !     - FOUR_THIRDS*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec) )                
+           !mustore(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec)
+           kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )                
+           mustore(i,j,k,ispec) = rho*vs*vs
+
+! attenuation
+           iflag_attenuation_store(i,j,k,ispec) = iflag_atten
            ! Stacey, a completer par la suite  
-           rho_vp(i,j,k,ispec) = rhostore(i,j,k,ispec)*vpstore(i,j,k,ispec)
-           rho_vs(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)
+           !rho_vp(i,j,k,ispec) = rhostore(i,j,k,ispec)*vpstore(i,j,k,ispec)
+           !rho_vs(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)
+           rho_vp(i,j,k,ispec) = rho*vp
+           rho_vs(i,j,k,ispec) = rho*vs
            !end pll
 
         enddo
@@ -1139,7 +1265,7 @@ subroutine create_regions_mesh_ext_mesh_determine_kappamu(nspec,mat_ext_mesh,nel
 !        enddo
 !     enddo
 
-end subroutine create_regions_mesh_ext_mesh_determine_kappamu
+end subroutine create_regions_mesh_ext_mesh_determine_velocity
 
 !
 !----

@@ -59,7 +59,13 @@ subroutine compute_forces_elastic()
                     NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
                     epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                     epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-                    rho_vs )
+                    rho_vs, &
+                    ANISOTROPY,NSPEC_ANISO, &
+                    c11store,c12store,c13store,c14store,c15store,c16store,&
+                    c22store,c23store,c24store,c25store,c26store,c33store,&
+                    c34store,c35store,c36store,c44store,c45store,c46store,&
+                    c55store,c56store,c66store )
+
 
       !call compute_forces_with_Deville( phase_is_inner ,NSPEC_AB,NGLOB_AB,&
       !              ATTENUATION,USE_OLSEN_ATTENUATION,displ,accel,&
@@ -90,7 +96,12 @@ subroutine compute_forces_elastic()
                     NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
                     epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                     epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
-                    rho_vs)
+                    rho_vs, &
+                    ANISOTROPY,NSPEC_ANISO, &
+                    c11store,c12store,c13store,c14store,c15store,c16store,&
+                    c22store,c23store,c24store,c25store,c26store,c33store,&
+                    c34store,c35store,c36store,c44store,c45store,c46store,&
+                    c55store,c56store,c66store)
     endif
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)

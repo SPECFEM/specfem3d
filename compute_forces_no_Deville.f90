@@ -36,7 +36,12 @@ subroutine compute_forces_no_Deville( phase_is_inner, &
                       NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
                       epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                       epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
-                      rho_vs)
+                      rho_vs,&
+                      ANISOTROPY,NSPEC_ANISO, &
+                      c11store,c12store,c13store,c14store,c15store,c16store,&
+                      c22store,c23store,c24store,c25store,c26store,c33store,&
+                      c34store,c35store,c36store,c44store,c45store,c46store,&
+                      c55store,c56store,c66store)
                       
 !                      NSOURCES,myrank,islice_selected_source,&
 !                      ispec_selected_source,xi_source,eta_source,&
@@ -84,6 +89,15 @@ subroutine compute_forces_no_Deville( phase_is_inner, &
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vs
 
+! anisotropy
+  logical :: ANISOTROPY
+  integer :: NSPEC_ANISO
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store, &
+            c34store,c35store,c36store,c44store,c45store,c46store, &
+            c55store,c56store,c66store
+
 ! source
 !  integer :: NSOURCES,myrank,it
 !  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
@@ -118,6 +132,10 @@ subroutine compute_forces_no_Deville( phase_is_inner, &
 
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
+
+! local anisotropy parameters
+  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+                        c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
 ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
@@ -241,17 +259,95 @@ subroutine compute_forces_no_Deville( phase_is_inner, &
                
             endif
 
-            lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2.*mul
+! full anisotropic case, stress calculations
+            if(ANISOTROPY) then
+              c11 = c11store(i,j,k,ispec)
+              c12 = c12store(i,j,k,ispec)
+              c13 = c13store(i,j,k,ispec)
+              c14 = c14store(i,j,k,ispec)
+              c15 = c15store(i,j,k,ispec)
+              c16 = c16store(i,j,k,ispec)
+              c22 = c22store(i,j,k,ispec)
+              c23 = c23store(i,j,k,ispec)
+              c24 = c24store(i,j,k,ispec)
+              c25 = c25store(i,j,k,ispec)
+              c26 = c26store(i,j,k,ispec)
+              c33 = c33store(i,j,k,ispec)
+              c34 = c34store(i,j,k,ispec)
+              c35 = c35store(i,j,k,ispec)
+              c36 = c36store(i,j,k,ispec)
+              c44 = c44store(i,j,k,ispec)
+              c45 = c45store(i,j,k,ispec)
+              c46 = c46store(i,j,k,ispec)
+              c55 = c55store(i,j,k,ispec)
+              c56 = c56store(i,j,k,ispec)
+              c66 = c66store(i,j,k,ispec)
+              !if(ATTENUATION .and. not_fully_in_bedrock(ispec)) then
+              !   mul = c44
+              !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
+              !   c12 = c12 - TWO_THIRDS * minus_sum_beta * mul
+              !   c13 = c13 - TWO_THIRDS * minus_sum_beta * mul
+              !   c22 = c22 + FOUR_THIRDS * minus_sum_beta * mul
+              !   c23 = c23 - TWO_THIRDS * minus_sum_beta * mul
+              !   c33 = c33 + FOUR_THIRDS * minus_sum_beta * mul
+              !   c44 = c44 + minus_sum_beta * mul
+              !   c55 = c55 + minus_sum_beta * mul
+              !   c66 = c66 + minus_sum_beta * mul
+              !endif
 
-  ! compute stress sigma
-            sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
-            sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
-            sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+              sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
+                        c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
+              sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl + &
+                        c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl
+              sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl + &
+                        c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl
+              sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl + &
+                        c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl
+              sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl + &
+                        c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl
+              sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
+                        c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
 
-            sigma_xy = mul*duxdyl_plus_duydxl
-            sigma_xz = mul*duzdxl_plus_duxdzl
-            sigma_yz = mul*duzdyl_plus_duydzl
+              !if (SIMULATION_TYPE == 3) then
+              ! b_sigma_xx = c11*b_duxdxl + c16*b_duxdyl_plus_duydxl + c12*b_duydyl + &
+              !       c15*b_duzdxl_plus_duxdzl + c14*b_duzdyl_plus_duydzl + c13*b_duzdzl
+              ! b_sigma_yy = c12*b_duxdxl + c26*b_duxdyl_plus_duydxl + c22*b_duydyl + &
+              !       c25*b_duzdxl_plus_duxdzl + c24*b_duzdyl_plus_duydzl + c23*b_duzdzl
+              ! b_sigma_zz = c13*b_duxdxl + c36*b_duxdyl_plus_duydxl + c23*b_duydyl + &
+              !       c35*b_duzdxl_plus_duxdzl + c34*b_duzdyl_plus_duydzl + c33*b_duzdzl
+              ! b_sigma_xy = c16*b_duxdxl + c66*b_duxdyl_plus_duydxl + c26*b_duydyl + &
+              !       c56*b_duzdxl_plus_duxdzl + c46*b_duzdyl_plus_duydzl + c36*b_duzdzl
+              ! b_sigma_xz = c15*b_duxdxl + c56*b_duxdyl_plus_duydxl + c25*b_duydyl + &
+              !       c55*b_duzdxl_plus_duxdzl + c45*b_duzdyl_plus_duydzl + c35*b_duzdzl
+              ! b_sigma_yz = c14*b_duxdxl + c46*b_duxdyl_plus_duydxl + c24*b_duydyl + &
+              !       c45*b_duzdxl_plus_duxdzl + c44*b_duzdyl_plus_duydzl + c34*b_duzdzl
+              !endif
+            else
+
+! isotropic case
+              lambdalplus2mul = kappal + FOUR_THIRDS * mul
+              lambdal = lambdalplus2mul - 2.*mul
+
+              ! compute stress sigma
+              sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+              sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+              sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+
+              sigma_xy = mul*duxdyl_plus_duydxl
+              sigma_xz = mul*duzdxl_plus_duxdzl
+              sigma_yz = mul*duzdyl_plus_duydzl
+
+              !if (SIMULATION_TYPE == 3) then
+              ! b_sigma_xx = lambdalplus2mul*b_duxdxl + lambdal*b_duydyl_plus_duzdzl
+              ! b_sigma_yy = lambdalplus2mul*b_duydyl + lambdal*b_duxdxl_plus_duzdzl
+              ! b_sigma_zz = lambdalplus2mul*b_duzdzl + lambdal*b_duxdxl_plus_duydyl
+              !
+              ! b_sigma_xy = mul*b_duxdyl_plus_duydxl
+              ! b_sigma_xz = mul*b_duzdxl_plus_duxdzl
+              ! b_sigma_yz = mul*b_duzdyl_plus_duydzl
+              !endif
+
+            endif ! ANISOTROPY
 
             ! subtract memory variables if attenuation
             if(ATTENUATION) then
