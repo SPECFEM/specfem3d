@@ -1,0 +1,26 @@
+Carl Tape, 11-July-2007
+
+Tomography model of Lin-Shearer-Hauksson-Thurber (2007).
+
+The files pa_all-1 and ra_all-1 were obtained from Egill Hauksson June 2007.
+
+pa_all-1 Vp tomography model for SoCal
+ra_all-1 Vp/Vs tomography model for SoCal
+
+In order to convert these files into the format of hauksson_new_format.dat (see haukson_model directory), I used a script in Matlab (hauksson_tomo_model.m; not included).  That output file is
+
+lin_new_format.dat
+
+
+---------- Forwarded message ----------
+Date: Fri, 15 Jun 2007 14:31:37 -0700
+From: Egill Hauksson <ehauksson@gmail.com>
+Reply-To:  <hauksson@gps.caltech.edu>
+To: Carl Tape <carltape@gps.caltech.edu>
+Subject: Fwd: faults
+
+Carl,
+The Lin et al. Vp and Vp/Vs models are attached.  Just ignore the readme
+file, it is related to something else.
+Let me know how this goes.
+Egill

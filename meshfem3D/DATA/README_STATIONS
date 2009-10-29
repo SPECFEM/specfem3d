@@ -1,0 +1,26 @@
+PLEASE EXPLAIN YOUR STATIONS FILE HERE
+---------------------
+
+
+
+---------------------
+Carl Tape, 14-Sept-2007
+
+STATIONS_CALIFORNIA_BROADBAND -- all broadband stations in California that have operated since 1999, compiled from several sources : SCEDC, NCEDC, BK (NCEDC), and several IRIS network lists (SeismiQuery), including USArray (TA and US).  (This file should be the default.)
+
+STATIONS_CALIFORNIA_TOMO -- stations within region of interest for adjoint tomography.  The aim is to exclude stations and sources within a certain distance of the boundaries, to avoid strong effects of false reflections.
+
+STATIONs -- STATIONS_CALIFORNIA_BROADBAND
+
+STATIONS_OLD -- default STATIONS file prior to 09-Aug-2007.  All of STATIONS_OLD, except for DW network stations and the following, most of which stopped operating before 1999:
+
+  ASBS  AZ
+  ELKS  AZ
+  GLAC  AZ
+  SHUM  AZ
+  K400  CE
+  CALB  CI
+   CIU  CI
+   GPO  CI
+   TAB  CI
+---------------------

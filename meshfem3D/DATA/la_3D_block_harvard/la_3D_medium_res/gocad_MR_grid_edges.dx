@@ -1,0 +1,17 @@
+ object 1 class array type float rank 1 shape 3  items 4 data follows
+    283000.0        3655000.      3000
+    476000.0        3655000.      3000
+    476000.0        3850000.      3000
+    283000.0        3850000.      3000
+ object 2 class array type int rank 1 shape 4 items 1 data follows
+ 0 3 1 2
+ attribute "element type" string "quads"
+ attribute "ref" string "positions"
+ object 3 class array type float rank 0  items 1 data follows
+ 100
+ attribute "dep" string "connections"
+ object "irregular connections  irregular positions" class field
+ component "positions" value 1
+ component "connections" value 2
+ component "data" value 3
+ end

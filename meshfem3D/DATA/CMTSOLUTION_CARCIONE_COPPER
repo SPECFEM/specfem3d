@@ -1,0 +1,13 @@
+ PDE 2000 01 01 01 01 01.00   0.0000  000.0000  10.0 4.5 4.5 Test Carcione Copper
+event name:      COPPER
+time shift:      0.0000
+half duration:   0.0000
+latitude:       0
+longitude:      0.03d0
+depth:          0.03d-3
+Mrr:       0.000000e+00
+Mtt:       0.000000e+00
+Mpp:       0.000000e+00
+Mrt:       0.000000e+00
+Mrp:       0.000000e+00
+Mtp:       7.498942e+22
