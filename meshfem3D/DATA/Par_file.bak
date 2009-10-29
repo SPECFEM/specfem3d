@@ -1,0 +1,68 @@
+
+# forward or adjoint simulation
+#SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
+#SAVE_FORWARD                    = .false.
+
+# coordinates of mesh block in latitude/longitude and depth in km
+LATITUDE_MIN                    = 33.8d0
+LATITUDE_MAX                    = 34.1d0
+LONGITUDE_MIN                   = -118.4d0
+LONGITUDE_MAX                   = -118.1d0
+DEPTH_BLOCK_KM                  = 60.d0
+UTM_PROJECTION_ZONE             = 11
+SUPPRESS_UTM_PROJECTION         = .false.
+
+# number of elements at the surface along edges of the mesh at the surface
+# (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
+# (must be multiple of NPROC below if mesh is regular)
+NEX_XI                          = 16
+NEX_ETA                         = 16
+
+# number of MPI processors along xi and eta (can be different)
+NPROC_XI                        = 2 
+NPROC_ETA                       = 2
+
+# model (SoCal, Harvard_LA, Min_Chen_anisotropy)
+MODEL                           = SoCal
+
+# parameters describing the model
+#OCEANS                          = .true.
+TOPOGRAPHY                      = .true.
+#ATTENUATION                     = .true.
+#USE_OLSEN_ATTENUATION           = .false.
+
+# absorbing boundary conditions for a regional simulation
+#ABSORBING_CONDITIONS            = .true.
+
+# record length in seconds
+#RECORD_LENGTH_IN_SECONDS        = 30.0
+
+# save AVS or OpenDX movies
+#MOVIE_SURFACE                   = .false.
+#MOVIE_VOLUME                    = .false.
+#NTSTEP_BETWEEN_FRAMES           = 200
+#CREATE_SHAKEMAP                 = .false.
+#SAVE_DISPLACEMENT               = .false.
+#USE_HIGHRES_FOR_MOVIES          = .false.
+#HDUR_MOVIE                      = 0.0
+
+# save AVS or OpenDX mesh files to check the mesh
+#SAVE_MESH_FILES                 = .false.
+
+# path to store the local database file on each node
+LOCAL_PATH                      = /scratch/komatits/DATABASES_MPI
+
+# machine file for MPI
+# this is not needed for new cluster and is in go_mesher/go_solver
+# MACHINE_FILE                    = mymachines
+
+# interval at which we output time step info and max of norm of displacement
+#NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+
+# interval in time steps for writing of seismograms
+#NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 200000
+
+# print source time function
+#PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+

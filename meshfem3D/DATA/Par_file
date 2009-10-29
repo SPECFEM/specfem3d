@@ -1,0 +1,35 @@
+
+# coordinates of mesh block in latitude/longitude and depth in km
+LATITUDE_MIN                    = 33.8d0
+LATITUDE_MAX                    = 34.1d0
+LONGITUDE_MIN                   = -118.4d0
+LONGITUDE_MAX                   = -118.1d0
+DEPTH_BLOCK_KM                  = 60.d0
+UTM_PROJECTION_ZONE             = 11
+SUPPRESS_UTM_PROJECTION         = .false.
+
+# number of elements at the surface along edges of the mesh at the surface
+# (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
+# (must be multiple of NPROC below if mesh is regular)
+NEX_XI                          = 16
+NEX_ETA                         = 16
+
+# number of MPI processors along xi and eta (can be different)
+NPROC_XI                        = 2 
+NPROC_ETA                       = 2
+
+# model (only SoCal. Harvard_LA and Min_Chen_anisotropy not implemented yet)
+MODEL                           = SoCal
+
+# parameters describing the model
+#OCEANS                          = .true.
+TOPOGRAPHY                      = .true.
+
+# path to store the local database file on each node
+LOCAL_PATH                      = ../OUTPUT_FILES
+
+# machine file for MPI
+# this is not needed for new cluster and is in go_mesher/go_solver
+# MACHINE_FILE                    = mymachines
+
+
