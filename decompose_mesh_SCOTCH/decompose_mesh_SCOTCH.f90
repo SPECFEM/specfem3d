@@ -120,11 +120,12 @@ module decompose_mesh_SCOTCH
       !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
       !          then top (positive z-direction) of element 
       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
-      read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
-            elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
 
-      !    read(98,*) num_elmnt, elmnts(1,num_elmnt), elmnts(2,num_elmnt),elmnts(3,num_elmnt), elmnts(4,num_elmnt), &
-      !          elmnts(5,num_elmnt), elmnts(6,num_elmnt), elmnts(7,num_elmnt), elmnts(8,num_elmnt)
+      !read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
+      !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
+
+      read(98,*) num_elmnt, elmnts(1,num_elmnt), elmnts(2,num_elmnt),elmnts(3,num_elmnt), elmnts(4,num_elmnt), &
+            elmnts(5,num_elmnt), elmnts(6,num_elmnt), elmnts(7,num_elmnt), elmnts(8,num_elmnt)
 
       if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
 
