@@ -29,29 +29,33 @@ subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
   real(kind=CUSTOM_REAL) :: midpoint_faces(NDIM,6),midpoint(NDIM),midpoint_distances(6)
   
 ! corners indices of reference cube faces
+  ! shapes of arrays below
+  integer,dimension(2),parameter :: face_shape = (/3,4/)
+  integer,dimension(3),parameter :: all_faces_shape = (/3,4,6/)
+
   ! xmin
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
-              (/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /)
+       reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),face_shape)
   ! xmax
   integer,dimension(3,4),parameter :: iface2_corner_ijk = &
-              (/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /)
+       reshape((/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /),face_shape)
   ! ymin
   integer,dimension(3,4),parameter :: iface3_corner_ijk = &
-              (/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /)
+       reshape((/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /),face_shape)
   ! ymax
   integer,dimension(3,4),parameter :: iface4_corner_ijk = &
-              (/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /)
+       reshape((/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /),face_shape)
   ! bottom
   integer,dimension(3,4),parameter :: iface5_corner_ijk = &
-              (/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /)
+       reshape((/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),face_shape)
   ! top  
   integer,dimension(3,4),parameter :: iface6_corner_ijk = &
-              (/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /)
+       reshape((/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),face_shape)
   ! all faces
   integer,dimension(3,4,6),parameter :: iface_all_corner_ijk = &
-              (/ iface1_corner_ijk,iface2_corner_ijk, &
-                 iface3_corner_ijk,iface4_corner_ijk, &
-                 iface5_corner_ijk,iface6_corner_ijk /)
+       reshape((/ iface1_corner_ijk,iface2_corner_ijk, &
+                  iface3_corner_ijk,iface4_corner_ijk, &
+                  iface5_corner_ijk,iface6_corner_ijk /),all_faces_shape)
                  
 ! face orientation
   !real(kind=CUSTOM_REAL) :: face_n(3),face_ntmp(3),tmp
@@ -125,8 +129,7 @@ subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
       j = iface_all_corner_ijk(2,icorner,iloc(1))
       k = iface_all_corner_ijk(3,icorner,iloc(1))
       iglob = ibool(i,j,k,ispec)    
-      print*,'error corner:',icorner,'xyz:',sngl(xstore_dummy(iglob)),&
-                sngl(ystore_dummy(iglob)),sngl(zstore_dummy(iglob))
+      print*,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
     enddo
     ! stop
     stop 'error element face midpoint'
