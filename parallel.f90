@@ -455,6 +455,25 @@
 !----
 !
 
+  subroutine any_all_l(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  logical sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_LOGICAL, &
+                  MPI_LOR,MPI_COMM_WORLD,ier)
+
+  end subroutine any_all_l
+
+!
+!----
+!
+
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 

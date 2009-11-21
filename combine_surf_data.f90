@@ -34,7 +34,7 @@ program combine_surf_data
   implicit none
 
   include 'constants.h'
-  include 'OUTPUT_FILES/values_from_mesher.h'
+!  include 'OUTPUT_FILES/values_from_mesher.h'
 
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
@@ -48,9 +48,9 @@ program combine_surf_data
   real x, y, z
   real, dimension(:,:,:,:), allocatable :: dat3D
   real, dimension(:,:,:), allocatable :: dat2D
-  character(len=150) :: sline, arg(8), filename, indir, outdir, prname, surfname
-  character(len=150) :: mesh_file, local_file, local_data_file, local_ibool_file
-  character(len=150) :: local_ibool_surf_file
+  character(len=256) :: sline, arg(8), filename, indir, outdir, prname, surfname
+  character(len=256) :: mesh_file, local_file, local_data_file, local_ibool_file
+  character(len=256) :: local_ibool_surf_file
   integer :: num_ibool(NGLOB_AB)
   logical :: HIGH_RESOLUTION_MESH,  FILE_ARRAY_IS_3D
   integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim

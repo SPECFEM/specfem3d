@@ -194,7 +194,7 @@
   call read_mesh_databases()
 
 
-! creates GLL points
+! sets up reference element GLL points/weights/derivatives
   call setup_GLL_points()
 
 

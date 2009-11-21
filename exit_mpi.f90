@@ -38,7 +38,7 @@
   character(len=*) error_msg
 
   character(len=80) outputname
-  character(len=150) OUTPUT_FILES
+  character(len=256) OUTPUT_FILES
 
 ! write error message to screen
   write(*,*) error_msg(1:len(error_msg))

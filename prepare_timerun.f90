@@ -28,10 +28,16 @@
   subroutine prepare_timerun()
 
   use specfem_par
+  use specfem_par_acoustic
   use specfem_par_elastic
-  use specfem_par_movie
-  
+  use specfem_par_poroelastic
   implicit none
+  
+  double precision :: scale_factor
+  real(kind=CUSTOM_REAL):: vs_val
+  integer :: i,j,k,ispec
+  integer :: iattenuation,iselected
+  
 
 ! user info
   if(myrank == 0) then
@@ -69,6 +75,27 @@
       write(IMAIN,*) 'no oceans'
     endif
 
+    write(IMAIN,*)
+    if(ACOUSTIC_SIMULATION) then
+      write(IMAIN,*) 'incorporating acoustic simulation'
+    else
+      write(IMAIN,*) 'no acoustic simulation'
+    endif
+
+    write(IMAIN,*)
+    if(ELASTIC_SIMULATION) then
+      write(IMAIN,*) 'incorporating elastic simulation'
+    else
+      write(IMAIN,*) 'no elastic simulation'
+    endif
+
+    write(IMAIN,*)
+    if(POROELASTIC_SIMULATION) then
+      write(IMAIN,*) 'incorporating poroelastic simulation'
+    else
+      write(IMAIN,*) 'no poroelastic simulation'
+    endif
+    write(IMAIN,*)
   endif
 
 ! synchronize all the processes before assembling the mass matrix
@@ -76,236 +103,91 @@
   call sync_all()
 
 ! the mass matrix needs to be assembled with MPI here once and for all
-  call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
-         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
-         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+  if(ACOUSTIC_SIMULATION) then
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        my_neighbours_ext_mesh)
 
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
+    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
+
+  endif ! ACOUSTIC_SIMULATION
+
+  if(ELASTIC_SIMULATION) then
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+    
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass <= 0._CUSTOM_REAL) rmass = 1._CUSTOM_REAL    
+    rmass(:) = 1._CUSTOM_REAL / rmass(:)
+
+    if(OCEANS ) then
+      if( minval(rmass_ocean_load(:)) <= 0._CUSTOM_REAL) &
+        call exit_MPI(myrank,'negative ocean load mass matrix term')
+      rmass_ocean_load(:) = 1. / rmass_ocean_load(:)
+    endif
+
+  endif ! ELASTIC_SIMULATION
+  
+  if(POROELASTIC_SIMULATION) then
+    
+    stop 'poroelastic simulation not implemented yet'
+  
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
+    where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
+    rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
+    rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
+
+  endif ! POROELASTIC_SIMULATION
+  
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
-! check that mass matrix is positive
-  if(minval(rmass(:)) <= 0.) call exit_MPI(myrank,'negative mass matrix term')
-  if(OCEANS .and. minval(rmass_ocean_load(:)) <= 0.) &
-       call exit_MPI(myrank,'negative ocean load mass matrix term')
-
-! for efficiency, invert final mass matrix once and for all in each slice
-  if(OCEANS) rmass_ocean_load(:) = 1. / rmass_ocean_load(:)
-  rmass(:) = 1.0 / rmass(:)
-
-! if attenuation is on, shift PREM to right frequency
-! rescale mu in PREM to average frequency for attenuation
-
-  if(ATTENUATION) then
-
-! get and store PREM attenuation model
-    do iattenuation = 1,NUM_REGIONS_ATTENUATION
-
-      call get_attenuation_model(myrank,iattenuation,tau_mu_dble, &
-        tau_sigma_dble,beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
-
-! distinguish between single and double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
-        tau_mu(iattenuation,:) = sngl(tau_mu_dble(:))
-        tau_sigma(iattenuation,:) = sngl(tau_sigma_dble(:))
-        beta(iattenuation,:) = sngl(beta_dble(:))
-        factor_scale(iattenuation) = sngl(factor_scale_dble)
-        one_minus_sum_beta(iattenuation) = sngl(one_minus_sum_beta_dble)
-      else
-        tau_mu(iattenuation,:) = tau_mu_dble(:)
-        tau_sigma(iattenuation,:) = tau_sigma_dble(:)
-        beta(iattenuation,:) = beta_dble(:)
-        factor_scale(iattenuation) = factor_scale_dble
-        one_minus_sum_beta(iattenuation) = one_minus_sum_beta_dble
-      endif
-    enddo
-
-! rescale shear modulus according to attenuation model
-    !pll
-    do ispec = 1,NSPEC_AB
-      do k=1,NGLLZ
-        do j=1,NGLLY
-          do i=1,NGLLX
-
-! use scaling rule similar to Olsen et al. (2003)          
-!! We might need to fix the attenuation part for the anisotropy case
-!! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
-            if(USE_OLSEN_ATTENUATION) then
-              vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-              call get_attenuation_model_Olsen_sediment( vs_val, iselected )
-            else                        
-! takes iflag set in (CUBIT) mesh         
-              iselected = iflag_attenuation_store(i,j,k,ispec)
-            endif
-            
-! scales only mu             
-            scale_factor = factor_scale(iselected)
-            mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
-            
-          enddo
-        enddo
-      enddo
-    enddo
-
-! obsolete, old way...
-!pll 
-!   do ispec = 1,NSPEC_AB
-!    if(not_fully_in_bedrock(ispec)) then
-!      do k=1,NGLLZ
-!        do j=1,NGLLY
-!          do i=1,NGLLX
-!
-!! distinguish attenuation factors
-!   if(flag_sediments(i,j,k,ispec)) then
-!
-!! use constant attenuation of Q = 90
-!! or use scaling rule similar to Olsen et al. (2003)
-!! We might need to fix the attenuation part for the anisotropy case
-!! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
-!     if(USE_OLSEN_ATTENUATION) then
-!       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-!! use rule Q_mu = constant * v_s
-!       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
-!       int_Q_mu = 10 * nint(Q_mu / 10.)
-!       if(int_Q_mu < 40) int_Q_mu = 40
-!       if(int_Q_mu > 150) int_Q_mu = 150
-!
-!       if(int_Q_mu == 40) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
-!       else if(int_Q_mu == 50) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
-!       else if(int_Q_mu == 60) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
-!       else if(int_Q_mu == 70) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
-!       else if(int_Q_mu == 80) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
-!       else if(int_Q_mu == 90) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
-!       else if(int_Q_mu == 100) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
-!       else if(int_Q_mu == 110) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
-!       else if(int_Q_mu == 120) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
-!       else if(int_Q_mu == 130) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
-!       else if(int_Q_mu == 140) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
-!       else if(int_Q_mu == 150) then
-!         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
-!       else
-!         stop 'incorrect attenuation coefficient'
-!       endif
-!
-!     else
-!       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
-!     endif
-!
-!     scale_factor = factor_scale(iattenuation_sediments)
-!   else
-!     scale_factor = factor_scale(IATTENUATION_BEDROCK)
-!   endif
-!
-!      mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
-!
-!          enddo
-!        enddo
-!      enddo
-!    endif
-!    enddo
-    
-  endif ! ATTENUATION
-
-! allocate seismogram array
-  if (nrec_local > 0) then
-    allocate(seismograms_d(NDIM,nrec_local,NSTEP))
-    allocate(seismograms_v(NDIM,nrec_local,NSTEP))
-    allocate(seismograms_a(NDIM,nrec_local,NSTEP))
-! initialize seismograms
-    seismograms_d(:,:,:) = 0._CUSTOM_REAL
-    seismograms_v(:,:,:) = 0._CUSTOM_REAL
-    seismograms_a(:,:,:) = 0._CUSTOM_REAL
-    if (SIMULATION_TYPE == 2) then
-    ! allocate Frechet derivatives array
-      allocate(Mxx_der(nrec_local),Myy_der(nrec_local),Mzz_der(nrec_local),Mxy_der(nrec_local), &
-               Mxz_der(nrec_local),Myz_der(nrec_local), sloc_der(NDIM,nrec_local))
-      Mxx_der = 0._CUSTOM_REAL
-      Myy_der = 0._CUSTOM_REAL
-      Mzz_der = 0._CUSTOM_REAL
-      Mxy_der = 0._CUSTOM_REAL
-      Mxz_der = 0._CUSTOM_REAL
-      Myz_der = 0._CUSTOM_REAL
-      sloc_der = 0._CUSTOM_REAL
-      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
-      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-    endif
+! initialize acoustic arrays to zero
+  if( ACOUSTIC_SIMULATION ) then
+    potential_acoustic(:) = 0._CUSTOM_REAL
+    potential_dot_acoustic(:) = 0._CUSTOM_REAL
+    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+    ! put negligible initial value to avoid very slow underflow trapping
+    if(FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic(:) = VERYSMALLVAL
+  endif
+  
+! initialize elastic arrays to zero/verysmallvall
+  if( ELASTIC_SIMULATION ) then
+    displ(:,:) = 0._CUSTOM_REAL
+    veloc(:,:) = 0._CUSTOM_REAL
+    accel(:,:) = 0._CUSTOM_REAL
+    ! put negligible initial value to avoid very slow underflow trapping
+    if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
   endif
 
-! initialize arrays to zero
-  displ(:,:) = 0._CUSTOM_REAL
-  veloc(:,:) = 0._CUSTOM_REAL
-  accel(:,:) = 0._CUSTOM_REAL
+  !! DK DK array not created yet for CUBIT
+  ! if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
 
-! put negligible initial value to avoid very slow underflow trapping
-  if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
+  ! open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
+  ! read(27) b_displ
+  ! read(27) b_veloc
+  ! read(27) b_accel
 
-!! DK DK array not created yet for CUBIT
-! if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
+  ! rho_kl(:,:,:,:) = 0._CUSTOM_REAL
+  ! mu_kl(:,:,:,:) = 0._CUSTOM_REAL
+  ! kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
 
-! open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
-! read(27) b_displ
-! read(27) b_veloc
-! read(27) b_accel
-
-! rho_kl(:,:,:,:) = 0._CUSTOM_REAL
-! mu_kl(:,:,:,:) = 0._CUSTOM_REAL
-! kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
-
-! endif
-
-! allocate files to save movies and shaking map
-  if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
-    if (USE_HIGHRES_FOR_MOVIES) then
-      nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
-    else
-      nmovie_points = NGNOD2D * NSPEC2D_TOP
-      iorderi(1) = 1
-      iorderi(2) = NGLLX
-      iorderi(3) = NGLLX
-      iorderi(4) = 1
-      iorderj(1) = 1
-      iorderj(2) = 1
-      iorderj(3) = NGLLY
-      iorderj(4) = NGLLY
-    endif
-    allocate(store_val_x(nmovie_points))
-    allocate(store_val_y(nmovie_points))
-    allocate(store_val_z(nmovie_points))
-    allocate(store_val_ux(nmovie_points))
-    allocate(store_val_uy(nmovie_points))
-    allocate(store_val_uz(nmovie_points))
-    allocate(store_val_norm_displ(nmovie_points))
-    allocate(store_val_norm_veloc(nmovie_points))
-    allocate(store_val_norm_accel(nmovie_points))
-
-    allocate(store_val_x_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_y_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_z_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_ux_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_uy_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_uz_all(nmovie_points,0:NPROC-1))
-
-! to compute max of norm for shaking map
-    store_val_norm_displ(:) = -1.
-    store_val_norm_veloc(:) = -1.
-    store_val_norm_accel(:) = -1.
-  else if (MOVIE_VOLUME) then
-    allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  endif
+  ! endif
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -323,18 +205,97 @@
   endif
   deltatover2 = deltat/2.
   deltatsqover2 = deltat*deltat/2.
-  if (SIMULATION_TYPE == 3) then
-    if(CUSTOM_REAL == SIZE_REAL) then
-      b_deltat = - sngl(DT)
-    else
-      b_deltat = - DT
-    endif
-    b_deltatover2 = b_deltat/2.
-    b_deltatsqover2 = b_deltat*b_deltat/2.
-  endif
+  !  if (SIMULATION_TYPE == 3) then
+  !    if(CUSTOM_REAL == SIZE_REAL) then
+  !      b_deltat = - sngl(DT)
+  !    else
+  !      b_deltat = - DT
+  !    endif
+  !    b_deltatover2 = b_deltat/2.
+  !    b_deltatsqover2 = b_deltat*b_deltat/2.
+  !  endif
+
+! seismograms
+  if (nrec_local > 0) then
+    ! allocate seismogram array
+    allocate(seismograms_d(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_v(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_a(NDIM,nrec_local,NSTEP))
+    
+    ! initialize seismograms
+    seismograms_d(:,:,:) = 0._CUSTOM_REAL
+    seismograms_v(:,:,:) = 0._CUSTOM_REAL
+    seismograms_a(:,:,:) = 0._CUSTOM_REAL
+    
+    !    if (SIMULATION_TYPE == 2) then
+    !    ! allocate Frechet derivatives array
+    !      allocate(Mxx_der(nrec_local),Myy_der(nrec_local),Mzz_der(nrec_local),Mxy_der(nrec_local), &
+    !               Mxz_der(nrec_local),Myz_der(nrec_local), sloc_der(NDIM,nrec_local))
+    !      Mxx_der = 0._CUSTOM_REAL
+    !      Myy_der = 0._CUSTOM_REAL
+    !      Mzz_der = 0._CUSTOM_REAL
+    !      Mxy_der = 0._CUSTOM_REAL
+    !      Mxz_der = 0._CUSTOM_REAL
+    !      Myz_der = 0._CUSTOM_REAL
+    !      sloc_der = 0._CUSTOM_REAL
+    !      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
+    !      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
+    !    endif    
+  endif  
+
+! if attenuation is on, shift PREM to right frequency
+! rescale mu in PREM to average frequency for attenuation
+  if(ATTENUATION) then
+
+! get and store PREM attenuation model
+    do iattenuation = 1,NUM_REGIONS_ATTENUATION
+
+      call get_attenuation_model(myrank,iattenuation,tau_mu_dble, &
+        tau_sigma_dble,beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
+
+      ! distinguish between single and double precision for reals
+      if(CUSTOM_REAL == SIZE_REAL) then
+        tau_mu(iattenuation,:) = sngl(tau_mu_dble(:))
+        tau_sigma(iattenuation,:) = sngl(tau_sigma_dble(:))
+        beta(iattenuation,:) = sngl(beta_dble(:))
+        factor_scale(iattenuation) = sngl(factor_scale_dble)
+        one_minus_sum_beta(iattenuation) = sngl(one_minus_sum_beta_dble)
+      else
+        tau_mu(iattenuation,:) = tau_mu_dble(:)
+        tau_sigma(iattenuation,:) = tau_sigma_dble(:)
+        beta(iattenuation,:) = beta_dble(:)
+        factor_scale(iattenuation) = factor_scale_dble
+        one_minus_sum_beta(iattenuation) = one_minus_sum_beta_dble
+      endif
+    enddo
+
+! rescale shear modulus according to attenuation model
+    do ispec = 1,NSPEC_AB
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+
+            ! use scaling rule similar to Olsen et al. (2003)          
+            !! We might need to fix the attenuation part for the anisotropy case
+            !! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
+            if(USE_OLSEN_ATTENUATION) then
+              vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+              call get_attenuation_model_olsen( vs_val, iselected )
+            else                        
+              ! takes iflag set in (CUBIT) mesh         
+              iselected = iflag_attenuation_store(i,j,k,ispec)
+            endif
+            
+            ! scales only mu             
+            scale_factor = factor_scale(iselected)
+            mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
+            
+          enddo
+        enddo
+      enddo
+    enddo
 
 ! precompute Runge-Kutta coefficients if attenuation
-  if(ATTENUATION) then
     tauinv(:,:) = - 1. / tau_sigma(:,:)
     factor_common(:,:) = 2. * beta(:,:) * tauinv(:,:)
     alphaval(:,:) = 1 + deltat*tauinv(:,:) + deltat**2*tauinv(:,:)**2 / 2. + &
@@ -369,7 +330,7 @@
 ! clear memory variables if attenuation
   if(ATTENUATION) then
   
-   ! initialize memory variables for attenuation
+    ! initialize memory variables for attenuation
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
@@ -390,22 +351,23 @@
       R_yz(:,:,:,:,:) = VERYSMALLVAL
     endif
 
-!! DK DK array not created yet for CUBIT
-!   if (SIMULATION_TYPE == 3) then
-!     read(27) b_R_xx
-!     read(27) b_R_yy
-!     read(27) b_R_xy
-!     read(27) b_R_xz
-!     read(27) b_R_yz
-!     read(27) b_epsilondev_xx
-!     read(27) b_epsilondev_yy
-!     read(27) b_epsilondev_xy
-!     read(27) b_epsilondev_xz
-!     read(27) b_epsilondev_yz
-!   endif
+    !! DK DK array not created yet for CUBIT
+    !   if (SIMULATION_TYPE == 3) then
+    !     read(27) b_R_xx
+    !     read(27) b_R_yy
+    !     read(27) b_R_xy
+    !     read(27) b_R_xz
+    !     read(27) b_R_yz
+    !     read(27) b_epsilondev_xx
+    !     read(27) b_epsilondev_yy
+    !     read(27) b_epsilondev_xy
+    !     read(27) b_epsilondev_xz
+    !     read(27) b_epsilondev_yz
+    !   endif
+    !  close(27)
 
   endif
-  close(27)
+  
 
 ! initialize Moho boundary index
 ! if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
@@ -414,7 +376,5 @@
 !   k_top = 1
 !   k_bot = NGLLZ
 ! endif
-
-
 
   end subroutine

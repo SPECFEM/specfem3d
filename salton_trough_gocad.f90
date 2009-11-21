@@ -33,7 +33,7 @@ subroutine read_salton_sea_model(vp_array)
   real :: vp_array(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW)
   integer :: ios, reclen
 
-  character(len=150) SALTON_SEA_MODEL_FILE
+  character(len=256) SALTON_SEA_MODEL_FILE
 
   reclen=(GOCAD_ST_NU * GOCAD_ST_NV * GOCAD_ST_NW) * 4
   call get_value_string(SALTON_SEA_MODEL_FILE, &

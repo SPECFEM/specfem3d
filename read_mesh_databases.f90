@@ -29,9 +29,13 @@
 
   use specfem_par
   use specfem_par_elastic
-  
+  use specfem_par_acoustic
+  use specfem_par_poroelastic
   implicit none
-
+  
+  integer :: i,j,k,ispec,iglob
+  integer :: iinterface
+  
 ! start reading the databasesa
 
 ! info about external mesh simulation
@@ -49,126 +53,152 @@
   read(27) gammay
   read(27) gammaz
   read(27) jacobian
-  
-  !pll
-  read(27) rho_vp
-  read(27) rho_vs
-  read(27) iflag_attenuation_store
 
-  ! checks attenuation flags: see integers defined in constants.h
-  if( ATTENUATION ) then
-    if( minval(iflag_attenuation_store(:,:,:,:)) < 1 ) then
-      close(27)
-      call exit_MPI(myrank,'something is wrong with the mesh attenuation: flag entry is invalid')
-    endif
-    if( maxval(iflag_attenuation_store(:,:,:,:)) > NUM_REGIONS_ATTENUATION ) then
-      close(27)
-      call exit_MPI(myrank,'something is wrong with the mesh attenuation: flag entry exceeds number of defined attenuation flags in constants.h')
-    endif
-  endif        
-  
-!  read(27) NSPEC2DMAX_XMIN_XMAX_ext 
-!  read(27) NSPEC2DMAX_YMIN_YMAX_ext
-!  allocate(nimin(2,NSPEC2DMAX_YMIN_YMAX_ext),nimax(2,NSPEC2DMAX_YMIN_YMAX_ext),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX_ext))
-!  allocate(njmin(2,NSPEC2DMAX_XMIN_XMAX_ext),njmax(2,NSPEC2DMAX_XMIN_XMAX_ext),nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX_ext))
-!  read(27) nimin
-!  read(27) nimax
-!  read(27) njmin
-!  read(27) njmax
-!  read(27) nkmin_xi 
-!  read(27) nkmin_eta
-  !end pll
-
-  read(27) kappastore
-  read(27) mustore
-  read(27) rmass
   read(27) ibool
+  
   read(27) xstore
   read(27) ystore
   read(27) zstore
 
-! absorbing boundaries
-  !pll
-!  read(27) nspec2D_xmin
-!  read(27) nspec2D_xmax
-!  read(27) nspec2D_ymin
-!  read(27) nspec2D_ymax
-!  read(27) NSPEC2D_BOTTOM
-!  read(27) NSPEC2D_TOP    
-!  allocate(ibelm_xmin(nspec2D_xmin))
-!  allocate(ibelm_xmax(nspec2D_xmax))
-!  allocate(ibelm_ymin(nspec2D_ymin))
-!  allocate(ibelm_ymax(nspec2D_ymax))
-!  allocate(ibelm_bottom(NSPEC2D_BOTTOM))  
-!  allocate(ibelm_top(NSPEC2D_TOP))
-!
-!  allocate(ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin))
-!  allocate(ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax))
-!  allocate(ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin))
-!  allocate(ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax))
-!  allocate(ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom))
-!  allocate(ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top))
-!              
-!  allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin))
-!  allocate(jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax))
-!  allocate(jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin))
-!  allocate(jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax))
-!  allocate(jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM))
-!  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
-!  
-!  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin))
-!  allocate(normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax))
-!  allocate(normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin))
-!  allocate(normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax))
-!  allocate(normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM))
-!  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
-!  read(27) ibelm_xmin
-!  read(27) ibelm_xmax
-!  read(27) ibelm_ymin
-!  read(27) ibelm_ymax
-!  read(27) ibelm_bottom
-!  read(27) ibelm_top
-!  
-!  read(27) ibelm_gll_xmin
-!  read(27) ibelm_gll_xmax
-!  read(27) ibelm_gll_ymin
-!  read(27) ibelm_gll_ymax
-!  read(27) ibelm_gll_bottom
-!  read(27) ibelm_gll_top
-!  
-!  read(27) normal_xmin
-!  read(27) normal_xmax
-!  read(27) normal_ymin
-!  read(27) normal_ymax
-!  read(27) normal_bottom
-!  read(27) normal_top
-!  read(27) jacobian2D_xmin
-!  read(27) jacobian2D_xmax
-!  read(27) jacobian2D_ymin
-!  read(27) jacobian2D_ymax
-!  read(27) jacobian2D_bottom
-!  read(27) jacobian2D_top
-!  !end pll
+  read(27) kappastore
+  read(27) mustore
 
-  read(27) num_absorbing_boundary_faces
-  allocate(absorbing_boundary_ispec(num_absorbing_boundary_faces))
-  allocate(absorbing_boundary_ijk(3,NGLLSQUARE,num_absorbing_boundary_faces))
-  allocate(absorbing_boundary_jacobian2D(NGLLSQUARE,num_absorbing_boundary_faces))
-  allocate(absorbing_boundary_normal(NDIM,NGLLSQUARE,num_absorbing_boundary_faces))
-  read(27) absorbing_boundary_ispec
-  read(27) absorbing_boundary_ijk
-  read(27) absorbing_boundary_jacobian2D
-  read(27) absorbing_boundary_normal
+  read(27) ispec_is_acoustic
+  read(27) ispec_is_elastic
+  read(27) ispec_is_poroelastic
+
+  ! acoustic
+  ! all processes will have acoustic_simulation set if any flag is .true.  
+  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
+  if( ACOUSTIC_SIMULATION ) then    
+    ! potentials
+    allocate(potential_acoustic(NGLOB_AB))
+    allocate(potential_dot_acoustic(NGLOB_AB))
+    allocate(potential_dot_dot_acoustic(NGLOB_AB))
+    
+    ! mass matrix, density
+    allocate(rmass_acoustic(NGLOB_AB))
+    allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    
+    read(27) rmass_acoustic    
+    read(27) rhostore            
+  endif
+
+  ! elastic
+  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+  if( ELASTIC_SIMULATION ) then
+    ! displacement,velocity,acceleration  
+    allocate(displ(NDIM,NGLOB_AB))
+    allocate(veloc(NDIM,NGLOB_AB))
+    allocate(accel(NDIM,NGLOB_AB))
+
+    allocate(rmass(NGLOB_AB))
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+    allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+
+    read(27) rmass
+    if( OCEANS ) then
+      read(27) rmass_ocean_load
+    endif
+    !pll
+    read(27) rho_vp
+    read(27) rho_vs
+    read(27) iflag_attenuation_store
+    
+  else    
+    ! no elastic attenuation & anisotropy
+    ATTENUATION = .false.
+    ANISOTROPY = .false.
+  endif
+  
+  ! poroelastic
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )  
+  if( POROELASTIC_SIMULATION ) then
+  
+    stop 'not implemented yet '
+    
+    allocate(rmass_solid_poroelastic(NGLOB_AB))
+    allocate(rmass_fluid_poroelastic(NGLOB_AB))
+
+    read(27) rmass_solid_poroelastic
+    read(27) rmass_fluid_poroelastic    
+  endif
+
+! checks simulation types are valid
+  if( (.not. ACOUSTIC_SIMULATION ) .and. &
+     (.not. ELASTIC_SIMULATION ) .and. &
+     (.not. POROELASTIC_SIMULATION ) ) then
+     close(27)
+     call exit_mpi(myrank,'error no simulation type defined')
+  endif
+  
+  ! checks attenuation flags: see integers defined in constants.h
+  if( ATTENUATION ) then
+    if( minval(iflag_attenuation_store(:,:,:,:)) < 1 ) then
+      close(27)
+      call exit_MPI(myrank,'error attenuation flag entry exceeds range')
+    endif
+    if( maxval(iflag_attenuation_store(:,:,:,:)) > NUM_REGIONS_ATTENUATION ) then
+      close(27)
+      call exit_MPI(myrank,'error attenuation flag entry exceeds range')
+    endif
+  endif        
+  
+! absorbing boundary surface
+  read(27) num_abs_boundary_faces
+  allocate(abs_boundary_ispec(num_abs_boundary_faces))
+  allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces))
+  allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces))
+  allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces))
+  read(27) abs_boundary_ispec
+  read(27) abs_boundary_ijk
+  read(27) abs_boundary_jacobian2Dw
+  read(27) abs_boundary_normal
 
 ! free surface 
-  read(27) NSPEC2D_TOP    
-  allocate(ibelm_top(NSPEC2D_TOP))
-  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP))
-  allocate(normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP))
-  read(27) ibelm_top
-  read(27) jacobian2D_top
-  read(27) normal_top
-  
+  read(27) num_free_surface_faces
+  allocate(free_surface_ispec(num_free_surface_faces))
+  allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces))
+  allocate(free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces))
+  allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces))
+  read(27) free_surface_ispec
+  read(27) free_surface_ijk
+  read(27) free_surface_jacobian2Dw
+  read(27) free_surface_normal
+
+! acoustic-elastic coupling surface
+  read(27) num_coupling_ac_el_faces
+  allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces))
+  read(27) coupling_ac_el_ispec   
+  read(27) coupling_ac_el_ijk
+  read(27) coupling_ac_el_jacobian2Dw 
+  read(27) coupling_ac_el_normal 
+    
 ! MPI interfaces
   read(27) num_interfaces_ext_mesh
   read(27) max_nibool_interfaces_ext_mesh
@@ -216,14 +246,14 @@
   allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh))
 
 ! locate inner and outer elements
-  allocate(ispec_is_inner_ext_mesh(NSPEC_AB))
-  allocate(iglob_is_inner_ext_mesh(NGLOB_AB))
-  ispec_is_inner_ext_mesh(:) = .true.
-  iglob_is_inner_ext_mesh(:) = .true.
+  allocate(ispec_is_inner(NSPEC_AB))
+  allocate(iglob_is_inner(NGLOB_AB))
+  ispec_is_inner(:) = .true.
+  iglob_is_inner(:) = .true.
   do iinterface = 1, num_interfaces_ext_mesh
     do i = 1, nibool_interfaces_ext_mesh(iinterface)
       iglob = ibool_interfaces_ext_mesh(i,iinterface)
-      iglob_is_inner_ext_mesh(iglob) = .false.
+      iglob_is_inner(iglob) = .false.
     enddo
   enddo
   do ispec = 1, NSPEC_AB
@@ -231,12 +261,13 @@
       do j = 1, NGLLY
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
-          ispec_is_inner_ext_mesh(ispec) = iglob_is_inner_ext_mesh(iglob) .and. ispec_is_inner_ext_mesh(ispec)
+          ispec_is_inner(ispec) = iglob_is_inner(iglob) .and. ispec_is_inner(ispec)
         enddo
       enddo
     enddo
   enddo
-
+  deallocate( iglob_is_inner )
+  
 ! counts inner and outer elements
 !    nspec_inner = 0
 !    nspec_outer = 0
@@ -267,8 +298,9 @@
 
     
 ! check courant criteria on mesh
-  call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    kappastore,mustore,rho_vp,rho_vs, &
-                                    DT )
+  if( ELASTIC_SIMULATION ) then
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                              kappastore,mustore,rho_vp,rho_vs,DT )
+  endif
 
   end subroutine

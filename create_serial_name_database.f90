@@ -34,7 +34,7 @@
   integer iproc,NPROC
 
 ! name of the database file
-  character(len=150) prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
+  character(len=256) prname,procname,LOCAL_PATH,clean_LOCAL_PATH,serial_prefix,OUTPUT_FILES
 
   integer iprocloop,nproc_max_loop
   integer, dimension(:), allocatable :: num_active_proc

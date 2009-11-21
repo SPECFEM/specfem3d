@@ -31,7 +31,7 @@
 
   integer value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=256) string_read
 
   call unused_string(name)
 
@@ -48,7 +48,7 @@
 
   double precision value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=256) string_read
 
   call unused_string(name)
 
@@ -65,7 +65,7 @@
 
   logical value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=256) string_read
 
   call unused_string(name)
 
@@ -82,7 +82,7 @@
 
   character(len=*) value_to_read
   character(len=*) name
-  character(len=100) string_read
+  character(len=256) string_read
 
   call unused_string(name)
 
@@ -99,12 +99,12 @@
 
   include "constants.h"
 
-  character(len=100) string_read
+  character(len=256) string_read
 
   integer index_equal_sign,ios
 
   do
-    read(unit=IIN,fmt="(a100)",iostat=ios) string_read
+    read(unit=IIN,fmt="(a256)",iostat=ios) string_read
     if(ios /= 0) stop 'error while reading parameter file'
 
 ! suppress leading white spaces, if any

@@ -37,9 +37,6 @@
 
   include "constants.h"
 
-! include values created by the mesher
-!  include "OUTPUT_FILES/values_from_mesher.h"
-
 ! array to assemble
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
 
@@ -108,6 +105,10 @@
 
   end subroutine assemble_MPI_vector_ext_mesh
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,array_val, &
             buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -118,9 +119,6 @@
   implicit none
 
   include "constants.h"
-
-! include values created by the mesher
-!  include "OUTPUT_FILES/values_from_mesher.h"
 
 ! array to assemble
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
@@ -172,6 +170,9 @@
 
   end subroutine assemble_MPI_vector_ext_mesh_s
 
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,array_val, &
             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -181,9 +182,6 @@
   implicit none
 
   include "constants.h"
-
-! include values created by the mesher
-!  include "OUTPUT_FILES/values_from_mesher.h"
 
 ! array to assemble
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val

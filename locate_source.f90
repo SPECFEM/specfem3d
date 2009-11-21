@@ -35,8 +35,8 @@
                  xi_source,eta_source,gamma_source, &
                  TOPOGRAPHY,UTM_PROJECTION_ZONE, &
                  PRINT_SOURCE_TIME_FUNCTION, &
-                 nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
-                 )
+                 nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
+                 ispec_is_acoustic,ispec_is_elastic)
 
   implicit none
 
@@ -55,6 +55,8 @@
 
 ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
+
+  logical, dimension(NSPEC_AB) :: ispec_is_acoustic,ispec_is_elastic
 
   integer yr,jda,ho,mi
 
@@ -121,7 +123,7 @@
   double precision, dimension(NSOURCES) :: lat,long,depth,elevation
   double precision moment_tensor(6,NSOURCES)
 
-  character(len=150) OUTPUT_FILES,plot_file
+  character(len=256) OUTPUT_FILES,plot_file
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision distmin
@@ -141,6 +143,10 @@
   integer it
   double precision time_source
   double precision, external :: comp_source_time_function
+
+  integer, dimension(NSOURCES) :: idomain
+  integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
+  
 
 ! **************
 
@@ -206,7 +212,7 @@
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
     z_target_source = depth(isource)
-    if (myrank == 0) write(IOVTK,*) x_target_source, y_target_source, z_target_source
+!    if (myrank == 0) write(IOVTK,*) x_target_source, y_target_source, z_target_source
       
 
 ! set distance to huge initial value
@@ -287,6 +293,15 @@
 
     if (ispec_selected_source(isource) == 0) then
       final_distance_source(isource) = HUGEVAL
+    endif
+
+    ! sets whether acoustic (1) or elastic (2)
+    if( ispec_is_acoustic( ispec_selected_source(isource) ) ) then
+      idomain(isource) = 1
+    else if( ispec_is_elastic( ispec_selected_source(isource) ) ) then
+      idomain(isource) = 2
+    else
+      idomain(isource) = 0
     endif
 
 ! get normal to the face of the hexaedra if receiver is on the surface
@@ -516,6 +531,7 @@
          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
 ! store xi,eta,gamma and x,y,z of point found
+! note: xi/eta/gamma will be in range [-1,1]
       xi_source(isource) = xi
       eta_source(isource) = eta
       gamma_source(isource) = gamma
@@ -548,6 +564,12 @@
     tmp_i_local(:) = ispec_selected_source(ns:ne)    
     call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
     ispec_selected_source_all(1:ng,:) = tmp_i_all_local(:,:)
+
+    ! acoustic/elastic domain
+    tmp_i_local(:) = idomain(ns:ne)    
+    call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
+    idomain_all(1:ng,:) = tmp_i_all_local(:,:)
+
     deallocate(tmp_i_local,tmp_i_all_local)
     
     ! avoids warnings about temporary creations of arrays for function call by compiler
@@ -622,13 +644,14 @@
             y_found_source(isource) = y_found_source_all(is,iprocloop)
             z_found_source(isource) = z_found_source_all(is,iprocloop)
             nu_source(:,:,isource) = nu_source_all(:,:,isource,iprocloop)
+            idomain(isource) = idomain_all(is,iprocloop)
           endif
         enddo
         final_distance_source(isource) = distmin
 
       enddo
     endif !myrank
-  enddo
+  enddo ! ngather
 
   if (myrank == 0) then
 
@@ -643,11 +666,19 @@
         write(IMAIN,*)
         write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
         write(IMAIN,*) '               in element ',ispec_selected_source(isource)
+        if( idomain(isource) == 1 ) then
+          write(IMAIN,*) '               in acoustic domain'
+        else if( idomain(isource) == 2 ) then
+          write(IMAIN,*) '               in elastic domain'
+        else
+          write(IMAIN,*) '               in unknown domain'        
+        endif
+        
         write(IMAIN,*)
         if(USE_FORCE_POINT_SOURCE) then
-          write(IMAIN,*) '   xi coordinate of source in that element: ',nint(xi_source(isource))
+          write(IMAIN,*) '  xi coordinate of source in that element: ',nint(xi_source(isource))
           write(IMAIN,*) '  eta coordinate of source in that element: ',nint(eta_source(isource))
-          write(IMAIN,*) 'gamma coordinate of source in that element: ',nint(gamma_source(isource))
+          write(IMAIN,*) '  gamma coordinate of source in that element: ',nint(gamma_source(isource))
           write(IMAIN,*) 'nu1 = ',nu_source(1,:,isource)
           write(IMAIN,*) 'nu2 = ',nu_source(2,:,isource)
           write(IMAIN,*) 'nu3 = ',nu_source(3,:,isource)
@@ -727,6 +758,21 @@
         enddo
         close(27)
 
+      endif
+
+      ! checks CMTSOLUTION format for acoustic case
+      if( idomain(isource) == 1 ) then
+        if( Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
+           Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL ) then
+            write(IMAIN,*)
+            write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
+            write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
+            write(IMAIN,*) '      Mrr = Mtt = Mpp '
+            write(IMAIN,*) '   and '
+            write(IMAIN,*) '      Mrt = Mrp = Mtp = zero'
+            write(IMAIN,*)
+            call exit_mpi(myrank,'error acoustic source')
+        endif
       endif
 
 ! end of loop on all the sources

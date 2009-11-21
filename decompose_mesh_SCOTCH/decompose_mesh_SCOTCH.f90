@@ -9,8 +9,7 @@ module decompose_mesh_SCOTCH
   include './scotchf.h'
 
 ! number of partitions
-!  integer, parameter  :: nparts = 4  
-  integer :: nparts != 4  
+  integer :: nparts ! e.g. 4 for partitioning for 4 processes/CPUs 
 
 ! mesh arrays
   integer(long) :: nspec
@@ -25,6 +24,7 @@ module decompose_mesh_SCOTCH
   integer, dimension(:), allocatable  :: adjncy
   integer, dimension(:), allocatable  :: nnodes_elmnts
   integer, dimension(:), allocatable  :: nodes_elmnts
+  integer, dimension(:), allocatable  :: elmnts_load
 
   integer, dimension(:), pointer  :: glob2loc_elmnts
   integer, dimension(:), pointer  :: glob2loc_nodes_nparts
@@ -63,7 +63,7 @@ module decompose_mesh_SCOTCH
   double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
   character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
-  integer  :: ierr
+  integer  :: ierr,idummy
   !integer :: i
   
   !pll
@@ -74,6 +74,9 @@ module decompose_mesh_SCOTCH
 ! default mesh file directory
   character(len=256) :: localpath_name    ! './OUTPUT_FILES'
   character(len=256) :: outputpath_name   ! './OUTPUT_FILES'
+
+  integer :: q_flag,aniso_flag,idomain_id
+  double precision :: vp,vs,rho
 
   contains
   
@@ -167,7 +170,8 @@ module decompose_mesh_SCOTCH
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
           status='old', form='formatted')
-    read(98,*,iostat=ierr) num_mat
+    ! note: format #material_domain_id #material_id #...      
+    read(98,*,iostat=ierr) idummy,num_mat
     print *,'materials:'
     ! counts materials (defined/undefined)
     do while (ierr == 0)
@@ -177,7 +181,7 @@ module decompose_mesh_SCOTCH
        else
           count_undef_mat = count_undef_mat + 1
        end if
-       read(98,*,iostat=ierr) num_mat
+       read(98,*,iostat=ierr) idummy,num_mat
     end do
     close(98)
     print*, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
@@ -188,15 +192,23 @@ module decompose_mesh_SCOTCH
       print*,'  bigger than defined materials in nummaterial_velocity_file:',count_def_mat
       stop 'error materials'
     endif
-    allocate(mat_prop(5,count_def_mat))
-    allocate(undef_mat_prop(5,count_undef_mat))
+    allocate(mat_prop(6,count_def_mat))
+    allocate(undef_mat_prop(6,count_undef_mat))
     ! reads in defined material properties
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted')
     do imat=1,count_def_mat
-       ! format:#(0) material_id  #(1) rho    #(2) vp      #(3) vs      #(4) Q_flag     #(5) 0 
-       read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
-                  mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
+       ! format: #(6) material_domain_id #(0) material_id  #(1) rho    #(2) vp      #(3) vs      #(4) Q_flag     #(5) anisotropy_flag
+       read(98,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
+       !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
+       !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
+       mat_prop(1,num_mat) = rho
+       mat_prop(2,num_mat) = vp
+       mat_prop(3,num_mat) = vs
+       mat_prop(4,num_mat) = q_flag
+       mat_prop(5,num_mat) = aniso_flag
+       mat_prop(6,num_mat) = idomain_id
+       
        if(num_mat < 0 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
 
        !checks attenuation flag with integer range as defined in constants.h like IATTENUATION_SEDIMENTS_40, ....
@@ -206,9 +218,8 @@ module decompose_mesh_SCOTCH
     end do
     ! reads in undefined material properties
     do imat=1,count_undef_mat
-       read(98,'(5A30)') undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-                        undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
-                        undef_mat_prop(5,imat)
+       read(98,'(6A30)') undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+                        undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
     end do
     close(98)
 
@@ -373,14 +384,16 @@ module decompose_mesh_SCOTCH
   !----------------------------------------------------------------------------------------------
   
   subroutine scotch_partitioning
-  
+
+    implicit none
+
     elmnts(:,:) = elmnts(:,:) - 1
 
+    ! determines maximum neighbors based on 1 common node
     allocate(xadj(1:nspec+1))
     allocate(adjncy(1:sup_neighbour*nspec))
     allocate(nnodes_elmnts(1:nnodes))
-    allocate(nodes_elmnts(1:nsize*nnodes))
-    
+    allocate(nodes_elmnts(1:nsize*nnodes))    
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, 1)
     print*, 'mesh2dual: '
@@ -392,48 +405,84 @@ module decompose_mesh_SCOTCH
     allocate(part(1:nspec))
     part(:) = -1
 
-
+  ! initializes
+  ! elements load array
+    allocate(elmnts_load(1:nspec))
+    
+    ! uniform load
+    elmnts_load(:) = 1 
+    
+    ! in case of acoustic/elastic simulation, weights elements accordingly
+    call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,mat(1,:),mat_prop)
+    
   ! SCOTCH partitioning
-      call scotchfstratinit (scotchstrat(1), ierr)
-       if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot initialize strat'
-      endif
+    call scotchfstratinit (scotchstrat(1), ierr)
+     if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot initialize strat'
+    endif
 
-      call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ierr)
-       if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot build strat'
-      endif
+    call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ierr)
+     if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot build strat'
+    endif
 
-      call scotchfgraphinit (scotchgraph (1), ierr)
-      if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot initialize graph'
-      endif
+    call scotchfgraphinit (scotchgraph (1), ierr)
+    if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot initialize graph'
+    endif
 
-      call scotchfgraphbuild (scotchgraph (1), 0, nspec, xadj (1), xadj (1), &
-           xadj (1), xadj (1), nb_edges, adjncy (1), adjncy (1), ierr)
-      if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot build graph'
-      endif
+    ! fills graph structure : see user manual (scotch_user5.1.pdf, page 72/73)
+    ! arguments: #(1) graph_structure       #(2) baseval(either 0/1)    #(3) number_of_vertices
+    !                    #(4) adjacency_index_array         #(5) adjacency_end_index_array (optional)
+    !                    #(6) vertex_load_array (optional) #(7) vertex_label_array
+    !                    #(7) number_of_arcs                    #(8) adjacency_array 
+    !                    #(9) arc_load_array (optional)      #(10) ierror
+    call scotchfgraphbuild (scotchgraph (1), 0, nspec, &
+                          xadj (1), xadj (1), &
+                          elmnts_load (1), xadj (1), &
+                          nb_edges, adjncy (1), &
+                          adjncy (1), ierr)
 
-      call scotchfgraphcheck (scotchgraph (1), ierr)
-      if (ierr /= 0) then
-         stop 'ERROR : MAIN : Invalid check'
-      endif
+    ! w/out element load, but adjacency array
+    !call scotchfgraphbuild (scotchgraph (1), 0, nspec, &
+    !                      xadj (1), xadj (1), &
+    !                      xadj (1), xadj (1), &
+    !                      nb_edges, adjncy (1), &
+    !                      adjncy (1), ierr)
+                          
+                          
+    if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot build graph'
+    endif
 
-      call scotchfgraphpart (scotchgraph (1), nparts, scotchstrat(1),part(1),ierr)
-      if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot part graph'
-      endif
+    call scotchfgraphcheck (scotchgraph (1), ierr)
+    if (ierr /= 0) then
+       stop 'ERROR : MAIN : Invalid check'
+    endif
 
-      call scotchfgraphexit (scotchgraph (1), ierr)
-      if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot destroy graph'
-      endif
+    call scotchfgraphpart (scotchgraph (1), nparts, scotchstrat(1),part(1),ierr)
+    if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot part graph'
+    endif
 
-      call scotchfstratexit (scotchstrat(1), ierr)
-      if (ierr /= 0) then
-         stop 'ERROR : MAIN : Cannot destroy strat'
-      endif
+    call scotchfgraphexit (scotchgraph (1), ierr)
+    if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot destroy graph'
+    endif
+
+    call scotchfstratexit (scotchstrat(1), ierr)
+    if (ierr /= 0) then
+       stop 'ERROR : MAIN : Cannot destroy strat'
+    endif
+
+
+  ! re-partitioning puts acoustic-elastic coupled elements into same partition
+  !  integer  :: nfaces_coupled
+  !  integer, dimension(:,:), pointer  :: faces_coupled
+  !    call acoustic_elastic_repartitioning (nspec, nnodes, elmnts, &
+  !                   count_def_mat, mat(1,:) , mat_prop, &
+  !                   sup_neighbour, nsize, &
+  !                   nproc, part, nfaces_coupled, faces_coupled)
    
   ! local number of each element for each partition
     call Construct_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
@@ -442,9 +491,17 @@ module decompose_mesh_SCOTCH
     call Construct_glob2loc_nodes(nspec, nnodes,nsize, nnodes_elmnts, nodes_elmnts, part, &
          glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, nparts)
 
+  ! mpi interfaces 
+    ! acoustic/elastic boundaries WILL BE SEPARATED into different MPI partitions
     call Construct_interfaces(nspec, sup_neighbour, part, elmnts, xadj, adjncy, tab_interfaces, &
-                              tab_size_interfaces, ninterfaces, &
-                              count_def_mat, mat_prop(3,:), mat(1,:), nparts)
+                             tab_size_interfaces, ninterfaces, &
+                             nparts)
+
+    !or: acoustic/elastic boundaries will NOT be separated into different MPI partitions
+    !call Construct_interfaces_no_acoustic_elastic_separation(nspec, &
+    !                          sup_neighbour, part, elmnts, xadj, adjncy, tab_interfaces, &
+    !                          tab_size_interfaces, ninterfaces, &
+    !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts)
 
   end subroutine scotch_partitioning
   
@@ -457,8 +514,10 @@ module decompose_mesh_SCOTCH
     allocate(my_interfaces(0:ninterfaces-1))
     allocate(my_nb_interfaces(0:ninterfaces-1))
 
+    ! writes out Database file for each partition
     do ipart = 0, nparts-1
 
+       ! opens output file
        write(prname, "(i6.6,'_Database')") ipart
        open(unit=15,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
             status='unknown', action='write', form='formatted', iostat = ierr)
@@ -469,13 +528,17 @@ module decompose_mesh_SCOTCH
         stop 'error file open Database'
        endif
    
+       ! gets number of nodes 
        call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 1)
+
+       ! gets number of spectral elements                           
        call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 1)
 
+       ! writes out node coordinate locations 
        write(15,*) nnodes_loc
        
        call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords,&
@@ -484,13 +547,15 @@ module decompose_mesh_SCOTCH
 
        call write_material_properties_database(15,count_def_mat,count_undef_mat, &
                                   mat_prop, undef_mat_prop) 
-
+        
+       ! writes out spectral element indices 
        write(15,*) nspec_loc
        
        call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 2)
-
+       
+       ! writes out absorbing/free-surface boundaries
        call write_boundaries_database(15, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
                                   nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
                                   ibelm_xmin, ibelm_xmax, ibelm_ymin, &
@@ -500,11 +565,13 @@ module decompose_mesh_SCOTCH
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part)
 
+       ! gets number of MPI interfaces                           
        call Write_interfaces_database(15, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 1, nparts)
-                                  
+
+       ! writes out MPI interfaces elements
        write(15,*) my_ninterface, maxval(my_nb_interfaces)
        
        call Write_interfaces_database(15, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &

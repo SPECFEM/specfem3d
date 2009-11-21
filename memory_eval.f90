@@ -115,7 +115,7 @@
         + NGLLX*NGLLX*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
         + nspec2D_xmin*20 + nspec2D_xmax*20 + nspec2D_ymin*20 + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20 
 
-! memory usage, in create_regions_mesh_ext_mesh() routine requested approximately
+! memory usage, in create_regions_mesh_ext() routine requested approximately
   static_memory_size_request =   &
         + 3*NGNOD*8 + NGLLX*NGLLY*NGLLZ*nspec*4 + 6*nspec*1 + 6*NGLLX*8 &
         + NGNOD*NGLLX*NGLLY*NGLLZ*8 + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*8 &

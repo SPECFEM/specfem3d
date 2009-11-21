@@ -60,7 +60,7 @@
 ! estimation of time step and period resolved
   real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.3
   real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
-
+  logical :: has_vs_zero
 
 ! initializes 
   if( DT <= 0.0d0) then
@@ -83,6 +83,8 @@
 
   dt_suggested_glob = HUGEVAL
 
+  has_vs_zero = .false.
+
 ! checks courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
           
@@ -91,8 +93,18 @@
     vpmax = -HUGEVAL
     vsmin = HUGEVAL
     vsmax = -HUGEVAL
-    vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) + kappastore(:,:,:,ispec)) / rho_vp(:,:,:,ispec)
-    vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
+    ! vp
+    where( rho_vp(:,:,:,ispec) > TINYVAL )
+      vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) + kappastore(:,:,:,ispec)) / rho_vp(:,:,:,ispec)
+    elsewhere
+      vp_elem(:,:,:) = 0.0
+    endwhere
+    ! vs    
+    where( rho_vs(:,:,:,ispec) > TINYVAL )
+      vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
+    elsewhere
+      vs_elem(:,:,:) = 0.0
+    endwhere
 
     val_min = minval(vp_elem(:,:,:))
     val_max = maxval(vp_elem(:,:,:))
@@ -104,7 +116,11 @@
     val_max = maxval(vs_elem(:,:,:))
     
     ! ignore fluid regions with Vs = 0
-    if( val_min(1) > 0.0001 ) vsmin = min(vsmin,val_min(1))
+    if( val_min(1) > 0.0001 ) then
+      vsmin = min(vsmin,val_min(1))
+    else
+      has_vs_zero = .true.
+    endif
     vsmax = max(vsmax,val_max(1))
 
     ! min/max for whole cpu partition
@@ -180,6 +196,8 @@
   call max_all_cr(vpmax,vpmax_glob)
 
   vsmin = vsmin_glob
+  if( has_vs_zero ) vsmin = 0.0
+  
   vsmax = vsmax_glob
   call min_all_cr(vsmin,vsmin_glob)
   call max_all_cr(vsmax,vsmax_glob)

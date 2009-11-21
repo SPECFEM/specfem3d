@@ -87,7 +87,9 @@
    write(15,*) maxval(idoubling), 0
    do idoubl = 1,maxval(idoubling)
       call socal_model(idoubl,rho,vp,vs,iattenuation)
-      write(15,*) rho,vp,vs,iattenuation,0.d0
+      !write(15,*) rho,vp,vs,iattenuation,0.d0
+      ! assumes material id for elastic domain
+      write(15,*) rho,vp,vs,iattenuation,0.d0,2
    end do
 !  write(15,*) 1,0
 !  write(15,*) 1100.d0,300.d0,200.d0,0.d0,0.d0

@@ -36,7 +36,7 @@
   implicit none
 
   include 'constants.h'
-  include 'OUTPUT_FILES/values_from_mesher.h'
+!  include 'OUTPUT_FILES/values_from_mesher.h'
 
 ! comment next line if using old basin version
   integer :: NSPEC_AB, NGLOB_AB
@@ -53,10 +53,10 @@
   integer :: numpoin
   integer :: i, ios, it
   integer :: iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
-  integer :: np, ne, npp, nee, npoint, nelement, njunk
+  integer :: np, ne, npp, nee, nelement, njunk 
     
-  character(len=150) :: sline, arg(6), filename, indir, outdir, prname
-  character(len=150) :: mesh_file,local_data_file, local_ibool_file
+  character(len=256) :: sline, arg(6), filename, indir, outdir, prname
+  character(len=256) :: mesh_file,local_data_file, local_ibool_file
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 
@@ -187,8 +187,8 @@
     if (.not. HIGH_RESOLUTION_MESH) then
       ! writes out element corners only
       call combine_vol_data_write_corners(nspec,nglob,ibool,mask_ibool,&
-                                            xstore,ystore,zstore,dat,npoint,&
-                                            it,npp,num_node,prname,numpoin)
+                                            xstore,ystore,zstore,dat, &
+                                            it,npp,prname,numpoin)
     else  
       ! high resolution, all GLL points
       call combine_vol_data_write_GLL_points(nspec,nglob,ibool,mask_ibool,&
@@ -245,7 +245,7 @@
       ! spectral elements
       call combine_vol_data_write_corner_elements(nspec,nglob,ibool,mask_ibool,num_ibool, &
                                             np,nelement, &
-                                            it,nee,num_node,prname,numpoin)  
+                                            it,nee,numpoin)  
     else 
       ! subdivided spectral elements
       call combine_vol_data_write_GLL_elements(nspec,nglob,ibool,mask_ibool,num_ibool, &
@@ -274,7 +274,7 @@
 
   print *, 'Done writing '//trim(mesh_file)
 
-  end program combine_paraview_data
+  end program combine_paraview_data_ext_mesh
 
 
 !=============================================================
@@ -287,7 +287,7 @@
   include 'constants.h'
   
   integer,intent(in) :: num_node,node_list(300)
-  character(len=150),intent(in) :: indir
+  character(len=256),intent(in) :: indir
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
   
@@ -297,7 +297,7 @@
   integer :: NSPEC_AB, NGLOB_AB
   integer :: it,iproc,npoint,nelement,ios,ispec
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  character(len=150) :: prname
+  character(len=256) :: prname
   
   npp = 0
   nee = 0
@@ -374,8 +374,8 @@
 ! writes out locations of spectral element corners only
 
   subroutine combine_vol_data_write_corners(nspec,nglob,ibool,mask_ibool,&
-                                            xstore,ystore,zstore,dat,npoint,&
-                                            it,npp,num_node,prname,numpoin)
+                                            xstore,ystore,zstore,dat,&
+                                            it,npp,prname,numpoin)
 
   implicit none
   include 'constants.h'
@@ -386,14 +386,16 @@
   real(kind=CUSTOM_REAL),dimension(nglob) :: xstore, ystore, zstore
   real,dimension(NGLLY,NGLLY,NGLLZ,nspec),intent(in) :: dat
   integer:: it  
-  integer :: npp,num_node,npoint,numpoin
-  character(len=150) :: prname
+  integer :: npp,numpoin
+  character(len=256) :: prname
 
+  !integer :: npoint,num_node
+  
   ! local parameters
   real :: x, y, z
-  integer :: ios,ispec,njunk
+  integer :: ios,ispec !,njunk
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  character(len=150) :: local_file
+  character(len=256) :: local_file
 
 ! corner locations  
   ! reads in coordinate files
@@ -550,12 +552,12 @@
   real(kind=CUSTOM_REAL),dimension(nglob) :: xstore, ystore, zstore
   real,dimension(NGLLY,NGLLY,NGLLZ,nspec),intent(in) :: dat
   integer:: it,npp,numpoin
-  character(len=150) :: prname
+  character(len=256) :: prname
 
   ! local parameters
   real :: x, y, z
   integer :: ios,ispec,i,j,k,iglob
-  character(len=150) :: local_file
+  character(len=256) :: local_file
 
   ! writes out total number of points
   if (it == 1) then
@@ -620,8 +622,8 @@
 ! writes out locations of spectral element corners only
 
   subroutine combine_vol_data_write_corner_elements(nspec,nglob,ibool,mask_ibool,num_ibool,&
-                                            np,nelement,&
-                                            it,nee,num_node,prname,numpoin)
+                                            np,nelement, &
+                                            it,nee,numpoin)
 
   implicit none
   include 'constants.h'
@@ -630,14 +632,16 @@
   integer,dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
   logical,dimension(nglob) :: mask_ibool
   integer,dimension(nglob) :: num_ibool
-  integer:: it,nee,num_node,np,nelement,numpoin
-  character(len=150) :: prname
+  integer:: it,nee,np,nelement,numpoin
+
+  !character(len=256) :: prname
+  !integer :: num_node
 
   ! local parameters
-  integer :: ios,ispec,i
+  integer :: ispec !,i,ios,njunk,njunk2
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  integer :: njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8  
-  character(len=150) :: local_element_file
+  integer :: n1, n2, n3, n4, n5, n6, n7, n8 
+  !character(len=256) :: local_element_file
 
 
   ! outputs total number of elements for all slices
