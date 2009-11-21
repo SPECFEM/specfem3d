@@ -37,7 +37,7 @@
 
   integer mo,da,julian_day,isource
   character(len=5) datasource
-  character(len=150) string, CMTSOLUTION
+  character(len=256) string, CMTSOLUTION
 
 !
 !---- read hypocenter info

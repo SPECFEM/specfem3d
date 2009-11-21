@@ -29,8 +29,8 @@
 
   use specfem_par
   use specfem_par_elastic
-  !use specfem_par_movie
-  
+  use specfem_par_acoustic
+  use specfem_par_poroelastic  
   implicit none
   
   integer :: sizeprocs
@@ -89,6 +89,12 @@
     ! just to be sure for now..
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
         stop 'must have NGLLX = NGLLY = NGLLZ'  
+  endif
+
+  ! exclusive movie flags
+  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then  
+    MOVIE_SURFACE = .false.
+    CREATE_SHAKEMAP = .false.
   endif
 
 ! chris: DT_ext_mesh & NSTE_ext_mesh were in constants.h, I suppressed it, now it is Par_file & read in 
@@ -183,45 +189,48 @@
   allocate(ystore(NGLOB_AB))
   allocate(zstore(NGLOB_AB))
 ! material properties  
+!  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+! material flags
+  allocate(ispec_is_acoustic(NSPEC_AB))
+  allocate(ispec_is_elastic(NSPEC_AB))
+  allocate(ispec_is_poroelastic(NSPEC_AB))
+  
 !  allocate(not_fully_in_bedrock(NSPEC_AB))
 !  allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
-  allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+!  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+!  allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+!  allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
   
 !  allocate(idoubling(NSPEC_AB))
 !mass matrix
-  allocate(rmass(NGLOB_AB))
+!  allocate(rmass(NGLOB_AB))
   allocate(rmass_ocean_load(NGLOB_AB))  
-  allocate(updated_dof_ocean_load(NGLOB_AB))
-! displacement,velocity,acceleration  
-  allocate(displ(NDIM,NGLOB_AB))
-  allocate(veloc(NDIM,NGLOB_AB))
-  allocate(accel(NDIM,NGLOB_AB))
+  !allocate(updated_dof_ocean_load(NGLOB_AB))
+  
 ! attenuation  
-  allocate(iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+!  allocate(iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
   end subroutine
   

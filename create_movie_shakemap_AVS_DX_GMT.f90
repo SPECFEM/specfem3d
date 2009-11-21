@@ -62,7 +62,7 @@
 
   double precision min_field_current,max_field_current,max_absol
 
-  character(len=150) outputname
+  character(len=256) outputname
 
   integer iproc,ipoin
 
@@ -105,8 +105,8 @@
   logical ABSORBING_CONDITIONS,SAVE_FORWARD
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH
-!  character(len=150) MODEL
+  character(len=256) OUTPUT_FILES,LOCAL_PATH
+!  character(len=256) MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC
@@ -246,37 +246,39 @@
   plot_shaking_map = .false.
   print *,'enter first time step of movie (e.g. 1, enter -1 for shaking map)'
   read(5,*) it1
+  
+  if(it1 == 0 ) it1 = 1
   if(it1 == -1) plot_shaking_map = .true.
-
+  
   if(.not. plot_shaking_map) then
 
-  print *,'enter last time step of movie (e.g. ',NSTEP,')'
-  read(5,*) it2
+    print *,'enter last time step of movie (e.g. ',NSTEP,')'
+    read(5,*) it2
 
-  print *
-  print *,'1 = define file names using frame number'
-  print *,'2 = define file names using time step number'
-  print *,'any other value = exit'
-  print *
-  print *,'enter value:'
-  read(5,*) inumber
-  if(inumber<1 .or. inumber>2) stop 'exiting...'
+    print *
+    print *,'1 = define file names using frame number'
+    print *,'2 = define file names using time step number'
+    print *,'any other value = exit'
+    print *
+    print *,'enter value:'
+    read(5,*) inumber
+    if(inumber<1 .or. inumber>2) stop 'exiting...'
 
-  print *
-  print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
+    print *
+    print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
 
-! count number of movie frames
-  nframes = 0
-  do it = it1,it2
-    if(mod(it,NTSTEP_BETWEEN_FRAMES) == 0) nframes = nframes + 1
-  enddo
-  print *
-  print *,'total number of frames will be ',nframes
-  if(nframes == 0) stop 'null number of frames'
+    ! count number of movie frames
+    nframes = 0
+    do it = it1,it2
+      if(mod(it,NTSTEP_BETWEEN_FRAMES) == 0) nframes = nframes + 1
+    enddo
+    print *
+    print *,'total number of frames will be ',nframes
+    if(nframes == 0) stop 'null number of frames'
 
   else
 
-! only one frame if shaking map
+    ! only one frame if shaking map
     nframes = 1
     it1 = 1
     it2 = 1

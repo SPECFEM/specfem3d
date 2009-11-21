@@ -33,7 +33,8 @@
 #   automatically using the module boundary_definition (see boundary_definition.py for more information)
 #or 
 #   manually following the convention:
-#     - each material should have a block defined by name,flag of the material (integer),p velocity 
+#     - each material should have a block defined by:
+#         material domain_flag (acoustic/elastic/poroelastic)name,flag of the material (integer),p velocity 
 #       (or the full description: name, flag, vp, vs, rho, Q ... if not present these last 3 parameters will be 
 #       interpolated by module mat_parameter)
 #     - each mesh should have the block definition for the face on the free_surface (topography), 
@@ -371,20 +372,35 @@ class mesh(object,mesh_tools):
         for block in blocks:
             name=cubit.get_exodus_entity_name('block',block)
             ty=cubit.get_block_element_type(block)
-            print block,blocks,ty,self.hex,self.face
+            print block,name,blocks,ty,self.hex,self.face
             if ty == self.hex:
-                nattrib=cubit.get_block_attribute_count(block)
                 flag=None
                 vel=None
                 vs=None
                 rho=None
-                q=None
-                ani=None
+                q=0
+                ani=0
+                # material domain id
+                if name == "acoustic" :
+                  imaterial = 1
+                elif name == "elastic" :
+                  imaterial = 2
+                elif name == "poroelastic" :
+                  imaterial = 3
+                else :
+                  imaterial = 0
+                  
+                nattrib=cubit.get_block_attribute_count(block)
                 if nattrib != 0:
-                    flag=int(cubit.get_block_attribute_value(block,0))
+                    # material flag: 
+                    #   positive => material properties, 
+                    #   negative => interface/tomography domain
+                    flag=int(cubit.get_block_attribute_value(block,0))                    
                     if flag > 0 and nattrib >= 2:
+                      # vp
                       vel=cubit.get_block_attribute_value(block,1)
                       if nattrib >= 3:
+                        # vs
                         vs=cubit.get_block_attribute_value(block,2)
                         if nattrib >= 4:
                           #density
@@ -402,6 +418,7 @@ class mesh(object,mesh_tools):
                               #anisotropy_flag
                               ani=cubit.get_block_attribute_value(block,5)                                      
                     elif flag < 0:
+                        # velocity model
                         vel=name
                         attrib=cubit.get_block_attribute_value(block,1)
                         if attrib == 1: 
@@ -416,19 +433,19 @@ class mesh(object,mesh_tools):
                 block_flag.append(int(flag))
                 block_mat.append(block)
                 if flag > 0:
-                    par=tuple([flag,vel,vs,rho,q,ani])
+                    par=tuple([imaterial,flag,vel,vs,rho,q,ani])
                 elif flag < 0:
                     if kind=='interface':
-                        par=tuple([flag,kind,name,flag_down,flag_up])
+                        par=tuple([imaterial,flag,kind,name,flag_down,flag_up])
                     elif kind=='tomography':
-                        par=tuple([flag,kind,name])
+                        par=tuple([imaterial,flag,kind,name])
                 elif flag==0:
-                    par=tuple([flag,name])
-                material[name]=par
+                    par=tuple([imaterial,flag,name])
+                material[block]=par
             elif ty == self.face: #Stacey condition, we need hex here for pml
                 block_bc_flag.append(4)
                 block_bc.append(block)
-                bc[name]=4 #face has connectivity = 4
+                bc[block]=4 #face has connectivity = 4
                 if name == self.topo: topography_face=block
             else:
                 print 'blocks no properly defined',ty
@@ -463,36 +480,39 @@ class mesh(object,mesh_tools):
         #TODO: material property acoustic/elastic/poroelastic ? .... where?
         print "#material properties:"
         print properties
-        flag=properties[0]
+        imaterial=properties[0]
+        flag=properties[1]
         if flag > 0:
-            vel=properties[1]
-            if properties[2] is None and type(vel) != str:
+            vel=properties[2]
+            if properties[3] is None and type(vel) != str:
+                # velocity model scales with given vp value
                 if vel >= 30:
                     m2km=1000.
                 else:
                     m2km=1.
                 vp=vel/m2km
                 rho=(1.6612*vp-0.472*vp**2+0.0671*vp**3-0.0043*vp**4+0.000106*vp**4)*m2km
-                txt='%3i %20f %20f %20f %1i %1i\n' % (properties[0],rho,vel,vel/(3**.5),0,0)     
+                txt='%1i %3i %20f %20f %20f %1i %1i\n' % (properties[0],properties[1],rho,vel,vel/(3**.5),0,0)     
             elif type(vel) != str:   
-                #format nummaterials file: #material_id #rho #vp #vs #Q_flag #anisotropy_flag
-                txt='%3i %20f %20f %20f %2i %2i\n' % (properties[0],properties[3], \
-                         properties[1],properties[2],properties[4],properties[5])
+                # velocity model given as vp,vs,rho,..
+                #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_flag #anisotropy_flag
+                txt='%1i %3i %20f %20f %20f %2i %2i\n' % (properties[0],properties[1],properties[4], \
+                         properties[2],properties[3],properties[5],properties[6])
             else:
-                txt='%3i %s \n' % (properties[0],properties[1])
+                txt='%1i %3i %s \n' % (properties[0],properties[1],properties[2])
         elif flag < 0:
-            if properties[1] == 'tomography':
-                txt='%3i %s %s\n' % (properties[0],properties[1],properties[2])
-            elif properties[1] == 'interface':
-                txt='%3i %s %s %1i %1i\n' % (properties[0],properties[1],properties[2],\
-                                            properties[3],properties[4])
+            if properties[2] == 'tomography':
+                txt='%1i %3i %s %s\n' % (properties[0],properties[1],properties[2],properties[3])
+            elif properties[2] == 'interface':
+                txt='%1i %3i %s %s %1i %1i\n' % (properties[0],properties[1],properties[2],properties[3],\
+                                            properties[4],properties[5])
         return txt
     def nummaterial_write(self,nummaterial_name):
         print 'Writing '+nummaterial_name+'.....'
         nummaterial=open(nummaterial_name,'w')
         for block in self.block_mat:
-            name=cubit.get_exodus_entity_name('block',block)
-            nummaterial.write(self.mat_parameter(self.material[name]))
+            #name=cubit.get_exodus_entity_name('block',block)
+            nummaterial.write(self.mat_parameter(self.material[block]))
         nummaterial.close()
         print 'Ok'
     def mesh_write(self,mesh_name):

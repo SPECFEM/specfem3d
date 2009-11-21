@@ -56,7 +56,7 @@
   integer npoin,numpoin,nspecface,ispecface
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! writing points
   open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='unknown')

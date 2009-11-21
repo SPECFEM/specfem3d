@@ -301,6 +301,20 @@
 !----
 !
 
+  subroutine any_all_l(sendbuf, recvbuf)
+
+  implicit none
+
+  logical sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine any_all_l
+
+!
+!----
+!
+
   subroutine sendrecv_all_cr(sendbuf, sendcount, dest, sendtag, &
                              recvbuf, recvcount, source, recvtag)
 

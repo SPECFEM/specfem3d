@@ -45,7 +45,7 @@
 
   double precision :: static_memory_size
 
-  character(len=150) HEADER_FILE
+  character(len=256) HEADER_FILE
 
   integer :: nfaces_surface_glob_ext_mesh
   

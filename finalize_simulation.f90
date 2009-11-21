@@ -32,6 +32,8 @@
   
   implicit none
 
+  integer :: irec_local
+  
 ! save last frame
 
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then

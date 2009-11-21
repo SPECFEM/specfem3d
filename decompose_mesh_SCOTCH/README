@@ -13,7 +13,7 @@ you will need SCOTCH libraries to be installed on your system
 to compile this executable xdecompose_mesh_SCOTCH for partitioning your mesh files
 ****
 
-  1. create mesh using CUBIT and scripts boundary_definity.py and
+  1. create mesh using CUBIT and scripts boundary_definition.py and
      cubit2specfem3D.py to generate all mesh files 
 
   2. compile executable "xdecompose_mesh_SCOTCH" in this directory decompose_mesh_SCOTCH/:

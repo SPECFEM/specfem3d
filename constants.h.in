@@ -111,7 +111,7 @@
 ! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk
-  character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
+  character(len=256), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
 
 !------------------------------------------------------
 ! nlegoff -- Variables that should be read/computed elsewhere.
@@ -139,6 +139,12 @@
 ! shakemaps and movies can not be generated during the same run. Mutually exclusive.
   logical, parameter :: EXTERNAL_MESH_MOVIE_SURFACE = .false.
   logical, parameter :: EXTERNAL_MESH_CREATE_SHAKEMAP = .false.
+
+! plots cross-section planes instead of model surface
+  logical, parameter :: PLOT_CROSS_SECTIONS = .false.
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0
+  real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0  
 
 ! number of nodes per element as provided by the external mesh
   integer, parameter :: ESIZE = 8
@@ -213,9 +219,6 @@
   integer, parameter :: IANISOTROPY_MODEL1 = 1
   integer, parameter :: IANISOTROPY_MODEL2 = 2  
 
-! flag for projection from latitude/longitude to UTM, and back
-  integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
-
 ! smallest real number on the Pentium and the SGI =  1.1754944E-38
 ! largest real number on the Pentium and the SGI  =  3.4028235E+38
 ! small negligible initial value to avoid very slow underflow trapping
@@ -247,18 +250,35 @@
   double precision, parameter :: DEGREES_PER_CELL_TOPO_SOCAL = 5.d0 / 1000.d0
   character(len=100), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
 
+! ! size of topography and bathymetry file for Piero Basini's model
+!   integer, parameter :: NX_TOPO = 787, NY_TOPO = 793
+!   double precision, parameter :: ORIG_LAT_TOPO = -102352.d0
+!   double precision, parameter :: ORIG_LONG_TOPO = 729806.d0
+! ! for Piero Basini's model this is the resolution in meters of the topo file
+!   double precision, parameter :: DEGREES_PER_CELL_TOPO = 250.d0
+!   character(len=256), parameter :: TOPO_FILE = 'DATA/piero_model/dem_EV_UTM_regular_250_reordered.dat'
+
+! flag for projection from latitude/longitude to UTM, and back
+  integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
+
+! minimum thickness in meters to include the effect of the oceans 
+! to avoid taking into account spurious oscillations in topography model
+  double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
+! density of sea water 
+  real(kind=CUSTOM_REAL), parameter :: RHO_OCEANS = 1020.0
+
+! material domain ids
+  integer, parameter :: IDOMAIN_ACOUSTIC    = 1
+  integer, parameter :: IDOMAIN_ELASTIC     = 2
+  integer, parameter :: IDOMAIN_POROELASTIC = 3
+
+
 
 ! unused parameters
 ! -----------------
 ! apply heuristic rule to modify doubling regions to balance angles -- not used anywhere
 !  logical, parameter :: APPLY_HEURISTIC_RULE = .true.
 !
-! minimum thickness in meters to include the effect of the oceans -- not used anywhere
-! to avoid taking into account spurious oscillations in topography model
-!  double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
-!
-! density of sea water -- not used anywhere
-!  real(kind=CUSTOM_REAL), parameter :: RHO_OCEANS = 1020.0
 !
 ! deltat -- obsolete, DT set in Par_file
 !  double precision, parameter :: DT_ext_mesh = 0.001d0

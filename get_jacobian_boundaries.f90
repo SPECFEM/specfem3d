@@ -25,12 +25,12 @@
 
   
   subroutine get_jacobian_boundary_face(myrank,nspec, & 
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
-              ispec,iface,jacobian2D_face,normal_face,NGLLA,NGLLB)
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+                        dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
+                        ispec,iface,jacobian2Dw_face,normal_face,NGLLA,NGLLB)
 
-! returns jacobian2D_face and normal_face (pointing outwards of element)
+! returns jacobian2Dw_face and normal_face (pointing outwards of element)
 
   implicit none
 
@@ -41,14 +41,10 @@
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
-  
-!  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
-!  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
-!  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
-  
-! absorbing boundaries 
+    
+! face information 
   integer :: iface,ispec,NGLLA,NGLLB
-  real(kind=CUSTOM_REAL) jacobian2D_face(NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
   real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)  
 
   double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
@@ -60,10 +56,9 @@
   double precision, dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   double precision, dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
+! local parameters
+! face corners
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
-
-! element numbering
-!  integer i,j
 
 ! check that the parameter file is correct
   if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
@@ -87,7 +82,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_x,wgllwgll_yz, &
-                  jacobian2D_face,normal_face,NGLLY,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
                   
 ! on boundary: xmax
   case(2)
@@ -106,7 +101,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_x,wgllwgll_yz, &
-                  jacobian2D_face,normal_face,NGLLY,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
 
 ! on boundary: ymin
   case(3)
@@ -125,7 +120,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_y,wgllwgll_xz, &
-                  jacobian2D_face,normal_face,NGLLX,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
 
 ! on boundary: ymax
   case(4)
@@ -144,7 +139,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_y, wgllwgll_xz, &
-                  jacobian2D_face,normal_face,NGLLX,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
                   
 
 ! on boundary: bottom
@@ -164,7 +159,7 @@
     
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
                   dershape2D_bottom,wgllwgll_xy, &
-                  jacobian2D_face,normal_face,NGLLX,NGLLY)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLY)
 
 ! on boundary: top
   case(6)
@@ -183,7 +178,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
                   dershape2D_top, wgllwgll_xy, &
-                  jacobian2D_face,normal_face,NGLLX,NGLLY)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLY)
                   
   case default
     stop 'error 2D jacobian'
@@ -196,7 +191,7 @@
 
   subroutine compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                                 dershape2D,wgllwgll, &
-                                jacobian2D_face,normal_face,NGLLA,NGLLB)
+                                jacobian2Dw_face,normal_face,NGLLA,NGLLB)
 
   implicit none
 
@@ -211,7 +206,7 @@
   double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
   double precision wgllwgll(NGLLA,NGLLB)
   
-  real(kind=CUSTOM_REAL) jacobian2D_face(NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
   real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
 
   integer i,j,ia
@@ -247,12 +242,12 @@
 
 ! distinguish if single or double precision for reals
     if(CUSTOM_REAL == SIZE_REAL) then
-      jacobian2D_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
+      jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
       normal_face(1,i,j)=sngl(unx/jacobian)
       normal_face(2,i,j)=sngl(uny/jacobian)
       normal_face(3,i,j)=sngl(unz/jacobian)
     else
-      jacobian2D_face(i,j) = jacobian * wgllwgll(i,j)
+      jacobian2Dw_face(i,j) = jacobian * wgllwgll(i,j)
       normal_face(1,i,j)=unx/jacobian
       normal_face(2,i,j)=uny/jacobian
       normal_face(3,i,j)=unz/jacobian
@@ -281,7 +276,7 @@
 
   subroutine recalc_jacobian_gll2D(myrank,xstore,ystore,zstore, &
                                   xigll,yigll,wgllwgll,NGLLA,NGLLB, &
-                                  ispec,nspec,jacobian2D_face,normal_face)
+                                  ispec,nspec,jacobian2Dw_face,normal_face)
 
   implicit none
 
@@ -296,7 +291,7 @@
   double precision, dimension(NGLLB):: yigll
   double precision:: wgllwgll(NGLLA,NGLLB)
 
-  real(kind=CUSTOM_REAL) jacobian2D_face(NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
   real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
 
   ! other parameters for this subroutine
@@ -395,12 +390,12 @@
 
 ! distinguish if single or double precision for reals
       if(CUSTOM_REAL == SIZE_REAL) then
-        jacobian2D_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
+        jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
         normal_face(1,i,j)=sngl(unx/jacobian)
         normal_face(2,i,j)=sngl(uny/jacobian)
         normal_face(3,i,j)=sngl(unz/jacobian)
       else
-        jacobian2D_face(i,j) = jacobian * wgllwgll(i,j)
+        jacobian2Dw_face(i,j) = jacobian * wgllwgll(i,j)
         normal_face(1,i,j)=unx/jacobian
         normal_face(2,i,j)=uny/jacobian
         normal_face(3,i,j)=unz/jacobian
@@ -549,17 +544,6 @@
 !!      zelm(i) = zcoord_iboun(i,1,ispec)
 !!    enddo
 !
-!    !daniel
-!    ! checks points for layered_halfspace model: 
-!    ! xmin = zero, xmax = 134000.0, etc...
-!    !if( myrank == 0 ) then 
-!    !  ! print*,'xmin: ',xelm(4),yelm(4),zelm(4)
-!    !  if( abs(xelm(1) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(1),yelm(1),zelm(1)
-!    !  if( abs(xelm(2) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(2),yelm(2),zelm(2)
-!    !  if( abs(xelm(3) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(3),yelm(3),zelm(3)
-!    !  if( abs(xelm(4) - 0.0) > 0.1) print*,'error xmin:',ispec,ispecb1,xelm(4),yelm(4),zelm(4)
-!    !endif
-!    
 !    call compute_jacobian_2D(myrank,ispecb1,xelm,yelm,zelm, &
 !                  dershape2D_x,wgllwgll_yz, &
 !                  jacobian2D_xmin,normal_xmin,NGLLY,NGLLZ,NSPEC2D_xmin)
@@ -575,26 +559,6 @@
 !      enddo
 !    enddo
 !                  
-!    !daniel          
-!    ! checks: layered halfspace
-!    ! checks normal:
-!    ! for boundary on xmin, outward direction must be (-1,0,0)
-!    !if( myrank == 0 ) then
-!    !i=1; j=1
-!    !do i=1,NGLLY
-!    !  do j=1,NGLLZ
-!    !    if( abs(normal_xmin(1,i,j,ispecb1) + 1.0 ) > 0.1 ) then
-!    !      print*,'error normal xmin',myrank,ispecb1
-!    !      print*,sngl(normal_xmin(:,i,j,ispecb1))
-!    !      !stop
-!    !    endif
-!    !  enddo
-!    !enddo
-!    !  print*,'normal xmin 1:',sngl(normal_xmin(:,1,1,ispecb1)),'jac',sngl(jacobian2D_xmin(1,1,ispecb1))
-!    !  print*,'normal xmin 2:',sngl(normal_xmin(:,2,2,ispecb1)),'jac',sngl(jacobian2D_xmin(2,2,ispecb1))
-!    !  print*,'normal xmin 3:',sngl(normal_xmin(:,3,3,ispecb1)),'jac',sngl(jacobian2D_xmin(3,3,ispecb1))      
-!    !endif
-!
 !  endif
 !
 !! on boundary: xmax
@@ -639,13 +603,6 @@
 !!      zelm(i) = zcoord_iboun(i,2,ispec)
 !!    enddo
 !
-!    !daniel
-!    ! checks: for halfspace model
-!    !if( myrank == 0 ) then
-!    !  ! print*,'xmax: ',xelm(4),yelm(4),zelm(4)
-!    !  if( abs(xelm(4) - 134000.0) > 0.1) print*,'error xmax:',myrank,ispec,ispecb2,xelm(4)
-!    !endif
-!
 !    call compute_jacobian_2D(myrank,ispecb2,xelm,yelm,zelm, &
 !                  dershape2D_x,wgllwgll_yz, &
 !                  jacobian2D_xmax,normal_xmax,NGLLY,NGLLZ,NSPEC2D_xmax)
@@ -661,26 +618,6 @@
 !      enddo
 !    enddo
 !                  
-!    !daniel
-!    ! checks: layered halfspace
-!    ! checks normal:
-!    ! for boundary on xmax, outward direction must be (1,0,0)    
-!    !if( myrank == 0 ) then
-!    !    do i=1,NGLLY
-!    !      do j=1,NGLLZ
-!    i=1; j=1
-!        if( abs(normal_xmax(1,i,j,ispecb2) - 1.0 ) > 0.1 ) then
-!          print*,'error normal xmax',myrank,ispecb2
-!          print*,sngl(normal_xmax(:,i,j,ispecb2))
-!          !stop
-!        endif
-!    !      enddo
-!    !    enddo    
-!    !  print*,'normal xmax 1:',sngl(normal_xmax(:,1,1,ispecb2)),'jac',sngl(jacobian2D_xmax(1,1,ispecb2))
-!    !  print*,'normal xmax 2:',sngl(normal_xmax(:,2,2,ispecb2)),'jac',sngl(jacobian2D_xmax(2,2,ispecb2))
-!    !  print*,'normal xmax 3:',sngl(normal_xmax(:,3,3,ispecb2)),'jac',sngl(jacobian2D_xmax(3,3,ispecb2))
-!    !endif
-!
 !  endif
 !
 !! on boundary: ymin
@@ -725,13 +662,6 @@
 !!      zelm(i) = zcoord_iboun(i,3,ispec)
 !!    enddo
 !
-!    !daniel
-!    ! checks: for layered halfspace
-!    !if( myrank == 0 ) then
-!    !  ! print*,'ymin: ',xelm(4),yelm(4),zelm(4)
-!    !  if( abs(yelm(4) - 0.0) > 0.1) print*,'error ymin:',myrank,ispec,ispecb3,yelm(4)
-!    !endif
-!
 !    call compute_jacobian_2D(myrank,ispecb3,xelm,yelm,zelm, &
 !                  dershape2D_y,wgllwgll_xz, &
 !                  jacobian2D_ymin,normal_ymin,NGLLX,NGLLZ,NSPEC2D_ymin)
@@ -747,25 +677,6 @@
 !      enddo
 !    enddo
 !                  
-!    !daniel              
-!    ! checks: layered halfspace
-!    ! checks normal:
-!    ! for boundary on ymin, outward direction must be (0,-1,0)    
-!    !if( myrank == 0 ) then
-!    !    do i=1,NGLLX
-!    !      do j=1,NGLLZ
-!    !i=1; j=1
-!    !    if( abs(normal_ymin(2,i,j,ispecb3) + 1.0 ) > 0.1 ) then
-!    !      print*,'error normal ymin',myrank,ispecb3
-!    !      print*,sngl(normal_ymin(:,i,j,ispecb3))
-!    !      !stop
-!    !    endif
-!    !      enddo
-!    !    enddo    
-!    !  print*,'normal ymin 1:',sngl(normal_ymin(:,1,1,ispecb3)),'jac',sngl(jacobian2D_ymin(1,1,ispecb3))
-!    !  print*,'normal ymin 2:',sngl(normal_ymin(:,2,2,ispecb3)),'jac',sngl(jacobian2D_ymin(2,2,ispecb3))
-!    !  print*,'normal ymin 3:',sngl(normal_ymin(:,3,3,ispecb3)),'jac',sngl(jacobian2D_ymin(3,3,ispecb3))      
-!    !endif
 !
 !  endif
 !
@@ -810,14 +721,7 @@
 !!      yelm(i) = ycoord_iboun(i,4,ispec)
 !!      zelm(i) = zcoord_iboun(i,4,ispec)
 !!    enddo
-!
-!    !daniel
-!    ! checks: for layered halfspace
-!    !if( myrank == 0 ) then 
-!    !  !print*,'ymax: ',xelm(4),yelm(4),zelm(4)
-!    !  if( abs(yelm(4) -134000.0) > 0.1 ) print*,'error ymax:',myrank,ispec,ispecb4,yelm(4)
-!    !endif
-!    
+!!    
 !    call compute_jacobian_2D(myrank,ispecb4,xelm,yelm,zelm, &
 !                  dershape2D_y, wgllwgll_xz, &
 !                  jacobian2D_ymax,normal_ymax,NGLLX,NGLLZ,NSPEC2D_ymax)
@@ -833,26 +737,6 @@
 !      enddo
 !    enddo
 !                  
-!    !daniel
-!    ! checks: layered halfspace
-!    ! checks normal:
-!    ! for boundary on ymax, outward direction must be (0,1,0)    
-!    !if( myrank == 0 ) then
-!    !    do i=1,NGLLX
-!    !      do j=1,NGLLZ
-!    i=1; j=1
-!        if( abs(normal_ymax(2,i,j,ispecb4) - 1.0 ) > 0.1 ) then
-!          print*,'error normal ymax',myrank,ispecb4
-!          print*,sngl(normal_ymax(:,i,j,ispecb4))
-!          !stop
-!        endif
-!    !      enddo
-!    !    enddo    
-!    !  print*,'normal ymax 1:',sngl(normal_ymax(:,1,1,ispecb4)),'jac',sngl(jacobian2D_ymax(1,1,ispecb4))
-!    !  print*,'normal ymax 2:',sngl(normal_ymax(:,2,2,ispecb4)),'jac',sngl(jacobian2D_ymax(2,2,ispecb4))
-!    !  print*,'normal ymax 3:',sngl(normal_ymax(:,3,3,ispecb4)),'jac',sngl(jacobian2D_ymax(3,3,ispecb4))
-!    !endif
-!
 !  endif
 !
 !! on boundary: bottom
@@ -898,13 +782,6 @@
 !!      zelm(i) = zcoord_iboun(i,5,ispec)
 !!    enddo
 !
-!    !daniel
-!    ! checks: layered halfspace
-!    !if( myrank == 0 ) then
-!    !  !print*,'bottom: ',xelm(4),yelm(4),zelm(4)
-!    !  if( abs(zelm(4) + 60000.0) > 0.1) print*,'error bottom:',myrank,ispec,ispecb5,zelm(4)
-!    !endif
-!
 !    call compute_jacobian_2D(myrank,ispecb5,xelm,yelm,zelm,&
 !                  dershape2D_bottom,wgllwgll_xy, &
 !                  jacobian2D_bottom,normal_bottom,NGLLX,NGLLY,NSPEC2D_BOTTOM)
@@ -920,26 +797,6 @@
 !      enddo
 !    enddo
 !
-!    !daniel
-!    ! checks: layered halfspace
-!    ! checks normal:
-!    ! for boundary on bottom, outward direction must be (0,0,-1)    
-!    !if( myrank == 0 ) then
-!    !    do i=1,NGLLX
-!    !      do j=1,NGLLY
-!    i=1; j=1
-!        if( abs(normal_bottom(3,i,j,ispecb5) + 1.0 ) > 0.1 ) then
-!          print*,'error normal bottom',myrank,ispecb5
-!          print*,sngl(normal_bottom(:,i,j,ispecb5))
-!          !stop
-!        endif
-!    !      enddo
-!    !    enddo        
-!    !  print*,'normal bottom 1:',sngl(normal_bottom(:,1,1,ispecb5)),'jac',sngl(jacobian2D_bottom(1,1,ispecb5))
-!    !  print*,'normal bottom 2:',sngl(normal_bottom(:,2,2,ispecb5)),'jac',sngl(jacobian2D_bottom(2,2,ispecb5))
-!    !  print*,'normal bottom 3:',sngl(normal_bottom(:,3,3,ispecb5)),'jac',sngl(jacobian2D_bottom(3,3,ispecb5))
-!    !endif                  
-!    
 !  endif
 !
 !! on boundary: top
@@ -972,13 +829,6 @@
 !!      zelm(i) = zcoord_iboun(i,6,ispec)
 !!    enddo
 !
-!    !daniel
-!    ! checks: layered halfspace
-!    !if( myrank == 0 ) then 
-!    !  !print*,'top: ',xelm(4),yelm(4),zelm(4)
-!    !if( abs(zelm(4) - 0.0) > 0.1 ) print*,'error top:',myrank,ispec,ispecb6,zelm(4)
-!    !endif
-!
 !    call compute_jacobian_2D(myrank,ispecb6,xelm,yelm,zelm,&
 !                  dershape2D_top, wgllwgll_xy, &
 !                  jacobian2D_top,normal_top,NGLLX,NGLLY,NSPEC2D_TOP)
@@ -994,23 +844,6 @@
 !      enddo
 !    enddo
 !
-!    !daniel
-!    ! checks: layered halfspace
-!    ! checks normal:
-!    ! for boundary on top, outward direction must be (0,0,1)    
-!    !if( myrank == 0 ) then
-!    !    do i=1,NGLLX
-!    !      do j=1,NGLLY
-!    i=1; j=1
-!        if( abs(normal_top(3,i,j,ispecb6) - 1.0 ) > 0.1 ) then
-!          print*,'error normal top',myrank,ispecb6
-!          print*,sngl(normal_top(:,i,j,ispecb6))
-!          stop
-!        endif
-!    !      enddo
-!    !    enddo    
-!    !endif
-!    
 !  endif
 !
 !  enddo

@@ -122,7 +122,7 @@
   double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
   double precision, allocatable, dimension(:,:,:,:) :: nu_all
 
-  character(len=150) OUTPUT_FILES
+  character(len=256) OUTPUT_FILES
 
 ! **************
 
@@ -227,7 +227,7 @@
       x_target(irec) = stutm_x(irec)
       y_target(irec) = stutm_y(irec)
       z_target(irec) = stbur(irec)
-      if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
+      !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
   
 
@@ -286,12 +286,12 @@
               iy_initial_guess(irec) = j
               iz_initial_guess(irec) = k
 
-  xi_receiver(irec) = dble(ix_initial_guess(irec))
-  eta_receiver(irec) = dble(iy_initial_guess(irec))
-  gamma_receiver(irec) = dble(iz_initial_guess(irec))
-  x_found(irec) = xstore(iglob)
-  y_found(irec) = ystore(iglob)
-  z_found(irec) = zstore(iglob)
+              xi_receiver(irec) = dble(ix_initial_guess(irec))
+              eta_receiver(irec) = dble(iy_initial_guess(irec))
+              gamma_receiver(irec) = dble(iz_initial_guess(irec))
+              x_found(irec) = xstore(iglob)
+              y_found(irec) = ystore(iglob)
+              z_found(irec) = zstore(iglob)
             endif
 
           enddo
@@ -488,104 +488,104 @@
 
 ! define coordinates of the control points of the element
 
-  do ia=1,NGNOD
+        do ia=1,NGNOD
 
-    if(iaddx(ia) == 0) then
-      iax = 1
-    else if(iaddx(ia) == 1) then
-      iax = (NGLLX+1)/2
-    else if(iaddx(ia) == 2) then
-      iax = NGLLX
-    else
-      call exit_MPI(myrank,'incorrect value of iaddx')
-    endif
+          if(iaddx(ia) == 0) then
+            iax = 1
+          else if(iaddx(ia) == 1) then
+            iax = (NGLLX+1)/2
+          else if(iaddx(ia) == 2) then
+            iax = NGLLX
+          else
+            call exit_MPI(myrank,'incorrect value of iaddx')
+          endif
 
-    if(iaddy(ia) == 0) then
-      iay = 1
-    else if(iaddy(ia) == 1) then
-      iay = (NGLLY+1)/2
-    else if(iaddy(ia) == 2) then
-      iay = NGLLY
-    else
-      call exit_MPI(myrank,'incorrect value of iaddy')
-    endif
+          if(iaddy(ia) == 0) then
+            iay = 1
+          else if(iaddy(ia) == 1) then
+            iay = (NGLLY+1)/2
+          else if(iaddy(ia) == 2) then
+            iay = NGLLY
+          else
+            call exit_MPI(myrank,'incorrect value of iaddy')
+          endif
 
-    if(iaddz(ia) == 0) then
-      iaz = 1
-    else if(iaddz(ia) == 1) then
-      iaz = (NGLLZ+1)/2
-    else if(iaddz(ia) == 2) then
-      iaz = NGLLZ
-    else
-      call exit_MPI(myrank,'incorrect value of iaddz')
-    endif
+          if(iaddz(ia) == 0) then
+            iaz = 1
+          else if(iaddz(ia) == 1) then
+            iaz = (NGLLZ+1)/2
+          else if(iaddz(ia) == 2) then
+            iaz = NGLLZ
+          else
+            call exit_MPI(myrank,'incorrect value of iaddz')
+          endif
 
-    iglob = ibool(iax,iay,iaz,ispec_iterate)
-    xelm(ia) = dble(xstore(iglob))
-    yelm(ia) = dble(ystore(iglob))
-    zelm(ia) = dble(zstore(iglob))
+          iglob = ibool(iax,iay,iaz,ispec_iterate)
+          xelm(ia) = dble(xstore(iglob))
+          yelm(ia) = dble(ystore(iglob))
+          zelm(ia) = dble(zstore(iglob))
 
-  enddo
+        enddo
 
 ! iterate to solve the non linear system
-  do iter_loop = 1,NUM_ITER
+        do iter_loop = 1,NUM_ITER
 
 ! impose receiver exactly at the surface
 !    gamma = 1.d0
 
 ! recompute jacobian for the new point
-    call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+          call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+                  xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
 ! compute distance to target location
-  dx = - (x - x_target(irec))
-  dy = - (y - y_target(irec))
-  dz = - (z - z_target(irec))
+          dx = - (x - x_target(irec))
+          dy = - (y - y_target(irec))
+          dz = - (z - z_target(irec))
 
 ! compute increments
 ! gamma does not change since we know the receiver is exactly on the surface
-  dxi  = xix*dx + xiy*dy + xiz*dz
-  deta = etax*dx + etay*dy + etaz*dz
-  dgamma = gammax*dx + gammay*dy + gammaz*dz
+          dxi  = xix*dx + xiy*dy + xiz*dz
+          deta = etax*dx + etay*dy + etaz*dz
+          dgamma = gammax*dx + gammay*dy + gammaz*dz
 
 ! update values
-  xi = xi + dxi
-  eta = eta + deta
-  gamma = gamma + dgamma
+          xi = xi + dxi
+          eta = eta + deta
+          gamma = gamma + dgamma
 
 ! impose that we stay in that element
 ! (useful if user gives a receiver outside the mesh for instance)
 ! we can go slightly outside the [1,1] segment since with finite elements
 ! the polynomial solution is defined everywhere
 ! this can be useful for convergence of itertive scheme with distorted elements
-  if (xi > 1.10d0) xi = 1.10d0
-  if (xi < -1.10d0) xi = -1.10d0
-  if (eta > 1.10d0) eta = 1.10d0
-  if (eta < -1.10d0) eta = -1.10d0
-  if (gamma > 1.10d0) gamma = 1.10d0
-  if (gamma < -1.10d0) gamma = -1.10d0
+          if (xi > 1.10d0) xi = 1.10d0
+          if (xi < -1.10d0) xi = -1.10d0
+          if (eta > 1.10d0) eta = 1.10d0
+          if (eta < -1.10d0) eta = -1.10d0
+          if (gamma > 1.10d0) gamma = 1.10d0
+          if (gamma < -1.10d0) gamma = -1.10d0
 
 ! end of non linear iterations
-  enddo
+        enddo
 
 ! impose receiver exactly at the surface after final iteration
 !  gamma = 1.d0
 
 ! compute final coordinates of point found
-  call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+        call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
 ! store xi,eta and x,y,z of point found
-  xi_receiver(irec) = xi
-  eta_receiver(irec) = eta
-  gamma_receiver(irec) = gamma
-  x_found(irec) = x
-  y_found(irec) = y
-  z_found(irec) = z
+        xi_receiver(irec) = xi
+        eta_receiver(irec) = eta
+        gamma_receiver(irec) = gamma
+        x_found(irec) = x
+        y_found(irec) = y
+        z_found(irec) = z
 
 ! compute final distance between asked and found (converted to km)
-  final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
-    (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
+        final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
+          (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
 
     enddo
 
@@ -610,67 +610,67 @@
   if(myrank == 0) then
 
 ! check that the gather operation went well
-  if(any(ispec_selected_rec_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for receivers')
+    if(any(ispec_selected_rec_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for receivers')
 
 ! MPI loop on all the results to determine the best slice
-  islice_selected_rec(:) = -1
-  do irec = 1,nrec
-  distmin = HUGEVAL
-  do iprocloop = 0,NPROC-1
-    if(final_distance_all(irec,iprocloop) < distmin) then
-      distmin = final_distance_all(irec,iprocloop)
-      islice_selected_rec(irec) = iprocloop
-      ispec_selected_rec(irec) = ispec_selected_rec_all(irec,iprocloop)
-      xi_receiver(irec) = xi_receiver_all(irec,iprocloop)
-      eta_receiver(irec) = eta_receiver_all(irec,iprocloop)
-      gamma_receiver(irec) = gamma_receiver_all(irec,iprocloop)
-      x_found(irec) = x_found_all(irec,iprocloop)
-      y_found(irec) = y_found_all(irec,iprocloop)
-      z_found(irec) = z_found_all(irec,iprocloop)
-      nu(:,:,irec) = nu_all(:,:,irec,iprocloop)
-    endif
-  enddo
-  final_distance(irec) = distmin
-  enddo
+    islice_selected_rec(:) = -1
+    do irec = 1,nrec
+    distmin = HUGEVAL
+    do iprocloop = 0,NPROC-1
+      if(final_distance_all(irec,iprocloop) < distmin) then
+        distmin = final_distance_all(irec,iprocloop)
+        islice_selected_rec(irec) = iprocloop
+        ispec_selected_rec(irec) = ispec_selected_rec_all(irec,iprocloop)
+        xi_receiver(irec) = xi_receiver_all(irec,iprocloop)
+        eta_receiver(irec) = eta_receiver_all(irec,iprocloop)
+        gamma_receiver(irec) = gamma_receiver_all(irec,iprocloop)
+        x_found(irec) = x_found_all(irec,iprocloop)
+        y_found(irec) = y_found_all(irec,iprocloop)
+        z_found(irec) = z_found_all(irec,iprocloop)
+        nu(:,:,irec) = nu_all(:,:,irec,iprocloop)
+      endif
+    enddo
+    final_distance(irec) = distmin
+    enddo
 
-  do irec=1,nrec
+    do irec=1,nrec
 
-    write(IMAIN,*)
-    write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
+      write(IMAIN,*)
+      write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
 
-    if(final_distance(irec) == HUGEVAL) call exit_MPI(myrank,'error locating receiver')
+      if(final_distance(irec) == HUGEVAL) call exit_MPI(myrank,'error locating receiver')
 
-    write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
-    write(IMAIN,*) '    original longitude: ',sngl(stlon(irec))
-    write(IMAIN,*) '        original UTM x: ',sngl(stutm_x(irec))
-    write(IMAIN,*) '        original UTM y: ',sngl(stutm_y(irec))
-    write(IMAIN,*) '   horizontal distance: ',sngl(horiz_dist(irec))
-    if(TOPOGRAPHY) write(IMAIN,*) '  topography elevation: ',sngl(elevation(irec))
-    write(IMAIN,*) '   target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
+      write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
+      write(IMAIN,*) '    original longitude: ',sngl(stlon(irec))
+      write(IMAIN,*) '        original UTM x: ',sngl(stutm_x(irec))
+      write(IMAIN,*) '        original UTM y: ',sngl(stutm_y(irec))
+      write(IMAIN,*) '   horizontal distance: ',sngl(horiz_dist(irec))
+      if(TOPOGRAPHY) write(IMAIN,*) '  topography elevation: ',sngl(elevation(irec))
+      write(IMAIN,*) '   target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
-    write(IMAIN,*) 'closest estimate found: ',sngl(final_distance(irec)),' m away'
-    write(IMAIN,*) ' in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
-    if(FASTER_RECEIVERS_POINTS_ONLY) then
-      write(IMAIN,*) 'in point i,j,k = ',nint(xi_receiver(irec)),nint(eta_receiver(irec)),nint(gamma_receiver(irec))
-      !write(IMAIN,*) 'in point i,j,k = ',x_found(irec),y_found(irec),z_found(irec)
-      write(IMAIN,*) 'nu1 = ',nu(1,:,irec)
-      write(IMAIN,*) 'nu2 = ',nu(2,:,irec)
-      write(IMAIN,*) 'nu3 = ',nu(3,:,irec)
-    else
-      write(IMAIN,*) ' at xi,eta,gamma coordinates = ',xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec)
-    endif
+      write(IMAIN,*) 'closest estimate found: ',sngl(final_distance(irec)),' m away'
+      write(IMAIN,*) ' in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
+      if(FASTER_RECEIVERS_POINTS_ONLY) then
+        write(IMAIN,*) 'in point i,j,k = ',nint(xi_receiver(irec)),nint(eta_receiver(irec)),nint(gamma_receiver(irec))
+        !write(IMAIN,*) 'in point i,j,k = ',x_found(irec),y_found(irec),z_found(irec)
+        write(IMAIN,*) 'nu1 = ',nu(1,:,irec)
+        write(IMAIN,*) 'nu2 = ',nu(2,:,irec)
+        write(IMAIN,*) 'nu3 = ',nu(3,:,irec)
+      else
+        write(IMAIN,*) ' at xi,eta,gamma coordinates = ',xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec)
+      endif
 
 ! add warning if estimate is poor
 ! (usually means receiver outside the mesh given by the user)
-    if(final_distance(irec) > 3000.d0) then
-      write(IMAIN,*) '*******************************************************'
-      write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
-      write(IMAIN,*) '*******************************************************'
-    endif
+      if(final_distance(irec) > 3000.d0) then
+        write(IMAIN,*) '*******************************************************'
+        write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
+        write(IMAIN,*) '*******************************************************'
+      endif
 
-    write(IMAIN,*)
+      write(IMAIN,*)
 
-  enddo
+    enddo
 
 ! compute maximal distance for all the receivers
     final_distance_max = maxval(final_distance(:))
@@ -690,22 +690,22 @@
     endif
 
 ! get the base pathname for output files
-  call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
+    call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
 ! write the list of stations and associated epicentral distance
-  open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
-  do irec=1,nrec
-    write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
-  enddo
-  close(27)
+    open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
+    do irec=1,nrec
+      write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
+    enddo
+    close(27)
 
 ! elapsed time since beginning of mesh generation
-  tCPU = wtime() - time_start
-  write(IMAIN,*)
-  write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
-  write(IMAIN,*)
-  write(IMAIN,*) 'End of receiver detection - done'
-  write(IMAIN,*)
+    tCPU = wtime() - time_start
+    write(IMAIN,*)
+    write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+    write(IMAIN,*)
+    write(IMAIN,*) 'End of receiver detection - done'
+    write(IMAIN,*)
 
   endif    ! end of section executed by main process only
 
@@ -769,7 +769,7 @@
   double precision stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME) station_name
   character(len=MAX_LENGTH_NETWORK_NAME) network_name
-  character(len=150) dummystring
+  character(len=256) dummystring
 
   nrec = 0
   nrec_filtered = 0

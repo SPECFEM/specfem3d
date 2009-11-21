@@ -68,12 +68,12 @@
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
-  character(len=150) dummystring
+  character(len=256) dummystring
 
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! small offset for source and receiver line in AVS_DX
 ! (small compared to normalized radius of the Earth)
@@ -101,7 +101,7 @@
 
   double precision zscaling
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA

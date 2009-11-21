@@ -73,7 +73,6 @@ libspecfem_a_OBJECTS = \
 	$O/exit_mpi.o \
 	$O/get_MPI_cutplanes_eta.o \
 	$O/get_MPI_cutplanes_xi.o \
-	$O/get_absorb.o \
 	$O/get_attenuation_model.o \
 	$O/get_cmt.o \
 	$O/get_element_face.o \
@@ -101,6 +100,7 @@ libspecfem_a_OBJECTS = \
 	$O/write_AVS_DX_global_data.o \
 	$O/write_AVS_DX_global_faces_data.o \
 	$O/write_AVS_DX_surface_data.o \
+	$O/write_VTK_data.o \
 	$O/write_seismograms.o \
 	$O/compute_boundary_kernel.o \
 	$O/memory_eval.o \
@@ -112,6 +112,7 @@ libspecfem_a_OBJECTS = \
 #	$O/compute_rho_estimate.o \
 #	$O/define_subregions.o \
 #	$O/define_subregions_heuristic.o \
+#	$O/get_absorb.o \
 #	$O/get_flags_boundaries.o \
 #	$O/hauksson_model.o \
 #	$O/interpolate_gocad_block_HR.o \
@@ -124,13 +125,15 @@ libspecfem_a_OBJECTS = \
 
 
 
-# solver objects with statically allocated arrays; dependent upon
-# values_from_mesher.h
+# solver objects with statically allocated arrays; not dependent upon
+# values_from_mesher.h anymore
 SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
   $O/compute_forces_elastic.o \
+  $O/compute_forces_acoustic.o \
+  $O/compute_gradient.o \
 	$O/initialize_simulation.o \
 	$O/read_mesh_databases.o \
 	$O/setup_GLL_points.o \
@@ -255,40 +258,40 @@ $O/libspecfem.a: $(libspecfem_a_OBJECTS)
 ####
 
 ###
-### optimized flags and dependence on values from mesher
+### optimized flags (not dependent on values from mesher anymore)
 ###
 
-$O/specfem3D_par.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D_par.f90
+$O/specfem3D_par.o: constants.h specfem3D_par.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D_par.o specfem3D_par.f90
 
-$O/initialize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h initialize_simulation.f90
+$O/initialize_simulation.o: constants.h initialize_simulation.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/initialize_simulation.o initialize_simulation.f90
 
-$O/read_mesh_databases.o: constants.h OUTPUT_FILES/values_from_mesher.h read_mesh_databases.f90
+$O/read_mesh_databases.o: constants.h read_mesh_databases.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/read_mesh_databases.o read_mesh_databases.f90
 
-$O/setup_GLL_points.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_GLL_points.f90
+$O/setup_GLL_points.o: constants.h setup_GLL_points.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/setup_GLL_points.o setup_GLL_points.f90
 
-$O/detect_mesh_surfaces.o: constants.h OUTPUT_FILES/values_from_mesher.h detect_mesh_surfaces.f90
+$O/detect_mesh_surfaces.o: constants.h detect_mesh_surfaces.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/detect_mesh_surfaces.o detect_mesh_surfaces.f90
 
-$O/setup_movie_meshes.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_movie_meshes.f90
+$O/setup_movie_meshes.o: constants.h setup_movie_meshes.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/setup_movie_meshes.o setup_movie_meshes.f90
 
-$O/read_topography_bathymetry.o: constants.h OUTPUT_FILES/values_from_mesher.h read_topography_bathymetry.f90
+$O/read_topography_bathymetry.o: constants.h read_topography_bathymetry.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/read_topography_bathymetry.o read_topography_bathymetry.f90
 
-$O/setup_sources_receivers.o: constants.h OUTPUT_FILES/values_from_mesher.h setup_sources_receivers.f90
+$O/setup_sources_receivers.o: constants.h setup_sources_receivers.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/setup_sources_receivers.o setup_sources_receivers.f90
 
-$O/prepare_timerun.o: constants.h OUTPUT_FILES/values_from_mesher.h prepare_timerun.f90
+$O/prepare_timerun.o: constants.h prepare_timerun.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/prepare_timerun.o prepare_timerun.f90
 
-$O/iterate_time.o: constants.h OUTPUT_FILES/values_from_mesher.h iterate_time.f90
+$O/iterate_time.o: constants.h iterate_time.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/iterate_time.o iterate_time.f90
 
-$O/finalize_simulation.o: constants.h OUTPUT_FILES/values_from_mesher.h finalize_simulation.f90
+$O/finalize_simulation.o: constants.h finalize_simulation.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
 
 $O/assemble_MPI_vector.o: constants.h assemble_MPI_vector.f90
@@ -380,9 +383,6 @@ $O/detect_surface.o: constants.h detect_surface.f90
 $O/gll_library.o: constants.h gll_library.f90
 	${FCCOMPILE_CHECK} -c -o $O/gll_library.o gll_library.f90
 
-$O/get_absorb.o: constants.h get_absorb.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_absorb.o get_absorb.f90
-
 $O/get_jacobian_boundaries.o: constants.h get_jacobian_boundaries.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_jacobian_boundaries.o get_jacobian_boundaries.f90
 
@@ -398,7 +398,7 @@ $O/get_MPI_cutplanes_eta.o: constants.h get_MPI_cutplanes_eta.f90
 $O/get_cmt.o: constants.h get_cmt.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90
 
-$O/create_movie_shakemap_AVS_DX_GMT.o: constants.h create_movie_shakemap_AVS_DX_GMT.f90
+$O/create_movie_shakemap_AVS_DX_GMT.o: constants.h create_movie_shakemap_AVS_DX_GMT.f90 OUTPUT_FILES/surface_from_mesher.h
 	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o create_movie_shakemap_AVS_DX_GMT.f90
 
 $O/get_element_face.o: constants.h get_element_face.f90
@@ -415,6 +415,9 @@ $O/write_AVS_DX_surface_data.o: constants.h write_AVS_DX_surface_data.f90
 
 $O/write_AVS_DX_global_data.o: constants.h write_AVS_DX_global_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_data.o write_AVS_DX_global_data.f90
+
+$O/write_VTK_data.o: constants.h write_VTK_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o write_VTK_data.f90
 
 $O/get_shape3D.o: constants.h get_shape3D.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_shape3D.o get_shape3D.f90
@@ -493,6 +496,12 @@ $O/compute_forces_with_Deville.o: constants.h compute_forces_with_Deville.f90
 $O/compute_forces_elastic.o: constants.h compute_forces_elastic.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic.o compute_forces_elastic.f90
 
+$O/compute_forces_acoustic.o: constants.h compute_forces_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic.o compute_forces_acoustic.f90
+
+$O/compute_gradient.o: constants.h compute_gradient.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_gradient.o compute_gradient.f90
+
 
 ###
 ### all obsolete files ?
@@ -500,6 +509,10 @@ $O/compute_forces_elastic.o: constants.h compute_forces_elastic.f90
 #--obsolete 
 #$O/mesh_vertical.o: constants.h mesh_vertical.f90
 #	${FCCOMPILE_CHECK} -c -o $O/mesh_vertical.o mesh_vertical.f90
+
+#--obsolete 
+#$O/get_absorb.o: constants.h get_absorb.f90
+#	${FCCOMPILE_CHECK} -c -o $O/get_absorb.o get_absorb.f90
 
 #--obsolete 
 #$O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90

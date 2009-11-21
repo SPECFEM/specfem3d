@@ -51,7 +51,7 @@
   integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
   ispecb1=0
   ispecb2=0

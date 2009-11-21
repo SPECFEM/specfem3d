@@ -37,7 +37,7 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision hdur,DT
-  character(len=150) LOCAL_PATH
+  character(len=256) LOCAL_PATH
 
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
@@ -47,7 +47,7 @@
 
   character(len=4) chn
   character(len=1) component
-  character(len=150) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
 ! parameters for master collects seismograms  
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
@@ -295,7 +295,7 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
   double precision hdur,DT
-  character(len=150) LOCAL_PATH
+  character(len=256) LOCAL_PATH
 
 
   integer irec,irec_local
@@ -303,7 +303,7 @@
 
   character(len=4) chn
   character(len=1) component
-  character(len=150) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -393,7 +393,7 @@
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
   double precision hdur,DT
-  character(len=150) LOCAL_PATH
+  character(len=256) LOCAL_PATH
 
 
   integer irec,irec_local
@@ -401,7 +401,7 @@
 
   character(len=4) chn
   character(len=1) component
-  character(len=150) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
   do irec_local = 1,nrec_local
 

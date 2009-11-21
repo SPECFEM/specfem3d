@@ -197,7 +197,7 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   integer icomp, itime, i, j, k, ios
   double precision :: junk
   character(len=3) :: comp(3)
-  character(len=150) :: filename
+  character(len=256) :: filename
 
   call lagrange_any(xi_receiver,NGLLX,xigll,hxir,hpxir)
   call lagrange_any(eta_receiver,NGLLY,yigll,hetar,hpetar)
@@ -412,6 +412,59 @@ subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_
 
 end subroutine compute_adj_source_frechet
 
+! =======================================================================
 
+! compute array for acoustic source
+  subroutine compute_arrays_source_acoustic(xi_source,eta_source,gamma_source,&
+                        sourcearray,xigll,yigll,zigll,factor_source)
+
+  implicit none
+
+  include "constants.h"
+
+  double precision :: xi_source,eta_source,gamma_source
+  real(kind=CUSTOM_REAL) :: factor_source
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
+
+! Gauss-Lobatto-Legendre points of integration and weights
+  double precision, dimension(NGLLX) :: xigll
+  double precision, dimension(NGLLY) :: yigll
+  double precision, dimension(NGLLZ) :: zigll
+
+! local parameters
+! source arrays
+  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
+  double precision, dimension(NGLLX) :: hxis,hpxis
+  double precision, dimension(NGLLY) :: hetas,hpetas
+  double precision, dimension(NGLLZ) :: hgammas,hpgammas
+  integer :: i,j,k
+  
+! initializes  
+  sourcearray(:,:,:,:) = 0._CUSTOM_REAL
+  sourcearrayd(:,:,:,:) = 0.d0
+
+! compute Lagrange polynomials at the source location
+  call lagrange_any(xi_source,NGLLX,xigll,hxis,hpxis)
+  call lagrange_any(eta_source,NGLLY,yigll,hetas,hpetas)
+  call lagrange_any(gamma_source,NGLLZ,zigll,hgammas,hpgammas)
+
+! calculates source array for interpolated location
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        ! identical source array components in x,y,z-direction
+        sourcearrayd(:,i,j,k) = hxis(i)*hetas(j)*hgammas(k)*dble(factor_source)        
+      enddo
+    enddo
+  enddo
+
+! distinguish between single and double precision for reals
+  if(CUSTOM_REAL == SIZE_REAL) then
+    sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
+  else
+    sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
+  endif
+
+  end subroutine compute_arrays_source_acoustic
 
 

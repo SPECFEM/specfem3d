@@ -220,7 +220,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_model_Olsen_sediment( vs_val, iselected )
+  subroutine get_attenuation_model_olsen( vs_val, iselected )
 
 ! uses scaling rule similar to Olsen et al. (2003) to determine attenuation medium
 !
@@ -275,4 +275,4 @@
   ! return sediment number
   iselected = iattenuation_sediments  
   
-  end subroutine get_attenuation_model_Olsen_sediment
+  end subroutine get_attenuation_model_olsen

@@ -24,29 +24,119 @@
 !=====================================================================
 
 
-  subroutine create_regions_mesh_ext_mesh(ibool, &
-                    xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
-                    nnodes_ext_mesh,nelmnts_ext_mesh, &
-                    nodes_coords_ext_mesh, elmnts_ext_mesh, &
-                    max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
-                    nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
-                    num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
-                    my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
-                    my_interfaces_ext_mesh, &
-                    ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
-                    nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
-                    NSPEC2D_BOTTOM, NSPEC2D_TOP,&
-                    ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
-                    nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
-                    nodes_ibelm_bottom,nodes_ibelm_top, &
-                    SAVE_MESH_FILES,nglob, &
-                    ANISOTROPY)
+module create_regions_mesh_ext_par
+
+  include 'constants.h'
+  
+! global point coordinates
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
+
+! Gauss-Lobatto-Legendre points and weights of integration
+  double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
+
+! 3D shape functions and their derivatives
+  double precision, dimension(:,:,:,:), allocatable :: shape3D
+  double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
+
+  double precision, dimension(:), allocatable :: xelm,yelm,zelm
+
+! arrays with mesh parameters
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
+    etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
+
+! for model density, kappa, mu
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore !,vpstore,vsstore 
+  
+! mass matrix
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
+                            rmass_solid_poroelastic,rmass_fluid_poroelastic
+
+! ocean load
+  integer :: NGLOB_OCEAN
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
+
+! attenuation 
+  integer, dimension(:,:,:,:), allocatable :: iflag_attenuation_store
+
+! 2D shape functions and their derivatives, weights
+  double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
+  double precision, dimension(:,:,:,:), allocatable :: dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top
+  double precision, dimension(:,:), allocatable :: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
+
+! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: abs_boundary_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: abs_boundary_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
+  integer, dimension(:), allocatable :: abs_boundary_ispec
+  integer :: num_abs_boundary_faces
+
+! free surface arrays
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: free_surface_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: free_surface_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: free_surface_ijk
+  integer, dimension(:), allocatable :: free_surface_ispec
+  integer :: num_free_surface_faces
+
+! acoustic-elastic coupling surface
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_el_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_el_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: coupling_ac_el_ijk
+  integer, dimension(:), allocatable :: coupling_ac_el_ispec
+  integer :: num_coupling_ac_el_faces
+
+! for stacey
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
+
+! anisotropy
+  integer :: NSPEC_ANISO
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+            c11store,c12store,c13store,c14store,c15store,c16store,&
+            c22store,c23store,c24store,c25store,c26store,c33store,&
+            c34store,c35store,c36store,c44store,c45store,c46store,&
+            c55store,c56store,c66store
+
+! material domain flags
+  logical, dimension(:), allocatable :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+
+! name of the database file
+  character(len=256) prname
+  
+end module create_regions_mesh_ext_par
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! main routine
+
+subroutine create_regions_mesh_ext(ibool, &
+                        xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
+                        nnodes_ext_mesh,nelmnts_ext_mesh, &
+                        nodes_coords_ext_mesh, elmnts_ext_mesh, &
+                        max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
+                        nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
+                        num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
+                        my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
+                        my_interfaces_ext_mesh, &
+                        ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
+                        nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
+                        NSPEC2D_BOTTOM, NSPEC2D_TOP,&
+                        ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
+                        nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
+                        nodes_ibelm_bottom,nodes_ibelm_top, &
+                        SAVE_MESH_FILES,nglob, &
+                        ANISOTROPY,NPROC,OCEANS, &
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
+                        ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+                        itopo_bathy)
 
 ! create the different regions of the mesh
 
+  use create_regions_mesh_ext_par  
   implicit none
-
-  include "constants.h"
+  !include "constants.h"
 
 ! number of spectral elements in each block
   integer :: nspec
@@ -59,8 +149,9 @@
 
 ! proc numbers for MPI
   integer :: myrank
+  integer :: NPROC
 
-  character(len=150) :: LOCAL_PATH
+  character(len=256) :: LOCAL_PATH
 
 ! data from the external mesh
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
@@ -74,10 +165,12 @@
 
 !pll
   integer :: nmat_ext_mesh,nundefMat_ext_mesh 
-  double precision, dimension(5,nmat_ext_mesh) :: materials_ext_mesh  
-  character (len=30), dimension(5,nundefMat_ext_mesh):: undef_mat_prop
+  double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh  
+  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
   
 !  double precision, external :: materials_ext_mesh
+
+! MPI communication
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
@@ -102,118 +195,28 @@
   integer, dimension(4,NSPEC2D_BOTTOM)  :: nodes_ibelm_bottom
   integer, dimension(4,NSPEC2D_TOP)  :: nodes_ibelm_top
 
-  logical :: SAVE_MESH_FILES
   integer :: nglob
 
+  logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
+  logical :: OCEANS
 
-! local parameters
-!-----------------------    
-
-! for MPI buffers
-!  integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
-!  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
-  !integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
-!  integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
-!  double precision, dimension(:), allocatable :: work_ext_mesh
+! use integer array to store topography values
+  integer :: UTM_PROJECTION_ZONE
+  logical :: SUPPRESS_UTM_PROJECTION
+  integer :: NX_TOPO,NY_TOPO
+  double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
   
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
-
-! Gauss-Lobatto-Legendre points and weights of integration
-  double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
-
-! 3D shape functions and their derivatives
-  double precision, dimension(:,:,:,:), allocatable :: shape3D
-  double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
-
-  double precision, dimension(:), allocatable :: xelm,yelm,zelm
+! local parameters
 
 ! static memory size needed by the solver
   double precision :: static_memory_size
 
-! arrays with mesh parameters
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
-    etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
-
-! for model density
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore !,vpstore,vsstore 
-! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
-
-! attenuation 
-  integer, dimension(:,:,:,:), allocatable :: iflag_attenuation_store
-
-! 2D shape functions and their derivatives, weights
-  double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
-  double precision, dimension(:,:,:,:), allocatable :: dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top
-  double precision, dimension(:,:), allocatable :: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
-
-! absorbing boundaries
-! pll 
-!  logical, dimension(:,:),allocatable :: iboun  
-!  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
-! 2-D jacobians and normals
-!  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: &
-!       jacobian2D_xmin,jacobian2D_xmax, &
-!       jacobian2D_ymin,jacobian2D_ymax,jacobian2D_bottom
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: jacobian2D_top
-  
-!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-!    normal_xmin,normal_xmax,normal_ymin,normal_ymax,normal_bottom
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: normal_top
-
-!  ! local indices i,j,k of all GLL points on xmin boundary in the element
-!  integer,dimension(:,:,:,:),allocatable :: ibelm_gll_xmin,ibelm_gll_xmax, &
-!                                          ibelm_gll_ymin,ibelm_gll_ymax, &
-!                                          ibelm_gll_bottom,ibelm_gll_top
-!  integer, dimension(:,:), allocatable :: nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta
-
-! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: absorbing_boundary_normal
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: absorbing_boundary_jacobian2D
-  integer, dimension(:,:,:), allocatable :: absorbing_boundary_ijk
-  integer, dimension(:), allocatable :: absorbing_boundary_ispec
-  integer :: num_absorbing_boundary_faces
-
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
-
-! variables for creating array ibool (some arrays also used for AVS or DX files)
-!  integer, dimension(:), allocatable :: locval !,iglob
-!  logical, dimension(:), allocatable :: ifseg
-!  double precision, dimension(:), allocatable :: xp,yp,zp
-
-!  integer :: ilocnum,ier,iinterface !,ieoff
-  integer, dimension(:), allocatable :: elem_flag
-  integer :: ier
-  integer :: i,j,k,ispec,iglobnum
-!  integer  :: ispec2D
-
-! name of the database file
-  character(len=150) prname
-  character(len=150) prname_file
-
-! anisotropy
-  integer :: NSPEC_ANISO
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-            c11store,c12store,c13store,c14store,c15store,c16store,&
-            c22store,c23store,c24store,c25store,c26store,c33store,&
-            c34store,c35store,c36store,c44store,c45store,c46store,&
-            c55store,c56store,c66store
-  
-
-! mask to sort ibool
-!  integer, dimension(:), allocatable :: mask_ibool
-!  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori
-!  integer :: inumber
-  
-! memory test
-!  logical,dimension(:),allocatable :: test_mem 
-
-
 ! for vtk output
+!  character(len=256) prname_file
 !  integer,dimension(:),allocatable :: itest_flag
+!  integer, dimension(:), allocatable :: elem_flag
 
 ! For Piero Basini :
 ! integer :: doubling_value_found_for_Piero
@@ -232,28 +235,226 @@
 ! ! store bedrock values
 !   integer ::  icornerlat,icornerlong
 !   double precision ::  lat,long,elevation_bedrock
-!   double precision ::  lat_corner,long_corner,ratio_xi,ratio_eta
-  
-! ! size of topography and bathymetry file for Piero Basini's model
-!   integer, parameter :: NX_TOPO = 787, NY_TOPO = 793
-!   double precision, parameter :: ORIG_LAT_TOPO = -102352.d0
-!   double precision, parameter :: ORIG_LONG_TOPO = 729806.d0
-!   character(len=150), parameter :: TOPO_FILE = 'DATA/piero_model/dem_EV_UTM_regular_250_reordered.dat'
-! ! for Piero Basini's model this is the resolution in meters of the topo file
-!   double precision, parameter :: DEGREES_PER_CELL_TOPO = 250.d0
-
+!   double precision ::  lat_corner,long_corner,ratio_xi,ratio_eta  
 !real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: ibedrock
 
-
-! **************
-
-
+! initializes arrays
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) 
     write(IMAIN,*) '  ...allocating arrays '
   endif
+  call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                        nspec2D_bottom,nspec2D_top,ANISOTROPY)
+  
 
+! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
+! returns jacobianstore,xixstore,...gammazstore
+! and GLL-point locations in xstore,ystore,zstore
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...setting up jacobian '
+  endif  
+  call crm_ext_setup_jacobian(myrank, &                      
+                        xstore,ystore,zstore,nspec, &
+                        nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                        elmnts_ext_mesh,nelmnts_ext_mesh)
+  
+! sets material velocities
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...determining velocity model'
+  endif
+  call crm_ext_determine_velocity(nspec,&
+                        mat_ext_mesh,nelmnts_ext_mesh, &
+                        materials_ext_mesh,nmat_ext_mesh, &
+                        undef_mat_prop,nundefMat_ext_mesh, &
+                        ANISOTROPY)
+  
+! creates ibool index array for projection from local to global points
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...indexing global points'
+  endif
+  call crm_ext_setup_indexing(ibool, &
+                        xstore,ystore,zstore,nspec,nglob,npointot, &
+                        nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
+
+! sets up MPI interfaces between partitions
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...preparing MPI interfaces '
+  endif
+  call crm_ext_prepare_MPI(myrank,nglob,nspec,ibool, &
+                        nelmnts_ext_mesh,elmnts_ext_mesh, &
+                        my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+                        ibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh, &
+                        num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
+                        my_neighbours_ext_mesh,NPROC)
+
+! creates mass matrix 
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...creating mass matrix '
+  endif
+  call crm_ext_create_mass_matrix(nglob,nspec,ibool)
+  
+! sets up absorbing/free surface boundaries  
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...setting up absorbing boundaries '
+  endif
+  call crm_ext_setup_abs_boundary(myrank,nspec,nglob,ibool, &
+                            nodes_coords_ext_mesh,nnodes_ext_mesh, &
+                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                            nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
+                            nodes_ibelm_bottom,nodes_ibelm_top, &
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                            nspec2D_bottom,nspec2D_top)
+    
+! sets up acoustic-elastic coupling surfaces
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...detecting acoustic-elastic surfaces '
+  endif
+  call crm_ext_detect_ac_el_surface(myrank, &
+                        nspec,nglob,ibool,NPROC, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                        my_neighbours_ext_mesh)
+
+! creates ocean load mass matrix 
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...creating ocean load mass matrix '
+  endif
+  call crm_ext_create_ocean_load_mass(nglob,nspec,ibool,OCEANS,&
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
+                        ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+                        itopo_bathy)
+
+
+! saves the binary mesh files
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...saving databases'
+  endif
+  !call create_name_database(prname,myrank,LOCAL_PATH)
+  call save_arrays_solver_ext_mesh(nspec,nglob, &
+                        xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,&
+                        gammaxstore,gammaystore,gammazstore, &
+                        jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
+                        rhostore,kappastore,mustore, &
+                        rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
+                        OCEANS,rmass_ocean_load,NGLOB_OCEAN,&                        
+                        ibool, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                        abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces, &
+                        free_surface_normal,free_surface_jacobian2Dw, &
+                        free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces, &
+                        coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
+                        coupling_ac_el_ijk,coupling_ac_el_ispec, &
+                        num_coupling_ac_el_faces, &                        
+                        num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                        max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
+                        prname,SAVE_MESH_FILES, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
+                        c55store,c56store,c66store, &
+                        ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
+
+! computes the approximate amount of static memory needed to run the solver
+  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh,static_memory_size)
+  call max_all_dp(static_memory_size, max_static_memory_size)
+
+! checks the mesh, stability and resolved period 
+  call sync_all()
+  call check_mesh_resolution(myrank,nspec,nglob,ibool,&
+                            xstore_dummy,ystore_dummy,zstore_dummy, &
+                            kappastore,mustore,rho_vp,rho_vs, &
+                            -1.0d0 )
+
+! VTK file output
+!  if( SAVE_MESH_FILES ) then
+!    ! saves material flag assigned for each spectral element into a vtk file 
+!    prname_file = prname(1:len_trim(prname))//'material_flag'
+!    allocate(elem_flag(nspec))
+!    elem_flag(:) = mat_ext_mesh(1,:)
+!    call write_VTK_data_elem_i(nspec,nglob, &
+!            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+!            elem_flag,prname_file)
+!    deallocate(elem_flag)
+!    
+!    !plotting abs boundaries
+!    !  allocate(itest_flag(nspec))
+!    !  itest_flag(:) = 0
+!    !  do ispec=1,nspec
+!    !    if( iboun(1,ispec) ) itest_flag(ispec) = 1
+!    !  enddo
+!    !  prname_file = prname(1:len_trim(prname))//'iboundary1_flag'
+!    !  call write_VTK_data_elem_i(nspec,nglob, &
+!    !            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+!    !            itest_flag,prname_file)
+!    !  deallocate(itest_flag)
+!  endif  
+
+! AVS/DX file output
+! create AVS or DX mesh data for the slice, edges and faces
+!  if(SAVE_MESH_FILES) then
+! check: no idoubling
+!    call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+!    call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
+!                   kappastore,mustore,rhostore)
+! check: no iMPIcut_xi,iMPIcut_eta,idoubling
+!    call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
+!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+! check: no idoubling
+!    call write_AVS_DX_surface_data(myrank,prname,nspec,iboun,ibool, &
+!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
+!  endif
+
+! cleanup
+  deallocate(xixstore,xiystore,xizstore,&
+            etaxstore,etaystore,etazstore,&
+            gammaxstore,gammaystore,gammazstore)
+  deallocate(jacobianstore,iflag_attenuation_store)
+  deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
+  deallocate(kappastore,mustore,rho_vp,rho_vs)
+
+end subroutine create_regions_mesh_ext
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                        nspec2D_bottom,nspec2D_top,ANISOTROPY)
+
+  use create_regions_mesh_ext_par  
+  implicit none
+
+  integer :: nspec,myrank
+  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+            nspec2D_bottom,nspec2D_top
+
+  character(len=256) :: LOCAL_PATH
+            
+  logical :: ANISOTROPY
+
+! local parameters  
+  integer :: ier
+
+! memory test
+!  logical,dimension(:),allocatable :: test_mem 
+!  
 ! tests memory availability (including some small buffer of 10*1024 byte)
 !  allocate( test_mem(int(max_static_memory_size)+10*1024),stat=ier)
 !  if(ier /= 0) then
@@ -265,7 +466,6 @@
 !  deallocate( test_mem, stat=ier) 
 !  if(ier /= 0) call exit_MPI(myrank,'error to allocate arrays')
 !  call sync_all()
-
           
   allocate( xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
 
@@ -327,45 +527,33 @@
           jacobianstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! allocates arrays for Stacey boundaries
-!  allocate( nimin(2,NSPEC2DMAX_YMIN_YMAX),nimax(2,NSPEC2DMAX_YMIN_YMAX), &
-!          njmin(2,NSPEC2DMAX_XMIN_XMAX),njmax(2,NSPEC2DMAX_XMIN_XMAX), &
-!          nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX),stat=ier)
-!  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
-!  ! local indices i,j,k of all GLL points on xmin boundary in the element
-!  allocate(ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin),ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax), &
-!            ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin),ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax), &
-!            ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom),ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top),stat=ier)          
-!  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')  
-
-!  ! pll 2-D jacobians and normals
-!  allocate(jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin),jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax), &
-!          jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin),jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax), &
-!          jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM),jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP),stat=ier)
-!  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
-!  allocate(normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin),normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax), &
-!          normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin),normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax), &
-!          normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM),normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP),stat=ier)
-!  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
-! free surface
-  allocate(jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP),&
-          normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
 ! absorbing boundary 
   ! absorbing faces
-  num_absorbing_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
-  ! free surface also absorbs
-  if( ABSORB_FREE_SURFACE ) num_absorbing_boundary_faces = num_absorbing_boundary_faces + nspec2D_top
+  num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
+  ! adds faces of free surface if it also absorbs
+  if( ABSORB_FREE_SURFACE ) num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  allocate( absorbing_boundary_ispec(num_absorbing_boundary_faces), &
-           absorbing_boundary_ijk(3,NGLLSQUARE,num_absorbing_boundary_faces), &
-           absorbing_boundary_jacobian2D(NGLLSQUARE,num_absorbing_boundary_faces), &
-           absorbing_boundary_normal(NDIM,NGLLSQUARE,num_absorbing_boundary_faces),stat=ier)
+  allocate( abs_boundary_ispec(num_abs_boundary_faces), &
+           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+! free surface
+  ! free surface faces
+  if( ABSORB_FREE_SURFACE ) then
+    ! no free surface - uses a dummy size
+    num_free_surface_faces = 1
+  else
+    num_free_surface_faces = nspec2D_top  
+  endif
+
+  ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
+  allocate( free_surface_ispec(num_free_surface_faces), &
+           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
+           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
+           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with anisotropy
@@ -397,269 +585,43 @@
           c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
-! returns jacobianstore,xixstore,...gammazstore
-! and GLL-point locations in xstore,ystore,zstore
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...setting up jacobian '
-  endif
+! material flags
+  allocate( ispec_is_acoustic(nspec), &
+           ispec_is_elastic(nspec), &
+           ispec_is_poroelastic(nspec), stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   
-  call create_regions_mesh_ext_mesh_setup_jacobian(xigll,yigll,zigll,wxgll,wygll,wzgll, &
-                      myrank,shape3D,dershape3D,shape2D_x,shape2D_y,shape2D_bottom,shape2D_top, &
-                      dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                      wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                      xstore,ystore,zstore,nspec,xelm,yelm,zelm, &
-                      nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh, &
-                      xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
-                      gammaxstore,gammaystore,gammazstore, &
-                      jacobianstore)
+end subroutine crm_ext_allocate_arrays
 
-! sets material velocities
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...determining velocity model'
-  endif
-
-  call create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,nelmnts_ext_mesh, &
-                        materials_ext_mesh,nmat_ext_mesh, &
-                        undef_mat_prop,nundefMat_ext_mesh, &
-                        rhostore,kappastore,mustore, &
-                        iflag_attenuation_store,rho_vp,rho_vs, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store)
-                        !,vpstore,vsstore,
-                        
-! creates ibool index array for projection from local to global points
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...indexing global points'
-  endif
-
-  call create_regions_mesh_ext_mesh_setup_global_indexing(ibool, &
-           xstore,ystore,zstore,nspec,nglob,npointot, &
-           nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
-
-! unique global point locations
-  allocate(xstore_dummy(nglob), &
-          ystore_dummy(nglob), &
-          zstore_dummy(nglob),stat=ier) 
-  if(ier /= 0) stop 'error in allocate'  
-  do ispec = 1, nspec
-     do k = 1, NGLLZ
-        do j = 1, NGLLY
-           do i = 1, NGLLX
-              iglobnum = ibool(i,j,k,ispec)
-              xstore_dummy(iglobnum) = xstore(i,j,k,ispec)
-              ystore_dummy(iglobnum) = ystore(i,j,k,ispec)
-              zstore_dummy(iglobnum) = zstore(i,j,k,ispec)
-           enddo
-        enddo
-     enddo
-  enddo  
-
-! creating mass matrix (will be fully assembled with MPI in the solver)
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...creating mass matrix '
-  endif
-
-  allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
-
-  call create_regions_mesh_ext_mesh_create_mass_matrix(nglob,rmass,&
-                  nspec,wxgll,wygll,wzgll,ibool,jacobianstore,rhostore)
-          
-! sets up absorbing/free surface boundaries  
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...setting up absorbing boundaries '
-  endif
-
-  call create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob, &
-                            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                            nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                            dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                            nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
-                            nodes_ibelm_bottom,nodes_ibelm_top, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-                            normal_top,jacobian2D_top, &
-                            absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                            absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                            num_absorbing_boundary_faces)
-
-! sets up MPI interfaces between partitions
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...preparing MPI interfaces '
-  endif
-       
-  call create_regions_mesh_ext_mesh_prepare_MPI_interfaces(nglob,nspec,ibool, &
-                                    nelmnts_ext_mesh,elmnts_ext_mesh, &
-                                    my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-                                    ibool_interfaces_ext_mesh, &
-                                    nibool_interfaces_ext_mesh, &
-                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy)
-
-! saves the binary files
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...saving databases'
-  endif
-
-  call create_name_database(prname,myrank,LOCAL_PATH)
-  call save_arrays_solver_ext_mesh(nspec,nglob, &
-                        xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,&
-                        gammaxstore,gammaystore,gammazstore, &
-                        jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
-                        kappastore,mustore,rmass,ibool, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        NSPEC2D_TOP,ibelm_top,normal_top,jacobian2D_top, &
-                        absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                        absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                        num_absorbing_boundary_faces, &
-                        num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
-                        max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                        prname,SAVE_MESH_FILES, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store)
-
-! computes the approximate amount of static memory needed to run the solver
-  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh,static_memory_size)
-  call max_all_dp(static_memory_size, max_static_memory_size)
-
-
-! checks the mesh, stability and resolved period 
-  call sync_all()
-  call check_mesh_resolution(myrank,nspec,nglob,ibool,&
-                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                            kappastore,mustore,rho_vp,rho_vs, &
-                            -1.0d0 )
-
-! VTK file output
-  if( SAVE_MESH_FILES ) then
-    ! saves material flag assigned for each spectral element into a vtk file 
-    prname_file = prname(1:len_trim(prname))//'material_flag'
-    allocate(elem_flag(nspec))
-    elem_flag(:) = mat_ext_mesh(1,:)
-    call save_arrays_solver_ext_mesh_elem_vtk(nspec,nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-            elem_flag,prname_file)
-    deallocate(elem_flag)
-    
-    ! saves attenuation flag assigned on each gll point into a vtk file 
-    prname_file = prname(1:len_trim(prname))//'attenuation_flag'
-    call save_arrays_solver_ext_mesh_glldata_vtk(nspec,nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-            iflag_attenuation_store,prname_file)
-
-    !daniel
-    !plotting abs boundaries
-    !  allocate(itest_flag(nspec))
-    !  itest_flag(:) = 0
-    !  do ispec=1,nspec
-    !    if( iboun(1,ispec) ) itest_flag(ispec) = 1
-    !  enddo
-    !  prname_file = prname(1:len_trim(prname))//'iboundary1_flag'
-    !  call save_arrays_solver_ext_mesh_elem_vtk(nspec,nglob, &
-    !            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-    !            itest_flag,prname_file)
-    !  deallocate(itest_flag)
-  endif  
-
-! AVS/DX file output
-! create AVS or DX mesh data for the slice, edges and faces
-!  if(SAVE_MESH_FILES) then
-! check: no idoubling
-!    call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-!    call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
-!                   kappastore,mustore,rhostore)
-! check: no iMPIcut_xi,iMPIcut_eta,idoubling
-!    call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
-!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-! check: no idoubling
-!    call write_AVS_DX_surface_data(myrank,prname,nspec,iboun,ibool, &
-!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-!  endif
-
-! cleanup
-  deallocate(xixstore,xiystore,xizstore,&
-            etaxstore,etaystore,etazstore,&
-            gammaxstore,gammaystore,gammazstore)
-  deallocate(jacobianstore,iflag_attenuation_store)
-  deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
-  deallocate(kappastore,mustore,rho_vp,rho_vs)
-
-  end subroutine create_regions_mesh_ext_mesh
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine create_regions_mesh_ext_mesh_setup_jacobian(xigll,yigll,zigll,wxgll,wygll,wzgll, &
-                      myrank,shape3D,dershape3D,shape2D_x,shape2D_y,shape2D_bottom,shape2D_top, &
-                      dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                      wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                      xstore,ystore,zstore,nspec,xelm,yelm,zelm, &
-                      nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh, &
-                      xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
-                      gammaxstore,gammaystore,gammazstore,&
-                      jacobianstore)
+subroutine crm_ext_setup_jacobian(myrank, &                      
+                        xstore,ystore,zstore,nspec, &
+                        nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                        elmnts_ext_mesh,nelmnts_ext_mesh)
 
+  use create_regions_mesh_ext_par
   implicit none
-
-  include 'constants.h'
 
 ! number of spectral elements in each block
   integer :: nspec
 
-! Gauss-Lobatto-Legendre points and weights of integration
-  double precision :: xigll(NGLLX),yigll(NGLLY),zigll(NGLLZ),wxgll(NGLLX),wygll(NGLLY),wzgll(NGLLZ)
-
-! 3D shape functions and their derivatives
-  double precision :: shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
-  double precision :: dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
-
-! 2D shape functions and their derivatives
-  double precision :: shape2D_x(NGNOD2D,NGLLY,NGLLZ),shape2D_y(NGNOD2D,NGLLX,NGLLZ),&
-                  shape2D_bottom(NGNOD2D,NGLLX,NGLLY),shape2D_top(NGNOD2D,NGLLX,NGLLY)
-  double precision :: dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ),dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ),&
-              dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY),dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY)
-
-  double precision, dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  double precision, dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  double precision, dimension(NGLLY,NGLLZ) :: wgllwgll_yz
-
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-
-  double precision,dimension(NGNOD) :: xelm,yelm,zelm
 
 ! data from the external mesh
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
   integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
-! arrays with mesh parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xixstore,xiystore,xizstore, &
-                        etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore, &
-                        jacobianstore
-
 ! proc numbers for MPI
   integer :: myrank
 
+! local parameters
   integer :: ispec,ia,i,j,k
 
-!  integer :: ielm
-!  logical :: inorder
-  
 ! set up coordinates of the Gauss-Lobatto-Legendre points
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
@@ -709,199 +671,8 @@ subroutine create_regions_mesh_ext_mesh_setup_jacobian(xigll,yigll,zigll,wxgll,w
       zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
     enddo
 
-
-!daniel
-!    ! do we have to test CUBIT order - or will 3D jacobian be defined?
-!
-!    ! bottom - top?
-!    ! point 1 (0,0,0) vs point 5 (0,0,1)
-!    inorder = .true.
-!    if( nodes_coords(3,elmnts(1,num_elmnt)) > nodes_coords(3,elmnts(5,num_elmnt)) ) then
-!      print*,num_elmnt,'z1-5 :',nodes_coords(3,elmnts(1,num_elmnt)),nodes_coords(3,elmnts(5,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( inorder .eqv. .false. ) then
-!      ielm = elmnts(1,num_elmnt)
-!      elmnts(1,num_elmnt) = elmnts(5,num_elmnt)
-!      elmnts(5,num_elmnt) = ielm
-!
-!      ! assumes to switch the others as well
-!      ielm = elmnts(2,num_elmnt)
-!      elmnts(2,num_elmnt) = elmnts(6,num_elmnt)
-!      elmnts(6,num_elmnt) = ielm
-!
-!      ielm = elmnts(3,num_elmnt)
-!      elmnts(3,num_elmnt) = elmnts(7,num_elmnt)
-!      elmnts(7,num_elmnt) = ielm
-!
-!      ielm = elmnts(4,num_elmnt)
-!      elmnts(4,num_elmnt) = elmnts(8,num_elmnt)
-!      elmnts(8,num_elmnt) = ielm
-!
-!    endif
-!    ! makes sure bottom - top is o.k.
-!    ! point 2 (0,1,0) vs point 6 (0,1,1)
-!    inorder = .true.
-!    if( nodes_coords(3,elmnts(2,num_elmnt)) > nodes_coords(3,elmnts(6,num_elmnt)) ) then
-!      print*,num_elmnt,'z2-6 :',nodes_coords(3,elmnts(2,num_elmnt)),nodes_coords(3,elmnts(6,num_elmnt))
-!      inorder = .false.
-!    endif    
-!    if( inorder .eqv. .false. ) then
-!      ielm = elmnts(2,num_elmnt)
-!      elmnts(2,num_elmnt) = elmnts(6,num_elmnt)
-!      elmnts(6,num_elmnt) = ielm
-!    endif
-!    
-!    ! point 3 (1,1,0) vs point 7 (1,1,1)
-!    inorder = .true.
-!    if( nodes_coords(3,elmnts(3,num_elmnt)) > nodes_coords(3,elmnts(7,num_elmnt)) ) then
-!      print*,num_elmnt,'z3-7 :',nodes_coords(3,elmnts(3,num_elmnt)),nodes_coords(3,elmnts(7,num_elmnt))
-!      inorder = .false.
-!    endif    
-!    if( inorder .eqv. .false. ) then    
-!      ielm = elmnts(3,num_elmnt)
-!      elmnts(3,num_elmnt) = elmnts(7,num_elmnt)
-!      elmnts(7,num_elmnt) = ielm
-!    endif
-!    
-!    ! point 4 (1,0,0) vs point 8 (1,0,1)
-!    inorder = .true.
-!    if( nodes_coords(3,elmnts(4,num_elmnt)) > nodes_coords(3,elmnts(8,num_elmnt)) ) then
-!      print*,num_elmnt,'z4-8 :',nodes_coords(3,elmnts(4,num_elmnt)),nodes_coords(3,elmnts(8,num_elmnt))
-!      inorder = .false.
-!    endif    
-!    if( inorder .eqv. .false. ) then    
-!      ielm = elmnts(4,num_elmnt)
-!      elmnts(4,num_elmnt) = elmnts(8,num_elmnt)
-!      elmnts(8,num_elmnt) = ielm
-!    endif
-!
-!    ! clock-wise order?
-!    ! point 1 (0,0,0) vs point 3 (1,1,0)
-!    inorder = .true.
-!    if( nodes_coords(1,elmnts(1,num_elmnt)) > nodes_coords(1,elmnts(3,num_elmnt)) ) then
-!      print*,num_elmnt,'x1-3 :',nodes_coords(1,elmnts(1,num_elmnt)),nodes_coords(1,elmnts(3,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( nodes_coords(2,elmnts(1,num_elmnt)) > nodes_coords(2,elmnts(3,num_elmnt)) ) then
-!      print*,num_elmnt,'y1-3 :',nodes_coords(2,elmnts(1,num_elmnt)),nodes_coords(2,elmnts(3,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( inorder .eqv. .false. ) then
-!      ielm = elmnts(1,num_elmnt)
-!      elmnts(1,num_elmnt) = elmnts(3,num_elmnt)
-!      elmnts(3,num_elmnt) = ielm
-!    endif
-!
-!    ! point 2 (0,1,0) vs point 4 (1,0,0)
-!    inorder = .true.
-!    if( nodes_coords(1,elmnts(2,num_elmnt)) > nodes_coords(1,elmnts(4,num_elmnt)) ) then
-!      print*,num_elmnt,'x2-4 :',nodes_coords(1,elmnts(2,num_elmnt)),nodes_coords(1,elmnts(4,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( nodes_coords(2,elmnts(2,num_elmnt)) < nodes_coords(2,elmnts(4,num_elmnt)) ) then
-!      print*,num_elmnt,'y2-4 :',nodes_coords(2,elmnts(2,num_elmnt)),nodes_coords(2,elmnts(4,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( inorder .eqv. .false. ) then
-!      ielm = elmnts(2,num_elmnt)
-!      elmnts(2,num_elmnt) = elmnts(4,num_elmnt)
-!      elmnts(4,num_elmnt) = ielm
-!    endif
-!
-!    ! point 5 (0,0,1) vs point 7 (1,1,1)
-!    inorder = .true.
-!    if( nodes_coords(1,elmnts(5,num_elmnt)) > nodes_coords(1,elmnts(7,num_elmnt)) ) then
-!      print*,num_elmnt,'x5-7 :',nodes_coords(1,elmnts(5,num_elmnt)),nodes_coords(1,elmnts(7,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( nodes_coords(2,elmnts(5,num_elmnt)) > nodes_coords(2,elmnts(7,num_elmnt)) ) then
-!      print*,num_elmnt,'y5-7 :',nodes_coords(2,elmnts(5,num_elmnt)),nodes_coords(2,elmnts(7,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( inorder .eqv. .false. ) then
-!      ielm = elmnts(5,num_elmnt)
-!      elmnts(5,num_elmnt) = elmnts(7,num_elmnt)
-!      elmnts(7,num_elmnt) = ielm
-!    endif
-!
-!    ! point 6 (0,1,1) vs point 8 (1,0,1)
-!    inorder = .true.
-!    if( nodes_coords(1,elmnts(6,num_elmnt)) > nodes_coords(1,elmnts(8,num_elmnt)) ) then
-!      print*,num_elmnt,'x6-8 :',nodes_coords(1,elmnts(6,num_elmnt)),nodes_coords(1,elmnts(8,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( nodes_coords(2,elmnts(6,num_elmnt)) < nodes_coords(2,elmnts(8,num_elmnt)) ) then
-!      print*,num_elmnt,'y6-8 :',nodes_coords(2,elmnts(6,num_elmnt)),nodes_coords(2,elmnts(8,num_elmnt))
-!      inorder = .false.
-!    endif
-!    if( inorder .eqv. .false. ) then
-!      ielm = elmnts(6,num_elmnt)
-!      elmnts(6,num_elmnt) = elmnts(8,num_elmnt)
-!      elmnts(8,num_elmnt) = ielm
-!    endif
-!
-! or    
-!    if( .false. ) then
-!      ! trys to order points in increasing z direction first, then y and x
-!      inorder = .false.
-!      do while (inorder .eqv. .false.)
-!        inorder = .true.       
-!        do i=1,8              
-!          ! If z needs to be swapped, do so 
-!          if (nodes_coords(3,elmnts(i,num_elmnt)) > nodes_coords(3,elmnts(i+1,num_elmnt)) )then
-!            i_temp = elmnts(i,num_elmnt)
-!            elmnts(i,num_elmnt) = elmnts(i+1,num_elmnt)
-!            elmnts(i+1,num_elmnt) = i_temp
-!            inorder = .false.
-!            exit
-!          endif         
-!          ! Check Equilivant Points and swap those on Y
-!          if (nodes_coords(3,elmnts(i,num_elmnt)) == nodes_coords(3,elmnts(i+1,num_elmnt))) then
-!            if (nodes_coords(2,elmnts(i,num_elmnt)) > nodes_coords(2,elmnts(i+1,num_elmnt)) ) then
-!              i_temp = elmnts(i,num_elmnt)
-!              elmnts(i,num_elmnt) = elmnts(i+1,num_elmnt)
-!              elmnts(i+1,num_elmnt) = i_temp
-!              inorder = .false.
-!              exit
-!            endif
-!          endif
-!          ! Check Equilivant Points and swap those on X
-!          if (nodes_coords(3,elmnts(i,num_elmnt)) == nodes_coords(3,elmnts(i+1,num_elmnt))) then
-!            if (nodes_coords(2,elmnts(i,num_elmnt)) == nodes_coords(2,elmnts(i+1,num_elmnt)) ) then
-!              if (nodes_coords(1,elmnts(i,num_elmnt)) > nodes_coords(1,elmnts(i+1,num_elmnt)) )then
-!                i_temp = elmnts(i,num_elmnt)
-!                elmnts(i,num_elmnt) = elmnts(i+1,num_elmnt)
-!                elmnts(i+1,num_elmnt) = i_temp
-!                inorder = .false.
-!                exit
-!              endif
-!            endif 
-!          endif
-!        enddo
-!      enddo    
-!      ! respect anti-clockwise ordering bottom face
-!      i_temp = elmnts(3,num_elmnt)
-!      elmnts(3,num_elmnt) = elmnts(4,num_elmnt)   
-!      elmnts(4,num_elmnt) = i_temp
-!      ! respect anti-clockwise ordering top face
-!      i_temp = elmnts(7,num_elmnt)
-!      elmnts(7,num_elmnt) = elmnts(8,num_elmnt)   
-!      elmnts(8,num_elmnt) = i_temp        
-!      if( nodes_coords(1,elmnts(1,num_elmnt)) > nodes_coords(1,elmnts(2,num_elmnt)) ) then
-!        print*,'elem:',num_elmnt
-!        stop 'error sorting x'
-!      endif
-!      if( nodes_coords(2,elmnts(1,num_elmnt)) > nodes_coords(2,elmnts(4,num_elmnt)) ) then
-!        print*,'elem:',num_elmnt
-!        stop 'error sorting y'
-!     endif
-!      if( nodes_coords(3,elmnts(1,num_elmnt)) > nodes_coords(3,elmnts(5,num_elmnt)) ) then
-!        print*,'elem:',num_elmnt
-!        stop 'error sorting z'
-!      endif
-!    endif
-
+    ! CUBIT should provide a mesh ordering such that the 3D jacobian is defined
+    ! (otherwise mesh would be degenerated)
     call calc_jacobian(myrank,xixstore,xiystore,xizstore, &
                       etaxstore,etaystore,etazstore, &
                       gammaxstore,gammaystore,gammazstore,jacobianstore, &
@@ -910,27 +681,21 @@ subroutine create_regions_mesh_ext_mesh_setup_jacobian(xigll,yigll,zigll,wxgll,w
 
   enddo
 
-end subroutine create_regions_mesh_ext_mesh_setup_jacobian
+end subroutine crm_ext_setup_jacobian
+
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,nelmnts_ext_mesh, &
+subroutine crm_ext_determine_velocity(nspec,&
+                        mat_ext_mesh,nelmnts_ext_mesh, &
                         materials_ext_mesh,nmat_ext_mesh, &
                         undef_mat_prop,nundefMat_ext_mesh, &
-                        rhostore,kappastore,mustore, &
-                        iflag_attenuation_store,rho_vp,rho_vs, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store)
-                        ! vpstore,vsstore,                        
+                        ANISOTROPY)
 
+  use create_regions_mesh_ext_par 
   implicit none
-
-  include 'constants.h'
 
 ! number of spectral elements in each block
   integer :: nspec
@@ -940,26 +705,11 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
   integer :: nmat_ext_mesh,nundefMat_ext_mesh 
 
   integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
-  double precision, dimension(5,nmat_ext_mesh) :: materials_ext_mesh  
-  character (len=30), dimension(5,nundefMat_ext_mesh):: undef_mat_prop
-
-! for model density
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: &
-                                                rhostore,kappastore,mustore !,vpstore,vsstore 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp,rho_vs
-
-! attenuation 
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: iflag_attenuation_store
+  double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh  
+  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
 
 ! anisotropy
   logical :: ANISOTROPY
-  integer :: NSPEC_ANISO
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
-            c11store,c12store,c13store,c14store,c15store,c16store, &
-            c22store,c23store,c24store,c25store,c26store,c33store, &
-            c34store,c35store,c36store,c44store,c45store,c46store, &
-            c55store,c56store,c66store
-  
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: vp,vs,rho  
@@ -968,7 +718,7 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
   
   integer :: ispec,i,j,k,iundef,iflag_atten
   integer :: iflag,flag_below,flag_above
-  integer :: iflag_aniso
+  integer :: iflag_aniso,idomain_id
   
 ! !  Piero, read bedrock file
 !  allocate(ibedrock(NX_TOPO_ANT,NY_TOPO_ANT))              
@@ -981,6 +731,10 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
 !  ! broadcast the information read on the master to the nodes
 !  ! call MPI_BCAST(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT,MPI_REAL,0,MPI_COMM_WORLD,ier)
 ! call bcast_all_cr(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT)
+
+  ispec_is_acoustic(:) = .false.
+  ispec_is_elastic(:) = .false.
+  ispec_is_poroelastic(:) = .false.
 
 ! material properties on all GLL points: taken from material values defined for 
 ! each spectral element in input mesh
@@ -1013,6 +767,9 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
               ! anisotropy
               iflag_aniso = materials_ext_mesh(5,mat_ext_mesh(1,ispec))
               
+              ! material domain_id
+              idomain_id = materials_ext_mesh(6,mat_ext_mesh(1,ispec))
+              
            else if (mat_ext_mesh(2,ispec) == 1) then
               stop 'material: interface not implemented yet'
               
@@ -1037,7 +794,8 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
               !  else
               !     iflag_attenuation_store(i,j,k,ispec) = 2
               !  endif
-              iflag_aniso = 0
+              iflag_aniso = materials_ext_mesh(5,iflag)
+              idomain_id = materials_ext_mesh(6,iflag)
              else
               stop 'material: tomography not implemented yet'
              ! call tomography()
@@ -1075,27 +833,47 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
            rhostore(i,j,k,ispec) = rho
           
 ! kappa, mu
-           !kappastore(i,j,k,ispec) = rhostore(i,j,k,ispec)* &
-           !     ( vpstore(i,j,k,ispec)*vpstore(i,j,k,ispec) &
-           !     - FOUR_THIRDS*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec) )                
-           !mustore(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec)
            kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )                
            mustore(i,j,k,ispec) = rho*vs*vs
 
 ! attenuation
            iflag_attenuation_store(i,j,k,ispec) = iflag_atten
            ! Stacey, a completer par la suite  
-           !rho_vp(i,j,k,ispec) = rhostore(i,j,k,ispec)*vpstore(i,j,k,ispec)
-           !rho_vs(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)
            rho_vp(i,j,k,ispec) = rho*vp
            rho_vs(i,j,k,ispec) = rho*vs
            !end pll
 
+! material domain
+           !print*,'velocity model:',ispec,idomain_id           
+           if( idomain_id == IDOMAIN_ACOUSTIC ) then
+             ispec_is_acoustic(ispec) = .true.            
+           else if( idomain_id == IDOMAIN_ELASTIC ) then
+             ispec_is_elastic(ispec) = .true.
+           else if( idomain_id == IDOMAIN_POROELASTIC ) then
+             stop 'poroelastic material domain not implemented yet'
+             ispec_is_poroelastic(ispec) = .true.
+           else
+             stop 'error material domain index'
+           endif
         enddo
       enddo
     enddo
     !print*,myrank,'ispec:',ispec,'rho:',rhostore(1,1,1,ispec),'vp:',vpstore(1,1,1,ispec),'vs:',vsstore(1,1,1,ispec)    
   enddo
+
+! checks material domains
+  do ispec=1,nspec
+    if( (ispec_is_acoustic(ispec) .eqv. .false.) &
+          .and. (ispec_is_elastic(ispec) .eqv. .false.) &
+          .and. (ispec_is_poroelastic(ispec) .eqv. .false.) ) then
+      print*,'error material domain not assigned to element:',ispec
+      print*,'acoustic: ',ispec_is_acoustic(ispec)
+      print*,'elastic: ',ispec_is_elastic(ispec)
+      print*,'poroelastic: ',ispec_is_poroelastic(ispec)      
+      stop 'error material domain index element'
+    endif
+  enddo
+
 
 ! !! DK DK store the position of the six stations to be able to
 ! !! DK DK exclude circles around each station to make sure they are on the bedrock
@@ -1265,21 +1043,21 @@ subroutine create_regions_mesh_ext_mesh_determine_velocity(nspec,mat_ext_mesh,ne
 !        enddo
 !     enddo
 
-end subroutine create_regions_mesh_ext_mesh_determine_velocity
+end subroutine crm_ext_determine_velocity
+
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine create_regions_mesh_ext_mesh_setup_global_indexing(ibool, &
+subroutine crm_ext_setup_indexing(ibool, &
                             xstore,ystore,zstore,nspec,nglob,npointot, &
                             nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
 
 ! creates global indexing array ibool
 
+  use create_regions_mesh_ext_par 
   implicit none
-
-  include "constants.h"
 
 ! number of spectral elements in each block
   integer :: nspec,nglob,npointot,myrank
@@ -1299,7 +1077,7 @@ subroutine create_regions_mesh_ext_mesh_setup_global_indexing(ibool, &
   logical, dimension(:), allocatable :: ifseg
 
   integer :: ieoff,ilocnum,ier
-  integer :: i,j,k,ispec
+  integer :: i,j,k,ispec,iglobnum
 
 ! allocate memory for arrays
   allocate(locval(npointot), &
@@ -1345,114 +1123,369 @@ subroutine create_regions_mesh_ext_mesh_setup_global_indexing(ibool, &
   deallocate(locval,stat=ier); if(ier /= 0) stop 'error in deallocate'
   deallocate(ifseg,stat=ier); if(ier /= 0) stop 'error in deallocate'
 
-end subroutine create_regions_mesh_ext_mesh_setup_global_indexing
+! unique global point locations
+  allocate(xstore_dummy(nglob), &
+          ystore_dummy(nglob), &
+          zstore_dummy(nglob),stat=ier) 
+  if(ier /= 0) stop 'error in allocate'  
+  do ispec = 1, nspec
+     do k = 1, NGLLZ
+        do j = 1, NGLLY
+           do i = 1, NGLLX
+              iglobnum = ibool(i,j,k,ispec)
+              xstore_dummy(iglobnum) = xstore(i,j,k,ispec)
+              ystore_dummy(iglobnum) = ystore(i,j,k,ispec)
+              zstore_dummy(iglobnum) = zstore(i,j,k,ispec)
+           enddo
+        enddo
+     enddo
+  enddo  
+
+end subroutine crm_ext_setup_indexing
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine create_regions_mesh_ext_mesh_create_mass_matrix(nglob,rmass,&
-          nspec,wxgll,wygll,wzgll,ibool,jacobianstore,rhostore)
+subroutine crm_ext_prepare_MPI(myrank,nglob,nspec,ibool, &
+                                    nelmnts_ext_mesh,elmnts_ext_mesh, &
+                                    my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+                                    ibool_interfaces_ext_mesh, &
+                                    nibool_interfaces_ext_mesh, &
+                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                                    my_neighbours_ext_mesh,NPROC)
 
-! returns precomputed mass matrix in rmass array
+! sets up the MPI interface for communication between partitions
 
+  use create_regions_mesh_ext_par 
   implicit none
 
-  include 'constants.h'
+  integer :: myrank,nglob,nspec,NPROC
 
-! number of spectral elements in each block
-  integer :: nglob,nspec
-
-! mass matrix
-  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass
-
-! Gauss-Lobatto-Legendre weights of integration
-  double precision :: wxgll(NGLLX),wygll(NGLLY),wzgll(NGLLZ)
-
-! arrays with the mesh
+! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
-! arrays with mesh parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: jacobianstore,rhostore
+! external mesh, element indexing  
+  integer :: nelmnts_ext_mesh
+  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
+  
+  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
+  
+  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
+
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh  
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+
+
+  !integer :: nnodes_ext_mesh
+  !double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh  
+  
+!local parameters
+  double precision, dimension(:), allocatable :: xp,yp,zp
+  double precision, dimension(:), allocatable :: work_ext_mesh
+
+  integer, dimension(:), allocatable :: locval
+  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
+
+  ! for MPI buffers
+  integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
+  integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
+  logical, dimension(:), allocatable :: ifseg
+  integer :: iinterface,ilocnum
+  integer :: num_points1, num_points2 
+
+  ! assembly test
+  integer :: i,j,k,ispec,iglob,count,inum
+  integer :: max_nibool_interfaces_ext_mesh
+  integer,dimension(:),allocatable :: test_flag
+  real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
+  integer, dimension(:,:), allocatable :: ibool_interfaces_dummy  
+
+! gets global indices for points on MPI interfaces (defined by my_interfaces_ext_mesh) between different partitions
+! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh (number of total points)
+  call prepare_assemble_MPI( nelmnts_ext_mesh,elmnts_ext_mesh, &
+                            ibool,nglob,ESIZE, &
+                            num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
+                            my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+                            ibool_interfaces_ext_mesh, &
+                            nibool_interfaces_ext_mesh )
+
+  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh))
+
+! sorts ibool comm buffers lexicographically for all MPI interfaces
+  num_points1 = 0
+  num_points2 = 0
+  do iinterface = 1, num_interfaces_ext_mesh
+
+    allocate(xp(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(yp(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(zp(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(locval(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ibool_interface_ext_mesh_dummy(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+
+    ! gets x,y,z coordinates of global points on MPI interface
+    do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
+      xp(ilocnum) = xstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+      yp(ilocnum) = ystore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+      zp(ilocnum) = zstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+    enddo
+
+    ! sorts (lexicographically?) ibool_interfaces_ext_mesh and updates value
+    ! of total number of points nibool_interfaces_ext_mesh_true(iinterface)
+    call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
+         ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
+         reorder_interface_ext_mesh,locval,ifseg,nibool_interfaces_ext_mesh_true(iinterface), &
+         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)
+
+    ! checks that number of MPI points are still the same
+    num_points1 = num_points1 + nibool_interfaces_ext_mesh(iinterface)
+    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true(iinterface)    
+    if( num_points1 /= num_points2 ) then
+      write(*,*) 'error sorting MPI interface points:',myrank
+      write(*,*) '   interface:',iinterface,num_points1,num_points2
+      call exit_mpi(myrank,'error sorting MPI interface')
+    endif
+    !write(*,*) myrank,'intfc',iinterface,num_points2,nibool_interfaces_ext_mesh_true(iinterface)
+    
+    ! cleanup temporary arrays
+    deallocate(xp)
+    deallocate(yp)
+    deallocate(zp)
+    deallocate(locval)
+    deallocate(ifseg)
+    deallocate(reorder_interface_ext_mesh)
+    deallocate(ibool_interface_ext_mesh_dummy)
+    deallocate(ind_ext_mesh)
+    deallocate(ninseg_ext_mesh)
+    deallocate(iwork_ext_mesh)
+    deallocate(work_ext_mesh)
+
+  enddo
+
+  ! cleanup
+  deallocate(nibool_interfaces_ext_mesh_true)
+
+  ! outputs total number of MPI interface points
+  call sum_all_i(num_points2,ilocnum)  
+  if( myrank == 0 ) then
+    write(IMAIN,*) '     total MPI interface points: ',ilocnum  
+  endif
+  
+! checks with assembly of test fields
+  allocate(test_flag(nglob),test_flag_cr(nglob))
+  test_flag(:) = 0
+  test_flag_cr(:) = 0._CUSTOM_REAL
+  count = 0
+  do ispec = 1, nspec    
+    ! sets flags on global points
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          ! global index
+          iglob = ibool(i,j,k,ispec)         
+          
+          ! counts number of unique global points to set
+          if( test_flag(iglob) == 0 ) count = count+1
+          
+          ! sets identifier
+          test_flag(iglob) = myrank + 1 
+          test_flag_cr(iglob) = myrank + 1.0
+        enddo
+      enddo
+    enddo
+  enddo
+  call sync_all()
+
+  ! collects contributions from different MPI partitions
+  ! sets up MPI communications
+  max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
+  allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+  
+  count = 0
+  do iinterface = 1, num_interfaces_ext_mesh
+     ibool_interfaces_dummy(:,iinterface) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,iinterface)
+     count = count + nibool_interfaces_ext_mesh(iinterface)
+     !write(*,*) myrank,'interfaces ',iinterface,nibool_interfaces_ext_mesh(iinterface),max_nibool_interfaces_ext_mesh
+  enddo
+  call sync_all()
+  
+  call sum_all_i(count,iglob)
+  if( myrank == 0 ) then
+    if( iglob /= ilocnum ) call exit_mpi(myrank,'error total global MPI interface points')
+  endif
+  
+  ! adds contributions from different partitions to flag arrays
+  ! integer arrays
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_dummy,&
+                        my_neighbours_ext_mesh)
+  ! custom_real arrays
+  call assemble_MPI_scalar_ext_mesh(NPROC,nglob,test_flag_cr, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_dummy, &
+                        my_neighbours_ext_mesh)
+
+  ! checks number of interface points
+  i = 0
+  j = 0
+  do iglob=1,nglob
+    ! only counts flags with MPI contributions
+    if( test_flag(iglob) > myrank+1 ) i = i + 1
+    if( test_flag_cr(iglob) > myrank+1.0) j = j + 1
+  enddo  
+  call sum_all_i(i,inum)
+  call sum_all_i(j,iglob)
+  if( myrank == 0 ) then
+    write(IMAIN,*) '     total assembled MPI interface points:',inum
+    if( inum /= iglob .or. inum > ilocnum ) call exit_mpi(myrank,'error MPI assembly')
+  endif
+  
+end subroutine crm_ext_prepare_MPI
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine crm_ext_create_mass_matrix(nglob,nspec,ibool)
+
+! returns precomputed mass matrix in rmass array
+  
+  use create_regions_mesh_ext_par 
+  implicit none
+
+! number of spectral elements in each block
+  integer :: nspec
+  integer :: nglob
+  
+! arrays with the mesh global indices
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
 ! local parameters
   double precision :: weight
   real(kind=CUSTOM_REAL) :: jacobianl
-  integer :: ispec,i,j,k,iglobnum
+  integer :: ispec,i,j,k,iglob,ier
+
+! allocates memory
+  allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(rmass_acoustic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(rmass_solid_poroelastic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(rmass_fluid_poroelastic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
 
 ! creates mass matrix  
   rmass(:) = 0._CUSTOM_REAL
-
+  rmass_acoustic(:) = 0._CUSTOM_REAL
+  rmass_solid_poroelastic(:) = 0._CUSTOM_REAL
+  rmass_fluid_poroelastic(:) = 0._CUSTOM_REAL
+  
   do ispec=1,nspec
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-          weight=wxgll(i)*wygll(j)*wzgll(k)
-          iglobnum=ibool(i,j,k,ispec)
+          iglob = ibool(i,j,k,ispec)
 
-          jacobianl=jacobianstore(i,j,k,ispec)
+          weight = wxgll(i)*wygll(j)*wzgll(k)
+          jacobianl = jacobianstore(i,j,k,ispec)
 
-! distinguish between single and double precision for reals
-          if(CUSTOM_REAL == SIZE_REAL) then
-            rmass(iglobnum) = rmass(iglobnum) + &
-                sngl((dble(rhostore(i,j,k,ispec)))  * dble(jacobianl) * weight)
-          else
-             rmass(iglobnum) = rmass(iglobnum) + rhostore(i,j,k,ispec) * jacobianl * weight
+! acoustic mass matrix
+          if( ispec_is_acoustic(ispec) ) then
+            ! distinguish between single and double precision for reals
+            if(CUSTOM_REAL == SIZE_REAL) then
+              rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                    sngl( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) )
+            else
+               rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                    jacobianl * weight / kappastore(i,j,k,ispec)
+            endif
           endif
 
+! elastic mass matrix
+          if( ispec_is_elastic(ispec) ) then
+            if(CUSTOM_REAL == SIZE_REAL) then
+              rmass(iglob) = rmass(iglob) + &
+                    sngl( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)) )
+            else
+               rmass(iglob) = rmass(iglob) + &
+                    jacobianl * weight * rhostore(i,j,k,ispec)
+            endif
+          endif
+          
+! poroelastic mass matrices
+          if( ispec_is_poroelastic(ispec) ) then
+            
+            stop 'poroelastic mass matrices not implemented yet'
+            
+            !rho_solid = density(1,kmato(ispec))
+            !rho_fluid = density(2,kmato(ispec))
+            !phi = porosity(kmato(ispec))
+            !tort = tortuosity(kmato(ispec))
+            !rho_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f          
+            !
+            !if(CUSTOM_REAL == SIZE_REAL) then            
+            !  ! for the solid mass matrix
+            !  rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
+            !      sngl( dble(jacobianl) * weight * dble(rho_bar - phi*rho_fluid/tort) )
+            !  
+            !  ! for the fluid mass matrix
+            !  rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
+            !      sngl( dble(jacobianl) * weight * dble(rho_bar*rho_fluid*tort - &
+            !                                  phi*rho_fluid*rho_fluid)/dble(rho_bar*phi) )            
+            !else
+            !  rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
+            !      jacobianl * weight * (rho_bar - phi*rho_fluid/tort)
+            !  
+            !  rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
+            !      jacobianl * weight * (rho_bar*rho_fluid*tort - &
+            !                                  phi*rho_fluid*rho_fluid) / (rho_bar*phi) 
+            !endif
+          endif
+          
         enddo
       enddo
     enddo
-  enddo  
+  enddo ! nspec  
 
+end subroutine crm_ext_create_mass_matrix
 
-end subroutine create_regions_mesh_ext_mesh_create_mass_matrix
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob,&
-                            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+subroutine crm_ext_setup_abs_boundary(myrank,nspec,nglob,ibool, &
                             nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                            dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                             nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
                             nodes_ibelm_bottom,nodes_ibelm_top, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-                            normal_top,jacobian2D_top, &
-                            absorbing_boundary_normal,absorbing_boundary_jacobian2D, &
-                            absorbing_boundary_ijk,absorbing_boundary_ispec, &
-                            num_absorbing_boundary_faces)
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                            nspec2D_bottom,nspec2D_top)
 
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
-  implicit none
 
-  include "constants.h"
+  use create_regions_mesh_ext_par 
+  implicit none
 
 ! number of spectral elements in each block
   integer :: myrank,nspec,nglob
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-!  double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-! global point locations          
-  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
-
-! 2D shape functions derivatives and weights
-  double precision :: dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ),dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ), &
-          dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY),dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY)
-  double precision, dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  double precision, dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  double precision, dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
 ! data from the external mesh
-  integer :: nnodes_ext_mesh !,nelmnts_ext_mesh
+  integer :: nnodes_ext_mesh 
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
-!  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
-! absorbing boundaries
+! absorbing boundaries (as defined in CUBIT)
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
   ! element indices containing a boundary
   integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
@@ -1469,48 +1502,12 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
   integer, dimension(4,nspec2D_ymax)  :: nodes_ibelm_ymax
   integer, dimension(4,NSPEC2D_BOTTOM)  :: nodes_ibelm_bottom
   integer, dimension(4,NSPEC2D_TOP)  :: nodes_ibelm_top
-
-  ! local indices i,j,k of all GLL points on an absorbing boundary in the element, 
-  ! defines all gll points located on the absorbing surfaces
-!  integer :: ibelm_gll_xmin(3,NGLLY,NGLLZ,nspec2D_xmin),ibelm_gll_xmax(3,NGLLY,NGLLZ,nspec2D_xmax), &
-!            ibelm_gll_ymin(3,NGLLX,NGLLZ,nspec2D_ymin),ibelm_gll_ymax(3,NGLLX,NGLLZ,nspec2D_ymax), &
-!            ibelm_gll_bottom(3,NGLLY,NGLLY,nspec2D_bottom),ibelm_gll_top(3,NGLLY,NGLLY,nspec2D_top)
-
-! overlap indices for elements at corners and edges with more than one aborbing boundary face
-!  integer  :: NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
-!  integer :: nimin(2,NSPEC2DMAX_YMIN_YMAX),nimax(2,NSPEC2DMAX_YMIN_YMAX), &
-!            njmin(2,NSPEC2DMAX_XMIN_XMAX),njmax(2,NSPEC2DMAX_XMIN_XMAX), &
-!            nkmin_xi(2,NSPEC2DMAX_XMIN_XMAX),nkmin_eta(2,NSPEC2DMAX_YMIN_YMAX)
-
-  ! 2-D jacobians and normals
-!  real(kind=CUSTOM_REAL) :: jacobian2D_xmin(NGLLY,NGLLZ,nspec2D_xmin),&
-!                jacobian2D_xmax(NGLLY,NGLLZ,nspec2D_xmax), &
-!                 jacobian2D_ymin(NGLLX,NGLLZ,nspec2D_ymin), &
-!                 jacobian2D_ymax(NGLLX,NGLLZ,nspec2D_ymax),&
-!                 jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM),&
-  real(kind=CUSTOM_REAL):: jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP)
-
-! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
-  integer :: num_absorbing_boundary_faces
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_normal
-  real(kind=CUSTOM_REAL), dimension(NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_jacobian2D
-  integer, dimension(3,NGLLSQUARE,num_absorbing_boundary_faces) :: absorbing_boundary_ijk
-  integer, dimension(num_absorbing_boundary_faces) :: absorbing_boundary_ispec    
   
-  ! normals for all GLL points on boundaries
-!  real(kind=CUSTOM_REAL) :: normal_xmin(NDIM,NGLLY,NGLLZ,nspec2D_xmin),&
-!           normal_xmax(NDIM,NGLLY,NGLLZ,nspec2D_xmax), &
-!           normal_ymin(NDIM,NGLLX,NGLLZ,nspec2D_ymin), &
-!           normal_ymax(NDIM,NGLLX,NGLLZ,nspec2D_ymax), &
-!           normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM),
-  real(kind=CUSTOM_REAL) :: normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP)  
-          
 ! local parameters
-! pll 
-  logical, dimension(:,:),allocatable :: iboun  
+  logical, dimension(:,:),allocatable :: iboun   ! pll 
 
   ! (assumes NGLLX=NGLLY=NGLLZ)
-  real(kind=CUSTOM_REAL) :: jacobian2D_face(NGLLX,NGLLY)
+  real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   integer:: ijk_face(3,NGLLX,NGLLY)
   
@@ -1519,7 +1516,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
   
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord    
-  integer  :: ispec,ispec2D,icorner,ier,iabs,iface,igll,i,j
+  integer  :: ispec,ispec2D,icorner,ier,iabs,iface,igll,i,j,igllfree,ifree
   
 ! allocate temporary flag array
   allocate(iboun(6,nspec), &
@@ -1566,7 +1563,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
               xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
-              ispec,iface,jacobian2D_face,normal_face,NGLLX,NGLLZ)                              
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)                              
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1579,31 +1576,18 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
       enddo
     enddo
 
-    !daniel
-    ! checks: layered halfspace  normals
-    ! for boundary on xmin, outward direction must be (-1,0,0)    
-    !if( myrank == 0 ) then
-    !if( abs(normal_face(1,1,1) + 1.0 ) > 0.1 ) then
-    !  print*,'error normal xmin',myrank,ispec
-    !  print*,sngl(normal_face(:,1,1))
-    !  stop
-    !endif    
-    !if( abs(xstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec)) - 0.0) > 0.1 ) &
-    !  print*,'error element xmin:',ispec,xstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec))
-    !endif
-                            
     ! sets face infos
     iabs = iabs + 1
-    absorbing_boundary_ispec(iabs) = ispec      
+    abs_boundary_ispec(iabs) = ispec      
     
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
         igll = igll+1
-        absorbing_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        absorbing_boundary_jacobian2D(igll,iabs) = jacobian2D_face(i,j)
-        absorbing_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
+        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
       enddo
     enddo        
 
@@ -1637,7 +1621,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
               xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
-              ispec,iface,jacobian2D_face,normal_face,NGLLX,NGLLZ)                              
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)                              
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1650,28 +1634,18 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
       enddo
     enddo
 
-    !daniel
-    ! checks: layered halfspace  normals
-    ! for boundary on xmin, outward direction must be (1,0,0)    
-    !if( abs(normal_face(1,1,1) - 1.0 ) > 0.1 ) then
-    !  print*,'error normal xmax',myrank,ispec
-    !  print*,sngl(normal_face(:,1,1))
-    !endif    
-    !if( abs(xstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec)) - 134000.0) > 0.1 ) &
-    !  print*,'error element xmax:',ispec,xstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec))
-
     ! sets face infos
     iabs = iabs + 1
-    absorbing_boundary_ispec(iabs) = ispec      
+    abs_boundary_ispec(iabs) = ispec      
     
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
         igll = igll+1
-        absorbing_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        absorbing_boundary_jacobian2D(igll,iabs) = jacobian2D_face(i,j)
-        absorbing_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
+        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
       enddo
     enddo            
     
@@ -1705,7 +1679,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
               xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
-              ispec,iface,jacobian2D_face,normal_face,NGLLY,NGLLZ)                              
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ)                              
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1718,28 +1692,18 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
       enddo
     enddo
 
-    !daniel
-    ! checks: layered halfspace  normals
-    ! for boundary on xmin, outward direction must be (0,-1,0)    
-    !if( abs(normal_face(2,1,1) + 1.0 ) > 0.1 ) then
-    !  print*,'error normal ymin',myrank,ispec
-    !  print*,sngl(normal_face(:,1,1))
-    !endif    
-    !if( abs(ystore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec)) - 0.0) > 0.1 ) &
-    !  print*,'error element ymin:',ispec,ystore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec))
-
     ! sets face infos
     iabs = iabs + 1
-    absorbing_boundary_ispec(iabs) = ispec      
+    abs_boundary_ispec(iabs) = ispec      
     
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLY
         igll = igll+1
-        absorbing_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        absorbing_boundary_jacobian2D(igll,iabs) = jacobian2D_face(i,j)
-        absorbing_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
+        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
       enddo
     enddo        
                                   
@@ -1773,7 +1737,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
               xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2D_face,normal_face,NGLLY,NGLLZ) 
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ) 
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1786,28 +1750,18 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
       enddo
     enddo
 
-    !daniel
-    ! checks: layered halfspace  normals
-    ! for boundary on xmin, outward direction must be (0,1,0)    
-    !if( abs(normal_face(2,1,1) - 1.0 ) > 0.1 ) then
-    !  print*,'error normal ymax',myrank,ispec
-    !  print*,sngl(normal_face(:,1,1))
-    !endif    
-    !if( abs(ystore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec)) - 134000.0) > 0.1 ) &
-    !  print*,'error element ymax:',ispec,ystore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec))
-
     ! sets face infos
     iabs = iabs + 1
-    absorbing_boundary_ispec(iabs) = ispec      
+    abs_boundary_ispec(iabs) = ispec      
     
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll+1
-        absorbing_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        absorbing_boundary_jacobian2D(igll,iabs) = jacobian2D_face(i,j)
-        absorbing_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
+        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
       enddo
     enddo
     
@@ -1841,7 +1795,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
               xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2D_face,normal_face,NGLLX,NGLLY) 
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY) 
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1854,34 +1808,26 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
       enddo
     enddo
 
-    !daniel
-    ! checks: layered halfspace  normals
-    ! for boundary on xmin, outward direction must be (0,0,-1)    
-    !if( abs(normal_face(3,1,1) + 1.0 ) > 0.1 ) then
-    !  print*,'error normal bottom',myrank,ispec
-    !  print*,sngl(normal_face(:,1,1))
-    !endif    
-    !if( abs(zstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec)) + 60000.0) > 0.1 ) &
-    !  print*,'error element bottom:',ispec,zstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec))
-
     ! sets face infos
     iabs = iabs + 1
-    absorbing_boundary_ispec(iabs) = ispec      
+    abs_boundary_ispec(iabs) = ispec      
     
     ! gll points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll+1
-        absorbing_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-        absorbing_boundary_jacobian2D(igll,iabs) = jacobian2D_face(i,j)
-        absorbing_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
+        abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
       enddo
     enddo    
     
   enddo
   
-  ! top
+  ! top 
+  ! free surface face counter
+  ifree = 0
   do ispec2D = 1, NSPEC2D_TOP
     ! sets element 
     ispec = ibelm_top(ispec2D)
@@ -1909,7 +1855,7 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
               xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-              ispec,iface,jacobian2D_face,normal_face,NGLLX,NGLLY) 
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY) 
 
     ! normal convention: points away from element
     ! switch normal direction if necessary
@@ -1922,45 +1868,63 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
       enddo
     enddo
 
-    !daniel
-    ! checks: layered halfspace  normals
-    ! for boundary on xmin, outward direction must be (0,0,1)    
-    !if( abs(normal_face(3,1,1) - 1.0 ) > 0.1 ) then
-    !  print*,'error normal top',myrank,ispec
-    !  print*,sngl(normal_face(:,1,1))
-    !endif    
-    !if( abs(zstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec)) - 0.0) > 0.1 ) &
-    !  print*,'error element top:',ispec,zstore_dummy(ibool(ijk_face(1,2,2),ijk_face(2,2,2),ijk_face(3,2,2),ispec))
+    ! stores surface infos
+    if( .not. ABSORB_FREE_SURFACE ) then
+      ! store for free surface
+      !jacobian2D_top(:,:,ispec2D) = jacobian2Dw_face(:,:)
+      !normal_top(:,:,:,ispec2D) = normal_face(:,:,:)  
 
-    ! store for free surface
-    jacobian2D_top(:,:,ispec2D) = jacobian2D_face(:,:)
-    normal_top(:,:,:,ispec2D) = normal_face(:,:,:)  
-
-    ! store for absorbing boundaries
-    if( ABSORB_FREE_SURFACE ) then
       ! sets face infos
+      ifree = ifree + 1
+      free_surface_ispec(ifree) = ispec      
+      
+      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+      igllfree = 0
+      do j=1,NGLLY
+        do i=1,NGLLX
+          igllfree = igllfree+1
+          free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+          free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+          free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)  
+        enddo
+      enddo        
+    else
+      ! adds face infos to absorbing boundary surface
       iabs = iabs + 1
-      absorbing_boundary_ispec(iabs) = ispec      
+      abs_boundary_ispec(iabs) = ispec      
       
       ! gll points -- assuming NGLLX = NGLLY = NGLLZ
       igll = 0
       do j=1,NGLLY
         do i=1,NGLLX
           igll = igll+1
-          absorbing_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-          absorbing_boundary_jacobian2D(igll,iabs) = jacobian2D_face(i,j)
-          absorbing_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
+          abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+          abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+          abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)  
         enddo
       enddo
+      
+      ! resets free surface 
+      ifree = 1
+      free_surface_ispec(:) = 0
+      free_surface_ijk(:,:,:) = 0
+      free_surface_jacobian2Dw(:,:) = 0.0
+      free_surface_normal(:,:,:) = 0.0
     endif
   enddo
   
-  if( iabs /= num_absorbing_boundary_faces ) then
-    print*,'error number of absorbing faces:',iabs,num_absorbing_boundary_faces
+! checks counters  
+  if( ifree /= num_free_surface_faces ) then  
+    print*,'error number of free surface faces:',ifree,num_free_surface_faces
+    stop 'error number of free surface faces'
+  endif
+  
+  if( iabs /= num_abs_boundary_faces ) then
+    print*,'error number of absorbing faces:',iabs,num_abs_boundary_faces
     stop 'error number of absorbing faces'
   endif
 
-  call sum_all_i(num_absorbing_boundary_faces,iabs)
+  call sum_all_i(num_abs_boundary_faces,iabs)
   if( myrank == 0 ) then
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of faces = ',iabs
@@ -1991,112 +1955,443 @@ subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound(myrank,nspec,nglob
 !       nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
 !       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM)
 
-end subroutine create_regions_mesh_ext_mesh_setup_absorbing_bound
+end subroutine crm_ext_setup_abs_boundary
+
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine create_regions_mesh_ext_mesh_prepare_MPI_interfaces(nglob,nspec,ibool, &
-                                    nelmnts_ext_mesh,elmnts_ext_mesh, &
-                                    my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-                                    ibool_interfaces_ext_mesh, &
-                                    nibool_interfaces_ext_mesh, &
-                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                                    xstore_dummy,ystore_dummy,zstore_dummy)
+subroutine crm_ext_detect_ac_el_surface(myrank, &
+                        nspec,nglob,ibool,NPROC, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                        my_neighbours_ext_mesh)
+                            
+! determines coupling surface for acoustic-elastic domains
 
-! sets up the MPI interface for communication between partitions
-
+  use create_regions_mesh_ext_par 
   implicit none
 
-  include "constants.h"
+! number of spectral elements in each block
+  integer :: myrank,nspec,nglob,NPROC
 
-  integer :: nglob,nspec
-
+! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  
-  integer :: nelmnts_ext_mesh
-  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
-  
+
+! MPI communication
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
+            ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+
+! local parameters
+  ! (assumes NGLLX=NGLLY=NGLLZ)
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord    
+  real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
+  real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
+  real(kind=CUSTOM_REAL),dimension(:,:,:),allocatable :: tmp_normal
+  real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: tmp_jacobian2Dw
+  integer :: ijk_face(3,NGLLX,NGLLY)
+  integer,dimension(:,:,:),allocatable :: tmp_ijk
+  integer,dimension(:),allocatable :: tmp_ispec
+
+  integer,dimension(NGNOD2D) :: iglob_corners_ref !,iglob_corners
+  integer :: ispec,i,j,k,igll,ier,iglob
+  integer :: inum,iface_ref,icorner,iglob_midpoint ! iface,ispec_neighbor
+  integer :: count_elastic,count_acoustic
   
-  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
-  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
+  ! mpi interface communication
+  integer, dimension(:), allocatable :: elastic_flag,acoustic_flag,test_flag
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+  integer :: max_nibool_interfaces_ext_mesh
+  logical, dimension(:), allocatable :: mask_ibool
   
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh  
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  ! corners indices of reference cube faces
+  integer,dimension(3,4),parameter :: iface1_corner_ijk = &
+             reshape( (/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/))   ! xmin
+  integer,dimension(3,4),parameter :: iface2_corner_ijk = &
+             reshape( (/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /),(/3,4/))   ! xmax
+  integer,dimension(3,4),parameter :: iface3_corner_ijk = &
+             reshape( (/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /),(/3,4/))   ! ymin
+  integer,dimension(3,4),parameter :: iface4_corner_ijk = &
+             reshape( (/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /),(/3,4/))   ! ymax
+  integer,dimension(3,4),parameter :: iface5_corner_ijk = &
+             reshape( (/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),(/3,4/))  ! bottom
+  integer,dimension(3,4),parameter :: iface6_corner_ijk = &
+             reshape( (/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/))   ! top  
+  integer,dimension(3,4,6),parameter :: iface_all_corner_ijk = &
+             reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
+                 iface3_corner_ijk,iface4_corner_ijk, &
+                 iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
+  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)               
+  integer,dimension(3,6),parameter :: iface_all_midpointijk = &
+             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top  
+
   
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+  ! test vtk output
+  !integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: gll_data
+  !character(len=256):: prname_file
   
-!local parameters
-  double precision, dimension(:), allocatable :: xp,yp,zp
-  double precision, dimension(:), allocatable :: work_ext_mesh
-
-  integer, dimension(:), allocatable :: locval !,iglob
-  integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
-
-! for MPI buffers
-  integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
-  integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
-
-  logical, dimension(:), allocatable :: ifseg
-
-  integer :: iinterface,ilocnum
+! allocates temporary arrays  
+  allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6))
+  allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6))  
+  allocate(tmp_ijk(3,NGLLSQUARE,nspec*6))
+  allocate(tmp_ispec(nspec*6))
+  tmp_ispec(:) = 0
+  tmp_ijk(:,:,:) = 0
+  tmp_normal(:,:,:) = 0.0
+  tmp_jacobian2Dw(:,:) = 0.0
   
-
-! get global indices for MPI interfaces between different partitions
-  call prepare_assemble_MPI (nelmnts_ext_mesh,ibool, &
-                            elmnts_ext_mesh, ESIZE, &
-                            nglob, &
-                            num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
-                            my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-                            ibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh &
-                            )
-
-  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh))
-
-! sort ibool comm buffers lexicographically  
-  do iinterface = 1, num_interfaces_ext_mesh
-
-    allocate(xp(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(yp(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(zp(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(locval(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ibool_interface_ext_mesh_dummy(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-
-    do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
-      xp(ilocnum) = xstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
-      yp(ilocnum) = ystore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
-      zp(ilocnum) = zstore_dummy(ibool_interfaces_ext_mesh(ilocnum,iinterface))
+  ! sets flags for acoustic / elastic on global points
+  allocate(elastic_flag(nglob),stat=ier)
+  allocate(acoustic_flag(nglob),stat=ier)  
+  allocate(test_flag(nglob),stat=ier)  
+  allocate(mask_ibool(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocate flag array'  
+  elastic_flag(:) = 0
+  acoustic_flag(:) = 0
+  test_flag(:) = 0
+  count_elastic = 0
+  count_acoustic = 0
+  do ispec = 1, nspec
+    ! counts elements
+    if( ispec_is_elastic(ispec) ) count_elastic = count_elastic + 1
+    if( ispec_is_acoustic(ispec) ) count_acoustic = count_acoustic + 1
+    
+    ! sets flags on global points
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          ! global index
+          iglob = ibool(i,j,k,ispec)         
+          ! sets elastic flag
+          if( ispec_is_elastic(ispec) ) elastic_flag(iglob) =  myrank+1
+          ! sets acoustic flag
+          if( ispec_is_acoustic(ispec) ) acoustic_flag(iglob) =  myrank+1
+          ! sets test flag
+          test_flag(iglob) = myrank+1
+        enddo
+      enddo
     enddo
+  enddo
+  call sum_all_i(count_acoustic,inum)
+  if( myrank == 0 ) then
+    write(IMAIN,*) '     total acoustic elements:',inum
+  endif   
+  call sum_all_i(count_elastic,inum)
+  if( myrank == 0 ) then
+    write(IMAIN,*) '     total elastic elements :',inum
+  endif   
 
-    call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
-         ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
-         reorder_interface_ext_mesh,locval,ifseg,nibool_interfaces_ext_mesh_true(iinterface), &
-         ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)
+  ! collects contributions from different MPI partitions
+  ! sets up MPI communications
+  max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
+  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array'  
+  do i = 1, num_interfaces_ext_mesh
+     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
+  enddo  
+  ! sums elastic flags
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,elastic_flag, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        my_neighbours_ext_mesh)
+  ! sums acoustic flags
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,acoustic_flag, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        my_neighbours_ext_mesh)
 
-    deallocate(xp)
-    deallocate(yp)
-    deallocate(zp)
-    deallocate(locval)
-    deallocate(ifseg)
-    deallocate(reorder_interface_ext_mesh)
-    deallocate(ibool_interface_ext_mesh_dummy)
-    deallocate(ind_ext_mesh)
-    deallocate(ninseg_ext_mesh)
-    deallocate(iwork_ext_mesh)
-    deallocate(work_ext_mesh)
+  ! sums test flags
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        my_neighbours_ext_mesh)
 
+  ! loops over all element faces and 
+  ! counts number of coupling faces between acoustic and elastic elements
+  mask_ibool(:) = .false.
+  inum = 0    
+  do ispec=1,nspec
+
+    ! loops over each face
+    do iface_ref= 1, 6      
+
+      ! takes indices of corners of reference face
+      do icorner = 1,NGNOD2D
+        i = iface_all_corner_ijk(1,icorner,iface_ref)
+        j = iface_all_corner_ijk(2,icorner,iface_ref)
+        k = iface_all_corner_ijk(3,icorner,iface_ref)
+        ! global reference indices
+        iglob_corners_ref(icorner) = ibool(i,j,k,ispec)
+
+        ! reference corner coordinates
+        xcoord(icorner) = xstore_dummy(iglob_corners_ref(icorner))
+        ycoord(icorner) = ystore_dummy(iglob_corners_ref(icorner))
+        zcoord(icorner) = zstore_dummy(iglob_corners_ref(icorner))                  
+      enddo
+      
+      ! checks if face has acoustic side
+      if( acoustic_flag( iglob_corners_ref(1) ) >= 1 .and. &
+         acoustic_flag( iglob_corners_ref(2) ) >= 1 .and. &
+         acoustic_flag( iglob_corners_ref(3) ) >= 1 .and. &
+         acoustic_flag( iglob_corners_ref(4) ) >= 1) then        
+        ! checks if face is has an elastic side 
+        if( elastic_flag( iglob_corners_ref(1) ) >= 1 .and. &
+           elastic_flag( iglob_corners_ref(2) ) >= 1 .and. &
+           elastic_flag( iglob_corners_ref(3) ) >= 1 .and. &
+           elastic_flag( iglob_corners_ref(4) ) >= 1) then
+
+          ! reference midpoint on face (used to avoid redundant face counting)
+          i = iface_all_midpointijk(1,iface_ref)
+          j = iface_all_midpointijk(2,iface_ref)
+          k = iface_all_midpointijk(3,iface_ref)      
+          iglob_midpoint = ibool(i,j,k,ispec)
+
+          ! checks if points on this face are masked already
+          if( .not. mask_ibool(iglob_midpoint) ) then
+
+            ! gets face GLL points i,j,k indices from element face
+            call get_element_face_gll_indices(iface_ref,ijk_face,NGLLX,NGLLY)
+            
+            ! takes each element face only once, if it lies on an MPI interface
+            ! note: this is not exactly load balanced
+            !          lowest rank process collects as many faces as possible, second lowest as so forth
+            if( (test_flag(iglob_midpoint) == myrank+1) .or. &
+               (test_flag(iglob_midpoint) > 2*(myrank+1)) ) then
+            
+              ! gets face GLL 2Djacobian, weighted from element face
+              call get_jacobian_boundary_face(myrank,nspec, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+                        dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
+
+              ! normal convention: points away from acoustic, reference element
+              !                                switch normal direction if necessary
+              do j=1,NGLLY
+                do i=1,NGLLX
+                    ! directs normals such that they point outwards of element
+                    call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
+                                                ibool,nspec,nglob, &
+                                                xstore_dummy,ystore_dummy,zstore_dummy, &
+                                                normal_face(:,i,j) )
+                    ! makes sure that it always points away from acoustic element, otherwise switch direction                            
+                    if( ispec_is_elastic(ispec) ) normal_face(:,i,j) = - normal_face(:,i,j)
+                enddo
+              enddo
+
+              ! stores informations about this face
+              inum = inum + 1
+              tmp_ispec(inum) = ispec
+              igll = 0
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  ! adds all gll points on this face
+                  igll = igll + 1
+                  
+                  ! do we need to store local i,j,k,ispec info? or only global indices iglob?
+                  tmp_ijk(:,igll,inum) = ijk_face(:,i,j)
+                  
+                  ! stores weighted jacobian and normals
+                  tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
+                  tmp_normal(:,igll,inum) = normal_face(:,i,j)
+                  
+                  ! masks global points ( to avoid redundant counting of faces)
+                  iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+                  mask_ibool(iglob) = .true.
+                enddo
+              enddo
+            else
+              ! assumes to be already collected by lower rank process, masks face points
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+                  mask_ibool(iglob) = .true. 
+                enddo
+              enddo
+            endif ! test_flag
+          endif ! mask_ibool          
+        endif ! elastic_flag
+      endif ! acoustic_flag
+    enddo ! iface_ref
+  enddo ! ispec
+    
+! stores completed coupling face informations  
+! 
+! note: no need to store material parameters on these coupling points 
+!          for acoustic-elastic interface
+  num_coupling_ac_el_faces = inum
+  allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces))
+  do inum = 1,num_coupling_ac_el_faces
+    coupling_ac_el_normal(:,:,inum) = tmp_normal(:,:,inum)
+    coupling_ac_el_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)
+    coupling_ac_el_ijk(:,:,inum) = tmp_ijk(:,:,inum)
+    coupling_ac_el_ispec(inum) = tmp_ispec(inum)    
   enddo
 
-end subroutine create_regions_mesh_ext_mesh_prepare_MPI_interfaces
+! user output
+  call sum_all_i(num_coupling_ac_el_faces,inum)
+  if( myrank == 0 ) then
+    write(IMAIN,*) '     acoustic-elastic coupling:'
+    write(IMAIN,*) '     total number of faces = ',inum
+  endif  
+
+end subroutine crm_ext_detect_ac_el_surface
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine crm_ext_create_ocean_load_mass(nglob,nspec,ibool,OCEANS,&
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
+                        ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
+                        itopo_bathy)
+
+! returns precomputed mass matrix in rmass array
+  
+  use create_regions_mesh_ext_par 
+  implicit none
+
+! number of spectral elements in each block
+  integer :: nspec
+  integer :: nglob
+  
+! arrays with the mesh global indices
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  logical :: OCEANS
+
+! use integer array to store topography values
+  integer :: UTM_PROJECTION_ZONE
+  logical :: SUPPRESS_UTM_PROJECTION
+  integer :: NX_TOPO,NY_TOPO
+  double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
+
+  
+! local parameters
+  double precision :: weight
+  double precision :: xval,yval,long,lat,elevation
+  double precision :: height_oceans
+  double precision :: long_corner,lat_corner,ratio_xi,ratio_eta
+  integer :: ix_oceans,iy_oceans,iz_oceans,ispec_oceans,ispec2D,igll,iglobnum
+  integer :: icornerlong,icornerlat
+
+! creates ocean load mass matrix
+  if(OCEANS) then
+
+    ! adding ocean load mass matrix at ocean bottom
+    NGLOB_OCEAN = nglob
+    allocate(rmass_ocean_load(NGLOB_OCEAN))
+
+    ! create ocean load mass matrix for degrees of freedom at ocean bottom
+    rmass_ocean_load(:) = 0._CUSTOM_REAL
+
+    ! add contribution of the oceans for surface elements exactly at ocean bottom
+    do ispec2D = 1,num_free_surface_faces
+
+      ispec_oceans = free_surface_ispec(ispec2D)
+
+      ! only adds contribution if top boundary is elastic, no need to add this approximate calculation
+      ! if top is already acoustic/poroelastic
+      if( ispec_is_elastic(ispec_oceans) ) then
+
+        do igll=1,NGLLSQUARE
+          ix_oceans = free_surface_ijk(1,igll,ispec2D)
+          iy_oceans = free_surface_ijk(1,igll,ispec2D)
+          iz_oceans = free_surface_ijk(1,igll,ispec2D)
+        
+
+!      iz_oceans = NGLLZ
+!      do ix_oceans = 1,NGLLX
+!        do iy_oceans = 1,NGLLY
+
+          iglobnum=ibool(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
+
+          ! compute local height of oceans
+
+          ! get coordinates of current point
+          xval = xstore_dummy(iglobnum)
+          yval = ystore_dummy(iglobnum)
+
+          ! project x and y in UTM back to long/lat since topo file is in long/lat
+          call utm_geo(long,lat,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+
+          ! get coordinate of corner in bathy/topo model
+          icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+          icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+
+          ! avoid edge effects and extend with identical point if outside model
+          if(icornerlong < 1) icornerlong = 1
+          if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+          if(icornerlat < 1) icornerlat = 1
+          if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+
+          ! compute coordinates of corner
+          long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
+          lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
+
+          ! compute ratio for interpolation
+          ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
+          ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+
+          ! avoid edge effects
+          if(ratio_xi < 0.) ratio_xi = 0.
+          if(ratio_xi > 1.) ratio_xi = 1.
+          if(ratio_eta < 0.) ratio_eta = 0.
+          if(ratio_eta > 1.) ratio_eta = 1.
+
+          ! interpolate elevation at current point
+          elevation = &
+                itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+                itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+                itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+                itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+
+          ! suppress positive elevation, which means no oceans
+          if(elevation >= - MINIMUM_THICKNESS_3D_OCEANS) then
+            height_oceans = 0.d0
+          else
+            height_oceans = dabs(elevation)
+          endif
+
+          ! take into account inertia of water column
+          !weight = wxgll(ix_oceans)*wygll(iy_oceans) &
+          !         * dble(jacobian2D_top(ix_oceans,iy_oceans,ispec2D_ocean_bottom)) &
+          !         * dble(RHO_OCEANS) * height_oceans
+
+          weight = dble( free_surface_jacobian2Dw(igll,ispec2D)) &
+                   * dble(RHO_OCEANS) * height_oceans
+
+          ! distinguish between single and double precision for reals
+          if(CUSTOM_REAL == SIZE_REAL) then
+            rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + sngl(weight)
+          else
+            rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + weight
+          endif
+
+        enddo ! igll
+      endif ! ispec_is_elastic
+    enddo ! num_free_surface_faces
+
+    ! add regular mass matrix to ocean load contribution
+    rmass_ocean_load(:) = rmass_ocean_load(:) + rmass(:)
+
+  else
+
+    ! allocate dummy array if no oceans
+    NGLOB_OCEAN = 1
+    allocate(rmass_ocean_load(NGLOB_OCEAN))
+
+  endif
+
+end subroutine crm_ext_create_ocean_load_mass
+
 
 !pll
 ! subroutine interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
@@ -2206,3 +2501,34 @@ end subroutine create_regions_mesh_ext_mesh_prepare_MPI_interfaces
     
 
 ! end subroutine interface
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+subroutine bubble_sort( arr, ndim )
+
+! sorts values in array arr[ndim] in increasing order
+
+  implicit none
+  
+  integer :: ndim
+  integer :: arr(ndim)
+  
+  logical :: swapped
+  integer :: j,tmp
+  
+  swapped = .true.
+  do while( swapped )
+    swapped = .false.
+    do j = 1, ndim-1
+      if( arr(j+1) < arr(j) ) then
+        tmp = arr(j) 
+        arr(j) = arr(j+1)
+        arr(j+1) = tmp
+        swapped = .true.        
+      endif
+    enddo
+  enddo
+  
+end subroutine bubble_sort

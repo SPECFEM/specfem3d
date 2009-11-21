@@ -28,8 +28,9 @@
   subroutine detect_mesh_surfaces()
 
   use specfem_par
+  use specfem_par_movie
   implicit none
-
+  
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
 
 
@@ -52,11 +53,91 @@
                       my_neighbours_ext_mesh, &
                       ibool_interfaces_ext_mesh) 
   endif 
+
+! takes cross-section surfaces instead
+  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
+    if( PLOT_CROSS_SECTIONS ) then
+      call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
+                            ispec_is_surface_external_mesh, &
+                            iglob_is_surface_external_mesh, &
+                            nfaces_surface_external_mesh, &
+                            num_interfaces_ext_mesh, &
+                            max_nibool_interfaces_ext_mesh, &
+                            nibool_interfaces_ext_mesh, &
+                            my_neighbours_ext_mesh, &
+                            ibool_interfaces_ext_mesh,&
+                            CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
+                            xstore,ystore,zstore,myrank)    
+    endif  
+  endif
+  
+  ! takes number of faces for top, free surface only
+  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
+    nfaces_surface_external_mesh = num_free_surface_faces
+    ! face corner indices
+    iorderi(1) = 1
+    iorderi(2) = NGLLX
+    iorderi(3) = NGLLX
+    iorderi(4) = 1
+    iorderj(1) = 1
+    iorderj(2) = 1
+    iorderj(3) = NGLLY
+    iorderj(4) = NGLLY    
+  endif
   
   ! handles movies and shakemaps
-  if (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
+  if( EXTERNAL_MESH_MOVIE_SURFACE .or. &
+     EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
+     MOVIE_SURFACE .or. &
+     CREATE_SHAKEMAP ) then
     call setup_movie_meshes()
   endif
+
+  if (MOVIE_VOLUME) then
+    allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    div(:,:,:,:) = 0._CUSTOM_REAL
+    curl_x(:,:,:,:) = 0._CUSTOM_REAL
+    curl_y(:,:,:,:) = 0._CUSTOM_REAL
+    curl_z(:,:,:,:) = 0._CUSTOM_REAL
+  endif
+
+
+! obsolete...
+! allocate files to save movies and shaking map
+!  if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
+!    if (USE_HIGHRES_FOR_MOVIES) then
+!      !nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
+!      nmovie_points = NGLLX * NGLLY * num_free_surface_faces
+!    else
+!      !nmovie_points = NGNOD2D * NSPEC2D_TOP
+!      nmovie_points = NGNOD2D * num_free_surface_faces
+!    endif
+!    allocate(store_val_x(nmovie_points))
+!    allocate(store_val_y(nmovie_points))
+!    allocate(store_val_z(nmovie_points))
+!    allocate(store_val_ux(nmovie_points))
+!    allocate(store_val_uy(nmovie_points))
+!    allocate(store_val_uz(nmovie_points))
+!    allocate(store_val_norm_displ(nmovie_points))
+!    allocate(store_val_norm_veloc(nmovie_points))
+!    allocate(store_val_norm_accel(nmovie_points))
+!
+!    allocate(store_val_x_all(nmovie_points,0:NPROC-1))
+!    allocate(store_val_y_all(nmovie_points,0:NPROC-1))
+!    allocate(store_val_z_all(nmovie_points,0:NPROC-1))
+!    allocate(store_val_ux_all(nmovie_points,0:NPROC-1))
+!    allocate(store_val_uy_all(nmovie_points,0:NPROC-1))
+!    allocate(store_val_uz_all(nmovie_points,0:NPROC-1))
+!
+!    ! to compute max of norm for shaking map
+!    store_val_norm_displ(:) = -1.
+!    store_val_norm_veloc(:) = -1.
+!    store_val_norm_accel(:) = -1.
+!  endif
+  
 
 !!!! NL NL REGOLITH : runs at cines for asteroid simulations. Elements in contact with surface are part of the regolith layer.
 !!$  allocate(ispec_is_regolith(NSPEC_AB))

@@ -14,6 +14,11 @@ module part_decompose_mesh_SCOTCH
 ! very large and very small values
   double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
 
+! acoustic-elastic load balancing:
+! assumes that elastic at least ~6 times more expensive than acoustic
+  integer, parameter :: ACOUSTIC_LOAD = 1
+  integer, parameter :: ELASTIC_LOAD = 4
+
 !  include './constants_decompose_mesh_SCOTCH.h'
 
 contains
@@ -21,8 +26,10 @@ contains
   !-----------------------------------------------
   ! Creating dual graph (adjacency is defined by 'ncommonnodes' between two elements).
   !-----------------------------------------------
-  subroutine mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, &
- nnodes_elmnts, nodes_elmnts, max_neighbour, ncommonnodes)
+  subroutine mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts,&
+                        xadj, adjncy, &
+                        nnodes_elmnts, nodes_elmnts, &
+                        max_neighbour, ncommonnodes)
 
 !    include './constants_decompose_mesh_SCOTCH.h'
 
@@ -56,7 +63,6 @@ contains
     do i = 0, esize*nelmnts-1
        nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/esize
        nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
-
     end do
 
     ! checking which elements are neighbours ('ncommonnodes' criteria)
@@ -242,14 +248,14 @@ contains
   ! Two adjacent elements in distinct partitions make an entry in array tab_interfaces :
   ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
   ! 5/ second node, if relevant.
-  ! No interface between acoustic and elastic elements.
+  
+  ! interface ignores acoustic and elastic elements 
+  
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
    subroutine Construct_interfaces(nelmnts, sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
-                              nb_materials, cs_material, num_material,nparts)
-
-!     include './constants_decompose_mesh_SCOTCH.h'
+                              nparts)
 
     integer(long), intent(in)  :: nelmnts, sup_neighbour
     integer, dimension(0:nelmnts-1), intent(in)  :: part
@@ -258,16 +264,15 @@ contains
     integer, dimension(0:sup_neighbour*nelmnts-1), intent(in)  :: adjncy
     integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
     integer, intent(out)  :: ninterfaces
-    integer, dimension(1:nelmnts), intent(in)  :: num_material
-    double precision, dimension(1:nb_materials), intent(in)  :: cs_material
-    integer, intent(in)  :: nb_materials,nparts
+    
+    integer, intent(in)  :: nparts
 
-
+    ! local parameters  
     integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
          num_node, num_node_bis
     integer  :: i, j
-    logical  :: is_acoustic_el, is_acoustic_el_adj
 
+    ! counts number of interfaces between partitions
     ninterfaces = 0
     do  i = 0, nparts-1
        do j = i+1, nparts-1
@@ -281,10 +286,133 @@ contains
     num_interface = 0
     num_edge = 0
 
+! determines acoustic/elastic elements based upon given vs velocities
+! and counts same elements for each interface
+    do num_part = 0, nparts-1
+       do num_part_bis = num_part+1, nparts-1
+          do el = 0, nelmnts-1
+             if ( part(el) == num_part ) then                
+                ! looks at all neighbor elements 
+                do el_adj = xadj(el), xadj(el+1)-1
+                   ! adds element if neighbor element lies in next partition
+                   if ( part(adjncy(el_adj)) == num_part_bis ) then
+                      num_edge = num_edge + 1
+                   end if
+
+                end do
+             end if
+          end do
+          ! stores number of elements at interface
+          tab_size_interfaces(num_interface+1) = tab_size_interfaces(num_interface) + num_edge
+          num_edge = 0
+          num_interface = num_interface + 1
+
+       end do
+    end do
+
+
+! stores element indices for elements from above search at each interface
+    num_interface = 0
+    num_edge = 0
+
+    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)))
+    tab_interfaces(:) = 0
+
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
           do el = 0, nelmnts-1
              if ( part(el) == num_part ) then
+                do el_adj = xadj(el), xadj(el+1)-1
+                   ! adds element if in adjacent partition                    
+                   if ( part(adjncy(el_adj)) == num_part_bis ) then
+                      tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
+                      tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
+                      ncommon_nodes = 0
+                      do num_node = 0, esize-1
+                         do num_node_bis = 0, esize-1
+                            if ( elmnts(el*esize+num_node) == elmnts(adjncy(el_adj)*esize+num_node_bis) ) then
+                               tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+3+ncommon_nodes) &
+                                    = elmnts(el*esize+num_node)
+                               ncommon_nodes = ncommon_nodes + 1
+                            end if
+                         end do
+                      end do
+                      if ( ncommon_nodes > 0 ) then
+                         tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+2) = ncommon_nodes
+                      else
+                         print *, "Error while building interfaces!", ncommon_nodes
+                      end if
+                      num_edge = num_edge + 1
+                   end if
+                end do
+             end if
+
+          end do
+          num_edge = 0
+          num_interface = num_interface + 1
+       end do
+    end do
+
+  end subroutine Construct_interfaces
+
+
+  !--------------------------------------------------
+  ! Construct interfaces between each partitions.
+  ! Two adjacent elements in distinct partitions make an entry in array tab_interfaces :
+  ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
+  ! 5/ second node, if relevant.
+  
+  ! No interface between acoustic and elastic elements.
+  
+  ! Elements with undefined material are considered as elastic elements.
+  !--------------------------------------------------
+   subroutine Construct_interfaces_no_acoustic_elastic_separation(nelmnts, &
+                              sup_neighbour, part, elmnts, xadj, adjncy, &
+                              tab_interfaces, tab_size_interfaces, ninterfaces, &
+                              nb_materials, cs_material, num_material,nparts)
+
+!     include './constants_decompose_mesh_SCOTCH.h'
+
+    integer(long), intent(in)  :: nelmnts, sup_neighbour
+    integer, dimension(0:nelmnts-1), intent(in)  :: part
+    integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
+    integer, dimension(0:nelmnts), intent(in)  :: xadj
+    integer, dimension(0:sup_neighbour*nelmnts-1), intent(in)  :: adjncy
+    integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
+    integer, intent(out)  :: ninterfaces
+    integer, dimension(1:nelmnts), intent(in)  :: num_material
+    ! vs velocities
+    double precision, dimension(1:nb_materials), intent(in)  :: cs_material
+    
+    integer, intent(in)  :: nb_materials,nparts
+
+    ! local parameters  
+    integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
+         num_node, num_node_bis
+    integer  :: i, j
+    logical  :: is_acoustic_el, is_acoustic_el_adj
+
+    ! counts number of interfaces between partitions
+    ninterfaces = 0
+    do  i = 0, nparts-1
+       do j = i+1, nparts-1
+          ninterfaces = ninterfaces + 1
+       end do
+    end do
+
+    allocate(tab_size_interfaces(0:ninterfaces))
+    tab_size_interfaces(:) = 0
+
+    num_interface = 0
+    num_edge = 0
+
+! determines acoustic/elastic elements based upon given vs velocities
+! and counts same elements for each interface
+    do num_part = 0, nparts-1
+       do num_part_bis = num_part+1, nparts-1
+          do el = 0, nelmnts-1
+             if ( part(el) == num_part ) then
+                ! determines whether element is acoustic or not
                 if(num_material(el+1) > 0) then
                    if ( cs_material(num_material(el+1)) < TINYVAL) then
                       is_acoustic_el = .true.
@@ -294,7 +422,9 @@ contains
                 else
                    is_acoustic_el = .false.
                 end if
+                ! looks at all neighbor elements 
                 do el_adj = xadj(el), xadj(el+1)-1
+                   ! determines whether neighbor element is acoustic or not
                    if(num_material(adjncy(el_adj)+1) > 0) then
                       if ( cs_material(num_material(adjncy(el_adj)+1)) < TINYVAL) then
                          is_acoustic_el_adj = .true.
@@ -304,13 +434,14 @@ contains
                    else
                       is_acoustic_el_adj = .false.
                    end if
+                   ! adds element if neighbor element has same material acoustic/not-acoustic and lies in next partition
                    if ( (part(adjncy(el_adj)) == num_part_bis) .and. (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
                       num_edge = num_edge + 1
-
                    end if
                 end do
              end if
           end do
+          ! stores number of elements at interface
           tab_size_interfaces(num_interface+1) = tab_size_interfaces(num_interface) + num_edge
           num_edge = 0
           num_interface = num_interface + 1
@@ -318,6 +449,8 @@ contains
        end do
     end do
 
+
+! stores element indices for elements from above search at each interface
     num_interface = 0
     num_edge = 0
 
@@ -376,8 +509,7 @@ contains
        end do
     end do
 
-
-  end subroutine Construct_interfaces
+  end subroutine Construct_interfaces_no_acoustic_elastic_separation
 
 
 
@@ -399,8 +531,8 @@ contains
     integer  :: i, j
 
     if ( num_phase == 1 ) then
+    ! counts number of points in partition
        npgeo = 0
-
        do i = 0, nnodes-1
           do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
              if ( glob2loc_nodes_parts(j) == iproc ) then
@@ -411,6 +543,7 @@ contains
           end do
        end do
     else
+    ! writes out point coordinates
        do i = 0, nnodes-1
           do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
              if ( glob2loc_nodes_parts(j) == iproc ) then
@@ -430,18 +563,20 @@ contains
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: count_def_mat,count_undef_mat
-    double precision, dimension(5,count_def_mat)  :: mat_prop
-    character (len=30), dimension(5,count_undef_mat) :: undef_mat_prop
+    double precision, dimension(6,count_def_mat)  :: mat_prop
+    character (len=30), dimension(6,count_undef_mat) :: undef_mat_prop
     integer  :: i
 
     write(IIN_database,*)  count_def_mat,count_undef_mat 
     do i = 1, count_def_mat
-      ! format:                          # rho                  # vp                    # vs                    # Q_flag             # 0     
-       write(IIN_database,*) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), mat_prop(4,i), mat_prop(5,i)
+      ! format:  #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id     
+       write(IIN_database,*) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), &
+                            mat_prop(4,i), mat_prop(5,i), mat_prop(6,i)
     end do
     do i = 1, count_undef_mat
-       write(IIN_database,*) trim(undef_mat_prop(1,i)),trim(undef_mat_prop(2,i)),trim(undef_mat_prop(3,i)), & 
-            trim(undef_mat_prop(4,i)),trim(undef_mat_prop(5,i))
+       write(IIN_database,*) trim(undef_mat_prop(1,i)),trim(undef_mat_prop(2,i)), &
+                            trim(undef_mat_prop(3,i)),trim(undef_mat_prop(4,i)), &
+                            trim(undef_mat_prop(5,i)),trim(undef_mat_prop(6,i))
     end do
 
   end subroutine  write_material_properties_database
@@ -723,16 +858,16 @@ contains
     integer, dimension(0:ngnod-1)  :: loc_nodes
 
     if ( num_phase == 1 ) then
+    ! counts number of spectral elements in this partition
        nspec = 0
-
        do i = 0, nelmnts-1
           if ( part(i) == iproc ) then
              nspec = nspec + 1
-
           end if
        end do
 
     else
+    ! writes out element corner indices
        do i = 0, nelmnts-1
           if ( part(i) == iproc ) then
 
@@ -741,7 +876,6 @@ contains
 
                    if ( glob2loc_nodes_parts(k) == iproc ) then
                       loc_nodes(j) = glob2loc_nodes(k)
-
                    end if
                 end do
 
@@ -785,18 +919,24 @@ contains
     integer  :: i, j, k, l
     integer  :: num_interface
 
+    integer  :: count_faces
+
     num_interface = 0
 
     if ( num_phase == 1 ) then
-
+    ! counts number of interfaces to neighbouring partitions
        my_interfaces(:) = 0
        my_nb_interfaces(:) = 0
-
-       do i = 0, nparts-1
+      
+       ! double loops over all partitions
+       do i = 0, nparts-1       
           do j = i+1, nparts-1
+             ! only counts if specified partition (iproc) appears and interface elements increment
              if ( (tab_size_interfaces(num_interface) < tab_size_interfaces(num_interface+1)) .and. &
                   (i == iproc .or. j == iproc) ) then
+                ! sets flag  
                 my_interfaces(num_interface) = 1
+                ! sets number of elements on interface
                 my_nb_interfaces(num_interface) = tab_size_interfaces(num_interface+1) - tab_size_interfaces(num_interface)
              end if
              num_interface = num_interface + 1
@@ -805,7 +945,7 @@ contains
        my_ninterface = sum(my_interfaces(:))
 
     else
-
+    ! writes out MPI interface elements
       do i = 0, nparts-1
          do j = i+1, nparts-1
             if ( my_interfaces(num_interface) == 1 ) then
@@ -814,7 +954,8 @@ contains
                else
                   write(IIN_database,*) i, my_nb_interfaces(num_interface)
                end if
-
+                
+               count_faces = 0
                do k = tab_size_interfaces(num_interface), tab_size_interfaces(num_interface+1)-1
                   if ( i == iproc ) then
                      local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+0))+1
@@ -852,6 +993,7 @@ contains
 !!$                  end if
                   select case (tab_interfaces(k*7+2))
                   case (1)
+                     ! single point element
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
                         if ( glob2loc_nodes_parts(l) == iproc ) then
@@ -860,6 +1002,7 @@ contains
                      end do
                      write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), local_nodes(1), -1, -1, -1
                   case (2)
+                     ! edge element
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
                         if ( glob2loc_nodes_parts(l) == iproc ) then
@@ -874,6 +1017,8 @@ contains
                      end do
                      write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), local_nodes(1), local_nodes(2), -1, -1
                   case (4)
+                     ! face element
+                     count_faces = count_faces + 1
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
                           glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
                         if ( glob2loc_nodes_parts(l) == iproc ) then
@@ -904,7 +1049,11 @@ contains
                      print *, "error in write_interfaces_database!", tab_interfaces(k*7+2), iproc
                   end select
                end do
-
+          
+               ! outputs infos
+               !print*,'  partition MPI interface:',iproc,num_interface
+               !print*,'    element faces: ',count_faces
+  
             end if
 
             num_interface = num_interface + 1
@@ -913,7 +1062,175 @@ contains
 
    end if
 
- end subroutine write_interfaces_database
+  end subroutine write_interfaces_database
+
+  !--------------------------------------------------
+  ! loading : sets weights for acoustic/elastic elements to account for different 
+  !               expensive calculations in specfem simulations
+  !--------------------------------------------------
+
+  subroutine acoustic_elastic_load (elmnts_load,nelmnts,nb_materials,num_material,mat_prop)
+
+    implicit none
+
+    integer(long),intent(in) :: nelmnts
+    integer, intent(in)  :: nb_materials
+    
+    ! load weights
+    integer,dimension(1:nelmnts),intent(out) :: elmnts_load
+
+    ! materials  
+    integer, dimension(1:nelmnts), intent(in)  :: num_material
+    double precision, dimension(6,nb_materials),intent(in)  :: mat_prop
+    
+    ! local parameters
+    logical, dimension(nb_materials)  :: is_acoustic, is_elastic    
+    integer  :: i,el
+    
+    ! sets acoustic/elastic flags for materials
+    is_acoustic(:) = .false.
+    is_elastic(:) = .false.
+    do i = 1, nb_materials
+       if (mat_prop(6,i) == 1 ) then
+          is_acoustic(i) = .true.
+       endif
+       if (mat_prop(6,i) == 2 ) then
+          is_elastic(i) = .true.
+       endif
+    enddo
+
+    ! sets weights for elements
+    do el = 0, nelmnts-1
+      ! acoustic element (cheap)
+      if ( is_acoustic(num_material(el+1)) ) then
+        elmnts_load(el+1) = elmnts_load(el+1)*ACOUSTIC_LOAD
+      endif
+      ! elastic element (expensive)
+      if ( is_elastic(num_material(el+1)) ) then
+        elmnts_load(el+1) = elmnts_load(el+1)*ELASTIC_LOAD
+      endif
+    enddo
+
+  end subroutine acoustic_elastic_load
+
+
+  !--------------------------------------------------
+  ! Repartitioning : two coupled acoustic/elastic elements are transfered to the same partition
+  !--------------------------------------------------
+
+  subroutine acoustic_elastic_repartitioning (nelmnts, nnodes, elmnts, &
+                        nb_materials, num_material, mat_prop, &
+                        sup_neighbour, nsize, &
+                        nproc, part, nfaces_coupled, faces_coupled)
+
+    implicit none
+
+    integer(long),intent(in) :: nelmnts
+    integer, intent(in)  :: nnodes, nproc, nb_materials
+    integer(long), intent(in) :: sup_neighbour,nsize
+    
+    !double precision, dimension(nb_materials), intent(in)  :: phi_material
+    integer, dimension(1:nelmnts), intent(in)  :: num_material
+
+    double precision, dimension(6,nb_materials),intent(in)  :: mat_prop
+    
+    !integer, dimension(:), pointer  :: elmnts
+    !integer, dimension(:), pointer :: part
+    integer, dimension(0:nelmnts-1)  :: part
+    integer, dimension(0:esize*nelmnts-1)  :: elmnts
+    
+    integer, intent(out)  :: nfaces_coupled
+    integer, dimension(:,:), pointer  :: faces_coupled
+
+
+    logical, dimension(nb_materials)  :: is_acoustic, is_elastic
+    
+    ! neighbors
+    !integer, dimension(:), pointer  :: xadj
+    !integer, dimension(:), pointer  :: adjncy
+    !integer, dimension(:), pointer  :: nodes_elmnts
+    !integer, dimension(:), pointer  :: nnodes_elmnts
+    integer, dimension(:), allocatable  :: xadj
+    integer, dimension(:), allocatable  :: adjncy
+    integer, dimension(:), allocatable  :: nnodes_elmnts
+    integer, dimension(:), allocatable  :: nodes_elmnts
+    integer  :: max_neighbour        
+
+    integer  :: i, iface
+    integer  :: el, el_adj
+    logical  :: is_repartitioned
+
+    ! sets acoustic/elastic flags for materials
+    is_acoustic(:) = .false.
+    is_elastic(:) = .false.
+    do i = 1, nb_materials
+       if (mat_prop(6,i) == 1 ) then
+          is_acoustic(i) = .true.
+       endif
+       if (mat_prop(6,i) == 2 ) then
+          is_elastic(i) = .true.
+       endif
+    enddo
+
+    ! gets neighbors by 4 common nodes (face)
+    allocate(xadj(1:nelmnts+1))
+    allocate(adjncy(1:sup_neighbour*nelmnts))
+    allocate(nnodes_elmnts(1:nnodes))
+    allocate(nodes_elmnts(1:nsize*nnodes))
+    !call mesh2dual_ncommonnodes(nelmnts, nnodes, elmnts, xadj, adjncy, nnodes_elmnts, nodes_elmnts,4)
+    call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
+         nodes_elmnts, max_neighbour, 4)
+
+    ! counts coupled elements
+    nfaces_coupled = 0
+    do el = 0, nelmnts-1
+       if ( is_acoustic(num_material(el+1)) ) then
+          do el_adj = xadj(el), xadj(el+1) - 1
+             if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
+                nfaces_coupled = nfaces_coupled + 1
+             endif
+          enddo
+       endif
+    enddo
+
+    ! coupled elements
+    allocate(faces_coupled(2,nfaces_coupled))
+
+    ! stores elements indices
+    nfaces_coupled = 0
+    do el = 0, nelmnts-1
+       if ( is_acoustic(num_material(el+1)) ) then
+          do el_adj = xadj(el), xadj(el+1) - 1
+             if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
+                nfaces_coupled = nfaces_coupled + 1
+                faces_coupled(1,nfaces_coupled) = el
+                faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
+             endif
+          enddo
+       endif
+    enddo
+
+    ! puts coupled elements into same partition
+    do i = 1, nfaces_coupled*nproc
+       is_repartitioned = .false.
+       do iface = 1, nfaces_coupled
+          if ( part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface)) ) then
+             if ( part(faces_coupled(1,iface)) < part(faces_coupled(2,iface)) ) then
+                part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
+             else
+                part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
+             endif
+             is_repartitioned = .true.
+          endif
+       enddo
+       if ( .not. is_repartitioned ) then
+          exit
+       endif
+    enddo
+
+ end subroutine acoustic_elastic_repartitioning
+
+
 
 end module part_decompose_mesh_SCOTCH
 
