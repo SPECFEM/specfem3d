@@ -105,9 +105,9 @@ subroutine compute_forces_with_Deville( phase_is_inner ,NSPEC_AB,NGLOB_AB, &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
 ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=4), dimension(NGLLX,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
-  real(kind=4), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
-  real(kind=4), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
 
   equivalence(dummyx_loc,B1_m1_m2_5points)
   equivalence(dummyy_loc,B2_m1_m2_5points)
@@ -119,9 +119,9 @@ subroutine compute_forces_with_Deville( phase_is_inner ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_5points)
   equivalence(newtempz1,E3_m1_m2_5points)
 
-  real(kind=4), dimension(m2,NGLLX) :: A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
-  real(kind=4), dimension(m2,m1) :: C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
-  real(kind=4), dimension(m2,m1) :: E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
+  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_5points)
   equivalence(dummyy_loc,A2_mxm_m2_m1_5points)
