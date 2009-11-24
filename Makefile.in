@@ -170,12 +170,12 @@ LIBSPECFEM = $O/libspecfem.a
 
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
+@COND_PYRE_FALSE@	generate_databases \
+@COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	check_buffers_2D \
 @COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
 @COND_PYRE_FALSE@	create_movie_shakemap_AVS_DX_GMT \
-@COND_PYRE_FALSE@	generate_databases \
-@COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 default: $(DEFAULT)

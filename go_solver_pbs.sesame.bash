@@ -6,13 +6,10 @@
 #PBS -j oe
 #PBS -o OUTPUT_FILES/job.o
 
-## 25 CPUs ( 1 + 3*8 ), walltime 10 hours
-##PBS -l nodes=3:ppn=8+1:ppn=1,walltime=10:00:00
-
 ## 4 CPUs ( 4  ), walltime 1 hour
 #PBS -l nodes=1:ppn=4,walltime=1:00:00
 
-cd /home/cmorency/SPECFEM3D_SESAME/
+cd $PBS_O_WORKDIR
 
 if [ -z $USER ]; then
 	echo "could not run go_solver_...bash as no USER env is set"
