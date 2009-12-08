@@ -1,6 +1,6 @@
 #!python
 #############################################################################
-# cubit2specfem3d.py                                                           #
+# cubit2specfem3d.py                                                        #
 # this file is part of GEOCUBIT                                             #
 #                                                                           #
 # Created by Emanuele Casarotti                                             #
@@ -389,7 +389,7 @@ class mesh(object,mesh_tools):
                   imaterial = 3
                 else :
                   imaterial = 0
-                  
+                #  
                 nattrib=cubit.get_block_attribute_count(block)
                 if nattrib != 0:
                     # material flag: 
