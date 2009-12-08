@@ -848,7 +848,7 @@ contains
     integer, dimension(0:nelmnts-1)  :: part
     integer, dimension(0:esize*nelmnts-1)  :: elmnts
     integer, dimension(:), pointer :: glob2loc_elmnts
-    integer, dimension(2,nspec)  :: num_modele
+    integer, dimension(2,nelmnts)  :: num_modele
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
