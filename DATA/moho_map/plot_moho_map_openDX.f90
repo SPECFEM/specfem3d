@@ -75,7 +75,7 @@
   write(3,*) 'component "data" value 3'
   write(3,*) 'end'
 
-210 format(i6,1x,i6,1x,i6,1x,i6)
+210 format(i7,1x,i7,1x,i7,1x,i7)
 
   close(3)
 
