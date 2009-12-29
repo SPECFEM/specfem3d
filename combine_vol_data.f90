@@ -39,15 +39,15 @@
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
   integer np, ne, npp, nee, npoint, nelement, njunk, njunk2, n1, n2, n3, n4, n5, n6, n7, n8
-  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
   integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8, iglob
-  logical mask_ibool(NGLOB_AB)
-  real(kind=CUSTOM_REAL) data(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
-  real x, y, z, dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  character(len=150) :: sline, arg(5), filename, indir, outdir, prname
+  logical mask_ibool(NGLOB_AB_VAL)
+  real(kind=CUSTOM_REAL) data(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB_VAL) :: xstore, ystore, zstore
+  real x, y, z, dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL)
+  character(len=150) :: sline, arg(6), filename, indir, outdir, prname
   character(len=150) :: mesh_file, local_point_file, local_element_file, local_file, local_data_file, local_ibool_file
-  integer :: num_ibool(NGLOB_AB)
+  integer :: num_ibool(NGLOB_AB_VAL)
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
 
@@ -56,7 +56,7 @@
   print *
 
   do i = 1, 6
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
       print *, 'Usage: xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
       print *, '    or xcombine_data slice_list filename input_dir output_dir high/low-resolution'
@@ -117,8 +117,8 @@
   mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
   call open_file(trim(mesh_file)//char(0))
 
-  nspec = NSPEC_AB
-  nglob = NGLOB_AB
+  nspec = NSPEC_AB_VAL
+  nglob = NGLOB_AB_VAL
 
   np = 0
 

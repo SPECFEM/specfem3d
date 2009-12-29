@@ -373,7 +373,7 @@
 
     ispec_selected_source_all(:,:) = -1
 
-  call gather_all_i(ispec_selected_source(ns:ne),ng,ispec_selected_source_all(1:ng,:),ng)
+  call gather_all_i(ispec_selected_source(ns:ne),ng,ispec_selected_source_all(1:ng,:),ng,NPROC)
 
   call gather_all_dp(xi_source(ns:ne),ng,xi_source_all(1:ng,:),ng,NPROC)
   call gather_all_dp(eta_source(ns:ne),ng,eta_source_all(1:ng,:),ng,NPROC)
