@@ -2,9 +2,7 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
-- Pieyre should add C-PML following Elise Delavaud's implementation
-
-- etudier comment lire un maillage CUBIT stocké au format natif de CUBIT (Exodus, basé sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si nécessaire d'après Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
+- Pieyre Le Loher should add C-PML following Elise Delavaud's implementation
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
@@ -13,6 +11,7 @@ To-do list for SPECFEM3D, by Dimitri Komatitsch
 
 Things to add later to the manual:
 ----------------------------------
+
 - Add the description of using basin_slice_number.pl and basin_normal.pl to
   get the slice numbers to combine for a specific source/receiver pair 
   (LQY, Jan 9, 2008)

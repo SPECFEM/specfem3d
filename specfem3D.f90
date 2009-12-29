@@ -1570,6 +1570,10 @@
       endif
     endif
 
+!---------------------------------------------------------------------------------------------------
+! beginning of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
+!---------------------------------------------------------------------------------------------------
+
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
@@ -1586,31 +1590,12 @@
           tempz2l = 0.
           tempz3l = 0.
 
-          if (SIMULATION_TYPE == 3) then
-            b_tempx1l = 0.
-            b_tempx2l = 0.
-            b_tempx3l = 0.
-
-            b_tempy1l = 0.
-            b_tempy2l = 0.
-            b_tempy3l = 0.
-
-            b_tempz1l = 0.
-            b_tempz2l = 0.
-            b_tempz3l = 0.
-          endif
-
           do l=1,NGLLX
             hp1 = hprime_xx(i,l)
             iglob = ibool(l,j,k,ispec)
             tempx1l = tempx1l + displ(1,iglob)*hp1
             tempy1l = tempy1l + displ(2,iglob)*hp1
             tempz1l = tempz1l + displ(3,iglob)*hp1
-            if (SIMULATION_TYPE == 3) then
-              b_tempx1l = b_tempx1l + b_displ(1,iglob)*hp1
-              b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
-              b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
-            endif
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
@@ -1619,11 +1604,6 @@
             tempx2l = tempx2l + displ(1,iglob)*hp2
             tempy2l = tempy2l + displ(2,iglob)*hp2
             tempz2l = tempz2l + displ(3,iglob)*hp2
-            if (SIMULATION_TYPE == 3) then
-              b_tempx2l = b_tempx2l + b_displ(1,iglob)*hp2
-              b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
-              b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
-            endif
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
@@ -1632,11 +1612,6 @@
             tempx3l = tempx3l + displ(1,iglob)*hp3
             tempy3l = tempy3l + displ(2,iglob)*hp3
             tempz3l = tempz3l + displ(3,iglob)*hp3
-            if (SIMULATION_TYPE == 3) then
-              b_tempx3l = b_tempx3l + b_displ(1,iglob)*hp3
-              b_tempy3l = b_tempy3l + b_displ(2,iglob)*hp3
-              b_tempz3l = b_tempz3l + b_displ(3,iglob)*hp3
-            endif
           enddo
 
 !         get derivatives of ux, uy and uz with respect to x, y and z
@@ -1663,31 +1638,6 @@
           duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
           duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-! save strain on the Moho boundary
-          if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-            if (is_moho_top(ispec)) then
-              dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
-              dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
-              dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
-              dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
-              dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
-              dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
-              dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
-              dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
-              dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
-            else if (is_moho_bot(ispec)) then
-              dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
-              dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
-              dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
-              dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
-              dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
-              dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
-              dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
-              dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
-              dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
-            endif
-          endif
-
 ! precompute some sums to save CPU time
           duxdxl_plus_duydyl = duxdxl + duydyl
           duxdxl_plus_duzdzl = duxdxl + duzdzl
@@ -1695,72 +1645,6 @@
           duxdyl_plus_duydxl = duxdyl + duydxl
           duzdxl_plus_duxdzl = duzdxl + duxdzl
           duzdyl_plus_duydzl = duzdyl + duydzl
-
-          if (SIMULATION_TYPE == 3) then
-            dsxx = duxdxl
-            dsxy = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
-            dsxz = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
-            dsyy = duydyl
-            dsyz = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
-            dszz = duzdzl
-
-            b_duxdxl = xixl*b_tempx1l + etaxl*b_tempx2l + gammaxl*b_tempx3l
-            b_duxdyl = xiyl*b_tempx1l + etayl*b_tempx2l + gammayl*b_tempx3l
-            b_duxdzl = xizl*b_tempx1l + etazl*b_tempx2l + gammazl*b_tempx3l
-
-            b_duydxl = xixl*b_tempy1l + etaxl*b_tempy2l + gammaxl*b_tempy3l
-            b_duydyl = xiyl*b_tempy1l + etayl*b_tempy2l + gammayl*b_tempy3l
-            b_duydzl = xizl*b_tempy1l + etazl*b_tempy2l + gammazl*b_tempy3l
-
-            b_duzdxl = xixl*b_tempz1l + etaxl*b_tempz2l + gammaxl*b_tempz3l
-            b_duzdyl = xiyl*b_tempz1l + etayl*b_tempz2l + gammayl*b_tempz3l
-            b_duzdzl = xizl*b_tempz1l + etazl*b_tempz2l + gammazl*b_tempz3l
-
-            b_duxdxl_plus_duydyl = b_duxdxl + b_duydyl
-            b_duxdxl_plus_duzdzl = b_duxdxl + b_duzdzl
-            b_duydyl_plus_duzdzl = b_duydyl + b_duzdzl
-            b_duxdyl_plus_duydxl = b_duxdyl + b_duydxl
-            b_duzdxl_plus_duxdzl = b_duzdxl + b_duxdzl
-            b_duzdyl_plus_duydzl = b_duzdyl + b_duydzl
-
-            b_dsxx =  b_duxdxl
-            b_dsxy = 0.5_CUSTOM_REAL * b_duxdyl_plus_duydxl
-            b_dsxz = 0.5_CUSTOM_REAL * b_duzdxl_plus_duxdzl
-            b_dsyy =  b_duydyl
-            b_dsyz = 0.5_CUSTOM_REAL * b_duzdyl_plus_duydzl
-            b_dszz =  b_duzdzl
-
-            kappa_k = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
-            mu_k = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
-                  2 * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) - ONE_THIRD * kappa_k
-            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * kappa_k
-            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * deltat * mu_k
-
-            if (SAVE_MOHO_MESH) then
-              if (is_moho_top(ispec)) then
-                b_dsdx_top(1,1,i,j,k,ispec2D_moho_top) = b_duxdxl
-                b_dsdx_top(1,2,i,j,k,ispec2D_moho_top) = b_duxdyl
-                b_dsdx_top(1,3,i,j,k,ispec2D_moho_top) = b_duxdzl
-                b_dsdx_top(2,1,i,j,k,ispec2D_moho_top) = b_duydxl
-                b_dsdx_top(2,2,i,j,k,ispec2D_moho_top) = b_duydyl
-                b_dsdx_top(2,3,i,j,k,ispec2D_moho_top) = b_duydzl
-                b_dsdx_top(3,1,i,j,k,ispec2D_moho_top) = b_duzdxl
-                b_dsdx_top(3,2,i,j,k,ispec2D_moho_top) = b_duzdyl
-                b_dsdx_top(3,3,i,j,k,ispec2D_moho_top) = b_duzdzl
-              else if (is_moho_bot(ispec)) then
-                b_dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = b_duxdxl
-                b_dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = b_duxdyl
-                b_dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = b_duxdzl
-                b_dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = b_duydxl
-                b_dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = b_duydyl
-                b_dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = b_duydzl
-                b_dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = b_duzdxl
-                b_dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = b_duzdyl
-                b_dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = b_duzdzl
-              endif
-            endif
-
-          endif
 
 ! precompute terms for attenuation if needed
   if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
@@ -1772,15 +1656,6 @@
     epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
     epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
     epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
-
-   if (SIMULATION_TYPE == 3) then
-      b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
-      b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
-      b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
-      b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
-      b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
-      b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
-    endif
 
 ! distinguish attenuation factors
     if(flag_sediments(i,j,k,ispec)) then
@@ -1894,26 +1769,8 @@
        sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
             c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
 
-       if (SIMULATION_TYPE == 3) then
-         b_sigma_xx = c11*b_duxdxl + c16*b_duxdyl_plus_duydxl + c12*b_duydyl + &
-               c15*b_duzdxl_plus_duxdzl + c14*b_duzdyl_plus_duydzl + c13*b_duzdzl
-
-         b_sigma_yy = c12*b_duxdxl + c26*b_duxdyl_plus_duydxl + c22*b_duydyl + &
-               c25*b_duzdxl_plus_duxdzl + c24*b_duzdyl_plus_duydzl + c23*b_duzdzl
-
-         b_sigma_zz = c13*b_duxdxl + c36*b_duxdyl_plus_duydxl + c23*b_duydyl + &
-               c35*b_duzdxl_plus_duxdzl + c34*b_duzdyl_plus_duydzl + c33*b_duzdzl
-
-         b_sigma_xy = c16*b_duxdxl + c66*b_duxdyl_plus_duydxl + c26*b_duydyl + &
-               c56*b_duzdxl_plus_duxdzl + c46*b_duzdyl_plus_duydzl + c36*b_duzdzl
-
-         b_sigma_xz = c15*b_duxdxl + c56*b_duxdyl_plus_duydxl + c25*b_duydyl + &
-               c55*b_duzdxl_plus_duxdzl + c45*b_duzdyl_plus_duydzl + c35*b_duzdzl
-
-         b_sigma_yz = c14*b_duxdxl + c46*b_duxdyl_plus_duydxl + c24*b_duydyl + &
-               c45*b_duzdxl_plus_duxdzl + c44*b_duzdyl_plus_duydzl + c34*b_duzdzl
-       endif
     else
+
 ! For isotropic case
 ! use unrelaxed parameters if attenuation
        if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
@@ -1930,15 +1787,6 @@
        sigma_xz = mul*duzdxl_plus_duxdzl
        sigma_yz = mul*duzdyl_plus_duydzl
 
-       if (SIMULATION_TYPE == 3) then
-         b_sigma_xx = lambdalplus2mul*b_duxdxl + lambdal*b_duydyl_plus_duzdzl
-         b_sigma_yy = lambdalplus2mul*b_duydyl + lambdal*b_duxdxl_plus_duzdzl
-         b_sigma_zz = lambdalplus2mul*b_duzdzl + lambdal*b_duxdxl_plus_duydyl
-
-         b_sigma_xy = mul*b_duxdyl_plus_duydxl
-         b_sigma_xz = mul*b_duzdxl_plus_duxdzl
-         b_sigma_yz = mul*b_duzdyl_plus_duydzl
-       endif
     endif
 
 ! subtract memory variables if attenuation
@@ -1952,16 +1800,6 @@
         sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
         sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
         sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-        if (SIMULATION_TYPE == 3) then
-          b_R_xx_val = b_R_xx(i,j,k,ispec,i_sls)
-          b_R_yy_val = b_R_yy(i,j,k,ispec,i_sls)
-          b_sigma_xx = b_sigma_xx - b_R_xx_val
-          b_sigma_yy = b_sigma_yy - b_R_yy_val
-          b_sigma_zz = b_sigma_zz + b_R_xx_val + b_R_yy_val
-          b_sigma_xy = b_sigma_xy - b_R_xy(i,j,k,ispec,i_sls)
-          b_sigma_xz = b_sigma_xz - b_R_xz(i,j,k,ispec,i_sls)
-          b_sigma_yz = b_sigma_yz - b_R_yz(i,j,k,ispec,i_sls)
-        endif
       enddo
     endif
 
@@ -1978,7 +1816,337 @@
       tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
       tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
 
-      if (SIMULATION_TYPE == 3) then
+          enddo
+        enddo
+      enddo
+
+!---------------------------------------------------------------------------------------------
+! end of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
+!---------------------------------------------------------------------------------------------
+
+!----------------------------------------------------------------------------------------------------
+! beginning of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
+!----------------------------------------------------------------------------------------------------
+
+    if (SIMULATION_TYPE == 3) then
+
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+
+            b_tempx1l = 0.
+            b_tempx2l = 0.
+            b_tempx3l = 0.
+
+            b_tempy1l = 0.
+            b_tempy2l = 0.
+            b_tempy3l = 0.
+
+            b_tempz1l = 0.
+            b_tempz2l = 0.
+            b_tempz3l = 0.
+
+          do l=1,NGLLX
+            hp1 = hprime_xx(i,l)
+            iglob = ibool(l,j,k,ispec)
+            b_tempx1l = b_tempx1l + b_displ(1,iglob)*hp1
+            b_tempy1l = b_tempy1l + b_displ(2,iglob)*hp1
+            b_tempz1l = b_tempz1l + b_displ(3,iglob)*hp1
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+            hp2 = hprime_yy(j,l)
+            iglob = ibool(i,l,k,ispec)
+            b_tempx2l = b_tempx2l + b_displ(1,iglob)*hp2
+            b_tempy2l = b_tempy2l + b_displ(2,iglob)*hp2
+            b_tempz2l = b_tempz2l + b_displ(3,iglob)*hp2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+            hp3 = hprime_zz(k,l)
+            iglob = ibool(i,j,l,ispec)
+            b_tempx3l = b_tempx3l + b_displ(1,iglob)*hp3
+            b_tempy3l = b_tempy3l + b_displ(2,iglob)*hp3
+            b_tempz3l = b_tempz3l + b_displ(3,iglob)*hp3
+          enddo
+
+!         get derivatives of ux, uy and uz with respect to x, y and z
+          xixl = xix(i,j,k,ispec)
+          xiyl = xiy(i,j,k,ispec)
+          xizl = xiz(i,j,k,ispec)
+          etaxl = etax(i,j,k,ispec)
+          etayl = etay(i,j,k,ispec)
+          etazl = etaz(i,j,k,ispec)
+          gammaxl = gammax(i,j,k,ispec)
+          gammayl = gammay(i,j,k,ispec)
+          gammazl = gammaz(i,j,k,ispec)
+          jacobianl = jacobian(i,j,k,ispec)
+
+          duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+          duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+          duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+          duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+          duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+          duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+          duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+          duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+          duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
+! save strain on the Moho boundary
+          if (SAVE_MOHO_MESH) then
+            if (is_moho_top(ispec)) then
+              dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
+              dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
+              dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
+              dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
+              dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
+              dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
+              dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
+              dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
+              dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
+            else if (is_moho_bot(ispec)) then
+              dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
+              dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
+              dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
+              dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
+              dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
+              dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
+              dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
+              dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
+              dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
+            endif
+          endif
+
+! precompute some sums to save CPU time
+          duxdxl_plus_duydyl = duxdxl + duydyl
+          duxdxl_plus_duzdzl = duxdxl + duzdzl
+          duydyl_plus_duzdzl = duydyl + duzdzl
+          duxdyl_plus_duydxl = duxdyl + duydxl
+          duzdxl_plus_duxdzl = duzdxl + duxdzl
+          duzdyl_plus_duydzl = duzdyl + duydzl
+
+            dsxx = duxdxl
+            dsxy = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
+            dsxz = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
+            dsyy = duydyl
+            dsyz = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
+            dszz = duzdzl
+
+            b_duxdxl = xixl*b_tempx1l + etaxl*b_tempx2l + gammaxl*b_tempx3l
+            b_duxdyl = xiyl*b_tempx1l + etayl*b_tempx2l + gammayl*b_tempx3l
+            b_duxdzl = xizl*b_tempx1l + etazl*b_tempx2l + gammazl*b_tempx3l
+
+            b_duydxl = xixl*b_tempy1l + etaxl*b_tempy2l + gammaxl*b_tempy3l
+            b_duydyl = xiyl*b_tempy1l + etayl*b_tempy2l + gammayl*b_tempy3l
+            b_duydzl = xizl*b_tempy1l + etazl*b_tempy2l + gammazl*b_tempy3l
+
+            b_duzdxl = xixl*b_tempz1l + etaxl*b_tempz2l + gammaxl*b_tempz3l
+            b_duzdyl = xiyl*b_tempz1l + etayl*b_tempz2l + gammayl*b_tempz3l
+            b_duzdzl = xizl*b_tempz1l + etazl*b_tempz2l + gammazl*b_tempz3l
+
+            b_duxdxl_plus_duydyl = b_duxdxl + b_duydyl
+            b_duxdxl_plus_duzdzl = b_duxdxl + b_duzdzl
+            b_duydyl_plus_duzdzl = b_duydyl + b_duzdzl
+            b_duxdyl_plus_duydxl = b_duxdyl + b_duydxl
+            b_duzdxl_plus_duxdzl = b_duzdxl + b_duxdzl
+            b_duzdyl_plus_duydzl = b_duzdyl + b_duydzl
+
+            b_dsxx =  b_duxdxl
+            b_dsxy = 0.5_CUSTOM_REAL * b_duxdyl_plus_duydxl
+            b_dsxz = 0.5_CUSTOM_REAL * b_duzdxl_plus_duxdzl
+            b_dsyy =  b_duydyl
+            b_dsyz = 0.5_CUSTOM_REAL * b_duzdyl_plus_duydzl
+            b_dszz =  b_duzdzl
+
+            kappa_k = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
+            mu_k = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
+                  2 * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) - ONE_THIRD * kappa_k
+            kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * kappa_k
+            mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2 * deltat * mu_k
+
+            if (SAVE_MOHO_MESH) then
+              if (is_moho_top(ispec)) then
+                b_dsdx_top(1,1,i,j,k,ispec2D_moho_top) = b_duxdxl
+                b_dsdx_top(1,2,i,j,k,ispec2D_moho_top) = b_duxdyl
+                b_dsdx_top(1,3,i,j,k,ispec2D_moho_top) = b_duxdzl
+                b_dsdx_top(2,1,i,j,k,ispec2D_moho_top) = b_duydxl
+                b_dsdx_top(2,2,i,j,k,ispec2D_moho_top) = b_duydyl
+                b_dsdx_top(2,3,i,j,k,ispec2D_moho_top) = b_duydzl
+                b_dsdx_top(3,1,i,j,k,ispec2D_moho_top) = b_duzdxl
+                b_dsdx_top(3,2,i,j,k,ispec2D_moho_top) = b_duzdyl
+                b_dsdx_top(3,3,i,j,k,ispec2D_moho_top) = b_duzdzl
+              else if (is_moho_bot(ispec)) then
+                b_dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = b_duxdxl
+                b_dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = b_duxdyl
+                b_dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = b_duxdzl
+                b_dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = b_duydxl
+                b_dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = b_duydyl
+                b_dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = b_duydzl
+                b_dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = b_duzdxl
+                b_dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = b_duzdyl
+                b_dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = b_duzdzl
+              endif
+            endif
+
+! precompute terms for attenuation if needed
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+
+! compute deviatoric strain
+    b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
+    b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
+    b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
+    b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
+    b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
+    b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
+
+! distinguish attenuation factors
+    if(flag_sediments(i,j,k,ispec)) then
+
+! use constant attenuation of Q = 90
+! or use scaling rule similar to Olsen et al. (2003)
+     if(USE_OLSEN_ATTENUATION) then
+       vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+! use rule Q_mu = constant * v_s
+       Q_mu = OLSEN_ATTENUATION_RATIO * vs_val
+       int_Q_mu = 10 * nint(Q_mu / 10.)
+       if(int_Q_mu < 40) int_Q_mu = 40
+       if(int_Q_mu > 150) int_Q_mu = 150
+
+       if(int_Q_mu == 40) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_40
+       else if(int_Q_mu == 50) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_50
+       else if(int_Q_mu == 60) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_60
+       else if(int_Q_mu == 70) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_70
+       else if(int_Q_mu == 80) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_80
+       else if(int_Q_mu == 90) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+       else if(int_Q_mu == 100) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_100
+       else if(int_Q_mu == 110) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_110
+       else if(int_Q_mu == 120) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_120
+       else if(int_Q_mu == 130) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_130
+       else if(int_Q_mu == 140) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_140
+       else if(int_Q_mu == 150) then
+         iattenuation_sediments = IATTENUATION_SEDIMENTS_150
+       else
+         stop 'incorrect attenuation coefficient'
+       endif
+
+     else
+       iattenuation_sediments = IATTENUATION_SEDIMENTS_90
+     endif
+
+      iselected = iattenuation_sediments
+    else
+      iselected = IATTENUATION_BEDROCK
+    endif
+
+    one_minus_sum_beta_use = one_minus_sum_beta(iselected)
+    minus_sum_beta =  one_minus_sum_beta_use - 1.
+
+  endif
+
+    kappal = kappastore(i,j,k,ispec)
+    mul = mustore(i,j,k,ispec)
+
+! For fully anisotropic case
+    if(ANISOTROPY_VAL) then
+       c11 = c11store(i,j,k,ispec)
+       c12 = c12store(i,j,k,ispec)
+       c13 = c13store(i,j,k,ispec)
+       c14 = c14store(i,j,k,ispec)
+       c15 = c15store(i,j,k,ispec)
+       c16 = c16store(i,j,k,ispec)
+       c22 = c22store(i,j,k,ispec)
+       c23 = c23store(i,j,k,ispec)
+       c24 = c24store(i,j,k,ispec)
+       c25 = c25store(i,j,k,ispec)
+       c26 = c26store(i,j,k,ispec)
+       c33 = c33store(i,j,k,ispec)
+       c34 = c34store(i,j,k,ispec)
+       c35 = c35store(i,j,k,ispec)
+       c36 = c36store(i,j,k,ispec)
+       c44 = c44store(i,j,k,ispec)
+       c45 = c45store(i,j,k,ispec)
+       c46 = c46store(i,j,k,ispec)
+       c55 = c55store(i,j,k,ispec)
+       c56 = c56store(i,j,k,ispec)
+       c66 = c66store(i,j,k,ispec)
+       !if(ATTENUATION_VAL.and. not_fully_in_bedrock(ispec)) then
+       !   mul = c44
+       !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
+       !   c12 = c12 - TWO_THIRDS * minus_sum_beta * mul
+       !   c13 = c13 - TWO_THIRDS * minus_sum_beta * mul
+       !   c22 = c22 + FOUR_THIRDS * minus_sum_beta * mul
+       !   c23 = c23 - TWO_THIRDS * minus_sum_beta * mul
+       !   c33 = c33 + FOUR_THIRDS * minus_sum_beta * mul
+       !   c44 = c44 + minus_sum_beta * mul
+       !   c55 = c55 + minus_sum_beta * mul
+       !   c66 = c66 + minus_sum_beta * mul
+       !endif
+
+       b_sigma_xx = c11*b_duxdxl + c16*b_duxdyl_plus_duydxl + c12*b_duydyl + &
+             c15*b_duzdxl_plus_duxdzl + c14*b_duzdyl_plus_duydzl + c13*b_duzdzl
+
+       b_sigma_yy = c12*b_duxdxl + c26*b_duxdyl_plus_duydxl + c22*b_duydyl + &
+             c25*b_duzdxl_plus_duxdzl + c24*b_duzdyl_plus_duydzl + c23*b_duzdzl
+
+       b_sigma_zz = c13*b_duxdxl + c36*b_duxdyl_plus_duydxl + c23*b_duydyl + &
+             c35*b_duzdxl_plus_duxdzl + c34*b_duzdyl_plus_duydzl + c33*b_duzdzl
+
+       b_sigma_xy = c16*b_duxdxl + c66*b_duxdyl_plus_duydxl + c26*b_duydyl + &
+             c56*b_duzdxl_plus_duxdzl + c46*b_duzdyl_plus_duydzl + c36*b_duzdzl
+
+       b_sigma_xz = c15*b_duxdxl + c56*b_duxdyl_plus_duydxl + c25*b_duydyl + &
+             c55*b_duzdxl_plus_duxdzl + c45*b_duzdyl_plus_duydzl + c35*b_duzdzl
+
+       b_sigma_yz = c14*b_duxdxl + c46*b_duxdyl_plus_duydxl + c24*b_duydyl + &
+             c45*b_duzdxl_plus_duxdzl + c44*b_duzdyl_plus_duydzl + c34*b_duzdzl
+
+    else
+! For isotropic case
+! use unrelaxed parameters if attenuation
+       if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) mul = mul * one_minus_sum_beta_use
+
+       lambdalplus2mul = kappal + FOUR_THIRDS * mul
+       lambdal = lambdalplus2mul - 2.*mul
+
+! compute stress sigma
+       b_sigma_xx = lambdalplus2mul*b_duxdxl + lambdal*b_duydyl_plus_duzdzl
+       b_sigma_yy = lambdalplus2mul*b_duydyl + lambdal*b_duxdxl_plus_duzdzl
+       b_sigma_zz = lambdalplus2mul*b_duzdzl + lambdal*b_duxdxl_plus_duydyl
+
+       b_sigma_xy = mul*b_duxdyl_plus_duydxl
+       b_sigma_xz = mul*b_duzdxl_plus_duxdzl
+       b_sigma_yz = mul*b_duzdyl_plus_duydzl
+
+    endif
+
+! subtract memory variables if attenuation
+    if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+      do i_sls = 1,N_SLS
+        b_R_xx_val = b_R_xx(i,j,k,ispec,i_sls)
+        b_R_yy_val = b_R_yy(i,j,k,ispec,i_sls)
+        b_sigma_xx = b_sigma_xx - b_R_xx_val
+        b_sigma_yy = b_sigma_yy - b_R_yy_val
+        b_sigma_zz = b_sigma_zz + b_R_xx_val + b_R_yy_val
+        b_sigma_xy = b_sigma_xy - b_R_xy(i,j,k,ispec,i_sls)
+        b_sigma_xz = b_sigma_xz - b_R_xz(i,j,k,ispec,i_sls)
+        b_sigma_yz = b_sigma_yz - b_R_yz(i,j,k,ispec,i_sls)
+      enddo
+    endif
+
+! form dot product with test vector, symmetric form
         b_tempx1(i,j,k) = jacobianl * (b_sigma_xx*xixl + b_sigma_xy*xiyl + b_sigma_xz*xizl)
         b_tempy1(i,j,k) = jacobianl * (b_sigma_xy*xixl + b_sigma_yy*xiyl + b_sigma_yz*xizl)
         b_tempz1(i,j,k) = jacobianl * (b_sigma_xz*xixl + b_sigma_yz*xiyl + b_sigma_zz*xizl)
@@ -1990,11 +2158,20 @@
         b_tempx3(i,j,k) = jacobianl * (b_sigma_xx*gammaxl + b_sigma_xy*gammayl + b_sigma_xz*gammazl)
         b_tempy3(i,j,k) = jacobianl * (b_sigma_xy*gammaxl + b_sigma_yy*gammayl + b_sigma_yz*gammazl)
         b_tempz3(i,j,k) = jacobianl * (b_sigma_xz*gammaxl + b_sigma_yz*gammayl + b_sigma_zz*gammazl)
-      endif
 
           enddo
         enddo
       enddo
+
+      endif ! of test if SIMULATION_TYPE == 3
+
+!----------------------------------------------------------------------------------------------
+! end of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
+!----------------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------------------
+! beginning of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
+!---------------------------------------------------------------------------------------------------
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -2012,30 +2189,11 @@
           tempy3l = 0.
           tempz3l = 0.
 
-          if (SIMULATION_TYPE == 3) then
-            b_tempx1l = 0.
-            b_tempy1l = 0.
-            b_tempz1l = 0.
-
-            b_tempx2l = 0.
-            b_tempy2l = 0.
-            b_tempz2l = 0.
-
-            b_tempx3l = 0.
-            b_tempy3l = 0.
-            b_tempz3l = 0.
-          endif
-
           do l=1,NGLLX
             fac1 = hprimewgll_xx(l,i)
             tempx1l = tempx1l + tempx1(l,j,k)*fac1
             tempy1l = tempy1l + tempy1(l,j,k)*fac1
             tempz1l = tempz1l + tempz1(l,j,k)*fac1
-            if (SIMULATION_TYPE == 3) then
-              b_tempx1l = b_tempx1l + b_tempx1(l,j,k)*fac1
-              b_tempy1l = b_tempy1l + b_tempy1(l,j,k)*fac1
-              b_tempz1l = b_tempz1l + b_tempz1(l,j,k)*fac1
-            endif
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
@@ -2043,11 +2201,6 @@
             tempx2l = tempx2l + tempx2(i,l,k)*fac2
             tempy2l = tempy2l + tempy2(i,l,k)*fac2
             tempz2l = tempz2l + tempz2(i,l,k)*fac2
-            if (SIMULATION_TYPE == 3) then
-              b_tempx2l = b_tempx2l + b_tempx2(i,l,k)*fac2
-              b_tempy2l = b_tempy2l + b_tempy2(i,l,k)*fac2
-              b_tempz2l = b_tempz2l + b_tempz2(i,l,k)*fac2
-            endif
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
@@ -2055,11 +2208,6 @@
             tempx3l = tempx3l + tempx3(i,j,l)*fac3
             tempy3l = tempy3l + tempy3(i,j,l)*fac3
             tempz3l = tempz3l + tempz3(i,j,l)*fac3
-            if (SIMULATION_TYPE == 3) then
-              b_tempx3l = b_tempx3l + b_tempx3(i,j,l)*fac3
-              b_tempy3l = b_tempy3l + b_tempy3(i,j,l)*fac3
-              b_tempz3l = b_tempz3l + b_tempz3(i,j,l)*fac3
-            endif
           enddo
 
           fac1 = wgllwgll_yz(j,k)
@@ -2067,17 +2215,10 @@
           fac3 = wgllwgll_xy(i,j)
 
 ! sum contributions from each element to the global mesh
-
   iglob = ibool(i,j,k,ispec)
-
   accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
   accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
   accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
-  if (SIMULATION_TYPE == 3) then
-    b_accel(1,iglob) = b_accel(1,iglob) - (fac1*b_tempx1l + fac2*b_tempx2l + fac3*b_tempx3l)
-    b_accel(2,iglob) = b_accel(2,iglob) - (fac1*b_tempy1l + fac2*b_tempy2l + fac3*b_tempy3l)
-    b_accel(3,iglob) = b_accel(3,iglob) - (fac1*b_tempz1l + fac2*b_tempz2l + fac3*b_tempz3l)
-  endif
 
 ! update memory variables based upon the Runge-Kutta scheme
 
@@ -2126,7 +2267,80 @@
   Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
   R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
 
-  if (SIMULATION_TYPE == 3) then
+    enddo   ! end of loop on memory variables
+
+  endif  !  end attenuation
+
+        enddo
+      enddo
+    enddo
+
+!---------------------------------------------------------------------------------------------
+! end of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
+!---------------------------------------------------------------------------------------------
+
+!----------------------------------------------------------------------------------------------------
+! beginning of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
+!----------------------------------------------------------------------------------------------------
+
+    if (SIMULATION_TYPE == 3) then
+
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+
+          b_tempx1l = 0.
+          b_tempy1l = 0.
+          b_tempz1l = 0.
+
+          b_tempx2l = 0.
+          b_tempy2l = 0.
+          b_tempz2l = 0.
+
+          b_tempx3l = 0.
+          b_tempy3l = 0.
+          b_tempz3l = 0.
+
+          do l=1,NGLLX
+            fac1 = hprimewgll_xx(l,i)
+            b_tempx1l = b_tempx1l + b_tempx1(l,j,k)*fac1
+            b_tempy1l = b_tempy1l + b_tempy1(l,j,k)*fac1
+            b_tempz1l = b_tempz1l + b_tempz1(l,j,k)*fac1
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+            fac2 = hprimewgll_yy(l,j)
+            b_tempx2l = b_tempx2l + b_tempx2(i,l,k)*fac2
+            b_tempy2l = b_tempy2l + b_tempy2(i,l,k)*fac2
+            b_tempz2l = b_tempz2l + b_tempz2(i,l,k)*fac2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+            fac3 = hprimewgll_zz(l,k)
+            b_tempx3l = b_tempx3l + b_tempx3(i,j,l)*fac3
+            b_tempy3l = b_tempy3l + b_tempy3(i,j,l)*fac3
+            b_tempz3l = b_tempz3l + b_tempz3(i,j,l)*fac3
+          enddo
+
+          fac1 = wgllwgll_yz(j,k)
+          fac2 = wgllwgll_xz(i,k)
+          fac3 = wgllwgll_xy(i,j)
+
+! sum contributions from each element to the global mesh
+  iglob = ibool(i,j,k,ispec)
+  b_accel(1,iglob) = b_accel(1,iglob) - (fac1*b_tempx1l + fac2*b_tempx2l + fac3*b_tempx3l)
+  b_accel(2,iglob) = b_accel(2,iglob) - (fac1*b_tempy1l + fac2*b_tempy2l + fac3*b_tempy3l)
+  b_accel(3,iglob) = b_accel(3,iglob) - (fac1*b_tempz1l + fac2*b_tempz2l + fac3*b_tempz3l)
+
+! update memory variables based upon the Runge-Kutta scheme
+
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+
+! use Runge-Kutta scheme to march in time
+  do i_sls = 1,N_SLS
+
+! get coefficients for that standard linear solid
+    factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
     b_alphaval_loc = b_alphaval(iselected,i_sls)
     b_betaval_loc = b_betaval(iselected,i_sls)
     b_gammaval_loc = b_gammaval(iselected,i_sls)
@@ -2158,8 +2372,6 @@
     b_Snp1   = factor_loc * b_epsilondev_yz_loc(i,j,k)
     b_R_yz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yz(i,j,k,ispec,i_sls) + b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
 
-  endif
-
     enddo   ! end of loop on memory variables
 
   endif  !  end attenuation
@@ -2167,6 +2379,12 @@
         enddo
       enddo
     enddo
+
+    endif ! of test if SIMULATION_TYPE == 3
+
+!----------------------------------------------------------------------------------------------
+! end of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
+!----------------------------------------------------------------------------------------------
 
 ! save deviatoric strain for Runge-Kutta scheme
   if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
@@ -2184,7 +2402,7 @@
     endif
   endif
 
-  enddo   ! spectral element loop
+  enddo   ! of the spectral element loop
 
 ! add Stacey conditions
 
