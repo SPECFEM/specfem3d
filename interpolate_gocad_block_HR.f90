@@ -106,6 +106,9 @@
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI)
+! the vp_final we start from is the one we computed by interpolation in the HR block,
+! and as we get closer to the transition with the MR block we mix it with the value on the edge of MR;
+! it is not a linear interpolation between two fixed values but rather a linear variation of the amount of mixing
     vp_final = vp_ref_MR * (1. - gamma_interp_x) + vp_final * gamma_interp_x
 
 ! x = xmax
@@ -116,6 +119,9 @@
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
+! the vp_final we start from is the one we computed by interpolation in the HR block,
+! and as we get closer to the transition with the MR block we mix it with the value on the edge of MR;
+! it is not a linear interpolation between two fixed values but rather a linear variation of the amount of mixing
     vp_final = vp_ref_MR * gamma_interp_x + vp_final * (1. - gamma_interp_x)
 
 ! y = ymin
@@ -126,6 +132,9 @@
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
+! the vp_final we start from is the one we computed by interpolation in the HR block,
+! and as we get closer to the transition with the MR block we mix it with the value on the edge of MR;
+! it is not a linear interpolation between two fixed values but rather a linear variation of the amount of mixing
     vp_final = vp_ref_MR * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
 ! y = ymax
@@ -136,6 +145,9 @@
               VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
               IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_HR, &
               vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL, MOHO_MAP_LUPEI)
+! the vp_final we start from is the one we computed by interpolation in the HR block,
+! and as we get closer to the transition with the MR block we mix it with the value on the edge of MR;
+! it is not a linear interpolation between two fixed values but rather a linear variation of the amount of mixing
     vp_final = vp_ref_MR * gamma_interp_y + vp_final * (1. - gamma_interp_y)
 
   endif
