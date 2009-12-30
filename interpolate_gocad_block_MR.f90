@@ -3,7 +3,7 @@
       utm_x_eval,utm_y_eval,z_eval,rho_final,vp_final,vs_final,point_is_in_sediments, &
       VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
       IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_MR, &
-      vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI)
+      vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,MOHO_MAP_LUPEI,is_second_call)
 
   implicit none
 
@@ -22,6 +22,7 @@
   double precision xmesh,ymesh,zmesh,vs_dummy,rho_dummy
 
   logical point_is_in_sediments,IMPOSE_MINIMUM_VP_GOCAD
+  logical is_second_call
 
 ! for Hauksson's model
   integer doubling_index
@@ -90,10 +91,10 @@
       v7 < 19000. .and. v8 < 19000.) then
 
 ! set flag indicating whether point is in the sediments
-         point_is_in_sediments = .true.
+      point_is_in_sediments = .true.
 
 ! use trilinear interpolation in cell to define Vp
-         vp_final = &
+      vp_final = &
            v1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z) + &
            v2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z) + &
            v3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z) + &
@@ -104,82 +105,99 @@
            v8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z
 
 ! impose minimum velocity if needed
-         if(IMPOSE_MINIMUM_VP_GOCAD .and. vp_final < VP_MIN_GOCAD) vp_final = VP_MIN_GOCAD
+      if(IMPOSE_MINIMUM_VP_GOCAD .and. vp_final < VP_MIN_GOCAD) vp_final = VP_MIN_GOCAD
 
 ! taper edges to make smooth transition between Hauksson and MR blocks
 ! get value from edge of medium-resolution block
 ! then use linear interpolation from edge of the model
-  if(TAPER_GOCAD_TRANSITIONS) then
+      if(TAPER_GOCAD_TRANSITIONS) then
 
 ! x = xmin
-  if(utm_x_eval < ORIG_X_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
-    xmesh = ORIG_X_GOCAD_MR
-    ymesh = utm_y_eval
-    zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
-    else
-      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
-    endif
-    gamma_interp_x = (utm_x_eval - ORIG_X_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
-    vp_final = vp_ref_hauksson * (1. - gamma_interp_x) + vp_final * gamma_interp_x
+         if(utm_x_eval < ORIG_X_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
+            xmesh = ORIG_X_GOCAD_MR
+            ymesh = utm_y_eval
+            zmesh = z_eval
+            if(HAUKSSON_REGIONAL_MODEL) then
+               call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
+            else
+               call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
+            endif
+            gamma_interp_x = (utm_x_eval - ORIG_X_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
+            vp_final = vp_ref_hauksson * (1. - gamma_interp_x) + vp_final * gamma_interp_x
 
 ! x = xmax
-  else if(utm_x_eval > END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
-    xmesh = END_X_GOCAD_MR
-    ymesh = utm_y_eval
-    zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
-    else
-      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
-    endif
-    gamma_interp_x = (utm_x_eval - (END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR)) / THICKNESS_TAPER_BLOCK_MR
-    vp_final = vp_ref_hauksson * gamma_interp_x + vp_final * (1. - gamma_interp_x)
+         else if(utm_x_eval > END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
+            xmesh = END_X_GOCAD_MR
+            ymesh = utm_y_eval
+            zmesh = z_eval
+            if(HAUKSSON_REGIONAL_MODEL) then
+               call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
+            else
+               call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
+            endif
+            gamma_interp_x = (utm_x_eval - (END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR)) / THICKNESS_TAPER_BLOCK_MR
+            vp_final = vp_ref_hauksson * gamma_interp_x + vp_final * (1. - gamma_interp_x)
 
 ! y = ymin
-  else if(utm_y_eval < ORIG_Y_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
-    xmesh = utm_x_eval
-    ymesh = ORIG_Y_GOCAD_MR
-    zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
-    else
-      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
-    endif
-    gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
-    vp_final = vp_ref_hauksson * (1. - gamma_interp_y) + vp_final * gamma_interp_y
+         else if(utm_y_eval < ORIG_Y_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
+            xmesh = utm_x_eval
+            ymesh = ORIG_Y_GOCAD_MR
+            zmesh = z_eval
+            if(HAUKSSON_REGIONAL_MODEL) then
+               call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
+            else
+               call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
+            endif
+            gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_MR) / THICKNESS_TAPER_BLOCK_MR
+            vp_final = vp_ref_hauksson * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
 ! y = ymax
-  else if(utm_y_eval > END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
-    xmesh = utm_x_eval
-    ymesh = END_Y_GOCAD_MR
-    zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
-      call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
-    else
-      call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
-    endif
-    gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR)) / THICKNESS_TAPER_BLOCK_MR
-    vp_final = vp_ref_hauksson * gamma_interp_y + vp_final * (1. - gamma_interp_y)
-
-  endif
-
-  endif
+         else if(utm_y_eval > END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
+            xmesh = utm_x_eval
+            ymesh = END_Y_GOCAD_MR
+            zmesh = z_eval
+            if(HAUKSSON_REGIONAL_MODEL) then
+               call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
+            else
+               call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
+            endif
+            gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR)) / THICKNESS_TAPER_BLOCK_MR
+            vp_final = vp_ref_hauksson * gamma_interp_y + vp_final * (1. - gamma_interp_y)
+            
+         endif
+         
+      endif
 
 ! use linear variation of vp/vs ratio with depth, between 0. and 8.5 km
-         vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM + &
+      vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM + &
            (VP_VS_RATIO_GOCAD_TOP - VP_VS_RATIO_GOCAD_BOTTOM) * &
            (z_eval - (-8500.d0)) / (0.d0 - (-8500.d0))
 
 ! make sure ratio remains in interval
-  if(vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
-  if(vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
+      if(vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
+      if(vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
 
-         vs_final = vp_final / vp_vs_ratio
-         call compute_rho_estimate(rho_final,vp_final)
+      vs_final = vp_final / vp_vs_ratio
+      call compute_rho_estimate(rho_final,vp_final)
 
-     endif
+! fix for the smooth transition between HR and MR blocks : search vp_final in Hauksson's model if MR element is undefined    
+   elseif(is_second_call .eqv. .true.) then
+         
+      call hauksson_model(vp_hauksson,vs_hauksson,utm_x_eval,utm_y_eval,z_eval,vp_final,vs_final,MOHO_MAP_LUPEI)
+         
+! use linear variation of vp/vs ratio with depth, between 0. and 8.5 km
+      vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM + &
+           (VP_VS_RATIO_GOCAD_TOP - VP_VS_RATIO_GOCAD_BOTTOM) * &
+           (z_eval - (-8500.d0)) / (0.d0 - (-8500.d0))
 
-  end subroutine interpolate_gocad_block_MR
+! make sure ratio remains in interval
+      if(vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
+      if(vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
+      
+      vs_final = vp_final / vp_vs_ratio
+      call compute_rho_estimate(rho_final,vp_final)
+
+   endif
+   
+ end subroutine interpolate_gocad_block_MR
 

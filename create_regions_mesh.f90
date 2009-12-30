@@ -205,6 +205,7 @@
   double precision c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
 ! for the Harvard 3-D basin model
+  logical is_second_call 
   double precision vp_block_gocad_MR(0:NX_GOCAD_MR-1,0:NY_GOCAD_MR-1,0:NZ_GOCAD_MR-1)
   double precision vp_block_gocad_HR(0:NX_GOCAD_HR-1,0:NY_GOCAD_HR-1,0:NZ_GOCAD_HR-1)
   integer irecord,nrecord,i_vp
@@ -414,6 +415,7 @@
 !--- read the Harvard 3-D basin model
   if(HARVARD_3D_GOCAD_MODEL) then
 
+  is_second_call = .false.
 ! read medium-resolution model
 
 ! initialize array to undefined values everywhere
@@ -709,7 +711,7 @@
                   VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
                   IMPOSE_MINIMUM_VP_GOCAD,THICKNESS_TAPER_BLOCK_MR, &
                   vp_hauksson,vs_hauksson,doubling_index,HAUKSSON_REGIONAL_MODEL,&
-                  MOHO_MAP_LUPEI)
+                  MOHO_MAP_LUPEI,is_second_call)
 
 ! then superimpose high-resolution model
              if(xmesh >= ORIG_X_GOCAD_HR &
