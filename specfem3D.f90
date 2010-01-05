@@ -1560,19 +1560,13 @@
     ispec2D_moho_bot = 0
   endif
 
-  do ispec = 1,NSPEC_AB
-
-    if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-      if (is_moho_top(ispec)) then
-        ispec2D_moho_top = ispec2D_moho_top + 1
-      else if (is_moho_bot(ispec)) then
-        ispec2D_moho_bot = ispec2D_moho_bot + 1
-      endif
-    endif
-
 !---------------------------------------------------------------------------------------------------
 ! beginning of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
 !---------------------------------------------------------------------------------------------------
+
+!!!!!!!! DK DK beginning of compute_forces_elastic_direct
+
+  do ispec = 1,NSPEC_AB !  for the direct calculation
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -1816,19 +1810,138 @@
       tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
       tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
 
+          tempx1l = 0.
+          tempy1l = 0.
+          tempz1l = 0.
+
+          tempx2l = 0.
+          tempy2l = 0.
+          tempz2l = 0.
+
+          tempx3l = 0.
+          tempy3l = 0.
+          tempz3l = 0.
+
+          do l=1,NGLLX
+            fac1 = hprimewgll_xx(l,i)
+            tempx1l = tempx1l + tempx1(l,j,k)*fac1
+            tempy1l = tempy1l + tempy1(l,j,k)*fac1
+            tempz1l = tempz1l + tempz1(l,j,k)*fac1
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+            fac2 = hprimewgll_yy(l,j)
+            tempx2l = tempx2l + tempx2(i,l,k)*fac2
+            tempy2l = tempy2l + tempy2(i,l,k)*fac2
+            tempz2l = tempz2l + tempz2(i,l,k)*fac2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+            fac3 = hprimewgll_zz(l,k)
+            tempx3l = tempx3l + tempx3(i,j,l)*fac3
+            tempy3l = tempy3l + tempy3(i,j,l)*fac3
+            tempz3l = tempz3l + tempz3(i,j,l)*fac3
           enddo
+
+          fac1 = wgllwgll_yz(j,k)
+          fac2 = wgllwgll_xz(i,k)
+          fac3 = wgllwgll_xy(i,j)
+
+! sum contributions from each element to the global mesh
+  iglob = ibool(i,j,k,ispec)
+  accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
+  accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
+  accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
+
+! update memory variables based upon the Runge-Kutta scheme
+
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+
+! use Runge-Kutta scheme to march in time
+  do i_sls = 1,N_SLS
+
+! get coefficients for that standard linear solid
+
+  factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
+  alphaval_loc = alphaval(iselected,i_sls)
+  betaval_loc = betaval(iselected,i_sls)
+  gammaval_loc = gammaval(iselected,i_sls)
+
+! term in xx
+  Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
+  Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
+  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+
+! term in yy
+  Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
+  Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
+  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+
+! term in zz not computed since zero trace
+! This is because we only implement Q_\mu attenuation and not Q_\kappa.
+! Note that this does *NOT* imply that there is no attenuation for P waves
+! because for Q_\kappa = infinity one gets (see for instance Dahlen and Tromp (1998)
+! equation (9.59) page 350): Q_\alpha = Q_\mu * 3 * (V_p/V_s)^2 / 4
+! therefore Q_\alpha is not zero; for instance for V_p / V_s = sqrt(3)
+! we get Q_\alpha = (9 / 4) * Q_\mu = 2.25 * Q_\mu
+
+! term in xy
+  Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
+  Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
+  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+
+! term in xz
+  Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
+  Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
+  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+
+! term in yz
+  Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
+  Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
+  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
+
+    enddo   ! end of loop on memory variables
+
+  endif  !  end attenuation
+
         enddo
       enddo
+    enddo
 
 !---------------------------------------------------------------------------------------------
 ! end of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
 !---------------------------------------------------------------------------------------------
+
+! save deviatoric strain for Runge-Kutta scheme
+  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
+    epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
+    epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
+    epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
+    epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
+    epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
+  endif
+
+  enddo   ! of the spectral element loop for the direct calculation
+
+!!!!!!!! DK DK end of compute_forces_elastic_direct
+
+!!!!!!!! DK DK beginning of compute_forces_elastic_backward
 
 !----------------------------------------------------------------------------------------------------
 ! beginning of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
 !----------------------------------------------------------------------------------------------------
 
     if (SIMULATION_TYPE == 3) then
+
+  do ispec = 1,NSPEC_AB ! for the backward calculation
+
+    if (SAVE_MOHO_MESH) then
+      if (is_moho_top(ispec)) then
+        ispec2D_moho_top = ispec2D_moho_top + 1
+      else if (is_moho_bot(ispec)) then
+        ispec2D_moho_bot = ispec2D_moho_bot + 1
+      endif
+    endif
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -2159,136 +2272,6 @@
         b_tempy3(i,j,k) = jacobianl * (b_sigma_xy*gammaxl + b_sigma_yy*gammayl + b_sigma_yz*gammazl)
         b_tempz3(i,j,k) = jacobianl * (b_sigma_xz*gammaxl + b_sigma_yz*gammayl + b_sigma_zz*gammazl)
 
-          enddo
-        enddo
-      enddo
-
-      endif ! of test if SIMULATION_TYPE == 3
-
-!----------------------------------------------------------------------------------------------
-! end of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
-!----------------------------------------------------------------------------------------------
-
-!---------------------------------------------------------------------------------------------------
-! beginning of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
-!---------------------------------------------------------------------------------------------------
-
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-
-          tempx1l = 0.
-          tempy1l = 0.
-          tempz1l = 0.
-
-          tempx2l = 0.
-          tempy2l = 0.
-          tempz2l = 0.
-
-          tempx3l = 0.
-          tempy3l = 0.
-          tempz3l = 0.
-
-          do l=1,NGLLX
-            fac1 = hprimewgll_xx(l,i)
-            tempx1l = tempx1l + tempx1(l,j,k)*fac1
-            tempy1l = tempy1l + tempy1(l,j,k)*fac1
-            tempz1l = tempz1l + tempz1(l,j,k)*fac1
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-            fac2 = hprimewgll_yy(l,j)
-            tempx2l = tempx2l + tempx2(i,l,k)*fac2
-            tempy2l = tempy2l + tempy2(i,l,k)*fac2
-            tempz2l = tempz2l + tempz2(i,l,k)*fac2
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-            fac3 = hprimewgll_zz(l,k)
-            tempx3l = tempx3l + tempx3(i,j,l)*fac3
-            tempy3l = tempy3l + tempy3(i,j,l)*fac3
-            tempz3l = tempz3l + tempz3(i,j,l)*fac3
-          enddo
-
-          fac1 = wgllwgll_yz(j,k)
-          fac2 = wgllwgll_xz(i,k)
-          fac3 = wgllwgll_xy(i,j)
-
-! sum contributions from each element to the global mesh
-  iglob = ibool(i,j,k,ispec)
-  accel(1,iglob) = accel(1,iglob) - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l)
-  accel(2,iglob) = accel(2,iglob) - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l)
-  accel(3,iglob) = accel(3,iglob) - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l)
-
-! update memory variables based upon the Runge-Kutta scheme
-
-  if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-
-! use Runge-Kutta scheme to march in time
-  do i_sls = 1,N_SLS
-
-! get coefficients for that standard linear solid
-
-  factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
-  alphaval_loc = alphaval(iselected,i_sls)
-  betaval_loc = betaval(iselected,i_sls)
-  gammaval_loc = gammaval(iselected,i_sls)
-
-! term in xx
-  Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-  R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in yy
-  Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-  R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in zz not computed since zero trace
-! This is because we only implement Q_\mu attenuation and not Q_\kappa.
-! Note that this does *NOT* imply that there is no attenuation for P waves
-! because for Q_\kappa = infinity one gets (see for instance Dahlen and Tromp (1998)
-! equation (9.59) page 350): Q_\alpha = Q_\mu * 3 * (V_p/V_s)^2 / 4
-! therefore Q_\alpha is not zero; for instance for V_p / V_s = sqrt(3)
-! we get Q_\alpha = (9 / 4) * Q_\mu = 2.25 * Q_\mu
-
-! term in xy
-  Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-  R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in xz
-  Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-  R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-! term in yz
-  Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-  Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-  R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + betaval_loc * Sn + gammaval_loc * Snp1
-
-    enddo   ! end of loop on memory variables
-
-  endif  !  end attenuation
-
-        enddo
-      enddo
-    enddo
-
-!---------------------------------------------------------------------------------------------
-! end of nested loops on i,j,k to perform the forward calculations in a given element (ispec)
-!---------------------------------------------------------------------------------------------
-
-!----------------------------------------------------------------------------------------------------
-! beginning of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
-!----------------------------------------------------------------------------------------------------
-
-    if (SIMULATION_TYPE == 3) then
-
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-
           b_tempx1l = 0.
           b_tempy1l = 0.
           b_tempz1l = 0.
@@ -2380,29 +2363,22 @@
       enddo
     enddo
 
-    endif ! of test if SIMULATION_TYPE == 3
-
 !----------------------------------------------------------------------------------------------
 ! end of nested loops on i,j,k to perform the backward calculations in a given element (ispec)
 !----------------------------------------------------------------------------------------------
 
 ! save deviatoric strain for Runge-Kutta scheme
   if(ATTENUATION_VAL .and. not_fully_in_bedrock(ispec)) then
-    epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-    epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
-    epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
-    epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
-    epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
-    if (SIMULATION_TYPE == 3) then
-      b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
-      b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
-      b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
-      b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
-      b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
-    endif
+    b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
+    b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
+    b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
+    b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
+    b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
   endif
 
-  enddo   ! of the spectral element loop
+  enddo   ! of the spectral element loop for the backward calculation
+
+    endif ! of test if SIMULATION_TYPE == 3
 
 ! add Stacey conditions
 
