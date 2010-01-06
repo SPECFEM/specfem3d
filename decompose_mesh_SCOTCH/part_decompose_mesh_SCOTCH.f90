@@ -569,7 +569,12 @@ contains
 
     write(IIN_database,*)  count_def_mat,count_undef_mat 
     do i = 1, count_def_mat
+      ! database material definition
+      !
       ! format:  #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id     
+      !
+      ! (note that this order of the properties is different than the input in nummaterial_velocity_file)
+      !
        write(IIN_database,*) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), &
                             mat_prop(4,i), mat_prop(5,i), mat_prop(6,i)
     end do
@@ -1070,7 +1075,11 @@ contains
   !--------------------------------------------------
 
   subroutine acoustic_elastic_load (elmnts_load,nelmnts,nb_materials,num_material,mat_prop)
-
+  !
+  ! note: 
+  !   acoustic material = domainID 1  (stored in mat_prop(6,..) )
+  !   elastic material    = domainID 2
+  !
     implicit none
 
     integer(long),intent(in) :: nelmnts
@@ -1091,9 +1100,11 @@ contains
     is_acoustic(:) = .false.
     is_elastic(:) = .false.
     do i = 1, nb_materials
+       ! acoustic material has idomain_id 1
        if (mat_prop(6,i) == 1 ) then
           is_acoustic(i) = .true.
        endif
+       ! elastic material has idomain_id 2
        if (mat_prop(6,i) == 2 ) then
           is_elastic(i) = .true.
        endif

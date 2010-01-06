@@ -32,14 +32,14 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-cubit.cmd('block 1 name "acoustic" ')        # elastic material region
+cubit.cmd('block 1 name "acoustic" ')        # material region
 cubit.cmd('block 1 attribute count 4')
 cubit.cmd('block 1 attribute index 1 1')      # flag for material: 1 for 1. material
 cubit.cmd('block 1 attribute index 2 3000')   # vp
 cubit.cmd('block 1 attribute index 3 0')   # vs
 cubit.cmd('block 1 attribute index 4 2300')   # rho
 
-cubit.cmd('block 2 name "elastic" ')        # elastic material region
+cubit.cmd('block 2 name "elastic" ')        # material region
 cubit.cmd('block 2 attribute count 6')
 cubit.cmd('block 2 attribute index 1 2')      # flag for material: 2 for 2. material
 cubit.cmd('block 2 attribute index 2 3000')   # vp

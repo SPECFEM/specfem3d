@@ -27,8 +27,8 @@
 ! routine for saving vtk file holding integer flag on each spectral element
 
   subroutine write_VTK_data_elem_i(nspec,nglob, &
-            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-            elem_flag,prname_file)
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        elem_flag,prname_file)
 
 
   implicit none
@@ -57,26 +57,26 @@
   write(IOVTK,'(a)') 'material model VTK file'
   write(IOVTK,'(a)') 'ASCII'
   write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-  write(IOVTK, '(a,i,a)') 'POINTS ', nglob, ' float'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOVTK,'(3f)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOVTK,*) ""
 
   ! note: indices for vtk start at 0
-  write(IOVTK,'(a,i,i)') "CELLS ",nspec,nspec*9
+  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec=1,nspec
-    write(IOVTK,'(9i)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+    write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
   
   ! type: hexahedrons
-  write(IOVTK,'(a,i)') "CELL_TYPES ",nspec
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
   write(IOVTK,*) ""
   
-  write(IOVTK,'(a,i)') "CELL_DATA ",nspec
+  write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec
@@ -128,22 +128,22 @@
   write(IOVTK,'(a)') 'material model VTK file'
   write(IOVTK,'(a)') 'ASCII'
   write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-  write(IOVTK, '(a,i,a)') 'POINTS ', nglob, ' float'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOVTK,'(3f)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOVTK,*) ""
 
   ! note: indices for vtk start at 0
-  write(IOVTK,'(a,i,i)') "CELLS ",nspec,nspec*9
+  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec=1,nspec
-    write(IOVTK,'(9i)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+    write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
   
   ! type: hexahedrons
-  write(IOVTK,'(a,i)') "CELL_TYPES ",nspec
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
   write(IOVTK,*) ""
     
@@ -166,7 +166,7 @@
     enddo
   enddo
 
-  write(IOVTK,'(a,i)') "POINT_DATA ",nglob
+  write(IOVTK,'(a,i12)') "POINT_DATA ",nglob
   write(IOVTK,'(a)') "SCALARS gll_data float"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do i = 1,nglob    
@@ -218,22 +218,22 @@
   write(IOVTK,'(a)') 'material model VTK file'
   write(IOVTK,'(a)') 'ASCII'
   write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-  write(IOVTK, '(a,i,a)') 'POINTS ', nglob, ' float'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
   do i=1,nglob
-    write(IOVTK,'(3f)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
   write(IOVTK,*) ""
 
   ! note: indices for vtk start at 0
-  write(IOVTK,'(a,i,i)') "CELLS ",nspec,nspec*9
+  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec=1,nspec
-    write(IOVTK,'(9i)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+    write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
   
   ! type: hexahedrons
-  write(IOVTK,'(a,i)') "CELL_TYPES ",nspec
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
   write(IOVTK,*) ""
     
@@ -256,7 +256,7 @@
     enddo
   enddo
 
-  write(IOVTK,'(a,i)') "POINT_DATA ",nglob
+  write(IOVTK,'(a,i12)') "POINT_DATA ",nglob
   write(IOVTK,'(a)') "SCALARS gll_data float"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do i = 1,nglob    
@@ -305,7 +305,7 @@
   write(IOVTK,'(a)') 'material model VTK file'
   write(IOVTK,'(a)') 'ASCII'
   write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-  write(IOVTK, '(a,i,a)') 'POINTS ', num_points_globalindices, ' float'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', num_points_globalindices, ' float'
   do i=1,num_points_globalindices
     iglob = points_globalindices(i)
     if( iglob <= 0 .or. iglob > nglob ) then
@@ -315,7 +315,7 @@
       stop 'error vtk points file'
     endif
     
-    write(IOVTK,'(3f)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
+    write(IOVTK,'(3e18.6)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
   enddo
   write(IOVTK,*) ""
 
@@ -323,3 +323,72 @@
 
 
   end subroutine write_VTK_data_points
+  
+  
+!=============================================================
+
+! external mesh routine for saving vtk files for points locations
+
+  subroutine write_VTK_data_elem_vectors(nspec,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        elem_vector,prname_file)
+
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: nspec,nglob
+
+  ! global coordinates  
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+
+  ! element flag array
+  real(kind=CUSTOM_REAL), dimension(3,nspec) :: elem_vector  
+  integer :: ispec,i
+
+  ! file name
+  character(len=256) prname_file
+
+  ! write source and receiver VTK files for Paraview
+  write(IMAIN,*) '  vtk file: '
+  write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+  
+  open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOVTK,'(a)') 'material model VTK file'
+  write(IOVTK,'(a)') 'ASCII'
+  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
+  do i=1,nglob
+    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+  enddo
+  write(IOVTK,*) ""
+
+  ! note: indices for vtk start at 0
+  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+  do ispec=1,nspec
+    write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+          ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
+  enddo
+  write(IOVTK,*) ""
+  
+  ! type: hexahedrons
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
+  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,*) ""
+
+  ! vector data for each cell
+  write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
+  write(IOVTK,'(a)') "VECTORS _vectors_ float"
+  do i=1,nspec
+    write(IOVTK,*) elem_vector(1,i),elem_vector(2,i),elem_vector(3,i)
+  enddo
+  
+  write(IOVTK,*) ""  
+  close(IOVTK)
+
+
+  end subroutine write_VTK_data_elem_vectors
+  

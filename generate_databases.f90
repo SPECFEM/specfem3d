@@ -306,7 +306,7 @@
 !  integer ix,iy
   
   integer,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
-  integer :: nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh
+  integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
   integer :: i
   
   end module generate_databases_par
@@ -890,7 +890,7 @@
   call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
                         ispec_is_surface_external_mesh, &
                         iglob_is_surface_external_mesh, &
-                        nfaces_surface_external_mesh, &
+                        nfaces_surface_ext_mesh, &
                         num_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh, &
@@ -904,11 +904,11 @@
 
   ! takes number of faces for top, free surface only
   if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
-    nfaces_surface_external_mesh = NSPEC2D_TOP
+    nfaces_surface_ext_mesh = NSPEC2D_TOP
   endif
   
 ! number of surface faces for all partitions together
-  call sum_all_i(nfaces_surface_external_mesh,nfaces_surface_glob_ext_mesh)
+  call sum_all_i(nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh)
 
   
 ! copy number of elements and points in an include file for the solver

@@ -29,6 +29,8 @@
 
   use specfem_par
   use specfem_par_movie
+  use specfem_par_acoustic
+  use specfem_par_elastic
   implicit none
   
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
@@ -42,11 +44,11 @@
 
     ! returns surface points/elements 
     ! in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh and
-    ! number of faces in nfaces_surface_external_mesh
+    ! number of faces in nfaces_surface_ext_mesh
     call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                       ispec_is_surface_external_mesh, &
                       iglob_is_surface_external_mesh, &
-                      nfaces_surface_external_mesh, &
+                      nfaces_surface_ext_mesh, &
                       num_interfaces_ext_mesh, &
                       max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh, &
@@ -60,7 +62,7 @@
       call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
-                            nfaces_surface_external_mesh, &
+                            nfaces_surface_ext_mesh, &
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
@@ -73,7 +75,7 @@
   
   ! takes number of faces for top, free surface only
   if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
-    nfaces_surface_external_mesh = num_free_surface_faces
+    nfaces_surface_ext_mesh = num_free_surface_faces
     ! face corner indices
     iorderi(1) = 1
     iorderi(2) = NGLLX
@@ -94,16 +96,25 @@
   endif
 
   if (MOVIE_VOLUME) then
-    allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    div(:,:,:,:) = 0._CUSTOM_REAL
-    curl_x(:,:,:,:) = 0._CUSTOM_REAL
-    curl_y(:,:,:,:) = 0._CUSTOM_REAL
-    curl_z(:,:,:,:) = 0._CUSTOM_REAL
+    if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then  
+      allocate(velocity_movie(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    endif
+    if( ELASTIC_SIMULATION ) then
+      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      div(:,:,:,:) = 0._CUSTOM_REAL
+      curl_x(:,:,:,:) = 0._CUSTOM_REAL
+      curl_y(:,:,:,:) = 0._CUSTOM_REAL
+      curl_z(:,:,:,:) = 0._CUSTOM_REAL
+    endif
   endif
 
+  ! handles cross-section gif image
+  if( PNM_GIF_IMAGE ) then
+    call write_PNM_GIF_initialize()
+  endif
 
 ! obsolete...
 ! allocate files to save movies and shaking map

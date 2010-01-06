@@ -56,18 +56,45 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use PML_par
+  use PML_par_acoustic
   implicit none
-
+  ! local parameters
   integer:: iphase
   logical:: phase_is_inner
-
+  
+  ! time marching potentials
+  if(PML) call PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
+                        potential_acoustic,potential_dot_acoustic,&
+                        deltat,deltatsqover2,deltatover2,&
+                        num_PML_ispec,PML_ispec,PML_damping_d,&
+                        chi1,chi2,chi2_t,chi3,chi4,&
+                        chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
+                        chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot,&
+                        iglob_is_PML_interface,PML_mask_ibool,&
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        my_neighbours_ext_mesh,NPROC,&
+                        ispec_is_acoustic)
+  
 ! enforces free surface (zeroes potentials at free surface)
-  call compute_forces_acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
+  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool, &
                         free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces, &
                         ispec_is_acoustic)
+
+  if(PML) call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
+                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                        ibool,free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces, &
+                        ispec_is_acoustic, &
+                        num_PML_ispec,PML_ispec,&
+                        chi1,chi2,chi2_t,chi3,chi4,&
+                        chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
+                        chi1_dot_dot,chi2_t_dot_dot,&
+                        chi3_dot_dot,chi4_dot_dot)             
 
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
@@ -80,30 +107,68 @@ subroutine compute_forces_acoustic()
     endif
 
 ! acoustic pressure term
-    call compute_forces_acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, &
-                    potential_acoustic,potential_dot_dot_acoustic, &
-                    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                    hprime_xx,hprime_yy,hprime_zz, &
-                    hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                    rhostore,jacobian,ibool, &
-                    ispec_is_inner, &
-                    ispec_is_acoustic)
+    call acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, &
+                        potential_acoustic,potential_dot_dot_acoustic, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        rhostore,jacobian,ibool, &
+                        ispec_is_inner,ispec_is_acoustic)
+                    
+    
+    if(PML) then
+      call compute_forces_acoustic_PML(NSPEC_AB,NGLOB_AB, &
+                        ibool,ispec_is_inner,phase_is_inner, &                        
+                        rhostore,ispec_is_acoustic,potential_acoustic, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
+                        wxgll,wygll,wzgll,&
+                        PML_damping_dprime,num_PML_ispec,&
+                        PML_ispec,PML_normal,&
+                        chi1_dot_dot,chi2_t_dot_dot,&
+                        chi3_dot_dot,chi4_dot_dot)
+
+      ! couples potential_dot_dot with PML interface contributions
+      call PML_acoustic_interface_coupling(phase_is_inner,NSPEC_AB,NGLOB_AB,&
+                        potential_dot_dot_acoustic,&
+                        ibool,ispec_is_inner,ispec_is_acoustic,&
+                        num_PML_ispec,PML_ispec,iglob_is_PML_interface,&
+                        chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
+      
+    endif
 
 ! absorbing boundaries
-    if(ABSORBING_CONDITIONS) & 
-      call compute_forces_acoustic_absorbing_boundaries(NSPEC_AB,NGLOB_AB, &
-                            potential_dot_dot_acoustic,potential_dot_acoustic, &
-                            ibool,ispec_is_inner,phase_is_inner, &
-                            abs_boundary_jacobian2Dw, &
-                            abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces, &
-                            rhostore,kappastore, &
-                            ispec_is_acoustic)
+    if(ABSORBING_CONDITIONS) then
+      if( PML .and. PML_USE_SOMMERFELD ) then
+        ! adds a Sommerfeld condition on the domain's absorbing boundaries
+        call PML_acoustic_abs_boundaries(phase_is_inner,NSPEC_AB,NGLOB_AB,&
+                        abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces, &
+                        kappastore,ibool,ispec_is_inner, &
+                        rhostore,ispec_is_acoustic,&
+                        potential_dot_acoustic,potential_dot_dot_acoustic,&
+                        num_PML_ispec,PML_ispec,ispec_is_PML_inum,&
+                        chi1_dot,chi2_t,chi2_t_dot,chi3_dot,chi4_dot,&
+                        chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)      
+      else
+        call acoustic_absorbing_boundaries(NSPEC_AB,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_dot_acoustic, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        abs_boundary_jacobian2Dw, &
+                        abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces, &
+                        rhostore,kappastore, &
+                        ispec_is_acoustic)    
 
+      endif
+    endif
+    
 ! elastic coupling
     if(ELASTIC_SIMULATION ) &
-      call compute_forces_acoustic_coupling_elastic(NSPEC_AB,NGLOB_AB, &
+      call acoustic_coupling_elastic(NSPEC_AB,NGLOB_AB, &
                         ibool,displ,potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -113,46 +178,62 @@ subroutine compute_forces_acoustic()
 
 ! poroelastic coupling
     if(POROELASTIC_SIMULATION ) &
-      call compute_forces_acoustic_coupling_poroelastic()
+      call acoustic_coupling_poroelastic()
     
 ! sources
-    call compute_forces_acoustic_sources(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
-                    ibool,ispec_is_inner,phase_is_inner, &
-                    NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                    xi_source,eta_source,gamma_source, &
-                    hdur,hdur_gaussian,t_cmt,dt,stf,t0, &
-                    sourcearrays,kappastore, &
-                    ispec_is_acoustic)
+    call acoustic_sources(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                        xi_source,eta_source,gamma_source, &
+                        hdur,hdur_gaussian,t_cmt,dt,stf,t0, &
+                        sourcearrays,kappastore, &
+                        ispec_is_acoustic)
 
 ! assemble all the contributions between slices using MPI
     if( phase_is_inner .eqv. .false. ) then
       ! sends potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       call assemble_MPI_scalar_ext_mesh_s(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                    buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
-                    num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                    my_neighbours_ext_mesh, &
-                    request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+                        buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        my_neighbours_ext_mesh, &
+                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_scalar_ext_mesh_w(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                    buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh,&
-                    max_nibool_interfaces_ext_mesh, &
-                    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                    request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
+                        buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh,&
+                        max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
     endif
+
 
   enddo
 
-! update pressure with mass 
+  ! divides pressure with mass matrix 
   potential_dot_dot_acoustic(:) = potential_dot_dot_acoustic(:) * rmass_acoustic(:)
+
+  if(PML) then
+    ! divides local contributions with mass term
+    call PML_acoustic_mass_update(NSPEC_AB,NGLOB_AB,&
+                        ispec_is_acoustic,rmass_acoustic,ibool,&
+                        num_PML_ispec,PML_ispec,&
+                        chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot)
+
+    ! Newark time scheme corrector terms
+    call PML_acoustic_time_corrector(NSPEC_AB,ispec_is_acoustic,deltatover2,&
+                        num_PML_ispec,PML_ispec,PML_damping_d,&
+                        chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
+                        chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot)                        
+  endif
+
 
 ! update velocity
 ! note: Newark finite-difference time scheme with acoustic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
 ! chi(t+delta_t) = chi(t) + delta_t chi_dot(t) + 1/2 delta_t**2 chi_dot_dot(t)
-! chi_dot(t+delta_t) = chi_dot(t) + 1/2 delta_t chi_dot_dot(t) + 1/2 delta_t chi_dot_dot(t+delta_t)
+! chi_dot(t+delta_t) = chi_dot(t) + 1/2 delta_t chi_dot_dot(t) + 1/2 DELTA_T CHI_DOT_DOT( T + DELTA_T )
 ! chi_dot_dot(t+delta_t) = 1/M_acoustic( -K_acoustic chi(t+delta) + B_acoustic u(t+delta_t) + f(t+delta_t) )
 !
 ! where 
@@ -165,13 +246,39 @@ subroutine compute_forces_acoustic()
 !   updates the chi_dot term which requires chi_dot_dot(t+delta)
   potential_dot_acoustic(:) = potential_dot_acoustic(:) + deltatover2*potential_dot_dot_acoustic(:)
 
+  ! updates potential_dot_acoustic and potential_dot_dot_acoustic inside PML region for plotting seismograms/movies
+  if(PML) call PML_acoustic_update_potentials(NGLOB_AB,NSPEC_AB, &
+                        ibool,ispec_is_acoustic, &
+                        potential_dot_acoustic,potential_dot_dot_acoustic,&
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        my_neighbours_ext_mesh,NPROC,&
+                        num_PML_ispec,PML_ispec,iglob_is_PML_interface,&
+                        PML_mask_ibool,PML_damping_d,&
+                        chi1,chi2,chi2_t,chi3,&
+                        chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
+                        chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
+
+
 ! enforces free surface (zeroes potentials at free surface)
-  call compute_forces_acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
+  call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool, &
                         free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces, &
                         ispec_is_acoustic)
+
+  if(PML) call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
+                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                        ibool,free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces, &
+                        ispec_is_acoustic, &
+                        num_PML_ispec,PML_ispec,&
+                        chi1,chi2,chi2_t,chi3,chi4,&
+                        chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
+                        chi1_dot_dot,chi2_t_dot_dot,&
+                        chi3_dot_dot,chi4_dot_dot)             
+
 
 end subroutine compute_forces_acoustic
 
@@ -180,25 +287,24 @@ end subroutine compute_forces_acoustic
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, &
-                    potential_acoustic,potential_dot_dot_acoustic, &
-                    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                    hprime_xx,hprime_yy,hprime_zz, &
-                    hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                    wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                    rhostore,jacobian,ibool, &
-                    ispec_is_inner, &
-                    ispec_is_acoustic )
+subroutine acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, &
+                        potential_acoustic,potential_dot_dot_acoustic, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        rhostore,jacobian,ibool, &
+                        ispec_is_inner,ispec_is_acoustic )
 
 ! compute forces for the acoustic elements
 !
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot  
 !
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL
+  use PML_par,only:PML,ispec_is_PML_inum
   implicit none
-
-  include "constants.h"
-
+  !include "constants.h"
   integer :: NSPEC_AB,NGLOB_AB
 
 ! acoustic potentials
@@ -228,6 +334,7 @@ subroutine compute_forces_acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, 
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
 ! local variables
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
   real(kind=CUSTOM_REAL) temp1l,temp2l,temp3l
 
@@ -235,17 +342,33 @@ subroutine compute_forces_acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, 
   real(kind=CUSTOM_REAL) dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) rho_invl
   
-  integer :: ispec,iglob
-  integer :: i,j,k,l
-
+  integer :: ispec,iglob,i,j,k,l
 
 ! loop over spectral elements
   do ispec = 1,NSPEC_AB
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if ( (ispec_is_inner(ispec) .eqv. phase_is_inner) ) then
 
+      ! only elements outside PML, inside "regular" domain
+      if( PML ) then
+        if( ispec_is_PML_inum(ispec) > 0 ) then
+         cycle
+        endif
+      endif
+      
       if( ispec_is_acoustic(ispec) ) then
-        
+
+        ! gets values for element
+        do k=1,NGLLZ
+          do j=1,NGLLY
+            do i=1,NGLLX
+              chi_elem(i,j,k) = potential_acoustic(ibool(i,j,k,ispec))
+            enddo
+          enddo
+        enddo
+        ! would check if anything to do, but might lower accuracy of computation
+        !if( maxval( abs( chi_elem ) ) < TINYVAL_SNGL ) cycle
+
         do k=1,NGLLZ
           do j=1,NGLLY
             do i=1,NGLLX
@@ -260,9 +383,12 @@ subroutine compute_forces_acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, 
               temp2l = 0._CUSTOM_REAL
               temp3l = 0._CUSTOM_REAL
               do l = 1,NGLLX
-                temp1l = temp1l + potential_acoustic(ibool(l,j,k,ispec))*hprime_xx(i,l)
-                temp2l = temp2l + potential_acoustic(ibool(i,l,k,ispec))*hprime_yy(j,l)
-                temp3l = temp3l + potential_acoustic(ibool(i,j,l,ispec))*hprime_zz(k,l)
+                !temp1l = temp1l + potential_acoustic(ibool(l,j,k,ispec))*hprime_xx(i,l)
+                !temp2l = temp2l + potential_acoustic(ibool(i,l,k,ispec))*hprime_yy(j,l)
+                !temp3l = temp3l + potential_acoustic(ibool(i,j,l,ispec))*hprime_zz(k,l)
+                temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
+                temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
+                temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
               enddo 
 
               ! get derivatives of potential with respect to x, y and z
@@ -322,16 +448,18 @@ subroutine compute_forces_acoustic_pressure( phase_is_inner, NSPEC_AB,NGLOB_AB, 
 
       endif ! end of test if acoustic element
     endif ! ispec_is_inner
+    
   enddo ! end of loop over all spectral elements
 
-end subroutine compute_forces_acoustic_pressure
+end subroutine acoustic_pressure
 
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_absorbing_boundaries(NSPEC_AB,NGLOB_AB, &
+
+subroutine acoustic_absorbing_boundaries(NSPEC_AB,NGLOB_AB, &
                             potential_dot_dot_acoustic,potential_dot_acoustic, &
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_jacobian2Dw, &
@@ -368,7 +496,7 @@ subroutine compute_forces_acoustic_absorbing_boundaries(NSPEC_AB,NGLOB_AB, &
   real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw !weight,jacobianl
   integer :: ispec,iglob,i,j,k,iface,igll
   
-! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)  
+! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
   do iface=1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
@@ -405,13 +533,13 @@ subroutine compute_forces_acoustic_absorbing_boundaries(NSPEC_AB,NGLOB_AB, &
     endif ! ispec_is_inner
   enddo ! num_abs_boundary_faces
   
-end subroutine compute_forces_acoustic_absorbing_boundaries
+end subroutine acoustic_absorbing_boundaries
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_coupling_elastic(NSPEC_AB,NGLOB_AB, &
+subroutine acoustic_coupling_elastic(NSPEC_AB,NGLOB_AB, &
                         ibool,displ,potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -506,24 +634,24 @@ subroutine compute_forces_acoustic_coupling_elastic(NSPEC_AB,NGLOB_AB, &
 
   enddo ! iface
    
-end subroutine compute_forces_acoustic_coupling_elastic
+end subroutine acoustic_coupling_elastic
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_coupling_poroelastic()
+subroutine acoustic_coupling_poroelastic()
   implicit none
  
   stop 'not yet implemented'
   
-end subroutine compute_forces_acoustic_coupling_poroelastic
+end subroutine acoustic_coupling_poroelastic
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_sources(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
+subroutine acoustic_sources(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   xi_source,eta_source,gamma_source, &
@@ -654,13 +782,13 @@ subroutine compute_forces_acoustic_sources(NSPEC_AB,NGLOB_AB,potential_dot_dot_a
   
   enddo ! NSOURCES
 
-end subroutine compute_forces_acoustic_sources
+end subroutine acoustic_sources
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
+subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool, &
                         free_surface_ijk,free_surface_ispec, &
@@ -709,4 +837,5 @@ subroutine compute_forces_acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
     
   enddo
   
-end subroutine compute_forces_acoustic_enforce_free_surface
+end subroutine acoustic_enforce_free_surface
+

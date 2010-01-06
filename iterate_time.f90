@@ -66,11 +66,11 @@
   
 ! simulation status output and stability check
     if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5) then
-      call iterate_time_check_stability()    
+      call it_check_stability()    
     endif
     
 ! update displacement using Newark time scheme
-    call iterate_time_update_displacement_scheme()
+    call it_update_displacement_scheme()
 
 ! acoustic solver 
 ! (needs to be done first, before elastic one)
@@ -84,22 +84,22 @@
     
 ! write the seismograms with time shift
     if (nrec_local > 0) then
-      call iterate_time_write_seismograms()
+      call it_write_seismograms()
     endif 
 
 ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
     if (ATTENUATION ) then
-      call iterate_time_store_attenuation_arrays()
+      call it_store_attenuation_arrays()
     endif ! ATTENUATION
 
 ! shakemap creation
     if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
-      call iterate_time_create_shakemap_ext_mesh()
+      call it_create_shakemap_em()
     endif 
 
 ! movie file creation
     if(EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-      call iterate_time_create_movie_surface_ext_mesh()
+      call it_create_movie_surface_em()
     endif
 
 ! save MOVIE on the SURFACE
@@ -107,7 +107,7 @@
 
       !stop 'DK DK MOVIE_SURFACE has been removed for now because we need a flag to detect the surface elements'
 
-      call iterate_time_movie_surface_output_obsolete()
+      call it_movie_surface_output_o()
     endif
 
 ! compute SHAKING INTENSITY MAP
@@ -115,14 +115,18 @@
 
       !stop 'DK DK CREATE_SHAKEMAP has been removed for now because we need a flag to detect the surface elements'
 
-      call iterate_time_create_shakemap_obsolete()
+      call it_create_shakemap_o()
     endif
 
 ! save MOVIE in full 3D MESH
     if(MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-      call iterate_time_movie_volume_output()
+      call it_movie_volume_output()
     endif
 
+! creates cross-section GIF image
+    if(PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0 ) then
+      call write_PNM_GIF_create_image()
+    endif
 !
 !---- end of time iteration loop
 !
@@ -133,7 +137,7 @@
   
 !=====================================================================
 
-  subroutine iterate_time_check_stability()
+  subroutine it_check_stability()
 
 ! computes the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
@@ -246,12 +250,12 @@
 
   endif ! myrank
   
-  end subroutine iterate_time_check_stability
+  end subroutine it_check_stability
   
 
 !=====================================================================
 
-  subroutine iterate_time_update_displacement_scheme()
+  subroutine it_update_displacement_scheme()
 
 ! explicit Newark time scheme with acoustic & elastic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
@@ -314,11 +318,11 @@
   endif
 
 
-  end subroutine iterate_time_update_displacement_scheme
+  end subroutine it_update_displacement_scheme
   
 !=====================================================================
 
-  subroutine iterate_time_write_seismograms()
+  subroutine it_write_seismograms()
 
 ! writes the seismograms with time shift
   
@@ -587,12 +591,12 @@
     endif
   endif
 
-  end subroutine iterate_time_write_seismograms
+  end subroutine it_write_seismograms
 
 
 !================================================================
   
-  subroutine iterate_time_store_attenuation_arrays()
+  subroutine it_store_attenuation_arrays()
 
 ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
   
@@ -640,11 +644,11 @@
     endif ! SIMULATION_TYPE
   endif ! it
 
-  end subroutine iterate_time_store_attenuation_arrays
+  end subroutine it_store_attenuation_arrays
   
 !================================================================
   
-  subroutine iterate_time_create_shakemap_ext_mesh()
+  subroutine it_create_shakemap_em()
 
 ! creation of shapemap file
   
@@ -660,10 +664,10 @@
     store_val_ux_external_mesh(:) = -HUGEVAL
     store_val_uy_external_mesh(:) = -HUGEVAL
     store_val_uz_external_mesh(:) = -HUGEVAL
-    do ispec2D = 1,nfaces_surface_external_mesh
+    do ispec2D = 1,nfaces_surface_ext_mesh
       if (USE_HIGHRES_FOR_MOVIES) then
         do ipoin = 1, NGLLX*NGLLY
-          iglob = faces_surface_external_mesh(ipoin,ispec2D)
+          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
           ! x,y,z coordinates
           store_val_x_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = xstore(iglob)
           store_val_y_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = ystore(iglob)
@@ -671,7 +675,7 @@
         enddo
       else
         do ipoin = 1, 4
-          iglob = faces_surface_external_mesh(ipoin,ispec2D)
+          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
           ! x,y,z coordinates
           store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
           store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
@@ -682,12 +686,12 @@
   endif
 
 ! stores displacement, velocity and acceleration amplitudes
-  do ispec2D = 1,nfaces_surface_external_mesh
-    ispec = faces_surface_external_mesh_ispec(ispec2D)    
+  do ispec2D = 1,nfaces_surface_ext_mesh
+    ispec = faces_surface_ext_mesh_ispec(ispec2D)    
     ! high-resolution
     if (USE_HIGHRES_FOR_MOVIES) then
       do ipoin = 1, NGLLX*NGLLY
-        iglob = faces_surface_external_mesh(ipoin,ispec2D)
+        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! saves norm of displacement,velocity and acceleration vector
         if( ispec_is_elastic(ispec) ) then            
           ! norm of displacement
@@ -707,7 +711,7 @@
     else
       ! low-resolution: only corner points outputted
       do ipoin = 1, 4
-        iglob = faces_surface_external_mesh(ipoin,ispec2D)
+        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! saves norm of displacement,velocity and acceleration vector
         if( ispec_is_elastic(ispec) ) then                    
           ! norm of displacement
@@ -730,41 +734,41 @@
 ! finalizes shakemap: master process collects all info   
   if (it == NSTEP) then
     if (USE_HIGHRES_FOR_MOVIES) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
     else
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
     endif
@@ -782,12 +786,12 @@
     endif
   endif
   
-  end subroutine iterate_time_create_shakemap_ext_mesh
+  end subroutine it_create_shakemap_em
   
   
 !================================================================
 
-  subroutine iterate_time_create_movie_surface_ext_mesh()
+  subroutine it_create_movie_surface_em()
 
 ! creation of moviedata files  
 
@@ -803,10 +807,10 @@
   
 ! initializes arrays for point coordinates
   if (it == NTSTEP_BETWEEN_FRAMES ) then
-    do ispec2D = 1,nfaces_surface_external_mesh
+    do ispec2D = 1,nfaces_surface_ext_mesh
       if (USE_HIGHRES_FOR_MOVIES) then
         do ipoin = 1, NGLLX*NGLLY
-          iglob = faces_surface_external_mesh(ipoin,ispec2D)
+          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
           ! x,y,z coordinates
           store_val_x_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = xstore(iglob)
           store_val_y_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = ystore(iglob)
@@ -814,7 +818,7 @@
         enddo
       else
         do ipoin = 1, 4
-          iglob = faces_surface_external_mesh(ipoin,ispec2D)
+          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
           ! x,y,z coordinates
           store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
           store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
@@ -825,8 +829,8 @@
   endif
   
 ! saves surface velocities
-  do ispec2D = 1,nfaces_surface_external_mesh
-    ispec = faces_surface_external_mesh_ispec(ispec2D)      
+  do ispec2D = 1,nfaces_surface_ext_mesh
+    ispec = faces_surface_ext_mesh_ispec(ispec2D)      
 
     if( ispec_is_acoustic(ispec) ) then
       ! velocity vector
@@ -839,7 +843,7 @@
     
     if (USE_HIGHRES_FOR_MOVIES) then
       do ipoin = 1, NGLLX*NGLLY
-        iglob = faces_surface_external_mesh(ipoin,ispec2D)
+        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! x,y,z coordinates
         !store_val_x_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = xstore(iglob)
         !store_val_y_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = ystore(iglob)
@@ -878,7 +882,7 @@
       enddo
     else
       do ipoin = 1, 4
-        iglob = faces_surface_external_mesh(ipoin,ispec2D)
+        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! x,y,z coordinates
         !store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
         !store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
@@ -920,45 +924,49 @@
 
 ! master process collects all info
   if (USE_HIGHRES_FOR_MOVIES) then
+    ! collects locations only once
     if (it == NTSTEP_BETWEEN_FRAMES ) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
     endif
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+    ! updates/gathers velocity field (high-res)
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
   else
+    ! collects locations only once
     if (it == NTSTEP_BETWEEN_FRAMES ) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
     endif
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+    ! updates/gathers velocity field (low-res)
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
   endif
@@ -976,12 +984,12 @@
     close(IOUT)
   endif
   
-  end subroutine iterate_time_create_movie_surface_ext_mesh
+  end subroutine it_create_movie_surface_em
 
     
 !=====================================================================
 
-  subroutine iterate_time_movie_surface_output_obsolete()
+  subroutine it_movie_surface_output_o()
 
 ! outputs moviedata files  
   
@@ -1108,44 +1116,44 @@
 ! master process collects all info
   if (USE_HIGHRES_FOR_MOVIES) then
     if (it == NTSTEP_BETWEEN_FRAMES ) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
     endif
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
          store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
   else
     if (it == NTSTEP_BETWEEN_FRAMES ) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
     endif
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
          store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
   endif
@@ -1186,12 +1194,12 @@
 !    close(IOUT)
 !  endif
 
-  end subroutine iterate_time_movie_surface_output_obsolete
+  end subroutine it_movie_surface_output_o
   
   
 !=====================================================================
 
-  subroutine iterate_time_create_shakemap_obsolete()
+  subroutine it_create_shakemap_o()
 
 ! outputs shakemap file 
   
@@ -1262,41 +1270,41 @@
 ! save shakemap only at the end of the simulation
   if(it == NSTEP) then
     if (USE_HIGHRES_FOR_MOVIES) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGLLX*NGLLY,&
+      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
            store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGLLX*NGLLY,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGLLX*NGLLY,NPROC)
     else
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_external_mesh*NGNOD2D,&
+      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh*NGNOD2D,&
            store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh*NGNOD2D,faces_surface_offset_ext_mesh,&
            nfaces_surface_glob_ext_mesh*NGNOD2D,NPROC)
     endif
@@ -1338,131 +1346,161 @@
 !
   endif ! NTSTEP
 
-  end subroutine iterate_time_create_shakemap_obsolete
+  end subroutine it_create_shakemap_o
 
     
 !=====================================================================
 
-  subroutine iterate_time_movie_volume_output()
+  subroutine it_movie_volume_output()
 
 ! outputs movie files for div, curl and velocity  
   
   use specfem_par
   use specfem_par_elastic
+  use specfem_par_acoustic
   use specfem_par_movie
-  
   implicit none
-
+  
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: veloc_element
   integer :: ispec,i,j,k,l,iglob
   
 ! save velocity here to avoid static offset on displacement for movies
-  if( .not. ELASTIC_SIMULATION ) return
+  velocity_movie(:,:,:,:,:) = 0._CUSTOM_REAL
+  
+  if( ACOUSTIC_SIMULATION ) then
+    ! uses div as temporary array to store velocity on all gll points
+    do ispec=1,NSPEC_AB
+      if( .not. ispec_is_acoustic(ispec) ) cycle
+
+      ! calculates velocity
+      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                        potential_dot_acoustic, veloc_element,&
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        ibool,rhostore)
+      velocity_movie(:,:,:,:,ispec) = veloc_element(:,:,:,:)
+    enddo
+  endif ! acoustic
 
 ! save full snapshot data to local disk
+  if( ELASTIC_SIMULATION ) then
 
-! calculate strain div and curl
-  do ispec=1,NSPEC_AB
+  ! calculate strain div and curl
+    do ispec=1,NSPEC_AB
+      if( .not. ispec_is_elastic(ispec) ) cycle
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
 
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+            tempx1l = 0._CUSTOM_REAL
+            tempx2l = 0._CUSTOM_REAL
+            tempx3l = 0._CUSTOM_REAL
 
-          tempx1l = 0._CUSTOM_REAL
-          tempx2l = 0._CUSTOM_REAL
-          tempx3l = 0._CUSTOM_REAL
+            tempy1l = 0._CUSTOM_REAL
+            tempy2l = 0._CUSTOM_REAL
+            tempy3l = 0._CUSTOM_REAL
 
-          tempy1l = 0._CUSTOM_REAL
-          tempy2l = 0._CUSTOM_REAL
-          tempy3l = 0._CUSTOM_REAL
+            tempz1l = 0._CUSTOM_REAL
+            tempz2l = 0._CUSTOM_REAL
+            tempz3l = 0._CUSTOM_REAL
 
-          tempz1l = 0._CUSTOM_REAL
-          tempz2l = 0._CUSTOM_REAL
-          tempz3l = 0._CUSTOM_REAL
+            do l=1,NGLLX
+              hp1 = hprime_xx(i,l)
+              iglob = ibool(l,j,k,ispec)
+              tempx1l = tempx1l + veloc(1,iglob)*hp1
+              tempy1l = tempy1l + veloc(2,iglob)*hp1
+              tempz1l = tempz1l + veloc(3,iglob)*hp1
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-          do l=1,NGLLX
-            hp1 = hprime_xx(i,l)
-            iglob = ibool(l,j,k,ispec)
-            tempx1l = tempx1l + veloc(1,iglob)*hp1
-            tempy1l = tempy1l + veloc(2,iglob)*hp1
-            tempz1l = tempz1l + veloc(3,iglob)*hp1
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+              hp2 = hprime_yy(j,l)
+              iglob = ibool(i,l,k,ispec)
+              tempx2l = tempx2l + veloc(1,iglob)*hp2
+              tempy2l = tempy2l + veloc(2,iglob)*hp2
+              tempz2l = tempz2l + veloc(3,iglob)*hp2
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-            hp2 = hprime_yy(j,l)
-            iglob = ibool(i,l,k,ispec)
-            tempx2l = tempx2l + veloc(1,iglob)*hp2
-            tempy2l = tempy2l + veloc(2,iglob)*hp2
-            tempz2l = tempz2l + veloc(3,iglob)*hp2
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+  !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+              hp3 = hprime_zz(k,l)
+              iglob = ibool(i,j,l,ispec)
+              tempx3l = tempx3l + veloc(1,iglob)*hp3
+              tempy3l = tempy3l + veloc(2,iglob)*hp3
+              tempz3l = tempz3l + veloc(3,iglob)*hp3
+            enddo
 
-!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-            hp3 = hprime_zz(k,l)
-            iglob = ibool(i,j,l,ispec)
-            tempx3l = tempx3l + veloc(1,iglob)*hp3
-            tempy3l = tempy3l + veloc(2,iglob)*hp3
-            tempz3l = tempz3l + veloc(3,iglob)*hp3
+  !         get derivatives of ux, uy and uz with respect to x, y and z
+
+            xixl = xix(i,j,k,ispec)
+            xiyl = xiy(i,j,k,ispec)
+            xizl = xiz(i,j,k,ispec)
+            etaxl = etax(i,j,k,ispec)
+            etayl = etay(i,j,k,ispec)
+            etazl = etaz(i,j,k,ispec)
+            gammaxl = gammax(i,j,k,ispec)
+            gammayl = gammay(i,j,k,ispec)
+            gammazl = gammaz(i,j,k,ispec)
+
+            dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+            dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            dvxdzl(i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+            dvydxl(i,j,k) = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+            dvydyl(i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+            dvydzl(i,j,k) = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+            dvzdxl(i,j,k) = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+            dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+            dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
           enddo
-
-!         get derivatives of ux, uy and uz with respect to x, y and z
-
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-
-          dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-          dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-          dvxdzl(i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
-
-          dvydxl(i,j,k) = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-          dvydyl(i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-          dvydzl(i,j,k) = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
-
-          dvzdxl(i,j,k) = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-          dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-          dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
-
         enddo
       enddo
-    enddo
 
-    do k = 1,NGLLZ
-      do j = 1,NGLLY
-        do i = 1,NGLLX
-          div(i,j,k,ispec) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
-          curl_x(i,j,k,ispec) = dvzdyl(i,j,k) - dvydzl(i,j,k)
-          curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
-          curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
+      do k = 1,NGLLZ
+        do j = 1,NGLLY
+          do i = 1,NGLLX
+            div(i,j,k,ispec) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
+            curl_x(i,j,k,ispec) = dvzdyl(i,j,k) - dvydzl(i,j,k)
+            curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
+            curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
+            
+            iglob = ibool(i,j,k,ispec)
+            velocity_movie(:,i,j,k,ispec) = veloc(:,iglob)
+          enddo
         enddo
       enddo
-    enddo
-  enddo !NSPEC_AB
+    enddo !NSPEC_AB
 
-  write(outputname,"('div_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
-  write(27) div
-  close(27)
-  write(outputname,"('curl_x_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
-  write(27) curl_x
-  close(27)
-  write(outputname,"('curl_y_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
-  write(27) curl_y
-  close(27)
-  write(outputname,"('curl_z_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
-  write(27) curl_z
-  close(27)
-  write(outputname,"('veloc_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
-  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
-  write(27) veloc
-  close(27)
-
-  end subroutine iterate_time_movie_volume_output
+    write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file='OUTPUT_FILES'//trim(outputname),status='unknown',form='unformatted')
+    write(27) div
+    close(27)
+    write(outputname,"('/proc',i6.6,'_curl_x_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file='OUTPUT_FILES'//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_x
+    close(27)
+    write(outputname,"('/proc',i6.6,'_curl_y_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file='OUTPUT_FILES'//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_y
+    close(27)
+    write(outputname,"('/proc',i6.6,'_curl_z_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file='OUTPUT_FILES'//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_z
+    close(27)
+    
+    !write(outputname,"('veloc_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
+    !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    !write(27) veloc
+    !close(27)
+  
+  endif ! elastic
+ 
+  if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
+    write(outputname,"('/proc',i6.6,'_veloc_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file='OUTPUT_FILES'//trim(outputname),status='unknown',form='unformatted')
+    write(27) velocity_movie
+    close(27)  
+  endif 
+  
+  end subroutine it_movie_volume_output
   

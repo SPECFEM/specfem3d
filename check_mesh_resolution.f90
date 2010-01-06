@@ -26,9 +26,11 @@
 
   subroutine check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     kappastore,mustore,rho_vp,rho_vs, &
-                                    DT )
+                                    DT, model_speed_max )
 
 ! check the mesh, stability and resolved period 
+!
+! returns: maximum velocity in model ( model_speed_max )
   
   implicit none
   
@@ -38,7 +40,10 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
+  double precision :: DT
+  real(kind=CUSTOM_REAL) :: model_speed_max
+  
+  ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: vp_elem,vs_elem
   real(kind=CUSTOM_REAL), dimension(1) :: val_min,val_max  
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
@@ -46,7 +51,6 @@
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
   real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob  
   
-  double precision :: DT
   logical:: DT_PRESENT
   
   integer :: myrank
@@ -278,6 +282,17 @@
       write(IMAIN,*)
     endif    
   endif
+
+  ! returns the maximum velocity
+  if( myrank == 0 ) then
+    if( vpmax_glob > vsmax_glob ) then
+      model_speed_max = vpmax_glob
+    else
+      model_speed_max = vsmax_glob
+    endif
+  endif
+  call bcast_all_cr(model_speed_max,1)
+  
   
   end subroutine
   

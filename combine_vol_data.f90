@@ -42,7 +42,10 @@
   integer :: NSPEC_AB, NGLOB_AB
   
 ! parameters  
+  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: data
+  
+  ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
 
   integer, dimension(:,:,:,:),allocatable :: ibool
@@ -55,10 +58,26 @@
   integer :: iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
   integer :: np, ne, npp, nee, nelement, njunk 
     
-  character(len=256) :: sline, arg(6), filename, indir, outdir, prname
+  character(len=256) :: sline, arg(6), filename, indir, outdir
+  character(len=256) :: prname, prname_lp
   character(len=256) :: mesh_file,local_data_file, local_ibool_file
   logical :: HIGH_RESOLUTION_MESH
   integer :: ires
+
+  ! for read_parameter_files
+  double precision :: DT
+  double precision :: HDUR_MOVIE
+  integer :: NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
+            UTM_PROJECTION_ZONE,SIMULATION_TYPE
+  integer :: NSOURCES
+  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+            USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+  logical :: TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
+            OCEANS
+  logical :: ABSORBING_CONDITIONS,SAVE_FORWARD
+  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION  
+  character(len=256) LOCAL_PATH
 
 ! checks given arguments
   print *
@@ -72,12 +91,16 @@
       print *, '        xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
       print *, '    or '
       print *, '        xcombine_data slice_list filename input_dir output_dir high/low-resolution'
+      print *
       print *, ' possible filenames are '
       print *, '   rho_vp, rho_vs, kappastore, mustore etc'
+      print *      
       print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,nspec)  '
       print *, '   in filename.bin'
+      print *
       print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
       print *, ' give 0 for low resolution and 1 for high resolution'
+      print *      
       stop ' Reenter command line options'
     endif
   enddo
@@ -122,6 +145,19 @@
     HIGH_RESOLUTION_MESH = .true.
   endif
 
+  ! needs local_path for mesh files
+  call read_parameter_file( &
+        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
+        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
+
+
+
   print *, 'Slice list: '
   print *, node_list(1:num_node)
 
@@ -132,7 +168,8 @@
   ! counts total number of points (all slices)
   npp = 0
   nee = 0
-  call combine_vol_data_count_totals_ext_mesh(num_node,node_list,indir,npp,nee,HIGH_RESOLUTION_MESH)    
+  call combine_vol_data_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,&
+                                    npp,nee,HIGH_RESOLUTION_MESH)    
 
 
   ! write point and scalar information  
@@ -143,9 +180,10 @@
 
     print *, ' '
     print *, 'Reading slice ', iproc
-    write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
 
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+          status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB 
     close(27)   
@@ -158,9 +196,23 @@
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
     
+    ! ibool file
+    local_ibool_file = trim(prname_lp) // 'ibool' // '.bin'
+    open(unit = 28,file = trim(local_ibool_file),status='old',&
+          action='read', iostat = ios, form='unformatted')
+    if (ios /= 0) then
+      print *,'Error opening ',trim(local_data_file)
+      stop
+    endif
+    read(28) ibool
+    close(28)
+    print *, trim(local_ibool_file)
+
     ! data file  
+    write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    open(unit = 27,file = trim(local_data_file),status='old',action='read', iostat = ios,form ='unformatted')
+    open(unit = 27,file = trim(local_data_file),status='old',&
+          action='read', iostat = ios,form ='unformatted')
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
@@ -172,28 +224,19 @@
     ! uses implicit conversion to real values
     dat = data
 
-    ! ibool file
-    local_ibool_file = trim(prname) // 'ibool' // '.bin'
-    open(unit = 28,file = trim(local_ibool_file),status='old',action='read', iostat = ios, form='unformatted')
-    if (ios /= 0) then
-      print *,'Error opening ',trim(local_data_file)
-      stop
-    endif
-    read(28) ibool
-    close(28)
-    print *, trim(local_ibool_file)
+
 
     ! writes point coordinates and scalar value to mesh file
     if (.not. HIGH_RESOLUTION_MESH) then
       ! writes out element corners only
       call combine_vol_data_write_corners(nspec,nglob,ibool,mask_ibool,&
                                             xstore,ystore,zstore,dat, &
-                                            it,npp,prname,numpoin)
+                                            it,npp,prname_lp,numpoin)
     else  
       ! high resolution, all GLL points
       call combine_vol_data_write_GLL_points(nspec,nglob,ibool,mask_ibool,&
                                             xstore,ystore,zstore,dat,&
-                                            it,npp,prname,numpoin)
+                                            it,npp,prname_lp,numpoin)
     endif
     
     print*,'  points:',np,numpoin
@@ -218,9 +261,10 @@
     iproc = node_list(it)
 
     print *, 'Reading slice ', iproc
-    write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
 
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+          status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB 
     close(27)   
@@ -232,8 +276,9 @@
     allocate(num_ibool(NGLOB_AB))
 
     ! ibool file
-    local_ibool_file = trim(prname) // 'ibool' // '.bin'
-    open(unit = 28,file = trim(local_ibool_file),status='old',action='read', iostat = ios, form='unformatted')
+    local_ibool_file = trim(prname_lp) // 'ibool' // '.bin'
+    open(unit = 28,file = trim(local_ibool_file),status='old',&
+          action='read', iostat = ios, form='unformatted')
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
@@ -281,13 +326,14 @@
 
 ! counts total number of points and elements for external meshes in given slice list
 
-  subroutine combine_vol_data_count_totals_ext_mesh(num_node,node_list,indir,npp,nee,HIGH_RESOLUTION_MESH)
+  subroutine combine_vol_data_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,&
+                          npp,nee,HIGH_RESOLUTION_MESH)
 
   implicit none
   include 'constants.h'
   
   integer,intent(in) :: num_node,node_list(300)
-  character(len=256),intent(in) :: indir
+  character(len=256),intent(in) :: LOCAL_PATH
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
   
@@ -297,15 +343,16 @@
   integer :: NSPEC_AB, NGLOB_AB
   integer :: it,iproc,npoint,nelement,ios,ispec
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  character(len=256) :: prname
+  character(len=256) :: prname_lp
   
   npp = 0
   nee = 0
   do it = 1, num_node
     ! gets number of elements and points for this slice
     iproc = node_list(it)
-    write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+          status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB 
     close(27)   
@@ -315,7 +362,8 @@
       npp = npp + NGLOB_AB
 
       ! total number of elements
-      ! each spectral elements gets subdivided by GLL points, which form (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) sub-elements
+      ! each spectral elements gets subdivided by GLL points, 
+      ! which form (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) sub-elements
       nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) 
       nee = nee + nelement
 
@@ -325,10 +373,11 @@
       allocate(mask_ibool(NGLOB_AB))
 
       ! ibool file
-      open(unit = 28,file = prname(1:len_trim(prname))//'ibool'//'.bin',status='old',action='read',&
+      open(unit = 28,file = prname_lp(1:len_trim(prname_lp))//'ibool'//'.bin',&
+            status='old',action='read',&
             iostat = ios,form='unformatted')
       if (ios /= 0) then
-        print *,'Error opening: ',prname(1:len_trim(prname))//'ibool'//'.bin'
+        print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'ibool'//'.bin'
         stop
       endif
       read(28) ibool
@@ -375,7 +424,7 @@
 
   subroutine combine_vol_data_write_corners(nspec,nglob,ibool,mask_ibool,&
                                             xstore,ystore,zstore,dat,&
-                                            it,npp,prname,numpoin)
+                                            it,npp,prname_lp,numpoin)
 
   implicit none
   include 'constants.h'
@@ -387,7 +436,7 @@
   real,dimension(NGLLY,NGLLY,NGLLZ,nspec),intent(in) :: dat
   integer:: it  
   integer :: npp,numpoin
-  character(len=256) :: prname
+  character(len=256) :: prname_lp
 
   !integer :: npoint,num_node
   
@@ -399,24 +448,24 @@
 
 ! corner locations  
   ! reads in coordinate files
-  local_file = trim(prname)//'x.bin'
-  open(unit = 27,file = trim(prname)//'x.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  local_file = trim(prname_lp)//'x.bin'
+  open(unit = 27,file = trim(prname_lp)//'x.bin',status='old',action='read', iostat = ios,form ='unformatted')
   if (ios /= 0) then
     print *,'Error opening ',trim(local_file)
     stop
   endif
   read(27) xstore
   close(27)
-  local_file = trim(prname)//'y.bin'
-  open(unit = 27,file = trim(prname)//'y.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  local_file = trim(prname_lp)//'y.bin'
+  open(unit = 27,file = trim(prname_lp)//'y.bin',status='old',action='read', iostat = ios,form ='unformatted')
   if (ios /= 0) then
     print *,'Error opening ',trim(local_file)
     stop
   endif
   read(27) ystore
   close(27)
-  local_file = trim(prname)//'z.bin'
-  open(unit = 27,file = trim(prname)//'z.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  local_file = trim(prname_lp)//'z.bin'
+  open(unit = 27,file = trim(prname_lp)//'z.bin',status='old',action='read', iostat = ios,form ='unformatted')
   if (ios /= 0) then
     print *,'Error opening ',trim(local_file)
     stop
@@ -541,7 +590,7 @@
 
   subroutine combine_vol_data_write_GLL_points(nspec,nglob,ibool,mask_ibool,&
                                             xstore,ystore,zstore,dat,&
-                                            it,npp,prname,numpoin)
+                                            it,npp,prname_lp,numpoin)
 
   implicit none
   include 'constants.h'
@@ -552,7 +601,7 @@
   real(kind=CUSTOM_REAL),dimension(nglob) :: xstore, ystore, zstore
   real,dimension(NGLLY,NGLLY,NGLLZ,nspec),intent(in) :: dat
   integer:: it,npp,numpoin
-  character(len=256) :: prname
+  character(len=256) :: prname_lp
 
   ! local parameters
   real :: x, y, z
@@ -566,24 +615,27 @@
   endif
 
   ! reads in coordinate files
-  local_file = trim(prname)//'x.bin'
-  open(unit = 27,file = trim(prname)//'x.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  local_file = trim(prname_lp)//'x.bin'
+  open(unit = 27,file = trim(prname_lp)//'x.bin',status='old',&
+          action='read', iostat = ios,form ='unformatted')
   if (ios /= 0) then
     print *,'Error opening ',trim(local_file)
     stop
   endif
   read(27) xstore
   close(27)
-  local_file = trim(prname)//'y.bin'
-  open(unit = 27,file = trim(prname)//'y.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  local_file = trim(prname_lp)//'y.bin'
+  open(unit = 27,file = trim(prname_lp)//'y.bin',status='old',&
+        action='read', iostat = ios,form ='unformatted')
   if (ios /= 0) then
     print *,'Error opening ',trim(local_file)
     stop
   endif
   read(27) ystore
   close(27)
-  local_file = trim(prname)//'z.bin'
-  open(unit = 27,file = trim(prname)//'z.bin',status='old',action='read', iostat = ios,form ='unformatted')
+  local_file = trim(prname_lp)//'z.bin'
+  open(unit = 27,file = trim(prname_lp)//'z.bin',status='old',&
+        action='read', iostat = ios,form ='unformatted')
   if (ios /= 0) then
     print *,'Error opening ',trim(local_file)
     stop

@@ -129,14 +129,17 @@ libspecfem_a_OBJECTS = \
 # values_from_mesher.h anymore
 SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
+	$O/PML_init.o \
 	$O/compute_forces_no_Deville.o \
 	$O/compute_forces_with_Deville.o \
-  $O/compute_forces_elastic.o \
-  $O/compute_forces_acoustic.o \
-  $O/compute_gradient.o \
+	$O/compute_forces_elastic.o \
+	$O/compute_forces_acoustic_PML.o \
+	$O/compute_forces_acoustic.o \
+	$O/compute_gradient.o \
 	$O/initialize_simulation.o \
 	$O/read_mesh_databases.o \
 	$O/setup_GLL_points.o \
+	$O/write_PNM_GIF_data.o \
 	$O/detect_mesh_surfaces.o \
 	$O/setup_movie_meshes.o \
 	$O/read_topography_bathymetry.o \
@@ -234,8 +237,8 @@ xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
 xcheck_buffers_2D: $O/check_buffers_2D.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcheck_buffers_2D $O/check_buffers_2D.o $(LIBSPECFEM)
 
-xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o
-	${FCCOMPILE_CHECK} -o xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o
+xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o 
+	${FCCOMPILE_CHECK} -o xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o
 
 xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o
 	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o
@@ -419,6 +422,9 @@ $O/write_AVS_DX_global_data.o: constants.h write_AVS_DX_global_data.f90
 $O/write_VTK_data.o: constants.h write_VTK_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o write_VTK_data.f90
 
+$O/write_PNM_GIF_data.o: constants.h write_PNM_GIF_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_PNM_GIF_data.o write_PNM_GIF_data.f90
+
 $O/get_shape3D.o: constants.h get_shape3D.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_shape3D.o get_shape3D.f90
 
@@ -482,6 +488,9 @@ $O/combine_surf_data.o: constants.h combine_surf_data.f90
 $O/prepare_assemble_MPI.o: constants.h prepare_assemble_MPI.f90
 	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o prepare_assemble_MPI.f90
 
+$O/PML_init.o: constants.h PML_init.f90
+	${FCCOMPILE_CHECK} -c -o $O/PML_init.o PML_init.f90
+
 ### compilation with optimization
 
 $O/specfem3D.o: constants.h specfem3D.f90
@@ -498,6 +507,9 @@ $O/compute_forces_elastic.o: constants.h compute_forces_elastic.f90
 
 $O/compute_forces_acoustic.o: constants.h compute_forces_acoustic.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic.o compute_forces_acoustic.f90
+
+$O/compute_forces_acoustic_PML.o: constants.h compute_forces_acoustic_PML.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic_PML.o compute_forces_acoustic_PML.f90
 
 $O/compute_gradient.o: constants.h compute_gradient.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_gradient.o compute_gradient.f90
