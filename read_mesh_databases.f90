@@ -300,7 +300,15 @@
 ! check courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                              kappastore,mustore,rho_vp,rho_vs,DT )
+                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max )
+  else if( ACOUSTIC_SIMULATION ) then  
+      allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      rho_vp = sqrt( kappastore / rhostore ) * rhostore
+      rho_vs = 0.0_CUSTOM_REAL
+      call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max )
+      deallocate(rho_vp,rho_vs)
   endif
 
   end subroutine

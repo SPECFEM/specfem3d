@@ -51,7 +51,7 @@
   call setup_sources_precompute_arrays()  
 
 ! pre-compute receiver interpolation factors
-  call setup_receivers_precompute_interpolations()
+  call setup_receivers_precompute_intp()
 
 ! write source and receiver VTK files for Paraview
   call setup_sources_receivers_VTKfile()
@@ -152,10 +152,13 @@ subroutine setup_sources_check_acoustic()
   implicit none
   
   integer :: isource,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
-  logical :: is_on
+  logical :: is_on,is_on_all
 
 ! outputs a warning in case of an acoustic source lying on the free surface
   do isource = 1,NSOURCES
+    ! checks if source is close to face 
+    is_on = .false. 
+  
     ! only receivers in this process  
     if( myrank == islice_selected_source(isource) ) then
 
@@ -177,9 +180,6 @@ subroutine setup_sources_check_acoustic()
            
             izmin = minval( free_surface_ijk(3,:,iface) )
             izmax = maxval( free_surface_ijk(3,:,iface) )
-
-            ! checks if receiver is close to face 
-            is_on = .false. 
            
             if( .not. USE_FORCE_POINT_SOURCE ) then
               ! xmin face 
@@ -224,19 +224,22 @@ subroutine setup_sources_check_acoustic()
               endif              
             endif
             
-            ! user output    
-            if( is_on ) then       
-              print*, '**********************************************************************'
-              print*, '*** source: ',isource,'in rank:',myrank,'  ***'
-              print*, '*** Warning: acoustic source located exactly on the free surface ***'
-              print*, '*** will be zeroed                                                                           ***'
-              print*, '**********************************************************************'
-              print*
-            endif
           endif ! free_surface_ispec
         enddo ! iface
       endif ! ispec_is_acoustic
     endif ! islice_selected_rec
+    
+    ! user output    
+    call any_all_l( is_on, is_on_all )
+    if( myrank == 0 .and. is_on_all ) then       
+      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*) '*** source: ',isource,'                                          ***'
+      write(IMAIN,*) '*** Warning: acoustic source located exactly on the free surface ***'
+      write(IMAIN,*) '*** will be zeroed                                                                           ***'
+      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*)
+    endif    
+    
   enddo ! num_free_surface_faces
 
 
@@ -439,10 +442,14 @@ subroutine setup_receivers_check_acoustic()
   implicit none
   
   integer :: irec,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
-  logical :: is_on
+  logical :: is_on,is_on_all
 
 ! outputs a warning in case the receiver is lying on the free surface
   do irec = 1,nrec
+  
+    ! checks if receiver is close to face 
+    is_on = .false. 
+  
     ! only receivers in this process  
     if( myrank == islice_selected_rec(irec) ) then
 
@@ -464,9 +471,6 @@ subroutine setup_receivers_check_acoustic()
            
             izmin = minval( free_surface_ijk(3,:,iface) )
             izmax = maxval( free_surface_ijk(3,:,iface) )
-
-            ! checks if receiver is close to face 
-            is_on = .false. 
            
             ! xmin face 
             if(ixmin==1 .and. ixmax==1) then
@@ -488,19 +492,22 @@ subroutine setup_receivers_check_acoustic()
               if( gamma_receiver(irec) > 0.99d0) is_on = .true.
             endif
                 
-            ! user output    
-            if( is_on ) then       
-              print*, '**********************************************************************'
-              print*, '*** receiver:',irec,'in rank:',myrank,'  ***'
-              print*, '*** Warning: acoustic receiver located exactly on the free surface ***'
-              print*, '*** Warning: tangential component will be zero there               ***'
-              print*, '**********************************************************************'
-              print*
-            endif
           endif ! free_surface_ispec
         enddo ! iface
       endif ! ispec_is_acoustic
     endif ! islice_selected_rec
+    
+    ! user output    
+    call any_all_l( is_on, is_on_all )
+    if( myrank == 0 .and. is_on_all ) then       
+      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*) '*** station:',irec,'                                          ***'
+      write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
+      write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
+      write(IMAIN,*) '**********************************************************************'
+      write(IMAIN,*)
+    endif
+        
   enddo ! num_free_surface_faces
 
 end subroutine setup_receivers_check_acoustic
@@ -510,7 +517,7 @@ end subroutine setup_receivers_check_acoustic
 !-------------------------------------------------------------------------------------------------
 !  
 
-subroutine setup_receivers_precompute_interpolations()
+subroutine setup_receivers_precompute_intp()
 
   use specfem_par
   implicit none
@@ -582,7 +589,7 @@ subroutine setup_receivers_precompute_interpolations()
   endif
   
 
-end subroutine setup_receivers_precompute_interpolations
+end subroutine setup_receivers_precompute_intp
 !
 !-------------------------------------------------------------------------------------------------
 !  

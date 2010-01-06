@@ -62,6 +62,19 @@
 !----
 !
 
+  subroutine bcast_all_cr(buffer, count)
+
+  include "constants.h"
+
+  integer count
+  real(kind=CUSTOM_REAL), dimension(count) :: buffer
+
+  end subroutine bcast_all_cr
+
+!
+!----
+!
+
   subroutine bcast_all_dp(buffer, count)
 
   integer count
@@ -118,6 +131,24 @@
   recvbuf(:,0) = sendbuf(:)
 
   end subroutine gather_all_cr
+
+!
+!----
+!
+
+  subroutine gather_all_all_cr(sendbuf, recvbuf, counts,NPROC)
+
+  implicit none
+
+  include "constants.h"
+
+  integer  NPROC,counts
+  real(kind=CUSTOM_REAL), dimension(counts) :: sendbuf
+  real(kind=CUSTOM_REAL), dimension(counts,0:NPROC-1) :: recvbuf
+
+  recvbuf(:,0) = sendbuf(:)
+
+  end subroutine gather_all_all_cr
 
 !
 !----
@@ -230,6 +261,22 @@
 !----
 !
 
+  subroutine max_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+  include "constants.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine max_all_all_cr
+
+!
+!----
+!
+
   subroutine min_all_cr(sendbuf, recvbuf)
 
   implicit none
@@ -241,6 +288,22 @@
   recvbuf = sendbuf
 
   end subroutine min_all_cr
+
+!
+!----
+!
+
+  subroutine min_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+  include "constants.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine min_all_all_cr
 
 !
 !----
@@ -296,6 +359,20 @@
   recvbuf = sendbuf
 
   end subroutine sum_all_i
+
+
+!
+!----
+!
+  subroutine sum_all_all_i(sendbuf, recvbuf)
+
+  implicit none
+
+  integer sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine sum_all_all_i
 
 !
 !----
@@ -408,7 +485,10 @@
 
   implicit none
   
-  integer recvbuf,recvcount,dest,recvtag
+  !integer recvbuf,recvcount,dest,recvtag
+  integer dest,recvtag
+  integer recvcount
+  integer,dimension(recvcount):: recvbuf
   
   stop 'recv_i not implemented for serial code'
 

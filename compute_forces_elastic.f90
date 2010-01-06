@@ -49,42 +49,35 @@ subroutine compute_forces_elastic()
 
 ! elastic term
     if(USE_DEVILLE_PRODUCTS) then                        
-      call compute_forces_with_Deville(phase_is_inner, NSPEC_AB,NGLOB_AB, &
-                        displ,accel, &
+      call compute_forces_with_Deville(phase_is_inner, NSPEC_AB,NGLOB_AB,displ,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_xxT, &
-                        hprimewgll_xx,hprimewgll_xxT, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ispec_is_inner, &
+                        kappastore,mustore,jacobian,ibool,ispec_is_inner, &
                         ATTENUATION,USE_OLSEN_ATTENUATION, &
                         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-                        rho_vs, &
-                        ANISOTROPY,NSPEC_ANISO, &
+                        rho_vs,ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
                         c34store,c35store,c36store,c44store,c45store,c46store,&
                         c55store,c56store,c66store, &
                         ispec_is_elastic )
     else
-      call compute_forces_no_Deville( phase_is_inner, NSPEC_AB,NGLOB_AB, &
-                        displ,accel, &
+      call compute_forces_no_Deville( phase_is_inner, NSPEC_AB,NGLOB_AB,displ,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ispec_is_inner, &
+                        kappastore,mustore,jacobian,ibool,ispec_is_inner, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,&
                         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                         epsilondev_xz,epsilondev_yz,iflag_attenuation_store,&
-                        rho_vs, &
-                        ANISOTROPY,NSPEC_ANISO, &
+                        rho_vs,ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
                         c34store,c35store,c36store,c44store,c45store,c46store,&
@@ -94,7 +87,7 @@ subroutine compute_forces_elastic()
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if(ABSORBING_CONDITIONS) &
-      call compute_forces_elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, &
+      call elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec, &
@@ -104,7 +97,7 @@ subroutine compute_forces_elastic()
 
 ! acoustic coupling
     if( ACOUSTIC_SIMULATION ) &
-      call compute_forces_elastic_coupling_acoustic(NSPEC_AB,NGLOB_AB, &
+      call elastic_coupling_acoustic(NSPEC_AB,NGLOB_AB, &
                         ibool,accel,potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -114,10 +107,10 @@ subroutine compute_forces_elastic()
 
 ! poroelastic coupling
     if( POROELASTIC_SIMULATION ) &
-      call compute_forces_elastic_coupling_poroelastic()
+      call elastic_coupling_poroelastic()
 
 ! adds source term (single-force/moment-tensor solution)
-    call compute_forces_elastic_sources( NSPEC_AB,NGLOB_AB,accel, &
+    call elastic_sources( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         xi_source,eta_source,gamma_source,nu_source, &
@@ -165,7 +158,7 @@ subroutine compute_forces_elastic()
 
 ! updates acceleration with ocean load term
   if(OCEANS) then    
-    call compute_forces_elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
+    call elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
                         ibool,rmass,rmass_ocean_load,accel, &
                         free_surface_normal,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces)
@@ -202,7 +195,7 @@ end subroutine compute_forces_elastic
 
 ! absorbing boundary term for elastic media (Stacey conditions)
 
-subroutine compute_forces_elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, &
+subroutine elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec, &
@@ -293,13 +286,13 @@ subroutine compute_forces_elastic_absorbing_boundaries(NSPEC_AB,NGLOB_AB,accel, 
     endif ! ispec_is_inner    
   enddo
   
-end subroutine compute_forces_elastic_absorbing_boundaries
+end subroutine elastic_absorbing_boundaries
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_elastic_coupling_acoustic(NSPEC_AB,NGLOB_AB, &
+subroutine elastic_coupling_acoustic(NSPEC_AB,NGLOB_AB, &
                         ibool,accel,potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -391,22 +384,22 @@ subroutine compute_forces_elastic_coupling_acoustic(NSPEC_AB,NGLOB_AB, &
     
   enddo ! iface
 
-end subroutine compute_forces_elastic_coupling_acoustic
+end subroutine elastic_coupling_acoustic
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_elastic_coupling_poroelastic()
+subroutine elastic_coupling_poroelastic()
   implicit none
  
-end subroutine compute_forces_elastic_coupling_poroelastic
+end subroutine elastic_coupling_poroelastic
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_elastic_sources( NSPEC_AB,NGLOB_AB,accel, &
+subroutine elastic_sources( NSPEC_AB,NGLOB_AB,accel, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   xi_source,eta_source,gamma_source,nu_source, &
@@ -515,13 +508,13 @@ subroutine compute_forces_elastic_sources( NSPEC_AB,NGLOB_AB,accel, &
   
   enddo ! NSOURCES
 
-end subroutine compute_forces_elastic_sources
+end subroutine elastic_sources
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
+subroutine elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
                         ibool,rmass,rmass_ocean_load,accel, &
                         free_surface_normal,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces)
@@ -625,5 +618,5 @@ subroutine compute_forces_elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
     enddo ! igll
   enddo ! iface  
 
-end subroutine compute_forces_elastic_ocean_load
+end subroutine elastic_ocean_load
 

@@ -209,10 +209,10 @@ subroutine create_regions_mesh_ext(ibool, &
   integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
   
 ! local parameters
-
 ! static memory size needed by the solver
   double precision :: static_memory_size
-
+  real(kind=CUSTOM_REAL) :: model_speed_max
+  
 ! for vtk output
 !  character(len=256) prname_file
 !  integer,dimension(:),allocatable :: itest_flag
@@ -348,22 +348,16 @@ subroutine create_regions_mesh_ext(ibool, &
                         jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
                         rhostore,kappastore,mustore, &
                         rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                        OCEANS,rmass_ocean_load,NGLOB_OCEAN,&                        
-                        ibool, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        OCEANS,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                        abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces, &
+                        abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
                         free_surface_normal,free_surface_jacobian2Dw, &
-                        free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces, &
+                        free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
                         coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                        coupling_ac_el_ijk,coupling_ac_el_ispec, &
-                        num_coupling_ac_el_faces, &                        
+                        coupling_ac_el_ijk,coupling_ac_el_ispec,num_coupling_ac_el_faces, &                        
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                        prname,SAVE_MESH_FILES, &
-                        ANISOTROPY,NSPEC_ANISO, &
+                        prname,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store, &
                         c22store,c23store,c24store,c25store,c26store,c33store, &
                         c34store,c35store,c36store,c44store,c45store,c46store, &
@@ -379,7 +373,7 @@ subroutine create_regions_mesh_ext(ibool, &
   call check_mesh_resolution(myrank,nspec,nglob,ibool,&
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             kappastore,mustore,rho_vp,rho_vs, &
-                            -1.0d0 )
+                            -1.0d0, model_speed_max )
 
 ! VTK file output
 !  if( SAVE_MESH_FILES ) then

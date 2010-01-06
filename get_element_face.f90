@@ -383,7 +383,7 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   if( abs(tmp) < TINYVAL ) then
     print*,'error get face normal: length',tmp
     print*,'normal:',face_n(:)
-    stop 'error get element face normal'
+    call exit_mpi(0,'error get element face normal')
   endif
   face_n(:) = face_n(:)/tmp
 
@@ -415,8 +415,14 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   if( tmp > 0.0 ) then
     face_n(:) = - face_n(:)
   endif  
-  
-! determines orientation normal and flips direction such that normal points outwards
+ 
+! in case given normal has zero length, sets it to computed face normal
+  if( ( normal(1)**2 + normal(2)**2 + normal(3)**2 ) < TINYVAL ) then
+    normal(:) = face_n(:)
+    return
+  endif
+   
+! otherwise determines orientation of normal and flips direction such that normal points outwards
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
   if( tmp < 0.0 ) then
     !print*,'element face normal: orientation ',ispec,iface,tmp

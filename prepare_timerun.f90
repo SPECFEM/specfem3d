@@ -177,25 +177,14 @@
 
   !! DK DK array not created yet for CUBIT
   ! if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
-
   ! open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
   ! read(27) b_displ
   ! read(27) b_veloc
   ! read(27) b_accel
-
   ! rho_kl(:,:,:,:) = 0._CUSTOM_REAL
   ! mu_kl(:,:,:,:) = 0._CUSTOM_REAL
   ! kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
-
   ! endif
-
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) '           time step: ',sngl(DT),' s'
-    write(IMAIN,*) 'number of time steps: ',NSTEP
-    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
-    write(IMAIN,*)
-  endif
 
 ! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
@@ -366,8 +355,7 @@
     !   endif
     !  close(27)
 
-  endif
-  
+  endif  
 
 ! initialize Moho boundary index
 ! if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
@@ -376,5 +364,22 @@
 !   k_top = 1
 !   k_bot = NGLLZ
 ! endif
+
+  ! initializes PML arrays  
+  if( ABSORBING_CONDITIONS  ) then
+    if( ABSORB_USE_PML ) then 
+      call PML_initialize()              
+    endif
+  endif
+  
+! user output
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '           time step: ',sngl(DT),' s'
+    write(IMAIN,*) 'number of time steps: ',NSTEP
+    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
+    write(IMAIN,*)
+  endif
+
 
   end subroutine

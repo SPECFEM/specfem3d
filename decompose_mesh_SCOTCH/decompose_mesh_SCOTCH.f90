@@ -166,6 +166,19 @@ module decompose_mesh_SCOTCH
     mat(2,:) = 1
     
   ! reads material definitions
+  !
+  ! note: format of nummaterial_velocity_file must be
+  !
+  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_flag  #(7)anisotropy_flag
+  !
+  ! where
+  !     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
+  !     material_id               : number of material/volume
+  !     rho                           : density
+  !     vp                             : P-velocity
+  !     vs                             : S-velocity
+  !     Q_flag                      : 0=no attenuation/1=IATTENUATION_SEDIMENTS_40, 2=..., 13=IATTENUATION_BEDROCK
+  !     anisotropy_flag        : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
     count_def_mat = 0
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
@@ -198,7 +211,11 @@ module decompose_mesh_SCOTCH
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted')
     do imat=1,count_def_mat
-       ! format: #(6) material_domain_id #(0) material_id  #(1) rho    #(2) vp      #(3) vs      #(4) Q_flag     #(5) anisotropy_flag
+       ! material definitions
+       !
+       ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
+       !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_flag #(5) anisotropy_flag
+       !
        read(98,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
        !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
        !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)

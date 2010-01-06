@@ -284,6 +284,9 @@ module specfem_par
   ! real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
   ! ADJOINT
 
+! maximum speed in velocity model
+  real(kind=CUSTOM_REAL):: model_speed_max
+  
 !daniel
 !  integer, dimension(:),allocatable :: spec_inner, spec_outer
 !  integer :: nspec_inner,nspec_outer
@@ -408,6 +411,8 @@ module specfem_par_movie
 
 ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: velocity_movie
+  
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
                                 dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
 
@@ -439,9 +444,9 @@ module specfem_par_movie
 ! for storing surface of external mesh
   integer,dimension(:),allocatable :: nfaces_perproc_surface_ext_mesh
   integer,dimension(:),allocatable :: faces_surface_offset_ext_mesh
-  integer,dimension(:,:),allocatable :: faces_surface_external_mesh
-  integer,dimension(:),allocatable :: faces_surface_external_mesh_ispec
-  integer :: nfaces_surface_external_mesh
+  integer,dimension(:,:),allocatable :: faces_surface_ext_mesh
+  integer,dimension(:),allocatable :: faces_surface_ext_mesh_ispec
+  integer :: nfaces_surface_ext_mesh
   integer :: nfaces_surface_glob_ext_mesh
 
   integer :: iorderi(NGNOD2D),iorderj(NGNOD2D)

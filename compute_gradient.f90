@@ -34,6 +34,7 @@ subroutine compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
 ! note: 
 !   displacement s = (rho)^{-1} \del \chi
 !   velocity          v = (rho)^{-1} \del \ddot \chi
+!
 ! returns: gradient vector field (vector_field_element) in specified element 
 
   implicit none
