@@ -77,6 +77,7 @@ O = obj
 
 libspecfem_a_OBJECTS = \
 	$O/store_coords.o \
+	$O/read_parameter_file.o \
 	$O/compute_parameters.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
@@ -94,7 +95,6 @@ libspecfem_a_OBJECTS = \
 	$O/meshfem3D.o \
 	$O/read_topo_bathy_file.o \
 	$O/read_moho_map.o \
-	$O/read_parameter_file.o \
 	$O/read_value_parameters.o \
 	$O/salton_trough_gocad.o \
 	$O/save_databases.o \

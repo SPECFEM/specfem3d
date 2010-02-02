@@ -56,6 +56,11 @@
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
 ! I/O unit for source and receiver vtk file
   integer, parameter :: IOVTK = 98
+! I/O unit for interface file
+  integer, parameter :: IIN_INTERFACES = 43
+
+! ignore variable name field (junk) at the beginning of each input line
+  logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
 
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model

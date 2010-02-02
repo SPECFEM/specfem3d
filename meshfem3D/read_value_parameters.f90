@@ -25,82 +25,144 @@
 
 ! read values from parameter file, ignoring white lines and comments
 
-  subroutine read_value_integer(value_to_read, name)
+  subroutine read_value_integer(ignore_junk,value_to_read, name)
 
   implicit none
 
+  logical ignore_junk
   integer value_to_read
   character(len=*) name
   character(len=100) string_read
 
   call unused_string(name)
 
-  call read_next_line(string_read)
+  call read_next_line(ignore_junk,string_read)
   read(string_read,*) value_to_read
 
   end subroutine read_value_integer
 
 !--------------------
 
-  subroutine read_value_double_precision(value_to_read, name)
+  subroutine read_value_double_precision(ignore_junk,value_to_read, name)
 
   implicit none
 
+  logical ignore_junk
   double precision value_to_read
   character(len=*) name
   character(len=100) string_read
 
   call unused_string(name)
 
-  call read_next_line(string_read)
+  call read_next_line(ignore_junk,string_read)
   read(string_read,*) value_to_read
 
   end subroutine read_value_double_precision
 
 !--------------------
 
-  subroutine read_value_logical(value_to_read, name)
+  subroutine read_value_logical(ignore_junk,value_to_read, name)
 
   implicit none
 
+  logical ignore_junk
   logical value_to_read
   character(len=*) name
   character(len=100) string_read
 
   call unused_string(name)
 
-  call read_next_line(string_read)
+  call read_next_line(ignore_junk,string_read)
   read(string_read,*) value_to_read
 
   end subroutine read_value_logical
 
 !--------------------
 
-  subroutine read_value_string(value_to_read, name)
+  subroutine read_value_string(ignore_junk,value_to_read, name)
 
   implicit none
 
+  logical ignore_junk
   character(len=*) value_to_read
   character(len=*) name
   character(len=100) string_read
 
   call unused_string(name)
 
-  call read_next_line(string_read)
+  call read_next_line(ignore_junk,string_read)
   value_to_read = string_read
 
   end subroutine read_value_string
 
 !--------------------
 
-  subroutine read_next_line(string_read)
+  subroutine read_interface_parameters(SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
+             orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface)
 
   implicit none
 
   include "constants.h"
 
+  logical SUPPRESS_UTM_PROJECTION
+  integer npx_interface,npy_interface
+  double precision orig_x_interface,orig_y_interface
+  double precision spacing_x_interface,spacing_y_interface
   character(len=100) string_read
 
+  call read_next_line(DONT_IGNORE_JUNK,string_read)
+  read(string_read,*) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
+             orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface 
+
+  end subroutine read_interface_parameters
+
+!--------------------
+
+  subroutine read_material_parameters(i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id)
+
+  implicit none
+
+  include "constants.h"
+
+  integer i
+  double precision rho,vp,vs,Q_flag,anisotropy_flag,domain_id
+  character(len=100) string_read
+
+  call read_next_line(DONT_IGNORE_JUNK,string_read)
+  read(string_read,*)  i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
+
+  end subroutine read_material_parameters
+
+!--------------------
+
+  subroutine read_region_parameters(ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+          iz_beg_region,iz_end_region,imaterial_number)
+
+  implicit none
+
+  include "constants.h"
+
+  integer ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
+  integer iz_beg_region,iz_end_region,imaterial_number
+  character(len=100) string_read
+
+  call read_next_line(DONT_IGNORE_JUNK,string_read)
+  read(string_read,*) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+          iz_beg_region,iz_end_region,imaterial_number
+
+  end subroutine read_region_parameters
+  
+!--------------------
+
+  subroutine read_next_line(suppress_junk,string_read)
+
+  implicit none
+
+  include "constants.h"
+
+
+  logical suppress_junk
+  character(len=100) string_read
   integer index_equal_sign,ios
 
   do
@@ -125,10 +187,12 @@
 ! suppress trailing comments, if any
   if(index(string_read,'#') > 0) string_read = string_read(1:index(string_read,'#')-1)
 
+  if(suppress_junk) then
 ! suppress leading junk (up to the first equal sign, included)
-  index_equal_sign = index(string_read,'=')
-  if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in DATA/Par_file'
-  string_read = string_read(index_equal_sign + 1:len_trim(string_read))
+     index_equal_sign = index(string_read,'=')
+     if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in DATA/Par_file'
+     string_read = string_read(index_equal_sign + 1:len_trim(string_read))
+  end if
 
 ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
   string_read = adjustl(string_read)

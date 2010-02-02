@@ -198,10 +198,14 @@
 ! standard include of the MPI library
   include 'mpif.h'
 
-  integer ier
+  integer ier!,size
 
 ! initialize the MPI communicator and start the NPROCTOT MPI processes.
   call MPI_INIT(ier)
+
+  ! print*,'init'
+  !call MPI_COMM_SIZE(MPI_COMM_WORLD,size,ier)
+  !print*,'size = ',size 
 
   end subroutine init
 
