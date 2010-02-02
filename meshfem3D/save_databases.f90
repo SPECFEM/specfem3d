@@ -25,8 +25,9 @@
 
 
   subroutine save_databases(prname,nspec,nglob,iproc_xi,iproc_eta,NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-     ibool,nodes_coords,idoubling,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,&
-     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom)
+     ibool,nodes_coords,true_material_num,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,&
+     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,&
+     NMATERIALS,material_properties)
 
   implicit none
 
@@ -48,9 +49,11 @@
  
 ! arrays with the mesh
   integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
-  real(kind=CUSTOM_REAL):: nodes_coords(nglob,3)
+!  real(kind=CUSTOM_REAL) :: nodes_coords(nglob,3)
+  double precision :: nodes_coords(nglob,3)
 
-  integer idoubling(nspec)
+
+  integer true_material_num(nspec)
   double precision rho,vp,vs
 
 ! attenuation flag
@@ -62,11 +65,16 @@
   integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
   integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
   integer ibelm_bottom(NSPEC2D_BOTTOM)
-  
+
+! material properties
+  integer :: NMATERIALS
+! first dimension  : material_id
+! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+  double precision , dimension(NMATERIALS,6) ::  material_properties
 
   integer i,ispec,iglob
 
-! name of the database file
+! name of the database filex
   character(len=150) prname
 
 ! for MPI interfaces
@@ -75,36 +83,26 @@
   integer, dimension(8) ::  nspec_interface
 
 
-!  write(prname, "(i6.6,'_Database')"
   open(unit=15,file=prname(1:len_trim(prname))//'Database',status='unknown',action='write',form='formatted')
- 
+
   write(15,*) nglob
   do iglob=1,nglob
      write(15,*) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
   end do
 
+
 ! Materials properties
-   write(15,*) maxval(idoubling), 0
-   do idoubl = 1,maxval(idoubling)
-      call socal_model(idoubl,rho,vp,vs,iattenuation)
-      !write(15,*) rho,vp,vs,iattenuation,0.d0
-      ! assumes material id for elastic domain
-      write(15,*) rho,vp,vs,iattenuation,0.d0,2
+   write(15,*) NMATERIALS, 0
+   do idoubl = 1,NMATERIALS
+      write(15,*) material_properties(idoubl,:)
    end do
-!  write(15,*) 1,0
-!  write(15,*) 1100.d0,300.d0,200.d0,0.d0,0.d0
+
 
   write(15,*) nspec
   do ispec=1,nspec
-!      write(15,'(11i8)') ispec,idoubling(ispec),1,ibool(1,1,2,ispec),ibool(1,1,1,ispec),&
-!     ibool(1,2,1,ispec),ibool(1,2,2,ispec),ibool(2,1,2,ispec),ibool(2,1,1,ispec),&
-!          ibool(2,2,1,ispec),ibool(2,2,2,ispec) 
-      write(15,'(11i8)') ispec,idoubling(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
+      write(15,'(11i8)') ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
            ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
            ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec) 
-!     write(15,'(11i8)') ispec,idoubling(ispec),1,ibool(1,1,1,ispec),ibool(1,2,1,ispec),&
-!          ibool(2,2,1,ispec),ibool(2,1,1,ispec),ibool(1,1,2,ispec),ibool(1,2,2,ispec),&
-!          ibool(2,2,2,ispec),ibool(2,1,2,ispec) 
   end do  
 
   ! Boundaries
@@ -136,6 +134,9 @@
   end do
 
   ! MPI Interfaces
+
+  if(NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
+
   nb_interfaces = 4
   interfaces(W:N) = .true.
   interfaces(NW:SW) = .false.
@@ -256,6 +257,11 @@
      end do
   end if
   
+  else
+
+     write(15,*) 0,0
+     
+  end if
 
   close(15)
     

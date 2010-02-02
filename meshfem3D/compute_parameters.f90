@@ -68,9 +68,6 @@
 !
   if(USE_REGULAR_MESH) then
 
-! total number of spectral elements along radius
-  NER = NER_SEDIM
-
 ! number of elements horizontally in each slice (i.e. per processor)
 ! these two values MUST be equal in all cases
   NEX_PER_PROC_XI = NEX_XI / NPROC_XI
@@ -80,18 +77,19 @@
   NPROC = NPROC_XI * NPROC_ETA
 
 ! exact number of spectral elements without doubling layers
-  NSPEC_NO_DOUBLING = NEX_XI*NEX_ETA*NER_SEDIM
+  NSPEC_NO_DOUBLING = NEX_XI*NEX_ETA*NER
 
 ! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
 
 ! exact number of surface elements for a chunk without doubling layers
 
-  NSPEC2D_NO_DOUBLING_XI = NEX_PER_PROC_XI*NER_SEDIM
+  NSPEC2D_NO_DOUBLING_XI = NEX_PER_PROC_XI*NER
 
-  NSPEC2D_NO_DOUBLING_ETA = NEX_PER_PROC_ETA*NER_SEDIM
+  NSPEC2D_NO_DOUBLING_ETA = NEX_PER_PROC_ETA*NER
 
 ! exact number of spectral elements
-  NSPEC_AB = NSPEC_NO_DOUBLING / NPROC
+!  NSPEC_AB = NSPEC_NO_DOUBLING / NPROC
+  NSPEC_AB = NER * NEX_PER_PROC_XI * NEX_PER_PROC_ETA
 
 ! exact number of surface elements for faces A and B along XI and ETA
   NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI

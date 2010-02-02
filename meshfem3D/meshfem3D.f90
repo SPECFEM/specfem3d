@@ -28,10 +28,11 @@
 
   subroutine meshfem3D
 
+  use readParFile
+  use createRegMesh
   implicit none
-
   include "constants.h"
-
+ 
 !=============================================================================!
 !                                                                             !
 !  meshfem3D produces a spectral element grid for a local or regional model.  !
@@ -193,8 +194,6 @@
 
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
 
-! parameters needed to store the radii of the grid points
-  integer, dimension(:), allocatable :: idoubling
   integer, dimension(:,:,:,:), allocatable :: ibool
 
 ! arrays with the mesh in double precision
@@ -204,9 +203,9 @@
   integer myrank,sizeprocs,ier
 
 ! check area and volume of the final mesh
-  double precision area_local_bottom,area_total_bottom
-  double precision area_local_top,area_total_top
-  double precision volume_local,volume_total
+!   double precision area_local_bottom,area_total_bottom
+!   double precision area_local_top,area_total_top
+!   double precision volume_local,volume_total
 
   integer iprocnum,npx,npy
 
@@ -234,12 +233,11 @@
 ! parameters read from parameter file
   integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
              NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,NSTEP,UTM_PROJECTION_ZONE
+             NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
   double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX!,HDUR_MOVIE
-  double precision THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM
 
   logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,&!ATTENUATION,USE_OLSEN_ATTENUATION, &
           IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
@@ -271,6 +269,41 @@
   double precision x_corner,y_corner
   double precision z_basement(NX_BASEMENT,NY_BASEMENT)
   character(len=150) BASEMENT_MAP_FILE
+
+! interfaces parameters
+  logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
+  integer ipoint_current,ilayer,interface_current
+  integer number_of_interfaces,number_of_layers
+  integer max_npx_interface,max_npy_interface
+  integer npx_interface_bottom,npy_interface_bottom
+  integer npx_interface_top,npy_interface_top
+  double precision z_interface_bottom,z_interface_top
+  double precision orig_x_interface_bottom,orig_y_interface_bottom
+  double precision orig_x_interface_top,orig_y_interface_top
+  double precision spacing_x_interface_bottom,spacing_y_interface_bottom
+  double precision spacing_x_interface_top,spacing_y_interface_top
+  character(len=50) INTERFACES_FILE
+  integer, dimension(:), allocatable :: ner_layer
+  double precision, dimension(:,:),allocatable :: interface_bottom,interface_top
+
+! to compute the coordinate transformation
+  integer :: ioffset
+  double precision :: gamma
+
+! subregions parameters
+  integer NSUBREGIONS
+!  definition of the different regions of the model in the mesh (nx,ny,nz) 
+!  #1 #2 : nx_begining,nx_end  
+!  #3 #4 : ny_begining,ny_end 
+!  #5 #6 : nz_begining,nz_end   
+!     #7 : material number 
+  integer, dimension(:,:), pointer :: subregions
+
+! material properties
+  integer NMATERIALS
+! first dimension  : material_id
+! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+  double precision , dimension(:,:), pointer :: material_properties
 
 ! to filter list of stations
 !   integer irec,nrec,nrec_filtered,ios
@@ -307,32 +340,90 @@
   endif
 
 ! read the parameter file
-!   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-!         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-!         NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-!         NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,DT, &
-!         ATTENUATION,USE_OLSEN_ATTENUATION,HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-!         THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-!         OCEANS,IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL,ANISOTROPY, &
-!         BASEMENT_MAP,MOHO_MAP_LUPEI,ABSORBING_CONDITIONS, &
-!         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-!         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-!         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-!         NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
+!   call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+!        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+!        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
+!        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
+!        HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH, &
+!        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
+!        IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
+!        BASEMENT_MAP,MOHO_MAP_LUPEI, &
+!        SUPPRESS_UTM_PROJECTION,MODEL,& 
+!        interfacesfile,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+!        USE_REGULAR_MESH)
+  USE_REGULAR_MESH = .true.
 
-call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+ ! nullify(subregions,material_properties) 
+  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
         NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-        HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH, &
-        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-        IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-        BASEMENT_MAP,MOHO_MAP_LUPEI, &
-        SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH)
+        LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
+        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
   endif
+
+! ! compute other parameters based upon values read
+!   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+!       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+!       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+!       NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+!       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+
+! ! check that the code is running with the requested nb of processes
+!   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+
+
+!! PLL ici ouverture fichier interface 
+! get interface data from external file to count the spectral elements along Z
+  write(IMAIN,*) 'Reading interface data from file DATA/',INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
+       ' to count the spectral elements'
+  open(unit=IIN,file='DATA/'//INTERFACES_FILE,status='old')
+
+  max_npx_interface  = -1
+  max_npy_interface  = -1
+
+! read number of interfaces
+  call read_value_integer(DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  if(number_of_interfaces < 2) stop 'not enough interfaces (minimum is 2)'
+
+! loop on all the interfaces
+  do interface_current = 1,number_of_interfaces
+     
+     call read_interface_parameters(SUPPRESS_UTM_PROJECTION_BOTTOM,npx_interface_bottom,npy_interface_bottom,&
+             orig_x_interface_bottom,orig_y_interface_bottom,spacing_x_interface_bottom,spacing_y_interface_bottom)
+     max_npx_interface = max(npx_interface_bottom,max_npx_interface)
+     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
+
+     if((max_npx_interface < 2) .or.(max_npy_interface < 2)) stop 'not enough interface points (minimum is 2x2)'
+     
+! skip all the points describing this interface
+     do ipoint_current = 1,npx_interface_bottom*npy_interface_bottom
+        read(IIN,*)
+     enddo
+     
+  enddo
+
+  ! define number of layers
+  number_of_layers = number_of_interfaces! - 1
+  allocate(ner_layer(number_of_layers))
+
+! loop on all the layers
+  do ilayer = 1,number_of_layers
+
+! read number of spectral elements in vertical direction in this layer
+     call read_value_integer(DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
+     if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
+
+  enddo
+
+  close(IIN)
+
+! compute total number of spectral elements in vertical direction
+  NER = sum(ner_layer)
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -367,20 +458,17 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
 
 ! create global slice addressing for solver
   if(myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/addressing.txt',status='unknown')
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
-  endif
+ endif
     do iproc_eta=0,NPROC_ETA-1
       do iproc_xi=0,NPROC_XI-1
         iprocnum = iproc_eta * NPROC_XI + iproc_xi
         iproc_xi_slice(iprocnum) = iproc_xi
         iproc_eta_slice(iprocnum) = iproc_eta
         addressing(iproc_xi,iproc_eta) = iprocnum
-        if(myrank == 0) write(IOUT,*) iprocnum,iproc_xi,iproc_eta
       enddo
     enddo
-  if(myrank == 0) close(IOUT)
 
   if (myrank == 0) then
     write(IMAIN,*) 'Spatial distribution of slice numbers:'
@@ -399,6 +487,10 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
     write(IMAIN,*)
     write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
     write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
+    write(IMAIN,*) 'There are ',NER,' elements along Z'
+    do ilayer = 1,number_of_layers
+       write(IMAIN,*) 'There are ',ner_layer(ilayer),' spectral elements along Z in layer ',ilayer
+    end do
     write(IMAIN,*)
     write(IMAIN,*) 'There are ',NPROC_XI,' slices along xi'
     write(IMAIN,*) 'There are ',NPROC_ETA,' slices along eta'
@@ -422,10 +514,6 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
 
 ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
-
-! check that Poisson's ratio in Gocad block is fine
-  if(VP_VS_RATIO_GOCAD_TOP < sqrt(2.) .or. VP_VS_RATIO_GOCAD_BOTTOM < sqrt(2.))&
-    call exit_MPI(myrank,'vp/vs ratio in Gocad block is too small')
 
 ! check that number of slices is at least 1 in each direction
   if(NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
@@ -470,11 +558,11 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
 
 
   write(IMAIN,*)
-  if(TOPOGRAPHY) then
-    write(IMAIN,*) 'incorporating surface topography'
-  else
-    write(IMAIN,*) 'no surface topography'
-  endif
+!   if(TOPOGRAPHY) then
+!     write(IMAIN,*) 'incorporating surface topography'
+!   else
+!     write(IMAIN,*) 'no surface topography'
+!   endif
 
   write(IMAIN,*)
   if(SUPPRESS_UTM_PROJECTION) then
@@ -484,11 +572,11 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
   endif
 
   write(IMAIN,*)
-  if(HARVARD_3D_GOCAD_MODEL) then
-    write(IMAIN,*) 'incorporating 3-D lateral variations'
-  else
-    write(IMAIN,*) 'no 3-D lateral variations'
-  endif
+!   if(HARVARD_3D_GOCAD_MODEL) then
+!     write(IMAIN,*) 'incorporating 3-D lateral variations'
+!   else
+!     write(IMAIN,*) 'no 3-D lateral variations'
+!   endif
 
 !   write(IMAIN,*)
 !   if(ATTENUATION) then
@@ -515,50 +603,50 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
 
 ! read topography and bathymetry file
 !  if(TOPOGRAPHY .or. OCEANS) then
-  if(TOPOGRAPHY) then
+!   if(TOPOGRAPHY) then
 
-! for Southern California
-    NX_TOPO = NX_TOPO_SOCAL
-    NY_TOPO = NY_TOPO_SOCAL
-    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-    topo_file = TOPO_FILE_SOCAL
+! ! for Southern California
+!     NX_TOPO = NX_TOPO_SOCAL
+!     NY_TOPO = NY_TOPO_SOCAL
+!     ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
+!     ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
+!     DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
+!     topo_file = TOPO_FILE_SOCAL
 
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+!     allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
-    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
+!     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
 
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
-      write(IMAIN,*)
-    endif
+!     if(myrank == 0) then
+!       write(IMAIN,*)
+!       write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
+!       write(IMAIN,*)
+!     endif
 
-  endif
+!   endif
 
-! read Moho map
-  if(MOHO_MAP_LUPEI) then
-    call read_moho_map(imoho_depth)
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'regional Moho depth read ranges in m from ',minval(imoho_depth),' to ',maxval(imoho_depth)
-      write(IMAIN,*)
-    endif
-  endif
+! ! read Moho map
+!   if(MOHO_MAP_LUPEI) then
+!     call read_moho_map(imoho_depth)
+!     if(myrank == 0) then
+!       write(IMAIN,*)
+!       write(IMAIN,*) 'regional Moho depth read ranges in m from ',minval(imoho_depth),' to ',maxval(imoho_depth)
+!       write(IMAIN,*)
+!     endif
+!   endif
 
-! read basement map
-  if(BASEMENT_MAP) then
-    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
-    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
-    do ix=1,NX_BASEMENT
-      do iy=1,NY_BASEMENT
-        read(55,*) iz_basement
-        z_basement(ix,iy) = dble(iz_basement)
-      enddo
-    enddo
-    close(55)
-  endif
+! ! read basement map
+!   if(BASEMENT_MAP) then
+!     call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','DATA/la_basement/reggridbase2_filtered_ascii.dat')
+!     open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
+!     do ix=1,NX_BASEMENT
+!       do iy=1,NY_BASEMENT
+!         read(55,*) iz_basement
+!         z_basement(ix,iy) = dble(iz_basement)
+!       enddo
+!     enddo
+!     close(55)
+!   endif
 
 ! get addressing for this process
   iproc_xi = iproc_xi_slice(myrank)
@@ -567,172 +655,337 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
 ! number of elements in each slice
   npx = 2*NEX_PER_PROC_XI
   npy = 2*NEX_PER_PROC_ETA
-
+  ner_layer(:) = 2 * ner_layer(:)
   min_elevation = +HUGEVAL
   max_elevation = -HUGEVAL
 
-! fill the region between the cutoff depth and the free surface
-  do iy=0,npy
-  do ix=0,npx
+
+  write(IMAIN,*)
+  write(IMAIN,*) 'Reading interface data from file DATA/',INTERFACES_FILE(1:len_trim(INTERFACES_FILE))
+  write(IMAIN,*)
+     open(unit=IIN,file='DATA/'//INTERFACES_FILE,status='old')
+
+     allocate(interface_bottom(max_npx_interface,max_npy_interface))
+     allocate(interface_top(max_npx_interface,max_npy_interface))
+
+     ! read number of interfaces
+     call read_value_integer(DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+
+!      ! read bottom interface
+!      call read_interface_parameters(SUPPRESS_UTM_PROJECTION_BOTTOM,npx_interface_bottom,npy_interface_bottom,&
+!           orig_x_interface_bottom,orig_y_interface_bottom,spacing_x_interface_bottom,spacing_y_interface_bottom) 
+
+!      ! loop on all the points describing this interface
+!      do ix=1,npx_interface_bottom
+!         do iy=1,npy_interface_bottom
+!            call read_value_double_precision(DONT_IGNORE_JUNK,interface_bottom(ix,iy),'Z_INTERFACE_BOTTOM') 
+!         enddo
+!      enddo
+     SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
+     npx_interface_bottom = 2
+     npy_interface_bottom = 2
+     orig_x_interface_bottom = UTM_X_MIN
+     orig_y_interface_bottom = UTM_Y_MIN
+     spacing_x_interface_bottom = UTM_X_MAX - UTM_X_MIN
+     spacing_y_interface_bottom = UTM_Y_MAX - UTM_Y_MIN
+     interface_bottom(:,:) = - dabs(Z_DEPTH_BLOCK)
+
+     ! loop on all the layers
+     do ilayer = 1,number_of_layers
+
+        ! read top interface
+        call read_interface_parameters(SUPPRESS_UTM_PROJECTION_TOP,npx_interface_top,npy_interface_top,&
+             orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top) 
+
+        !npoints_interface_top = npx_interface_top * npy_interface
+        ! loop on all the points describing this interface
+        do ix=1,npx_interface_top
+           do iy=1,npy_interface_top
+              call read_value_double_precision(DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP') 
+           enddo
+        enddo        
+
+        ! compute the offset of this layer in terms of number of spectral elements below along Z
+        if(ilayer > 1) then
+           ioffset = sum(ner_layer(1:ilayer-1))
+        else
+           ioffset = 0
+        endif
+
+        !--- definition of the mesh
+
+        do iy=0,npy
+           do ix=0,npx
 
 !   define the mesh points on the top and the bottom
+              xin=dble(ix)/dble(npx)
+              x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
 
-    xin=dble(ix)/dble(npx)
-    x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
+              etan=dble(iy)/dble(npy)
+              y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
-    etan=dble(iy)/dble(npy)
-    y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
-
-! define model between topography surface and fictitious bottom
-    if(TOPOGRAPHY) then
-
+! get bottom interface value 
 ! project x and y in UTM back to long/lat since topo file is in long/lat
-  call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-
+              call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_BOTTOM)
+                 
 ! get coordinate of corner in bathy/topo model
-    icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-    icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+              icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
+              icornerlat = int((lat - orig_y_interface_bottom) / spacing_x_interface_bottom) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+              if(icornerlong < 1) icornerlong = 1
+              if(icornerlong > npx_interface_bottom-1) icornerlong = npx_interface_bottom-1
+              if(icornerlat < 1) icornerlat = 1
+              if(icornerlat > npy_interface_bottom-1) icornerlat = npy_interface_bottom-1
 
 ! compute coordinates of corner
-    long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
-    lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
+              long_corner = orig_x_interface_bottom + (icornerlong-1)*spacing_x_interface_bottom
+              lat_corner = orig_y_interface_bottom + (icornerlat-1)*spacing_y_interface_bottom
 
 ! compute ratio for interpolation
-    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
-    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+              ratio_xi = (long - long_corner) / spacing_x_interface_bottom
+              ratio_eta = (lat - lat_corner) / spacing_y_interface_bottom
 
 ! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
+              if(ratio_xi < 0.) ratio_xi = 0.
+              if(ratio_xi > 1.) ratio_xi = 1.
+              if(ratio_eta < 0.) ratio_eta = 0.
+              if(ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
-    elevation = &
-      itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-      itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-      itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+              z_interface_bottom = &
+                   interface_bottom(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+                   interface_bottom(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+                   interface_bottom(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+                   interface_bottom(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
-    else
-
-      elevation = 0.d0
-
-    endif
-
-    z_top = Z_SURFACE + elevation
-    z_bot = - dabs(Z_DEPTH_BLOCK)
-
-! compute global min and max of elevation
-  min_elevation = dmin1(min_elevation,elevation)
-  max_elevation = dmax1(max_elevation,elevation)
-
-! create vertical point distribution at current horizontal point
-  if(BASEMENT_MAP) then
+! get top interface value
+! project x and y in UTM back to long/lat since topo file is in long/lat
+              call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_TOP)
 
 ! get coordinate of corner in bathy/topo model
-    icorner_x = int((x_current - ORIG_X_BASEMENT) / SPACING_X_BASEMENT) + 1
-    icorner_y = int((y_current - ORIG_Y_BASEMENT) / SPACING_Y_BASEMENT) + 1
+              icornerlong = int((long - orig_x_interface_top) / spacing_x_interface_top) + 1
+              icornerlat = int((lat - orig_y_interface_top) / spacing_x_interface_top) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-    if(icorner_x < 1) icorner_x = 1
-    if(icorner_x > NX_BASEMENT-1) icorner_x = NX_BASEMENT-1
-    if(icorner_y < 1) icorner_y = 1
-    if(icorner_y > NY_BASEMENT-1) icorner_y = NY_BASEMENT-1
+              if(icornerlong < 1) icornerlong = 1
+              if(icornerlong > npx_interface_top-1) icornerlong = npx_interface_top-1
+              if(icornerlat < 1) icornerlat = 1
+              if(icornerlat > npy_interface_top-1) icornerlat = npy_interface_top-1
 
 ! compute coordinates of corner
-    x_corner = ORIG_X_BASEMENT + (icorner_x-1)*SPACING_X_BASEMENT
-    y_corner = ORIG_Y_BASEMENT + (icorner_y-1)*SPACING_Y_BASEMENT
+              long_corner = orig_x_interface_top + (icornerlong-1)*spacing_x_interface_top
+              lat_corner = orig_y_interface_top + (icornerlat-1)*spacing_y_interface_top
 
 ! compute ratio for interpolation
-    ratio_xi = (x_current - x_corner) / SPACING_X_BASEMENT
-    ratio_eta = (y_current - y_corner) / SPACING_Y_BASEMENT
+              ratio_xi = (long - long_corner) / spacing_x_interface_top
+              ratio_eta = (lat - lat_corner) / spacing_y_interface_top
 
 ! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
+              if(ratio_xi < 0.) ratio_xi = 0.
+              if(ratio_xi > 1.) ratio_xi = 1.
+              if(ratio_eta < 0.) ratio_eta = 0.
+              if(ratio_eta > 1.) ratio_eta = 1.
 
-! interpolate basement surface at current point
-    Z_BASEMENT_SURFACE = &
-      z_basement(icorner_x,icorner_y)*(1.-ratio_xi)*(1.-ratio_eta) + &
-      z_basement(icorner_x+1,icorner_y)*ratio_xi*(1.-ratio_eta) + &
-      z_basement(icorner_x+1,icorner_y+1)*ratio_xi*ratio_eta + &
-      z_basement(icorner_x,icorner_y+1)*(1.-ratio_xi)*ratio_eta
+! interpolate elevation at current point
+              z_interface_top = &
+                   interface_top(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+                   interface_top(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+                   interface_top(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+                   interface_top(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
-  else
-    Z_BASEMENT_SURFACE = DEPTH_5p5km_SOCAL
-  endif
+              do ir = 0,ner_layer(ilayer)
+              ! linear interpolation between bottom and top
+                 gamma = dble(ir) / dble(ner_layer(ilayer))
 
-! honor Lupei Zhu's Moho map
-  if(MOHO_MAP_LUPEI) then
+              ! coordinates of the grid points
+                 xgrid(ir + ioffset,ix,iy) = x_current
+                 ygrid(ir + ioffset,ix,iy) = y_current
+                 zgrid(ir + ioffset,ix,iy) = gamma*z_interface_top + (1.d0 - gamma)*z_interface_bottom
+              enddo
 
-! project x and y in UTM back to long/lat since topo file is in long/lat
-    call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+           end do
+        end do
 
-! get coordinate of corner in Moho map
-    icornerlong = int((long - ORIG_LONG_MOHO) / DEGREES_PER_CELL_MOHO) + 1
-    icornerlat = int((lat - ORIG_LAT_MOHO) / DEGREES_PER_CELL_MOHO) + 1
+        ! the top interface becomes the bottom interface before switching to the next layer
+        SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION_TOP
+        npx_interface_bottom = npx_interface_top
+        npy_interface_bottom = npy_interface_top
+        orig_x_interface_bottom = orig_x_interface_top
+        orig_y_interface_bottom = orig_y_interface_top
+        spacing_x_interface_bottom = spacing_x_interface_top
+        spacing_y_interface_bottom = spacing_y_interface_top
+        interface_bottom(:,:) = interface_top(:,:)
 
-! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_MOHO-1) icornerlong = NX_MOHO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_MOHO-1) icornerlat = NY_MOHO-1
+     enddo
 
-! compute coordinates of corner
-    long_corner = ORIG_LONG_MOHO + (icornerlong-1)*DEGREES_PER_CELL_MOHO
-    lat_corner = ORIG_LAT_MOHO + (icornerlat-1)*DEGREES_PER_CELL_MOHO
+     close(IIN_INTERFACES)
 
-! compute ratio for interpolation
-    ratio_xi = (long - long_corner) / DEGREES_PER_CELL_MOHO
-    ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_MOHO
 
-! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
+!!! FIN PLL
 
-! interpolate Moho depth at current point
-    Z_DEPTH_MOHO = &
-     - (imoho_depth(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-        imoho_depth(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-        imoho_depth(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-        imoho_depth(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta)
+! ! fill the region between the cutoff depth and the free surface
+!   do iy=0,npy
+!   do ix=0,npx
 
-  else
-    Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
-  endif
+! !   define the mesh points on the top and the bottom
 
-! define vertical spacing of the mesh in case of a non-regular mesh with mesh doublings
-  if(.not. USE_REGULAR_MESH) call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
-                     NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-!! DK DK UGLY modif z_top by Emmanuel Chaljub here
-!! DK DK UGLY modif Manu removed                     z_top, &
-                     Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
+!     xin=dble(ix)/dble(npx)
+!     x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
 
-!   fill the volume
-    do ir = 0,2*NER
-      if(USE_REGULAR_MESH) then
-        rn = dble(ir) / dble(2*NER)
-      else
-        rn = rns(ir)
-      endif
-      xgrid(ir,ix,iy) = x_current
-      ygrid(ir,ix,iy) = y_current
-      zgrid(ir,ix,iy) = z_bot*(ONE-rn) + z_top*rn
-    enddo
+!     etan=dble(iy)/dble(npy)
+!     y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
-  enddo
-  enddo
+! ! define model between topography surface and fictitious bottom
+!     if(TOPOGRAPHY) then
+
+! ! project x and y in UTM back to long/lat since topo file is in long/lat
+!   call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+
+! ! get coordinate of corner in bathy/topo model
+!     icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+!     icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+
+! ! avoid edge effects and extend with identical point if outside model
+!     if(icornerlong < 1) icornerlong = 1
+!     if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+!     if(icornerlat < 1) icornerlat = 1
+!     if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+
+! ! compute coordinates of corner
+!     long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
+!     lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
+
+! ! compute ratio for interpolation
+!     ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
+!     ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+
+! ! avoid edge effects
+!     if(ratio_xi < 0.) ratio_xi = 0.
+!     if(ratio_xi > 1.) ratio_xi = 1.
+!     if(ratio_eta < 0.) ratio_eta = 0.
+!     if(ratio_eta > 1.) ratio_eta = 1.
+
+! ! interpolate elevation at current point
+!     elevation = &
+!       itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+!       itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+!       itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+!       itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+
+!     else
+
+!       elevation = 0.d0
+
+!     endif
+
+!     z_top = Z_SURFACE + elevation
+!     z_bot = - dabs(Z_DEPTH_BLOCK)
+
+! ! compute global min and max of elevation
+!   min_elevation = dmin1(min_elevation,elevation)
+!   max_elevation = dmax1(max_elevation,elevation)
+
+! ! create vertical point distribution at current horizontal point
+!   if(BASEMENT_MAP) then
+
+! ! get coordinate of corner in bathy/topo model
+!     icorner_x = int((x_current - ORIG_X_BASEMENT) / SPACING_X_BASEMENT) + 1
+!     icorner_y = int((y_current - ORIG_Y_BASEMENT) / SPACING_Y_BASEMENT) + 1
+
+! ! avoid edge effects and extend with identical point if outside model
+!     if(icorner_x < 1) icorner_x = 1
+!     if(icorner_x > NX_BASEMENT-1) icorner_x = NX_BASEMENT-1
+!     if(icorner_y < 1) icorner_y = 1
+!     if(icorner_y > NY_BASEMENT-1) icorner_y = NY_BASEMENT-1
+
+! ! compute coordinates of corner
+!     x_corner = ORIG_X_BASEMENT + (icorner_x-1)*SPACING_X_BASEMENT
+!     y_corner = ORIG_Y_BASEMENT + (icorner_y-1)*SPACING_Y_BASEMENT
+
+! ! compute ratio for interpolation
+!     ratio_xi = (x_current - x_corner) / SPACING_X_BASEMENT
+!     ratio_eta = (y_current - y_corner) / SPACING_Y_BASEMENT
+
+! ! avoid edge effects
+!     if(ratio_xi < 0.) ratio_xi = 0.
+!     if(ratio_xi > 1.) ratio_xi = 1.
+!     if(ratio_eta < 0.) ratio_eta = 0.
+!     if(ratio_eta > 1.) ratio_eta = 1.
+
+! ! interpolate basement surface at current point
+!     Z_BASEMENT_SURFACE = &
+!       z_basement(icorner_x,icorner_y)*(1.-ratio_xi)*(1.-ratio_eta) + &
+!       z_basement(icorner_x+1,icorner_y)*ratio_xi*(1.-ratio_eta) + &
+!       z_basement(icorner_x+1,icorner_y+1)*ratio_xi*ratio_eta + &
+!       z_basement(icorner_x,icorner_y+1)*(1.-ratio_xi)*ratio_eta
+
+!   else
+!     Z_BASEMENT_SURFACE = DEPTH_5p5km_SOCAL
+!   endif
+
+! ! honor Lupei Zhu's Moho map
+!   if(MOHO_MAP_LUPEI) then
+
+! ! project x and y in UTM back to long/lat since topo file is in long/lat
+!     call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+
+! ! get coordinate of corner in Moho map
+!     icornerlong = int((long - ORIG_LONG_MOHO) / DEGREES_PER_CELL_MOHO) + 1
+!     icornerlat = int((lat - ORIG_LAT_MOHO) / DEGREES_PER_CELL_MOHO) + 1
+
+! ! avoid edge effects and extend with identical point if outside model
+!     if(icornerlong < 1) icornerlong = 1
+!     if(icornerlong > NX_MOHO-1) icornerlong = NX_MOHO-1
+!     if(icornerlat < 1) icornerlat = 1
+!     if(icornerlat > NY_MOHO-1) icornerlat = NY_MOHO-1
+
+! ! compute coordinates of corner
+!     long_corner = ORIG_LONG_MOHO + (icornerlong-1)*DEGREES_PER_CELL_MOHO
+!     lat_corner = ORIG_LAT_MOHO + (icornerlat-1)*DEGREES_PER_CELL_MOHO
+
+! ! compute ratio for interpolation
+!     ratio_xi = (long - long_corner) / DEGREES_PER_CELL_MOHO
+!     ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_MOHO
+
+! ! avoid edge effects
+!     if(ratio_xi < 0.) ratio_xi = 0.
+!     if(ratio_xi > 1.) ratio_xi = 1.
+!     if(ratio_eta < 0.) ratio_eta = 0.
+!     if(ratio_eta > 1.) ratio_eta = 1.
+
+! ! interpolate Moho depth at current point
+!     Z_DEPTH_MOHO = &
+!      - (imoho_depth(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+!         imoho_depth(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+!         imoho_depth(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+!         imoho_depth(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta)
+
+!   else
+!     Z_DEPTH_MOHO = DEPTH_MOHO_SOCAL
+!   endif
+
+! ! define vertical spacing of the mesh in case of a non-regular mesh with mesh doublings
+!   if(.not. USE_REGULAR_MESH) call mesh_vertical(myrank,rns,NER,NER_BOTTOM_MOHO,NER_MOHO_16, &
+!                      NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+! !! DK DK UGLY modif z_top by Emmanuel Chaljub here
+! !! DK DK UGLY modif Manu removed                     z_top, &
+!                      Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO,MOHO_MAP_LUPEI)
+
+! !   fill the volume
+!     do ir = 0,2*NER
+!       if(USE_REGULAR_MESH) then
+!         rn = dble(ir) / dble(2*NER)
+!       else
+!         rn = rns(ir)
+!       endif
+!       xgrid(ir,ix,iy) = x_current
+!       ygrid(ir,ix,iy) = y_current
+!       zgrid(ir,ix,iy) = z_bot*(ONE-rn) + z_top*rn
+!     enddo
+
+!   enddo
+!   enddo
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -743,9 +996,9 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
   endif
 
 ! volume of bottom and top area of the slice
-  volume_local = ZERO
-  area_local_bottom = ZERO
-  area_local_top = ZERO
+!   volume_local = ZERO
+!   area_local_bottom = ZERO
+!   area_local_top = ZERO
 
 ! assign theoretical number of elements
   nspec = NSPEC_AB
@@ -757,7 +1010,6 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
   call sync_all()
 
 ! use dynamic allocation to allocate memory for arrays
-  allocate(idoubling(nspec))
   allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
   allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
@@ -785,52 +1037,62 @@ call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX,
 !          ANISOTROPY,SAVE_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
 !          ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
 
-call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
+! call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
+!            xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
+!            NGLOB_AB,npointot, &
+!            NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
+!            NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+!            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!            HARVARD_3D_GOCAD_MODEL,NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!            NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+!            myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+!            HAUKSSON_REGIONAL_MODEL,USE_REGULAR_MESH)
+
+call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
            xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
            NGLOB_AB,npointot, &
-           NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
-           NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+           NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-           HARVARD_3D_GOCAD_MODEL,NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+           NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
            NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-           myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-           HAUKSSON_REGIONAL_MODEL,USE_REGULAR_MESH)
+           NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
+           myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,USE_REGULAR_MESH)
 
-! print min and max of topography included
-  if(TOPOGRAPHY) then
+! ! print min and max of topography included
+!   if(TOPOGRAPHY) then
 
-! compute the maximum of the maxima for all the slices using an MPI reduction
-      call min_all_dp(min_elevation,min_elevation_all)
-      call max_all_dp(max_elevation,max_elevation_all)
+! ! compute the maximum of the maxima for all the slices using an MPI reduction
+!       call min_all_dp(min_elevation,min_elevation_all)
+!       call max_all_dp(max_elevation,max_elevation_all)
 
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
-      write(IMAIN,*)
-    endif
-  endif
+!     if(myrank == 0) then
+!       write(IMAIN,*)
+!       write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
+!       write(IMAIN,*)
+!     endif
+!   endif
 
 
-! use MPI reduction to compute total area and volume
-  area_total_bottom   = ZERO
-  area_total_top   = ZERO
-  call sum_all_dp(area_local_bottom,area_total_bottom)
-  call sum_all_dp(area_local_top,area_total_top)
-  call sum_all_dp(volume_local,volume_total)
+! ! use MPI reduction to compute total area and volume
+!   area_total_bottom   = ZERO
+!   area_total_top   = ZERO
+!   call sum_all_dp(area_local_bottom,area_total_bottom)
+!   call sum_all_dp(area_local_top,area_total_top)
+!   call sum_all_dp(volume_local,volume_total)
 
   if(myrank == 0) then
 
-!   check volume, and bottom and top area
+! !   check volume, and bottom and top area
 
-      write(IMAIN,*)
-      write(IMAIN,*) '   calculated top area: ',area_total_top
+!       write(IMAIN,*)
+!       write(IMAIN,*) '   calculated top area: ',area_total_top
 
-! compare to exact theoretical value
-    if(.not. TOPOGRAPHY) &
-          write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
+! ! compare to exact theoretical value
+!     if(.not. TOPOGRAPHY) &
+!           write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
 
-      write(IMAIN,*)
-      write(IMAIN,*) 'calculated bottom area: ',area_total_bottom
+!       write(IMAIN,*)
+!       write(IMAIN,*) 'calculated bottom area: ',area_total_bottom
 
 ! compare to exact theoretical value (bottom is always flat)
       write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
@@ -840,16 +1102,16 @@ call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
 ! make sure everybody is synchronized
   call sync_all()
 
-  if(myrank == 0) then
-! check volume
-      write(IMAIN,*)
-      write(IMAIN,*) 'calculated volume: ',volume_total
-! take the central cube into account
-   if(.not. TOPOGRAPHY) &
-      write(IMAIN,*) '     exact volume: ', &
-        (UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)*dabs(Z_DEPTH_BLOCK)
+!   if(myrank == 0) then
+! ! check volume
+!       write(IMAIN,*)
+!       write(IMAIN,*) 'calculated volume: ',volume_total
+! ! take the central cube into account
+!    if(.not. TOPOGRAPHY) &
+!       write(IMAIN,*) '     exact volume: ', &
+!         (UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)*dabs(Z_DEPTH_BLOCK)
 
-  endif
+!   endif
 
 !--- print number of points and elements in the mesh
 
@@ -867,8 +1129,6 @@ call create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
   write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
   write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
   write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of time steps in the solver will be: ',NSTEP
   write(IMAIN,*)
 
 ! write information about precision used for floating-point operations

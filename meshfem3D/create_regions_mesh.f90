@@ -39,16 +39,31 @@
 !            ANISOTROPY,SAVE_MESH_FILES,SUPPRESS_UTM_PROJECTION, &
 !            ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO,NX_TOPO,NY_TOPO,USE_REGULAR_MESH)
 
-  subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
-           xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
-           NGLOB_AB,npointot, &
-           NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
-           NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-           HARVARD_3D_GOCAD_MODEL,NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-           NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-           myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-           HAUKSSON_REGIONAL_MODEL,USE_REGULAR_MESH)
+!   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool,idoubling, &
+!            xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
+!            NGLOB_AB,npointot, &
+!            NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER, &
+!            NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+!            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+!            HARVARD_3D_GOCAD_MODEL,NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+!            NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+!            myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+!            HAUKSSON_REGIONAL_MODEL,USE_REGULAR_MESH)
+
+module createRegMesh
+contains
+
+
+   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
+        xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
+        NGLOB_AB,npointot, &
+        NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
+        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+        NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+        NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+        nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
+        myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+        USE_REGULAR_MESH)
 
 ! create the different regions of the mesh
 
@@ -59,8 +74,8 @@
 ! number of spectral elements in each block
   integer nspec
 
-  integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA!,UTM_PROJECTION_ZONE
-  integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER
+  integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER!,UTM_PROJECTION_ZONE
+!  integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER
 
   integer NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
@@ -71,7 +86,7 @@
   integer npx,npy
   integer npointot
 
-  logical HARVARD_3D_GOCAD_MODEL,HAUKSSON_REGIONAL_MODEL
+!  logical HARVARD_3D_GOCAD_MODEL,HAUKSSON_REGIONAL_MODEL
   logical USE_REGULAR_MESH!,OCEANS,IMPOSE_MINIMUM_VP_GOCAD
 !  logical MOHO_MAP_LUPEI,SUPPRESS_UTM_PROJECTION
 
@@ -86,7 +101,8 @@
 
 ! arrays with the mesh
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
+!  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
+  double precision, dimension(:,:), allocatable :: nodes_coords
 
 !   double precision xstore_local(NGLLX,NGLLY,NGLLZ)
 !   double precision ystore_local(NGLLX,NGLLY,NGLLZ)
@@ -105,10 +121,24 @@
 !  integer itopo_bathy(NX_TOPO,NY_TOPO)
 
 ! auxiliary variables to generate the mesh
-  integer ix,iy,iz,ir,ir1,ir2,dir
+  integer ix,iy,ir,ir1,ir2,dir
   integer ix1,ix2,dix,iy1,iy2,diy
   integer iax,iay,iar
-  integer isubregion,nsubregions,doubling_index
+  integer isubregion,nsubregions,doubling_index,nmeshregions
+  integer imaterial_number
+  integer true_material_num(nspec)
+  integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
+
+!  definition of the different regions of the model in the mesh (nx,ny,nz) 
+!  #1 #2 : nx_begining,nx_end  
+!  #3 #4 : ny_begining,ny_end 
+!  #5 #6 : nz_begining,nz_end   
+!     #7 : material number 
+  integer subregions(nsubregions,7)
+
+! layers of the model
+  integer nblayers
+  integer ner_layer(nblayers)
 
 ! Gauss-Lobatto-Legendre points and weights of integration
 !  double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
@@ -130,9 +160,6 @@
   double precision yelm(NGNOD)
   double precision zelm(NGNOD)
 
-! parameters needed to store the radii of the grid points
-! in the spherically symmetric Earth
-  integer idoubling(nspec)
 
 ! ! for model density
 !   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
@@ -205,31 +232,31 @@
   logical, dimension(:,:), allocatable :: iMPIcut_xi,iMPIcut_eta
 
 ! name of the database file
-  character(len=150) prname
+  character(len=150) prname,prname2
 
 ! number of elements on the boundaries
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
 
-  integer i,j,k,ia,ispec,itype_element
+  integer i,j,k,ia,ispec,itype_element,ipoin
   integer iproc_xi,iproc_eta
 
 !  double precision rho,vp,vs
 !  double precision c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
 ! for the Harvard 3-D basin model
-  double precision vp_block_gocad_MR(0:NX_GOCAD_MR-1,0:NY_GOCAD_MR-1,0:NZ_GOCAD_MR-1)
-  double precision vp_block_gocad_HR(0:NX_GOCAD_HR-1,0:NY_GOCAD_HR-1,0:NZ_GOCAD_HR-1)
-  integer irecord,nrecord,i_vp
-  character(len=150) BASIN_MODEL_3D_MEDIUM_RES_FILE,BASIN_MODEL_3D_HIGH_RES_FILE
+!   double precision vp_block_gocad_MR(0:NX_GOCAD_MR-1,0:NY_GOCAD_MR-1,0:NZ_GOCAD_MR-1)
+!   double precision vp_block_gocad_HR(0:NX_GOCAD_HR-1,0:NY_GOCAD_HR-1,0:NZ_GOCAD_HR-1)
+!   integer irecord,nrecord,i_vp
+!   character(len=150) BASIN_MODEL_3D_MEDIUM_RES_FILE,BASIN_MODEL_3D_HIGH_RES_FILE
 
 ! for the harvard 3D salton sea model
-  real :: vp_st_gocad(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW)
+!  real :: vp_st_gocad(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW)
 !  double precision :: umesh, vmesh, wmesh, vp_st, vs_st, rho_st
 
 ! for Hauksson's model
-  double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp_hauksson,vs_hauksson
-  integer ilayer
-  character(len=150 ) HAUKSSON_REGIONAL_MODEL_FILE
+!   double precision, dimension(NLAYERS_HAUKSSON,NGRID_NEW_HAUKSSON,NGRID_NEW_HAUKSSON) :: vp_hauksson,vs_hauksson
+!   integer ilayer
+!   character(len=150 ) HAUKSSON_REGIONAL_MODEL_FILE
 
 ! Stacey put back
 ! indices for Clayton-Engquist absorbing conditions
@@ -240,6 +267,12 @@
 !  logical point_is_in_sediments
   logical, dimension(:,:,:,:), allocatable :: flag_sediments
   logical, dimension(:), allocatable :: not_fully_in_bedrock
+
+! material properties
+  integer :: NMATERIALS
+! first dimension  : material_id
+! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+  double precision , dimension(NMATERIALS,6) ::  material_properties
 
 
 ! **************
@@ -399,75 +432,78 @@
   allocate(yp(npointot))
   allocate(zp(npointot))
 
-!--- read Hauksson's model
-  if(HAUKSSON_REGIONAL_MODEL) then
-    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
-                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
-                          'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
-!    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
-!                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
-!                          'DATA/lin_model/lin_final_grid_smooth.dat')
-    open(unit=14,file=HAUKSSON_REGIONAL_MODEL_FILE,status='old',action='read')
-    do iy = 1,NGRID_NEW_HAUKSSON
-      do ix = 1,NGRID_NEW_HAUKSSON
-        read(14,*) (vp_hauksson(ilayer,ix,iy),ilayer=1,NLAYERS_HAUKSSON), &
-                   (vs_hauksson(ilayer,ix,iy),ilayer=1,NLAYERS_HAUKSSON)
-      enddo
-    enddo
-    close(14)
-    vp_hauksson(:,:,:) = vp_hauksson(:,:,:) * 1000.d0
-    vs_hauksson(:,:,:) = vs_hauksson(:,:,:) * 1000.d0
-  endif
+! !--- read Hauksson's model
+!   if(HAUKSSON_REGIONAL_MODEL) then
+!     call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
+!                           'model.HAUKSSON_REGIONAL_MODEL_FILE', &
+!                           'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
+! !    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
+! !                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
+! !                          'DATA/lin_model/lin_final_grid_smooth.dat')
+!     open(unit=14,file=HAUKSSON_REGIONAL_MODEL_FILE,status='old',action='read')
+!     do iy = 1,NGRID_NEW_HAUKSSON
+!       do ix = 1,NGRID_NEW_HAUKSSON
+!         read(14,*) (vp_hauksson(ilayer,ix,iy),ilayer=1,NLAYERS_HAUKSSON), &
+!                    (vs_hauksson(ilayer,ix,iy),ilayer=1,NLAYERS_HAUKSSON)
+!       enddo
+!     enddo
+!     close(14)
+!     vp_hauksson(:,:,:) = vp_hauksson(:,:,:) * 1000.d0
+!     vs_hauksson(:,:,:) = vs_hauksson(:,:,:) * 1000.d0
+!   endif
 
-!--- read the Harvard 3-D basin model
-  if(HARVARD_3D_GOCAD_MODEL) then
+! !--- read the Harvard 3-D basin model
+!   if(HARVARD_3D_GOCAD_MODEL) then
 
-! read medium-resolution model
+! ! read medium-resolution model
 
-! initialize array to undefined values everywhere
-  vp_block_gocad_MR(:,:,:) = 20000.
+! ! initialize array to undefined values everywhere
+!   vp_block_gocad_MR(:,:,:) = 20000.
 
-! read Vp from extracted text file
-  call get_value_string(BASIN_MODEL_3D_MEDIUM_RES_FILE, &
-                        'model.BASIN_MODEL_3D_MEDIUM_RES_FILE', &
-                        'DATA/la_3D_block_harvard/la_3D_medium_res/LA_MR_voxet_extracted.txt')
-  open(unit=27,file=BASIN_MODEL_3D_MEDIUM_RES_FILE,status='old',action='read')
-  read(27,*) nrecord
-  do irecord = 1,nrecord
-    read(27,*) ix,iy,iz,i_vp
-    if(ix<0 .or. ix>NX_GOCAD_MR-1 .or. iy<0 .or. iy>NY_GOCAD_MR-1 .or. iz<0 .or. iz>NZ_GOCAD_MR-1) &
-      stop 'wrong array index read in Gocad medium-resolution file'
-    vp_block_gocad_MR(ix,iy,iz) = dble(i_vp)
-  enddo
-  close(27)
+! ! read Vp from extracted text file
+!   call get_value_string(BASIN_MODEL_3D_MEDIUM_RES_FILE, &
+!                         'model.BASIN_MODEL_3D_MEDIUM_RES_FILE', &
+!                         'DATA/la_3D_block_harvard/la_3D_medium_res/LA_MR_voxet_extracted.txt')
+!   open(unit=27,file=BASIN_MODEL_3D_MEDIUM_RES_FILE,status='old',action='read')
+!   read(27,*) nrecord
+!   do irecord = 1,nrecord
+!     read(27,*) ix,iy,iz,i_vp
+!     if(ix<0 .or. ix>NX_GOCAD_MR-1 .or. iy<0 .or. iy>NY_GOCAD_MR-1 .or. iz<0 .or. iz>NZ_GOCAD_MR-1) &
+!       stop 'wrong array index read in Gocad medium-resolution file'
+!     vp_block_gocad_MR(ix,iy,iz) = dble(i_vp)
+!   enddo
+!   close(27)
 
-! read high-resolution model
+! ! read high-resolution model
 
-! initialize array to undefined values everywhere
-  vp_block_gocad_HR(:,:,:) = 20000.
+! ! initialize array to undefined values everywhere
+!   vp_block_gocad_HR(:,:,:) = 20000.
 
-! read Vp from extracted text file
-  call get_value_string(BASIN_MODEL_3D_HIGH_RES_FILE, &
-                        'model.BASIN_MODEL_3D_HIGH_RES_FILE', &
-                        'DATA/la_3D_block_harvard/la_3D_high_res/LA_HR_voxet_extracted.txt')
-  open(unit=27,file=BASIN_MODEL_3D_HIGH_RES_FILE,status='old',action='read')
-  read(27,*) nrecord
-  do irecord = 1,nrecord
-    read(27,*) ix,iy,iz,i_vp
-    if(ix<0 .or. ix>NX_GOCAD_HR-1 .or. iy<0 .or. iy>NY_GOCAD_HR-1 .or. iz<0 .or. iz>NZ_GOCAD_HR-1) &
-      stop 'wrong array index read in Gocad high-resolution file'
-    vp_block_gocad_HR(ix,iy,iz) = dble(i_vp)
-  enddo
-  close(27)
+! ! read Vp from extracted text file
+!   call get_value_string(BASIN_MODEL_3D_HIGH_RES_FILE, &
+!                         'model.BASIN_MODEL_3D_HIGH_RES_FILE', &
+!                         'DATA/la_3D_block_harvard/la_3D_high_res/LA_HR_voxet_extracted.txt')
+!   open(unit=27,file=BASIN_MODEL_3D_HIGH_RES_FILE,status='old',action='read')
+!   read(27,*) nrecord
+!   do irecord = 1,nrecord
+!     read(27,*) ix,iy,iz,i_vp
+!     if(ix<0 .or. ix>NX_GOCAD_HR-1 .or. iy<0 .or. iy>NY_GOCAD_HR-1 .or. iz<0 .or. iz>NZ_GOCAD_HR-1) &
+!       stop 'wrong array index read in Gocad high-resolution file'
+!     vp_block_gocad_HR(ix,iy,iz) = dble(i_vp)
+!   enddo
+!   close(27)
 
-! read Salton Trough model
-  call read_salton_sea_model(vp_st_gocad)
+! ! read Salton Trough model
+!   call read_salton_sea_model(vp_st_gocad)
 
-  endif
+!   endif
 
 !--- apply heuristic rule to modify doubling regions to balance angles
 
+
   if(APPLY_HEURISTIC_RULE .and. .not. USE_REGULAR_MESH) then
+
+     stop 'pas encore implemente'
 
 ! define number of subregions affected by heuristic rule in doubling regions
   nsubregions = 8
@@ -476,9 +512,10 @@
 
 ! define shape of elements for heuristic
     call define_subregions_heuristic(myrank,isubregion,iaddx,iaddy,iaddz, &
-              ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-              itype_element,npx,npy, &
-              NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM)
+         nblayers,ner_layer, &
+         ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
+         itype_element,npx,npy)
+         !              NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM)
 
 ! loop on all the mesh points in current subregion
   do ir = ir1,ir2,dir
@@ -588,44 +625,59 @@
       zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
 
-    endif
+   endif
 
-      enddo
-    enddo
-  enddo
+enddo
+enddo
+enddo
 
-  enddo
+enddo
 
-  endif
+endif
 
 !---
 
 ! generate the elements in all the regions of the mesh
   ispec = 0
 
-! define number of subregions in the mesh
-  if(USE_REGULAR_MESH) then
-    nsubregions = 2
-  else
-    if(NER_SEDIM > 1) then
-      nsubregions = 30
-    else
-      nsubregions = 29
-    endif
-  endif
-
-  do isubregion = 1,nsubregions
-
-! define shape of elements
-    call define_subregions(myrank,isubregion,iaddx,iaddy,iaddz, &
-              ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-              doubling_index,npx,npy, &
-              NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM,NER,USE_REGULAR_MESH)
+do isubregion = 1,nsubregions
+   call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
+        isubregion,nsubregions,subregions,nblayers,ner_layer, &
+        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
+        imaterial_number)
 
 ! loop on all the mesh points in current subregion
-  do ir = ir1,ir2,dir
-    do iy = iy1,iy2,diy
-      do ix = ix1,ix2,dix
+   do ir = ir1,ir2,dir
+      do iy = iy1,iy2,diy
+         do ix = ix1,ix2,dix
+            
+            material_num(ir,ix,ir) = imaterial_number 
+
+! end of loop on all the mesh points in current subregion
+         enddo
+      enddo
+   enddo
+
+! end of loop on all the subregions of the current region the mesh
+enddo
+
+
+if(USE_REGULAR_MESH) then
+   nmeshregions = 1
+else
+   ! TO DO
+endif
+
+do isubregion = 1,nmeshregions
+   ! define shape of elements
+   call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
+        nblayers,ner_layer, &
+        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
+
+! loop on all the mesh points in current subregion
+   do ir = ir1,ir2,dir
+      do iy = iy1,iy2,diy
+         do ix = ix1,ix2,dix
 
 !       loop over the NGNOD nodes
         do ia=1,NGNOD
@@ -636,14 +688,18 @@
 
 ! add one spectral element to the list and store its material number
         ispec = ispec + 1
-        if(ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
-        idoubling(ispec) = doubling_index
+        if(ispec > nspec) then
+           call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
+        end if
 
+! A revoir
+        if((ir == ir2) .and. (isubregion == nmeshregions)) then
+           doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
+        else
+           doubling_index = IFLAG_BASEMENT_TOPO
+        endif
 
-
-
-
-
+        true_material_num(ispec) = material_num(ir,ix,ir)
 
 ! ! assign Moho surface element
 !         if (SAVE_MOHO_MESH) then
@@ -875,11 +931,6 @@
 
 ! check total number of spectral elements created
   if(ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
-!   if (SAVE_MOHO_MESH) then
-!     if (nspec_moho_top /= NSPEC2D_BOTTOM .or. nspec_moho_bottom /= NSPEC2D_BOTTOM) &
-!                call exit_mpi(myrank, "nspec_moho should equal NSPEC2D_BOTTOM")
-!   endif
-
 
   do ispec=1,nspec
   ieoff = NGLLCUBE*(ispec-1)
@@ -898,10 +949,8 @@
 
   call get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
 
-  !PLL
-  allocate(nodes_coords(nglob,3))
-
 ! put in classical format
+  allocate(nodes_coords(nglob,3))
   do ispec=1,nspec
   ieoff = NGLLCUBE*(ispec-1)
   ilocnum = 0
@@ -917,9 +966,113 @@
     enddo
   enddo
   enddo
+  
 
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+  write(prname2, "(i6.6,'.dx')") myrank
+  open(unit=66,file='DX_HR_'//prname2,status='unknown')
+  
+! ************* generate points ******************
+
+!   NPOIN = 0
+! ! loop on all the mesh points
+!   do ir = 0,2*NER!ir1,ir2,dir
+!      do iy = 0,2*NEX_PER_PROC_ETA!iy1,iy2,diy
+!         do ix = 0,2*NEX_PER_PROC_XI!ix1,ix2,dix
+!            !if(grid_flag_MR(ir,ix,iy)) then
+!               NPOIN = NPOIN + 1
+!            !end if
+!         end do
+!      end do
+!   end do
+
+! ! write OpenDX header
+!   write(66,*) 'object 1 class array type float rank 1 shape 3 items ',NPOIN,' data follows'
+
+! !! 0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA
+! ! loop on all the mesh points
+!   do ir = 0,2*NER!ir1,ir2,dir
+!      do iy = 0,2*NEX_PER_PROC_ETA!iy1,iy2,diy
+!         do ix = 0,2*NEX_PER_PROC_XI!ix1,ix2,dix
+!            !if(grid_flag_MR(ir,ix,iy)) then
+!               write(66,*) sngl(xgrid(ir,ix,iy)),sngl(ygrid(ir,ix,iy)),sngl(zgrid(ir,ix,iy))
+!            !end if
+!         end do
+!      end do
+!   end do
+
+
+! write OpenDX header
+  write(66,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
+  
+  do ipoin = 1,nglob
+     write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
+  end do
+
+! ************* generate elements ******************
+
+  write(66,*) 'object 2 class array type int rank 1 shape ',8,' items ',nspec,' data follows'
+
+  do ispec=1,nspec
+
+        ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
+        ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
+        ! in the case of OpenDX, node numbers start at zero     
+        write(66,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
+             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(1,2,2,ispec)-1,ibool(2,2,2,ispec)-1,&
+             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(1,2,1,ispec)-1,ibool(2,2,1,ispec)-1
+!              ibool(5,1,5,ispec)-1,ibool(5,1,1,ispec)-1,ibool(1,1,1,ispec)-1,ibool(1,1,5,ispec)-1,&
+!              ibool(5,5,5,ispec)-1,ibool(5,5,1,ispec)-1,ibool(1,5,1,ispec)-1,ibool(1,5,5,ispec)-1
+!             ibool(1,5,1,ispec)-1,ibool(1,1,1,ispec)-1,ibool(1,5,5,ispec)-1,ibool(1,1,5,ispec)-1,&
+!             ibool(5,5,1,ispec)-1,ibool(5,1,1,ispec)-1,ibool(5,5,5,ispec)-1,ibool(5,1,5,ispec)-1
+!             ibool(1,5,5,ispec)-1,ibool(1,1,5,ispec)-1,ibool(5,5,5,ispec)-1,ibool(5,1,5,ispec)-1,&
+!             ibool(1,5,1,ispec)-1,ibool(1,1,1,ispec)-1,ibool(5,5,1,ispec)-1,ibool(5,1,1,ispec)-1
+!             ibool(1,1,1,ispec)-1,ibool(1,5,1,ispec)-1,ibool(5,5,1,ispec)-1,ibool(5,1,1,ispec)-1,&
+!             ibool(1,1,5,ispec)-1,ibool(1,5,5,ispec)-1,ibool(5,5,5,ispec)-1,ibool(5,1,5,ispec)-1
+        !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
+        !          then top (positive z-direction) of element
+        !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
+        !          ibool(4,ispec)-1, ibool(1,ispec)-1, ibool(8,ispec)-1, ibool(5,ispec)-1, &
+        !          ibool(3,ispec)-1, ibool(2,ispec)-1, ibool(7,ispec)-1, ibool(6,ispec)-1      
+     
+  enddo
+
+
+
+! ************* generate element data values ******************
+
+! output OpenDX header for data
+  write(66,*) 'attribute "element type" string "cubes"'
+
+  write(66,*) 'attribute "ref" string "positions"'
+  write(66,*) 'object 3 class array type float rank 0 items ',nspec,' data follows'
+
+! loop on all the elements
+  do ispec = 1,nspec
+    write(66,*) 1.
+  enddo
+
+
+  write(66,*) 'attribute "dep" string "connections"'
+  write(66,*) 'object "irregular positions irregular connections" class field'
+  write(66,*) 'component "positions" value 1'
+  write(66,*) 'component "connections" value 2'
+  write(66,*) 'component "data" value 3'
+  write(66,*) 'end'
+
+  close(66)
+  call sync_all()
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) then
     call exit_MPI(myrank,'incorrect global numbering')
+ end if
 
 ! ! create a new indirect addressing array instead, to reduce cache misses
 ! ! in memory access in the solver
@@ -996,18 +1149,19 @@
 
 ! create MPI buffers
 ! arrays locval(npointot) and ifseg(npointot) used to save memory
-  call get_MPI_cutplanes_xi(myrank,prname,nspec,iMPIcut_xi,ibool, &
-                  xstore,ystore,zstore,ifseg,npointot, &
-                  NSPEC2D_A_ETA,NSPEC2D_B_ETA)
-  call get_MPI_cutplanes_eta(myrank,prname,nspec,iMPIcut_eta,ibool, &
-                  xstore,ystore,zstore,ifseg,npointot, &
-                  NSPEC2D_A_XI,NSPEC2D_B_XI)
+!   call get_MPI_cutplanes_xi(myrank,prname,nspec,iMPIcut_xi,ibool, &
+!                   xstore,ystore,zstore,ifseg,npointot, &
+!                   NSPEC2D_A_ETA,NSPEC2D_B_ETA)
+!   call get_MPI_cutplanes_eta(myrank,prname,nspec,iMPIcut_eta,ibool, &
+!                   xstore,ystore,zstore,ifseg,npointot, &
+!                   NSPEC2D_A_XI,NSPEC2D_B_XI)
+
 
   call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta,NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-       ibool,nodes_coords,idoubling,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,&
-       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom)
-
-
+       ibool,nodes_coords,true_material_num,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,&
+       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,&
+       NMATERIALS,material_properties)
 
   end subroutine create_regions_mesh
 
+end module createRegMesh

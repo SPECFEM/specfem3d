@@ -8,6 +8,9 @@ DEPTH_BLOCK_KM                  = 60.d0
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .false.
 
+# file that contains the interfaces of the model / mesh
+INTERFACES_FILE                 = interfaces_M2_UPPA_curved_test.dat
+
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
 # (must be multiple of NPROC below if mesh is regular)
@@ -16,20 +19,28 @@ NEX_ETA                         = 16
 
 # number of MPI processors along xi and eta (can be different)
 NPROC_XI                        = 2 
-NPROC_ETA                       = 2
+NPROC_ETA                       = 1
 
-# model (only SoCal. Harvard_LA and Min_Chen_anisotropy not implemented yet)
-MODEL                           = SoCal
+# path to store the databases files 
+LOCAL_PATH                      = OUTPUT_FILES
 
-# parameters describing the model
-#OCEANS                          = .true.
-TOPOGRAPHY                      = .true.
-
-# path to store the local database file on each node
-LOCAL_PATH                      = ../OUTPUT_FILES
-
-# machine file for MPI
-# this is not needed for new cluster and is in go_mesher/go_solver
-# MACHINE_FILE                    = mymachines
-
+# number of materials
+NMATERIALS                      = 4  
+# define the different materials in the model as :
+# #material_id  #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+#     Q_flag           : 0=no attenuation/1=IATTENUATION_SEDIMENTS_40, 2=..., 13=IATTENUATION_BEDROCK
+#     anisotropy_flag  : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
+#     domain_id        : 1=acoustic / 2=elastic / 3=poroelastic
+1  1200  1500  750  1  0  1
+2  1100  1600  800  3  0  1
+3  1000  1500  0    0  0  2
+4  1300  1400  700  2  0  3
+# number of regions 
+NREGIONS                        = 4             
+# define the different regions of the model as :
+#NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
+1              16           1               16            1         3        1
+1              16           1               16            4         7        2
+1              16           1               16            8         20       3
+14             16           9               16            6         20       4
 
