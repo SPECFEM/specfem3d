@@ -1,25 +1,32 @@
 
-To-do list for SPECFEM3D, by Dimitri Komatitsch
------------------------------------------------
+To-do list for SPECFEM3D_SESAME, by Dimitri Komatitsch
+------------------------------------------------------
 
-- we should keep and modify the old mesher from SPECFEM3D_BASIN in order
-to be able to quickly generate an analytical mesh for a simple basin without
-using CUBIT, because many users may still want to be able to use the old and
-simple mesher and not the (more complex) CUBIT package, and/or they might not
-have access to CUBIT. Therefore the old mesher should be modified to save its
-files in CUBIT/Abaqus format so that they can be used as input to "decompose_mesh".
+- there is something in SPECFEM3D that we noticed a few years ago
+regarding attenuation but never fixed: on page 813 of our 1999 paper
+I used a trick suggested by Robertsson et al. (1994) 
+to use a non-staggered Runge-Kutta (RK4) scheme for the attenuation
+equations while using a staggered finite-difference (Newmark)
+time scheme for all the other equations.
+(combining staggered and non-staggered formulations being difficult)
+The trick works fine in most cases but there is a hidden problem for very long
+simulations, and in particular for multi-orbit surface waves:
+because of that trick, the RK4 is not really a real Runge-Kutta scheme
+(because grad(displacement) is used as a source but not known half way between
+time steps, therefore I replaced it with an average between
+t and t + Delta_t, which implies that the approximation is not fourth-order
+accurate any more because of that smoothing/interpolation). Therefore
+dispersion due to attenuation is not very accurately computed in the case of
+very long runs; that matters mostly for surface waves.
+We should fix that one day. The only thing to do would be to design a better
+time integration scheme for the attenuation equation, without that trick; the rest
+(Newmark etc) is fine and does not need to change.
 
-- Regarding domain decomposition we should forget about both
-METIS and ParMETIS, which are both inefficient
-for very large meshes. Pieyre has done detailed tests (Pieyre,
-could you please send the Excel file to all of us with a few lines
-of description of the figures?).
-SCOTCH (serial) and PT-SCOTCH (parallel) is much better.
-(faster, uses far less memory etc.)
-Because of that, we have removed support for METIS in SESAME.
-It can still be called indirectly from SCOTCH (there is an option
-in SCOTCH to call METIS instead). But this is a bad idea because
-the partition obtained is worse. 
+- we could add support for the TetGen mesh creation package, and cut each
+tetrahedron into four hexahedra using the barycenter. This could help design
+meshes for sedimentary basins, in particular near basin edges
+
+- we could add support for different polynomial degrees in different elements (p-adaptivity)
 
 - Regarding memory size (getting an estimate of memory consumption in SESAME),
 somebody should just cut and paste my SPECFEM3D_GLOBE routine
@@ -27,15 +34,12 @@ somebody should just cut and paste my SPECFEM3D_GLOBE routine
 I call from "SPECFEM3D_GLOBE/version41_beta/src/create_header_file.f90".
 It would work for SESAME as well (with minor modifications).
 
-- re-add the kernel calculations
-
 - add SOURCESOLUTION in addition to CMTSOLUTION, to choose between a CMT source and a force source
 
 - put a flag to choose between a Ricker source and a Heaviside source when a force source is used
 (we can cut and paste the Heaviside implementation from the case of a CMT source)
 
-- automatic detection (coloring / flags) of the free surface and of the PML absorbing elements in CUBIT;
-read this from input files in the solver
+- automatic detection (coloring / flags) of the free surface and of the PML absorbing elements in CUBIT; read this from input files in the solver
 
 - Pieyre should add C-PML following Roland's 2D implementation
 
@@ -116,3 +120,17 @@ Done:
  - Added attenuation
 
  - Added moment sources
+
+ - Put kernel calculations back
+
+- Regarding domain decomposition, METIS and ParMETIS can become inefficient
+for very large meshes. Pieyre has done detailed tests (Pieyre,
+could you please send the Excel file to all of us with a few lines
+of description of the figures?).
+SCOTCH (serial) and PT-SCOTCH (parallel) is then better.
+(faster, uses less memory etc.)
+Because of that, we have removed support for METIS in SESAME.
+It can still be called indirectly from SCOTCH (there is an option
+in SCOTCH to call METIS instead). But this is a bad idea because
+the partition obtained is worse.
+
