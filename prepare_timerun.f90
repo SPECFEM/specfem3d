@@ -31,15 +31,20 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use specfem_par_movie
+  
   implicit none
-  
-  double precision :: scale_factor
-  real(kind=CUSTOM_REAL):: vs_val
-  integer :: i,j,k,ispec
-  integer :: iattenuation,iselected
-  
+  character(len=256) :: plot_file
 
-! user info
+  ! flag for any movie simulation
+  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
+     MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_GIF_IMAGE ) then
+    MOVIE_SIMULATION = .true.
+  else
+    MOVIE_SIMULATION = .false.  
+  endif
+
+  ! user info
   if(myrank == 0) then
 
     write(IMAIN,*)
@@ -96,12 +101,121 @@
       write(IMAIN,*) 'no poroelastic simulation'
     endif
     write(IMAIN,*)
+
+    write(IMAIN,*)
+    if(MOVIE_SIMULATION) then
+      write(IMAIN,*) 'incorporating movie simulation'
+    else
+      write(IMAIN,*) 'no movie simulation'
+    endif
+    write(IMAIN,*)
+
   endif
 
-! synchronize all the processes before assembling the mass matrix
-! to make sure all the nodes have finished to read their databases
+  ! synchronize all the processes before assembling the mass matrix
+  ! to make sure all the nodes have finished to read their databases
   call sync_all()
 
+  ! sets up mass matrices
+  call prepare_timerun_mass_matrices()
+
+
+  ! initialize acoustic arrays to zero
+  if( ACOUSTIC_SIMULATION ) then
+    potential_acoustic(:) = 0._CUSTOM_REAL
+    potential_dot_acoustic(:) = 0._CUSTOM_REAL
+    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+    ! put negligible initial value to avoid very slow underflow trapping
+    if(FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic(:) = VERYSMALLVAL
+  endif
+  
+  ! initialize elastic arrays to zero/verysmallvall
+  if( ELASTIC_SIMULATION ) then
+    displ(:,:) = 0._CUSTOM_REAL
+    veloc(:,:) = 0._CUSTOM_REAL
+    accel(:,:) = 0._CUSTOM_REAL
+    ! put negligible initial value to avoid very slow underflow trapping
+    if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
+  endif
+
+
+  ! distinguish between single and double precision for reals
+  if(CUSTOM_REAL == SIZE_REAL) then
+    deltat = sngl(DT)
+  else
+    deltat = DT
+  endif
+  deltatover2 = deltat/2._CUSTOM_REAL
+  deltatsqover2 = deltat*deltat/2._CUSTOM_REAL
+
+  ! seismograms
+  if (nrec_local > 0) then
+    ! allocate seismogram array
+    allocate(seismograms_d(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_v(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_a(NDIM,nrec_local,NSTEP))
+    
+    ! initialize seismograms
+    seismograms_d(:,:,:) = 0._CUSTOM_REAL
+    seismograms_v(:,:,:) = 0._CUSTOM_REAL
+    seismograms_a(:,:,:) = 0._CUSTOM_REAL    
+  endif  
+
+  ! prepares attenuation arrays
+  call prepare_timerun_attenuation()
+
+  ! initializes PML arrays  
+  if( ABSORBING_CONDITIONS  ) then    
+    if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then 
+      write(IMAIN,*) 'NOTE: adjoint simulations and PML not supported yet...'
+    else  
+      if( ABSORB_USE_PML ) then 
+        call PML_initialize()              
+      endif
+    endif
+  endif
+
+  ! opens source time function file
+  if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then  
+    ! print the source-time function
+    if(NSOURCES == 1) then
+      plot_file = '/plot_source_time_function.txt'
+    else
+     if(NSOURCES < 10) then
+        write(plot_file,"('/plot_source_time_function',i1,'.txt')") NSOURCES
+      else
+        write(plot_file,"('/plot_source_time_function',i2,'.txt')") NSOURCES
+      endif
+    endif
+    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown')
+  endif
+  
+  ! user output
+  if(myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '           time step: ',sngl(DT),' s'
+    write(IMAIN,*) 'number of time steps: ',NSTEP
+    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
+    write(IMAIN,*)
+  endif
+
+  ! prepares ADJOINT simulations
+  call prepare_timerun_adjoint()
+  
+  end subroutine prepare_timerun
+  
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_mass_matrices()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
+    
 ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
@@ -135,8 +249,8 @@
   
   if(POROELASTIC_SIMULATION) then
     
-    stop 'poroelastic simulation not implemented yet'
-  
+    stop 'poroelastic simulation not implemented yet'  
+    ! but would be something like this...
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
@@ -147,7 +261,7 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
     where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
     rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
@@ -157,80 +271,26 @@
   
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
-! initialize acoustic arrays to zero
-  if( ACOUSTIC_SIMULATION ) then
-    potential_acoustic(:) = 0._CUSTOM_REAL
-    potential_dot_acoustic(:) = 0._CUSTOM_REAL
-    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
-    ! put negligible initial value to avoid very slow underflow trapping
-    if(FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic(:) = VERYSMALLVAL
-  endif
-  
-! initialize elastic arrays to zero/verysmallvall
-  if( ELASTIC_SIMULATION ) then
-    displ(:,:) = 0._CUSTOM_REAL
-    veloc(:,:) = 0._CUSTOM_REAL
-    accel(:,:) = 0._CUSTOM_REAL
-    ! put negligible initial value to avoid very slow underflow trapping
-    if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
-  endif
 
-  !! DK DK array not created yet for CUBIT
-  ! if (SIMULATION_TYPE == 3)  then ! kernel calculation, read in last frame
-  ! open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',action='read',form='unformatted')
-  ! read(27) b_displ
-  ! read(27) b_veloc
-  ! read(27) b_accel
-  ! rho_kl(:,:,:,:) = 0._CUSTOM_REAL
-  ! mu_kl(:,:,:,:) = 0._CUSTOM_REAL
-  ! kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
-  ! endif
+  end subroutine prepare_timerun_mass_matrices
 
-! distinguish between single and double precision for reals
-  if(CUSTOM_REAL == SIZE_REAL) then
-    deltat = sngl(DT)
-  else
-    deltat = DT
-  endif
-  deltatover2 = deltat/2.
-  deltatsqover2 = deltat*deltat/2.
-  !  if (SIMULATION_TYPE == 3) then
-  !    if(CUSTOM_REAL == SIZE_REAL) then
-  !      b_deltat = - sngl(DT)
-  !    else
-  !      b_deltat = - DT
-  !    endif
-  !    b_deltatover2 = b_deltat/2.
-  !    b_deltatsqover2 = b_deltat*b_deltat/2.
-  !  endif
+!
+!-------------------------------------------------------------------------------------------------
+!
 
-! seismograms
-  if (nrec_local > 0) then
-    ! allocate seismogram array
-    allocate(seismograms_d(NDIM,nrec_local,NSTEP))
-    allocate(seismograms_v(NDIM,nrec_local,NSTEP))
-    allocate(seismograms_a(NDIM,nrec_local,NSTEP))
-    
-    ! initialize seismograms
-    seismograms_d(:,:,:) = 0._CUSTOM_REAL
-    seismograms_v(:,:,:) = 0._CUSTOM_REAL
-    seismograms_a(:,:,:) = 0._CUSTOM_REAL
-    
-    !    if (SIMULATION_TYPE == 2) then
-    !    ! allocate Frechet derivatives array
-    !      allocate(Mxx_der(nrec_local),Myy_der(nrec_local),Mzz_der(nrec_local),Mxy_der(nrec_local), &
-    !               Mxz_der(nrec_local),Myz_der(nrec_local), sloc_der(NDIM,nrec_local))
-    !      Mxx_der = 0._CUSTOM_REAL
-    !      Myy_der = 0._CUSTOM_REAL
-    !      Mzz_der = 0._CUSTOM_REAL
-    !      Mxy_der = 0._CUSTOM_REAL
-    !      Mxz_der = 0._CUSTOM_REAL
-    !      Myz_der = 0._CUSTOM_REAL
-    !      sloc_der = 0._CUSTOM_REAL
-    !      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
-    !      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-    !    endif    
-  endif  
+  subroutine prepare_timerun_attenuation()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
+
+  ! local parameters
+  double precision :: scale_factor
+  real(kind=CUSTOM_REAL):: vs_val
+  integer :: i,j,k,ispec
+  integer :: iattenuation,iselected
 
 ! if attenuation is on, shift PREM to right frequency
 ! rescale mu in PREM to average frequency for attenuation
@@ -285,20 +345,16 @@
     enddo
 
 ! precompute Runge-Kutta coefficients if attenuation
-    tauinv(:,:) = - 1. / tau_sigma(:,:)
-    factor_common(:,:) = 2. * beta(:,:) * tauinv(:,:)
-    alphaval(:,:) = 1 + deltat*tauinv(:,:) + deltat**2*tauinv(:,:)**2 / 2. + &
-      deltat**3*tauinv(:,:)**3 / 6. + deltat**4*tauinv(:,:)**4 / 24.
-    betaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 3. + deltat**3*tauinv(:,:)**2 / 8. + deltat**4*tauinv(:,:)**3 / 24.
-    gammaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 6. + deltat**3*tauinv(:,:)**2 / 24.
-    !if (SIMULATION_TYPE == 3) then
-    !  b_alphaval(:,:) = 1 + b_deltat*tauinv(:,:) + b_deltat**2*tauinv(:,:)**2 / 2. + &
-    !        b_deltat**3*tauinv(:,:)**3 / 6. + b_deltat**4*tauinv(:,:)**4 / 24.
-    !  b_betaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 3. + &
-    !        b_deltat**3*tauinv(:,:)**2 / 8. + b_deltat**4*tauinv(:,:)**3 / 24.
-    !  b_gammaval(:,:) = b_deltat / 2. + b_deltat**2*tauinv(:,:) / 6. + &
-    !        b_deltat**3*tauinv(:,:)**2 / 24.
-    !endif
+    tauinv(:,:) = - 1._CUSTOM_REAL / tau_sigma(:,:)
+    factor_common(:,:) = 2._CUSTOM_REAL * beta(:,:) * tauinv(:,:)
+    alphaval(:,:) = 1 + deltat*tauinv(:,:) + deltat**2*tauinv(:,:)**2 / 2._CUSTOM_REAL &
+                    + deltat**3*tauinv(:,:)**3 / 6._CUSTOM_REAL &
+                    + deltat**4*tauinv(:,:)**4 / 24._CUSTOM_REAL
+    betaval(:,:) = deltat / 2._CUSTOM_REAL + deltat**2*tauinv(:,:) / 3._CUSTOM_REAL &
+                   + deltat**3*tauinv(:,:)**2 / 8._CUSTOM_REAL &
+                   + deltat**4*tauinv(:,:)**3 / 24._CUSTOM_REAL
+    gammaval(:,:) = deltat / 2._CUSTOM_REAL + deltat**2*tauinv(:,:) / 6._CUSTOM_REAL &
+                    + deltat**3*tauinv(:,:)**2 / 24._CUSTOM_REAL
   endif
 
 
@@ -339,47 +395,197 @@
       R_xz(:,:,:,:,:) = VERYSMALLVAL
       R_yz(:,:,:,:,:) = VERYSMALLVAL
     endif
-
-    !! DK DK array not created yet for CUBIT
-    !   if (SIMULATION_TYPE == 3) then
-    !     read(27) b_R_xx
-    !     read(27) b_R_yy
-    !     read(27) b_R_xy
-    !     read(27) b_R_xz
-    !     read(27) b_R_yz
-    !     read(27) b_epsilondev_xx
-    !     read(27) b_epsilondev_yy
-    !     read(27) b_epsilondev_xy
-    !     read(27) b_epsilondev_xz
-    !     read(27) b_epsilondev_yz
-    !   endif
-    !  close(27)
-
   endif  
 
-! initialize Moho boundary index
-! if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-!   ispec2D_moho_top = 0
-!   ispec2D_moho_bot = 0
-!   k_top = 1
-!   k_bot = NGLLZ
-! endif
+  end subroutine prepare_timerun_attenuation
 
-  ! initializes PML arrays  
-  if( ABSORBING_CONDITIONS  ) then
-    if( ABSORB_USE_PML ) then 
-      call PML_initialize()              
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_adjoint()
+
+! prepares adjoint simulations
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
+
+  integer :: ier
+  
+! seismograms
+  if (nrec_local > 0 .and. SIMULATION_TYPE == 2 ) then
+    ! allocate Frechet derivatives array
+    allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
+            Mzz_der(nrec_local),Mxy_der(nrec_local), &
+            Mxz_der(nrec_local),Myz_der(nrec_local), &
+            sloc_der(NDIM,nrec_local))
+    Mxx_der = 0._CUSTOM_REAL
+    Myy_der = 0._CUSTOM_REAL
+    Mzz_der = 0._CUSTOM_REAL
+    Mxy_der = 0._CUSTOM_REAL
+    Mxz_der = 0._CUSTOM_REAL
+    Myz_der = 0._CUSTOM_REAL
+    sloc_der = 0._CUSTOM_REAL
+    
+    allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
+    seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
+  endif  
+
+! timing
+  if (SIMULATION_TYPE == 3) then
+  
+    ! backward/reconstructed wavefields: time stepping is in time-reversed sense 
+    ! (negative time increments)
+    if(CUSTOM_REAL == SIZE_REAL) then
+      b_deltat = - sngl(DT)
+    else
+      b_deltat = - DT
+    endif
+    b_deltatover2 = b_deltat/2._CUSTOM_REAL
+    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+    
+  endif
+
+! attenuation backward memories
+  if( ATTENUATION .and. SIMULATION_TYPE == 3 ) then
+    ! precompute Runge-Kutta coefficients if attenuation  
+    b_alphaval(:,:) = 1 + b_deltat*tauinv(:,:) + b_deltat**2*tauinv(:,:)**2 / 2._CUSTOM_REAL &
+                      + b_deltat**3*tauinv(:,:)**3 / 6._CUSTOM_REAL &
+                      + b_deltat**4*tauinv(:,:)**4 / 24._CUSTOM_REAL
+    b_betaval(:,:) = b_deltat / 2._CUSTOM_REAL + b_deltat**2*tauinv(:,:) / 3._CUSTOM_REAL &
+                      + b_deltat**3*tauinv(:,:)**2 / 8._CUSTOM_REAL &
+                      + b_deltat**4*tauinv(:,:)**3 / 24._CUSTOM_REAL
+    b_gammaval(:,:) = b_deltat / 2._CUSTOM_REAL + b_deltat**2*tauinv(:,:) / 6._CUSTOM_REAL &
+                      + b_deltat**3*tauinv(:,:)**2 / 24._CUSTOM_REAL
+  endif
+      
+! kernel calculation, reads in last frame
+  if (SIMULATION_TYPE == 3)  then 
+    ! reads in wavefields
+    open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',&
+          action='read',form='unformatted',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error: opening save_forward_arrays'
+      print*,'path: ',trim(prname)//'save_forward_arrays.bin'
+      call exit_mpi(myrank,'error open file save_forward_arrays.bin')
+    endif
+
+    if( ACOUSTIC_SIMULATION ) then              
+      read(27) b_potential_acoustic
+      read(27) b_potential_dot_acoustic
+      read(27) b_potential_dot_dot_acoustic 
+    endif
+
+    ! elastic wavefields
+    if( ELASTIC_SIMULATION ) then    
+      read(27) b_displ
+      read(27) b_veloc
+      read(27) b_accel
+    endif
+    
+    ! memory variables if attenuation
+    if( ATTENUATION ) then
+       read(27) b_R_xx
+       read(27) b_R_yy
+       read(27) b_R_xy
+       read(27) b_R_xz
+       read(27) b_R_yz
+       read(27) b_epsilondev_xx
+       read(27) b_epsilondev_yy
+       read(27) b_epsilondev_xy
+       read(27) b_epsilondev_xz
+       read(27) b_epsilondev_yz
+    endif  
+
+    close(27)
+  endif
+
+! initializes adjoint kernels
+  if (SIMULATION_TYPE == 3)  then 
+    ! elastic domain
+    if( ELASTIC_SIMULATION ) then
+      rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
+      kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+    endif
+    
+    ! acoustic domain
+    if( ACOUSTIC_SIMULATION ) then
+      rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
     endif
   endif
-  
-! user output
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) '           time step: ',sngl(DT),' s'
-    write(IMAIN,*) 'number of time steps: ',NSTEP
-    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
-    write(IMAIN,*)
+
+! initialize Moho boundary index
+  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+    ispec2D_moho_top = 0
+    ispec2D_moho_bot = 0
   endif
+  
+! stacey absorbing fields will be reconstructed for adjoint simulations 
+! using snapshot files of wavefields
+  if( ABSORBING_CONDITIONS ) then
+  
+    ! opens absorbing wavefield saved/to-be-saved by forward simulations
+    if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
+          (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then
 
+      b_num_abs_boundary_faces = num_abs_boundary_faces
+      
+      ! elastic domains
+      if( ELASTIC_SIMULATION) then
+        ! allocates wavefield
+        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces))
+        
+        b_reclen_field = CUSTOM_REAL * (NDIM * NGLLSQUARE * num_abs_boundary_faces)
+      
+        if (SIMULATION_TYPE == 3) then
+          ! opens existing files
+          open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
+                action='read',form='unformatted',access='direct', &
+                recl=b_reclen_field+2*sizeof(b_reclen_field) )
+        else
+          ! opens new file
+          open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
+                form='unformatted',access='direct',&
+                recl=b_reclen_field+2*sizeof(b_reclen_field) )
+        endif
+      endif
 
-  end subroutine
+      ! acoustic domains
+      if( ACOUSTIC_SIMULATION) then
+        ! allocates wavefield
+        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces))
+        
+        b_reclen_potential = CUSTOM_REAL * (NGLLSQUARE * num_abs_boundary_faces)
+      
+        if (SIMULATION_TYPE == 3) then
+          ! opens existing files
+          open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='old',&
+                action='read',form='unformatted',access='direct', &
+                recl=b_reclen_potential+2*sizeof(b_reclen_potential) )
+        else
+          ! opens new file
+          open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='unknown',&
+                form='unformatted',access='direct',&
+                recl=b_reclen_potential+2*sizeof(b_reclen_potential) )
+        endif
+      endif      
+      
+    else
+      ! dummy array
+      b_num_abs_boundary_faces = 1
+      if( ELASTIC_SIMULATION ) &
+        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces))
+        
+      if( ACOUSTIC_SIMULATION ) &
+        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces))
+        
+    endif
+  endif  
+  
+  end subroutine prepare_timerun_adjoint

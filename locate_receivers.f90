@@ -31,15 +31,14 @@
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
-                 TOPOGRAPHY,UTM_PROJECTION_ZONE, &
-                 iglob_is_surface_external_mesh,ispec_is_surface_external_mesh &
-                 )
+                 TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                 iglob_is_surface_external_mesh,ispec_is_surface_external_mesh )
 
   implicit none
 
   include "constants.h"
 
-  logical TOPOGRAPHY
+  logical TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
 
   integer NPROC,UTM_PROJECTION_ZONE
 
@@ -191,9 +190,9 @@
     read(1,*,iostat=ios) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
-! convert station location to UTM
-    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),UTM_PROJECTION_ZONE,ILONGLAT2UTM, &
-         .true.)
+! convert station location to UTM 
+    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),&
+                UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
 ! compute horizontal distance between source and receiver in km
     horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 + (stutm_x(irec)-utm_x_source)**2) / 1000.
@@ -641,23 +640,30 @@
       if(final_distance(irec) == HUGEVAL) call exit_MPI(myrank,'error locating receiver')
 
       write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
-      write(IMAIN,*) '    original longitude: ',sngl(stlon(irec))
-      write(IMAIN,*) '        original UTM x: ',sngl(stutm_x(irec))
-      write(IMAIN,*) '        original UTM y: ',sngl(stutm_y(irec))
-      write(IMAIN,*) '   horizontal distance: ',sngl(horiz_dist(irec))
-      if(TOPOGRAPHY) write(IMAIN,*) '  topography elevation: ',sngl(elevation(irec))
-      write(IMAIN,*) '   target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
-
-      write(IMAIN,*) 'closest estimate found: ',sngl(final_distance(irec)),' m away'
-      write(IMAIN,*) ' in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
-      if(FASTER_RECEIVERS_POINTS_ONLY) then
-        write(IMAIN,*) 'in point i,j,k = ',nint(xi_receiver(irec)),nint(eta_receiver(irec)),nint(gamma_receiver(irec))
-        !write(IMAIN,*) 'in point i,j,k = ',x_found(irec),y_found(irec),z_found(irec)
-        write(IMAIN,*) 'nu1 = ',nu(1,:,irec)
-        write(IMAIN,*) 'nu2 = ',nu(2,:,irec)
-        write(IMAIN,*) 'nu3 = ',nu(3,:,irec)
+      write(IMAIN,*) '     original longitude: ',sngl(stlon(irec))
+      if( SUPPRESS_UTM_PROJECTION ) then
+        write(IMAIN,*) '     original x: ',sngl(stutm_x(irec))
+        write(IMAIN,*) '     original y: ',sngl(stutm_y(irec))
       else
-        write(IMAIN,*) ' at xi,eta,gamma coordinates = ',xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec)
+        write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
+        write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))      
+      endif
+      write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
+      if(TOPOGRAPHY) write(IMAIN,*) '     topography elevation: ',sngl(elevation(irec))
+      write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
+
+      write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
+      write(IMAIN,*) '     in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
+      if(FASTER_RECEIVERS_POINTS_ONLY) then
+        write(IMAIN,*) '     in point i,j,k = ',nint(xi_receiver(irec)),nint(eta_receiver(irec)),nint(gamma_receiver(irec))
+        write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
+        write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
+        write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
+      else
+        write(IMAIN,*) '     at coordinates: '
+        write(IMAIN,*) '       xi    = ',xi_receiver(irec)
+        write(IMAIN,*) '       eta   = ',eta_receiver(irec)
+        write(IMAIN,*) '       gamma = ',gamma_receiver(irec)
       endif
 
 ! add warning if estimate is poor
@@ -747,7 +753,8 @@
 
   end subroutine locate_receivers
 
-!===========================
+!=====================================================================
+
 
   subroutine station_filter(myrank,filename,filtered_filename,nfilter, &
       LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
@@ -758,46 +765,74 @@
 
 ! input
   integer :: myrank
-  character(len=*) filename,filtered_filename
-  double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
+  character(len=*) :: filename,filtered_filename
+  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
 ! output
-  integer nfilter
+  integer :: nfilter
 
-  integer irec, nrec, nrec_filtered, ios
+  integer :: nrec, nrec_filtered, ios !, irec
 
-  double precision stlat,stlon,stele,stbur
-  character(len=MAX_LENGTH_STATION_NAME) station_name
-  character(len=MAX_LENGTH_NETWORK_NAME) network_name
-  character(len=256) dummystring
+  double precision :: stlat,stlon,stele,stbur
+  character(len=MAX_LENGTH_STATION_NAME) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
+  character(len=256) :: dummystring
 
   nrec = 0
   nrec_filtered = 0
 
+  ! counts number of lines in stations file
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
   if (ios /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
   do while(ios == 0)
-     read(IIN,"(a)",iostat = ios) dummystring
-     if(ios == 0) nrec = nrec + 1
+    read(IIN,"(a256)",iostat = ios) dummystring
+    if(ios /= 0) exit
+
+    if( len_trim(dummystring) > 0 ) nrec = nrec + 1
   enddo
   close(IIN)
 
+  ! reads in station locations
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
-  do irec = 1, nrec
-    read(IIN, *) station_name, network_name, stlat, stlon, stele, stbur
-    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+  !do irec = 1,nrec
+  !    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+  do while(ios == 0)
+    read(IIN,"(a256)",iostat = ios) dummystring
+    if( ios /= 0 ) exit
+
+    ! counts number of stations in min/max region
+    if( len_trim(dummystring) > 0 ) then
+        dummystring = trim(dummystring)
+        read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
+    
+        ! counts stations within lon/lat region
+        if( stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. &
+           stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
           nrec_filtered = nrec_filtered + 1
+    endif
   enddo
   close(IIN)
 
+  ! writes out filtered stations file
   if (myrank == 0) then
-    open(unit=IIN,file=trim(filename),status='old',action='read')
+    open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ios)
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
-    write(IOUT,*) nrec_filtered
-    do irec = 1,nrec
-      read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-      if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-            write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
+    !write(IOUT,*) nrec_filtered
+    !do irec = 1,nrec
+    do while(ios == 0)
+      read(IIN,"(a256)",iostat = ios) dummystring
+      if( ios /= 0 ) exit
+
+      !read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
+      if( len_trim(dummystring) > 0 ) then
+        dummystring = trim(dummystring)
+        read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
+        
+        if( stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. &
+           stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+          write(IOUT,*) trim(station_name),' ',trim(network_name),' ',sngl(stlat), &
+                       ' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
+      endif
     enddo
     close(IIN)
     close(IOUT)
@@ -807,6 +842,16 @@
     write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_filename)
     write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
     write(IMAIN,*)
+
+    if( nrec_filtered < 1 ) then    
+      write(IMAIN,*) 'error filtered stations:'
+      write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered
+      write(IMAIN,*) 
+      write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'
+      write(IMAIN,*) '    latitude min/max : ',LATITUDE_MIN,LATITUDE_MAX
+      write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
+      write(IMAIN,*) 
+    endif
 
   endif
 

@@ -357,7 +357,7 @@ endif
 
 ! get source information for frequency for number of points per lambda
   print *,'reading source duration from the CMTSOLUTION file'
-  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,NSOURCES)
 
 ! set global element and point offsets to zero
   iglobpointoffset = 0
@@ -580,7 +580,7 @@ endif
 
 !   get source information
     print *,'reading position of the source from the CMTSOLUTION file'
-    call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+    call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,NSOURCES)
 
 !   the point for the source is put at the surface for clarity (depth ignored)
 !   even slightly above to superimpose to real surface

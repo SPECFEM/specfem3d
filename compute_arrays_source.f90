@@ -166,8 +166,8 @@
 !=============================================================================
 
 subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
-      xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
-      xigll,yigll,zigll,NSTEP)
+                    xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
+                    xigll,yigll,zigll,NSTEP)
 
 
   implicit none
@@ -182,43 +182,52 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   character(len=*) adj_source_file
 
 ! output
-  real(kind=CUSTOM_REAL) :: adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
+  real(kind=CUSTOM_REAL),dimension(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
 
 ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLY) :: yigll
   double precision, dimension(NGLLZ) :: zigll
 
-
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
+        
   real(kind=CUSTOM_REAL) :: adj_src(NSTEP,NDIM)
 
   integer icomp, itime, i, j, k, ios
   double precision :: junk
-  character(len=3) :: comp(3)
+  character(len=3),dimension(NDIM) :: comp = (/ "BHN", "BHE", "BHZ" /)
   character(len=256) :: filename
 
-  call lagrange_any(xi_receiver,NGLLX,xigll,hxir,hpxir)
-  call lagrange_any(eta_receiver,NGLLY,yigll,hetar,hpetar)
-  call lagrange_any(gamma_receiver,NGLLZ,zigll,hgammar,hpgammar)
-
-  adj_sourcearray(:,:,:,:,:) = 0.
-
-  comp = (/"BHE", "BHN", "BHZ"/)
-
+  !adj_sourcearray(:,:,:,:,:) = 0.
+  adj_src = 0._CUSTOM_REAL
+  
+  ! loops over components
   do icomp = 1, NDIM
 
     filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
-    open(unit = IIN, file = trim(filename), iostat = ios)
-    if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
+    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
+    if (ios /= 0) cycle ! cycles to next file    
+    !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
+    
+    ! reads in adjoint source trace
     do itime = 1, NSTEP
-      read(IIN,*) junk, adj_src(itime,icomp)
-    enddo
+      
+      read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)      
+      if( ios /= 0 ) &
+        call exit_MPI(myrank, &
+          'file '//trim(filename)//' has wrong length, please check with your simulation duration')      
+    enddo    
     close(IIN)
 
   enddo
 
+  ! lagrange interpolators for receiver location
+  call lagrange_any(xi_receiver,NGLLX,xigll,hxir,hpxir)
+  call lagrange_any(eta_receiver,NGLLY,yigll,hetar,hpetar)
+  call lagrange_any(gamma_receiver,NGLLZ,zigll,hgammar,hpgammar)
+
+  ! interpolates adjoint source onto GLL points within this element
   do k = 1, NGLLZ
     do j = 1, NGLLY
       do i = 1, NGLLX
@@ -226,7 +235,6 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
       enddo
     enddo
   enddo
-
 
 end subroutine compute_arrays_adjoint_source
 
@@ -443,7 +451,7 @@ end subroutine compute_adj_source_frechet
   sourcearray(:,:,:,:) = 0._CUSTOM_REAL
   sourcearrayd(:,:,:,:) = 0.d0
 
-! compute Lagrange polynomials at the source location
+! computes Lagrange polynomials at the source location
   call lagrange_any(xi_source,NGLLX,xigll,hxis,hpxis)
   call lagrange_any(eta_source,NGLLY,yigll,hetas,hpetas)
   call lagrange_any(gamma_source,NGLLZ,zigll,hgammas,hpgammas)

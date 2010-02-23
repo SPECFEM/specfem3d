@@ -53,10 +53,7 @@
   
   logical:: DT_PRESENT
   
-  integer :: myrank
-  
-!! DK DK May 2009: added this to print the minimum and maximum number of elements
-!! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
+  integer :: myrank  
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum    
   integer :: i,j,k,ispec,iglob_a,iglob_b,sizeprocs
@@ -66,7 +63,7 @@
   real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
   logical :: has_vs_zero
 
-! initializes 
+! initializations
   if( DT <= 0.0d0) then
     DT_PRESENT = .false.
   else

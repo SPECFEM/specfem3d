@@ -1,15 +1,15 @@
 
-# forward or adjoint simulation
-SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
+# forward or adjoint simulation:
+# 1 = forward, 2 = adjoint, 3 = both simultaneously
+SIMULATION_TYPE                 = 1   
 SAVE_FORWARD                    = .false.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
-# number of MPI processors along xi and eta (can be different)
-NPROC_XI                        = 2 
-NPROC_ETA                       = 2
+# number of MPI processors 
+NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 4500

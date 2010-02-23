@@ -31,13 +31,12 @@ contains
                         nnodes_elmnts, nodes_elmnts, &
                         max_neighbour, ncommonnodes)
 
-!    include './constants_decompose_mesh_SCOTCH.h'
-
     integer(long), intent(in)  :: nelmnts
     integer, intent(in)  :: nnodes
     integer(long), intent(in)  :: nsize
     integer(long), intent(in)  :: sup_neighbour
-    integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
+    integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts    
+    
     integer, dimension(0:nelmnts)  :: xadj
     integer, dimension(0:sup_neighbour*nelmnts-1)  :: adjncy
     integer, dimension(0:nnodes-1)  :: nnodes_elmnts
@@ -45,6 +44,7 @@ contains
     integer, intent(out) :: max_neighbour
     integer, intent(in)  :: ncommonnodes
 
+    ! local parameters
     integer  :: i, j, k, l, m, nb_edges
     logical  ::  is_neighbour
     integer  :: num_node, n
@@ -96,9 +96,12 @@ contains
                 end do
                 if ( .not.is_neighbour ) then
                    adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
+                   
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
                    if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) stop 'ERROR : too much neighbours per element, modify the mesh.'
+
                    adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour+xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
+
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
                    if (xadj(nodes_elmnts(l+j*nsize))>sup_neighbour) stop 'ERROR : too much neighbours per element, modify the mesh.'
                 end if
@@ -366,12 +369,10 @@ contains
   
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
-   subroutine Construct_interfaces_no_acoustic_elastic_separation(nelmnts, &
+   subroutine Construct_interfaces_no_ac_el_sep(nelmnts, &
                               sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nb_materials, cs_material, num_material,nparts)
-
-!     include './constants_decompose_mesh_SCOTCH.h'
 
     integer(long), intent(in)  :: nelmnts, sup_neighbour
     integer, dimension(0:nelmnts-1), intent(in)  :: part
@@ -509,15 +510,16 @@ contains
        end do
     end do
 
-  end subroutine Construct_interfaces_no_acoustic_elastic_separation
+  end subroutine Construct_interfaces_no_ac_el_sep
 
 
 
   !--------------------------------------------------
   ! Write nodes (their coordinates) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_glob2loc_nodes_database(IIN_database, iproc, npgeo, nodes_coords, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-       glob2loc_nodes, nnodes, num_phase)
+  subroutine write_glob2loc_nodes_database(IIN_database, iproc, npgeo, &
+                  nodes_coords, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                  glob2loc_nodes, nnodes, num_phase)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: nnodes, iproc, num_phase
@@ -591,13 +593,14 @@ contains
   ! Write elements on boundaries (and their four nodes on boundaries) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_boundaries_database(IIN_database, iproc, nelmnts, nspec2D_xmin, nspec2D_xmax, &
-       nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
-       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
-       nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, & 
-       glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, part)
+                        nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
+                        ibelm_xmin, ibelm_xmax, ibelm_ymin, &
+                        ibelm_ymax, ibelm_bottom, ibelm_top, &
+                        nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
+                        nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, & 
+                        glob2loc_elmnts, glob2loc_nodes_nparts, &
+                        glob2loc_nodes_parts, glob2loc_nodes, part )
      
-!    include './constants_decompose_mesh_SCOTCH.h'
-
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer(long), intent(in)  :: nelmnts 
@@ -621,10 +624,11 @@ contains
     integer, dimension(:), pointer  :: glob2loc_nodes
     integer, dimension(1:nelmnts)  :: part
 
+    ! local parameters  
     integer  :: i,j
     integer  :: loc_node1, loc_node2, loc_node3, loc_node4
-    integer  :: loc_nspec2D_xmin,loc_nspec2D_xmax,loc_nspec2D_ymin,loc_nspec2D_ymax,loc_nspec2D_bottom,loc_nspec2D_top 
-  
+    integer  :: loc_nspec2D_xmin,loc_nspec2D_xmax,loc_nspec2D_ymin, &
+               loc_nspec2D_ymax,loc_nspec2D_bottom,loc_nspec2D_top  
     
     ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
     loc_nspec2D_xmin = 0
@@ -831,7 +835,6 @@ contains
        end if
 
     end do
-
 
   end subroutine write_boundaries_database
 
@@ -1070,6 +1073,82 @@ contains
   end subroutine write_interfaces_database
 
   !--------------------------------------------------
+  ! Write elements on surface boundaries (and their four nodes on boundaries) 
+  ! pertaining to iproc partition in the corresponding Database
+  !--------------------------------------------------
+  subroutine write_moho_surface_database(IIN_database, iproc, nelmnts, & 
+                        glob2loc_elmnts, glob2loc_nodes_nparts, &
+                        glob2loc_nodes_parts, glob2loc_nodes, part, &
+                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
+     
+    integer, intent(in)  :: IIN_database
+    integer, intent(in)  :: iproc
+    integer(long), intent(in)  :: nelmnts 
+
+    integer, dimension(:), pointer :: glob2loc_elmnts
+    integer, dimension(:), pointer  :: glob2loc_nodes_nparts
+    integer, dimension(:), pointer  :: glob2loc_nodes_parts
+    integer, dimension(:), pointer  :: glob2loc_nodes
+    integer, dimension(1:nelmnts)  :: part
+
+    integer ,intent(in) :: nspec2D_moho
+    integer ,dimension(nspec2D_moho), intent(in) :: ibelm_moho
+    integer, dimension(4,nspec2D_moho), intent(in) :: nodes_ibelm_moho
+    
+    integer  :: i,j
+    integer  :: loc_node1, loc_node2, loc_node3, loc_node4
+    integer  :: loc_nspec2D_moho
+      
+    ! counts number of elements for moho surface in this partition
+    ! optional moho
+    loc_nspec2D_moho = 0
+    do i=1,nspec2D_moho
+       if(part(ibelm_moho(i)) == iproc) then
+          loc_nspec2D_moho = loc_nspec2D_moho + 1
+       end if
+    end do
+    ! format: #surface_id, #number of elements
+    write(IIN_database,*) 7, loc_nspec2D_moho
+
+    ! outputs element index and element node indices
+    ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
+    !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
+    !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus 
+    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1 )
+
+    ! optional moho
+    do i=1,nspec2D_moho    
+       if(part(ibelm_moho(i)) == iproc) then
+          do j = glob2loc_nodes_nparts(nodes_ibelm_moho(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_moho(1,i))-1
+             if (glob2loc_nodes_parts(j) == iproc ) then
+                loc_node1 = glob2loc_nodes(j)+1
+             end if
+          end do
+          do j = glob2loc_nodes_nparts(nodes_ibelm_moho(2,i)-1), glob2loc_nodes_nparts(nodes_ibelm_moho(2,i))-1
+             if (glob2loc_nodes_parts(j) == iproc ) then
+                loc_node2 = glob2loc_nodes(j)+1
+             end if
+          end do
+          do j = glob2loc_nodes_nparts(nodes_ibelm_moho(3,i)-1), glob2loc_nodes_nparts(nodes_ibelm_moho(3,i))-1
+             if (glob2loc_nodes_parts(j) == iproc ) then
+                loc_node3 = glob2loc_nodes(j)+1
+             end if
+          end do
+          do j = glob2loc_nodes_nparts(nodes_ibelm_moho(4,i)-1), glob2loc_nodes_nparts(nodes_ibelm_moho(4,i))-1
+             if (glob2loc_nodes_parts(j) == iproc ) then
+                loc_node4 = glob2loc_nodes(j)+1
+             end if
+          end do
+          write(IIN_database,*) glob2loc_elmnts(ibelm_moho(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4  
+       end if
+
+    end do
+
+  end subroutine write_moho_surface_database
+
+
+
+  !--------------------------------------------------
   ! loading : sets weights for acoustic/elastic elements to account for different 
   !               expensive calculations in specfem simulations
   !--------------------------------------------------
@@ -1140,13 +1219,10 @@ contains
     integer, intent(in)  :: nnodes, nproc, nb_materials
     integer(long), intent(in) :: sup_neighbour,nsize
     
-    !double precision, dimension(nb_materials), intent(in)  :: phi_material
     integer, dimension(1:nelmnts), intent(in)  :: num_material
 
     double precision, dimension(6,nb_materials),intent(in)  :: mat_prop
     
-    !integer, dimension(:), pointer  :: elmnts
-    !integer, dimension(:), pointer :: part
     integer, dimension(0:nelmnts-1)  :: part
     integer, dimension(0:esize*nelmnts-1)  :: elmnts
     
@@ -1157,10 +1233,6 @@ contains
     logical, dimension(nb_materials)  :: is_acoustic, is_elastic
     
     ! neighbors
-    !integer, dimension(:), pointer  :: xadj
-    !integer, dimension(:), pointer  :: adjncy
-    !integer, dimension(:), pointer  :: nodes_elmnts
-    !integer, dimension(:), pointer  :: nnodes_elmnts
     integer, dimension(:), allocatable  :: xadj
     integer, dimension(:), allocatable  :: adjncy
     integer, dimension(:), allocatable  :: nnodes_elmnts
@@ -1184,13 +1256,14 @@ contains
     enddo
 
     ! gets neighbors by 4 common nodes (face)
-    allocate(xadj(1:nelmnts+1))
-    allocate(adjncy(1:sup_neighbour*nelmnts))
-    allocate(nnodes_elmnts(1:nnodes))
-    allocate(nodes_elmnts(1:nsize*nnodes))
+    allocate(xadj(0:nelmnts))
+    allocate(adjncy(0:sup_neighbour*nelmnts-1))
+    allocate(nnodes_elmnts(0:nnodes-1))
+    allocate(nodes_elmnts(0:nsize*nnodes-1))
     !call mesh2dual_ncommonnodes(nelmnts, nnodes, elmnts, xadj, adjncy, nnodes_elmnts, nodes_elmnts,4)
-    call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
-         nodes_elmnts, max_neighbour, 4)
+    call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, &
+                                elmnts, xadj, adjncy, nnodes_elmnts, &
+                                nodes_elmnts, max_neighbour, 4)
 
     ! counts coupled elements
     nfaces_coupled = 0
@@ -1241,6 +1314,155 @@ contains
 
  end subroutine acoustic_elastic_repartitioning
 
+  !--------------------------------------------------
+  ! Repartitioning : two coupled moho surface elements are transfered to the same partition
+  !--------------------------------------------------
+
+  subroutine moho_surface_repartitioning (nelmnts, nnodes, elmnts, &
+                        sup_neighbour, nsize, nproc, part, &
+                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
+
+    implicit none
+
+    ! number of (spectral) elements  ( <-> nspec )
+    integer(long),intent(in) :: nelmnts
+    
+    ! number of (global) nodes, number or processes
+    integer, intent(in)  :: nnodes, nproc 
+    
+    ! maximum number of neighours and max number of elements-that-contain-the-same-node
+    integer(long), intent(in) :: sup_neighbour,nsize
+        
+    ! partition index on each element
+    integer, dimension(0:nelmnts-1)  :: part
+    
+    ! mesh element indexing
+    ! ( elmnts(esize,nspec) )
+    integer, dimension(0:esize*nelmnts-1)  :: elmnts
+
+    ! moho surface
+    integer ,intent(in) :: nspec2D_moho
+    integer ,dimension(nspec2D_moho), intent(in) :: ibelm_moho
+    integer, dimension(4,nspec2D_moho), intent(in) :: nodes_ibelm_moho
+
+    ! local parameters
+    integer :: nfaces_coupled
+    integer, dimension(:,:), pointer  :: faces_coupled
+
+    logical, dimension(:),allocatable  :: is_moho,node_is_moho
+    
+    ! for neighbors
+    integer, dimension(:), allocatable  :: xadj
+    integer, dimension(:), allocatable  :: adjncy
+    integer, dimension(:), allocatable  :: nnodes_elmnts
+    integer, dimension(:), allocatable  :: nodes_elmnts
+    integer  :: max_neighbour        
+
+    integer  :: i, j, iface, inode, ispec2D, counter
+    integer  :: el, el_adj
+    logical  :: is_repartitioned
+
+    ! temporary flag arrays
+    allocate( is_moho(0:nelmnts-1)) ! element ids start from 0
+    allocate( node_is_moho(0:nnodes-1) ) ! node ids start from 0
+    is_moho(:) = .false.
+    node_is_moho(:) = .false.
+        
+    ! sets moho flags for known elements
+    do ispec2D = 1, nspec2D_moho
+      ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
+      el = ibelm_moho(ispec2D) - 1
+      is_moho(el) = .true.  
+      
+      ! sets node flags      
+      do j=1,4
+        ! note: assumes that node indices in nodes_ibelm_* arrays are in the range from 1 to nodes
+        inode = nodes_ibelm_moho(j,ispec2D) - 1
+        node_is_moho(inode) = .true.
+      enddo
+    enddo
+
+    ! checks if element has moho surface 
+    do el = 0, nelmnts-1
+      if( is_moho(el) ) cycle
+      
+      ! loops over all element corners         
+      counter = 0   
+      do i=0,esize-1
+        ! note: assumes that node indices in elmnts array are in the range from 0 to nodes-1
+        inode = elmnts(el*esize+i)
+        if( node_is_moho(inode) ) counter = counter + 1  
+      enddo
+      
+      ! sets flag if it has a surface
+      if( counter == 4 ) is_moho(el) = .true.
+    enddo
+    
+    ! statistics output
+    counter = 0
+    do el=0, nelmnts-1
+     if ( is_moho(el) ) counter = counter + 1
+    enddo
+    print*,'  moho elements = ',counter
+    
+    ! gets neighbors by 4 common nodes (face)
+    allocate(xadj(0:nelmnts)) ! contains number of adjacent elements (neighbours)
+    allocate(adjncy(0:sup_neighbour*nelmnts-1)) ! contains all element id indices of adjacent elements
+    allocate(nnodes_elmnts(0:nnodes-1))
+    allocate(nodes_elmnts(0:nsize*nnodes-1))
+    
+    call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, &
+                        elmnts, xadj, adjncy, nnodes_elmnts, &
+                        nodes_elmnts, max_neighbour, 4)
+
+    ! counts coupled elements
+    nfaces_coupled = 0
+    do el = 0, nelmnts-1
+       if ( is_moho(el) ) then
+          do el_adj = xadj(el), xadj(el+1) - 1
+            ! increments counter if it contains face
+            if( is_moho(adjncy(el_adj)) ) nfaces_coupled = nfaces_coupled + 1
+          enddo
+       endif
+    enddo
+
+    ! coupled elements
+    allocate(faces_coupled(2,nfaces_coupled))
+
+    ! stores elements indices
+    nfaces_coupled = 0
+    do el = 0, nelmnts-1
+       if ( is_moho(el) ) then
+          do el_adj = xadj(el), xadj(el+1) - 1
+             if ( is_moho(adjncy(el_adj)) ) then
+                nfaces_coupled = nfaces_coupled + 1
+                faces_coupled(1,nfaces_coupled) = el
+                faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
+             endif
+          enddo
+       endif
+    enddo
+
+    ! puts coupled elements into same partition
+    do i = 1, nfaces_coupled*nproc
+       is_repartitioned = .false.
+       do iface = 1, nfaces_coupled
+          if ( part(faces_coupled(1,iface)) /= part(faces_coupled(2,iface)) ) then
+             ! coupled moho elements are in different partitions
+             if ( part(faces_coupled(1,iface)) < part(faces_coupled(2,iface)) ) then
+                part(faces_coupled(2,iface)) = part(faces_coupled(1,iface))
+             else
+                part(faces_coupled(1,iface)) = part(faces_coupled(2,iface))
+             endif
+             is_repartitioned = .true.
+          endif
+       enddo
+       if ( .not. is_repartitioned ) then
+          exit
+       endif
+    enddo
+
+ end subroutine moho_surface_repartitioning
 
 
 end module part_decompose_mesh_SCOTCH

@@ -77,7 +77,7 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-cubit.cmd('block 1 name "acoustic" ')       # acoustic material region
+cubit.cmd('block 1 name "acoustic 1" ')       # acoustic material region
 cubit.cmd('block 1 attribute count 4')
 cubit.cmd('block 1 attribute index 1 1  ')     # material 1
 cubit.cmd('block 1 attribute index 2 1480 ')  # vp
@@ -85,14 +85,14 @@ cubit.cmd('block 1 attribute index 3 0 ')      # vs
 cubit.cmd('block 1 attribute index 4 1028 ')  # rho (ocean salt water density:
                                          # http://www.windows.ucar.edu/tour/link=/earth/Water/density.html
 
-cubit.cmd('block 2 name "acoustic" ')       # acoustic material region
+cubit.cmd('block 2 name "acoustic 2" ')       # acoustic material region
 cubit.cmd('block 2 attribute count 4')
 cubit.cmd('block 2 attribute index 1 2  ')     # material 1
 cubit.cmd('block 2 attribute index 2 1480 ')  # vp
 cubit.cmd('block 2 attribute index 3 0 ')      # vs
 cubit.cmd('block 2 attribute index 4 1028 ')  # rho (ocean salt water density:
 
-cubit.cmd('block 3 name "acoustic" ')       # acoustic material region
+cubit.cmd('block 3 name "acoustic 3" ')       # acoustic material region
 cubit.cmd('block 3 attribute count 4')
 cubit.cmd('block 3 attribute index 1 3  ')     # material 1
 cubit.cmd('block 3 attribute index 2 1480 ')  # vp

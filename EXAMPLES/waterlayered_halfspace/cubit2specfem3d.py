@@ -113,9 +113,7 @@
 #
 #############################################################################
 
-
 import cubit
-
 
 class mtools(object):
     """docstring for ciao"""
@@ -289,7 +287,7 @@ class mesh_tools(block_tools):
         elif dot < 0:
             return nodes[0],nodes[3],nodes[2],nodes[1]
         else:
-            print 'error, dot=0', axb,normal,dot,p0,p1,p2
+            print 'error: surface normal, dot=0', axb,normal,dot,p0,p1,p2
     def mesh_analysis(self,frequency):
         from sets import Set
         cubit.cmd('set info off')
@@ -350,14 +348,15 @@ class mesh(object,mesh_tools):
         self.freename='free_surface_file'
         self.recname='STATIONS'
         self.face='QUAD4'
+        self.face2='SHELL4'
         self.hex='HEX8'
         self.edge='BAR2'
         self.topo='face_topo'
         self.rec='receivers'
-        self.block_definition()
         self.ngll=5
         self.percent_gll=0.172
         self.point_wavelength=5
+        self.block_definition()
         cubit.cmd('compress')
     def __repr__(self):
         pass
@@ -371,9 +370,10 @@ class mesh(object,mesh_tools):
         blocks=cubit.get_block_id_list()
         for block in blocks:
             name=cubit.get_exodus_entity_name('block',block)
-            ty=cubit.get_block_element_type(block)
-            print block,name,blocks,ty,self.hex,self.face
-            if ty == self.hex:
+            type=cubit.get_block_element_type(block)
+            print block,name,blocks,type,self.hex,self.face
+            # block has hexahedral elements (HEX8)
+            if type == self.hex:
                 flag=None
                 vel=None
                 vs=None
@@ -381,14 +381,18 @@ class mesh(object,mesh_tools):
                 q=0
                 ani=0
                 # material domain id
-                if name == "acoustic" :
+                if name.find("acoustic") >= 0 :
                   imaterial = 1
-                elif name == "elastic" :
+                elif name.find("elastic") >= 0 :
                   imaterial = 2
-                elif name == "poroelastic" :
+                elif name.find("poroelastic") >= 0 :
                   imaterial = 3
                 else :
                   imaterial = 0
+                  print "block: ",name
+                  print "  could not find appropriate material for this block..."
+                  print ""
+                  break
                   
                 nattrib=cubit.get_block_attribute_count(block)
                 if nattrib != 0:
@@ -442,14 +446,28 @@ class mesh(object,mesh_tools):
                 elif flag==0:
                     par=tuple([imaterial,flag,name])
                 material[block]=par
-            elif ty == self.face: #Stacey condition, we need hex here for pml
+            elif (type == self.face) or (type == self.face2) : 
+                # block has surface elements (QUAD4 or SHELL4)                
                 block_bc_flag.append(4)
                 block_bc.append(block)
                 bc[block]=4 #face has connectivity = 4
                 if name == self.topo: topography_face=block
             else:
-                print 'blocks no properly defined',ty
-                return None, None,None,None,None,None,None,None
+                # block elements differ from HEX8/QUAD4/SHELL4    
+                print '****************************************'
+                print 'block not properly defined:'
+                print '  name:',name
+                print '  type:',type
+                print
+                print 'please check your block definitions!'
+                print
+                print 'only supported types are:'
+                print '  HEX8  for volumes'
+                print '  QUAD4 for surface'
+                print '  SHELL4 for surface'
+                print '****************************************'
+                continue
+                
         nsets=cubit.get_nodeset_id_list()
         if len(nsets) == 0: self.receivers=None
         for nset in nsets:
@@ -468,7 +486,8 @@ class mesh(object,mesh_tools):
             self.bc=bc
             self.topography=topography_face
         except:
-            print 'blocks no properly defined'
+            print '****************************************'
+            print 'sorry, no blocks or blocks not properly defined'
             print block_mat
             print block_flag
             print block_bc
@@ -476,8 +495,9 @@ class mesh(object,mesh_tools):
             print material
             print bc
             print topography
+            print '****************************************'            
     def mat_parameter(self,properties): 
-        #TODO: material property acoustic/elastic/poroelastic ? .... where?
+        #note: material property acoustic/elastic/poroelastic are defined by the block's name
         print "#material properties:"
         print properties
         imaterial=properties[0]
@@ -558,22 +578,23 @@ class mesh(object,mesh_tools):
         nodecoord.close()
         print 'Ok'
     def free_write(self,freename=None):
+        # free surface 
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
         cubit.cmd('set journal off')
         from sets import Set
         normal=(0,0,1)
         if not freename: freename=self.freename
-        freehex=open(freename,'w')
+        # writes free surface file  
         print 'Writing '+freename+'.....'
-        #
-        #
+        freehex=open(freename,'w')
+        # searches block definition with name face_topo
         for block,flag in zip(self.block_bc,self.block_bc_flag):
             if block == self.topography:
                 name=cubit.get_exodus_entity_name('block',block)
-                print name,block
+                print '  block name:',name,'id:',block
                 quads_all=cubit.get_block_faces(block)
-                print 'face = ',len(quads_all)
+                print '  face = ',len(quads_all)
                 dic_quads_all=dict(zip(quads_all,quads_all))
                 freehex.write('%10i\n' % len(quads_all))
                 list_hex=cubit.parse_cubit_list('hex','all')
@@ -587,11 +608,12 @@ class mesh(object,mesh_tools):
                             txt='%10i %10i %10i %10i %10i\n' % (h,nodes_ok[0],\
                                          nodes_ok[1],nodes_ok[2],nodes_ok[3])
                             freehex.write(txt)
-                freehex.close()   
+        freehex.close()   
         print 'Ok'
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
     def abs_write(self,absname=None):
+        # absorbing boundaries
         import re
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
@@ -599,7 +621,7 @@ class mesh(object,mesh_tools):
         from sets import Set
         if not absname: absname=self.absname
         #
-        #
+        # loops through all block definitions
         list_hex=cubit.parse_cubit_list('hex','all')
         for block,flag in zip(self.block_bc,self.block_bc_flag):
             if block != self.topography:
@@ -607,33 +629,31 @@ class mesh(object,mesh_tools):
                 print name,block
                 absflag=False
                 if re.search('xmin',name):
-                    print 'xmin'
-                    abshex_local=open(absname+'_xmin','w')
+                    filename=absname+'_xmin'
                     normal=(-1,0,0)
                 elif re.search('xmax',name):
-                    print "xmax"
-                    abshex_local=open(absname+'_xmax','w')
+                    filename=absname+'_xmax'
                     normal=(1,0,0)
                 elif re.search('ymin',name):
-                    print "ymin"
-                    abshex_local=open(absname+'_ymin','w')
+                    filename=absname+'_ymin'                    
                     normal=(0,-1,0)
                 elif re.search('ymax',name):
-                    print "ymax"
-                    abshex_local=open(absname+'_ymax','w')
+                    filename=absname+'_ymax'                    
                     normal=(0,1,0)
                 elif re.search('bottom',name):
-                    print "bottom"
-                    abshex_local=open(absname+'_bottom','w')
+                    filename=absname+'_bottom'                    
                     normal=(0,0,-1)
-                elif re.search('abs',name):
-                    print "abs all - no implemented yet"
-                    absflag=True
-                    abshex_local=open(absname,'w')
-                #
-                #
+                elif re.search('abs',name):                
+                    print "  ...face_abs - not used so far..."
+                    continue
+                else:
+                    continue
+                # opens file
+                print 'Writing '+filename+'.....'                  
+                abshex_local=open(filename,'w')
+                # gets face elements
                 quads_all=cubit.get_block_faces(block)
-                dic_quads_all=dict(zip(quads_all,quads_all))
+                dic_quads_all=dict(zip(quads_all,quads_all))                
                 abshex_local.write('%10i\n' % len(quads_all))
                 #command = "group 'list_hex' add hex in face "+str(quads_all)
                 #command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
@@ -648,6 +668,7 @@ class mesh(object,mesh_tools):
                         if dic_quads_all.has_key(f):
                             nodes=cubit.get_connectivity('Face',f)
                             if not absflag: 
+                                # checks with specified normal
                                 nodes_ok=self.normal_check(nodes,normal)
                                 txt='%10i %10i %10i %10i %10i\n' % (h,nodes_ok[0],\
                                              nodes_ok[1],nodes_ok[2],nodes_ok[3])
@@ -655,10 +676,55 @@ class mesh(object,mesh_tools):
                                 txt='%10i %10i %10i %10i %10i\n' % (h,nodes[0],\
                                              nodes[1],nodes[2],nodes[3])
                             abshex_local.write(txt)
+                # closes file
                 abshex_local.close()   
         print 'Ok'
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
+    def surface_write(self,pathdir=None):    
+        # optional surfaces, e.g. moho_surface
+        # should be created like e.g.: 
+        #  > block 10 face in surface 2
+        #  > block 10 name 'moho_surface'
+        import re            
+        from sets import Set
+        for block in self.block_bc :
+            if block != self.topography:
+                name=cubit.get_exodus_entity_name('block',block)
+                # skips block names like face_abs**, face_topo**
+                if re.search('abs',name):
+                  continue
+                elif re.search('topo',name):
+                  continue
+                elif re.search('surface',name):
+                  filename=pathdir+name+'_file'
+                else:
+                  continue
+                # gets face elements
+                print '  surface block name: ',name,'id: ',block
+                quads_all=cubit.get_block_faces(block)
+                print '  face = ',len(quads_all)
+                if len(quads_all) == 0 :
+                  continue
+                # writes out surface infos to file                
+                print 'Writing '+filename+'.....'  
+                surfhex_local=open(filename,'w')
+                dic_quads_all=dict(zip(quads_all,quads_all))                
+                # writes number of surface elements
+                surfhex_local.write('%10i\n' % len(quads_all))
+                # writes out element node ids
+                list_hex=cubit.parse_cubit_list('hex','all')
+                for h in list_hex:
+                    faces=cubit.get_sub_elements('hex',h,2)
+                    for f in faces:
+                        if dic_quads_all.has_key(f):
+                            nodes=cubit.get_connectivity('Face',f)
+                            txt='%10i %10i %10i %10i %10i\n' % (h,nodes[0],\
+                                             nodes[1],nodes[2],nodes[3])
+                            surfhex_local.write(txt)
+                # closes file            
+                surfhex_local.close()   
+        print 'Ok'
     def rec_write(self,recname):
         print 'Writing '+self.recname+'.....'
         recfile=open(self.recname,'w')
@@ -674,25 +740,36 @@ class mesh(object,mesh_tools):
         cubit.cmd('set journal off')
         if len(path) != 0:
             if path[-1] != '/': path=path+'/'
+        # mesh file    
         self.mesh_write(path+self.mesh_name)
+        # mesh material 
         self.material_write(path+self.material_name)
+        # mesh coordinates
         self.nodescoord_write(path+self.nodecoord_name)
-        self.free_write(path+self.freename)
-        self.abs_write(path+self.absname)
+        # material definitions
         self.nummaterial_write(path+self.nummaterial_name)
+        # free surface: face_top
+        self.free_write(path+self.freename)
+        # absorbing surfaces: abs_***
+        self.abs_write(path+self.absname)
+        # any other surfaces: ***surface***
+        self.surface_write(path)
+        # receivers            
         if self.receivers: self.rec_write(path+self.recname)
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
 
 def export2SESAME(path_exporting_mesh_SPECFEM3D_SESAME):
+    cubit.cmd('set info on')
+    cubit.cmd('set echo on')
     sem_mesh=mesh()
     sem_mesh.write(path=path_exporting_mesh_SPECFEM3D_SESAME)
     
 
-
 if __name__ == '__main__':
-    path='/Users/emanuele/Desktop/'
-    export2SESAME(path)
-
-#TODO: change the algorithm for the abs detection of the hex
-
+    path='MESH/'
+    export2SESAME(path)    
+    
+# call by:
+# import cubit2specfem3d
+# cubit2specfem3d.export2SESAME('MESH')

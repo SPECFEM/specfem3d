@@ -257,21 +257,19 @@
   allocate(valence_external_mesh(nglob),ispec_has_points(nspec),stat=ier)
   if( ier /= 0 ) stop 'error allocate valence array'
 
-! initialize surface indices
-  ispec_is_surface_external_mesh(:) = .false.
-  iglob_is_surface_external_mesh(:) = .false.    
-  
-  valence_external_mesh(:) = 0
-  ispec_has_points(:) = .false.
-  
 ! an estimation of the minimum distance between global points (for an element width)
   mindist = minval( (xstore(ibool(1,3,3,:)) - xstore(ibool(NGLLX,3,3,:)))**2 &
                   + (ystore(ibool(1,3,3,:)) - ystore(ibool(NGLLX,3,3,:)))**2 &
                   + (zstore(ibool(1,3,3,:)) - zstore(ibool(NGLLX,3,3,:)))**2 )
   mindist = sqrt(mindist)
+
+! initialize surface indices
+  ispec_is_surface_external_mesh(:) = .false.
+  iglob_is_surface_external_mesh(:) = .false.    
+  nfaces_surface_ext_mesh  = 0
+  valence_external_mesh(:) = 0
   
 ! sets valence value to one corresponding to process rank  for points on cross-sections
-  count = 0
   do ispec = 1, nspec
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -282,24 +280,18 @@
           if( abs( xstore(iglob) - x_section ) < 0.2*mindist ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
-            count = count + 1
-            ispec_has_points(ispec) = .true.
           endif
 
           ! y cross-section  
           if( abs( ystore(iglob) - y_section ) < 0.2*mindist ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
-            count = count + 1
-            ispec_has_points(ispec) = .true.
           endif
           
           ! z cross-section  
           if( abs( zstore(iglob) - z_section ) < 0.2*mindist ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
-            count = count + 1
-            ispec_has_points(ispec) = .true.
           endif
           
         enddo
@@ -316,6 +308,7 @@
 
 ! determines spectral elements containing surface points
 ! (only counts element outer faces, no planes inside element)
+  ispec_has_points(:) = .false.  
   count = 0
   do ispec = 1, nspec
 
@@ -627,7 +620,8 @@
   ispec_is_image_surface(:) = .false.
   iglob_is_image_surface(:) = .false.    
   valence_external_mesh(:) = 0
-
+  num_iglob_image_surface = 0
+  
 ! an estimation of the minimum distance between global points
   mindist = minval( (xstore(ibool(1,1,1,:)) - xstore(ibool(2,1,1,:)))**2 &
                   + (ystore(ibool(1,1,1,:)) - ystore(ibool(2,1,1,:)))**2 &

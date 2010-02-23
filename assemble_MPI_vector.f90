@@ -133,6 +133,8 @@
             request_send_vector_ext_mesh,request_recv_vector_ext_mesh &
             )
 
+! sends data
+
   implicit none
 
   include "constants.h"
@@ -152,8 +154,6 @@
   integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   integer ipoin,iinterface
-
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 ! here we have to assemble all the contributions between partitions using MPI
 
@@ -196,6 +196,8 @@
             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
             request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
+! waits for data to receive and assembles
+
   implicit none
 
   include "constants.h"
@@ -215,8 +217,6 @@
   integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
 
   integer ipoin,iinterface
-
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 ! here we have to assemble all the contributions between partitions using MPI
 

@@ -146,6 +146,12 @@
   write(IOUT) nspec
   write(IOUT) nglob
 
+  write(IOUT) ibool
+
+  write(IOUT) xstore_dummy
+  write(IOUT) ystore_dummy
+  write(IOUT) zstore_dummy
+
   write(IOUT) xixstore
   write(IOUT) xiystore
   write(IOUT) xizstore
@@ -156,12 +162,6 @@
   write(IOUT) gammaystore
   write(IOUT) gammazstore
   write(IOUT) jacobianstore
-
-  write(IOUT) ibool
-
-  write(IOUT) xstore_dummy
-  write(IOUT) ystore_dummy
-  write(IOUT) zstore_dummy
 
   write(IOUT) kappastore
   write(IOUT) mustore

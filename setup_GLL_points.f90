@@ -62,8 +62,5 @@
 
 ! create name of database
   call create_name_database(prname,myrank,LOCAL_PATH)
-  if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
-           call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
-
 
   end subroutine
