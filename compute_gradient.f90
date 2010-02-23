@@ -111,3 +111,5 @@ subroutine compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
   enddo
 
 end subroutine compute_gradient
+
+

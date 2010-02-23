@@ -272,7 +272,35 @@
   recvbuf = sendbuf
 
   end subroutine max_all_all_cr
+  
+!
+!----
+!
 
+  subroutine max_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+  
+  end subroutine max_all_all_dp
+  
+
+!
+!----
+!
+!
+!  subroutine min_all_all_dp(sendbuf, recvbuf)
+!
+!  implicit none
+!
+!  double precision :: sendbuf, recvbuf
+!
+!  recvbuf = sendbuf
+!  
+!  end subroutine min_all_all_dp
 !
 !----
 !
@@ -345,6 +373,21 @@
   recvbuf = sendbuf
 
   end subroutine sum_all_dp
+
+!
+!----
+!
+
+  subroutine sum_all_cr(sendbuf, recvbuf)
+
+  implicit none
+  include "constants.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine sum_all_cr
 
 !
 !----

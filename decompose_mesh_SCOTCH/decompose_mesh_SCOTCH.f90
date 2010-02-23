@@ -9,7 +9,7 @@ module decompose_mesh_SCOTCH
   include './scotchf.h'
 
 ! number of partitions
-  integer :: nparts ! e.g. 4 for partitioning for 4 processes/CPUs 
+  integer :: nparts ! e.g. 4 for partitioning for 4 CPUs or 4 processes
 
 ! mesh arrays
   integer(long) :: nspec
@@ -54,6 +54,11 @@ module decompose_mesh_SCOTCH
   integer, dimension(:), allocatable :: ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin
   integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top 
+
+  ! moho surface (optional)
+  integer :: nspec2D_moho
+  integer, dimension(:), allocatable :: ibelm_moho
+  integer, dimension(:,:), allocatable :: nodes_ibelm_moho
   
   character(len=256)  :: prname
 
@@ -64,7 +69,6 @@ module decompose_mesh_SCOTCH
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
   character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
   integer  :: ierr,idummy
-  !integer :: i
   
   !pll
   double precision , dimension(:,:), allocatable :: mat_prop
@@ -72,8 +76,8 @@ module decompose_mesh_SCOTCH
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
 ! default mesh file directory
-  character(len=256) :: localpath_name    ! './OUTPUT_FILES'
-  character(len=256) :: outputpath_name   ! './OUTPUT_FILES'
+  character(len=256) :: localpath_name    
+  character(len=256) :: outputpath_name 
 
   integer :: q_flag,aniso_flag,idomain_id
   double precision :: vp,vs,rho
@@ -365,6 +369,24 @@ module decompose_mesh_SCOTCH
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
 
+  ! reads in moho_surface boundary files (optional)
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
+          status='old', form='formatted',iostat=ierr)
+    if( ierr /= 0 ) then
+      nspec2D_moho = 0
+    else
+      read(98,*) nspec2D_moho
+    endif
+    allocate(ibelm_moho(nspec2D_moho))
+    allocate(nodes_ibelm_moho(4,nspec2D_moho))
+    do ispec2D = 1,nspec2D_moho
+      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
+      read(98,*) ibelm_moho(ispec2D), nodes_ibelm_moho(1,ispec2D), nodes_ibelm_moho(2,ispec2D), &
+             nodes_ibelm_moho(3,ispec2D), nodes_ibelm_moho(4,ispec2D)
+    end do
+    close(98)
+    if( nspec2D_moho > 0 ) print*, '  nspec2D_moho = ', nspec2D_moho
+
   end subroutine read_mesh_files
   
   !----------------------------------------------------------------------------------------------
@@ -499,7 +521,13 @@ module decompose_mesh_SCOTCH
   !    call acoustic_elastic_repartitioning (nspec, nnodes, elmnts, &
   !                   count_def_mat, mat(1,:) , mat_prop, &
   !                   sup_neighbour, nsize, &
-  !                   nproc, part, nfaces_coupled, faces_coupled)
+  !                   nparts, part, nfaces_coupled, faces_coupled)
+
+  ! re-partitioning puts moho-surface coupled elements into same partition
+    call moho_surface_repartitioning (nspec, nnodes, elmnts, &
+                     sup_neighbour, nsize, nparts, part, &
+                     nspec2D_moho,ibelm_moho,nodes_ibelm_moho )
+
    
   ! local number of each element for each partition
     call Construct_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
@@ -510,13 +538,14 @@ module decompose_mesh_SCOTCH
 
   ! mpi interfaces 
     ! acoustic/elastic boundaries WILL BE SEPARATED into different MPI partitions
-    call Construct_interfaces(nspec, sup_neighbour, part, elmnts, xadj, adjncy, tab_interfaces, &
+    call Construct_interfaces(nspec, sup_neighbour, part, elmnts, &
+                             xadj, adjncy, tab_interfaces, &
                              tab_size_interfaces, ninterfaces, &
                              nparts)
 
-    !or: acoustic/elastic boundaries will NOT be separated into different MPI partitions
-    !call Construct_interfaces_no_acoustic_elastic_separation(nspec, &
-    !                          sup_neighbour, part, elmnts, xadj, adjncy, tab_interfaces, &
+    !or: uncomment if you want acoustic/elastic boundaries NOT to be separated into different MPI partitions
+    !call Construct_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
+    !                          xadj, adjncy, tab_interfaces, &
     !                          tab_size_interfaces, ninterfaces, &
     !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts)
 
@@ -595,6 +624,12 @@ module decompose_mesh_SCOTCH
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 2, nparts)       
+
+       ! writes out moho surface (optional) 
+       call write_moho_surface_database(15, ipart, nspec, &
+                                  glob2loc_elmnts, glob2loc_nodes_nparts, &
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, &
+                                  nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
         
        close(15)
        

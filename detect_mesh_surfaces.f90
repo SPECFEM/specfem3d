@@ -32,15 +32,14 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   implicit none
-  
-! detecting surface points/elements (based on valence check on NGLL points) for external mesh
 
-
+  ! for mesh surface
   allocate(ispec_is_surface_external_mesh(NSPEC_AB))
   allocate(iglob_is_surface_external_mesh(NGLOB_AB))
-!  allocate(valence_external_mesh(NGLOB_AB))
 
-  if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
+! determines model surface  
+  if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. &
+      EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
 
     ! returns surface points/elements 
     ! in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh and
@@ -57,9 +56,9 @@
   endif 
 
 ! takes cross-section surfaces instead
-  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
-    if( PLOT_CROSS_SECTIONS ) then
-      call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
+  if( (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) &
+     .and. PLOT_CROSS_SECTIONS ) then
+    call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
                             nfaces_surface_ext_mesh, &
@@ -70,10 +69,9 @@
                             ibool_interfaces_ext_mesh,&
                             CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
                             xstore,ystore,zstore,myrank)    
-    endif  
   endif
   
-  ! takes number of faces for top, free surface only
+! takes number of faces for top, free surface only
   if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
     nfaces_surface_ext_mesh = num_free_surface_faces
     ! face corner indices
@@ -87,7 +85,7 @@
     iorderj(4) = NGLLY    
   endif
   
-  ! handles movies and shakemaps
+! handles movies and shakemaps
   if( EXTERNAL_MESH_MOVIE_SURFACE .or. &
      EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
      MOVIE_SURFACE .or. &
@@ -95,10 +93,15 @@
     call setup_movie_meshes()
   endif
 
+! stores wavefields for whole volume
   if (MOVIE_VOLUME) then
+    ! acoustic
     if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then  
-      allocate(velocity_movie(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     endif
+    ! elastic only
     if( ELASTIC_SIMULATION ) then
       allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
       allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -111,43 +114,10 @@
     endif
   endif
 
-  ! handles cross-section gif image
+! initializes cross-section gif image
   if( PNM_GIF_IMAGE ) then
     call write_PNM_GIF_initialize()
   endif
-
-! obsolete...
-! allocate files to save movies and shaking map
-!  if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
-!    if (USE_HIGHRES_FOR_MOVIES) then
-!      !nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
-!      nmovie_points = NGLLX * NGLLY * num_free_surface_faces
-!    else
-!      !nmovie_points = NGNOD2D * NSPEC2D_TOP
-!      nmovie_points = NGNOD2D * num_free_surface_faces
-!    endif
-!    allocate(store_val_x(nmovie_points))
-!    allocate(store_val_y(nmovie_points))
-!    allocate(store_val_z(nmovie_points))
-!    allocate(store_val_ux(nmovie_points))
-!    allocate(store_val_uy(nmovie_points))
-!    allocate(store_val_uz(nmovie_points))
-!    allocate(store_val_norm_displ(nmovie_points))
-!    allocate(store_val_norm_veloc(nmovie_points))
-!    allocate(store_val_norm_accel(nmovie_points))
-!
-!    allocate(store_val_x_all(nmovie_points,0:NPROC-1))
-!    allocate(store_val_y_all(nmovie_points,0:NPROC-1))
-!    allocate(store_val_z_all(nmovie_points,0:NPROC-1))
-!    allocate(store_val_ux_all(nmovie_points,0:NPROC-1))
-!    allocate(store_val_uy_all(nmovie_points,0:NPROC-1))
-!    allocate(store_val_uz_all(nmovie_points,0:NPROC-1))
-!
-!    ! to compute max of norm for shaking map
-!    store_val_norm_displ(:) = -1.
-!    store_val_norm_veloc(:) = -1.
-!    store_val_norm_accel(:) = -1.
-!  endif
   
 
 !!!! NL NL REGOLITH : runs at cines for asteroid simulations. Elements in contact with surface are part of the regolith layer.
@@ -226,7 +196,7 @@
 
 !!!!!!!!!! DK DK   endif
 
-  end subroutine
+  end subroutine detect_mesh_surfaces
   
   
 !!!! NL NL REGOLITH

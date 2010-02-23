@@ -23,21 +23,20 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file( &
-        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
-        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
-        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
-        SIMULATION_TYPE,SAVE_FORWARD)
+  subroutine read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+                        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
+                        SIMULATION_TYPE,SAVE_FORWARD )
 
   implicit none
 
   include "constants.h"
 
-  integer NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
+  integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
 
   double precision DT,HDUR_MOVIE
@@ -49,41 +48,30 @@
   character(len=256) LOCAL_PATH,CMTSOLUTION
 
 ! local variables
-  integer ios,icounter,isource,idummy
-
-  double precision hdur,minval_hdur
-
-  character(len=256) dummystring
-
+  integer ::ios,icounter,isource,idummy
+  double precision :: hdur,minval_hdur
+  character(len=256) :: dummystring
   integer, external :: err_occurred
 
-  open(unit=IIN,file='DATA/Par_file',status='old',action='read')
+  ! opens file DATA/Par_file
+  call open_parameter_file()
 
+  ! reads in parameters
   call read_value_integer(SIMULATION_TYPE, 'solver.SIMULATION_TYPE')
   if(err_occurred() /= 0) return
   call read_value_logical(SAVE_FORWARD, 'solver.SAVE_FORWARD')
   if(err_occurred() /= 0) return
-
   call read_value_integer(UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
   if(err_occurred() /= 0) return
   call read_value_logical(SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
   if(err_occurred() /= 0) return
-
-  call read_value_integer(NPROC_XI, 'mesher.NPROC_XI')
+  ! total number of processors 
+  call read_value_integer(NPROC, 'mesher.NPROC')
   if(err_occurred() /= 0) return
-  call read_value_integer(NPROC_ETA, 'mesher.NPROC_ETA')
-  if(err_occurred() /= 0) return
-
-! total number of processors in each of the six chunks
-! it is later (generate_parameters.f90 & specfem3D.f90 set to sizeprocs.
-! This will have to be fixed
-  NPROC = NPROC_XI * NPROC_ETA
-
   call read_value_integer(NSTEP, 'solver.NSTEP')
   if(err_occurred() /= 0) return
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
-
   call read_value_logical(OCEANS, 'model.OCEANS')
   if(err_occurred() /= 0) return
   call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY')
@@ -94,26 +82,8 @@
   if(err_occurred() /= 0) return
   call read_value_logical(ANISOTROPY, 'model.ANISOTROPY')
   if(err_occurred() /= 0) return
-
   call read_value_logical(ABSORBING_CONDITIONS, 'solver.ABSORBING_CONDITIONS')
   if(err_occurred() /= 0) return
-
-! compute the total number of sources in the CMTSOLUTION file
-! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
-  open(unit=1,file=CMTSOLUTION,iostat=ios,status='old',action='read')
-  if(ios /= 0) stop 'error opening CMTSOLUTION file'
-  icounter = 0
-  do while(ios == 0)
-    read(1,"(a)",iostat=ios) dummystring
-    if(ios == 0) icounter = icounter + 1
-  enddo
-  close(1)
-  if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-    stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
-  NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-  if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
-
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_VOLUME, 'solver.MOVIE_VOLUME')
@@ -128,35 +98,6 @@
   if(err_occurred() /= 0) return
   call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
   if(err_occurred() /= 0) return
-! Sets HDUR_MOVIE as the minimum period the mesh can resolvel
-
-! compute the minimum value of hdur in CMTSOLUTION file
-  open(unit=1,file=CMTSOLUTION,status='old',action='read')
-  minval_hdur = HUGEVAL
-  do isource = 1,NSOURCES
-
-! skip other information
-    do idummy = 1,3
-      read(1,"(a)") dummystring
-    enddo
-
-! read half duration and compute minimum
-    read(1,"(a)") dummystring
-    read(dummystring(15:len_trim(dummystring)),*) hdur
-    minval_hdur = min(minval_hdur,hdur)
-
-! skip other information
-    do idummy = 1,9
-      read(1,"(a)") dummystring
-    enddo
-
-  enddo
-  close(1)
-
-! one cannot use a Heaviside source for the movies
-!  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-!    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
-
   call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
   if(err_occurred() /= 0) return
   call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
@@ -168,8 +109,56 @@
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
 
-! close parameter file
-  close(IIN)
 
+  ! compute the total number of sources in the CMTSOLUTION file
+  ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
+  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
+  
+  open(unit=1,file=CMTSOLUTION,iostat=ios,status='old',action='read')
+  if(ios /= 0) stop 'error opening CMTSOLUTION file'
+
+  icounter = 0
+  do while(ios == 0)
+    read(1,"(a)",iostat=ios) dummystring
+    if(ios == 0) icounter = icounter + 1
+  enddo
+  close(1)
+
+  if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+    stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+
+  NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
+  if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
+
+  ! compute the minimum value of hdur in CMTSOLUTION file
+  open(unit=1,file=CMTSOLUTION,status='old',action='read')
+  minval_hdur = HUGEVAL
+  do isource = 1,NSOURCES
+
+    ! skip other information
+    do idummy = 1,3
+      read(1,"(a)") dummystring
+    enddo
+
+    ! read half duration and compute minimum
+    read(1,"(a)") dummystring
+    read(dummystring(15:len_trim(dummystring)),*) hdur
+    minval_hdur = min(minval_hdur,hdur)
+
+    ! skip other information
+    do idummy = 1,9
+      read(1,"(a)") dummystring
+    enddo
+
+  enddo
+  close(1)
+
+! one cannot use a Heaviside source for the movies
+  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
+    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
+
+! close parameter file
+  call close_parameter_file()
+  
   end subroutine read_parameter_file
 

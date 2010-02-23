@@ -34,15 +34,30 @@
   implicit none
   
   integer :: i,j,k,ispec,iglob
-  integer :: iinterface
+  integer :: iinterface,ier
+  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
   
 ! start reading the databasesa
 
 ! info about external mesh simulation
   call create_name_database(prname,myrank,LOCAL_PATH)
-  open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',action='read',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
+      action='read',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error: could not open database '
+    print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
+    call exit_mpi(myrank,'error opening database')
+  endif
+  
   read(27) NSPEC_AB
   read(27) NGLOB_AB
+
+  read(27) ibool
+  
+  read(27) xstore
+  read(27) ystore
+  read(27) zstore
+  
   read(27) xix
   read(27) xiy
   read(27) xiz
@@ -53,12 +68,6 @@
   read(27) gammay
   read(27) gammaz
   read(27) jacobian
-
-  read(27) ibool
-  
-  read(27) xstore
-  read(27) ystore
-  read(27) zstore
 
   read(27) kappastore
   read(27) mustore
@@ -137,7 +146,7 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )  
   if( POROELASTIC_SIMULATION ) then
   
-    stop 'not implemented yet '
+    stop 'not implemented yet: read rmass_solid_poroelastic .. '
     
     allocate(rmass_solid_poroelastic(NGLOB_AB))
     allocate(rmass_fluid_poroelastic(NGLOB_AB))
@@ -266,37 +275,95 @@
       enddo
     enddo
   enddo
-  deallocate( iglob_is_inner )
+  deallocate( iglob_is_inner )  
+
+! sets up elements for loops in acoustic simulations
+  if( ACOUSTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    nspec_inner_acoustic = 0
+    nspec_outer_acoustic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_acoustic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_acoustic = nspec_inner_acoustic + 1
+        else
+          nspec_outer_acoustic = nspec_outer_acoustic + 1
+        endif
+      endif
+    enddo
+        
+    ! stores indices of inner and outer elements for faster(?) computation 
+    num_phase_ispec_acoustic = max(nspec_inner_acoustic,nspec_outer_acoustic)
+    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2))
+    nspec_inner_acoustic = 0
+    nspec_outer_acoustic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_acoustic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_acoustic = nspec_inner_acoustic + 1
+          phase_ispec_inner_acoustic(nspec_inner_acoustic,2) = ispec
+        else
+          nspec_outer_acoustic = nspec_outer_acoustic + 1
+          phase_ispec_inner_acoustic(nspec_outer_acoustic,1) = ispec
+        endif
+      endif
+    enddo
+    !print *,'rank ',myrank,' acoustic inner spec: ',nspec_inner_acoustic
+    !print *,'rank ',myrank,' acoustic outer spec: ',nspec_outer_acoustic
+  endif
+
+! sets up elements for loops in acoustic simulations
+  if( ELASTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    nspec_inner_elastic = 0
+    nspec_outer_elastic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_elastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_elastic = nspec_inner_elastic + 1
+        else
+          nspec_outer_elastic = nspec_outer_elastic + 1
+        endif
+      endif
+    enddo
+        
+    ! stores indices of inner and outer elements for faster(?) computation 
+    num_phase_ispec_elastic = max(nspec_inner_elastic,nspec_outer_elastic)
+    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2))
+    nspec_inner_elastic = 0
+    nspec_outer_elastic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_elastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_elastic = nspec_inner_elastic + 1
+          phase_ispec_inner_elastic(nspec_inner_elastic,2) = ispec
+        else
+          nspec_outer_elastic = nspec_outer_elastic + 1
+          phase_ispec_inner_elastic(nspec_outer_elastic,1) = ispec
+        endif
+      endif
+    enddo
+    !print *,'rank ',myrank,' elastic inner spec: ',nspec_inner_elastic
+    !print *,'rank ',myrank,' elastic outer spec: ',nspec_outer_elastic
+  endif
+
+
+
+! gets model dimensions  
+  minl = minval( xstore )
+  maxl = maxval( xstore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LATITUDE_MIN = min_all
+  LATITUDE_MAX = max_all
+
+  minl = minval( ystore )
+  maxl = maxval( ystore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LONGITUDE_MIN = min_all
+  LONGITUDE_MAX = max_all
   
-! counts inner and outer elements
-!    nspec_inner = 0
-!    nspec_outer = 0
-!    do ispec = 1, NSPEC_AB
-!      if( ispec_is_inner_ext_mesh(ispec) .eqv. .true. ) then
-!        nspec_inner = nspec_inner + 1
-!      else
-!        nspec_outer = nspec_outer + 1
-!      endif
-!    enddo
-
-! stores indices of inner and outer elements for faster(?) compute_forces_with_Deville routine
-!    if( nspec_inner > 0 ) allocate( spec_inner(nspec_inner))
-!    if( nspec_outer > 0 ) allocate( spec_outer(nspec_outer))
-!    nspec_inner = 0
-!    nspec_outer = 0
-!    do ispec = 1, NSPEC_AB
-!      if( ispec_is_inner_ext_mesh(ispec) .eqv. .true. ) then
-!        nspec_inner = nspec_inner + 1
-!        spec_inner(nspec_inner) = ispec
-!      else
-!        nspec_outer = nspec_outer + 1
-!        spec_outer(nspec_outer) = ispec
-!      endif
-!    enddo
-  !print *,'rank ',myrank,' inner spec: ',nspec_inner
-  !print *,'rank ',myrank,' outer spec: ',nspec_outer
-
-    
 ! check courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
@@ -311,4 +378,169 @@
       deallocate(rho_vp,rho_vs)
   endif
 
-  end subroutine
+! reads adjoint parameters
+  call read_mesh_databases_adjoint()
+
+  end subroutine read_mesh_databases
+  
+!
+!-------------------------------------------------------------------------------------------------
+!  
+
+  subroutine read_mesh_databases_adjoint()
+
+! reads in moho meshes
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  use specfem_par_poroelastic
+  implicit none
+  
+  integer :: ier
+
+! allocates adjoint arrays for elastic simulations
+  if( ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
+    ! backward displacement,velocity,acceleration fields  
+    allocate(b_displ(NDIM,NGLOB_ADJOINT))
+    allocate(b_veloc(NDIM,NGLOB_ADJOINT))
+    allocate(b_accel(NDIM,NGLOB_ADJOINT))
+  
+    ! adjoint kernels
+
+    ! primary, isotropic kernels
+    ! density kernel
+    allocate(rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+    ! shear modulus kernel
+    allocate(mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+    ! compressional modulus kernel
+    allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+
+    ! derived kernels
+    ! density prime kernel
+    allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+    ! vp kernel
+    allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+    ! vs kernel
+    allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+    
+    ! MPI handling
+    allocate(b_request_send_vector_ext_mesh(num_interfaces_ext_mesh))
+    allocate(b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh))    
+    allocate(b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+    allocate(b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+    
+  endif
+
+! allocates adjoint arrays for acoustic simulations
+  if( ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
+    ! backward potentials  
+    allocate(b_potential_acoustic(NGLOB_ADJOINT))
+    allocate(b_potential_dot_acoustic(NGLOB_ADJOINT))
+    allocate(b_potential_dot_dot_acoustic(NGLOB_ADJOINT))
+    
+    ! kernels
+    allocate(rho_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT)) 
+    allocate(rhop_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT)) 
+    allocate(kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT)) 
+    allocate(alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT)) 
+
+    ! MPI handling
+    allocate(b_request_send_scalar_ext_mesh(num_interfaces_ext_mesh))
+    allocate(b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh))    
+    allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+    allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+    
+  endif
+
+! allocates attenuation solids
+  if( ATTENUATION .and. SIMULATION_TYPE == 3 ) then
+    allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) )
+            
+    allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
+            b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
+            b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
+            b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
+            b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL) )    
+  endif
+  
+! ADJOINT moho
+! moho boundary
+  if( ELASTIC_SIMULATION ) then
+    allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN) )
+
+    if( SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
+    
+      ! boundary elements
+      !open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
+      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
+            form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'error: could not open ibelm_moho '
+        print*,'path: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
+        call exit_mpi(myrank,'error opening ibelm_moho')
+      endif
+      
+      read(27) NSPEC2D_MOHO
+      
+      ! allocates arrays for moho mesh
+      allocate(ibelm_moho_bot(NSPEC2D_MOHO))
+      allocate(ibelm_moho_top(NSPEC2D_MOHO))
+      allocate(normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO))
+      allocate(normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO))
+      allocate(ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO))
+      allocate(ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO))
+
+      read(27) ibelm_moho_top
+      read(27) ibelm_moho_bot
+      read(27) ijk_moho_top
+      read(27) ijk_moho_bot
+      
+      close(27)
+
+      ! normals
+      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
+            form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'error: could not open normal_moho '
+        print*,'path: ',prname(1:len_trim(prname))//'normal_moho.bin'
+        call exit_mpi(myrank,'error opening normal_moho')
+      endif
+      
+      read(27) normal_moho_top
+      read(27) normal_moho_bot    
+      close(27)
+
+      ! flags    
+      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
+            form='unformatted',iostat=ier)
+      if( ier /= 0 ) then
+        print*,'error: could not open is_moho '
+        print*,'path: ',prname(1:len_trim(prname))//'is_moho.bin'
+        call exit_mpi(myrank,'error opening is_moho')
+      endif
+      
+      read(27) is_moho_top
+      read(27) is_moho_bot    
+      
+      close(27)
+      
+      ! moho kernel
+      allocate( moho_kl(NGLLSQUARE,NSPEC2D_MOHO) )      
+      moho_kl = 0._CUSTOM_REAL
+      
+    else
+      NSPEC2D_MOHO = 1
+    endif
+  
+    allocate( dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+                                   dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+                                   b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
+                                   b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO) )  
+  endif
+  
+  end subroutine read_mesh_databases_adjoint

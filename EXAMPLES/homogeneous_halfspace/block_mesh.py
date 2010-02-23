@@ -30,7 +30,7 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
 
 
-cubit.cmd('block 1 name "elastic" ')        # elastic material region
+cubit.cmd('block 1 name "elastic 1" ')        # elastic material region
 cubit.cmd('block 1 attribute count 6')
 cubit.cmd('block 1 attribute index 1 1')      # flag for material: 1 for 1. material
 cubit.cmd('block 1 attribute index 2 2800')   # vp
@@ -40,7 +40,7 @@ cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENU
 cubit.cmd('block 1 attribute index 6 0 ')      # anisotropy_flag
 
 
-#cubit.cmd('block 1 name "acoustic" ')       # acoustic material region
+#cubit.cmd('block 1 name "acoustic 1" ')       # acoustic material region
 #cubit.cmd('block 1 attribute count 4')
 #cubit.cmd('block 1 attribute index 1 1  ')     # material 1
 #cubit.cmd('block 1 attribute index 2 1480 ')  # vp

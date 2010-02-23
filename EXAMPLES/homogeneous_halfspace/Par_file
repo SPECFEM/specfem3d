@@ -12,8 +12,8 @@ NPROC_XI                        = 2
 NPROC_ETA                       = 2
 
 # time step parameters
-NSTEP                           = 5000
-DT                              = 0.0065d0
+NSTEP                           = 1000
+DT                              = 0.05d0
 
 # parameters describing the model
 OCEANS                          = .false.

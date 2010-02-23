@@ -262,9 +262,9 @@ end subroutine swap_all
   
 ! mask to sort ibool
   integer, dimension(:), allocatable :: mask_ibool
-  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori
-  
-  integer :: inumber,i,j,k,ispec,ier
+  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori  
+  integer :: inumber
+  integer:: i,j,k,ispec,ier
   
 ! copies original array  
   allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'

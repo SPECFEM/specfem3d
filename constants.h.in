@@ -71,7 +71,12 @@
 ! integer, parameter :: IMAIN = ISTANDARD_OUTPUT
 ! I/O unit for source and receiver vtk file
   integer, parameter :: IOVTK = 98
-
+! I/O unit for absorbing boundary snapshots
+  integer, parameter :: IOABS = 31
+  integer, parameter :: IOABS_AC = 32
+! I/O unit for plotting source time function
+  integer, Parameter :: IOSTF = 71
+  
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
 
@@ -99,16 +104,17 @@
   logical,parameter :: ABSORB_FREE_SURFACE = .false.
 
 ! absorb boundaries using a PML region 
-! (EXPERIMENTAL feature: only acoustic domains supported...
-!                        user parameters can be specified in PML_init.f90)
+! (EXPERIMENTAL feature)
+! (only acoustic domains supported...)
+! (user parameters can be specified in PML_init.f90)
   logical,parameter :: ABSORB_USE_PML = .false.
 
 ! ---------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily,
 !        we need to move them to Par_file at a proper time
 ! ---------------------------------------------------------------------------------------
-! save moho mesh and compute Moho boundary kernels -- unused
-!  logical, parameter :: SAVE_MOHO_MESH = .false.
+! save moho mesh and compute Moho boundary kernels
+  logical, parameter :: SAVE_MOHO_MESH = .false.
 
 ! number of steps to save the state variables in the forward simulation,
 ! to be used in the backward reconstruction in the presence of attenuation
@@ -148,12 +154,14 @@
 
 ! plots VTK cross-section planes instead of model surface 
 ! (EXPERIMENTAL feature)
+! (requires EXTERNAL_MESH_MOVIE_SURFACE set to true)
   logical, parameter :: PLOT_CROSS_SECTIONS = .false.
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0  
 
 ! plots GIF cross-section image 
+! (EXPERIMENTAL feature)
 ! (cross-section plane parameters can be specified in write_PNM_GIF_data.f90)
   logical, parameter :: PNM_GIF_IMAGE = .false.
 

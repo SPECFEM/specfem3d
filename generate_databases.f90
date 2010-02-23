@@ -193,8 +193,7 @@
 ! number of spectral elements in each block
   integer nspec,npointot
 
-! parameters needed to store the radii of the grid points
-!  integer, dimension(:), allocatable :: idoubling
+! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool
 
 ! arrays with the mesh in double precision
@@ -211,15 +210,11 @@
   character(len=100) :: topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
   
-! use integer array to store Moho depth
-!  integer imoho_depth(NX_MOHO,NY_MOHO)
-
 ! timer MPI
   double precision, external :: wtime
   double precision :: time_start,tCPU
 
 ! parameters read from parameter file
-  integer :: NPROC_XI,NPROC_ETA
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
   integer :: NSOURCES
 
@@ -236,7 +231,7 @@
   character(len=256) OUTPUT_FILES,LOCAL_PATH
 
 ! parameters deduced from parameters read from file
-  integer NPROC
+  integer :: NPROC
 
 ! static memory size that will be needed by the solver
   double precision :: max_static_memory_size,max_static_memory_size_request
@@ -246,23 +241,8 @@
   
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP
   
-!  integer NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX, &
-!          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
-
   double precision min_elevation,max_elevation
   double precision min_elevation_all,max_elevation_all
-
-! for tapered basement map
-!  integer iz_basement
-!  double precision z_basement(NX_BASEMENT,NY_BASEMENT)
-!  character(len=256) BASEMENT_MAP_FILE
-
-! to filter list of stations
-!   integer nrec,nrec_filtered
-!   double precision stlat,stlon,stele,stbur
-!   character(len=MAX_LENGTH_STATION_NAME) station_name
-!   character(len=MAX_LENGTH_NETWORK_NAME) network_name
-!   character(len=256) rec_filename!,filtered_rec_filename
 
 ! for Databases of external meshes
   character(len=256) prname
@@ -290,24 +270,23 @@
   integer, dimension(:,:), allocatable  :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
-
-  integer  :: ispec2D, boundary_number,j
+  ! absorbing boundary
+  integer  :: ispec2D, boundary_number
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
     
+  ! moho (optional)  
+  integer :: nspec2D_moho_ext
+  integer, dimension(:), allocatable  :: ibelm_moho
+  integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
+    
 ! number of points per spectral element
   integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
-! for vectorization of loops 
-!  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
 
   integer :: nglob,nglob_total,nspec_total
 
-! auxiliary variables to generate the mesh
-!  integer ix,iy
-  
   integer,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
-  integer :: i
   
   end module generate_databases_par
 
@@ -385,19 +364,20 @@
   implicit none
 
 ! reads DATA/Par_file 
-  call read_parameter_file( &
-        NPROC,NPROC_XI,NPROC_ETA,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
-        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
-        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
-        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
-        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
+  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+                        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
 
-! checks user input parameters for mesher to run
-  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
-    stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
+! check that the code is running with the requested nb of processes
+  if(sizeprocs /= NPROC) then
+    write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
+    write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
+    call exit_MPI(myrank,'wrong number of MPI processes')
   endif
 
 ! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
@@ -411,23 +391,6 @@
 ! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
 ! chris -- once the steps in decompose_mesh_SCOTCH are integrated into generate_database.f90,
 ! NPROC will be known
-
-! Need to initialize NPROC_AB, put this call back in as a result
-! compute other parameters based upon values read
-!  call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-!      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-!      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-!      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-!      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-!      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-!      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
-
-! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) then
-    write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
-    write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
-    call exit_MPI(myrank,'wrong number of MPI processes')
-  endif
 
   if(myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
@@ -571,6 +534,8 @@
   implicit none
 
   integer :: num_xmin,num_xmax,num_ymin,num_ymax,num_top,num_bottom,num
+  integer :: num_moho
+  integer :: j
   
 ! read databases about external mesh simulation
 ! global node coordinates
@@ -658,9 +623,6 @@
   NSPEC2D_BOTTOM = nspec2D_bottom_ext
   NSPEC2D_TOP = nspec2D_top_ext
 
-!  NSPEC2DMAX_XMIN_XMAX = max(nspec2D_xmin,nspec2D_xmax)
-!  NSPEC2DMAX_YMIN_YMAX = max(nspec2D_ymin,nspec2D_ymax)
-
   allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(4,nspec2D_xmin))
   do ispec2D = 1,nspec2D_xmin
      read(IIN,*) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
@@ -703,7 +665,6 @@
     write(IMAIN,*) '    xmin,xmax: ',num_xmin,num_xmax
     write(IMAIN,*) '    ymin,ymax: ',num_ymin,num_ymax
     write(IMAIN,*) '    bottom,top: ',num_bottom,num_top
-    !write(IMAIN,*) '    xmin_xmax,ymin_ymax: ',NSPEC2DMAX_XMIN_XMAX, NSPEC2DMAX_YMIN_YMAX
   endif
   call sync_all()
 
@@ -739,13 +700,35 @@
                   my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
     enddo
   enddo
-  close(IIN)
-
+  
   call sum_all_i(num_interfaces_ext_mesh,num)  
   if(myrank == 0) then
     write(IMAIN,*) '  number of MPI partition interfaces: ',num
   endif
   call sync_all()
+
+  ! optional moho
+  if( SAVE_MOHO_MESH ) then
+    read(IIN,*,iostat=ier) boundary_number ,nspec2D_moho_ext
+    if( ier /= 0 ) call exit_mpi(myrank,'error reading moho mesh in database')
+    
+    if(boundary_number /= 7) stop "Error : invalid database file"
+    
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext))
+    do ispec2D = 1,nspec2D_moho_ext
+      ! format: #element_id #node_id1 #node_id2 #node_id3 #node_id4
+      read(IIN,*) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
+    end do
+
+    call sum_all_i(nspec2D_moho_ext,num_moho)
+  
+    if(myrank == 0) then
+      write(IMAIN,*) '  moho surfaces: ',num_moho
+    endif    
+    call sync_all()
+  endif
+  
+  close(IIN)
   
   end subroutine gd_read_partition_files
 
@@ -810,7 +793,12 @@
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)
 
-  call sync_all()
+! Moho boundary parameters, 2-D jacobians and normals
+  if( SAVE_MOHO_MESH ) then
+    call create_regions_mesh_save_moho(myrank,nglob,nspec, &
+                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
+                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )    
+  endif
 
 ! defines global number of nodes in model
   NGLOB_AB = nglob
@@ -829,6 +817,8 @@
     endif
   endif
 
+
+! clean-up
   deallocate(xstore,ystore,zstore)
 
 ! make sure everybody is synchronized
@@ -846,8 +836,10 @@
 
   use generate_databases_par
   implicit none
+
+  integer :: i
   
-!--- print number of points and elements in the mesh
+! print number of points and elements in the mesh
   call sum_all_i(NGLOB_AB,nglob_total)
   call sum_all_i(NSPEC_AB,nspec_total)
   call sync_all()  
@@ -918,48 +910,6 @@
                SIMULATION_TYPE,max_static_memory_size,nfaces_surface_glob_ext_mesh)
   endif 
   
-! filters stations file
-!  if( myrank == 0 ) then
-!  call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
-!  call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-! get total number of stations
-! open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
-! nrec = 0
-! do while(ios == 0)
-!   read(IIN,"(a)",iostat=ios) dummystring
-!   if(ios == 0) nrec = nrec + 1
-! enddo
-! close(IIN)
-! filter list of stations, only retain stations that are in the model
-!  nrec_filtered = 0
-!  open(unit=IIN,file=rec_filename,status='old',action='read')
-!  do irec = 1,nrec
-!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-!         .or. USE_EXTERNAL_MESH) &
-!      nrec_filtered = nrec_filtered + 1
-!  enddo
-!  close(IIN)
-!  write(IMAIN,*)
-!  write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(rec_filename)
-!  write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_rec_filename)
-!  write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
-!  write(IMAIN,*)
-!  if(nrec_filtered < 1) call exit_MPI(myrank,'need at least one station in the model')
-!  if(nrec < 1) call exit_MPI(myrank,'need at least one station in the model')
-!  open(unit=IIN,file=rec_filename,status='old',action='read')
-!  open(unit=IOUT,file=filtered_rec_filename,status='unknown')
-!  do irec = 1,nrec
-!    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-!    if((stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-!         .or. USE_EXTERNAL_MESH) &
-!      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
-!              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
-!  enddo
-!    close(IIN)
-!    close(IOUT)
-!  endif   ! end of section executed by main process only
-
 ! elapsed time since beginning of mesh generation
   if(myrank == 0) then
     tCPU = wtime() - time_start
@@ -980,4 +930,3 @@
   call sync_all()
   
   end subroutine gd_finalize
-  

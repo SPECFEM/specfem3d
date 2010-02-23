@@ -365,7 +365,7 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   
 ! global point locations          
-  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  real(kind=CUSTOM_REAL),dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
   
 ! face normal  
   real(kind=CUSTOM_REAL),dimension(NDIM) :: normal
@@ -379,7 +379,7 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
   face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))
   face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
-  tmp = sqrt( face_n(1)**2 + face_n(2)**2 + face_n(3)**2 ) 
+  tmp = sqrt( face_n(1)*face_n(1) + face_n(2)*face_n(2) + face_n(3)*face_n(3) ) 
   if( abs(tmp) < TINYVAL ) then
     print*,'error get face normal: length',tmp
     print*,'normal:',face_n(:)
@@ -433,4 +433,106 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   endif
   !print*,'face ',iface,'scalarproduct:',tmp
 
-end subroutine get_element_face_normal         
+end subroutine get_element_face_normal      
+
+!
+!----
+!
+
+subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
+                                ibool,nspec,nglob, &
+                                xstore_dummy,ystore_dummy,zstore_dummy, &
+                                normal,idirect)
+
+! returns direction of normal: 
+!   idirect = 1 to point outwards of/away from element
+!   idirect = 2 to point into element
+
+  implicit none
+  
+  include "constants.h"
+                     
+  integer :: ispec,iface,nspec,nglob
+  
+! face corner locations
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+
+! index array
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  
+! global point locations          
+  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  
+! face normal  
+  real(kind=CUSTOM_REAL),dimension(NDIM) :: normal
+  
+! direction type
+  integer, intent(out) :: idirect
+  
+! local parameters  
+  real(kind=CUSTOM_REAL) :: face_n(3),tmp,v_tmp(3)
+  integer :: iglob
+ 
+! initializes 
+  idirect = 0
+ 
+! determines initial orientation given by three corners on the face 
+  ! cross-product of vectors from corner 1 to corner 2 and from corner 1 to corner 3
+  face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
+  face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))
+  face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
+  tmp = sqrt( face_n(1)**2 + face_n(2)**2 + face_n(3)**2 ) 
+  if( abs(tmp) < TINYVAL ) then
+    print*,'error get face normal: length',tmp
+    print*,'normal:',face_n(:)
+    call exit_mpi(0,'error get element face normal')
+  endif
+  face_n(:) = face_n(:)/tmp
+
+! checks that this normal direction is outwards of element: 
+  ! takes additional corner out of face plane and determines scalarproduct to normal
+  select case( iface )
+  case(1) ! opposite to xmin face
+    iglob = ibool(NGLLX,1,1,ispec)      
+  case(2) ! opposite to xmax face
+    iglob = ibool(1,1,1,ispec)      
+  case(3) ! opposite to ymin face
+    iglob = ibool(1,NGLLY,1,ispec)      
+  case(4) ! opposite to ymax face
+    iglob = ibool(1,1,1,ispec)        
+  case(5) ! opposite to bottom
+    iglob = ibool(1,1,NGLLZ,ispec)      
+  case(6) ! opposite to top
+    iglob = ibool(1,1,1,ispec)      
+  end select
+  ! vector from corner 1 to this opposite one
+  v_tmp(1) = xstore_dummy(iglob) - xcoord(1)
+  v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
+  v_tmp(3) = zstore_dummy(iglob) - zcoord(1)
+  
+  ! scalarproduct
+  tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
+  
+  ! makes sure normal points outwards, that is points away from this additional corner and scalarproduct is negative
+  if( tmp > 0.0 ) then
+    face_n(:) = - face_n(:)
+  endif  
+ 
+! in case given normal has zero length, exit
+  if( ( normal(1)**2 + normal(2)**2 + normal(3)**2 ) < TINYVAL ) then    
+    print*,'problem: given normal is zero'
+    return
+  endif
+   
+! otherwise determines orientation of normal 
+  tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
+  if( tmp < 0.0 ) then
+    ! points into element
+    idirect = 2
+  else
+    ! points away from element/ outwards
+    idirect = 1
+  endif
+
+end subroutine get_element_face_normal_idirect
+   

@@ -30,17 +30,6 @@
   use specfem_par
   implicit none
 
-! write source and receiver VTK files for Paraview
-!  if (myrank == 0) then
-!    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
-!    write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
-!    write(IOVTK,'(a)') 'Source and Receiver VTK file'
-!    write(IOVTK,'(a)') 'ASCII'
-!    write(IOVTK,'(a)') 'DATASET POLYDATA'
-!    ! LQY -- cannot figure out NSOURCES+nrec at this point
-!    write(IOVTK, '(a,i6,a)') 'POINTS ', 2, ' float'
-!  endif
-
 ! locates sources and determines simulation start time t0
   call setup_sources()
  
@@ -77,9 +66,12 @@ subroutine setup_sources()
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic  
+  use specfem_par_movie
   implicit none
   
+  double precision :: t0_ac
   integer :: yr,jda,ho,mi
+  integer :: isource,ispec
   
 ! allocate arrays for source
   allocate(islice_selected_source(NSOURCES))
@@ -106,11 +98,11 @@ subroutine setup_sources()
 !                xi_source, eta_source & gamma_source 
   call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          sec,t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-          NSTEP,DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+          t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          TOPOGRAPHY,UTM_PROJECTION_ZONE, &
+          TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
           PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
           ispec_is_acoustic,ispec_is_elastic)
@@ -119,21 +111,38 @@ subroutine setup_sources()
 
 ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
-     hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
-     if(myrank == 0) then
-        write(IMAIN,*)
-        write(IMAIN,*) 'Each source is being convolved with HDUR_MOVIE = ',HDUR_MOVIE
-        write(IMAIN,*)
-     endif
+    hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
+    if(myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'Each source is being convolved with HDUR_MOVIE = ',HDUR_MOVIE
+      write(IMAIN,*)
+    endif
   endif
-  
-! convert the half duration for triangle STF to the one for gaussian STF
+
+  ! convert the half duration for triangle STF to the one for gaussian STF
   hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
 
-! define t0 as the earliest start time
-  t0 = - 1.5d0 * minval(t_cmt-hdur)
+  ! define t0 as the earliest start time
+  t0 = - 1.5d0 * minval(t_cmt-hdur)  
 
-! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
+  ! uses an earlier start time if source is acoustic with a gaussian source time function
+  t0_ac = 0.0d0
+  do isource = 1,NSOURCES  
+    if( myrank == islice_selected_source(isource) ) then    
+      ispec = ispec_selected_source(isource)      
+      if( ispec_is_acoustic(ispec) ) then
+        t0_ac = - 3.0d0 * ( t_cmt(isource) - hdur(isource) )
+        if(  t0_ac > t0 ) t0 = t0_ac
+      endif
+    endif
+  enddo
+
+  ! passes maximum value to all processes
+  ! note: t0 is defined positive and will be subtracted from simulation time (it-1)*DT
+  t0_ac = t0
+  call max_all_all_dp(t0_ac,t0)
+
+  ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
   
 end subroutine setup_sources
@@ -249,124 +258,31 @@ end subroutine setup_sources_check_acoustic
 !-------------------------------------------------------------------------------------------------
 !  
 
-  
-subroutine setup_sources_precompute_arrays()
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-  implicit none
-  
-  integer :: isource,ispec
-  real(kind=CUSTOM_REAL) :: factor_source
-  
-! forward simulations  
-  if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
-    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
-    allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
-
-    ! compute source arrays
-    do isource = 1,NSOURCES
-
-      !   check that the source slice number is okay
-      if(islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
-            call exit_MPI(myrank,'something is wrong with the source slice number')
-
-      !   compute source arrays in source slice
-      if(myrank == islice_selected_source(isource)) then
-      
-        ispec = ispec_selected_source(isource)
-        
-        ! elastic moment tensor source
-        if( ispec_is_elastic(ispec) ) then
-          call compute_arrays_source(ispec, &
-                        xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
-                        Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        xigll,yigll,zigll,NSPEC_AB)
-        endif
-        
-        ! acoustic case 
-        if( ispec_is_acoustic(ispec) ) then
-          ! scalar moment of moment tensor values read in from CMTSOLUTION 
-          ! note: M0 by Dahlen and Tromp, eq. 5.91
-          factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
-                                    + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
-
-          ! scales source such that it would be equivalent to explosion source moment tensor,
-          ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
-          ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
-          factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
-
-          ! source array interpolated on all element gll points
-          call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&
-                        sourcearray,xigll,yigll,zigll,factor_source)
-        endif
-        
-        ! stores source excitations
-        sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
-        
-      endif
-    enddo
-  endif
-
-  ! adjoint simulations  
-  !  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-  !    nadj_rec_local = 0
-  !    do irec = 1,nrec
-  !      if(myrank == islice_selected_rec(irec))then
-  !!   check that the source slice number is okay
-  !        if(islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
-  !              call exit_MPI(myrank,'something is wrong with the source slice number in adjoint simulation')
-  !        nadj_rec_local = nadj_rec_local + 1
-  !      endif
-  !    enddo
-  !    allocate(adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
-  !    if (nadj_rec_local > 0) allocate(adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
-  !    irec_local = 0
-  !    do irec = 1, nrec
-  !!   compute only adjoint source arrays in the local slice
-  !      if(myrank == islice_selected_rec(irec)) then
-  !        irec_local = irec_local + 1
-  !        adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-  !        call compute_arrays_adjoint_source(myrank, adj_source_file, &
-  !              xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
-  !              adj_sourcearray, xigll,yigll,zigll,NSTEP)
-  !
-  !        adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
-  !
-  !      endif
-  !    enddo
-  !  endif
-
-end subroutine setup_sources_precompute_arrays
-
-!
-!-------------------------------------------------------------------------------------------------
-!  
-
-
 subroutine setup_receivers()
 
   use specfem_par
   use specfem_par_acoustic
   implicit none
   
-  integer :: irec,isource,ios
+  integer :: irec,isource !,ios
   
 ! reads in station file  
   if (SIMULATION_TYPE == 1) then
     call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
+    call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
+    call station_filter(myrank,rec_filename,filtered_rec_filename,nrec, &
+           LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
-! get total number of stations
-    open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
-    nrec = 0
-    do while(ios == 0)
-      read(IIN,"(a)",iostat=ios) dummystring
-      if(ios == 0) nrec = nrec + 1
-    enddo
-    close(IIN)
+    ! get total number of stations
+    !open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
+    !nrec = 0
+    !do while(ios == 0)
+    !  read(IIN,"(a)",iostat=ios) dummystring
+    !  if(ios == 0) nrec = nrec + 1
+    !enddo
+    !close(IIN)
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+    call sync_all()
 
   else
     call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS_ADJOINT')
@@ -401,11 +317,11 @@ subroutine setup_receivers()
 
 ! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
-            xstore,ystore,zstore,xigll,yigll,zigll,rec_filename, &
+            xstore,ystore,zstore,xigll,yigll,zigll,filtered_rec_filename, &
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
-            TOPOGRAPHY,UTM_PROJECTION_ZONE, &
+            TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
             iglob_is_surface_external_mesh,ispec_is_surface_external_mesh )
 
 ! count number of receivers located in this slice
@@ -511,6 +427,153 @@ subroutine setup_receivers_check_acoustic()
   enddo ! num_free_surface_faces
 
 end subroutine setup_receivers_check_acoustic
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!  
+  
+subroutine setup_sources_precompute_arrays()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  implicit none
+  
+  real(kind=CUSTOM_REAL) :: factor_source
+  real(kind=CUSTOM_REAL) :: junk
+  integer :: isource,ispec
+  integer :: irec,irec_local
+  integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
+  character(len=3),dimension(NDIM) :: comp = (/ "BHN", "BHE", "BHZ" /)
+  character(len=150) :: filename
+
+  
+! forward simulations  
+  if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
+    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
+
+    ! compute source arrays
+    do isource = 1,NSOURCES
+
+      !   check that the source slice number is okay
+      if(islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
+            call exit_MPI(myrank,'something is wrong with the source slice number')
+
+      !   compute source arrays in source slice
+      if(myrank == islice_selected_source(isource)) then
+      
+        ispec = ispec_selected_source(isource)
+        
+        ! elastic moment tensor source
+        if( ispec_is_elastic(ispec) ) then
+          call compute_arrays_source(ispec, &
+                        xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
+                        Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        xigll,yigll,zigll,NSPEC_AB)
+        endif
+        
+        ! acoustic case 
+        if( ispec_is_acoustic(ispec) ) then
+          ! scalar moment of moment tensor values read in from CMTSOLUTION 
+          ! note: M0 by Dahlen and Tromp, eq. 5.91
+          factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
+                                    + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
+
+          ! scales source such that it would be equivalent to explosion source moment tensor,
+          ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
+          ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
+          factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
+
+          ! source array interpolated on all element gll points
+          call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&
+                        sourcearray,xigll,yigll,zigll,factor_source)
+        endif
+        
+        ! stores source excitations
+        sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
+        
+      endif
+    enddo
+  endif
+
+! ADJOINT simulations  
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+  
+    ! counts local receivers which become adjoint sources
+    nadj_rec_local = 0
+    ! temporary counter to check if any files are found at all
+    nadj_files_found = 0    
+    do irec = 1,nrec
+      if( myrank == islice_selected_rec(irec) ) then
+        ! checks that the source slice number is okay
+        if(islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
+              call exit_MPI(myrank,'something is wrong with the source slice number in adjoint simulation')
+              
+        ! updates counter
+        nadj_rec_local = nadj_rec_local + 1
+
+        ! checks **sta**.**net**.**BH**.adj files for correct number of time steps
+        adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+        do icomp = 1,NDIM
+          filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+          open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
+          if( ier == 0 ) then
+            ! checks length of file
+            itime = 0
+            do while(ier == 0) 
+              read(IIN,*,iostat=ier) junk,junk
+              if( ier == 0 ) itime = itime + 1
+            enddo
+            if( itime /= NSTEP) &
+              call exit_MPI(myrank,&
+                'file '//trim(filename)//' has wrong length, please check with your simulation duration')
+            nadj_files_found = nadj_files_found + 1
+          endif
+          close(IIN)
+        enddo        
+      endif
+    enddo
+    ! checks if any adjoint source files found at all
+    call sum_all_i(nadj_files_found,nadj_files_found_tot)
+    if( myrank == 0 ) then
+      write(IMAIN,*)
+      write(IMAIN,*) '    ',nadj_files_found_tot,' adjoint component traces found in all slices'
+      if(nadj_files_found_tot == 0) &
+        call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
+    endif
+
+    ! reads in adjoint source traces
+    allocate(adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+    adj_sourcearrays = 0._CUSTOM_REAL
+    adj_sourcearray = 0._CUSTOM_REAL
+
+    ! pre-computes adjoint source arrays
+    irec_local = 0
+    do irec = 1, nrec
+      ! computes only adjoint source arrays in the local slice
+      if( myrank == islice_selected_rec(irec) ) then
+        irec_local = irec_local + 1
+
+        ! reads in **sta**.**net**.**BH**.adj files        
+        adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+        
+        call compute_arrays_adjoint_source(myrank, adj_source_file, &
+                          xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
+                          adj_sourcearray, xigll,yigll,zigll,NSTEP)
+
+        adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
+
+      endif
+    enddo
+    ! frees temporary array
+    deallocate(adj_sourcearray)
+  endif
+
+end subroutine setup_sources_precompute_arrays
 
 
 !

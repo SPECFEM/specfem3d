@@ -260,10 +260,14 @@
   
   ! user output
   if (myrank == 0) then 
-    if( PLOT_CROSS_SECTIONS ) write(IMAIN,*) 'movie: cross-sections'
-    write(IMAIN,*) 'movie: nfaces_surface_ext_mesh   = ',nfaces_surface_ext_mesh
-    write(IMAIN,*) 'movie: nfaces_perproc_surface_ext_mesh = ',nfaces_perproc_surface_ext_mesh
-    write(IMAIN,*) 'movie: nfaces_surface_glob_ext_mesh    = ',nfaces_surface_glob_ext_mesh
+    if( PLOT_CROSS_SECTIONS ) then 
+      write(IMAIN,*) 'movie cross-sections:'
+    else
+      write(IMAIN,*) 'movie surface:'    
+    endif
+    write(IMAIN,*) '  nfaces_surface_ext_mesh:',nfaces_surface_ext_mesh
+    write(IMAIN,*) '  nfaces_perproc_surface_ext_mesh:',nfaces_perproc_surface_ext_mesh
+    write(IMAIN,*) '  nfaces_surface_glob_ext_mesh:',nfaces_surface_glob_ext_mesh
 
     ! updates number of surface elements in an include file for the movies
     if( nfaces_surface_glob_ext_mesh > 0 ) then
@@ -283,7 +287,7 @@
   endif
 
   
-  end subroutine
+  end subroutine setup_movie_meshes
   
   
   

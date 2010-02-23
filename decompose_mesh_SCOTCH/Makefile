@@ -1,9 +1,19 @@
 # Makefile
 
+#############################################################
+## modify to match your compiler defaults 
+## (which were used to compile SCOTCH libraries from below as well)
 F90 = gfortran
+#F90 = ifort
 
-SCOTCH_LIBS = /data2/tarje/SCOTCH/lib/libscotch.a /data2/tarje/SCOTCH/lib/libscotcherr.a
+## modify to match your library paths
+SCOTCH_LIBS = /opt/seismo-util/source/scotch/lib/libscotch.a \
+							/opt/seismo-util/source/scotch/lib/libscotcherr.a
 #SCOTCH_LIBS = /scratch/network/SCOTCH/lib/libscotch.a /scratch/network/SCOTCH/lib/libscotcherr.a
+
+#############################################################
+
+
 
 LIBS = part_decompose_mesh_SCOTCH.o \
 				decompose_mesh_SCOTCH.o \

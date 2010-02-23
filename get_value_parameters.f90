@@ -80,3 +80,18 @@
   value_to_get = default_value
 
   end subroutine get_value_string
+  
+!--------------------
+  
+! dummy subroutine to avoid warnings about variable not used in other subroutines
+  subroutine unused_string(s)
+  
+  implicit none
+  
+  character(len=*) s
+
+  if (len(s) == 1) continue
+
+  end subroutine unused_string
+  
+  

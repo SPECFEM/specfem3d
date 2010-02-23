@@ -440,6 +440,28 @@
 !
 !----
 !
+!
+!
+!  subroutine min_all_all_dp(sendbuf, recvbuf)
+!
+!  implicit none
+!
+!! standard include of the MPI library
+!  include 'mpif.h'
+!  include "constants.h"
+!  include "precision.h"
+!
+!  double precision :: sendbuf, recvbuf
+!  integer ier
+!
+!  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
+!                  MPI_MIN,MPI_COMM_WORLD,ier)
+!
+!  end subroutine min_all_all_dp
+!
+!
+!----
+!
 
   subroutine max_all_i(sendbuf, recvbuf)
 
@@ -485,6 +507,29 @@
 !----
 !
 
+
+  subroutine max_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  double precision :: sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
+                  MPI_MAX,MPI_COMM_WORLD,ier)
+
+  end subroutine max_all_all_dp
+
+
+!
+!----
+!
+
   subroutine min_all_i(sendbuf, recvbuf)
 
   implicit none
@@ -522,6 +567,27 @@
                   MPI_SUM,0,MPI_COMM_WORLD,ier)
 
   end subroutine sum_all_dp
+
+!
+!----
+!
+
+  subroutine sum_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  integer ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
+                  MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  end subroutine sum_all_cr
 
 !
 !----

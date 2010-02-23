@@ -498,9 +498,11 @@
     j = ceiling(real(num_pixel_loc(k)) / real(NX_IMAGE_color))
     i = num_pixel_loc(k) - (j-1)*NX_IMAGE_color
 
-    ! gets velocity for iglob  
+    ! global point and element indices of gll point in this pixel
     iglob = iglob_image_color(i,j)
     ispec = ispec_image_color(i,j)
+
+    ! gets velocity for point iglob  
     call get_iglob_veloc(iglob,ispec,veloc_val)
 
     ! data type

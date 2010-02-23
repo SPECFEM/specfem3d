@@ -70,7 +70,7 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-cubit.cmd('block 1 name "elastic" ')        # elastic material region
+cubit.cmd('block 1 name "elastic 1" ')        # elastic material region
 cubit.cmd('block 1 attribute count 6')
 cubit.cmd('block 1 attribute index 1 1  ')      # volume 1
 cubit.cmd('block 1 attribute index 2 2800 ')   # vp 
@@ -79,7 +79,7 @@ cubit.cmd('block 1 attribute index 4 2300 ')   # rho
 cubit.cmd('block 1 attribute index 5 6 ')       # Q_flag
 cubit.cmd('block 1 attribute index 6 0 ')     # anisotropy_flag
 
-cubit.cmd('block 2 name "elastic" ')        # elastic material region
+cubit.cmd('block 2 name "elastic 2" ')        # elastic material region
 cubit.cmd('block 2 attribute count 6')
 cubit.cmd('block 2 attribute index 1 2  ')      # volume 2
 cubit.cmd('block 2 attribute index 2 7500 ')
@@ -88,7 +88,7 @@ cubit.cmd('block 2 attribute index 4 3200 ')
 cubit.cmd('block 2 attribute index 5 6 ')
 cubit.cmd('block 2 attribute index 6 0 ')     # anisotropy_flag
 
-cubit.cmd('block 3 name "elastic" ')        # elastic material region
+cubit.cmd('block 3 name "elastic 3" ')        # elastic material region
 cubit.cmd('block 3 attribute count 6')
 cubit.cmd('block 3 attribute index 1 3  ')      # same properties as for volume 2
 cubit.cmd('block 3 attribute index 2 7500 ')
