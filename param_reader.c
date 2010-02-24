@@ -1,14 +1,12 @@
 /*
  !=====================================================================
  !
- !          S p e c f e m 3 D  G l o b e  V e r s i o n  4 . 0
- !          --------------------------------------------------
+ !               S p e c f e m 3 D  V e r s i o n  1 . 4
+ !               ---------------------------------------
  !
- !          Main authors: Dimitri Komatitsch and Jeroen Tromp
- !    Seismological Laboratory, California Institute of Technology, USA
- !             and University of Pau / CNRS / INRIA, France
- ! (c) California Institute of Technology and University of Pau / CNRS / INRIA
- !                            February 2008
+ !                 Dimitri Komatitsch and Jeroen Tromp
+ !    Seismological Laboratory - California Institute of Technology
+ !         (c) California Institute of Technology September 2006
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -28,9 +26,9 @@
  */
 
 /* 
- 
- by Dennis McRitchie
- 
+
+by Dennis McRitchie
+
  January 7, 2010 - par_file parsing
  ..
  You'll notice that the heart of the parser is a complex regular
@@ -47,7 +45,7 @@
  already six C files that make up part of the build (though they all are
  related to the pyre-framework).
  ..
- */
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -128,6 +126,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
 	if (fseek(fd, 0, SEEK_SET) != 0) {
 		printf("Can't seek to begining of parameter file\n");
 		*ierr = 1;
+    regfree(&compiled_pattern);
 		return;
 	}
 	// Read every line in the file.
@@ -148,6 +147,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
 		if(regret != 0) {
 			printf("regexec returned error %d\n", regret);
 			*ierr = 1;
+      regfree(&compiled_pattern);
 			return;
 		}
     //		printf("Line read = %s\n", line);
@@ -159,6 +159,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
 			continue;
 		}
 		free(keyword);
+    regfree(&compiled_pattern);
 		// If it matches, extract the value from the line.
 		value = strndup(line+parameter[2].rm_so, parameter[2].rm_eo-parameter[2].rm_so);
 		// Clear out the return string with blanks, copy the value into it, and return.
@@ -172,6 +173,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
 	// If no keyword matches, print out error and die.
 	printf("No match in parameter file for keyword %s\n", namecopy);
 	free(namecopy);
+  regfree(&compiled_pattern);
 	*ierr = 1;
 	return;
 }

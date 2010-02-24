@@ -7,9 +7,8 @@ SAVE_FORWARD                    = .false.
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
-# number of MPI processors along xi and eta (can be different)
-NPROC_XI                        = 2 
-NPROC_ETA                       = 2
+# number of MPI processors 
+NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 4500
