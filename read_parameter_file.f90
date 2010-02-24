@@ -48,7 +48,7 @@
   character(len=256) LOCAL_PATH,CMTSOLUTION
 
 ! local variables
-  integer ::ios,icounter,isource,idummy
+  integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
   double precision :: hdur,minval_hdur
   character(len=256) :: dummystring
   integer, external :: err_occurred
@@ -67,7 +67,23 @@
   if(err_occurred() /= 0) return
   ! total number of processors 
   call read_value_integer(NPROC, 'mesher.NPROC')
-  if(err_occurred() /= 0) return
+  if(err_occurred() /= 0) then
+    ! checks if it's using an old Par_file format
+    call read_value_integer(nproc_eta_old, 'mesher.NPROC_ETA')
+    if( err_occurred() /= 0 ) then
+      print*,'please specify the number of processes in Par_file as:'
+      print*,'NPROC           =    <my_number_of_desired_processes> '
+      return
+    endif
+    ! checks if it's using an old Par_file format
+    call read_value_integer(nproc_xi_old, 'mesher.NPROC_XI')
+    if( err_occurred() /= 0 ) then
+      print*,'please specify the number of processes in Par_file as:'
+      print*,'NPROC           =    <my_number_of_desired_processes> '
+      return
+    endif
+    NPROC = nproc_eta_old * nproc_xi_old    
+  endif  
   call read_value_integer(NSTEP, 'solver.NSTEP')
   if(err_occurred() /= 0) return
   call read_value_double_precision(DT, 'solver.DT')
