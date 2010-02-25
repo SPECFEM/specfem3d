@@ -5397,7 +5397,7 @@ fi
 # Checks for library functions.
 
 
-ac_config_files="$ac_config_files Makefile constants.h precision.h"
+ac_config_files="$ac_config_files Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5969,6 +5969,9 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "constants.h") CONFIG_FILES="$CONFIG_FILES constants.h" ;;
     "precision.h") CONFIG_FILES="$CONFIG_FILES precision.h" ;;
+    "DATA/Par_file") CONFIG_FILES="$CONFIG_FILES DATA/Par_file" ;;
+    "DATA/CMTSOLUTION") CONFIG_FILES="$CONFIG_FILES DATA/CMTSOLUTION" ;;
+    "DATA/STATIONS") CONFIG_FILES="$CONFIG_FILES DATA/STATIONS" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

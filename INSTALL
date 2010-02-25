@@ -61,6 +61,9 @@ Basic installation
     ./Makefile
     ./constants.h
     ./precision.h
+    ./DATA/Par_file
+    ./DATA/CMTSOLUTION
+    ./DATA/STATIONS
     
     please make sure, your installation is working and that 
     the created files 'constant.h' and 'Makefile' satisfy
@@ -76,10 +79,7 @@ Basic installation
    ./DATA/STATIONS
 
    default simulation files are provided in the directory DATA/ which you can
-   use as the ones needed above:
-   > cp DATA/Par_file.default DATA/Par_file
-   > cp DATA/CMTSOLUTION.default DATA/CMTSOLUTION
-   > cp DATA/STATIONS.default DATA/STATIONS
+   use as the ones needed above.
 
    then type
 

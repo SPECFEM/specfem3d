@@ -593,7 +593,11 @@
   read(IIN,*) nelmnts_ext_mesh
   allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh))
+  
+  ! reads in material association for each spectral element and corner node indices
   do ispec = 1, nelmnts_ext_mesh
+     ! format:
+     ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
      read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
           elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)

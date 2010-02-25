@@ -62,7 +62,7 @@ step-by-step tutorial:
       > make xgenerate_databases
      
     - submit job script:
-      > qsub go_generate_database_pbs.sesame.bash
+      > qsub go_generate_databases_pbs.bash
 
     (note: if execution fails due to memory shortage - most likely fails when calling routine to 
            create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
@@ -74,7 +74,7 @@ step-by-step tutorial:
       > make xspecfem3D
       
     - submit job script:
-      > qsub go_solver_pbs.sesame.bash
+      > qsub go_solver_pbs.bash
 
 
 
