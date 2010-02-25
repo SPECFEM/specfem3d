@@ -2149,7 +2149,8 @@ subroutine crm_ext_detect_ac_el_surface(myrank, &
                                                 ibool,nspec,nglob, &
                                                 xstore_dummy,ystore_dummy,zstore_dummy, &
                                                 normal_face(:,i,j) )
-                    ! makes sure that it always points away from acoustic element, otherwise switch direction                            
+                    ! makes sure that it always points away from acoustic element, 
+                    ! otherwise switch direction
                     if( ispec_is_elastic(ispec) ) normal_face(:,i,j) = - normal_face(:,i,j)
                 enddo
               enddo
@@ -2573,7 +2574,7 @@ subroutine create_regions_mesh_save_moho( myrank,nglob,nspec, &
         if( idirect == 1 ) then
           
           ! checks validity
-          if( is_moho_bot( ispec) == .true. ) then
+          if( is_moho_bot( ispec) .eqv. .true. ) then
             print*,'error: moho surface geometry bottom'
             print*,'  does not allow for mulitple element faces in kernel computation'
             call exit_mpi(myrank,'error moho bottom elements')
@@ -2597,7 +2598,7 @@ subroutine create_regions_mesh_save_moho( myrank,nglob,nspec, &
         else if( idirect == 2 ) then
 
           ! checks validity
-          if( is_moho_top( ispec) == .true. ) then
+          if( is_moho_top( ispec) .eqv. .true. ) then
             print*,'error: moho surface geometry top'
             print*,'  does not allow for mulitple element faces kernel computation'
             call exit_mpi(myrank,'error moho top elements')

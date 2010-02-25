@@ -47,7 +47,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: vp_elem,vs_elem
   real(kind=CUSTOM_REAL), dimension(1) :: val_min,val_max  
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
-  real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob,dx,dy,dz
+  real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob,dx !,dy,dz
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
   real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob  
   
@@ -56,7 +56,7 @@
   integer :: myrank  
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum    
-  integer :: i,j,k,ispec,iglob_a,iglob_b,sizeprocs
+  integer :: i,j,k,ii,jj,kk,ispec,iglob_a,iglob_b,sizeprocs
 
 ! estimation of time step and period resolved
   real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.3
@@ -135,27 +135,31 @@
     distance_min = HUGEVAL
     distance_max = -HUGEVAL
     
-    do k=2,NGLLZ
-      do j=2,NGLLY
-        do i=2,NGLLX
+    ! loops over all GLL points
+    do k=1,NGLLZ-1
+      do j=1,NGLLY-1
+        do i=1,NGLLX-1
           iglob_a = ibool(i,j,k,ispec)
-          iglob_b = ibool(i-1,j,k,ispec)
-          dx = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
 
-          iglob_b = ibool(i,j-1,k,ispec)
-          dy = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
-                       
-          iglob_b = ibool(i,j,k-1,ispec)
-          dz = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
-                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
-    
-          distance_min = min(distance_min,dx,dy,dz)
-          distance_max = max(distance_max,dx,dy,dz)
+          ! loops over nearest neighbor points
+          ! maybe a faster method could be found...
+          do kk=k-1,k+1  
+            do jj=j-1,j+1
+              do ii=i-1,i+1
+                if( ii < 1 .or. jj < 1 .or. kk < 1 ) cycle
+                ! distances between points
+                iglob_b = ibool(ii,jj,kk,ispec)
+                if( iglob_a /= iglob_b) then
+                  dx = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
+                          + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
+                          + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
+                  if( dx < distance_min) distance_min = dx
+                  if( dx > distance_max) distance_max = dx
+                endif
+              enddo
+            enddo
+          enddo
+              
         enddo
       enddo
     enddo

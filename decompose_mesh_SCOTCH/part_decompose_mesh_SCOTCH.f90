@@ -1107,6 +1107,9 @@ contains
           loc_nspec2D_moho = loc_nspec2D_moho + 1
        end if
     end do
+    ! checks if anything to do
+    if( loc_nspec2D_moho == 0 ) return
+    
     ! format: #surface_id, #number of elements
     write(IIN_database,*) 7, loc_nspec2D_moho
 

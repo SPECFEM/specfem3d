@@ -31,7 +31,7 @@
 !=============================================================================!
 
 Instructions on how to install and use SPECFEM3D are
-available in the manual located in DATA/util/manual.
+available in the manual located in directory USER_MANUAL.
 
 Main developers: Dimitri Komatitsch and Jeroen Tromp
 
@@ -201,26 +201,18 @@ SCRIPTS:
 
 MESHER (generate_databases):
 
-- The mesher generate_databases needs NPROC_XI * NPROC_ETA processors. NPROC_XI and
-  NPROC_ETA do not need to be equal.
-- Note that NPROC_XI = 1 or NPROC_ETA = 1 is valid (in case you have a
+- The mesher generate_databases needs NPROC processors. 
+- Note that NPROC = 1 is valid (in case you have a
   machine with a small number of processors). Therefore the code can
   if needed run serially on one processor only (in such a case,
   still link with MPI, and use "mpirun -np 1")
-- NEX_XI and NEX_ETA need to be 8 * multiple of NPROC_XI and NPROC_ETA,
-  respectively.
-- In the Par_file, define the size of the mesh. The mesher and the solver
-  use UTM coordinates internally, therefore you also need to define
+- In the Par_file, define the type of the mesh. The mesher and the solver
+  can use UTM coordinates internally, therefore you also need to define
   the zone number for the UTM projection (e.g., zone 11 for Los Angeles).
   Use decimal values for latitude and longitude (no minutes/seconds).
   These values are approximate, the mesher will round them off to define
   a square mesh in UTM coordinates.
 
-  LATITUDE_MIN           ! minimum latitude in the block  (negative for South)
-  LATITUDE_MAX           ! maximum latitude in the block
-  LONGITUDE_MIN          ! minimum longitude in the block (negative for West)
-  LONGITUDE_MAX          ! maximum longitude in the block
-  DEPTH_BLOCK_KM         ! depth of bottom of mesh in km
   UTM_PROJECTION_ZONE    ! zone of the UTM projection (e.g. 11 for Los Angeles)
 
 - set all the parameters in DATA/Par_file, in particular the following:
@@ -283,7 +275,7 @@ SOLVER (specfem3D):
 - For reasons of speed, the solver uses static memory allocation. Therefore it
   needs to be recompiled every time one reruns the mesher. The mesher uses
   dynamic allocation only, and does not need to be recompiled.
-- The solver needs NPROC_XI * NPROC_ETA processors (same as the mesher)
+- The solver needs NPROC processors (same as the mesher)
 - The solver needs the DATA/CMTSOLUTION file for the source and the
   DATA/STATIONS file for the list of stations
 - Set the "time shift" in the CMTSOLUTION file to 0.0
@@ -341,7 +333,7 @@ SERIAL RUNS (WITHOUT MPI):
 On a large serial machine, one may want to run a serial version of the code without MPI.
 To do this, one needs to:
 
-- set NPROC_XI = NPROC_ETA = 1 in DATA/Par_file
+- set NPROC = 1 in DATA/Par_file
 - type "make generate_databases_serial" and "make specfem3D_serial" instead of
     "make generate_databases" and "make specfem3D"
 - run the code serially with "./xgenerate_databases" and "./xspecfem3D"
@@ -349,7 +341,7 @@ To do this, one needs to:
 BUG REPORTS:
 
 To report bugs or suggest improvements to the code, please send an email
-to Jeroen Tromp <jtromp AT caltech.edu> and/or use our online
+to Jeroen Tromp <jtromp AT princeton.edu> and/or use our online
 bug tracking system at http://www.geodynamics.org/roundup .
 
 Note: The Gauss-Lobatto subroutines in gll_library.f90 are based in part on

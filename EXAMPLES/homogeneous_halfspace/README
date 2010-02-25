@@ -4,6 +4,10 @@ README
 
 step-by-step tutorial:
 
+0. check that all software is available (or that modules are loaded):
+     intel/openmpi, cubit, scotch, gnuplot
+
+
 1. configure package:
    
    - From the SPECFEM3D_SESAME root directory /SPECFEM3D_SESAME/
@@ -44,24 +48,24 @@ step-by-step tutorial:
 
 3. decompose mesh files:
 
-   - run decomposer in directory /SPECFEM3D_SESAME/decompose_mesh_SCOTCH/:
-     (example assumes 4 partitions with mesh files in ../EXAMPLES/homogeneous_halfspace/MESH/)
-     > cd /SPECFEM3D_SESAME/decompose_mesh_SCOTCH
+   - compile decomposer in directory /SPECFEM3D_SESAME/decompose_mesh_SCOTCH/:
      > make
 
      NOTE 1: check that the two scotch libraries are properly specified in Makefile
      NOTE 2: compile with the same compiler (ifort or gfortran) used
               for the SCOTCH libraries
 
+   - run decomposer in directory
+     (example assumes 4 partitions with mesh files in ../EXAMPLES/homogeneous_halfspace/MESH/)
      > ./xdecompose_mesh_SCOTCH 4 ../EXAMPLES/homogeneous_halfspace/MESH/ ../DATABASES_MPI/ 
             
-     which creates mesh partitions "proc0000***_Database" in directory DATABASES_MPI/.
+     this creates mesh partitions "proc000***_Database" in directory DATABASES_MPI/.
      (you can then specify "DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
 
 
 4. generate databases:
 
-   - copy three files -- Par_file, CMTSOLUTION, STATIONS -- from
+   - copy three files -- Par_file CMTSOLUTION STATIONS -- from
       /SPECFEM3D_SESAME/EXAMPLES/homogeneous_halfspace/ to /SPECFEM3D_SESAME/DATA/
 
    - compile generate_databases from /SPECFEM3D_SESAME/ :    
@@ -86,7 +90,8 @@ step-by-step tutorial:
    - submit job script:
      > qsub go_solver_pbs.sesame.bash
 
-     NOTE 1: this script will need to be tailored to your cluster
+     NOTE 1: this script will need to be tailored to your cluster, e.g.,
+             > bsub < go_solver_lsf.sesame.bash
      NOTE 2: the simulation runs on 4 cores and should take about 15 minutes,
              and you can track the progress with the timestamp files
      NOTE 3: you should have 672 x 3 (semd,semv,sema) seismograms in OUTPUT_FILES
@@ -119,13 +124,10 @@ step-by-step tutorial:
 
 7. plot your output seismograms in /SPECFEM3D_SESAME/OUTPUT_FILES/
 
-   - copy gnuplot script X1-50.BHZ.gnuplot to local directory:
-     > cp /SPECFEM3D_SESAME/EXAMPLES/homogeneous_halfspace/REF_SEIS/X1-50.BHZ.gnuplot /SPECFEM3D_SESAME/OUTPUT_FILES
-
+   - copy gnuplot script X1-50.BHZ.gnuplot to OUTPUT_FILES/
    - execute same commands as above
-
    - you should see the same image as generated from the reference seismograms,
-      but the record length is 25 s (instead of 42 s)
+      but the record length is a bit longer (42.4500 vs 41.24350)
 
 ===========================================================
 
