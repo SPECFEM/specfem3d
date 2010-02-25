@@ -669,7 +669,7 @@
               if(USE_OPENDX) then
                 write(11,*) xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
               else if(USE_AVS) then
-                write(11,'(i,3f)') ireorder(ibool_number),xp_save(ilocnum+ieoff), &
+                write(11,'(i9,3f16.6)') ireorder(ibool_number),xp_save(ilocnum+ieoff), &
                     yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
               endif
             endif

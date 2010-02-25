@@ -547,12 +547,12 @@
           ! opens existing files
           open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
                 action='read',form='unformatted',access='direct', &
-                recl=b_reclen_field+2*sizeof(b_reclen_field) )
+                recl=b_reclen_field+2*4 )
         else
           ! opens new file
           open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
                 form='unformatted',access='direct',&
-                recl=b_reclen_field+2*sizeof(b_reclen_field) )
+                recl=b_reclen_field+2*4 )
         endif
       endif
 
@@ -567,12 +567,12 @@
           ! opens existing files
           open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='old',&
                 action='read',form='unformatted',access='direct', &
-                recl=b_reclen_potential+2*sizeof(b_reclen_potential) )
+                recl=b_reclen_potential+2*4 )
         else
           ! opens new file
           open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='unknown',&
                 form='unformatted',access='direct',&
-                recl=b_reclen_potential+2*sizeof(b_reclen_potential) )
+                recl=b_reclen_potential+2*4 )
         endif
       endif      
       

@@ -536,6 +536,7 @@
   integer :: num_xmin,num_xmax,num_ymin,num_ymax,num_top,num_bottom,num
   integer :: num_moho
   integer :: j
+  character(len=128) :: line
   
 ! read databases about external mesh simulation
 ! global node coordinates
@@ -709,19 +710,31 @@
 
   ! optional moho
   if( SAVE_MOHO_MESH ) then
-    read(IIN,*,iostat=ier) boundary_number ,nspec2D_moho_ext
-    if( ier /= 0 ) call exit_mpi(myrank,'error reading moho mesh in database')
-    
+    ! checks if additional line exists
+    read(IIN,'(a128)',iostat=ier) line 
+    if( ier /= 0 ) then 
+      ! no moho informations given
+      nspec2D_moho_ext = 0
+      boundary_number = 7
+    else
+      ! tries to read in number of moho elements
+      read(line,*,iostat=ier) boundary_number ,nspec2D_moho_ext
+      if( ier /= 0 ) call exit_mpi(myrank,'error reading moho mesh in database')
+    endif    
     if(boundary_number /= 7) stop "Error : invalid database file"
+
+    ! checks total number of elements  
+    call sum_all_i(nspec2D_moho_ext,num_moho)
+    if( num_moho == 0 ) call exit_mpi(myrank,'error no moho mesh in database')
     
+    ! reads in element informations
     allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext))
     do ispec2D = 1,nspec2D_moho_ext
       ! format: #element_id #node_id1 #node_id2 #node_id3 #node_id4
       read(IIN,*) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
     end do
-
-    call sum_all_i(nspec2D_moho_ext,num_moho)
   
+    ! user output
     if(myrank == 0) then
       write(IMAIN,*) '  moho surfaces: ',num_moho
     endif    
