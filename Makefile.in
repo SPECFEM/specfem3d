@@ -57,7 +57,6 @@ RANLIB = ranlib
 O = obj
 
 libspecfem_a_OBJECTS = \
-	$O/aniso_model.o \
 	$O/assemble_MPI_scalar.o \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
@@ -67,10 +66,15 @@ libspecfem_a_OBJECTS = \
 	$O/create_header_file.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
+	$O/create_mass_matrices.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
 	$O/detect_surface.o \
 	$O/exit_mpi.o \
+	$O/get_absorbing_boundary.o \
+	$O/get_coupling_surfaces.o \
+	$O/get_model.o \
+	$O/get_MPI.o \
 	$O/get_MPI_cutplanes_eta.o \
 	$O/get_MPI_cutplanes_xi.o \
 	$O/get_attenuation_model.o \
@@ -87,6 +91,8 @@ libspecfem_a_OBJECTS = \
 	$O/locate_receivers.o \
 	$O/locate_source.o \
 	$O/generate_databases.o \
+	$O/model_external_values.o \
+	$O/model_aniso.o \
 	$O/netlib_specfun_erf.o \
 	$O/param_reader.o \
 	$O/prepare_assemble_MPI.o \
@@ -96,6 +102,7 @@ libspecfem_a_OBJECTS = \
 	$O/recompute_jacobian.o \
 	$O/save_arrays_solver.o \
 	$O/save_header_file.o \
+	$O/save_moho_arrays.o \
 	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
 	$O/write_AVS_DX_global_data.o \
@@ -197,7 +204,7 @@ default: $(DEFAULT)
 all: clean default
 
 backup:
-	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_mesher go_solver mymachines bak
+	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
 
 bak: backup
 
@@ -382,12 +389,16 @@ $O/write_seismograms.o: constants.h write_seismograms.f90
 $O/parallel.o: constants.h parallel.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o parallel.f90
 
+$O/model_external_values.o: constants.h model_external_values.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
+
+
 ###
 ### serial compilation without optimization
 ###
 
-$O/aniso_model.o: constants.h aniso_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
+$O/model_aniso.o: constants.h model_aniso.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_aniso.o model_aniso.f90
 
 $O/serial.o: constants.h exit_mpi.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o serial.f90
@@ -524,8 +535,28 @@ $O/lagrange_poly.o: constants.h lagrange_poly.f90
 $O/recompute_jacobian.o: constants.h recompute_jacobian.f90
 	${FCCOMPILE_CHECK} -c -o $O/recompute_jacobian.o recompute_jacobian.f90
 
+
 $O/create_regions_mesh.o: constants.h create_regions_mesh.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
+
+$O/create_mass_matrices.o: constants.h create_mass_matrices.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_mass_matrices.o create_mass_matrices.f90
+
+$O/get_absorbing_boundary.o: constants.h get_absorbing_boundary.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_absorbing_boundary.o get_absorbing_boundary.f90
+
+$O/get_coupling_surfaces.o: constants.h get_coupling_surfaces.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_coupling_surfaces.o get_coupling_surfaces.f90
+
+$O/get_model.o: constants.h get_model.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_model.o get_model.f90
+
+$O/get_MPI.o: constants.h get_MPI.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_MPI.o get_MPI.f90
+
+$O/save_moho_arrays.o: constants.h save_moho_arrays.f90
+	${FCCOMPILE_CHECK} -c -o $O/save_moho_arrays.o save_moho_arrays.f90
+
 
 $O/create_name_database.o: constants.h create_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o create_name_database.f90

@@ -48,6 +48,9 @@
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
   logical, parameter :: LOCAL_PATH_IS_ALSO_GLOBAL = .@LOCAL_PATH_IS_ALSO_GLOBAL@.
 
+! adds/superimposes velocity model values from 'model_external_values.f90'
+  logical, parameter :: USE_MODEL_EXTERNAL_VALUES = .false.
+
 ! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
   logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
 
