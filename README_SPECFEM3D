@@ -201,7 +201,7 @@ SCRIPTS:
 
 MESHER (generate_databases):
 
-- The mesher generate_databases needs NPROC processors. 
+- The mesher generate_databases needs NPROC processors.
 - Note that NPROC = 1 is valid (in case you have a
   machine with a small number of processors). Therefore the code can
   if needed run serially on one processor only (in such a case,
