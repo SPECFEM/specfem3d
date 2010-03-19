@@ -30,8 +30,8 @@ contains
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
         LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties)!,&
-        !USE_REGULAR_MESH)
+        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   implicit none
 
@@ -42,7 +42,10 @@ contains
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, UTM_MAX
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  logical SUPPRESS_UTM_PROJECTION!,USE_REGULAR_MESH
+  logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
+
+  integer NDOUBLINGS
+  integer, dimension(2) :: ner_doublings
 
   character(len=150) LOCAL_PATH
   character(len=50) INTERFACES_FILE
@@ -122,6 +125,16 @@ contains
 ! right distribution is determined based upon maximum value of NEX
   NEX_MAX = max(NEX_XI,NEX_ETA)
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
+
+  call read_value_logical(IGNORE_JUNK,USE_REGULAR_MESH, 'mesher.USE_REGULAR_MESH')
+  if(err_occurred() /= 0) return
+  call read_value_integer(IGNORE_JUNK,NDOUBLINGS, 'mesher.NDOUBLINGS')
+  if(err_occurred() /= 0) return
+  call read_value_integer(IGNORE_JUNK,ner_doublings(1), 'mesher.NZ_DOUGLING_1')
+  if(err_occurred() /= 0) return
+  call read_value_integer(IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
+  if(err_occurred() /= 0) return
+
 
 ! file in which we store the databases
   call read_value_string(IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')

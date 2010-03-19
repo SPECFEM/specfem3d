@@ -247,6 +247,9 @@
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 !  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
+  integer NDOUBLINGS
+  integer, dimension(2) :: ner_doublings
+
   character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
@@ -339,48 +342,24 @@
     write(IMAIN,*)
   endif
 
-! read the parameter file
-!   call read_parameter_file (LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-!        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-!        NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT,NER_MOHO_16,NER_BOTTOM_MOHO, &
-!        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-!        HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,LOCAL_PATH, &
-!        THICKNESS_TAPER_BLOCK_HR,THICKNESS_TAPER_BLOCK_MR,VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM, &
-!        IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-!        BASEMENT_MAP,MOHO_MAP_LUPEI, &
-!        SUPPRESS_UTM_PROJECTION,MODEL,& 
-!        interfacesfile,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
-!        USE_REGULAR_MESH)
-  USE_REGULAR_MESH = .true.
-
  ! nullify(subregions,material_properties) 
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
         LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties)
+        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
+        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
   endif
 
-! ! compute other parameters based upon values read
-!   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-!       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-!       NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-!       NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-!       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-!       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-!       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
-
-! ! check that the code is running with the requested nb of processes
-!   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
-
-
-!! PLL ici ouverture fichier interface 
 ! get interface data from external file to count the spectral elements along Z
-  write(IMAIN,*) 'Reading interface data from file DATA/',INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
-       ' to count the spectral elements'
+  if(myrank == 0) then
+     write(IMAIN,*) 'Reading interface data from file DATA/',INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
+          ' to count the spectral elements'
+  end if
+
   open(unit=IIN,file='DATA/'//INTERFACES_FILE,status='old')
 
   max_npx_interface  = -1
@@ -388,7 +367,7 @@
 
 ! read number of interfaces
   call read_value_integer(DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
-  if(number_of_interfaces < 2) stop 'not enough interfaces (minimum is 2)'
+  if(number_of_interfaces < 1) stop 'not enough interfaces (minimum is 1, for topography)'
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
@@ -432,7 +411,8 @@
       NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
+      USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
@@ -525,11 +505,11 @@
     if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
     if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
   else
-    if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8 for a non-regular mesh')
-    if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8 for a non-regular mesh')
+    !if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8 for a non-regular mesh')
+    !if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8 for a non-regular mesh')
 
-    if(mod(NEX_XI/8,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI for a non-regular mesh')
-    if(mod(NEX_ETA/8,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA for a non-regular mesh')
+    !if(mod(NEX_XI/8,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8*NPROC_XI for a non-regular mesh')
+    !if(mod(NEX_ETA/8,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8*NPROC_ETA for a non-regular mesh')
   endif
 
   if(myrank == 0) then
@@ -659,10 +639,12 @@
   min_elevation = +HUGEVAL
   max_elevation = -HUGEVAL
 
+  if(myrank == 0) then
+     write(IMAIN,*)
+     write(IMAIN,*) 'Reading interface data from file DATA/',INTERFACES_FILE(1:len_trim(INTERFACES_FILE))
+     write(IMAIN,*)
+  end if
 
-  write(IMAIN,*)
-  write(IMAIN,*) 'Reading interface data from file DATA/',INTERFACES_FILE(1:len_trim(INTERFACES_FILE))
-  write(IMAIN,*)
      open(unit=IIN,file='DATA/'//INTERFACES_FILE,status='old')
 
      allocate(interface_bottom(max_npx_interface,max_npy_interface))
@@ -1056,7 +1038,8 @@ call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
            NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
            NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
            NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
-           myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,USE_REGULAR_MESH)
+           myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
+           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
 ! ! print min and max of topography included
 !   if(TOPOGRAPHY) then
