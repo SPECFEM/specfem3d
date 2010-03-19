@@ -320,3 +320,9 @@
   integer, parameter :: ITYPE_UNUSUAL_4  = 3
   integer, parameter :: ITYPE_UNUSUAL_4p = 4
 
+! define number of spectral elements and points in basic symmetric mesh doubling superbrick
+  integer, parameter :: NSPEC_DOUBLING_SUPERBRICK = 32
+  integer, parameter :: NGLOB_DOUBLING_SUPERBRICK = 67
+  integer, parameter :: NSPEC_SUPERBRICK_1L = 28
+  integer, parameter :: NGLOB_SUPERBRICK_1L = 58
+  integer, parameter :: NGNOD_EIGHT_CORNERS = 8

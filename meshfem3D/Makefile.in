@@ -83,6 +83,7 @@ libspecfem_a_OBJECTS = \
 	$O/create_regions_mesh.o \
 	$O/define_subregions.o \
 	$O/define_subregions_heuristic.o \
+	$O/define_superbrick.o \
 	$O/exit_mpi.o \
 	$O/get_MPI_cutplanes_eta.o \
 	$O/get_MPI_cutplanes_xi.o \
@@ -262,3 +263,6 @@ $O/define_subregions.o: constants.h define_subregions.f90
 
 $O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
+
+$O/define_superbrick.o: constants.h define_superbrick.f90
+	${FCCOMPILE_CHECK} -c -o $O/define_superbrick.o define_superbrick.f90

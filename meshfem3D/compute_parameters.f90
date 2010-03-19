@@ -23,29 +23,36 @@
 !
 !=====================================================================
 
-  subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,USE_REGULAR_MESH)
+subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+     NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+     NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
+     NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+     NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+     NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
+     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   implicit none
 
   include "constants.h"
 
-! parameters read from parameter file
+  ! parameters read from parameter file
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA
   integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM
+  integer NER_REGULAR1,NER_REGULAR2,NER_REGULAR3
+  integer NGLOB_DOUBLING,NGLOB_DOUBLING_1,NGLOB_DOUBLING_2,NGLOB_NO_DOUBLING
+  integer NDOUBLINGS
+  integer ner_doublings(2)
 
-! parameters to be computed based upon parameters above read from file
+  ! parameters to be computed based upon parameters above read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER
+  integer NEX_DOUBLING_ABOVE_PER_PROC_XI,NEX_DOUBLING_ABOVE_PER_PROC_ETA
+  integer NEX_DOUBLING_ABOVE_XI,NEX_DOUBLING_ABOVE_ETA
 
   integer NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
+       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
   integer NEX_DOUBLING_SEDIM_XI,NEX_DOUBLING_SEDIM_ETA
   integer NEX_DOUBLING_SEDIM_PER_PROC_XI,NEX_DOUBLING_SEDIM_PER_PROC_ETA
@@ -63,200 +70,291 @@
 
   logical USE_REGULAR_MESH
 
-!
-!--- case of a regular mesh
-!
+
+  ! number of elements horizontally in each slice (i.e. per processor)
+  ! these two values MUST be equal in all cases
+  NEX_PER_PROC_XI = NEX_XI / NPROC_XI
+  NEX_PER_PROC_ETA = NEX_ETA / NPROC_ETA
+
+  ! total number of processors in each of the six chunks
+  NPROC = NPROC_XI * NPROC_ETA
+
+  !
+  !--- case of a regular mesh
+  !
   if(USE_REGULAR_MESH) then
 
-! number of elements horizontally in each slice (i.e. per processor)
-! these two values MUST be equal in all cases
-  NEX_PER_PROC_XI = NEX_XI / NPROC_XI
-  NEX_PER_PROC_ETA = NEX_ETA / NPROC_ETA
+     ! exact number of spectral elements without doubling layers
+     NSPEC_NO_DOUBLING = NEX_XI*NEX_ETA*NER
 
-! total number of processors in each of the six chunks
-  NPROC = NPROC_XI * NPROC_ETA
+     ! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
 
-! exact number of spectral elements without doubling layers
-  NSPEC_NO_DOUBLING = NEX_XI*NEX_ETA*NER
+     ! exact number of surface elements for a chunk without doubling layers
 
-! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
+     NSPEC2D_NO_DOUBLING_XI = NEX_PER_PROC_XI*NER
 
-! exact number of surface elements for a chunk without doubling layers
+     NSPEC2D_NO_DOUBLING_ETA = NEX_PER_PROC_ETA*NER
 
-  NSPEC2D_NO_DOUBLING_XI = NEX_PER_PROC_XI*NER
+     ! exact number of spectral elements
+     !  NSPEC_AB = NSPEC_NO_DOUBLING / NPROC
+     NSPEC_AB = NER * NEX_PER_PROC_XI * NEX_PER_PROC_ETA
 
-  NSPEC2D_NO_DOUBLING_ETA = NEX_PER_PROC_ETA*NER
+     ! exact number of surface elements for faces A and B along XI and ETA
+     NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI
+     NSPEC2D_B_XI = NSPEC2D_NO_DOUBLING_XI
+     NSPEC2D_A_ETA = NSPEC2D_NO_DOUBLING_ETA
+     NSPEC2D_B_ETA = NSPEC2D_NO_DOUBLING_ETA
 
-! exact number of spectral elements
-!  NSPEC_AB = NSPEC_NO_DOUBLING / NPROC
-  NSPEC_AB = NER * NEX_PER_PROC_XI * NEX_PER_PROC_ETA
+     ! exact number of surface elements on the bottom and top boundaries
+     ! and theoretical number of spectral elements in radial direction
 
-! exact number of surface elements for faces A and B along XI and ETA
-  NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI
-  NSPEC2D_B_XI = NSPEC2D_NO_DOUBLING_XI
-  NSPEC2D_A_ETA = NSPEC2D_NO_DOUBLING_ETA
-  NSPEC2D_B_ETA = NSPEC2D_NO_DOUBLING_ETA
+     NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
+     NSPEC2D_BOTTOM = NSPEC2D_TOP
 
-! exact number of surface elements on the bottom and top boundaries
-! and theoretical number of spectral elements in radial direction
+     NSPEC1D_RADIAL_BEDROCK = NER
 
-  NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
-  NSPEC2D_BOTTOM = NSPEC2D_TOP
+     ! face with max number of elements is type B here
+     ! maximum number of surface elements on vertical boundaries of the slices
+     NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
+     NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
 
-  NSPEC1D_RADIAL_BEDROCK = NER
+     ! theoretical number of Gauss-Lobatto points in radial direction
+     NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
 
-! face with max number of elements is type B here
-! maximum number of surface elements on vertical boundaries of the slices
-  NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
-  NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
+     ! 2-D addressing and buffers for summation between slices
+     ! we add one to number of points because of the flag after the last point
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
 
-! theoretical number of Gauss-Lobatto points in radial direction
-  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+     ! exact number of global points
+     NGLOB_AB = (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1) * (NER*(NGLLZ-1)+1)
 
-! 2-D addressing and buffers for summation between slices
-! we add one to number of points because of the flag after the last point
-  NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
-  NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+     !
+     !--- case of a non-regular mesh with mesh doublings
+     !
+  else if(NDOUBLINGS == 1) then
 
-! exact number of global points
-  NGLOB_AB = (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1) * (NER*(NGLLZ-1)+1)
+     ! number of spectral elements at the bottom of the doubling below the moho
+     NEX_DOUBLING_ABOVE_XI=NEX_XI/2
+     NEX_DOUBLING_ABOVE_ETA=NEX_ETA/2
+     NEX_DOUBLING_ABOVE_PER_PROC_XI=NEX_PER_PROC_XI/2
+     NEX_DOUBLING_ABOVE_PER_PROC_ETA=NEX_PER_PROC_ETA/2
 
-!
-!--- case of a non-regular mesh with mesh doublings
-!
-  else
+     ! exact number of spectral elements without doubling layers
+     NER_REGULAR2 = NER - ner_doublings(1)
+     NER_REGULAR1 = ner_doublings(1) - 2
 
-! total number of spectral elements along radius
-  NER = NER_BOTTOM_MOHO + NER_MOHO_16 + NER_16_BASEMENT + NER_BASEMENT_SEDIM + NER_SEDIM
+     NSPEC_NO_DOUBLING = &
+          (NEX_XI/2)*(NEX_ETA/2)*NER_REGULAR1 &
+          + NEX_XI*NEX_ETA*NER_REGULAR2
 
-! number of elements horizontally in each slice (i.e. per processor)
-! these two values MUST be equal in all cases
-  NEX_PER_PROC_XI = NEX_XI / NPROC_XI
-  NEX_PER_PROC_ETA = NEX_ETA / NPROC_ETA
+     ! exact number of spectral elements in the doubling regions
 
-! total number of processors in each of the six chunks
-  NPROC = NPROC_XI * NPROC_ETA
+     ! number of elementary bricks in the two regions with doubling
+     NUM_DOUBLING_BRICKS = (NEX_DOUBLING_ABOVE_XI*NEX_DOUBLING_ABOVE_ETA)/4
 
-! number of spectral elements at the bottom of the doubling below the moho
-  NEX_DOUBLING_SEDIM_XI=NEX_XI/2
-  NEX_DOUBLING_SEDIM_ETA=NEX_ETA/2
-  NEX_DOUBLING_SEDIM_PER_PROC_XI=NEX_PER_PROC_XI/2
-  NEX_DOUBLING_SEDIM_PER_PROC_ETA=NEX_PER_PROC_ETA/2
+     ! for type AB, each doubling brick contains 32 elements on 2 levels
+     NSPEC_DOUBLING_AB=32*NUM_DOUBLING_BRICKS
 
-! exact number of spectral elements without doubling layers
-  NSPEC_NO_DOUBLING = &
-     (NEX_DOUBLING_SEDIM_XI*NEX_DOUBLING_SEDIM_ETA*(NER_BASEMENT_SEDIM/2-3) &
-    +(NEX_XI/4)*(NEX_ETA/4)*(NER_16_BASEMENT/2-3) &
-    +(NEX_XI/4)*(NEX_ETA/4)*(NER_MOHO_16/2) &
-    +(NEX_XI/4)*(NEX_ETA/4)*(NER_BOTTOM_MOHO/4)) + NEX_XI*NEX_ETA*NER_SEDIM
+     ! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
 
-! exact number of spectral elements in the doubling regions
+     ! exact number of surface elements for a chunk without doubling layers
 
-! number of elementary bricks in the two regions with doubling
-  NUM_DOUBLING_BRICKS = ((NEX_XI/4)*(NEX_ETA/4) &
-        +NEX_DOUBLING_SEDIM_XI*NEX_DOUBLING_SEDIM_ETA)/4
+     NSPEC2D_NO_DOUBLING_XI = &
+          (NEX_PER_PROC_XI/2)*NER_REGULAR1 &
+          + NEX_PER_PROC_XI*NER_REGULAR2 
 
-! for type AB, each doubling brick contains 40 elements on 3 levels
-  NSPEC_DOUBLING_AB=40*NUM_DOUBLING_BRICKS
+     NSPEC2D_NO_DOUBLING_ETA = &
+          (NEX_PER_PROC_ETA/2)*NER_REGULAR1 &
+          +NEX_PER_PROC_ETA*NER_REGULAR2 
 
-! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
+     ! exact number of surface elements in the doubling regions
 
-! exact number of surface elements for a chunk without doubling layers
+     ! number of elementary bricks in the two regions with doubling
+     NUM2D_DOUBLING_BRICKS_XI = (NEX_PER_PROC_XI/4 &
+          + NEX_DOUBLING_ABOVE_PER_PROC_XI)/2
 
-  NSPEC2D_NO_DOUBLING_XI = &
-      NEX_DOUBLING_SEDIM_PER_PROC_XI*(NER_BASEMENT_SEDIM/2-3) &
-     +(NEX_PER_PROC_XI/4)*(NER_16_BASEMENT/2-3) &
-     +(NEX_PER_PROC_XI/4)*(NER_MOHO_16/2) &
-     +(NEX_PER_PROC_XI/4)*(NER_BOTTOM_MOHO/4) + NEX_PER_PROC_XI*NER_SEDIM
+     NUM2D_DOUBLING_BRICKS_ETA = (NEX_PER_PROC_ETA/2 &
+          + NEX_DOUBLING_ABOVE_PER_PROC_ETA)/2
 
-  NSPEC2D_NO_DOUBLING_ETA = &
-       NEX_DOUBLING_SEDIM_PER_PROC_ETA*(NER_BASEMENT_SEDIM/2-3) &
-     +(NEX_PER_PROC_ETA/4)*(NER_16_BASEMENT/2-3) &
-     +(NEX_PER_PROC_ETA/4)*(NER_MOHO_16/2) &
-     +(NEX_PER_PROC_ETA/4)*(NER_BOTTOM_MOHO/4) + NEX_PER_PROC_ETA*NER_SEDIM
+     ! for type A, each doubling brick contains 10 elements on 3 levels
+     NSPEC2D_DOUBLING_A_XI=10*NUM2D_DOUBLING_BRICKS_XI
+     NSPEC2D_DOUBLING_A_ETA=10*NUM2D_DOUBLING_BRICKS_ETA
 
-! exact number of surface elements in the doubling regions
+     ! for type B, each doubling brick contains 12 elements on 3 levels
+     NSPEC2D_DOUBLING_B_XI=10*NUM2D_DOUBLING_BRICKS_XI
+     NSPEC2D_DOUBLING_B_ETA=10*NUM2D_DOUBLING_BRICKS_ETA
 
-! number of elementary bricks in the two regions with doubling
-  NUM2D_DOUBLING_BRICKS_XI = ((NEX_PER_PROC_XI/4) &
-        +NEX_DOUBLING_SEDIM_PER_PROC_XI)/2
+     ! exact number of spectral elements
+     NSPEC_AB = (NSPEC_NO_DOUBLING + NSPEC_DOUBLING_AB) / NPROC
 
-  NUM2D_DOUBLING_BRICKS_ETA = ((NEX_PER_PROC_ETA/4) &
-        +NEX_DOUBLING_SEDIM_PER_PROC_ETA)/2
+     ! exact number of surface elements for faces A and B
+     ! along XI and ETA for doubling region
+     NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI + NSPEC2D_DOUBLING_A_XI
+     NSPEC2D_B_XI = NSPEC2D_NO_DOUBLING_XI + NSPEC2D_DOUBLING_B_XI
+     NSPEC2D_A_ETA = NSPEC2D_NO_DOUBLING_ETA + NSPEC2D_DOUBLING_A_ETA
+     NSPEC2D_B_ETA = NSPEC2D_NO_DOUBLING_ETA + NSPEC2D_DOUBLING_B_ETA
 
-! for type A, each doubling brick contains 10 elements on 3 levels
-  NSPEC2D_DOUBLING_A_XI=10*NUM2D_DOUBLING_BRICKS_XI
-  NSPEC2D_DOUBLING_A_ETA=10*NUM2D_DOUBLING_BRICKS_ETA
+     ! exact number of surface elements on the bottom and top boundaries
+     ! and theoretical number of spectral elements in radial direction
 
-! for type B, each doubling brick contains 12 elements on 3 levels
-  NSPEC2D_DOUBLING_B_XI=12*NUM2D_DOUBLING_BRICKS_XI
-  NSPEC2D_DOUBLING_B_ETA=12*NUM2D_DOUBLING_BRICKS_ETA
+     NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
+     NSPEC2D_BOTTOM = (NEX_XI/2)*(NEX_ETA/2) / NPROC
 
-! exact number of spectral elements
-  NSPEC_AB = (NSPEC_NO_DOUBLING + NSPEC_DOUBLING_AB) / NPROC
+     ! face with max number of elements is type B here
+     ! maximum number of surface elements on vertical boundaries of the slices
+     NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
+     NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
 
-! exact number of surface elements for faces A and B
-! along XI and ETA for doubling region
-  NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI + NSPEC2D_DOUBLING_A_XI
-  NSPEC2D_B_XI = NSPEC2D_NO_DOUBLING_XI + NSPEC2D_DOUBLING_B_XI
-  NSPEC2D_A_ETA = NSPEC2D_NO_DOUBLING_ETA + NSPEC2D_DOUBLING_A_ETA
-  NSPEC2D_B_ETA = NSPEC2D_NO_DOUBLING_ETA + NSPEC2D_DOUBLING_B_ETA
+     ! theoretical number of Gauss-Lobatto points in radial direction
+     !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
 
-! exact number of surface elements on the bottom and top boundaries
-! and theoretical number of spectral elements in radial direction
+     ! 2-D addressing and buffers for summation between slices
+     ! we add one to number of points because of the flag after the last point
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*2*2 + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*2*2 + 1
 
-  NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
-  NSPEC2D_BOTTOM = (NEX_XI/4)*(NEX_ETA/4) / NPROC
+     ! exact number of global points
 
-  NSPEC1D_RADIAL_BEDROCK = (NER_BASEMENT_SEDIM+NER_16_BASEMENT+NER_MOHO_16)/2 + NER_BOTTOM_MOHO/4
+     ! case of the doubling regions
 
-! face with max number of elements is type B here
-! maximum number of surface elements on vertical boundaries of the slices
-  NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
-  NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
+     NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/4)*(NEX_PER_PROC_ETA/4)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
+          - ((NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4) + (NEX_PER_PROC_ETA/4-1)*(NEX_PER_PROC_XI/4)) * (8*NGLLX**2-11*NGLLX+4)&
+          + (NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4-1)*(NGLLX+1)
 
-! theoretical number of Gauss-Lobatto points in radial direction
-  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+     ! NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/2)*(NEX_PER_PROC_ETA/2)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
+     !  - ((NEX_PER_PROC_XI/2-1)*(NEX_PER_PROC_ETA/2) + (NEX_PER_PROC_ETA/2-1)*(NEX_PER_PROC_XI/2)) * (8*NGLLX**2-11*NGLLX+4)&
+     !  + (NEX_PER_PROC_XI/2-1)*(NEX_PER_PROC_ETA/2-1)*NGLLX
 
-! 2-D addressing and buffers for summation between slices
-! we add one to number of points because of the flag after the last point
-  NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
-  NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+     ! NGLOB_DOUBLING_2 =(NEX_PER_PROC_XI/8)*(NEX_PER_PROC_ETA/8)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
+     !  - ((NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8) + (NEX_PER_PROC_ETA/8-1)*(NEX_PER_PROC_XI/8)) * (8*NGLLX**2-11*NGLLX+4)&
+     !  + (NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8-1)*NGLLX
 
-! exact number of global points
+     NGLOB_DOUBLING = NGLOB_DOUBLING_1 !+ NGLOB_DOUBLING_2
 
-! case of the doubling regions
-! formulas computed using Mathematica for the basic 3D doubling brick
+     ! compute number of points in blocks with no doubling
+     ! exclude the four surfaces in contact with the doubling regions
 
-! compute number of points in blocks with no doubling
-! exclude the three surfaces in contact with the doubling regions
-  nglob_no_doubling_volume = (4*(NGLLX-1)+1)*(4*(NGLLX-1)+1)*((NER_BASEMENT_SEDIM/2-3 )*(NGLLX-1)-1) &
-    +(2*(NGLLX-1)+1)*(2*(NGLLX-1)+1)*(((NER_16_BASEMENT/2+NER_MOHO_16/2+NER_BOTTOM_MOHO/4)-3)*(NGLLX-1)+0)
+     NGLOB_NO_DOUBLING = (NEX_PER_PROC_XI/2 + 1)*(NEX_PER_PROC_ETA/2 + 1)*NER_REGULAR1 & 
+          + (NEX_PER_PROC_XI + 1)*(NEX_PER_PROC_ETA + 1)*NER_REGULAR2 
 
-! number of basic blocks in each slice
-  nblocks_xi = NEX_PER_PROC_XI / 8
-  nblocks_eta = NEX_PER_PROC_ETA / 8
+     NGLOB_AB = NGLOB_DOUBLING + NGLOB_NO_DOUBLING
 
-  NGLOB_AB = nblocks_xi*nblocks_eta*(200*NGLLX**3 - 484*NGLLX**2 + 392*NGLLX - 106 + nglob_no_doubling_volume)
+  else if (NDOUBLINGS == 2) then
 
-! same thing for 2D surfaces for the three types of faces
-  nglob_no_doubling_surface = (4*(NGLLX-1)+1)*((NER_BASEMENT_SEDIM/2-3)*(NGLLX-1)-1) &
-    +(2*(NGLLX-1)+1)*(((NER_16_BASEMENT/2+NER_MOHO_16/2+NER_BOTTOM_MOHO/4)-3)*(NGLLX-1)+0)
+     ! number of spectral elements at the bottom of the doubling below the moho
+     NEX_DOUBLING_ABOVE_XI=NEX_XI/2
+     NEX_DOUBLING_ABOVE_ETA=NEX_ETA/2
+     NEX_DOUBLING_ABOVE_PER_PROC_XI=NEX_PER_PROC_XI/2
+     NEX_DOUBLING_ABOVE_PER_PROC_ETA=NEX_PER_PROC_ETA/2
 
-  nglob_surface_typeA = 30*NGLLX**2 - 45 * NGLLX + 17
-  nglob_surface_typeB = 36*NGLLX**2 - 57 * NGLLX + 23
+     ! exact number of spectral elements without doubling layers
+     NER_REGULAR3 = NER - ner_doublings(1)
+     NER_REGULAR2 = (ner_doublings(1) - 2) - ner_doublings(2)
+     NER_REGULAR1 = ner_doublings(2) - 2
 
-! final number of points in volume obtained by removing planes counted twice
-  NGLOB_AB = NGLOB_AB &
-     - (nblocks_xi-1)*nblocks_eta*(nglob_surface_typeA + nglob_no_doubling_surface) &
-     - (nblocks_eta-1)*nblocks_xi*(nglob_surface_typeB + nglob_no_doubling_surface) &
-     + (nblocks_eta-1)*(nblocks_xi-1)*NPOIN1D_RADIAL_BEDROCK
+     NSPEC_NO_DOUBLING = &
+          (NEX_XI/4)*(NEX_ETA/4)*NER_REGULAR1 &
+          + (NEX_XI/2)*(NEX_ETA/2)*NER_REGULAR2 &
+          + NEX_XI*NEX_ETA*NER_REGULAR3
 
-! add number of points in the sediments
-  NGLOB_AB = NGLOB_AB + (NEX_PER_PROC_XI*(NGLLX-1)+1) &
-    *(NEX_PER_PROC_ETA*(NGLLY-1)+1)*(NER_SEDIM*(NGLLZ-1)+0)
+     ! exact number of spectral elements in the doubling regions
+
+     ! number of elementary bricks in the two regions with doubling
+     NUM_DOUBLING_BRICKS = (NEX_DOUBLING_ABOVE_XI*NEX_DOUBLING_ABOVE_ETA)/4&
+          + (NEX_DOUBLING_ABOVE_XI*NEX_DOUBLING_ABOVE_ETA)/16
+
+     ! for type AB, each doubling brick contains 32 elements on 2 levels
+     NSPEC_DOUBLING_AB=32*NUM_DOUBLING_BRICKS
+
+
+     ! %%%%%%%%%%%%%% surface elements %%%%%%%%%%%%%%%%%%%
+
+     ! exact number of surface elements for a chunk without doubling layers
+
+     NSPEC2D_NO_DOUBLING_XI = &
+          (NEX_PER_PROC_XI/4)*NER_REGULAR1 &
+          + (NEX_PER_PROC_XI/2)*NER_REGULAR2 &
+          + NEX_PER_PROC_XI*NER_REGULAR3
+
+     NSPEC2D_NO_DOUBLING_ETA = &
+          (NEX_PER_PROC_ETA/4)*NER_REGULAR1 &
+          + (NEX_PER_PROC_ETA/4)*NER_REGULAR2 &
+          + NEX_PER_PROC_ETA*NER_REGULAR3
+
+     ! exact number of surface elements in the doubling regions
+
+     ! number of elementary bricks in the two regions with doubling
+     NUM2D_DOUBLING_BRICKS_XI = (NEX_PER_PROC_XI/2 &
+          + NEX_DOUBLING_ABOVE_PER_PROC_XI)/2
+
+     NUM2D_DOUBLING_BRICKS_ETA = (NEX_PER_PROC_ETA/2 &
+          + NEX_DOUBLING_ABOVE_PER_PROC_ETA)/2
+
+     ! for type A, each doubling brick contains 10 elements on 3 levels
+     NSPEC2D_DOUBLING_A_XI=7*NUM2D_DOUBLING_BRICKS_XI
+     NSPEC2D_DOUBLING_A_ETA=7*NUM2D_DOUBLING_BRICKS_ETA
+
+     ! for type B, each doubling brick contains 12 elements on 3 levels
+     NSPEC2D_DOUBLING_B_XI=10*NUM2D_DOUBLING_BRICKS_XI
+     NSPEC2D_DOUBLING_B_ETA=12*NUM2D_DOUBLING_BRICKS_ETA
+
+     ! exact number of spectral elements
+     NSPEC_AB = (NSPEC_NO_DOUBLING + NSPEC_DOUBLING_AB) / NPROC
+
+     ! exact number of surface elements for faces A and B
+     ! along XI and ETA for doubling region
+     NSPEC2D_A_XI = NSPEC2D_NO_DOUBLING_XI + NSPEC2D_DOUBLING_A_XI
+     NSPEC2D_B_XI = NSPEC2D_NO_DOUBLING_XI + NSPEC2D_DOUBLING_B_XI
+     NSPEC2D_A_ETA = NSPEC2D_NO_DOUBLING_ETA + NSPEC2D_DOUBLING_A_ETA
+     NSPEC2D_B_ETA = NSPEC2D_NO_DOUBLING_ETA + NSPEC2D_DOUBLING_B_ETA
+
+     ! exact number of surface elements on the bottom and top boundaries
+     ! and theoretical number of spectral elements in radial direction
+
+     NSPEC2D_TOP = NEX_XI*NEX_ETA / NPROC
+     NSPEC2D_BOTTOM = (NEX_XI/4)*(NEX_ETA/4) / NPROC
+
+     !  NSPEC1D_RADIAL_BEDROCK = (NER_BASEMENT_SEDIM+NER_16_BASEMENT+NER_MOHO_16)/2 + NER_BOTTOM_MOHO/4
+
+     ! face with max number of elements is type B here
+     ! maximum number of surface elements on vertical boundaries of the slices
+     NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
+     NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
+
+     ! theoretical number of Gauss-Lobatto points in radial direction
+     !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+
+     ! 2-D addressing and buffers for summation between slices
+     ! we add one to number of points because of the flag after the last point
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*2*2 + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*2*2 + 1
+
+     ! exact number of global points
+
+     ! case of the doubling regions
+
+     NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/8)*(NEX_PER_PROC_ETA/8)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
+          - ((NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8) + (NEX_PER_PROC_ETA/8-1)*(NEX_PER_PROC_XI/8)) * (8*NGLLX**2-11*NGLLX+4)&
+          + (NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8-1)*(NGLLX+1)
+
+     NGLOB_DOUBLING_2 = (NEX_PER_PROC_XI/4)*(NEX_PER_PROC_ETA/4)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
+          - ((NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4) + (NEX_PER_PROC_ETA/4-1)*(NEX_PER_PROC_XI/4)) * (8*NGLLX**2-11*NGLLX+4)&
+          + (NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4-1)*(NGLLX+1)
+
+     NGLOB_DOUBLING = NGLOB_DOUBLING_1 + NGLOB_DOUBLING_2
+
+     ! compute number of points in blocks with no doubling
+     ! exclude the four surfaces in contact with the doubling regions
+
+     NGLOB_NO_DOUBLING = (NEX_PER_PROC_XI/4 + 1)*(NEX_PER_PROC_ETA/4 + 1)*NER_REGULAR1 & 
+          + (NEX_PER_PROC_XI/2 + 1)*(NEX_PER_PROC_ETA/2 + 1)*(NER_REGULAR2 - 1) &
+          + (NEX_PER_PROC_XI + 1)*(NEX_PER_PROC_ETA + 1)*NER_REGULAR3 
+
+     NGLOB_AB = NGLOB_DOUBLING + NGLOB_NO_DOUBLING
+
 
   endif ! end of section for non-regular mesh with doublings
 
-  end subroutine compute_parameters
+end subroutine compute_parameters
 

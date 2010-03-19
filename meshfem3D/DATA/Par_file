@@ -21,6 +21,13 @@ NEX_ETA                         = 16
 NPROC_XI                        = 2 
 NPROC_ETA                       = 1
 
+# Regular/irregular mesh 
+USE_REGULAR_MESH                = .false.
+# Only for irregular meshes, number of doubling layers (1 or 2) and their position
+NDOUBLINGS                      = 2
+NZ_DOUGLING_1                   = 8 
+NZ_DOUGLING_2                   = 4
+
 # path to store the databases files 
 LOCAL_PATH                      = OUTPUT_FILES
 
@@ -31,7 +38,7 @@ NMATERIALS                      = 4
 #     Q_flag           : 0=no attenuation/1=IATTENUATION_SEDIMENTS_40, 2=..., 13=IATTENUATION_BEDROCK
 #     anisotropy_flag  : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
 #     domain_id        : 1=acoustic / 2=elastic / 3=poroelastic
-1  1200  1500  750  1  0  1
+1  1200  1500  750  1  0  2
 2  1100  1600  800  3  0  1
 3  1000  1500  0    0  0  2
 4  1300  1400  700  2  0  3
@@ -39,8 +46,8 @@ NMATERIALS                      = 4
 NREGIONS                        = 4             
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-1              16           1               16            1         3        1
-1              16           1               16            4         7        2
-1              16           1               16            8         20       3
-14             16           9               16            6         20       4
+1              16           1               16             1         2        1
+1              16           1               16             3         3        2
+1              16           1               16             4         20       3
+14             16           7               16             7         10       4
 
