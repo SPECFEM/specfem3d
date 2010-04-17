@@ -353,7 +353,7 @@
   implicit none
 
   if( it > 1 .and. it < NSTEP) then
-    ! adjoint simulatioins
+    ! adjoint simulations
     if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
       ! reads files content
       write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it

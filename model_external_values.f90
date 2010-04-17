@@ -27,6 +27,9 @@
 !
 ! note: the idea is to super-impose velocity model values on the GLL points,
 !          additional to the ones assigned on the CUBIT mesh
+!
+! most of the routines here are place-holders, please add/implement your own routines
+!
 
   module external_model
 
@@ -36,14 +39,11 @@
 !
 !---
  
-  ! only a dummy variable used as example 
-  integer :: idummy_size = 1
-
+  ! only here to illustrate an example
   !  type model_external_variables
   !    sequence
   !    double precision dvs(0:dummy_size)
   !  end type model_external_variables
-  !
   !  type (model_external_variables) MEXT_V
 
   end module external_model
@@ -100,7 +100,7 @@
   real(kind=CUSTOM_REAL) :: x,y,z
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
   real(kind=CUSTOM_REAL) :: depth
-  integer :: iglob
+  integer :: iglob,idummy
 
 !---
 !
@@ -115,12 +115,12 @@
   z = zstore_dummy(iglob)
 
   ! model dimensions
-  xmin = minval(xstore_dummy)
-  xmax = maxval(xstore_dummy)
-  ymin = minval(ystore_dummy)
-  ymax = maxval(ystore_dummy)
-  zmin = minval(zstore_dummy)
-  zmax = maxval(zstore_dummy)
+  xmin = 0. ! minval(xstore_dummy)
+  xmax = 134000. ! maxval(xstore_dummy)
+  ymin = 0.  !minval(ystore_dummy)
+  ymax = 134000. ! maxval(ystore_dummy)
+  zmin = 0. ! minval(zstore_dummy)
+  zmax = -60000. ! maxval(zstore_dummy)
 
   ! depth in Z-direction
   depth = zmax - z
@@ -150,9 +150,9 @@
                      c46,c55,c56,c66) 
 
   ! to avoid compiler warnings
-  idummy_size = imaterial_id
-  idummy_size = idomain_id
-  idummy_size = iflag_atten
+  idummy = imaterial_id
+  idummy = idomain_id
+  idummy = iflag_atten
       
   end subroutine model_external_values
 

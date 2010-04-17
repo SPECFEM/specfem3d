@@ -973,7 +973,9 @@
   implicit none
   
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: veloc_element
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB):: div_glob,curl_glob ! divergence and curl only in the global nodes
   integer :: ispec,i,j,k,l,iglob
+  integer,dimension(NGLOB_AB) :: valency
   
   ! saves velocity here to avoid static offset on displacement for movies
   velocity_x(:,:,:,:) = 0._CUSTOM_REAL
@@ -999,6 +1001,8 @@
 
   ! saves full snapshot data to local disk
   if( ELASTIC_SIMULATION ) then
+    div_glob=0.0_CUSTOM_REAL
+    curl_glob=0.0_CUSTOM_REAL
 
     do ispec=1,NSPEC_AB
       if( .not. ispec_is_elastic(ispec) ) cycle
@@ -1076,10 +1080,29 @@
             velocity_x(i,j,k,ispec) = veloc(1,iglob)
             velocity_y(i,j,k,ispec) = veloc(2,iglob)
             velocity_z(i,j,k,ispec) = veloc(3,iglob)
+
+            valency(iglob)=valency(iglob)+1
+            
+            div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)
+            curl_glob(iglob)=curl_glob(iglob)+0.5_CUSTOM_REAL*(curl_x(i,j,k,ispec)+curl_x(i,j,k,ispec)+curl_x(i,j,k,ispec))
           enddo
         enddo
       enddo
     enddo !NSPEC_AB
+
+    do i=1,NGLOB_AB
+      div_glob(i)=div_glob(i)/valency(i)
+      curl_glob(i)=curl_glob(i)/valency(i)
+    enddo
+    
+    write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) div_glob
+    close(27)
+    write(outputname,"('/proc',i6.6,'_curl_glob_it',i6.6,'.bin')") myrank,it
+    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
+    write(27) curl_glob
+    close(27)
 
     write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
