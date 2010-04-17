@@ -271,14 +271,15 @@
     write(IMAIN,*) '*** Verification of simulation parameters ***'
     write(IMAIN,*) '*********************************************'
     write(IMAIN,*)
-    write(IMAIN,*) '*** Max grid size = ',distance_max_glob
-    write(IMAIN,*) '*** Min grid size = ',distance_min_glob
+    write(IMAIN,*) '*** Max GLL point distance = ',distance_max_glob
+    write(IMAIN,*) '*** Min GLL point distance = ',distance_min_glob
     write(IMAIN,*) '*** Max/min ratio = ',distance_max_glob/distance_min_glob
     write(IMAIN,*)
     write(IMAIN,*) '*** Minimum period resolved = ',pmax_glob    
     write(IMAIN,*) '*** Maximum suggested time step = ',dt_suggested_glob
     write(IMAIN,*)
     if( DT_PRESENT ) then
+      write(IMAIN,*) '*** for DT : ',DT
       write(IMAIN,*) '*** Max stability for wave velocities = ',cmax_glob
       write(IMAIN,*)
     endif    
