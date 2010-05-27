@@ -25,8 +25,8 @@
 
 
   subroutine save_databases(prname,nspec,nglob,iproc_xi,iproc_eta,NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-     ibool,nodes_coords,true_material_num,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,&
-     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,&
+     ibool,nodes_coords,true_material_num,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
+     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
      NMATERIALS,material_properties)
 
   implicit none
@@ -60,11 +60,12 @@
   integer iattenuation
 
 ! boundary parameters locator
-  integer NSPEC2D_BOTTOM,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
+  integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
   integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
   integer ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),ibelm_ymax(NSPEC2DMAX_YMIN_YMAX)
   integer ibelm_bottom(NSPEC2D_BOTTOM)
+  integer ibelm_top(NSPEC2D_TOP)
 
 ! material properties
   integer :: NMATERIALS
@@ -74,7 +75,7 @@
 
   integer i,ispec,iglob
 
-! name of the database filex
+! name of the database files
   character(len=150) prname
 
 ! for MPI interfaces
@@ -111,7 +112,8 @@
   write(15,*) 3,nspec2D_ymin
   write(15,*) 4,nspec2D_ymax
   write(15,*) 5,NSPEC2D_BOTTOM
-  write(15,*) 6,0
+  write(15,*) 6,NSPEC2D_TOP
+  
   do i=1,nspec2D_xmin
      write(15,*) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY,1,ibelm_xmin(i)),& 
           ibool(1,1,NGLLZ,ibelm_xmin(i)),ibool(1,NGLLY,NGLLZ,ibelm_xmin(i))
@@ -131,6 +133,10 @@
   do i=1,NSPEC2D_BOTTOM
      write(15,*) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX,1,1,ibelm_bottom(i)), &
           ibool(NGLLX,NGLLY,1,ibelm_bottom(i)),ibool(1,NGLLY,1,ibelm_bottom(i))
+  end do
+  do i=1,NSPEC2D_TOP
+     write(15,*) ibelm_top(i),ibool(1,1,NGLLZ,ibelm_top(i)),ibool(NGLLX,1,NGLLZ,ibelm_top(i)), &
+          ibool(NGLLX,NGLLY,NGLLZ,ibelm_top(i)),ibool(1,NGLLY,NGLLZ,ibelm_top(i))
   end do
 
   ! MPI Interfaces

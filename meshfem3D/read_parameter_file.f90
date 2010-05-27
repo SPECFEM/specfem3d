@@ -31,7 +31,8 @@ contains
         NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
         LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
         INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
-        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+        CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
+        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings,DT)
 
   implicit none
 
@@ -43,6 +44,7 @@ contains
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
+  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
 
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
@@ -79,35 +81,37 @@ contains
 
   integer i,ireg,imat
 
+! anticipated time step
+  double precision DT
 
 ! open parameter file
   open(unit=IIN,file='DATA/Par_file',status='old',action='read')
 
-  call read_value_double_precision(IGNORE_JUNK,LATITUDE_MIN, 'mesher.LATITUDE_MIN')
+  call read_value_double_precision(IIN,IGNORE_JUNK,LATITUDE_MIN, 'mesher.LATITUDE_MIN')
   if(err_occurred() /= 0) return
-  call read_value_double_precision(IGNORE_JUNK,LATITUDE_MAX, 'mesher.LATITUDE_MAX')
+  call read_value_double_precision(IIN,IGNORE_JUNK,LATITUDE_MAX, 'mesher.LATITUDE_MAX')
   if(err_occurred() /= 0) return
-  call read_value_double_precision(IGNORE_JUNK,LONGITUDE_MIN, 'mesher.LONGITUDE_MIN')
+  call read_value_double_precision(IIN,IGNORE_JUNK,LONGITUDE_MIN, 'mesher.LONGITUDE_MIN')
   if(err_occurred() /= 0) return
-  call read_value_double_precision(IGNORE_JUNK,LONGITUDE_MAX, 'mesher.LONGITUDE_MAX')
+  call read_value_double_precision(IIN,IGNORE_JUNK,LONGITUDE_MAX, 'mesher.LONGITUDE_MAX')
   if(err_occurred() /= 0) return
-  call read_value_double_precision(IGNORE_JUNK,DEPTH_BLOCK_KM, 'mesher.DEPTH_BLOCK_KM')
+  call read_value_double_precision(IIN,IGNORE_JUNK,DEPTH_BLOCK_KM, 'mesher.DEPTH_BLOCK_KM')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
+  call read_value_integer(IIN,IGNORE_JUNK,UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
   if(err_occurred() /= 0) return
-  call read_value_logical(IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
-  if(err_occurred() /= 0) return
-
-  call read_value_string(IGNORE_JUNK,INTERFACES_FILE, 'mesher.INTERFACES_FILE')
+  call read_value_logical(IIN,IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
   if(err_occurred() /= 0) return
 
-  call read_value_integer(IGNORE_JUNK,NEX_XI, 'mesher.NEX_XI')
+  call read_value_string(IIN,IGNORE_JUNK,INTERFACES_FILE, 'mesher.INTERFACES_FILE')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,NEX_ETA, 'mesher.NEX_ETA')
+
+  call read_value_integer(IIN,IGNORE_JUNK,NEX_XI, 'mesher.NEX_XI')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,NPROC_XI, 'mesher.NPROC_XI')
+  call read_value_integer(IIN,IGNORE_JUNK,NEX_ETA, 'mesher.NEX_ETA')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,NPROC_ETA, 'mesher.NPROC_ETA')
+  call read_value_integer(IIN,IGNORE_JUNK,NPROC_XI, 'mesher.NPROC_XI')
+  if(err_occurred() /= 0) return
+  call read_value_integer(IIN,IGNORE_JUNK,NPROC_ETA, 'mesher.NPROC_ETA')
   if(err_occurred() /= 0) return
 
 
@@ -126,22 +130,30 @@ contains
   NEX_MAX = max(NEX_XI,NEX_ETA)
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
-  call read_value_logical(IGNORE_JUNK,USE_REGULAR_MESH, 'mesher.USE_REGULAR_MESH')
+  call read_value_logical(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'mesher.USE_REGULAR_MESH')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,NDOUBLINGS, 'mesher.NDOUBLINGS')
+  call read_value_integer(IIN,IGNORE_JUNK,NDOUBLINGS, 'mesher.NDOUBLINGS')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,ner_doublings(1), 'mesher.NZ_DOUGLING_1')
+  call read_value_integer(IIN,IGNORE_JUNK,ner_doublings(1), 'mesher.NZ_DOUGLING_1')
   if(err_occurred() /= 0) return
-  call read_value_integer(IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
+  call read_value_integer(IIN,IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
   if(err_occurred() /= 0) return
 
+  call read_value_logical(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
+  if(err_occurred() /= 0) return
+  call read_value_logical(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'mesher.CREATE_DX_FILES')
+  if(err_occurred() /= 0) return
+
+
+  call read_value_double_precision(IIN,IGNORE_JUNK,DT, 'mesher.NPROC_DT')
+  if(err_occurred() /= 0) return
 
 ! file in which we store the databases
-  call read_value_string(IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')
+  call read_value_string(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')
   if(err_occurred() /= 0) return
  
 ! read number of materials
-  call read_value_integer(IGNORE_JUNK,NMATERIALS, 'mesher.NMATERIALS')
+  call read_value_integer(IIN,IGNORE_JUNK,NMATERIALS, 'mesher.NMATERIALS')
   if(err_occurred() /= 0) return
 
 ! read materials properties
@@ -149,7 +161,7 @@ contains
   if(ierr /= 0) print*,"Allocation error of material_properties" 
    
   do imat =1,NMATERIALS
-     call read_material_parameters(i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id)
+     call read_material_parameters(IIN,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id)
      if (i /= imat) stop "Incorrect material ID"
      if(rho <= 0.d0 .or. vp <= 0.d0 .or. vs < 0.d0) stop 'negative value of velocity or density'
      material_properties(imat,1) = rho
@@ -161,14 +173,14 @@ contains
   end do
 
 ! read number of subregions
-  call read_value_integer(IGNORE_JUNK,NSUBREGIONS, 'mesher.NSUBREGIONS')
+  call read_value_integer(IIN,IGNORE_JUNK,NSUBREGIONS, 'mesher.NSUBREGIONS')
   if(err_occurred() /= 0) return
 
 ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ierr)
   if(ierr /= 0) print*,"Allocation error of subregions"
   do ireg =1,NSUBREGIONS
-     call read_region_parameters(ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+     call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
           iz_beg_region,iz_end_region,imaterial_number)
      if(ix_beg_region < 1) stop 'XI coordinate of region negative!'
      if(ix_end_region > NEX_XI) stop 'XI coordinate of region too high!'

@@ -78,9 +78,11 @@ O = obj
 libspecfem_a_OBJECTS = \
 	$O/store_coords.o \
 	$O/read_parameter_file.o \
+	$O/check_mesh_quality.o \
 	$O/compute_parameters.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
+	$O/create_visual_files.o \
 	$O/define_subregions.o \
 	$O/define_subregions_heuristic.o \
 	$O/define_superbrick.o \
@@ -266,3 +268,10 @@ $O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
 
 $O/define_superbrick.o: constants.h define_superbrick.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_superbrick.o define_superbrick.f90
+
+$O/check_mesh_quality.o: constants.h check_mesh_quality.f90
+	${FCCOMPILE_CHECK} -c -o $O/check_mesh_quality.o check_mesh_quality.f90
+
+$O/create_visual_files.o: constants.h create_visual_files.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_visual_files.o create_visual_files.f90
+
