@@ -34,7 +34,7 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 
 # anticipated time step for simulation (in order to check the stability condition)
-DT                              = 0.1
+DT                              = 0.01
 
 # path to store the databases files 
 LOCAL_PATH                      = OUTPUT_FILES
@@ -51,7 +51,7 @@ NMATERIALS                      = 4
 3  1000  1500  0    0  0  2
 4  1300  1400  700  2  0  3
 # number of regions 
-NREGIONS                        = 1             
+NREGIONS                        = 4             
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
 1              64            1               64             1         4        1

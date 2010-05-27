@@ -12,7 +12,7 @@ fi
 case $FC in
     pgf90|*/pgf90)
         #
-        # Beowulf Portland pgf90
+        # Portland pgf90
         #
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="-fast -Mnobounds -Mneginfo -Mdclchk -Knoieee" # -mcmodel=medium
@@ -23,31 +23,37 @@ case $FC in
         ;;
     ifort|*/ifort)
         #
-        # Intel ifort Fortran90 for Linux
+        # Intel ifort Fortran90
         #
         if test x"$FLAGS_CHECK" = x; then
-	FLAGS_CHECK="-O3 -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe0 -ftz -traceback -ftrapuv" # -mcmodel=medium
-        #    FLAGS_CHECK="-O3 -vec-report0 -e95 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe0 -ftz -traceback -ftrapuv" # -mcmodel=medium
+            #FLAGS_CHECK="-O3 -vec-report0 -e95 -std95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe0 -ftz -traceback -ftrapuv" # -mcmodel=medium
+
+            # ifort v 10.1 with these flags shows best performance
+            FLAGS_CHECK="-O2 -ftz -xT -fpe0 -ftz -traceback -ftrapuv -vec-report0 -std95 -implicitnone -check nobounds  -assume byterecl  -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
+            #FLAGS_CHECK="-O2 -xT -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback"
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
-# standard options (leave option -ftz, which is *critical* for performance)
-# add -Winline to get information about routines that are inlined
-# add -vec-report3 to get information about loops that are vectorized or not
-         FLAGS_NO_CHECK="-O3 -xP -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
-         #FLAGS_NO_CHECK="-O3 -xP -vec-report0 -e95 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
+        # standard options (leave option -ftz, which is *critical* for performance)
+        # add -Winline to get information about routines that are inlined
+        # add -vec-report3 to get information about loops that are vectorized or not
+            #FLAGS_NO_CHECK="-O3 -xP -vec-report0 -e95 -std95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -align sequence -assume byterecl -fpe3 -ftz" # -mcmodel=medium
+
+            # ifort v 10.1 with these flags shows best performance
+            FLAGS_NO_CHECK="-O2 -ftz -xT -fpe3 -ftz -vec-report0 -std95 -implicitnone -check nobounds  -assume byterecl  -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
+            #FLAGS_NO_CHECK="-O2 -xT -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback"
         fi
-        #MPI_LIBS = -Vaxlib
         ;;
     gfortran|*/gfortran|f95|*/f95)
         #
         # GNU gfortran
         #
         if test x"$FLAGS_NO_CHECK" = x; then
+            # works with: GNU Fortran (GCC) 4.1.2 20080704        
+            FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow -fno-trapping-math"
 
-#            FLAGS_NO_CHECK="-fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math" # -mcmodel=medium
-#            FLAGS_NO_CHECK="-std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math" # -mcmodel=medium
-# older gfortran syntax
-           FLAGS_NO_CHECK="-fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math" # -mcmodel=medium
+        #            FLAGS_NO_CHECK="-std=f95 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math" # -mcmodel=medium
+        # older gfortran syntax
+        #           FLAGS_NO_CHECK="-std=f95 -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math" # -mcmodel=medium
         fi
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="\$(FLAGS_NO_CHECK)" # -fbounds-check
@@ -143,7 +149,7 @@ case $FC in
         # for the C compiler when using -q64 for the Fortran compiler
         #
         if test x"$FLAGS_NO_CHECK" = x; then
-            FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -Q -qsuffix=f=f90 -qhalt=w -qlanglvl=2003pure -qflttrap=overflow:zerodivide:invalid:enable -qsigtrap -qinitauto=7FBFFFFF"
+            FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003pure -qflttrap=overflow:zerodivide:invalid:enable -qsigtrap -qinitauto=7FBFFFFF -Q -Q+rank,swap_all"
         # on MareNostrum at the Barcelona SuperComputing Center (Spain) use
         # -qtune=ppc970 -qarch=ppc64v instead of -qtune=auto -qarch=auto
         fi

@@ -220,7 +220,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
      stop 'NGNOD must be 4 or 8'
   endif
 
-  if(stability_max >= max_CFL_stability_limit) then
+  if(stability_max_MPI >= max_CFL_stability_limit) then
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) '*********************************************'
      write(IMAIN,*) ' WARNING, that value is above the upper CFL limit of ',max_CFL_stability_limit
@@ -330,6 +330,8 @@ subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delt
   implicit none
 
   include "constants.h"
+
+  integer :: true_NGLLX = 5 
 
   integer :: iface,icorner,ispec,NSPEC,NPOIN,i
 
@@ -468,7 +470,7 @@ subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delt
   ! compute edge aspect ratio
   edge_aspect_ratio = distmax / distmin
 
-  stability = delta_t * VP_MAX / (distmin * percent_GLL(NGLLX))
+  stability = delta_t * VP_MAX / (distmin * percent_GLL(true_NGLLX))
 
   ! compute diagonal aspect ratio
   dist1 = sqrt((xelm(5) - xelm(4))**2 + (yelm(5) - yelm(4))**2 + (zelm(5) - zelm(4))**2)
