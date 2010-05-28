@@ -354,15 +354,15 @@
   maxl = maxval( xstore )
   call min_all_all_cr(minl,min_all)
   call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
+  LONGITUDE_MIN = min_all
+  LONGITUDE_MAX = max_all
 
   minl = minval( ystore )
   maxl = maxval( ystore )
   call min_all_all_cr(minl,min_all)
   call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
+  LATITUDE_MIN = min_all
+  LATITUDE_MAX = max_all
   
 ! check courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
