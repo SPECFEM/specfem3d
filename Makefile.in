@@ -138,6 +138,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/assemble_MPI_vector.o \
 	$O/read_arrays_solver.o \
 	$O/specfem3D.o \
+        $O/noise_tomography.o \
 	$(EMPTY_MACRO)
 
 # objects toggled between the parallel and serial version
@@ -282,6 +283,9 @@ $O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble
 
 $O/parallel.o: constants.h parallel.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o parallel.f90
+
+$O/noise_tomography.o: constants.h OUTPUT_FILES/values_from_mesher.h noise_tomography.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/noise_tomography.o ${FCFLAGS_f90} noise_tomography.f90
 
 ###
 ### serial compilation without optimization

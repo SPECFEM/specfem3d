@@ -40,7 +40,7 @@
   real(kind=CUSTOM_REAL), parameter :: THRESHOLD = 1._CUSTOM_REAL / 100._CUSTOM_REAL
 
 ! coefficient of power law used for non linear scaling
-  logical, parameter :: NONLINEAR_SCALING = .true.
+  logical, parameter :: NONLINEAR_SCALING = .false.
   real(kind=CUSTOM_REAL), parameter :: POWER_SCALING = 0.25_CUSTOM_REAL
 
   integer it,it1,it2,ivalue,nspectot_AVS_max,ispec

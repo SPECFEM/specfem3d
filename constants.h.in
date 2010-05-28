@@ -61,6 +61,8 @@
 ! input, output and main MPI I/O files
   integer, parameter :: ISTANDARD_OUTPUT = 6
   integer, parameter :: IIN = 40,IOUT = 41
+  integer, parameter :: IIN_NOISE = 43,IOUT_NOISE = 44
+  integer, parameter :: NOISE_TOMOGRAPHY = 1
 ! uncomment this to write messages to a text file
   integer, parameter :: IMAIN = 42
 ! uncomment this to write messages to the screen

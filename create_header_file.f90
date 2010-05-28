@@ -98,7 +98,11 @@
   print *
   print *,'on NEC SX, make sure "loopcnt=" parameter'
   print *,'in Makefile is greater than max vector length = ',NGLOB_AB
-
+  print *
+  print *, '********************************'
+  print *,'number of time steps = ',NSTEP
+  print *,'time-stepping of the solver will be: ',DT
+  print *, '********************************'
   print *
   print *,'done'
   print *

@@ -1,0 +1,7 @@
+#!/bin/bash
+ulimit -s unlimited
+
+LOCAL_PATH=$1
+
+rm -rf $LOCAL_PATH
+mkdir -p $LOCAL_PATH

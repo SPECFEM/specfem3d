@@ -1,0 +1,91 @@
+#!/bin/bash
+#PBS -S /bin/bash
+#PBS -N NOISE_BASIN_12
+#PBS -q tromp
+#PBS -o zzz_job_info/job.o_all
+#PBS -e zzz_job_info/job.e_all
+
+#PBS -l  nodes=21:ppn=8,walltime=100:00:00
+
+
+cd $PBS_O_WORKDIR
+
+######################################## pre-simulation ###########################################
+## gather simulation infomation
+NPROC_XI=`grep NPROC_XI DATA/Par_file | cut -d = -f 2 `
+NPROC_ETA=`grep NPROC_ETA DATA/Par_file | cut -d = -f 2`
+numnodes=$(( $NPROC_XI * $NPROC_ETA ))
+cat $PBS_NODEFILE > zzz_job_info/compute_nodes_all
+echo "$PBS_JOBID" > zzz_job_info/jobid_all
+
+### clean local nodes
+d=`date`
+LOCAL_PATH_ALL=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
+echo "Start cleaning local disk on nodes, $d"
+#for (( ievent=1;ievent<=$numnodes;ievent=ievent+1 ))
+#do
+#    let line=$ievent
+#    machine_all=$(awk 'NR=='$line'{print}' zzz_job_info/compute_nodes_all)
+#    mpiexec -np 1 -host $machine_all ./NOISE_clean_create $LOCAL_PATH_ALL < /dev/null &
+#done
+#wait
+for (( ievent=1;ievent<=$numnodes;ievent=ievent+8 ))
+do
+    let line=$ievent
+    machine_all=$(awk 'NR=='$line'{print}' zzz_job_info/compute_nodes_all)
+    mpiexec -np 1 -host $machine_all ./NOISE_clean_create $LOCAL_PATH_ALL < /dev/null &
+done
+wait
+d=`date`
+echo "Finish cleaning local disk on nodes, $d"
+
+## clean OUTPUT_FILES
+rm -rf OUTPUT_FILES
+mkdir  OUTPUT_FILES
+
+#### backup Fortran source files
+##rm -rf      ZZZ_src
+##mkdir -p    ZZZ_src
+##cp -p *.f90 ZZZ_src/
+##cp -p *.c   ZZZ_src/
+##cp -p *.in  ZZZ_src/
+##cp -p *.h   ZZZ_src/
+######################################## simulation ###############################################
+################################################################### step 1: ensemble forward source
+sleep 2 
+mpiexec -np $numnodes -hostfile zzz_job_info/compute_nodes_all $PWD/xmeshfem3D_NOISE1
+sleep 2 
+mpiexec -np $numnodes -hostfile zzz_job_info/compute_nodes_all $PWD/xspecfem3D_NOISE1
+# backup step 1 results
+rm   -rf ZZZ_1
+mkdir -p ZZZ_1
+mv OUTPUT_FILES/*   ZZZ_1/
+cp DATA/Par_file    ZZZ_1/ 
+cp DATA/CMTSOLUTION ZZZ_1/
+cp DATA/STATIONS    ZZZ_1/
+################################################################ step 2: ensemble forward wavefield
+cp DATA/Par_file_NOISE_2_attenuation DATA/Par_file
+sleep 2 
+mpiexec -np $numnodes -hostfile zzz_job_info/compute_nodes_all $PWD/xmeshfem3D_NOISE2
+sleep 2 
+mpiexec -np $numnodes -hostfile zzz_job_info/compute_nodes_all $PWD/xspecfem3D_NOISE2
+# backup step 2 results
+rm   -rf ZZZ_2
+mkdir -p ZZZ_2
+mv OUTPUT_FILES/*   ZZZ_2/
+cp DATA/Par_file    ZZZ_2/ 
+cp DATA/CMTSOLUTION ZZZ_2/
+cp DATA/STATIONS    ZZZ_2/
+
+
+d=`date`
+echo "Start cleaning local disk on nodes, $d"
+for (( ievent=1;ievent<=$numnodes;ievent=ievent+8 ))
+do
+    let line=$ievent
+    machine_all=$(awk 'NR=='$line'{print}' zzz_job_info/compute_nodes_all)
+    mpiexec -np 1 -host $machine_all ./NOISE_clean_create $LOCAL_PATH_ALL < /dev/null &
+done
+wait
+d=`date`
+echo "Finish cleaning local disk on nodes, $d"

@@ -345,7 +345,7 @@
   real(kind=CUSTOM_REAL) b_additional_term,b_force_normal_comp, kappa_k, mu_k
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT) :: b_displ, b_veloc, b_accel
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: rho_kl, mu_kl, kappa_kl, &
-    rhop_kl, beta_kl, alpha_kl
+    rhop_kl, beta_kl, alpha_kl,Sigma_kl_crust_mantle
   real(kind=CUSTOM_REAL) dsxx,dsxy,dsxz,dsyy,dsyz,dszz
   real(kind=CUSTOM_REAL) b_duxdxl,b_duxdyl,b_duxdzl,b_duydxl,b_duydyl,b_duydzl,b_duzdxl,b_duzdyl,b_duzdzl
   real(kind=CUSTOM_REAL) b_duxdxl_plus_duydyl,b_duxdxl_plus_duzdzl,b_duydyl_plus_duzdzl
@@ -552,6 +552,15 @@
 ! to save full 3D snapshot of velocity
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable::  div, curl_x, curl_y, curl_z
+
+!<YANGL
+! NOISE_TOMOGRAPHY
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
+  integer :: irec_master_noise
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
+             normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+!>YANGL
+
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -1383,12 +1392,12 @@
   rho_kl(:,:,:,:) = 0._CUSTOM_REAL
   mu_kl(:,:,:,:) = 0._CUSTOM_REAL
   kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
-
+  if (NOISE_TOMOGRAPHY == 3) Sigma_kl_crust_mantle(:,:,:,:) = 0._CUSTOM_REAL
   endif
 
 ! allocate files to save movies and shaking map
-  if(MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
-    if (USE_HIGHRES_FOR_MOVIES) then
+  if(MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. NOISE_TOMOGRAPHY /= 0) then ! for noise tomography, store_val_x/y/z/ux/uy/uz needed for 'surface movie'
+    if (USE_HIGHRES_FOR_MOVIES .or. NOISE_TOMOGRAPHY /= 0) then ! for noise tomography, must NOT be coarse
       nmovie_points = NGLLX * NGLLY * NSPEC2D_TOP
     else
       nmovie_points = NGNOD2D * NSPEC2D_TOP
@@ -1410,13 +1419,14 @@
     allocate(store_val_norm_displ(nmovie_points))
     allocate(store_val_norm_veloc(nmovie_points))
     allocate(store_val_norm_accel(nmovie_points))
-
-    allocate(store_val_x_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_y_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_z_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_ux_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_uy_all(nmovie_points,0:NPROC-1))
-    allocate(store_val_uz_all(nmovie_points,0:NPROC-1))
+    if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then  ! those arrays are not neccessary for noise tomography, so only allocate them in MOVIE_SURFACE case
+       allocate(store_val_x_all(nmovie_points,0:NPROC-1))
+       allocate(store_val_y_all(nmovie_points,0:NPROC-1))
+       allocate(store_val_z_all(nmovie_points,0:NPROC-1))
+       allocate(store_val_ux_all(nmovie_points,0:NPROC-1))
+       allocate(store_val_uy_all(nmovie_points,0:NPROC-1))
+       allocate(store_val_uz_all(nmovie_points,0:NPROC-1))
+    endif
 
 ! to compute max of norm for shaking map
     store_val_norm_displ(:) = -1.
@@ -1512,6 +1522,35 @@
 
   endif
   close(27)
+
+!<YANGL
+    ! NOISE TOMOGRAPHY
+    if ( NOISE_TOMOGRAPHY /= 0 ) then
+       allocate(noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP))
+       allocate(normal_x_noise(nmovie_points))
+       allocate(normal_y_noise(nmovie_points))
+       allocate(normal_z_noise(nmovie_points))
+       allocate(mask_noise(nmovie_points))
+       noise_sourcearray(:,:,:,:,:) = 0._CUSTOM_REAL
+       normal_x_noise(:)            = 0._CUSTOM_REAL
+       normal_y_noise(:)            = 0._CUSTOM_REAL
+       normal_z_noise(:)            = 0._CUSTOM_REAL
+       mask_noise(:)                = 0._CUSTOM_REAL
+
+       call read_parameters_noise(myrank,nrec,NSTEP,nmovie_points, &
+                                  islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
+                                  noise_sourcearray,xigll,yigll,zigll,NSPEC2D_TOP_VAL, &
+                                  1, ibool, ibelm_top, &
+                                  xstore,ystore,zstore, &
+                                  irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise)
+
+       if (myrank == 0) &
+       call check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
+                                  1, 1, .false., &
+                                  .false., .false., USE_HIGHRES_FOR_MOVIES)
+    endif
+!>YANGL
+
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
@@ -3030,6 +3069,42 @@
 
   endif
 
+!<YANGL
+    ! NOISE_TOMOGRAPHY
+    if ( NOISE_TOMOGRAPHY == 1 ) then
+       ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
+       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
+       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
+       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
+       call add_source_master_rec_noise(myrank,nrec, & 
+                                NSTEP,accel,noise_sourcearray, &
+                                ibool,islice_selected_rec,ispec_selected_rec, &
+                                it,irec_master_noise)
+    elseif ( NOISE_TOMOGRAPHY == 2 ) then
+       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
+       ! use the movie to drive the unsemble forward wavefield
+       call noise_read_add_surface_movie(myrank,nmovie_points,accel, &
+                              normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                              store_val_ux,store_val_uy,store_val_uz, &
+                              ibelm_top,ibool,NSPEC2D_TOP, &
+                              1,NSTEP-it+1,LOCAL_PATH,jacobian2D_top,wgllwgll_xy)
+        ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
+        ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
+        ! note the ensemble forward sources are generally distributed on the surface of the earth
+        ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
+        ! therefore, we must add it here, before applying the inverse of mass matrix
+    elseif ( NOISE_TOMOGRAPHY == 3 ) then
+        ! third step of noise tomography, i.e., read the surface movie saved at every timestep
+        ! use the movie to reconstruct the ensemble forward wavefield
+        ! the ensemble adjoint wavefield is done as usual
+        ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
+        call noise_read_add_surface_movie(myrank,nmovie_points,b_accel, &
+                              normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                              store_val_ux,store_val_uy,store_val_uz, &
+                              ibelm_top,ibool,NSPEC2D_TOP, &
+                              1,it,LOCAL_PATH,jacobian2D_top,wgllwgll_xy)
+    endif
+!>YANGL
 
 ! assemble all the contributions between slices using MPI
   call assemble_MPI_vector(accel,iproc_xi,iproc_eta,addressing, &
@@ -3333,6 +3408,15 @@
       enddo
     enddo
 
+!<YANGL
+    ! NOISE TOMOGRAPHY --- source strength kernel
+    if (NOISE_TOMOGRAPHY == 3)  &
+       call compute_kernels_strength_noise(myrank,ibool, &
+                          Sigma_kl_crust_mantle,displ,deltat,it, &
+                          nmovie_points,normal_x_noise,normal_y_noise,normal_z_noise, &
+                          NSPEC2D_TOP,ibelm_top,LOCAL_PATH)
+!>YANGL
+
     if (SAVE_MOHO_MESH) then
       do ispec2D = 1, nspec2D_moho
         ispec_top = ibelm_moho_top(ispec2D)
@@ -3361,6 +3445,20 @@
       enddo
     endif
   endif
+
+!<YANGL
+  ! first step of noise tomography, i.e., save a surface movie at every time step
+  ! modified from the subroutine 'write_movie_surface'
+  if ( NOISE_TOMOGRAPHY == 1 ) then
+        call noise_save_surface_movie(myrank,nmovie_points,displ, &
+                            xstore,ystore,zstore, &
+                            store_val_x,store_val_y,store_val_z, &
+                            store_val_ux,store_val_uy,store_val_uz, &
+                            ibelm_top,ibool, &
+                            NSPEC2D_TOP, &
+                            1,it,LOCAL_PATH)
+  endif
+!>YANGL
 
 ! save MOVIE on the SURFACE
   if(MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
@@ -3692,6 +3790,13 @@
       write(27) moho_kl
       close(27)
     endif
+!<YANGL
+    ! noise strength kernel
+    if (NOISE_TOMOGRAPHY == 3) then
+       call save_kernels_strength_noise(myrank,LOCAL_PATH, &
+                                        Sigma_kl_crust_mantle,1.0,1.0)
+    endif
+!>YANGL
 
   endif
 
