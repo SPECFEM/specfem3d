@@ -125,6 +125,7 @@
 
 ! **************
 
+
 ! get MPI starting time
   time_start = wtime()
 
@@ -481,6 +482,7 @@
         ispec_iterate = ispec_selected_rec(irec)
 
 ! use initial guess in xi and eta
+
         xi = xigll(ix_initial_guess(irec))
         eta = yigll(iy_initial_guess(irec))
         gamma = zigll(iz_initial_guess(irec))
@@ -756,7 +758,7 @@
 !=====================================================================
 
 
-  subroutine station_filter(myrank,filename,filtered_filename,nfilter, &
+  subroutine station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,filename,filtered_filename,nfilter, &
       LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
   implicit none
@@ -764,6 +766,8 @@
   include 'constants.h'
 
 ! input
+  logical :: SUPPRESS_UTM_PROJECTION
+  integer :: UTM_PROJECTION_ZONE
   integer :: myrank
   character(len=*) :: filename,filtered_filename
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
@@ -773,7 +777,7 @@
 
   integer :: nrec, nrec_filtered, ios !, irec
 
-  double precision :: stlat,stlon,stele,stbur
+  double precision :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   character(len=MAX_LENGTH_STATION_NAME) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
   character(len=256) :: dummystring
@@ -805,11 +809,15 @@
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
     
+        ! convert station location to UTM 
+        call utm_geo(stlon,stlat,stutm_x,stutm_y,&
+             UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+
         ! counts stations within lon/lat region
-        if( stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. &
-           stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+        if( stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
+           stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) &
           nrec_filtered = nrec_filtered + 1
-    endif
+     endif
   enddo
   close(IIN)
 
@@ -828,12 +836,17 @@
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
         
-        if( stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. &
-           stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+        ! convert station location to UTM 
+        call utm_geo(stlon,stlat,stutm_x,stutm_y,&
+             UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+
+        if( stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
+           stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
           write(IOUT,*) trim(station_name),' ',trim(network_name),' ',sngl(stlat), &
                        ' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
-      endif
-    enddo
+       endif
+    end if
+ enddo
     close(IIN)
     close(IOUT)
 
@@ -856,6 +869,6 @@
   endif
 
   nfilter = nrec_filtered
-
+  
   end subroutine station_filter
 

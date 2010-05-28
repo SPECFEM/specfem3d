@@ -270,7 +270,7 @@ subroutine setup_receivers()
   if (SIMULATION_TYPE == 1) then
     call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS')
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_FILTERED')
-    call station_filter(myrank,rec_filename,filtered_rec_filename,nrec, &
+    call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
     ! get total number of stations
@@ -287,7 +287,7 @@ subroutine setup_receivers()
   else
     call get_value_string(rec_filename, 'solver.STATIONS', 'DATA/STATIONS_ADJOINT')
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', 'DATA/STATIONS_ADJOINT_FILTERED')
-    call station_filter(myrank,rec_filename,filtered_rec_filename,nrec, &
+    call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
     if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one receiver')
     call sync_all()
