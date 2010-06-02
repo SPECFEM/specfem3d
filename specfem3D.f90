@@ -3082,7 +3082,7 @@
                                 it,irec_master_noise)
     elseif ( NOISE_TOMOGRAPHY == 2 ) then
        ! second step of noise tomography, i.e., read the surface movie saved at every timestep
-       ! use the movie to drive the unsemble forward wavefield
+       ! use the movie to drive the ensemble forward wavefield
        call noise_read_add_surface_movie(myrank,nmovie_points,accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
                               store_val_ux,store_val_uy,store_val_uz, &
