@@ -62,7 +62,7 @@
   integer, parameter :: ISTANDARD_OUTPUT = 6
   integer, parameter :: IIN = 40,IOUT = 41
   integer, parameter :: IIN_NOISE = 43,IOUT_NOISE = 44
-  integer, parameter :: NOISE_TOMOGRAPHY = 1
+  integer, parameter :: NOISE_TOMOGRAPHY = 0
 ! uncomment this to write messages to a text file
   integer, parameter :: IMAIN = 42
 ! uncomment this to write messages to the screen
