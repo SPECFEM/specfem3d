@@ -26,6 +26,8 @@
   subroutine compute_rho_estimate(rho,vp)
 
 ! compute rho estimate in Gocad block and in Hauksson model from Vp
+! -- this may be called in create_regions_mesh.f90 to apply the
+!    Vp-rho scaling throughout the entire volume
 
   implicit none
 

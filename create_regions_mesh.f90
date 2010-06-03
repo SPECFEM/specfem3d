@@ -745,6 +745,9 @@
   flag_sediments(i,j,k,ispec) = point_is_in_sediments
   if(point_is_in_sediments) not_fully_in_bedrock(ispec) = .true.
 
+! CHT: overwrite ALL density values using the Brocher2005 vp-rho scaling
+  call compute_rho_estimate(rho,vp)
+
 ! define elastic parameters in the model
 ! distinguish between single and double precision for reals
   if(ANISOTROPY) then
