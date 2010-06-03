@@ -1,10 +1,15 @@
 %
 % hauksson_tomo_model.m
-% CARL TAPE, 11-July-2007
-% printed xxx
+% Carl Tape, 11-July-2007
 % 
-% This program reads in the Hauksson (2000) and Lin-Shearer-Hauksson-Thurber
-% (2007) tomography models for southern California, and outputs some figures.
+% This program reads in the southern California tomography models of
+%    Hauksson (JGR 2000)
+%    Lin-Shearer-Hauksson-Thurber (JGR 2007)
+% and outputs some figures.
+%
+% NOTE: THIS PROGRAM REQUIRES SOME ADDITIONAL CUSTOM SUBROUTINES.
+%       If you want to run the program and generate the output
+%       files and figures, email Carl Tape for the additional scripts.
 %
 % calls xxx
 % called by xxx
@@ -15,9 +20,9 @@ close all
 clc
 format compact
 
-dir = '/net/denali/home2/carltape/gmt/tomography/';
+idir = '/home/carltape/gmt/tomography/';
 
-ihauk = 0;
+ihauk = 1;    % =1 to also plot Hauksson (2000) model
 iwrite = 0;
 
 % bounds for 'standard' SPECFEM3D simulation
@@ -33,12 +38,81 @@ axbox = [-120.3 -114.7 32.2 36.8];
 axbox_hauk = [-121 -114 32 37];
 
 %------------------------------------------------------
+% dimensions of PoChen et al. LA Basin model (2007)
+%
+% ---------- Forwarded message ----------
+% Date: Tue, 30 Oct 2007 14:33:52 -0400
+% From: Po Chen <pseudopochen@gmail.com>
+% To: Carl Tape <carltape@gps.caltech.edu>
+% Subject: Re: BSSA paper, figure 1 bounds
+% 
+% Hello Carl,
+% 
+% I could not find the exact lat/lon for that box used in the paper. The
+% following numbers might be close:
+% 
+% lon: -118.76 -117.22
+% lat: 33.66 34.41
+% 
+% Yes, the depth extend of the inversion is 26km.
+% 
+% Best,
+% Po
+if 0==1
+    ax0 = [-118.76 -117.22 33.66 34.41];
+    ax_utm = axes_utm2ll(ax0,11,0);
+    dx = diff(ax_utm(1:2));
+    dy = diff(ax_utm(3:4));
+    dz = 26*1e3;
+    V = dx*dy*dz;
+    disp(sprintf(' dx dy dz : %.2f km %.2f km %.2f km',dx*1e-3,dy*1e-3,dz*1e-3));
+    disp(sprintf(' Volume : %.4e m^3',V));
+    
+    lons = [238.6100 239.0480 239.4235 238.9854];
+    lats = [35.6421 35.2860 35.5913 35.9474];
+    disp([lons'-360 lats']);
+    
+    % bounds of our simulations
+    ax0 = [-121.6 -114.7 32.2 36.8];
+    ax0_utm = axes_utm2ll(ax0,11,0);
+    dx0 = diff(ax0_utm(1:2));
+    dy0 = diff(ax0_utm(3:4));
+    dz0 = 60*1e3;
+    V0 = dx0*dy0*dz0;
+    disp(sprintf(' dx dy dz : %.2f km %.2f km %.2f km',dx0*1e-3,dy0*1e-3,dz0*1e-3));
+    disp(sprintf(' Volume : %.4e m^3',V0));
+    disp(sprintf(' Volume ratio : %.2f m^3',V0/V));
+    break
+end
+%------------------------------------------------------
+
+if 0==1
+    % regrid_hauksson_regular.f90
+    % write(13,'(2i10,3e20.10)') i, j, utm_x_new(i,j), utm_y_new(i,j), distmin_all(i,j)
+    dall = load('distmin.dat');
+    
+    utmx = dall(:,3);
+    utmy = dall(:,4);
+    dmin = dall(:,5)/1000;    % km
+    
+    figure; nr=2; nc=1;
+    subplot(nr,nc,1); hold on;
+    plot3(utmx,utmy,zeros,'r.','markersize',1);
+    plot3(utmx,utmy,dmin,'b.','markersize',1); grid on; box on;
+    xlabel('UTM-X (m)'); ylabel('UTM-Y (m)'); zlabel(' Min distance, km');
+    subplot(nr,nc,2); plot_histo(dmin,[0:1:10]); xlabel(' Min distance, km');
+    orient tall, wysiwyg
+    
+    break
+end
+
+%------------------------------------------------------
 % Hauksson (2000) tomo model
 
 if ihauk==1
     disp('  '); disp(' Hauksson (2000) tomography model');
 
-    dir_hauk = [dir 'hauk_2000/'];
+    dir_hauk = [idir 'hauk_2000/'];
     lines = textread([dir_hauk 'hauksson_new_format.dat'],'%s','delimiter','\n','whitespace','');
     nlines = length(lines);
 
@@ -115,7 +189,7 @@ end
 disp('  '); disp(' Lin-Shearer-Hauksson-Thurber (2007) tomography model');
 
 % load Vp model
-dir_lin = [dir 'lin_2007/'];
+dir_lin = [idir 'lin_2007/'];
 vp = load([dir_lin 'pa_all-1']);
 alpha = vp(:,1);
 lon = vp(:,3);
@@ -132,6 +206,18 @@ beta = 1./vpvs(:,1) .* alpha;
 % find the depth levels
 udep = unique(dep);
 ndep = length(udep);
+
+% assuming a max depth of the model, compute the thickness of each layer
+dmax = 60;
+dlayer = diff(udep)/2;
+dtop = udep - [0; dlayer];
+dbot = udep + [dlayer ; dmax-udep(end)];
+dthickness = dbot-dtop;
+dall = [udep dtop dbot dthickness];
+if sum(dall(:,4)) ~= dmax, error(['thickness of all layers should equal ' num2str(dmax) ]); end
+disp('Here is how we might think of the depth layers:');
+disp('   reference    top    bottom   thickness');
+disp(dall);
 
 % find range of grid
 mingY = min(gridY); maxgY = max(gridY);
@@ -167,6 +253,42 @@ npts = NX * NY;
 disp(['Grid is ' num2str(NX) ' by ' num2str(NY) ' = ' num2str(npts) ' nodes']);
 disp([ num2str(ndep) ' depth layers']);
 
+% extract the boundary lat-lon points (for GMT plots)
+% ORDERING: from top point, clockwise
+iNE_boundary = flipud( find( gridX(isurface) == mingX ) );
+iSE_boundary =         find( gridY(isurface) == mingY );
+iSW_boundary =         find( gridX(isurface) == maxgX );
+iNW_boundary = flipud( find( gridY(isurface) == maxgY ) );
+iboundary = isurface([iNE_boundary ; iSE_boundary(2:end) ; iSW_boundary(2:end) ; iNW_boundary]);
+%figure; plot(lon(iboundary),lat(iboundary),'b.-');
+if iwrite == 1
+    write_xy_points([dir_lin 'lin_boundary'],lon(iboundary),lat(iboundary));
+end
+
+% compute the mean 1D model -- including scaling to density from alpha
+alpha_1D = zeros(ndep,3);
+beta_1D  = zeros(ndep,3);
+for ii=1:ndep
+    inds = find(dep == udep(ii));
+    alpha_1D(ii,:) = [min(alpha(inds))  mean(alpha(inds)) max(alpha(inds))] ;
+    beta_1D(ii,:)  = [min(beta(inds))   mean(beta(inds))  max(beta(inds)) ] ;
+end
+rho_1D = alpha_rho(alpha_1D*1e3);
+disp('  ');
+disp('1D averaged model:');
+disp('     depth  thickness   vp-min   vp-mean    vp-max    vs-min   vs-mean    vs-max    rho-min  rho-mean  rho-max');
+disp([ udep dthickness alpha_1D beta_1D rho_1D/1000]);
+
+% using the 1D model and the layer thicknesses, compute the overall mean velocities
+alpha_mean = sum(alpha_1D(:,2) .* dthickness) / sum(dthickness);
+beta_mean  = sum(beta_1D(:,2) .* dthickness) / sum(dthickness);
+c_mean = sqrt( alpha_mean^2 - (4/3)*beta_mean^2 );
+disp('  ');
+disp([' Overall mean velocities, assuming a bottom depth of ' num2str(dmax) ' km:'])
+disp(sprintf('%8s : %.1f (%.4f) km/s','alpha',alpha_mean,alpha_mean));
+disp(sprintf('%8s : %.1f (%.4f) km/s','beta',beta_mean,beta_mean));
+disp(sprintf('%8s : %.1f (%.4f) km/s','c',c_mean,c_mean));
+
 %---------------------------------
 % figures
 
@@ -187,7 +309,7 @@ plot(lon(isurface),lat(isurface),'b.');
 if ihauk==1
 plot(lon_hauk(isurface_hauk),lat_hauk(isurface_hauk),'r.');
 end
-axis equal; ax0 = axis; axis(axes_expand(ax0,1.05));
+axis equal; ax0 = axis; axis(axes_expand(ax0,1.05,1));
 plot(axbox_hauk([1 2 2 1 1]),axbox_hauk([3 3 4 4 3]),'r','linewidth',2);
 plot(axbox([1 2 2 1 1]),axbox([3 3 4 4 3]),'k','linewidth',2);
 if ihauk==1, legend('Lin et al. 2007','Hauksson 2000','Regular tomo in SPECFEM','SPECFEM bounds');
@@ -198,7 +320,7 @@ orient tall, wysiwyg
 
 figure; hold on;
 plot(lon(isurface),lat(isurface),'k.')
-axis equal; ax0 = axis; axis(axes_expand(ax0,1.05));
+axis equal; ax0 = axis; axis(axes_expand(ax0,1.05,1));
 plot(lon(izeroY),lat(izeroY),'ro');
 plot(lon(izeroX),lat(izeroX),'bo');
 text(lon1,lat1,st1); text(lon2,lat2,st2); text(lon3,lat3,st3); text(lon4,lat4,st4);
@@ -209,7 +331,7 @@ orient tall, wysiwyg
 
 figure; hold on;
 plot(gridX(isurface),gridY(isurface),'k.')
-axis equal; ax0 = axis; axis(axes_expand(ax0,1.05));
+axis equal; ax0 = axis; axis(axes_expand(ax0,1.05,1));
 plot(gridX(izeroY),gridY(izeroY),'ro');
 plot(gridX(izeroX),gridY(izeroX),'bo');
 plot(gridX(iorigin),gridY(iorigin),'kp','markersize',15);

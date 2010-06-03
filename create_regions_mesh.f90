@@ -394,12 +394,12 @@
 
 !--- read Hauksson's model
   if(HAUKSSON_REGIONAL_MODEL) then
-    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
-                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
-                          'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
 !    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
 !                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
-!                          'DATA/lin_model/lin_final_grid_smooth.dat')
+!                          'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
+    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
+                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
+                          'DATA/lin_model/lin_final_grid_smooth.dat')
     open(unit=14,file=HAUKSSON_REGIONAL_MODEL_FILE,status='old',action='read')
     do iy = 1,NGRID_NEW_HAUKSSON
       do ix = 1,NGRID_NEW_HAUKSSON

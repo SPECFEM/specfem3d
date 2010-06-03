@@ -1,7 +1,7 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  B a s i n  V e r s i o n  1 . 4
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               ---------------------------------------
 !
 !                 Dimitri Komatitsch and Jeroen Tromp
 !    Seismological Laboratory - California Institute of Technology
@@ -182,15 +182,6 @@
     vp_lower = vp_interp(7)
     vs_lower = vs_interp(7)
     z_lower = Z_HAUKSSON_LAYER_7
-
-!  else if(z_eval >= Z_HAUKSSON_LAYER_8) then
-!    vp_upper = vp_interp(7)
-!    vs_upper = vs_interp(7)
-!    z_upper = Z_HAUKSSON_LAYER_7
-!
-!    vp_lower = vp_interp(8)
-!    vs_lower = vs_interp(8)
-!    z_lower = Z_HAUKSSON_LAYER_8
 
   else
     if(.not. MOHO_MAP_LUPEI) then

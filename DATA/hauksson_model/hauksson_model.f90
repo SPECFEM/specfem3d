@@ -124,9 +124,9 @@
     vs_final = vs_interp(1)
     return
 
-  else if(z_eval <= Z_HAUKSSON_LAYER_8) then
-    vp_final = vp_interp(8)
-    vs_final = vs_interp(8)
+  else if(z_eval <= Z_HAUKSSON_LAYER_9) then
+    vp_final = vp_interp(9)
+    vs_final = vs_interp(9)
     return
 
   else if(z_eval >= Z_HAUKSSON_LAYER_2) then
@@ -183,24 +183,33 @@
     vs_lower = vs_interp(7)
     z_lower = Z_HAUKSSON_LAYER_7
 
+  else if(z_eval >= Z_HAUKSSON_LAYER_8) then
+    vp_upper = vp_interp(7)
+    vs_upper = vs_interp(7)
+    z_upper = Z_HAUKSSON_LAYER_7
+
+    vp_lower = vp_interp(8)
+    vs_lower = vs_interp(8)
+    z_lower = Z_HAUKSSON_LAYER_8
+
   else
     if(.not. MOHO_MAP_LUPEI) then
-      vp_upper = vp_interp(7)
-      vs_upper = vs_interp(7)
-      z_upper = Z_HAUKSSON_LAYER_7
+      vp_upper = vp_interp(8)
+      vs_upper = vs_interp(8)
+      z_upper = Z_HAUKSSON_LAYER_8
 
-      vp_lower = vp_interp(8)
-      vs_lower = vs_interp(8)
-      z_lower = Z_HAUKSSON_LAYER_8
+      vp_lower = vp_interp(9)
+      vs_lower = vs_interp(9)
+      z_lower = Z_HAUKSSON_LAYER_9
    !!! waiting for better interpolation of Moho maps.
     else
-      vp_upper = vp_interp(7)
-      vs_upper = vs_interp(7)
-      z_upper = Z_HAUKSSON_LAYER_7
+      vp_upper = vp_interp(8)
+      vs_upper = vs_interp(8)
+      z_upper = Z_HAUKSSON_LAYER_8
 
-      vp_lower = vp_interp(8)
-      vs_lower = vs_interp(8)
-      z_lower = Z_HAUKSSON_LAYER_8
+      vp_lower = vp_interp(9)
+      vs_lower = vs_interp(9)
+      z_lower = Z_HAUKSSON_LAYER_9
     endif
 
   endif

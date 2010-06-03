@@ -302,38 +302,61 @@
   double precision, parameter :: GOCAD_ST_NO_DATA_VALUE = -99999
 
 !
-!--- larger Hauksson model for entire So-Cal, 15 km resolution
+!--- larger crustal tomographic model for entire So-Cal, 15 km resolution
+!--- default implementation is the Lin-2007 model
+!--- see DATA/hauksson_model/ to implement the Hauksson-2000 model
 !
 
+!! Hauksson (2000)
+!! number of non-constant layers
+!  integer, parameter :: NLAYERS_HAUKSSON = 9
+!! depth of layers
+!  double precision, parameter :: Z_HAUKSSON_LAYER_1 =  -1000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_2 =  -4000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_3 =  -6000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_4 = -10000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_5 = -15000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_6 = -17000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_7 = -22000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_8 = -31000.d0
+!  double precision, parameter :: Z_HAUKSSON_LAYER_9 = -33000.d0
+!
+!  integer, parameter :: NGRID_NEW_HAUKSSON = 201
+!
+!! corners of new Hauksson interpolated grid
+!  double precision, parameter :: UTM_X_ORIG_HAUKSSON = 122035.012d0
+!  double precision, parameter :: UTM_X_END_HAUKSSON  = 766968.628d0
+!  double precision, parameter :: UTM_Y_ORIG_HAUKSSON = 3547232.986d0
+!  double precision, parameter :: UTM_Y_END_HAUKSSON  = 4098868.501d0
+
+! Lin-Shearer-Hauksson-Thurber (2007)
 ! number of non-constant layers
-  integer, parameter :: NLAYERS_HAUKSSON = 9
+  integer, parameter :: NLAYERS_HAUKSSON = 8
 ! depth of layers
-  double precision, parameter :: Z_HAUKSSON_LAYER_1 =  -1000.d0
-  double precision, parameter :: Z_HAUKSSON_LAYER_2 =  -4000.d0
+  double precision, parameter :: Z_HAUKSSON_LAYER_1 =  0.d0
+  double precision, parameter :: Z_HAUKSSON_LAYER_2 =  -3000.d0
   double precision, parameter :: Z_HAUKSSON_LAYER_3 =  -6000.d0
   double precision, parameter :: Z_HAUKSSON_LAYER_4 = -10000.d0
   double precision, parameter :: Z_HAUKSSON_LAYER_5 = -15000.d0
   double precision, parameter :: Z_HAUKSSON_LAYER_6 = -17000.d0
   double precision, parameter :: Z_HAUKSSON_LAYER_7 = -22000.d0
   double precision, parameter :: Z_HAUKSSON_LAYER_8 = -31000.d0
-  double precision, parameter :: Z_HAUKSSON_LAYER_9 = -33000.d0
 
-  integer, parameter :: NGRID_NEW_HAUKSSON = 201
+  integer, parameter :: NGRID_NEW_HAUKSSON = 241
 
-! corners of new Hauksson's interpolated grid
-  double precision, parameter :: UTM_X_ORIG_HAUKSSON = 122035.012d0
-  double precision, parameter :: UTM_X_END_HAUKSSON  = 766968.628d0
-  double precision, parameter :: UTM_Y_ORIG_HAUKSSON = 3547232.986d0
-  double precision, parameter :: UTM_Y_END_HAUKSSON  = 4098868.501d0
+! corners of new Hauksson interpolated grid
+  double precision, parameter :: UTM_X_ORIG_HAUKSSON = 88021.568d0
+  double precision, parameter :: UTM_X_END_HAUKSSON  = 861517.886d0
+  double precision, parameter :: UTM_Y_ORIG_HAUKSSON = 3404059.875d0
+  double precision, parameter :: UTM_Y_END_HAUKSSON  = 4180234.582d0
 
   double precision, parameter :: SPACING_UTM_X_HAUKSSON = (UTM_X_END_HAUKSSON - UTM_X_ORIG_HAUKSSON) / (NGRID_NEW_HAUKSSON-1.d0)
   double precision, parameter :: SPACING_UTM_Y_HAUKSSON = (UTM_Y_END_HAUKSSON - UTM_Y_ORIG_HAUKSSON) / (NGRID_NEW_HAUKSSON-1.d0)
 
 ! layers in the So-Cal regional model
 ! DEPTH_MOHO_SOCAL = -35 km was based on Dreger and Helmberger (1990)
-! and is (July 2007) the preferred Moho depth for Dreger.
 ! The depth of 32 km is used in the standard processing (Wald et al., 1995)
-! of SoCal events and is the value in the original Kanamori-Hadley (1975) model.
+! of So-Cal events and is the value in the original Kanamori-Hadley (1975) model.
   double precision, parameter :: DEPTH_5p5km_SOCAL = -5500.d0
   double precision, parameter :: DEPTH_16km_SOCAL = -16000.d0
   double precision, parameter :: DEPTH_MOHO_SOCAL = -32000.d0

@@ -1,0 +1,22 @@
+As of June 2010, the Hauksson-2000 model has been replaced by the Lin-2007 model as the background tomographic model for southern California simulations.
+
+In order to implement the Hauksson-2000 model, the following changes should be made.
+
+1. In create_regions_mesh.f90, uncomment the call to the Hauksson (2000) model and comment the call to the Lin et al. (2007) model.
+
+    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
+                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
+                          'DATA/hauksson_model/hauksson_final_grid_smooth.dat')
+!    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
+!                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
+!                          'DATA/lin_model/lin_final_grid_smooth.dat')
+
+
+2. In constants.h.in, uncomment the block of lines beginning with "Hauksson (2000)" and comment the block of lines beginning with "Lin-Shearer-Hauksson-Thurber (2007)". These minor differences are due to the differences in the input models.
+
+3. cp ./hauksson_model.f90 ../../
+   This modified file accounts for the 9 layers of the Hauksson model, rather than the 8 layers of the Lin model.
+
+See the the PDF files in DATA/lin_model/ to examine the differences between the parameterizations of the two tomographic models.
+
+===========================================
