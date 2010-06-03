@@ -25,17 +25,32 @@
 
   subroutine compute_rho_estimate(rho,vp)
 
-! compute rho estimate in Gocad block and in Hauksson's model
-! based upon Vp
+! compute rho estimate in Gocad block and in Hauksson model from Vp
 
   implicit none
 
   include "constants.h"
 
   double precision rho,vp
+  double precision :: P0, P1, P2, P3, P4, P5
 
-! scale density - use empirical rule from Christiane
-  rho = 0.33d0 * vp + 1280.d0
+!!$! Vp-rho empirical rule from Stidham et al. (2001)
+!!$! -- used in Komatitsch et al. (2004) simulations
+!!$  P1 = 0.33d0 
+!!$  P0 = 1280.d0
+!!$  rho = P1*vp + P0
+!!$!  rho = 0.33d0 * vp + 1280.d0
+
+! Vp-rho empirical rule from Ludwig-Nafe-Drake (1970),
+! which is listed in Brocher (2005a)
+! -- used in Tape et al. (2009) simulations
+   P5 =  1.0600d-16
+   P4 = -4.3000d-12
+   P3 =  6.7100d-08
+   P2 = -4.7210d-04
+   P1 =  1.6612d0
+   P0 =  0.0d0
+   rho = P5*vp**5 + P4*vp**4 + P3*vp**3 + P2*vp**2 + P1*vp + P0
 
 ! make sure density estimate is reasonable
   if(rho > DENSITY_MAX) rho = DENSITY_MAX

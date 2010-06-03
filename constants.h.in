@@ -74,9 +74,9 @@
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
 
-! min and max density in the model
-  double precision, parameter :: DENSITY_MAX = 3000.d0
-  double precision, parameter :: DENSITY_MIN = 2000.d0
+! min and max density in the model (based on Brocher, 2005, eq. 1)
+  double precision, parameter :: DENSITY_MAX = 3476.d0  ! 3000.d0
+  double precision, parameter :: DENSITY_MIN = 1635.d0  ! 2000.d0
 
 ! density of sea water
   real(kind=CUSTOM_REAL), parameter :: RHO_OCEANS = 1020.0
