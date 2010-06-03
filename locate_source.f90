@@ -36,7 +36,8 @@
                  TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                  PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                 ispec_is_acoustic,ispec_is_elastic)
+                 ispec_is_acoustic,ispec_is_elastic, &
+                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   implicit none
 
@@ -65,7 +66,9 @@
 
   integer iprocloop
 
-  integer i,j,k,ispec,iglob,isource,imin,imax,jmin,jmax,kmin,kmax
+  integer i,j,k,ispec,iglob,iglob_selected,inode,iface,isource,imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
+  integer iselected,jselected,iface_selected,iadjust,jadjust
+  integer iproc(1)
 
   double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
   double precision dist
@@ -96,6 +99,10 @@
 
   double precision x_target_source,y_target_source,z_target_source
 
+  double precision,dimension(1) :: altitude_source,distmin_ele
+  double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
+  double precision,dimension(4) :: elevation_node,dist_node
+
   integer islice_selected_source(NSOURCES)
 
   ! timer MPI
@@ -120,12 +127,13 @@
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(3,3,NSOURCES) :: nu_source
 
-  double precision, dimension(NSOURCES) :: lat,long,depth,elevation
+  double precision, dimension(NSOURCES) :: lat,long,depth
   double precision moment_tensor(6,NSOURCES)
 
   character(len=256) OUTPUT_FILES
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
+  double precision, dimension(NSOURCES) :: elevation
   double precision distmin
 
   integer, dimension(:), allocatable :: tmp_i_local
@@ -133,9 +141,12 @@
 
   ! for surface locating and normal computing with external mesh
   integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
+  integer :: num_free_surface_faces
   real(kind=CUSTOM_REAL), dimension(3) :: u_vector,v_vector,w_vector
   logical, dimension(NGLOB_AB) :: iglob_is_surface_external_mesh
   logical, dimension(NSPEC_AB) :: ispec_is_surface_external_mesh
+  integer, dimension(num_free_surface_faces) :: free_surface_ispec
+  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
 
@@ -197,7 +208,85 @@
     ! gets UTM x,y
     call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource), &
                    UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
-    
+
+    ! get approximate topography elevation at source long/lat coordinates
+    ! set distance to huge initial value
+    distmin = HUGEVAL
+    if(num_free_surface_faces > 0) then
+    iglob_selected = 1
+    ! loop only on points inside the element
+    ! exclude edges to ensure this point is not shared with other elements
+        imin = 2
+        imax = NGLLX - 1
+
+        jmin = 2
+        jmax = NGLLY - 1
+    do iface=1,num_free_surface_faces
+          do j=jmin,jmax
+             do i=imin,imax
+
+                ispec = free_surface_ispec(iface)
+                igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
+                jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
+                kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
+                iglob = ibool(igll,jgll,kgll,ispec)
+
+                ! keep this point if it is closer to the receiver
+                dist = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
+                     (utm_y_source(isource)-dble(ystore(iglob)))**2)
+                if(dist < distmin) then
+                   distmin = dist
+                   iglob_selected = iglob
+                   iface_selected = iface
+                   iselected = i
+                   jselected = j
+                   altitude_source(1) = zstore(iglob_selected)
+                endif
+             enddo
+          enddo
+          ! end of loop on all the elements on the free surface
+       end do
+!  weighted mean at current point of topography elevation of the four closest nodes   
+!  set distance to huge initial value
+       distmin = HUGEVAL
+       do j=jselected,jselected+1
+          do i=iselected,iselected+1
+             inode = 1
+             do jadjust=0,1
+                do iadjust= 0,1
+                   ispec = free_surface_ispec(iface_selected)
+                   igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+                   jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+                   kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+                   iglob = ibool(igll,jgll,kgll,ispec)
+
+                   elevation_node(inode) = zstore(iglob)
+                   dist_node(inode) = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
+                        (utm_y_source(isource)-dble(ystore(iglob)))**2)
+                   inode = inode + 1
+                end do
+             end do
+             dist = sum(dist_node)
+             if(dist < distmin) then
+                distmin = dist
+                altitude_source(1) = (dist_node(1)/dist)*elevation_node(1) + &
+                     (dist_node(2)/dist)*elevation_node(2) + &
+                     (dist_node(3)/dist)*elevation_node(3) + &
+                     (dist_node(4)/dist)*elevation_node(4) 
+             endif
+          end do
+       end do
+    end if
+    !  MPI communications to determine the best slice
+    distmin_ele(1)= distmin
+    call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
+    call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
+    if(myrank == 0) then
+       iproc = minloc(distmin_ele_all)
+       altitude_source(1) = elevation_all(iproc(1))         
+    end if
+    call bcast_all_dp(altitude_source,1)  
+    elevation(isource) = altitude_source(1)
 
     ! orientation consistent with the UTM projection
     !     East
@@ -215,8 +304,8 @@
 
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
-    z_target_source = depth(isource)
-      
+    !z_target_source = depth(isource)
+    z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
 
     ! set distance to huge initial value
     distmin = HUGEVAL
@@ -700,11 +789,11 @@
           write(IMAIN,*) '         x: ',utm_x_source(isource)
           write(IMAIN,*) '         y: ',utm_y_source(isource)
         else
-          write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
-          write(IMAIN,*) '         UTM y: ',utm_y_source(isource)        
+          write(IMAIN,*) '     UTM x: ',utm_x_source(isource)
+          write(IMAIN,*) '     UTM y: ',utm_y_source(isource)        
         endif
-        write(IMAIN,*) '         z depth: ',depth(isource)
-        if(TOPOGRAPHY) write(IMAIN,*) 'topo elevation: ',elevation(isource),' m'
+        write(IMAIN,*) '     depth: ',depth(isource),' km'
+        !if(TOPOGRAPHY) write(IMAIN,*) 'topo elevation: ',elevation(isource),' m'
 
         write(IMAIN,*)
         write(IMAIN,*) 'position of the source that will be used:'
@@ -713,10 +802,11 @@
           write(IMAIN,*) '         x: ',x_found_source(isource)
           write(IMAIN,*) '         y: ',y_found_source(isource)
         else
-          write(IMAIN,*) '         UTM x: ',x_found_source(isource)
-          write(IMAIN,*) '         UTM y: ',y_found_source(isource)        
+          write(IMAIN,*) '     UTM x: ',x_found_source(isource)
+          write(IMAIN,*) '     UTM y: ',y_found_source(isource)        
         endif
-        write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
+        write(IMAIN,*) '     depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
+        write(IMAIN,*) '         z: ',z_found_source(isource)
         write(IMAIN,*)
 
         ! display error in location estimate

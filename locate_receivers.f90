@@ -32,7 +32,8 @@
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
                  TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                 iglob_is_surface_external_mesh,ispec_is_surface_external_mesh )
+                 iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
+                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   implicit none
 
@@ -53,22 +54,30 @@
 
 ! for surface locating and normal computing with external mesh
   integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
+  integer :: num_free_surface_faces
   real(kind=CUSTOM_REAL), dimension(3) :: u_vector,v_vector,w_vector
   logical, dimension(NGLOB_AB) :: iglob_is_surface_external_mesh
   logical, dimension(NSPEC_AB) :: ispec_is_surface_external_mesh
+  integer, dimension(num_free_surface_faces) :: free_surface_ispec
+  integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
   integer, allocatable, dimension(:) :: ix_initial_guess,iy_initial_guess,iz_initial_guess
 
   integer iprocloop
   integer ios
 
+  double precision,dimension(1) :: altitude_rec,distmin_ele
+  double precision,dimension(4) :: elevation_node,dist_node
+  double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
-  double precision, allocatable, dimension(:) :: horiz_dist,elevation
+  double precision, allocatable, dimension(:) :: horiz_dist
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision, allocatable, dimension(:,:) :: x_found_all,y_found_all,z_found_all
 
   integer irec
-  integer i,j,k,ispec,iglob,imin,imax,jmin,jmax,kmin,kmax
+  integer i,j,k,ispec,iglob,iface,inode,imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
+  integer iselected,jselected,iface_selected,iadjust,jadjust
+  integer iproc(1)
 
   double precision utm_x_source,utm_y_source
   double precision dist
@@ -110,6 +119,7 @@
 ! timing information for the stations
 ! station information for writing the seismograms
 
+  integer :: iglob_selected
   integer, dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   double precision, dimension(nrec) :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(3,3,nrec) :: nu
@@ -117,9 +127,10 @@
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
 
   integer, allocatable, dimension(:,:) :: ispec_selected_rec_all
-  double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y
+  double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
   double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
   double precision, allocatable, dimension(:,:,:,:) :: nu_all
+
 
   character(len=256) OUTPUT_FILES
 
@@ -185,9 +196,6 @@
 ! loop on all the stations
   do irec=1,nrec
 
-! set distance to huge initial value
-  distmin=HUGEVAL
-
     read(1,*,iostat=ios) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
@@ -203,6 +211,88 @@
         write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
                        '.',network_name(irec)(1:len_trim(network_name(irec))), &
                        '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
+
+! get approximate topography elevation at source long/lat coordinates
+!   set distance to huge initial value
+    distmin = HUGEVAL
+    if(num_free_surface_faces > 0) then
+    iglob_selected = 1
+! loop only on points inside the element
+! exclude edges to ensure this point is not shared with other elements
+        imin = 2
+        imax = NGLLX - 1
+
+        jmin = 2
+        jmax = NGLLY - 1
+    do iface=1,num_free_surface_faces
+          do j=jmin,jmax
+             do i=imin,imax
+
+                ispec = free_surface_ispec(iface)
+                igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
+                jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
+                kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
+                iglob = ibool(igll,jgll,kgll,ispec)
+
+ !           keep this point if it is closer to the receiver
+                dist = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
+                     (stutm_y(irec)-dble(ystore(iglob)))**2)
+                if(dist < distmin) then
+                   distmin = dist
+                   iglob_selected = iglob
+                   iface_selected = iface
+                   iselected = i
+                   jselected = j
+                   altitude_rec(1) = zstore(iglob_selected)
+                endif
+             enddo
+          enddo
+          ! end of loop on all the elements on the free surface
+       end do
+!  weighted mean at current point of topography elevation of the four closest nodes     
+!  set distance to huge initial value
+       distmin = HUGEVAL
+       do j=jselected,jselected+1
+          do i=iselected,iselected+1
+             inode = 1
+             do jadjust=0,1
+                do iadjust= 0,1
+                   ispec = free_surface_ispec(iface_selected)
+                   igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+                   jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+                   kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+                   iglob = ibool(igll,jgll,kgll,ispec)
+
+                   elevation_node(inode) = zstore(iglob)
+                   dist_node(inode) = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
+                        (stutm_y(irec)-dble(ystore(iglob)))**2)
+                   inode = inode + 1
+                end do
+             end do
+             dist = sum(dist_node)
+             if(dist < distmin) then
+                distmin = dist
+                altitude_rec(1) = (dist_node(1)/dist)*elevation_node(1) + &
+                     (dist_node(2)/dist)*elevation_node(2) + &
+                     (dist_node(3)/dist)*elevation_node(3) + &
+                     (dist_node(4)/dist)*elevation_node(4) 
+             endif
+          end do
+       end do
+    end if
+!  MPI communications to determine the best slice
+    distmin_ele(1)= distmin
+    call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
+    call gather_all_dp(altitude_rec,1,elevation_all,1,NPROC)
+    if(myrank == 0) then
+       iproc = minloc(distmin_ele_all)
+       altitude_rec(1) = elevation_all(iproc(1))         
+    end if
+    call bcast_all_dp(altitude_rec,1)  
+    elevation(irec) = altitude_rec(1)
+
+! reset distance to huge initial value
+  distmin=HUGEVAL
 
 !     get the Cartesian components of n in the model: nu
 
@@ -226,10 +316,9 @@
 
       x_target(irec) = stutm_x(irec)
       y_target(irec) = stutm_y(irec)
-      z_target(irec) = stbur(irec)
+      z_target(irec) = elevation(irec) - stbur(irec)
+      !z_target(irec) = stbur(irec)
       !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
-
-  
 
 ! examine top of the elements only (receivers always at the surface)
 !      k = NGLLZ
@@ -650,8 +739,8 @@
         write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
         write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))      
       endif
+        write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'  
       write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
-      if(TOPOGRAPHY) write(IMAIN,*) '     topography elevation: ',sngl(elevation(irec))
       write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
       write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
@@ -667,6 +756,17 @@
         write(IMAIN,*) '       eta   = ',eta_receiver(irec)
         write(IMAIN,*) '       gamma = ',gamma_receiver(irec)
       endif
+      if( SUPPRESS_UTM_PROJECTION ) then
+         write(IMAIN,*) '         x: ',x_found(irec)
+         write(IMAIN,*) '         y: ',y_found(irec)
+      else
+         write(IMAIN,*) '     UTM x: ',x_found(irec)
+         write(IMAIN,*) '     UTM y: ',y_found(irec)        
+        endif
+        write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
+        write(IMAIN,*) '         z: ',z_found(irec)
+        write(IMAIN,*)
+      
 
 ! add warning if estimate is poor
 ! (usually means receiver outside the mesh given by the user)
@@ -678,7 +778,7 @@
 
       write(IMAIN,*)
 
-    enddo
+   enddo
 
 ! compute maximal distance for all the receivers
     final_distance_max = maxval(final_distance(:))
