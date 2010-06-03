@@ -105,7 +105,8 @@ subroutine setup_sources()
           TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
           PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
-          ispec_is_acoustic,ispec_is_elastic)
+          ispec_is_acoustic,ispec_is_elastic, &
+          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
@@ -322,7 +323,8 @@ subroutine setup_receivers()
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
             TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-            iglob_is_surface_external_mesh,ispec_is_surface_external_mesh )
+            iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
+            num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
 ! count number of receivers located in this slice
   nrec_local = 0
