@@ -10,7 +10,7 @@
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
+! (at your o ption) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -70,6 +70,10 @@
   double precision ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
 
   character(len=150) LOCAL_PATH
+
+!!$! CHT option for m16 mesh: reading in a model
+!!$  character(len=500) :: m_file
+!!$  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: vpstore,vsstore
 
 ! arrays with the mesh
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
@@ -392,7 +396,23 @@
   allocate(yp(npointot))
   allocate(zp(npointot))
 
-!--- read Hauksson's model
+!!$!----------------------------
+!!$! CHT option for m16 mesh: read in model to overwrite all vp and vs values
+!!$  allocate(vpstore(NGLLX,NGLLY,NGLLZ,nspec))
+!!$  allocate(vsstore(NGLLX,NGLLY,NGLLZ,nspec))
+!!$
+!!$  write(m_file,'(a,i6.6,a)') 'DATA/m16_model/bin_files/proc',myrank,'_'//'vp_m16.bin'
+!!$  open(12,file=trim(m_file),status='old',form='unformatted')
+!!$  read(12) vpstore(:,:,:,1:nspec)
+!!$  close(12)
+!!$
+!!$  write(m_file,'(a,i6.6,a)') 'DATA/m16_model/bin_files/proc',myrank,'_'//'vs_m16.bin'
+!!$  open(12,file=trim(m_file),status='old',form='unformatted')
+!!$  read(12) vsstore(:,:,:,1:nspec)
+!!$  close(12)
+!!$!----------------------------
+
+!--- read Lin-Shearer-Hauksson-Thurber-2007 model
   if(HAUKSSON_REGIONAL_MODEL) then
 !    call get_value_string(HAUKSSON_REGIONAL_MODEL_FILE, &
 !                          'model.HAUKSSON_REGIONAL_MODEL_FILE', &
@@ -745,7 +765,11 @@
   flag_sediments(i,j,k,ispec) = point_is_in_sediments
   if(point_is_in_sediments) not_fully_in_bedrock(ispec) = .true.
 
-! CHT: overwrite ALL density values using the Brocher2005 vp-rho scaling
+!!$! CHT option for m16 mesh: overwrite vp and vs values with the read-in model
+!!$  vp = vpstore(i,j,k,ispec)
+!!$  vs = vsstore(i,j,k,ispec)
+
+! CHT: overwrite ALL density values using the Brocher-2005 vp-rho scaling
   call compute_rho_estimate(rho,vp)
 
 ! define elastic parameters in the model
