@@ -2,6 +2,9 @@
 To-do list for SPECFEM3D_SESAME, by Dimitri Komatitsch
 ------------------------------------------------------
 
+- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back;
+that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it. 
+
 - there is something in SPECFEM3D that we noticed a few years ago
 regarding attenuation but never fixed: on page 813 of our 1999 paper
 I used a trick suggested by Robertsson et al. (1994) 
@@ -27,6 +30,8 @@ tetrahedron into four hexahedra using the barycenter. This could help design
 meshes for sedimentary basins, in particular near basin edges
 
 - we could add support for different polynomial degrees in different elements (p-adaptivity)
+
+- we could add support for Discontinuous Galerkin, and/or for SEM on tetrahedra and pyramids
 
 - Regarding memory size (getting an estimate of memory consumption in SESAME),
 somebody should just cut and paste my SPECFEM3D_GLOBE routine
