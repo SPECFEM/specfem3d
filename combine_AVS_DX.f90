@@ -68,12 +68,12 @@
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
-  character(len=150) dummystring
+  character(len=256) dummystring
 
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! small offset for source and receiver line in AVS_DX
 ! (small compared to normalized radius of the Earth)
@@ -101,7 +101,7 @@
 
   double precision zscaling
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,MODEL,filtered_rec_filename
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -116,6 +116,8 @@
   integer proc_p1,proc_p2
 
 ! ************** PROGRAM STARTS HERE **************
+
+! only for old regular meshes!
 
   print *
   print *,'Recombining all AVS or DX files for slices'
@@ -355,7 +357,7 @@ endif
 
 ! get source information for frequency for number of points per lambda
   print *,'reading source duration from the CMTSOLUTION file'
-  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,NSOURCES)
 
 ! set global element and point offsets to zero
   iglobpointoffset = 0
@@ -578,7 +580,7 @@ endif
 
 !   get source information
     print *,'reading position of the source from the CMTSOLUTION file'
-    call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+    call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,NSOURCES)
 
 !   the point for the source is put at the surface for clarity (depth ignored)
 !   even slightly above to superimpose to real surface

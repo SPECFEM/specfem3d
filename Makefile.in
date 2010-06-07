@@ -53,109 +53,137 @@ AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
 
-# extra defines for the Pyrized version
-@COND_PYRE_TRUE@MPICC = @MPICC@
-@COND_PYRE_TRUE@FCLIBS = @FCLIBS@
-@COND_PYRE_TRUE@PYTHON = @PYTHON@
-@COND_PYRE_TRUE@PYTHON_CFLAGS = $(PYTHON_EGG_CFLAGS) $(PYTHON_CPPFLAGS)
-@COND_PYRE_TRUE@PYTHON_CPPFLAGS = $(PYTHON_EGG_CPPFLAGS) -I@PYTHON_INCDIR@
-@COND_PYRE_TRUE@PYTHON_LDFLAGS = $(PYTHON_EGG_LDFLAGS) @PYTHON_LDFLAGS@ @PYTHON_LINKFORSHARED@ @PYTHON_BLDLIBRARY@ @PYTHON_LIBS@ @PYTHON_MODLIBS@ @PYTHON_SYSLIBS@ @PYTHON_LDLAST@
-@COND_PYRE_TRUE@OUTPUT_DIR = OUTPUT_FILES
-@COND_PYRE_TRUE@PYTHON_EGG_CFLAGS = @PYTHON_EGG_CFLAGS@
-@COND_PYRE_TRUE@PYTHON_EGG_CPPFLAGS = @PYTHON_EGG_CPPFLAGS@
-@COND_PYRE_TRUE@PYTHON_EGG_LDFLAGS = @PYTHON_EGG_LDFLAGS@
-
 
 O = obj
 
-# objects toggled between the pure Fortran and Pyrized version
-@COND_PYRE_TRUE@PYRE_EXTRA_OBJECTS = $O/misc.o $O/trampoline.o $O/PyxMeshfem.o
-@COND_PYRE_TRUE@COND_PYRE_OBJECTS = $O/PyxParameters.o $(PYRE_EXTRA_OBJECTS)
-
-# objects toggled between the pure Fortran and Pyrized version
-@COND_PYRE_FALSE@COND_PYRE_OBJECTS = $O/read_value_parameters.o $O/get_value_parameters.o
-
 libspecfem_a_OBJECTS = \
-	$O/aniso_model.o \
+	$O/assemble_MPI_scalar.o \
 	$O/calc_jacobian.o \
+	$O/check_mesh_resolution.o \
 	$O/comp_source_time_function.o \
 	$O/compute_arrays_source.o \
 	$O/compute_parameters.o \
-	$O/compute_rho_estimate.o \
 	$O/create_header_file.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
+	$O/create_mass_matrices.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
-	$O/define_subregions.o \
-	$O/define_subregions_heuristic.o \
+	$O/detect_surface.o \
 	$O/exit_mpi.o \
+	$O/get_absorbing_boundary.o \
+	$O/get_coupling_surfaces.o \
+	$O/get_model.o \
+	$O/get_MPI.o \
 	$O/get_MPI_cutplanes_eta.o \
 	$O/get_MPI_cutplanes_xi.o \
-	$O/get_absorb.o \
 	$O/get_attenuation_model.o \
 	$O/get_cmt.o \
-	$O/get_flags_boundaries.o \
+	$O/get_element_face.o \
 	$O/get_global.o \
 	$O/get_jacobian_boundaries.o \
 	$O/get_shape2D.o \
 	$O/get_shape3D.o \
 	$O/get_value_parameters.o \
 	$O/gll_library.o \
-	$O/hauksson_model.o \
 	$O/hex_nodes.o \
-	$O/interpolate_gocad_block_HR.o \
-	$O/interpolate_gocad_block_MR.o \
 	$O/lagrange_poly.o \
 	$O/locate_receivers.o \
 	$O/locate_source.o \
-	$O/mesh_vertical.o \
-	$O/meshfem3D.o \
+	$O/generate_databases.o \
+	$O/model_external_values.o \
+	$O/model_aniso.o \
 	$O/netlib_specfun_erf.o \
-	$O/read_arrays_buffers_solver.o \
+	$O/param_reader.o \
+	$O/prepare_assemble_MPI.o \
 	$O/read_topo_bathy_file.o \
-	$O/read_moho_map.o \
 	$O/read_parameter_file.o \
 	$O/read_value_parameters.o \
 	$O/recompute_jacobian.o \
-	$O/salton_trough_gocad.o \
 	$O/save_arrays_solver.o \
 	$O/save_header_file.o \
-	$O/socal_model.o \
+	$O/save_moho_arrays.o \
 	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
 	$O/write_AVS_DX_global_data.o \
 	$O/write_AVS_DX_global_faces_data.o \
-	$O/write_AVS_DX_mesh_quality_data.o \
 	$O/write_AVS_DX_surface_data.o \
-	$O/write_seismograms.o \
-	$O/compute_boundary_kernel.o \
-	$O/compute_forces.o \
+	$O/write_VTK_data.o \
+	$O/memory_eval.o \
 	$(EMPTY_MACRO)
 
-# solver objects with statically allocated arrays; dependent upon
-# values_from_mesher.h
+###
+###--obsolete routines
+###
+#	$O/compute_rho_estimate.o \
+#	$O/define_subregions.o \
+#	$O/define_subregions_heuristic.o \
+#	$O/get_absorb.o \
+#	$O/get_flags_boundaries.o \
+#	$O/hauksson_model.o \
+#	$O/interpolate_gocad_block_HR.o \
+#	$O/interpolate_gocad_block_MR.o \
+#	$O/mesh_vertical.o \
+#	$O/read_arrays_buffers_solver.o \
+#	$O/read_moho_map.o \
+#	$O/salton_trough_gocad.o \
+#	$O/socal_model.o \
+
+
+
+# solver objects with statically allocated arrays; not dependent upon
+# values_from_mesher.h anymore
 SOLVER_ARRAY_OBJECTS = \
-	$O/assemble_MPI_scalar.o \
-	$O/assemble_MPI_vector.o \
-	$O/read_arrays_solver.o \
+	$O/specfem3D_par.o \
+	$O/PML_init.o \
+	$O/compute_boundary_kernel.o \
+	$O/compute_forces_acoustic.o \
+	$O/compute_forces_acoustic_pot.o \
+	$O/compute_forces_acoustic_PML.o \
+	$O/compute_forces_elastic.o \
+	$O/compute_forces_elastic_Dev.o \
+	$O/compute_forces_elastic_noDev.o \
+	$O/compute_add_sources_acoustic.o \
+	$O/compute_add_sources_elastic.o \
+	$O/compute_coupling_acoustic_el.o \
+	$O/compute_coupling_elastic_ac.o \
+	$O/compute_stacey_acoustic.o \
+	$O/compute_stacey_elastic.o \
+	$O/compute_gradient.o \
+	$O/compute_interpolated_dva.o \
+	$O/initialize_simulation.o \
+	$O/read_mesh_databases.o \
+	$O/setup_GLL_points.o \
+	$O/write_movie_output.o \
+	$O/write_PNM_GIF_data.o \
+	$O/write_seismograms.o \
+	$O/detect_mesh_surfaces.o \
+	$O/setup_movie_meshes.o \
+	$O/read_topography_bathymetry.o \
+	$O/setup_sources_receivers.o \
+	$O/prepare_timerun.o \
+	$O/iterate_time.o \
+	$O/finalize_simulation.o \
+	$O/save_adjoint_kernels.o \
 	$O/specfem3D.o \
+	$O/assemble_MPI_vector.o \
 	$(EMPTY_MACRO)
+
+###
+###--obsolete routines
+###
+#	$O/read_arrays_solver.o \
+
 
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
 @COND_MPI_FALSE@COND_MPI_OBJECTS = $O/serial.o
 
-LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
+LIBSPECFEM = $O/libspecfem.a
 
 # objects for the pure Fortran version
-@COND_PYRE_FALSE@XMESHFEM_OBJECTS = $O/program_meshfem3D.o $(LIBSPECFEM)
+@COND_PYRE_FALSE@XGENERATE_DATABASES_OBJECTS = $O/program_generate_databases.o $(LIBSPECFEM)
 @COND_PYRE_FALSE@XSPECFEM_OBJECTS = $O/program_specfem3D.o $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM)
-
-# objects for the Pyrized version
-@COND_PYRE_TRUE@XMESHFEM_OBJECTS = $(LIBSPECFEM)
-@COND_PYRE_TRUE@XSPECFEM_OBJECTS = $O/PyxSpecfem.o $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM)
-
 
 ####
 #### targets
@@ -163,29 +191,24 @@ LIBSPECFEM = $(COND_PYRE_OBJECTS) $O/libspecfem.a
 
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
+@COND_PYRE_FALSE@	generate_databases \
+@COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	check_buffers_2D \
-@COND_PYRE_FALSE@	check_mesh_quality_AVS_DX \
 @COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
-@COND_PYRE_FALSE@	create_movie_AVS_DX \
-@COND_PYRE_FALSE@	create_movie_GMT \
-@COND_PYRE_FALSE@	meshfem3D \
+@COND_PYRE_FALSE@	create_movie_shakemap_AVS_DX_GMT \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
-
-# default targets for the Pyrized version
-@COND_PYRE_TRUE@DEFAULT = specfem3D
-
 
 default: $(DEFAULT)
 
 all: clean default
 
 backup:
-	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_mesher go_solver mymachines bak
+	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
 
 bak: backup
 
-meshfem3D: xmeshfem3D
+generate_databases: xgenerate_databases
 
 specfem3D: xspecfem3D
 
@@ -195,36 +218,21 @@ specfem3D: xspecfem3D
 ####
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xmeshfem3D: $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o xmeshfem3D $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_FALSE@	${FCLINK} -o xgenerate_databases $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 @COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
 @COND_PYRE_FALSE@	${FCLINK} -o xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 
-# rules for the Pyrized version
-@COND_PYRE_TRUE@xspecfem3D: pyspecfem3D
-@COND_PYRE_TRUE@
-@COND_PYRE_TRUE@pyspecfem3D: main.c $(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_TRUE@	${MPICC} -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) main.c \
-@COND_PYRE_TRUE@		$(XMESHFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
-@COND_PYRE_TRUE@
-@COND_PYRE_TRUE@$(OUTPUT_DIR)/pyspecfem3D: main.c $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_TRUE@	${MPICC} -o $@ $(CFLAGS) $(PYTHON_CPPFLAGS) -DUSE_MPI -DWITH_SOLVER main.c \
-@COND_PYRE_TRUE@		$(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)$(MPILIBS) $(PYTHON_LDFLAGS) $(FCLIBS)
-
-
 check_buffers_2D: xcheck_buffers_2D
-check_mesh_quality_AVS_DX: xcheck_mesh_quality_AVS_DX
 combine_AVS_DX: xcombine_AVS_DX
 convolve_source_timefunction: xconvolve_source_timefunction
 create_header_file: xcreate_header_file
-create_movie_AVS_DX: xcreate_movie_AVS_DX
-create_movie_GMT: xcreate_movie_GMT
+create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
-
 
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 	${FCCOMPILE_CHECK} -o xconvolve_source_timefunction $O/convolve_source_timefunction.o
@@ -232,29 +240,33 @@ xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
 
-@COND_PYRE_FALSE@xcreate_movie_AVS_DX: $O/create_movie_AVS_DX.o $(LIBSPECFEM)
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_AVS_DX $O/create_movie_AVS_DX.o $(LIBSPECFEM)
+#@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) OUTPUT_FILES/values_from_mesher.h
+#@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
+
+@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o OUTPUT_FILES/surface_from_mesher.h $O/param_reader.o
+@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
+
+
+
 
 xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBSPECFEM)
 
-xcheck_mesh_quality_AVS_DX: $O/check_mesh_quality_AVS_DX.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o xcheck_mesh_quality_AVS_DX $O/check_mesh_quality_AVS_DX.o $(LIBSPECFEM)
-
 xcheck_buffers_2D: $O/check_buffers_2D.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcheck_buffers_2D $O/check_buffers_2D.o $(LIBSPECFEM)
 
-xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o
-	${FCCOMPILE_CHECK} -o xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o
+xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
+	${FCCOMPILE_CHECK} -o xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
 
-xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o
-	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o
+xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
+	${FCCOMPILE_CHECK} -o xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
 
-xcreate_movie_GMT:  $O/create_movie_GMT.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o xcreate_movie_GMT  $O/create_movie_GMT.o $(LIBSPECFEM)
 
 clean:
-	rm -f $O/* *.o *.gnu OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* xmeshfem3D xspecfem3D xcombine_AVS_DX xcheck_mesh_quality_AVS_DX xcheck_buffers_2D xconvolve_source_timefunction xcreate_header_file xcreate_movie_AVS_DX xcombine_vol_data xcombine_surf_data xcreate_movie_GMT
+	rm -f $O/* *.o *.gnu *.mod OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* \
+        xgenerate_databases xspecfem3D xcombine_AVS_DX xcheck_buffers_2D \
+        xconvolve_source_timefunction xcreate_header_file \
+        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
 
 ###
 ### rule for the archive library
@@ -270,17 +282,105 @@ $O/libspecfem.a: $(libspecfem_a_OBJECTS)
 ####
 
 ###
-### optimized flags and dependence on values from mesher
+### optimized flags (not dependent on values from mesher anymore)
 ###
 
-$O/specfem3D.o: constants.h OUTPUT_FILES/values_from_mesher.h specfem3D.f90
+$O/specfem3D_par.o: constants.h specfem3D_par.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D_par.o specfem3D_par.f90
+
+$O/specfem3D.o: constants.h specfem3D.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
 
-$O/assemble_MPI_vector.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_vector.f90
+$O/compute_forces_elastic_noDev.o: constants.h compute_forces_elastic_noDev.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic_noDev.o compute_forces_elastic_noDev.f90
+
+$O/compute_forces_elastic_Dev.o: constants.h compute_forces_elastic_Dev.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic_Dev.o compute_forces_elastic_Dev.f90
+
+$O/compute_forces_elastic.o: constants.h compute_forces_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic.o compute_forces_elastic.f90
+
+$O/compute_forces_acoustic.o: constants.h compute_forces_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic.o compute_forces_acoustic.f90
+
+$O/compute_forces_acoustic_pot.o: constants.h compute_forces_acoustic_pot.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic_pot.o compute_forces_acoustic_pot.f90
+
+$O/compute_forces_acoustic_PML.o: constants.h compute_forces_acoustic_PML.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic_PML.o compute_forces_acoustic_PML.f90
+
+$O/compute_add_sources_acoustic.o: constants.h compute_add_sources_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_add_sources_acoustic.o compute_add_sources_acoustic.f90
+
+$O/compute_add_sources_elastic.o: constants.h compute_add_sources_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_add_sources_elastic.o compute_add_sources_elastic.f90
+
+$O/compute_coupling_acoustic_el.o: constants.h compute_coupling_acoustic_el.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_acoustic_el.o compute_coupling_acoustic_el.f90
+
+$O/compute_coupling_elastic_ac.o: constants.h compute_coupling_elastic_ac.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_elastic_ac.o compute_coupling_elastic_ac.f90
+
+$O/compute_stacey_acoustic.o: constants.h compute_stacey_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_stacey_acoustic.o compute_stacey_acoustic.f90
+
+$O/compute_stacey_elastic.o: constants.h compute_stacey_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_stacey_elastic.o compute_stacey_elastic.f90
+
+$O/compute_gradient.o: constants.h compute_gradient.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_gradient.o compute_gradient.f90
+
+$O/compute_interpolated_dva.o: constants.h compute_interpolated_dva.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_interpolated_dva.o compute_interpolated_dva.f90
+
+$O/initialize_simulation.o: constants.h initialize_simulation.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/initialize_simulation.o initialize_simulation.f90
+
+$O/read_mesh_databases.o: constants.h read_mesh_databases.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/read_mesh_databases.o read_mesh_databases.f90
+
+$O/setup_GLL_points.o: constants.h setup_GLL_points.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_GLL_points.o setup_GLL_points.f90
+
+$O/detect_mesh_surfaces.o: constants.h detect_mesh_surfaces.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/detect_mesh_surfaces.o detect_mesh_surfaces.f90
+
+$O/setup_movie_meshes.o: constants.h setup_movie_meshes.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_movie_meshes.o setup_movie_meshes.f90
+
+$O/read_topography_bathymetry.o: constants.h read_topography_bathymetry.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/read_topography_bathymetry.o read_topography_bathymetry.f90
+
+$O/setup_sources_receivers.o: constants.h setup_sources_receivers.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_sources_receivers.o setup_sources_receivers.f90
+
+$O/prepare_timerun.o: constants.h prepare_timerun.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/prepare_timerun.o prepare_timerun.f90
+
+$O/iterate_time.o: constants.h iterate_time.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/iterate_time.o iterate_time.f90
+
+$O/finalize_simulation.o: constants.h finalize_simulation.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
+
+$O/assemble_MPI_vector.o: constants.h assemble_MPI_vector.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
 
-$O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble_MPI_scalar.f90
+$O/assemble_MPI_scalar.o: constants.h assemble_MPI_scalar.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_scalar.o assemble_MPI_scalar.f90
+
+$O/save_adjoint_kernels.o: constants.h save_adjoint_kernels.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/save_adjoint_kernels.o save_adjoint_kernels.f90
+
+$O/write_movie_output.o: constants.h write_movie_output.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_movie_output.o write_movie_output.f90
+
+$O/write_PNM_GIF_data.o: constants.h write_PNM_GIF_data.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_PNM_GIF_data.o write_PNM_GIF_data.f90
+
+$O/write_seismograms.o: constants.h write_seismograms.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
+
 
 ###
 ### MPI compilation without optimization
@@ -289,9 +389,16 @@ $O/assemble_MPI_scalar.o: constants.h OUTPUT_FILES/values_from_mesher.h assemble
 $O/parallel.o: constants.h parallel.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o parallel.f90
 
+$O/model_external_values.o: constants.h model_external_values.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
+
+
 ###
 ### serial compilation without optimization
 ###
+
+$O/model_aniso.o: constants.h model_aniso.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_aniso.o model_aniso.f90
 
 $O/serial.o: constants.h exit_mpi.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o serial.f90
@@ -299,17 +406,20 @@ $O/serial.o: constants.h exit_mpi.f90
 $O/program_specfem3D.o: program_specfem3D.f90
 	${FCCOMPILE_CHECK} -c -o $O/program_specfem3D.o program_specfem3D.f90
 
-$O/program_meshfem3D.o: program_meshfem3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/program_meshfem3D.o program_meshfem3D.f90
+$O/program_generate_databases.o: program_generate_databases.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_generate_databases.o program_generate_databases.f90
 
-$O/meshfem3D.o: constants.h meshfem3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/meshfem3D.o meshfem3D.f90
+$O/generate_databases.o: constants.h generate_databases.f90
+	${FCCOMPILE_CHECK} -c -o $O/generate_databases.o generate_databases.f90
 
 $O/locate_source.o: constants.h locate_source.f90
 	${FCCOMPILE_CHECK} -c -o $O/locate_source.o locate_source.f90
 
 $O/locate_receivers.o: constants.h locate_receivers.f90
 	${FCCOMPILE_CHECK} -c -o $O/locate_receivers.o locate_receivers.f90
+
+$O/memory_eval.o: constants.h memory_eval.f90
+	${FCCOMPILE_CHECK} -c -o $O/memory_eval.o memory_eval.f90
 
 $O/exit_mpi.o: constants.h exit_mpi.f90
 	${FCCOMPILE_CHECK} -c -o $O/exit_mpi.o exit_mpi.f90
@@ -323,17 +433,11 @@ $O/program_create_header_file.o: program_create_header_file.f90
 $O/create_header_file.o: create_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_header_file.o create_header_file.f90
 
-$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_arrays_solver.o read_arrays_solver.f90
-
 $O/combine_AVS_DX.o: constants.h combine_AVS_DX.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_AVS_DX.o combine_AVS_DX.f90
 
 $O/save_header_file.o: constants.h save_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_header_file.o save_header_file.f90
-
-$O/check_mesh_quality_AVS_DX.o: constants.h check_mesh_quality_AVS_DX.f90
-	${FCCOMPILE_CHECK} -c -o $O/check_mesh_quality_AVS_DX.o check_mesh_quality_AVS_DX.f90
 
 $O/check_buffers_2D.o: constants.h check_buffers_2D.f90
 	${FCCOMPILE_CHECK} -c -o $O/check_buffers_2D.o check_buffers_2D.f90
@@ -356,11 +460,14 @@ $O/compute_parameters.o: constants.h compute_parameters.f90
 $O/calc_jacobian.o: constants.h calc_jacobian.f90
 	${FCCOMPILE_CHECK} -c -o $O/calc_jacobian.o calc_jacobian.f90
 
+$O/check_mesh_resolution.o: constants.h check_mesh_resolution.f90
+	${FCCOMPILE_CHECK} -c -o $O/check_mesh_resolution.o check_mesh_resolution.f90
+
+$O/detect_surface.o: constants.h detect_surface.f90
+	${FCCOMPILE_CHECK} -c -o $O/detect_surface.o detect_surface.f90
+
 $O/gll_library.o: constants.h gll_library.f90
 	${FCCOMPILE_CHECK} -c -o $O/gll_library.o gll_library.f90
-
-$O/get_absorb.o: constants.h get_absorb.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_absorb.o get_absorb.f90
 
 $O/get_jacobian_boundaries.o: constants.h get_jacobian_boundaries.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_jacobian_boundaries.o get_jacobian_boundaries.f90
@@ -377,8 +484,11 @@ $O/get_MPI_cutplanes_eta.o: constants.h get_MPI_cutplanes_eta.f90
 $O/get_cmt.o: constants.h get_cmt.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90
 
-$O/create_movie_AVS_DX.o: constants.h create_movie_AVS_DX.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_AVS_DX.o create_movie_AVS_DX.f90
+$O/create_movie_shakemap_AVS_DX_GMT.o: constants.h create_movie_shakemap_AVS_DX_GMT.f90 OUTPUT_FILES/surface_from_mesher.h
+	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o create_movie_shakemap_AVS_DX_GMT.f90
+
+$O/get_element_face.o: constants.h get_element_face.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_element_face.o get_element_face.f90
 
 $O/get_global.o: constants.h get_global.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
@@ -392,8 +502,8 @@ $O/write_AVS_DX_surface_data.o: constants.h write_AVS_DX_surface_data.f90
 $O/write_AVS_DX_global_data.o: constants.h write_AVS_DX_global_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_data.o write_AVS_DX_global_data.f90
 
-$O/write_AVS_DX_mesh_quality_data.o: constants.h write_AVS_DX_mesh_quality_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_mesh_quality_data.o write_AVS_DX_mesh_quality_data.f90
+$O/write_VTK_data.o: constants.h write_VTK_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o write_VTK_data.f90
 
 $O/get_shape3D.o: constants.h get_shape3D.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_shape3D.o get_shape3D.f90
@@ -404,35 +514,11 @@ $O/get_shape2D.o: constants.h get_shape2D.f90
 $O/hex_nodes.o: constants.h hex_nodes.f90
 	${FCCOMPILE_CHECK} -c -o $O/hex_nodes.o hex_nodes.f90
 
-$O/mesh_vertical.o: constants.h mesh_vertical.f90
-	${FCCOMPILE_CHECK} -c -o $O/mesh_vertical.o mesh_vertical.f90
-
 $O/netlib_specfun_erf.o: netlib_specfun_erf.f90
 	${FCCOMPILE_CHECK} -c -o $O/netlib_specfun_erf.o netlib_specfun_erf.f90
 
-$O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90
-	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_MR.o interpolate_gocad_block_MR.f90
-
-$O/interpolate_gocad_block_HR.o: constants.h interpolate_gocad_block_HR.f90
-	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_HR.o interpolate_gocad_block_HR.f90
-
-$O/salton_trough_gocad.o: constants.h salton_trough_gocad.f90
-	${FCCOMPILE_CHECK} -c -o $O/salton_trough_gocad.o salton_trough_gocad.f90
-
-$O/socal_model.o: constants.h socal_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/socal_model.o socal_model.f90
-
 $O/sort_array_coordinates.o: constants.h sort_array_coordinates.f90
 	${FCCOMPILE_CHECK} -c -o $O/sort_array_coordinates.o sort_array_coordinates.f90
-
-$O/aniso_model.o: constants.h aniso_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/aniso_model.o aniso_model.f90
-
-$O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_rho_estimate.o compute_rho_estimate.f90
-
-$O/hauksson_model.o: constants.h hauksson_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/hauksson_model.o hauksson_model.f90
 
 $O/save_arrays_solver.o: constants.h save_arrays_solver.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_arrays_solver.o save_arrays_solver.f90
@@ -443,35 +529,40 @@ $O/comp_source_time_function.o: constants.h comp_source_time_function.f90
 $O/read_topo_bathy_file.o: constants.h read_topo_bathy_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o read_topo_bathy_file.f90
 
-$O/read_moho_map.o: constants.h read_moho_map.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_moho_map.o read_moho_map.f90
-
-$O/write_seismograms.o: constants.h write_seismograms.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
-
 $O/lagrange_poly.o: constants.h lagrange_poly.f90
 	${FCCOMPILE_CHECK} -c -o $O/lagrange_poly.o lagrange_poly.f90
 
 $O/recompute_jacobian.o: constants.h recompute_jacobian.f90
 	${FCCOMPILE_CHECK} -c -o $O/recompute_jacobian.o recompute_jacobian.f90
 
+
 $O/create_regions_mesh.o: constants.h create_regions_mesh.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
+
+$O/create_mass_matrices.o: constants.h create_mass_matrices.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_mass_matrices.o create_mass_matrices.f90
+
+$O/get_absorbing_boundary.o: constants.h get_absorbing_boundary.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_absorbing_boundary.o get_absorbing_boundary.f90
+
+$O/get_coupling_surfaces.o: constants.h get_coupling_surfaces.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_coupling_surfaces.o get_coupling_surfaces.f90
+
+$O/get_model.o: constants.h get_model.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_model.o get_model.f90
+
+$O/get_MPI.o: constants.h get_MPI.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_MPI.o get_MPI.f90
+
+$O/save_moho_arrays.o: constants.h save_moho_arrays.f90
+	${FCCOMPILE_CHECK} -c -o $O/save_moho_arrays.o save_moho_arrays.f90
+
 
 $O/create_name_database.o: constants.h create_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o create_name_database.f90
 
 $O/create_serial_name_database.o: constants.h create_serial_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_serial_name_database.o create_serial_name_database.f90
-
-$O/define_subregions.o: constants.h define_subregions.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90
-
-$O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
-
-$O/read_arrays_buffers_solver.o: constants.h read_arrays_buffers_solver.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_arrays_buffers_solver.o read_arrays_buffers_solver.f90
 
 $O/define_derivation_matrices.o: constants.h define_derivation_matrices.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_derivation_matrices.o define_derivation_matrices.f90
@@ -485,17 +576,77 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 $O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
 
-$O/compute_forces.o: constants.h compute_forces.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_forces.o compute_forces.f90
-
 $O/combine_vol_data.o: constants.h combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90
 
 $O/combine_surf_data.o: constants.h combine_surf_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o combine_surf_data.f90
 
-$O/create_movie_GMT.o: constants.h create_movie_GMT.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_GMT.o create_movie_GMT.f90
+$O/prepare_assemble_MPI.o: constants.h prepare_assemble_MPI.f90
+	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o prepare_assemble_MPI.f90
+
+$O/PML_init.o: constants.h PML_init.f90
+	${FCCOMPILE_CHECK} -c -o $O/PML_init.o PML_init.f90
+
+
+
+
+
+###
+### all obsolete files ?
+###
+#--obsolete 
+#$O/mesh_vertical.o: constants.h mesh_vertical.f90
+#	${FCCOMPILE_CHECK} -c -o $O/mesh_vertical.o mesh_vertical.f90
+
+#--obsolete 
+#$O/get_absorb.o: constants.h get_absorb.f90
+#	${FCCOMPILE_CHECK} -c -o $O/get_absorb.o get_absorb.f90
+
+#--obsolete 
+#$O/interpolate_gocad_block_MR.o: constants.h interpolate_gocad_block_MR.f90
+#	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_MR.o interpolate_gocad_block_MR.f90
+
+#--obsolete 
+#$O/interpolate_gocad_block_HR.o: constants.h interpolate_gocad_block_HR.f90
+#	${FCCOMPILE_CHECK} -c -o $O/interpolate_gocad_block_HR.o interpolate_gocad_block_HR.f90
+
+#--obsolete 
+#$O/socal_model.o: constants.h socal_model.f90
+#	${FCCOMPILE_CHECK} -c -o $O/socal_model.o socal_model.f90
+
+# --obsolete
+#$O/define_subregions.o: constants.h define_subregions.f90
+#	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90
+
+# --obsolete
+#$O/define_subregions_heuristic.o: constants.h define_subregions_heuristic.f90
+#	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
+
+#--obsolete 
+#$O/read_moho_map.o: constants.h read_moho_map.f90
+#	${FCCOMPILE_CHECK} -c -o $O/read_moho_map.o read_moho_map.f90
+
+#--obsolete 
+#$O/compute_rho_estimate.o: constants.h compute_rho_estimate.f90
+#	${FCCOMPILE_CHECK} -c -o $O/compute_rho_estimate.o compute_rho_estimate.f90
+
+#--obsolete 
+#$O/hauksson_model.o: constants.h hauksson_model.f90
+#	${FCCOMPILE_CHECK} -c -o $O/hauksson_model.o hauksson_model.f90
+
+#--obsolete 
+#$O/salton_trough_gocad.o: constants.h salton_trough_gocad.f90
+#	${FCCOMPILE_CHECK} -c -o $O/salton_trough_gocad.o salton_trough_gocad.f90
+
+#--obsolete
+#$O/read_arrays_solver.o: constants.h OUTPUT_FILES/values_from_mesher.h read_arrays_solver.f90
+#	${FCCOMPILE_CHECK} -c -o $O/read_arrays_solver.o read_arrays_solver.f90
+
+#--obsolete
+#$O/read_arrays_buffers_solver.o: constants.h read_arrays_buffers_solver.f90
+#	${FCCOMPILE_CHECK} -c -o $O/read_arrays_buffers_solver.o read_arrays_buffers_solver.f90
+
 
 ###
 ### rule for the header file
@@ -508,31 +659,9 @@ $O/create_movie_GMT.o: constants.h create_movie_GMT.f90
 ### C files below
 ###
 
+$O/param_reader.o: param_reader.c
+	${CC} -c $(CFLAGS) -o $O/param_reader.o param_reader.c
+
 $O/write_c_binary.o: write_c_binary.c
-	cc -c -o $O/write_c_binary.o write_c_binary.c
+	${CC} -c $(CFLAGS) -o $O/write_c_binary.o write_c_binary.c
 
-###
-### additional rules for the Pyrized version
-###
-
-$O/misc.o: misc.c config.h
-	${MPICC} $(CFLAGS) -c $(PYTHON_CPPFLAGS) -o $O/misc.o misc.c
-
-$O/PyxParameters.o: PyxParameters.c config.h
-	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxParameters.o PyxParameters.c
-
-$O/PyxMeshfem.o: PyxMeshfem.c config.h
-	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxMeshfem.o PyxMeshfem.c
-
-$O/PyxSpecfem.o: PyxSpecfem.c config.h
-	${CC} -c $(CFLAGS) $(PYTHON_CPPFLAGS) -o $O/PyxSpecfem.o PyxSpecfem.c
-
-$O/trampoline.o: trampoline.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/trampoline.o ${FCFLAGS_f90} trampoline.f90
-
-# target to update the Pyrex-generated code
-# requires Pyrex:  http://www.cosc.canterbury.ac.nz/~greg/python/Pyrex/
-pyrex:
-	pyrexc PyxParameters.pyx -o PyxParameters.c
-	pyrexc PyxMeshfem.pyx -o PyxMeshfem.c
-	pyrexc PyxSpecfem.pyx -o PyxSpecfem.c

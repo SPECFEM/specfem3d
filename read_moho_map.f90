@@ -38,7 +38,7 @@
 
   double precision long,lat,depth_km
 
-  character(len=150) MOHO_MAP_FILE
+  character(len=256) MOHO_MAP_FILE
 
   imoho_depth(:,:) = 0
 

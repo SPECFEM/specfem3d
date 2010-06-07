@@ -100,9 +100,9 @@ if test x"$MPICC" = x; then
     MPICC=mpicc
 fi
 
-AC_ARG_VAR(LOCAL_PATH_IS_ALSO_GLOBAL, [files on a local path on each node are also seen as global with same path @<:@default=false@:>@])
+AC_ARG_VAR(LOCAL_PATH_IS_ALSO_GLOBAL, [files on a local path on each node are also seen as global with same path @<:@default=true@:>@])
 if test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x; then
-    LOCAL_PATH_IS_ALSO_GLOBAL=false
+    LOCAL_PATH_IS_ALSO_GLOBAL=true
 fi
 
 AC_ARG_VAR(PYTHON, [Python interpreter])
@@ -173,7 +173,7 @@ fi
 # Checks for library functions.
 
 
-AC_CONFIG_FILES([Makefile constants.h precision.h])
+AC_CONFIG_FILES([Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS])
 AC_OUTPUT
 
 

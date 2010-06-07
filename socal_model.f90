@@ -28,6 +28,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_gocad.h"
 
   integer idoubling
   double precision rho,vp,vs

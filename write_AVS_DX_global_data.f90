@@ -52,7 +52,7 @@
   integer npoin,numpoin
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! ------------------------------------
 

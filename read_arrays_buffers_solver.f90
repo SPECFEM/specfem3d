@@ -37,7 +37,7 @@
   integer npoin2D_xi,npoin2D_eta
   integer NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
 
-  character(len=150) LOCAL_PATH
+  character(len=256) LOCAL_PATH
 
   integer, dimension(NPOIN2DMAX_XMIN_XMAX) :: iboolleft_xi,iboolright_xi
   integer, dimension(NPOIN2DMAX_YMIN_YMAX) :: iboolleft_eta,iboolright_eta
@@ -47,7 +47,7 @@
   double precision xdummy,ydummy,zdummy
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

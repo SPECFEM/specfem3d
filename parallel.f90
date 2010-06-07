@@ -99,6 +99,29 @@
 !----
 !
 
+  subroutine bcast_all_cr(buffer, count)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  include "constants.h"  
+  include "precision.h"
+
+  integer count
+  real(kind=CUSTOM_REAL), dimension(count) :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,count,CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_cr
+
+!
+!----
+!
+
   subroutine bcast_all_dp(buffer, count)
 
   implicit none
@@ -186,6 +209,31 @@
                   0,MPI_COMM_WORLD,ier)
 
   end subroutine gather_all_cr
+
+!
+!----
+!
+
+  subroutine gather_all_all_cr(sendbuf, recvbuf, counts, NPROC)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer NPROC,counts
+  real(kind=CUSTOM_REAL), dimension(counts) :: sendbuf
+  real(kind=CUSTOM_REAL), dimension(counts,0:NPROC-1) :: recvbuf
+
+  integer ier
+
+  call MPI_ALLGATHER(sendbuf,counts,CUSTOM_MPI_TYPE,recvbuf,counts,CUSTOM_MPI_TYPE, &
+                 MPI_COMM_WORLD,ier)
+
+  end subroutine gather_all_all_cr
 
 !
 !----
@@ -350,6 +398,161 @@
 !----
 !
 
+  subroutine min_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  integer ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
+                  MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  end subroutine min_all_cr
+
+
+!
+!----
+!
+
+  subroutine min_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL):: sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
+                  MPI_MIN,MPI_COMM_WORLD,ier)
+
+  end subroutine min_all_all_cr
+
+!
+!----
+!
+!
+!
+!  subroutine min_all_all_dp(sendbuf, recvbuf)
+!
+!  implicit none
+!
+!! standard include of the MPI library
+!  include 'mpif.h'
+!  include "constants.h"
+!  include "precision.h"
+!
+!  double precision :: sendbuf, recvbuf
+!  integer ier
+!
+!  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
+!                  MPI_MIN,MPI_COMM_WORLD,ier)
+!
+!  end subroutine min_all_all_dp
+!
+!
+!----
+!
+
+  subroutine max_all_i(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer :: sendbuf, recvbuf
+  integer :: ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
+                  MPI_MAX,0,MPI_COMM_WORLD,ier)
+
+  end subroutine max_all_i
+
+!
+!----
+!
+
+  subroutine max_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL):: sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
+                  MPI_MAX,MPI_COMM_WORLD,ier)
+
+  end subroutine max_all_all_cr
+
+
+!
+!----
+!
+
+
+  subroutine max_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  double precision :: sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_DOUBLE_PRECISION, &
+                  MPI_MAX,MPI_COMM_WORLD,ier)
+
+  end subroutine max_all_all_dp
+
+
+!
+!----
+!
+
+  subroutine min_all_i(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer:: sendbuf, recvbuf
+  integer ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
+                  MPI_MIN,0,MPI_COMM_WORLD,ier)
+
+  end subroutine min_all_i
+
+!
+!----
+!
+
+
   subroutine sum_all_dp(sendbuf, recvbuf)
 
   implicit none
@@ -369,6 +572,27 @@
 !----
 !
 
+  subroutine sum_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  integer ier
+
+  call MPI_REDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
+                  MPI_SUM,0,MPI_COMM_WORLD,ier)
+
+  end subroutine sum_all_cr
+
+!
+!----
+!
+
   subroutine sum_all_i(sendbuf, recvbuf)
 
   implicit none
@@ -383,6 +607,44 @@
                   MPI_SUM,0,MPI_COMM_WORLD,ier)
 
   end subroutine sum_all_i
+
+!
+!----
+!
+
+  subroutine sum_all_all_i(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  integer sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_INTEGER, &
+                  MPI_SUM,MPI_COMM_WORLD,ier)
+
+  end subroutine sum_all_all_i
+
+!
+!----
+!
+
+  subroutine any_all_l(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  logical sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_LOGICAL, &
+                  MPI_LOR,MPI_COMM_WORLD,ier)
+
+  end subroutine any_all_l
 
 !
 !----
@@ -446,9 +708,6 @@
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
 
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ier
 
   call MPI_ISSEND(sendbuf(1),sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
@@ -472,9 +731,6 @@
 
   integer recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
-
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
 
   integer ier
 
@@ -500,9 +756,6 @@
   integer sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ier
 
   call MPI_ISSEND(sendbuf(1),sendcount,MPI_INTEGER,dest,sendtag, &
@@ -526,10 +779,6 @@
 
   integer recvcount, dest, recvtag, req
   integer, dimension(recvcount) :: recvbuf
-
-! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   integer ier
 
   call MPI_IRECV(recvbuf(1),recvcount,MPI_INTEGER,dest,recvtag, &
@@ -537,6 +786,97 @@
 
   end subroutine irecv_i
 
+
+!
+!----
+!
+
+  subroutine recv_i(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  integer dest,recvtag
+  integer recvcount
+  !integer recvbuf
+  integer,dimension(recvcount):: recvbuf
+  integer req(MPI_STATUS_SIZE)
+  integer ier
+  
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag,MPI_COMM_WORLD,req,ier)
+
+  end subroutine recv_i
+
+!
+!----
+!
+
+  subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  include "constants.h"
+  include "precision.h"
+  
+  integer recvcount,dest,recvtag
+  real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
+  integer req(MPI_STATUS_SIZE)
+  integer ier
+  
+  call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag,MPI_COMM_WORLD,req,ier)
+
+
+  end subroutine recvv_cr
+
+
+!
+!----
+!
+
+  subroutine send_i(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  !integer sendbuf,sendcount,dest,sendtag
+  integer dest,sendtag
+  integer sendcount
+  integer,dimension(sendcount):: sendbuf
+  integer ier
+  
+  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,MPI_COMM_WORLD,ier)
+
+  end subroutine send_i
+
+
+!
+!----
+!
+
+  subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  
+  include "constants.h"
+  include "precision.h"
+
+  integer sendcount,dest,sendtag
+  real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
+  integer ier
+
+  call MPI_SEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag,MPI_COMM_WORLD,ier)
+
+  end subroutine sendv_cr
 !
 !----
 !
@@ -555,5 +895,5 @@
   integer :: ier
 
   call mpi_wait(req,req_mpi_status,ier)
-  
+
   end subroutine wait_req

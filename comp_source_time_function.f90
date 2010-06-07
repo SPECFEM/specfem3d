@@ -33,8 +33,57 @@
 
   double precision, external :: netlib_specfun_erf
 
-! quasi Heaviside, small Gaussian moment-rate tensor with hdur
+  ! quasi Heaviside, small Gaussian moment-rate tensor with hdur
   comp_source_time_function = 0.5d0*(1.0d0 + netlib_specfun_erf(t/hdur))
 
   end function comp_source_time_function
 
+
+!
+!-------------------------------------------------------------------------------------------------
+! 
+ 
+  double precision function comp_source_time_function_gauss(t,hdur)
+
+  implicit none
+
+  include "constants.h"
+
+  double precision :: t,hdur
+  double precision :: hdur_decay
+  double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
+  
+  ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
+  hdur_decay = hdur
+  
+  ! this here uses a stronger gaussian decay rate (empirical value) to avoid non-zero onset times;
+  ! however, it should mimik a triangle source time function...
+  !hdur_decay = hdur  / SOURCE_DECAY_STRONG  
+
+  ! note: a nonzero time to start the simulation with would lead to more high-frequency noise 
+  !          due to the (spatial) discretization of the point source on the mesh
+  
+  ! gaussian  
+  comp_source_time_function_gauss = exp(-(t/hdur_decay)**2)/(sqrt(PI)*hdur_decay)
+
+  end function comp_source_time_function_gauss
+ 
+!
+!-------------------------------------------------------------------------------------------------
+! 
+ 
+  double precision function comp_source_time_function_rickr(t,f0)
+
+  implicit none
+
+  include "constants.h"
+
+  double precision t,f0
+
+  ! ricker 
+  comp_source_time_function_rickr = (1.d0 - 2.d0*PI*PI*f0*f0*t*t ) &
+                                    * exp( -PI*PI*f0*f0*t*t )
+                                                    
+  end function comp_source_time_function_rickr
+ 

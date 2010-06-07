@@ -73,7 +73,7 @@
           USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -87,7 +87,7 @@
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
 ! processor identification
-  character(len=150) prname,prname_other
+  character(len=256) prname,prname_other
 
 ! ************** PROGRAM STARTS HERE **************
 

@@ -31,6 +31,8 @@
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
+!
+! returns: sorted indexing array (ibool),  reordering array (iglob) & number of global points (nglob)
 
   implicit none
 

@@ -8,6 +8,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_gocad.h"
 
   double precision vp_block_gocad_MR(0:NX_GOCAD_MR-1,0:NY_GOCAD_MR-1,0:NZ_GOCAD_MR-1)
   double precision VP_MIN_GOCAD,VP_VS_RATIO_GOCAD_TOP,VP_VS_RATIO_GOCAD_BOTTOM,THICKNESS_TAPER_BLOCK_MR

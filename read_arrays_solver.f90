@@ -37,16 +37,16 @@
 
   include "constants.h"
 
-  include "OUTPUT_FILES/values_from_mesher.h"
+!  include "OUTPUT_FILES/values_from_mesher.h"
 
   integer myrank
 
   integer NSPEC_AB
   integer NGLOB_AB
-  
+
   logical OCEANS
 
-  character(len=150) LOCAL_PATH
+  character(len=256) LOCAL_PATH
 
 ! coordinates in single precision
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
@@ -81,7 +81,7 @@
   integer idoubling(NSPEC_AB)
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! create the name for the database of the current slide and region
   call create_name_database(prname,myrank,LOCAL_PATH)

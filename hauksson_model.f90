@@ -28,6 +28,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_gocad.h"
 
 !! DK DK UGLY one day, we should clarify the issue of merging Hauksson's Moho
 !! DK DK UGLY with our Lupei Moho. Should not be a big issue because in
