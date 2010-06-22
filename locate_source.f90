@@ -33,7 +33,7 @@
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
-                 TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                 UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                  PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic, &
@@ -46,7 +46,7 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical TOPOGRAPHY,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
+  logical PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   double precision DT
 
@@ -782,31 +782,31 @@
         write(IMAIN,*)
         write(IMAIN,*) 'original (requested) position of the source:'
         write(IMAIN,*)
-        write(IMAIN,*) '      latitude: ',lat(isource)
-        write(IMAIN,*) '     longitude: ',long(isource)
+        write(IMAIN,*) '          latitude: ',lat(isource)
+        write(IMAIN,*) '         longitude: ',long(isource)
         write(IMAIN,*)
         if( SUPPRESS_UTM_PROJECTION ) then
-          write(IMAIN,*) '         x: ',utm_x_source(isource)
-          write(IMAIN,*) '         y: ',utm_y_source(isource)
+          write(IMAIN,*) '             x: ',utm_x_source(isource)
+          write(IMAIN,*) '             y: ',utm_y_source(isource)
         else
-          write(IMAIN,*) '     UTM x: ',utm_x_source(isource)
-          write(IMAIN,*) '     UTM y: ',utm_y_source(isource)        
+          write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
+          write(IMAIN,*) '         UTM y: ',utm_y_source(isource)        
         endif
-        write(IMAIN,*) '     depth: ',depth(isource),' km'
-        !if(TOPOGRAPHY) write(IMAIN,*) 'topo elevation: ',elevation(isource),' m'
+        write(IMAIN,*) '         depth: ',depth(isource),' km'
+        write(IMAIN,*) 'topo elevation: ',elevation(isource)
 
         write(IMAIN,*)
         write(IMAIN,*) 'position of the source that will be used:'
         write(IMAIN,*)
         if( SUPPRESS_UTM_PROJECTION ) then
-          write(IMAIN,*) '         x: ',x_found_source(isource)
-          write(IMAIN,*) '         y: ',y_found_source(isource)
+          write(IMAIN,*) '             x: ',x_found_source(isource)
+          write(IMAIN,*) '             y: ',y_found_source(isource)
         else
-          write(IMAIN,*) '     UTM x: ',x_found_source(isource)
-          write(IMAIN,*) '     UTM y: ',y_found_source(isource)        
+          write(IMAIN,*) '         UTM x: ',x_found_source(isource)
+          write(IMAIN,*) '         UTM y: ',y_found_source(isource)        
         endif
-        write(IMAIN,*) '     depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
-        write(IMAIN,*) '         z: ',z_found_source(isource)
+        write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
+        write(IMAIN,*) '             z: ',z_found_source(isource)
         write(IMAIN,*)
 
         ! display error in location estimate

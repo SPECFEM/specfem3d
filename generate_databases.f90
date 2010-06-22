@@ -220,7 +220,7 @@
 
   double precision :: DT,HDUR_MOVIE
 
-  logical :: TOPOGRAPHY,ATTENUATION,USE_OLSEN_ATTENUATION, &
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
           OCEANS, SAVE_FORWARD
   logical :: ANISOTROPY,ABSORBING_CONDITIONS,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
@@ -248,11 +248,11 @@
   character(len=256) prname
   integer :: dummy_node
   integer :: dummy_elmnt
-  integer :: ispec, inode, num_interface, ie,imat !pll
+  integer :: ispec, inode, num_interface,ie,imat,iface,icorner
   integer :: nnodes_ext_mesh, nelmnts_ext_mesh
   integer  :: num_interfaces_ext_mesh
   integer  :: max_interface_size_ext_mesh
-  integer  :: nmat_ext_mesh, nundefMat_ext_mesh   !pll
+  integer  :: nmat_ext_mesh, nundefMat_ext_mesh   
   integer, dimension(:), allocatable  :: my_neighbours_ext_mesh
   integer, dimension(:), allocatable  :: my_nelmnts_neighbours_ext_mesh
   integer, dimension(:,:,:), allocatable  :: my_interfaces_ext_mesh
@@ -263,19 +263,17 @@
   integer, dimension(:,:), allocatable :: mat_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
-  
-  ! pll
-  double precision, dimension(:,:), allocatable :: materials_ext_mesh  
+
+! boundaries and materials
+  integer  :: ispec2D, boundary_number
+  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
+  character (len=30), dimension(:,:), allocatable :: undef_mat_prop   
   integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable  :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
+  double precision, dimension(:,:), allocatable :: materials_ext_mesh 
 
-  ! absorbing boundary
-  integer  :: ispec2D, boundary_number
-  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
-    
-  ! moho (optional)  
+! moho (optional)  
   integer :: nspec2D_moho_ext
   integer, dimension(:), allocatable  :: ibelm_moho
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
@@ -366,7 +364,7 @@
 ! reads DATA/Par_file 
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,TOPOGRAPHY,LOCAL_PATH,NSOURCES, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
                         OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
@@ -429,12 +427,6 @@
   if(myrank == 0) then
 ! chris: I am not sure if we should suppress the following. topography should appear in the external mesh
 ! leave it for now
-    write(IMAIN,*)
-    if(TOPOGRAPHY) then
-      write(IMAIN,*) 'incorporating surface topography'
-    else
-      write(IMAIN,*) 'no surface topography'
-    endif
 
     write(IMAIN,*)
     if(SUPPRESS_UTM_PROJECTION) then
@@ -488,7 +480,7 @@
 
   allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
-  if(TOPOGRAPHY .or. OCEANS) then
+  if(OCEANS) then
 
 ! for Southern California
     NX_TOPO = NX_TOPO_SOCAL
@@ -821,19 +813,29 @@
   NGLOB_AB = nglob
 
 ! print min and max of topography included
-  if(TOPOGRAPHY) then
+  min_elevation = HUGEVAL
+  max_elevation = -HUGEVAL
+  do iface = 1,nspec2D_top_ext
+     do icorner = 1,NGNOD2D
+        inode = nodes_ibelm_top(icorner,iface)
+        if (nodes_coords_ext_mesh(3,inode) < min_elevation) then
+           min_elevation = nodes_coords_ext_mesh(3,inode)
+        end if
+        if (nodes_coords_ext_mesh(3,inode) > max_elevation) then
+           max_elevation = nodes_coords_ext_mesh(3,inode) 
+        end if
+     end do
+  end do
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
-    call min_all_dp(min_elevation,min_elevation_all)
-    call max_all_dp(max_elevation,max_elevation_all)
-
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
-      write(IMAIN,*)
-    endif
+  call min_all_dp(min_elevation,min_elevation_all)
+  call max_all_dp(max_elevation,max_elevation_all)
+  
+  if(myrank == 0) then
+     write(IMAIN,*)
+     write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
+     write(IMAIN,*)
   endif
-
 
 ! clean-up
   deallocate(xstore,ystore,zstore)

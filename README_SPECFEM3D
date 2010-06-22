@@ -220,7 +220,6 @@ MESHER (generate_databases):
   MODEL                  ! Earth model to use
 
   OCEANS                 ! to incorporate the effects of the oceans (cheap)
-  TOPOGRAPHY             ! to add topography and bathymetry (no cost)
   ATTENUATION            ! to include attenuation (fairly expensive)
   USE_OLSEN_ATTENUATION  ! to use Kim Olsen's scaling instead of constant Q
 
