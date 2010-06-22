@@ -32,7 +32,7 @@ contains
         LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
         INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
         CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings,DT)
+        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   implicit none
 
@@ -80,9 +80,6 @@ contains
   double precision, dimension(:,:), pointer :: material_properties
 
   integer i,ireg,imat
-
-! anticipated time step
-  double precision DT
 
 ! open parameter file
   open(unit=IIN,file='DATA/Par_file',status='old',action='read')
@@ -142,10 +139,6 @@ contains
   call read_value_logical(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
   if(err_occurred() /= 0) return
   call read_value_logical(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'mesher.CREATE_DX_FILES')
-  if(err_occurred() /= 0) return
-
-
-  call read_value_double_precision(IIN,IGNORE_JUNK,DT, 'mesher.NPROC_DT')
   if(err_occurred() /= 0) return
 
 ! file in which we store the databases

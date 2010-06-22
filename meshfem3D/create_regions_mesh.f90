@@ -39,7 +39,7 @@ contains
        nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
        myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
        CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-       USE_REGULAR_MESH,NDOUBLINGS,ner_doublings,delta_t)
+       USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
     ! create the different regions of the mesh
 
@@ -65,9 +65,6 @@ contains
 
     integer NDOUBLINGS
     integer, dimension(2) :: ner_doublings
-
-
-    double precision delta_t
 
     double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
     double precision horiz_size,vert_size
@@ -196,147 +193,6 @@ contains
     allocate(xp(npointot))
     allocate(yp(npointot))
     allocate(zp(npointot))
-
-
-
-    !--- apply heuristic rule to modify doubling regions to balance angles
-
-
-    !   if(APPLY_HEURISTIC_RULE .and. .not. USE_REGULAR_MESH) then
-
-    !      stop 'pas encore implemente'
-
-    ! ! define number of subregions affected by heuristic rule in doubling regions
-    !   nsubregions = 8
-
-    !   do isubregion = 1,nsubregions
-
-    ! ! define shape of elements for heuristic
-    !     call define_subregions_heuristic(myrank,isubregion,iaddx,iaddy,iaddz, &
-    !          nblayers,ner_layer, &
-    !          ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
-    !          itype_element,npx,npy)
-    !          !              NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM)
-
-    ! ! loop on all the mesh points in current subregion
-    !   do ir = ir1,ir2,dir
-    !     do iy = iy1,iy2,diy
-    !       do ix = ix1,ix2,dix
-
-    ! ! this heuristic rule is only valid for 8-node elements
-    ! ! it would not work in the case of 27 nodes
-
-    ! !----
-    !     if(itype_element == ITYPE_UNUSUAL_1) then
-
-    ! ! side 1
-    !       horiz_size = xgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) &
-    !                  - xgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       xgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
-    !          xgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + horiz_size * MAGIC_RATIO
-
-    !       vert_size = zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) &
-    !                  - zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
-    !          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! ! side 2
-    !       horiz_size = xgrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
-    !                  - xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
-    !       xgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
-    !          xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + horiz_size * MAGIC_RATIO
-
-    !       vert_size = zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) &
-    !                  - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
-    !       zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
-    !          zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! !----
-    !     else if(itype_element == ITYPE_UNUSUAL_1p) then
-
-    ! ! side 1
-    !       horiz_size = xgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) &
-    !                  - xgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       xgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
-    !          xgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + horiz_size * (1. - MAGIC_RATIO)
-
-    !       vert_size = zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) &
-    !                  - zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
-    !          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! ! side 2
-    !       horiz_size = xgrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
-    !                  - xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
-    !       xgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
-    !          xgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + horiz_size * (1. - MAGIC_RATIO)
-
-    !       vert_size = zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) &
-    !                  - zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4))
-    !       zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
-    !          zgrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! !----
-    !     else if(itype_element == ITYPE_UNUSUAL_4) then
-
-    ! ! side 1
-    !       horiz_size = ygrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
-    !                  - ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
-    !       ygrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
-    !          ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + horiz_size * (1. - MAGIC_RATIO)
-
-    !       vert_size = zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) &
-    !                  - zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
-    !       zgrid(ir+iar*iaddz(7),ix+iax*iaddx(7),iy+iay*iaddy(7)) = &
-    !          zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! ! side 2
-    !       horiz_size = ygrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) &
-    !                  - ygrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       ygrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
-    !          ygrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + horiz_size * (1. - MAGIC_RATIO)
-
-    !       vert_size = zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) &
-    !                  - zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       zgrid(ir+iar*iaddz(8),ix+iax*iaddx(8),iy+iay*iaddy(8)) = &
-    !          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! !----
-    !     else if(itype_element == ITYPE_UNUSUAL_4p) then
-
-    ! ! side 1
-    !       horiz_size = ygrid(ir+iar*iaddz(3),ix+iax*iaddx(3),iy+iay*iaddy(3)) &
-    !                  - ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
-    !       ygrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
-    !          ygrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + horiz_size * MAGIC_RATIO
-
-    !       vert_size = zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) &
-    !                  - zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2))
-    !       zgrid(ir+iar*iaddz(6),ix+iax*iaddx(6),iy+iay*iaddy(6)) = &
-    !          zgrid(ir+iar*iaddz(2),ix+iax*iaddx(2),iy+iay*iaddy(2)) + vert_size * MAGIC_RATIO / 0.50
-
-    ! ! side 2
-    !       horiz_size = ygrid(ir+iar*iaddz(4),ix+iax*iaddx(4),iy+iay*iaddy(4)) &
-    !                  - ygrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       ygrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
-    !          ygrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + horiz_size * MAGIC_RATIO
-
-    !       vert_size = zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) &
-    !                  - zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1))
-    !       zgrid(ir+iar*iaddz(5),ix+iax*iaddx(5),iy+iay*iaddy(5)) = &
-    !          zgrid(ir+iar*iaddz(1),ix+iax*iaddx(1),iy+iay*iaddy(1)) + vert_size * MAGIC_RATIO / 0.50
-
-    !    endif
-
-    ! enddo
-    ! enddo
-    ! enddo
-
-    ! enddo
-
-    ! endif
-
-    !---
 
     ! generate the elements in all the regions of the mesh
     ispec = 0
@@ -528,7 +384,7 @@ contains
          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
     VP_MAX = maxval(material_properties(:,2))
-    call check_mesh_quality(myrank,VP_MAX,delta_t,nglob,nspec,nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool)
+    call check_mesh_quality(myrank,VP_MAX,nglob,nspec,nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool)
 
       call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta,NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
            ibool,nodes_coords,true_material_num,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&

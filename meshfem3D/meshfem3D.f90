@@ -196,8 +196,6 @@
 
   integer, dimension(:,:,:,:), allocatable :: ibool
  
-  double precision DT
-
 ! arrays with the mesh in double precision
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
@@ -340,7 +338,7 @@
         LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
         INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
         CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings,DT)
+        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
@@ -731,7 +729,7 @@ call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
            NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
            myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
            CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings,DT)
+           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if(myrank == 0) then
 
