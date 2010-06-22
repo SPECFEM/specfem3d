@@ -33,9 +33,6 @@ NZ_DOUGLING_2                   = 0
 CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 
-# anticipated time step for simulation (in order to check the stability condition)
-DT                              = 0.01
-
 # path to store the databases files 
 LOCAL_PATH                      = OUTPUT_FILES
 

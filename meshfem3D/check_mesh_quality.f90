@@ -36,7 +36,7 @@
 
 
 
-subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
+subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
   implicit none
 
@@ -44,7 +44,6 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
 
   integer :: NPOIN                    ! number of nodes
   integer :: NSPEC 
-  double precision :: delta_t          ! arbitrary, initial guess
   double precision :: VP_MAX           ! maximum vp in volume block id 3 
 
   !------------------------------------------------------------------------------------------------
@@ -71,6 +70,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
   double precision :: distmin_MPI,distmax_MPI
 
   ! for stability
+  double precision :: dt_suggested,dt_suggested_max,dt_suggested_max_MPI
   double precision :: stability,stability_min,stability_max,max_CFL_stability_limit
   double precision :: stability_MPI,stability_min_MPI,stability_max_MPI,max_CFL_stability_limit_MPI
 
@@ -113,6 +113,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
   diagonal_aspect_ratio_max = - HUGEVAL
   stability_max = - HUGEVAL
   distance_max = - HUGEVAL
+  dt_suggested_max = HUGEVAL
 
   ispec_min_edge_length = -1
   ispec_max_edge_length = -1
@@ -120,7 +121,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
   ! loop on all the elements
   do ispec = 1,NSPEC
 
-     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delta_t, &
+     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_suggested, &
           equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
      ! store element number in which the edge of minimum or maximum length is located
@@ -139,6 +140,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
      edge_aspect_ratio_max = max(edge_aspect_ratio_max,edge_aspect_ratio)
      diagonal_aspect_ratio_max = max(diagonal_aspect_ratio_max,diagonal_aspect_ratio)
      stability_max = max(stability_max,stability)
+     dt_suggested_max = min(dt_suggested_max,dt_suggested)
      distance_max = max(distance_max,distmax)
 
   enddo
@@ -155,7 +157,9 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
   skewness_max_rank = int(buf_maxloc_recv(2))
 
 
-  call max_all_dp(stability_max,stability_max_MPI)
+  call max_all_dp(stability,stability_max_MPI)
+  call min_all_dp(dt_suggested_max,dt_suggested_max_MPI)
+
   call max_all_dp(edge_aspect_ratio_max,edge_aspect_ratio_max_MPI)
   call max_all_dp(diagonal_aspect_ratio_max,diagonal_aspect_ratio_max_MPI)
   
@@ -192,8 +196,10 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
   write(IMAIN,*)
   write(IMAIN,*) 'maximum length of an edge in the whole mesh (m) = ',distance_max_MPI!,' in element ',ispec_max_edge_length
   write(IMAIN,*)
-  write(IMAIN,*) 'max equiangle skewness = ',equiangle_skewness_max_MPI,' in element ',ispec_max_skewness_MPI, &
+  write(IMAIN,*) '***'
+  write(IMAIN,*) '*** max equiangle skewness = ',equiangle_skewness_max_MPI,' in element ',ispec_max_skewness_MPI, &
        ' of slice ',skewness_max_rank
+  write(IMAIN,*) '***'
   ! write(IMAIN,*) 'min equiangle skewness = ',equiangle_skewness_min
   write(IMAIN,*)
   write(IMAIN,*) 'max deviation angle from a right angle (90 degrees) is therefore = ',90.*equiangle_skewness_max_MPI
@@ -207,8 +213,13 @@ subroutine check_mesh_quality(myrank,VP_MAX,delta_t,NPOIN,NSPEC,x,y,z,ibool)
   write(IMAIN,*) 'max diagonal aspect ratio = ',diagonal_aspect_ratio_max_MPI
   ! write(IMAIN,*) 'min diagonal aspect ratio = ',diagonal_aspect_ratio_min
   write(IMAIN,*)
-  write(IMAIN,*) 'max stability = ',stability_max_MPI
-  write(IMAIN,*) 'computed using VP_MAX = ',VP_MAX
+  !write(IMAIN,*) 'max stability = ',stability_max_MPI
+  write(IMAIN,*) '***'
+  write(IMAIN,'(a50,f13.8)') ' *** Maximum suggested time step for simulation = ',dt_suggested_max_MPI
+  write(IMAIN,*) '***'
+  write(IMAIN,*) '*** max stability = ',stability_max_MPI
+  write(IMAIN,*) '*** computed using VP_MAX = ',VP_MAX
+  write(IMAIN,*) '***'
   ! write(IMAIN,*) 'min stability = ',stability_min
 
   ! max stability CFL value is different in 2D and in 3D
@@ -247,7 +258,7 @@ end if
   ! loop on all the elements
   do ispec = 1,NSPEC
 
-     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delta_t, &
+     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_suggested, &
           equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
      ! store skewness in histogram
@@ -324,7 +335,7 @@ end subroutine check_mesh_quality
 
 ! create mesh quality data for a given 3D spectral element
 
-subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delta_t, &
+subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_suggested, &
      equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
 
   implicit none
@@ -348,7 +359,7 @@ subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delt
   double precision equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
 
   ! for stability
-  double precision :: stability,VP_MAX,delta_t
+  double precision :: stability,VP_MAX,dt_suggested
 
   ! maximum polynomial degree for which we can compute the stability condition
   integer, parameter :: NGLL_MAX_STABILITY = 15
@@ -470,7 +481,10 @@ subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,delt
   ! compute edge aspect ratio
   edge_aspect_ratio = distmax / distmin
 
-  stability = delta_t * VP_MAX / (distmin * percent_GLL(true_NGLLX))
+  !stability = delta_t * VP_MAX / (distmin * percent_GLL(true_NGLLX))
+
+  dt_suggested = ((1.d0 - 0.02d0)*0.48d0) * (distmin * percent_GLL(true_NGLLX)) / VP_MAX
+  stability = dt_suggested * VP_MAX / (distmin * percent_GLL(true_NGLLX))
 
   ! compute diagonal aspect ratio
   dist1 = sqrt((xelm(5) - xelm(4))**2 + (yelm(5) - yelm(4))**2 + (zelm(5) - zelm(4))**2)
