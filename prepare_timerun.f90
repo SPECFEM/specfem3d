@@ -48,13 +48,6 @@
   if(myrank == 0) then
 
     write(IMAIN,*)
-    if(TOPOGRAPHY) then
-      write(IMAIN,*) 'incorporating surface topography'
-    else
-      write(IMAIN,*) 'no surface topography'
-    endif
-
-    write(IMAIN,*)
     if(ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
       if(USE_OLSEN_ATTENUATION) then

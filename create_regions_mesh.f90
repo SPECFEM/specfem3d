@@ -162,7 +162,7 @@ subroutine create_regions_mesh_ext(ibool, &
   
   integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
 
-!pll
+! material properties
   integer :: nmat_ext_mesh,nundefMat_ext_mesh 
   double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh  
   character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
@@ -475,7 +475,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), &
           dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
 
-! pll 2D shape functions and their derivatives
+! 2D shape functions and their derivatives
   allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ), &
           shape2D_y(NGNOD2D,NGLLX,NGLLZ), &
           shape2D_bottom(NGNOD2D,NGLLX,NGLLY), &
@@ -491,7 +491,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
           wgllwgll_yz(NGLLY,NGLLZ),stat=ier)  
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! pll Stacey
+! Stacey
   allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec), &
           rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
@@ -499,7 +499,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 ! array with model density
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec), &
           kappastore(NGLLX,NGLLY,NGLLZ,nspec), &
-          mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) !pll
+          mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) 
           !vpstore(NGLLX,NGLLY,NGLLZ,nspec), &
           !vsstore(NGLLX,NGLLY,NGLLZ,nspec),          
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
@@ -625,7 +625,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
 ! get the 3-D shape functions
   call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll)
 
-! pll get the 2-D shape functions
+! get the 2-D shape functions
   call get_shape2D(myrank,shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ)
   call get_shape2D(myrank,shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ)
   call get_shape2D(myrank,shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY)
@@ -809,7 +809,7 @@ end subroutine crm_ext_setup_indexing
 !
 
 
-!pll
+!
 ! subroutine interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
 
 ! implicit none

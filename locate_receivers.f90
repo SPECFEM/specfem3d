@@ -31,7 +31,7 @@
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
                  NPROC,utm_x_source,utm_y_source, &
-                 TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                 UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                  iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
@@ -39,7 +39,7 @@
 
   include "constants.h"
 
-  logical TOPOGRAPHY,SUPPRESS_UTM_PROJECTION
+  logical SUPPRESS_UTM_PROJECTION
 
   integer NPROC,UTM_PROJECTION_ZONE
 

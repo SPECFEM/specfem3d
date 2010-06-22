@@ -102,7 +102,7 @@ subroutine setup_sources()
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+          UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
           PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
           ispec_is_acoustic,ispec_is_elastic, &
@@ -322,7 +322,7 @@ subroutine setup_receivers()
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
             NPROC,utm_x_source(1),utm_y_source(1), &
-            TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+            UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
             iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
             num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
