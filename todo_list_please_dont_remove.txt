@@ -2,6 +2,8 @@
 To-do list for SPECFEM3D_SESAME, by Dimitri Komatitsch
 ------------------------------------------------------
 
+- update the manual before the first official release of version 2.0
+
 - For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back;
 that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it. 
 
