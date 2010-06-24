@@ -10,26 +10,23 @@ step-by-step tutorial:
 
 1. configure package:
    
-   - From the SPECFEM3D_SESAME root directory SPECFEM3D_SESAME/
+   - From the SPECFEM3D root directory SPECFEM3D/
      configure the package, e.g. using intel's ifort compiler:
-     > cd SPECFEM3D_SESAME
+     > cd SPECFEM3D
      > ./configure F90=ifort  
 
      If successful, this will generate the files:
      Makefile, constants.h, and precision.h, among others
 
-   - make a directory for the databases
-     > mkdir DATABASES_MPI
-
-   - copy two run scripts from SPECFEM3D_SESAME/UTILS/Cluster/
-     into SPECFEM3D_SESAME/, e.g.,
+   - copy two run scripts from SPECFEM3D/UTILS/Cluster/
+     into SPECFEM3D/, e.g.,
      pbs/go_generate_databases_pbs.bash
      pbs/go_solver_pbs.bash
  
 
 2. create mesh:
 
-   - change to the examples directory SPECFEM3D_SESAME/EXAMPLES/homogeneous_halfspace:
+   - change to the examples directory SPECFEM3D/EXAMPLES/homogeneous_halfspace:
      > cd EXAMPLES/homogeneous_halfspace
 
    - open the cubit GUI:
@@ -50,10 +47,11 @@ step-by-step tutorial:
         MESH/nodes_coords_file
         MESH/nummaterial_velocity_file
      
+     the cubit graphics window should show a mesh similar to the file homogeneous.png
 
 3. decompose mesh files:
 
-   - compile decomposer in directory SPECFEM3D_SESAME/decompose_mesh_SCOTCH/:
+   - compile decomposer in directory SPECFEM3D/decompose_mesh_SCOTCH/:
      > make
 
      NOTE 1: check that the two scotch libraries are properly specified in Makefile
@@ -70,11 +68,8 @@ step-by-step tutorial:
 
 4. generate databases:
 
-   - copy three files -- Par_file CMTSOLUTION STATIONS -- from
-      SPECFEM3D_SESAME/EXAMPLES/homogeneous_halfspace/ to SPECFEM3D_SESAME/DATA/
-
-   - compile generate_databases from SPECFEM3D_SESAME/ :    
-     > cd SPECFEM3D_SESAME
+   - compile generate_databases from SPECFEM3D/ :    
+     > cd SPECFEM3D
      > make xgenerate_databases
      
    - submit job script
@@ -89,6 +84,9 @@ step-by-step tutorial:
 
 5. run simulation:
 
+   - copy three files -- Par_file CMTSOLUTION STATIONS -- from
+      SPECFEM3D/EXAMPLES/homogeneous_halfspace/ to SPECFEM3D/DATA/
+
    - compile specfem3D:
      > make xspecfem3D
       
@@ -102,14 +100,14 @@ step-by-step tutorial:
 
    - when the job is complete, you should have 3 sets (semd,semv,sema)
      of 672 (ls -1 *semd | wc) in the directory OUTPUT_FILES,
-     as well as 11 timestamp****** files
+     as well as 3 timestamp****** files
 
 
 6. check with 6 reference seismograms in 
-      SPECFEM3D_SESAME/EXAMPLES/homogeneous_halfspace/REF_SEIS/    
+      SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS/    
 
    - execute gnuplot script
-     > cd SPECFEM3D_SESAME/EXAMPLES/homogeneous_halfspace/REF_SEIS 
+     > cd SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS 
      > gnuplot
 
          gnuplot> load "X1-50.BHZ.gnuplot"
@@ -130,7 +128,7 @@ step-by-step tutorial:
          gnuplot> quit
 
 
-7. plot your output seismograms in SPECFEM3D_SESAME/OUTPUT_FILES/
+7. plot your output seismograms in SPECFEM3D/OUTPUT_FILES/
 
    - copy gnuplot script X1-50.BHZ.gnuplot to OUTPUT_FILES/
    - execute same commands as above
