@@ -93,6 +93,7 @@ libspecfem_a_OBJECTS = \
 	$O/generate_databases.o \
 	$O/model_external_values.o \
 	$O/model_aniso.o \
+	$O/model_tomography.o \
 	$O/netlib_specfun_erf.o \
 	$O/param_reader.o \
 	$O/prepare_assemble_MPI.o \
@@ -391,6 +392,8 @@ $O/parallel.o: constants.h parallel.f90
 $O/model_external_values.o: constants.h model_external_values.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
 
+$O/model_tomography.o: constants.h model_tomography.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/model_tomography.o model_tomography.f90
 
 ###
 ### serial compilation without optimization
