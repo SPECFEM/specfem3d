@@ -26,7 +26,7 @@
 module create_regions_mesh_ext_par
 
   include 'constants.h'
-  
+
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
@@ -46,8 +46,8 @@ module create_regions_mesh_ext_par
     etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
 
 ! for model density, kappa, mu
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore  
-  
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
+
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
@@ -56,7 +56,7 @@ module create_regions_mesh_ext_par
   integer :: NGLOB_OCEAN
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
-! attenuation 
+! attenuation
   integer, dimension(:,:,:,:), allocatable :: iflag_attenuation_store
 
 ! 2D shape functions and their derivatives, weights
@@ -101,7 +101,7 @@ module create_regions_mesh_ext_par
 
 ! name of the database file
   character(len=256) prname
-  
+
 end module create_regions_mesh_ext_par
 
 !
@@ -133,7 +133,7 @@ subroutine create_regions_mesh_ext(ibool, &
 
 ! create the different regions of the mesh
 
-  use create_regions_mesh_ext_par  
+  use create_regions_mesh_ext_par
   implicit none
   !include "constants.h"
 
@@ -158,15 +158,15 @@ subroutine create_regions_mesh_ext(ibool, &
   integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
 ! static memory size needed by the solver
-  double precision :: max_static_memory_size 
-  
+  double precision :: max_static_memory_size
+
   integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
 
 ! material properties
-  integer :: nmat_ext_mesh,nundefMat_ext_mesh 
-  double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh  
+  integer :: nmat_ext_mesh,nundefMat_ext_mesh
+  double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh
   character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
-  
+
 !  double precision, external :: materials_ext_mesh
 
 ! MPI communication
@@ -179,14 +179,14 @@ subroutine create_regions_mesh_ext(ibool, &
 
 ! absorbing boundaries
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
-  integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
+  integer, dimension(nspec2D_xmin)  :: ibelm_xmin
   integer, dimension(nspec2D_xmax)  :: ibelm_xmax
   integer, dimension(nspec2D_ymin)  :: ibelm_ymin
   integer, dimension(nspec2D_ymax)  :: ibelm_ymax
   integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
   integer, dimension(NSPEC2D_TOP)  :: ibelm_top
   ! node indices of boundary faces
-  integer, dimension(4,nspec2D_xmin)  :: nodes_ibelm_xmin  
+  integer, dimension(4,nspec2D_xmin)  :: nodes_ibelm_xmin
   integer, dimension(4,nspec2D_xmax)  :: nodes_ibelm_xmax
   integer, dimension(4,nspec2D_ymin)  :: nodes_ibelm_ymin
   integer, dimension(4,nspec2D_ymax)  :: nodes_ibelm_ymax
@@ -205,12 +205,12 @@ subroutine create_regions_mesh_ext(ibool, &
   integer :: NX_TOPO,NY_TOPO
   double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
-  
+
 ! local parameters
 ! static memory size needed by the solver
   double precision :: static_memory_size
   real(kind=CUSTOM_REAL) :: model_speed_max
-  
+
 ! for vtk output
 !  character(len=256) prname_file
 !  integer,dimension(:),allocatable :: itest_flag
@@ -233,19 +233,19 @@ subroutine create_regions_mesh_ext(ibool, &
 ! ! store bedrock values
 !   integer ::  icornerlat,icornerlong
 !   double precision ::  lat,long,elevation_bedrock
-!   double precision ::  lat_corner,long_corner,ratio_xi,ratio_eta  
+!   double precision ::  lat_corner,long_corner,ratio_xi,ratio_eta
 !real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: ibedrock
 
 ! initializes arrays
   call sync_all()
   if( myrank == 0) then
-    write(IMAIN,*) 
+    write(IMAIN,*)
     write(IMAIN,*) '  ...allocating arrays '
   endif
   call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
-  
+
 
 ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
 ! returns jacobianstore,xixstore,...gammazstore
@@ -253,12 +253,12 @@ subroutine create_regions_mesh_ext(ibool, &
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up jacobian '
-  endif  
-  call crm_ext_setup_jacobian(myrank, &                      
+  endif
+  call crm_ext_setup_jacobian(myrank, &
                         xstore,ystore,zstore,nspec, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,&
                         elmnts_ext_mesh,nelmnts_ext_mesh)
-    
+
 ! creates ibool index array for projection from local to global points
   call sync_all()
   if( myrank == 0) then
@@ -286,12 +286,12 @@ subroutine create_regions_mesh_ext(ibool, &
   if( myrank == 0) then
     write(IMAIN,*) '  ...determining velocity model'
   endif
-  call get_model(nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
+  call get_model(myrank,nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
                         materials_ext_mesh,nmat_ext_mesh, &
                         undef_mat_prop,nundefMat_ext_mesh, &
                         ANISOTROPY)
-  
-! sets up absorbing/free surface boundaries  
+
+! sets up absorbing/free surface boundaries
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up absorbing boundaries '
@@ -303,7 +303,7 @@ subroutine create_regions_mesh_ext(ibool, &
                             nodes_ibelm_bottom,nodes_ibelm_top, &
                             nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                             nspec2D_bottom,nspec2D_top)
-    
+
 ! sets up acoustic-elastic coupling surfaces
   call sync_all()
   if( myrank == 0) then
@@ -315,14 +315,14 @@ subroutine create_regions_mesh_ext(ibool, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
 
-! creates mass matrix 
+! creates mass matrix
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
   endif
   call create_mass_matrices(nglob,nspec,ibool)
 
-! creates ocean load mass matrix 
+! creates ocean load mass matrix
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating ocean load mass matrix '
@@ -350,7 +350,7 @@ subroutine create_regions_mesh_ext(ibool, &
                         free_surface_normal,free_surface_jacobian2Dw, &
                         free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
                         coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                        coupling_ac_el_ijk,coupling_ac_el_ispec,num_coupling_ac_el_faces, &                        
+                        coupling_ac_el_ijk,coupling_ac_el_ispec,num_coupling_ac_el_faces, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         prname,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
@@ -364,7 +364,7 @@ subroutine create_regions_mesh_ext(ibool, &
   call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh,static_memory_size)
   call max_all_dp(static_memory_size, max_static_memory_size)
 
-! checks the mesh, stability and resolved period 
+! checks the mesh, stability and resolved period
   call sync_all()
   call check_mesh_resolution(myrank,nspec,nglob,ibool,&
                             xstore_dummy,ystore_dummy,zstore_dummy, &
@@ -373,7 +373,7 @@ subroutine create_regions_mesh_ext(ibool, &
 
 ! VTK file output
 !  if( SAVE_MESH_FILES ) then
-!    ! saves material flag assigned for each spectral element into a vtk file 
+!    ! saves material flag assigned for each spectral element into a vtk file
 !    prname_file = prname(1:len_trim(prname))//'material_flag'
 !    allocate(elem_flag(nspec))
 !    elem_flag(:) = mat_ext_mesh(1,:)
@@ -381,7 +381,7 @@ subroutine create_regions_mesh_ext(ibool, &
 !            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
 !            elem_flag,prname_file)
 !    deallocate(elem_flag)
-!    
+!
 !    !plotting abs boundaries
 !    !  allocate(itest_flag(nspec))
 !    !  itest_flag(:) = 0
@@ -393,7 +393,7 @@ subroutine create_regions_mesh_ext(ibool, &
 !    !            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
 !    !            itest_flag,prname_file)
 !    !  deallocate(itest_flag)
-!  endif  
+!  endif
 
 ! AVS/DX file output
 ! create AVS or DX mesh data for the slice, edges and faces
@@ -415,7 +415,7 @@ subroutine create_regions_mesh_ext(ibool, &
   deallocate(xixstore,xiystore,xizstore,&
               etaxstore,etaystore,etazstore,&
               gammaxstore,gammaystore,gammazstore)
-  deallocate(jacobianstore,iflag_attenuation_store)  
+  deallocate(jacobianstore,iflag_attenuation_store)
   deallocate(kappastore,mustore,rho_vp,rho_vs)
 
 end subroutine create_regions_mesh_ext
@@ -428,7 +428,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
-  use create_regions_mesh_ext_par  
+  use create_regions_mesh_ext_par
   implicit none
 
   integer :: nspec,myrank
@@ -436,15 +436,15 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
             nspec2D_bottom,nspec2D_top
 
   character(len=256) :: LOCAL_PATH
-            
+
   logical :: ANISOTROPY
 
-! local parameters  
+! local parameters
   integer :: ier
 
 ! memory test
-!  logical,dimension(:),allocatable :: test_mem 
-!  
+!  logical,dimension(:),allocatable :: test_mem
+!
 ! tests memory availability (including some small buffer of 10*1024 byte)
 !  allocate( test_mem(int(max_static_memory_size)+10*1024),stat=ier)
 !  if(ier /= 0) then
@@ -453,10 +453,10 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 !    call exit_MPI(myrank,'not enough memory to allocate arrays')
 !  endif
 !  test_mem(:) = .true.
-!  deallocate( test_mem, stat=ier) 
+!  deallocate( test_mem, stat=ier)
 !  if(ier /= 0) call exit_MPI(myrank,'error to allocate arrays')
 !  call sync_all()
-          
+
   allocate( xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
 
   allocate( iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
@@ -480,15 +480,15 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
           shape2D_y(NGNOD2D,NGLLX,NGLLZ), &
           shape2D_bottom(NGNOD2D,NGLLX,NGLLY), &
           shape2D_top(NGNOD2D,NGLLX,NGLLY), stat=ier)
-  
+
   allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ), &
           dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ), &
           dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY), &
           dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
-  
+
   allocate(wgllwgll_xy(NGLLX,NGLLY), &
           wgllwgll_xz(NGLLX,NGLLZ), &
-          wgllwgll_yz(NGLLY,NGLLZ),stat=ier)  
+          wgllwgll_yz(NGLLY,NGLLZ),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! Stacey
@@ -499,9 +499,9 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 ! array with model density
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec), &
           kappastore(NGLLX,NGLLY,NGLLZ,nspec), &
-          mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier) 
+          mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
           !vpstore(NGLLX,NGLLY,NGLLZ,nspec), &
-          !vsstore(NGLLX,NGLLY,NGLLZ,nspec),          
+          !vsstore(NGLLX,NGLLY,NGLLZ,nspec),
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! arrays with mesh parameters
@@ -517,7 +517,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
           jacobianstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! absorbing boundary 
+! absorbing boundary
   ! absorbing faces
   num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
   ! adds faces of free surface if it also absorbs
@@ -536,7 +536,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
     ! no free surface - uses a dummy size
     num_free_surface_faces = 1
   else
-    num_free_surface_faces = nspec2D_top  
+    num_free_surface_faces = nspec2D_top
   endif
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
@@ -580,7 +580,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            ispec_is_elastic(nspec), &
            ispec_is_poroelastic(nspec), stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-  
+
 end subroutine crm_ext_allocate_arrays
 
 
@@ -588,7 +588,7 @@ end subroutine crm_ext_allocate_arrays
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine crm_ext_setup_jacobian(myrank, &                      
+subroutine crm_ext_setup_jacobian(myrank, &
                         xstore,ystore,zstore,nspec, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,&
                         elmnts_ext_mesh,nelmnts_ext_mesh)
@@ -684,7 +684,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! creates global indexing array ibool
 
-  use create_regions_mesh_ext_par 
+  use create_regions_mesh_ext_par
   implicit none
 
 ! number of spectral elements in each block
@@ -699,7 +699,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
 
 ! local parameters
-! variables for creating array ibool 
+! variables for creating array ibool
   double precision, dimension(:), allocatable :: xp,yp,zp
   integer, dimension(:), allocatable :: locval
   logical, dimension(:), allocatable :: ifseg
@@ -754,8 +754,8 @@ subroutine crm_ext_setup_indexing(ibool, &
 ! unique global point locations
   allocate(xstore_dummy(nglob), &
           ystore_dummy(nglob), &
-          zstore_dummy(nglob),stat=ier) 
-  if(ier /= 0) stop 'error in allocate'  
+          zstore_dummy(nglob),stat=ier)
+  if(ier /= 0) stop 'error in allocate'
   do ispec = 1, nspec
      do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -767,153 +767,6 @@ subroutine crm_ext_setup_indexing(ibool, &
            enddo
         enddo
      enddo
-  enddo  
+  enddo
 
 end subroutine crm_ext_setup_indexing
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-!
-!
-!subroutine bubble_sort( arr, ndim )
-!
-!! sorts values in array arr[ndim] in increasing order
-!
-!  implicit none
-!  
-!  integer :: ndim
-!  integer :: arr(ndim)
-!  
-!  logical :: swapped
-!  integer :: j,tmp
-!  
-!  swapped = .true.
-!  do while( swapped )
-!    swapped = .false.
-!    do j = 1, ndim-1
-!      if( arr(j+1) < arr(j) ) then
-!        tmp = arr(j) 
-!        arr(j) = arr(j+1)
-!        arr(j+1) = tmp
-!        swapped = .true.        
-!      endif
-!    enddo
-!  enddo
-!  
-!end subroutine bubble_sort
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-!
-! subroutine interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
-
-! implicit none
-
-! include "constants.h"
-
-! integer :: iflag,flag_below,flag_above
-! integer :: ispec,nspec
-! integer :: i,j,k
-! double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-! real(kind=CUSTOM_REAL), dimension(NX_TOPO_ANT,NY_TOPO_ANT) :: ibedrock
-! integer, parameter :: NUMBER_OF_STATIONS = 1
-! double precision, parameter :: RADIUS_TO_EXCLUDE = 250.d0
-! double precision, dimension(NUMBER_OF_STATIONS) :: utm_x_station,utm_y_station
-
-! !-------------------
-
-! !for Piero
-! logical :: is_around_a_station
-! integer :: istation
-
-! ! store bedrock values
-! integer ::  icornerlat,icornerlong
-! double precision ::  lat,long,elevation_bedrock
-! double precision ::  lat_corner,long_corner,ratio_xi,ratio_eta
-
-
-! !! DK DK store the position of the six stations to be able to
-! !! DK DK exclude circles around each station to make sure they are on the bedrock
-! !! DK DK and not in the ice
-!    utm_x_station(1) =  783500.6250000d0
-!    utm_y_station(1) = -11828.7519531d0
-
-!    utm_x_station(2) =  853644.5000000d0
-!    utm_y_station(2) = -114.0138092d0
-
-!    utm_x_station(3) = 863406.0000000d0
-!    utm_y_station(3) = -53736.1640625d0
-
-!    utm_x_station(4) =   823398.8125000d0
-!    utm_y_station(4) = 29847.4511719d0
-
-!    utm_x_station(5) = 863545.3750000d0
-!    utm_y_station(5) = 19669.6621094d0
-
-!    utm_x_station(6) =  817099.3750000d0
-!    utm_y_station(6) = -24430.2871094d0
-
-! ! since we have suppressed UTM projection for Piero Basini, UTMx is the same as long
-! ! and UTMy is the same as lat
-!     long = xstore(i,j,k,ispec)
-!     lat =  ystore(i,j,k,ispec)
-
-! ! get coordinate of corner in model
-!     icornerlong = int((long - ORIG_LONG_TOPO_ANT) / DEGREES_PER_CELL_TOPO_ANT) + 1
-!     icornerlat = int((lat - ORIG_LAT_TOPO_ANT) / DEGREES_PER_CELL_TOPO_ANT) + 1
-
-! ! avoid edge effects and extend with identical point if outside model
-!     if(icornerlong < 1) icornerlong = 1
-!     if(icornerlong > NX_TOPO_ANT-1) icornerlong = NX_TOPO_ANT-1
-!     if(icornerlat < 1) icornerlat = 1
-!     if(icornerlat > NY_TOPO_ANT-1) icornerlat = NY_TOPO_ANT-1
-
-! ! compute coordinates of corner
-!     long_corner = ORIG_LONG_TOPO_ANT + (icornerlong-1)*DEGREES_PER_CELL_TOPO_ANT
-!     lat_corner = ORIG_LAT_TOPO_ANT + (icornerlat-1)*DEGREES_PER_CELL_TOPO_ANT
-
-! ! compute ratio for interpolation
-!     ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO_ANT
-!     ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO_ANT
-
-! ! avoid edge effects
-!     if(ratio_xi < 0.) ratio_xi = 0.
-!     if(ratio_xi > 1.) ratio_xi = 1.
-!     if(ratio_eta < 0.) ratio_eta = 0.
-!     if(ratio_eta > 1.) ratio_eta = 1.
-
-! ! interpolate elevation at current point
-!     elevation_bedrock = &
-!       ibedrock(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-!       ibedrock(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-!       ibedrock(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-!       ibedrock(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-
-! !! DK DK exclude circles around each station to make sure they are on the bedrock
-! !! DK DK and not in the ice
-!   is_around_a_station = .false.
-!   do istation = 1,NUMBER_OF_STATIONS
-!     if(sqrt((xstore(i,j,k,ispec) - utm_x_station(istation))**2 + (ystore(i,j,k,ispec) - &
-!          utm_y_station(istation))**2) < RADIUS_TO_EXCLUDE) then
-!       is_around_a_station = .true.
-!       exit
-!     endif
-!   enddo
-
-! ! we are above the bedrock interface i.e. in the ice, and not too close to a station
-!   if(zstore(i,j,k,ispec) >= elevation_bedrock .and. .not. is_around_a_station) then
-!      iflag = flag_above
-!      !iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_ICE
-!      ! we are below the bedrock interface i.e. in the bedrock, or close to a station
-!   else
-!      iflag = flag_below
-!      !iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_BEDROCK
-!   endif
-    
-
-! end subroutine interface

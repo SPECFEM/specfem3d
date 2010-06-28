@@ -52,6 +52,65 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine model_external_broadcast(myrank)
+
+! standard routine to setup model 
+
+  use external_model
+  
+  implicit none
+
+  include "constants.h"
+  ! standard include of the MPI library
+  include 'mpif.h'
+
+  integer :: myrank
+  
+  ! local parameters
+  integer :: idummy
+
+  ! dummy to ignore compiler warnings
+  idummy = myrank
+
+!---
+!
+! ADD YOUR MODEL HERE
+!
+!---
+
+  ! the variables read are declared and stored in structure MEXT_V      
+  !if(myrank == 0) call read_external_model()
+      
+  ! broadcast the information read on the master to the nodes
+  !call MPI_BCAST(MEXT_V%dvs,size(MEXT_V%dvs),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+
+  end subroutine model_external_broadcast
+  
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+!
+!  subroutine read_external_model()
+!
+!  use external_model
+!  
+!  implicit none
+!
+!  include "constants.h"
+!---
+!
+! ADD YOUR MODEL HERE
+!
+!---
+!
+!  end subroutine read_external_model
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
   subroutine model_external_values(i,j,k,ispec,idomain_id,imaterial_id,&
                             nspec,ibool, &
@@ -156,56 +215,4 @@
       
   end subroutine model_external_values
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine model_external_broadcast(myrank)
-
-! standard routine to setup model 
-
-  use external_model
-  
-  implicit none
-
-  include "constants.h"
-  ! standard include of the MPI library
-  include 'mpif.h'
-
-  integer :: myrank
-  
-  ! local parameters
-  integer :: ier
-
-  ! dummy to ignore compiler warnings
-  ier = myrank
-
-!---
-!
-! ADD YOUR MODEL HERE
-!
-!---
-
-  ! the variables read are declared and stored in structure D3MM_V      
-  !if(myrank == 0) call read_external_model()
-      
-  ! broadcast the information read on the master to the nodes
-  !call MPI_BCAST(MEXT_V%dvs,size(MEXT_V%dvs),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-
-  end subroutine model_external_broadcast
-  
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-!
-!  subroutine read_external_model()
-!
-!  use external_model
-!  
-!  implicit none
-!
-!  include "constants.h"
-!
-!  end subroutine read_external_model
   
