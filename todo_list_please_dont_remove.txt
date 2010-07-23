@@ -1,6 +1,67 @@
 
-To-do list for SPECFEM3D_SESAME, by Dimitri Komatitsch
-------------------------------------------------------
+To-do list for SPECFEM3D, by Dimitri Komatitsch
+-----------------------------------------------
+
+Date: Fri, 23 Jul 2010 01:30:16 +0200
+From: Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
+To: Anne Sieminski <anne.sieminski@obs.ujf-grenoble.fr>
+CC: Jeroen Tromp <jtromp@princeton.edu>, Min Chen <mchen@gps.caltech.edu>, Vala Hjorleifsdottir <vala@ldeo.columbia.edu>, Brian Savage <savage@uri.edu>, Shiann-Jong Lee <sjlee@earth.sinica.edu.tw>, Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>, Roland Martin <roland.martin@univ-pau.fr>, Bernhard Schuberth <mail@bernhard-schuberth.de>, Carl Tape <carltape@fas.harvard.edu>, Anne Sieminski <anne.sieminski@obs.ujf-grenoble.fr>, Paul Friberg <p.friberg@isti.com>, Kasper van Wijk <kasper@cgiss.boisestate.edu>, Dylan Mikesell <dmikesell@cgiss.boisestate.edu>, Federica Magnoni <federica.magnoni@ingv.it>, Ebru Bozdag <bozdag@princeton.edu>, Hejun Zhu <hejunzhu@princeton.edu>, Pieyre Le Loher <pieyre.le_loher@inria.fr>, Christina Morency <cmorency@Princeton.EDU>, Emanuele Casarotti <emanuele.casarotti@gmail.com>, Piero Basini <basini@bo.ingv.it>, Emmanuel Chaljub <Emmanuel.Chaljub@obs.ujf-grenoble.fr>, Tarje Nissen-Meyer <tarje@princeton.edu>, Qinya Liu <liuqy@physics.utoronto.ca>, Yang Luo <yangl@Princeton.EDU>, Daniel Peter <dpeter@Princeton.EDU>, Ying Zhou <yingz@vt.edu>
+Subject: Re: milieux acoustiques
+
+Dear Anne,
+
+I answer in English and cc all the other developers because other people 
+may be interested. Yes, SPECFEM3D version 2 (which is a beta
+version right now) can handle acoustic media in addition to 
+(visco)elastic layers. Daniel Peter has added support for that
+(based in part on our implementation in the 2D version SPECFEM2D-6.0.0
+I guess, or on what was already implemented in SPECFEM3D_GLOBE, i.e.,
+the fluid outer core of the Earth).
+
+However, there is a hidden problem if you want to use acoustic layers 
+for oil industry simulations: our acoustic formulation in the 3D code
+(at least in SPECFEM3D_GLOBE for sure) can only handle one acoustic 
+layer with a smooth velocity gradient (which is the case in the outer 
+core) but not a first-order acoustic-acoustic discontinuity, which from 
+a physical point of view does not make much sense. *BUT* this implies
+that if you take an elastic oil industry model and make it acoustic 
+(with layers) by only considering Vp, as people often do in oil 
+companies, the code will fail (more precisely, and unfortunately, it 
+will not crash but will produce seismograms that will not be correct).
+
+This is because for acoustic-acoustic interfaces one should use a 
+potential of (density * displacement) rather than a potential of 
+displacement only in order to enforce continuity of pressure 
+automatically in the weak formulation of the problem.
+
+In the 2D code that's what I do (which means you can safely use
+the 2D code for acoustic oil industry models). But I think that
+this is not done in the 3D code because I assume Daniel took the 
+acoustic code from SPECFEM3D_GLOBE, in which case a potential
+of displacement is used and acoustic-acoustic interfaces are not handled 
+properly.
+
+I guess one day we should switch to a potential of (density * 
+displacement) in the 3D code, as I did in the 2D code two years ago.
+Otherwise I think one day some users will use it for oil industry models
+and will get erroneous seismograms. That's (very) easy to do but 
+unfortunately I do not have time for now...
+
+Hope this helps,
+Cheers,
+
+Dimitri.
+
+On 06/23/2010 05:42 PM, Anne Sieminski wrote:
+> Bonjour Dimitri,
+>
+> Je vois que SPECFEM2D-6.0.0 (disponible sur le site de CIG) permet de
+> faire des calculs dans des modèles acoustiques. La même option est-elle
+> en projet pour SPECFEM3D (ancien SPECFEM3D_BASIN) ? J'ai un peu perdu le
+> fil de toutes les nouveautés... Désolée !
+>
+> Merci,
+> Anne
 
 - serial domain decomposition is already a limitation in the case of regional seismology, because serial meshes can be very large. One option would be to switch to ParMetis or PT-Scotch, i.e., the parallel version of these domain decomposition packages. I know that PT-Scotch works great and is pretty fast. Another option is ZOLTAN from Sandia National Labs, but I do not know if it is serial or parallel.
 
@@ -37,11 +98,11 @@ meshes for sedimentary basins, in particular near basin edges
 
 - we could add support for Discontinuous Galerkin, and/or for SEM on tetrahedra and pyramids
 
-- Regarding memory size (getting an estimate of memory consumption in SESAME),
+- Regarding memory size (getting an estimate of memory consumption in SPECFEM3D),
 somebody should just cut and paste my SPECFEM3D_GLOBE routine
 "SPECFEM3D_GLOBE/version41_beta/src/memory_eval.f90", which
 I call from "SPECFEM3D_GLOBE/version41_beta/src/create_header_file.f90".
-It would work for SESAME as well (with minor modifications).
+It would work for SPECFEM3D as well (with minor modifications).
 
 - add SOURCESOLUTION in addition to CMTSOLUTION, to choose between a CMT source and a force source
 
@@ -138,7 +199,7 @@ could you please send the Excel file to all of us with a few lines
 of description of the figures?).
 SCOTCH (serial) and PT-SCOTCH (parallel) is then better.
 (faster, uses less memory etc.)
-Because of that, we have removed support for METIS in SESAME.
+Because of that, we have removed support for METIS in SPECFEM3D.
 It can still be called indirectly from SCOTCH (there is an option
 in SCOTCH to call METIS instead). But this is a bad idea because
 the partition obtained is worse.
