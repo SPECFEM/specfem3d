@@ -79,7 +79,7 @@ contains
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision, dimension(:,:), pointer :: material_properties
 
-  integer i,ireg,imat
+  integer i,ireg,imat,idoubl
 
 ! open parameter file
   open(unit=IIN,file='DATA/Par_file',status='old',action='read')
@@ -135,6 +135,14 @@ contains
   if(err_occurred() /= 0) return
   call read_value_integer(IIN,IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
   if(err_occurred() /= 0) return
+
+  if(ner_doublings(1) < ner_doublings(2) .and. NDOUBLINGS == 2) then
+    idoubl = ner_doublings(1)
+    ner_doublings(1) = ner_doublings(2)
+    ner_doublings(2) = idoubl
+  end if
+
+
 
   call read_value_logical(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
   if(err_occurred() /= 0) return
