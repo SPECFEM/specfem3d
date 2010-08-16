@@ -373,8 +373,10 @@
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
-    write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
-    write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
+    if( myrank == 0 ) then
+      write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
+      write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs    
+    endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
 
@@ -382,7 +384,7 @@
 ! just to be sure for now..
   if( ABSORBING_CONDITIONS ) then
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
-      stop 'must have NGLLX = NGLLY = NGLLZ for external meshes'  
+      call exit_MPI(myrank,'must have NGLLX = NGLLY = NGLLZ for external meshes')
   endif
 
 ! info about external mesh simulation
@@ -555,7 +557,6 @@
 ! read materials' physical properties
   read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
   allocate(materials_ext_mesh(6,nmat_ext_mesh))
-  allocate(undef_mat_prop(6,nundefMat_ext_mesh))
   do imat = 1, nmat_ext_mesh
      ! format:        #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag  #(6) material_domain_id 
      read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
@@ -571,9 +572,18 @@
   endif
   call sync_all()
 
+  allocate(undef_mat_prop(6,nundefMat_ext_mesh))
   do imat = 1, nundefMat_ext_mesh
+     ! format example tomography: 
+     ! -1 tomography elastic tomography_model.xyz 1 2              
+     ! format example interface: 
+     ! -1 interface 14 15 1 2              
      read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat), undef_mat_prop(6,imat)
+
+     ! output debug
+     !print*,'undefined materials:'
+     !print*,undef_mat_prop(:,imat)     
   end do
 
   if(myrank == 0) then
@@ -593,6 +603,10 @@
      read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
           elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
+
+     ! check debug     
+     if( dummy_elmnt /= ispec) stop "error ispec order in materials file"
+
   enddo
   NSPEC_AB = nelmnts_ext_mesh
 

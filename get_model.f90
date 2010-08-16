@@ -123,15 +123,16 @@
 
               do iundef = 1,nundefMat_ext_mesh
                  if(trim(undef_mat_prop(2,iundef)) == 'interface') then
-                    read(undef_mat_prop(4,iundef),'(1i3)') flag_below
-                    read(undef_mat_prop(5,iundef),'(1i3)') flag_above
+                    read(undef_mat_prop(3,iundef),'(1i3)') flag_below
+                    read(undef_mat_prop(4,iundef),'(1i3)') flag_above
                  endif
               enddo
 
               ! see file model_interface_bedrock.f90: routine interface()
               !call interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
-
-              iflag = 1
+              
+              ! dummy: takes 1. defined material
+              iflag = 1 
               rho = materials_ext_mesh(1,iflag)
               vp = materials_ext_mesh(2,iflag)
               vs = materials_ext_mesh(3,iflag)
@@ -145,7 +146,7 @@
               iflag_aniso = materials_ext_mesh(5,iflag)
               idomain_id = materials_ext_mesh(6,iflag)
 
-           else if ( imaterial_id < 0 ) then
+           else if ( mat_ext_mesh(2,ispec) == 2 ) then
            
               ! material definition undefined, uses definition from tomography model
               ! GLL point location
@@ -160,7 +161,12 @@
 
               iflag_atten = 1   ! attenuation: would use IATTENUATION_SEDIMENTS_40
               iflag_aniso = 0   ! no anisotropy
-              idomain_id = 2    ! elastic domain
+              
+              ! sets acoustic/elastic domain as given in materials properties
+              iundef = - imaterial_id    ! iundef must be positive
+              read(undef_mat_prop(6,iundef),*) idomain_id  
+              ! or
+              !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
            else
 

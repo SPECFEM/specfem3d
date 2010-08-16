@@ -88,7 +88,9 @@ module decompose_mesh_SCOTCH
   ! reads in mesh files
   !----------------------------------------------------------------------------------------------
   subroutine read_mesh_files
-
+    implicit none
+    character(len=256)  :: line
+    
   ! sets number of nodes per element
     ngnod = esize
 
@@ -192,10 +194,12 @@ module decompose_mesh_SCOTCH
     print *,'materials:'
     ! counts materials (defined/undefined)
     do while (ierr == 0)
-       print*, '  num_mat = ',num_mat
-       if(num_mat /= -1) then 
+       print*, '  num_mat = ',num_mat       
+       if(num_mat > 0 ) then 
+          ! positive materials_id: velocity values will be defined
           count_def_mat = count_def_mat + 1        
        else
+          ! negative materials_id: undefined material properties yet
           count_undef_mat = count_undef_mat + 1
        end if
        read(98,*,iostat=ierr) idummy,num_mat
@@ -214,6 +218,10 @@ module decompose_mesh_SCOTCH
     ! reads in defined material properties
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted')
+
+    ! note: entries in nummaterial_velocity_file must be sorted to list all
+    !          defined materials (material_id > 0) first, and afterwards list all
+    !          undefined materials (material_id < 0 )    
     do imat=1,count_def_mat
        ! material definitions
        !
@@ -221,6 +229,9 @@ module decompose_mesh_SCOTCH
        !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_flag #(5) anisotropy_flag
        !
        read(98,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
+
+       if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
+       
        !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
        !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
        mat_prop(1,num_mat) = rho
@@ -228,9 +239,7 @@ module decompose_mesh_SCOTCH
        mat_prop(3,num_mat) = vs
        mat_prop(4,num_mat) = q_flag
        mat_prop(5,num_mat) = aniso_flag
-       mat_prop(6,num_mat) = idomain_id
-       
-       if(num_mat < 0 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
+       mat_prop(6,num_mat) = idomain_id       
 
        !checks attenuation flag with integer range as defined in constants.h like IATTENUATION_SEDIMENTS_40, ....
        if( int(mat_prop(4,num_mat)) > 13 ) then
@@ -239,10 +248,96 @@ module decompose_mesh_SCOTCH
     end do
     ! reads in undefined material properties
     do imat=1,count_undef_mat
-       read(98,'(6A30)') undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+       !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
+       !  format: 
+       !   - for interfaces
+       !    #material_domain_id #material_id(<0) #type_name (="interface") #material_id_for_material_below #material_id_for_material_above
+       !        example:     2  -1 interface 1 2 
+       !   - for tomography models 
+       !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name 
+       !        example:     2  -1 tomography elastic tomography_model.xyz 1
+       read(98,'(A256)') line
+
+       ! checks if interface or tomography definition 
+       read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
+       if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
+         ! line will have 5 arguments, e.g.: 2  -1 interface 1 2 
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+                     undef_mat_prop(3,imat),undef_mat_prop(4,imat)
+         undef_mat_prop(5,imat) = "1" ! dummy value
+       else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then 
+         ! line will have 6 arguments, e.g.: 2  -1 tomography elastic tomography_model.xyz 1
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
+       else
+         stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
+       endif
+       
+       !read(98,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+       !                 undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
+
+       ! debug output
+       !print*,'properties:'
+       !print*,undef_mat_prop(:,imat)
+       !print*
+       
+       ! checks material_id
+       read(undef_mat_prop(1,imat),*) num_mat
+       !print *,'material_id: ',num_mat
+       if(num_mat > 0 .or. -num_mat > count_undef_mat)  stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
+       if(num_mat /= -imat)  stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."                            
+
+       ! checks interface: flag_down/flag_up
+       if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
+         ! flag_down
+         read( undef_mat_prop(3,imat),*) num_mat 
+         if( num_mat > 0 ) then
+          ! must point to a defined material
+          if( num_mat > count_def_mat) stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"
+         else
+          ! must point to an undefined material
+          if( -num_mat > count_undef_mat) stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"         
+         endif
+         ! flag_up
+         read( undef_mat_prop(4,imat),*) num_mat 
+         if( num_mat > 0 ) then
+          ! must point to a defined material
+          if( num_mat > count_def_mat) stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
+         else
+          ! must point to an undefined material
+          if( -num_mat > count_undef_mat) stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
+         endif
+       endif                                                                           
     end do
     close(98)
+
+
+    ! TODO:
+    ! must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
+    do ispec=1,nspec
+      ! get material_id
+      num_mat = mat(1,ispec)
+      if( num_mat < 0 ) then
+        ! finds undefined material property
+        do imat=1,count_undef_mat
+          if( -imat == num_mat ) then 
+            ! interface
+            if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
+              mat(2,ispec) = 1
+            ! tomography  
+            elseif( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+              mat(2,ispec) = 2
+            else
+              ! shouldn't encounter this case
+              stop "error undefined material: type name not recognized"
+            endif
+          endif
+        enddo
+      else
+        ! ispec belongs to a defined material
+        mat(2,ispec) = 0
+      endif
+    enddo
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
@@ -452,18 +547,43 @@ module decompose_mesh_SCOTCH
     elmnts_load(:) = 1 
     
     ! in case of acoustic/elastic simulation, weights elements accordingly
-    call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,mat(1,:),mat_prop)
+    call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
+                              mat(1,:),mat_prop,undef_mat_prop)
     
   ! SCOTCH partitioning
+
+    ! we use default strategy for partitioning, thus omit specifing explicit strategy .
+
+    ! workflow preferred by F. Pellegrini (SCOTCH): 
+    !!This comes from the fact that, in version 5.1.8, the name
+    !!for the "recursive bisection" method has changed from "b"
+    !!("bipartitioning") to "r" ("recursive").
+    !!
+    !!As a general rule, do not try to set up strategies by
+    !!yourself. The default strategy in Scotch will most probably
+    !!provide better results. To use it, just call:
+    !!
+    !!SCOTCHFstratInit (),
+    !!
+    !!and use this "empty" strategy in the mapping routine
+    !!(consequently, no call to SCOTCHFstratGraphMap () is
+    !!required).
+    !!
+    !!This will make you independent from further changes (most
+    !!probably improvements !;-)   ) in the strategy syntax.
+    !!And you should see an improvement in performance, too,
+    !!as your hand-made strategy did not make use of the
+    !!multi-level framework.
+
     call scotchfstratinit (scotchstrat(1), ierr)
      if (ierr /= 0) then
        stop 'ERROR : MAIN : Cannot initialize strat'
-    endif
-
-    call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ierr)
-     if (ierr /= 0) then
-       stop 'ERROR : MAIN : Cannot build strat'
-    endif
+    endif        
+    
+    !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ierr)
+    ! if (ierr /= 0) then
+    !   stop 'ERROR : MAIN : Cannot build strat'
+    !endif
 
     call scotchfgraphinit (scotchgraph (1), ierr)
     if (ierr /= 0) then

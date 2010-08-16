@@ -36,6 +36,7 @@
   integer :: i,j,k,ispec,iglob
   integer :: iinterface,ier
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
+  logical, dimension(:), allocatable :: iglob_is_inner
   
 ! start reading the databasesa
 
@@ -129,6 +130,8 @@
 
     read(27) rmass
     if( OCEANS ) then
+      ! ocean mass matrix
+      allocate(rmass_ocean_load(NGLOB_AB))      
       read(27) rmass_ocean_load
     endif
     !pll

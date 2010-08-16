@@ -49,8 +49,9 @@
   character(len=256) prname_file
 
 ! write source and receiver VTK files for Paraview
-  write(IMAIN,*) '  vtk file: '
-  write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+  !debug
+  !write(IMAIN,*) '  vtk file: '
+  !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
   
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
@@ -120,8 +121,9 @@
   integer :: ispec,i,j,k,ier,iglob
 
 ! write source and receiver VTK files for Paraview
-  write(IMAIN,*) '  vtk file: '
-  write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+  !debug
+  !write(IMAIN,*) '  vtk file: '
+  !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
   
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
@@ -210,8 +212,9 @@
   integer :: ispec,i,j,k,ier,iglob
 
 ! write source and receiver VTK files for Paraview
-  write(IMAIN,*) '  vtk file: '
-  write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+  !debug
+  !write(IMAIN,*) '  vtk file: '
+  !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
   
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
@@ -297,8 +300,9 @@
   integer :: i,iglob
 
 ! write source and receiver VTK files for Paraview
-  write(IMAIN,*) '  vtk file: '
-  write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+  !debug
+  !write(IMAIN,*) '  vtk file: '
+  !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
   
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
@@ -352,8 +356,9 @@
   character(len=256) prname_file
 
   ! write source and receiver VTK files for Paraview
-  write(IMAIN,*) '  vtk file: '
-  write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+  !debug
+  !write(IMAIN,*) '  vtk file: '
+  !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
   
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'

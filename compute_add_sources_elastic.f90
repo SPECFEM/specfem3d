@@ -110,16 +110,16 @@
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
               t0 = 1.2d0/f0
                
-              if (it == 1 .and. myrank == 0) then
-                print *,'using a source of dominant frequency ',f0
-                print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-              endif
+              !if (it == 1 .and. myrank == 0) then
+              !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+              !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+              !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+              !endif
                
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = 1.d10 * comp_source_time_function_rickr(dble(it-1)*DT-t0-t_cmt(isource),f0)              
+              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-t_cmt(isource),f0)              
                
-              ! we use nu_source(:,3) here because we want a source normal to the surface.
+              ! we use nu_source(:,3) here because we want a source normal to the surface (z-direction).
               accel(:,iglob) = accel(:,iglob)  &
                                + sngl( nu_source(:,3,isource) ) * stf_used
                
@@ -231,14 +231,14 @@
                f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
                t0 = 1.2d0/f0
                
-               if (it == 1 .and. myrank == 0) then
-                  print *,'using a source of dominant frequency ',f0
-                  print *,'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                  print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-               endif
+               !if (it == 1 .and. myrank == 0) then
+               !   write(IMAIN,*) 'using a source of dominant frequency ',f0
+               !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+               !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+               !endif
 
                ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-               stf_used = 1.d10 * comp_source_time_function_rickr(dble(NSTEP-it-1)*DT-t0-t_cmt(isource),f0)
+               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it-1)*DT-t0-t_cmt(isource),f0)
                
                ! we use nu_source(:,3) here because we want a source normal to the surface.
                ! note: time step is now at NSTEP-it

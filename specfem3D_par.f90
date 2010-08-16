@@ -77,7 +77,6 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappastore,mustore
 
 ! additional mass matrix for ocean load
-! ocean load mass matrix is always allocated statically even if no oceans
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
 ! time scheme
@@ -187,7 +186,6 @@ module specfem_par
 
 ! MPI partition surfaces 
   logical, dimension(:), allocatable :: ispec_is_inner
-  logical, dimension(:), allocatable :: iglob_is_inner
 
 ! maximum of the norm of the displacement
   real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all

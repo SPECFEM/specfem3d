@@ -28,62 +28,119 @@
 
 ! compute the approximate amount of static memory needed to run the solver
 
- subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,static_memory_size)
+ subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
+                        OCEANS,static_memory_size)
 
+  use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic
+  
   implicit none
 
   include "constants.h"
 
-! input
-!  logical, intent(in) :: ATTENUATION
+  ! input
   integer, intent(in) :: NSPEC_AB,NGLOB_AB
   integer, intent(in) :: max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh
-
-! output
+  logical, intent(in) :: OCEANS
+  ! output
   double precision, intent(out) :: static_memory_size
-
+  ! local parameters  
+  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
   static_memory_size = 0.d0
 
-! add size of each set of static arrays multiplied by the number of such arrays
+! add size of each set of arrays multiplied by the number of such arrays
 
-! ibool,idoubling
-  static_memory_size = static_memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(SIZE_INTEGER)
+  ! see: initialize_simulation.f90
+  ! ibool
+  static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(SIZE_INTEGER)
 
-! xix,xiy,xiz,
-! etax,etay,etaz,
-! gammax,gammay,gammaz,jacobian
-! kappavstore,muvstore
-! flag_sediments,rho_vp,rho_vs  
-  static_memory_size = static_memory_size + 15.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  ! xix,xiy,xiz,
+  ! etax,etay,etaz,
+  ! gammax,gammay,gammaz,jacobian
+  static_memory_size = static_memory_size + 10.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
 
-! xstore,ystore,zstore,rmass,rmass_ocean_load
-  static_memory_size = static_memory_size + 5.d0*NGLOB_AB*dble(CUSTOM_REAL)
+  ! xstore,ystore,zstore
+  static_memory_size = static_memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
 
-! updated_dof_ocean_load,iglob_is_inner_ext_mesh 
-  static_memory_size = static_memory_size + 2.d0*NGLOB_AB*dble(SIZE_LOGICAL)
+  ! kappastore,mustore
+  static_memory_size = static_memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  
+  ! ispec_acoustic,ispec_elastic,ispec_is_poroelastic (logical)
+  static_memory_size = static_memory_size + 3.d0*NSPEC_AB*dble(SIZE_LOGICAL)
 
-! ispec_is_inner_ext_mesh 
-  static_memory_size = static_memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
+  ! see: read_mesh_databases.f90  
+  ! acoustic arrays
+  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
+  if( ACOUSTIC_SIMULATION ) then
+    ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
+    static_memory_size = static_memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)    
+    ! rmass_acoustic
+    static_memory_size = static_memory_size + NGLOB_AB*dble(CUSTOM_REAL)
+    ! rhostore
+    static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)  
+  endif
 
-! displ,veloc,accel
-  static_memory_size = static_memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
+  ! elastic arrays
+  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+  if( ELASTIC_SIMULATION ) then
+    ! displacement,velocity,acceleration  
+    static_memory_size = static_memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)    
+    
+    ! rmass
+    static_memory_size = static_memory_size + NGLOB_AB*dble(CUSTOM_REAL)
 
-! my_neighbours_ext_mesh,nibool_interfaces_ext_mesh
+    ! rho_vp,rho_vs  
+    static_memory_size = static_memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+    
+    ! iflag_attenaution_store
+    static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(SIZE_INTEGER)
+    
+    ! c11store,...c66store
+    static_memory_size = static_memory_size + 21.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_ANISO*dble(CUSTOM_REAL)
+    
+    if (OCEANS ) then
+      ! rmass_ocean_load
+      static_memory_size = static_memory_size + NGLOB_AB*dble(CUSTOM_REAL)
+      ! updated_dof_ocean_load
+      static_memory_size = static_memory_size + NGLOB_AB*dble(SIZE_LOGICAL)
+    endif    
+  endif
+
+  ! skipping boundary surfaces 
+  ! skipping free surfaces
+  ! skipping acoustic-elastic coupling surfaces
+    
+  ! MPI interfaces  
+  ! my_neighbours_ext_mesh,nibool_interfaces_ext_mesh
   static_memory_size = static_memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
-! ibool_interfaces_ext_mesh
- static_memory_size = static_memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  ! ibool_interfaces_ext_mesh
+  static_memory_size = static_memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
-! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh  
- static_memory_size = static_memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+  ! MPI communications
+  ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh  
+  static_memory_size = static_memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
 
-! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh 
- static_memory_size = static_memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+  ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh 
+  static_memory_size = static_memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
 
-! request_send_vector_ext_mesh,request_recv_vector_ext_mesh,request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh 
- static_memory_size = static_memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh,request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh 
+  static_memory_size = static_memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
+  ! ispec_is_inner
+  static_memory_size = static_memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
+
+  ! skipping phase_ispec_inner_acoustic
+  ! skipping phase_ispec_inner_elastic
+
+  ! see: prepare_timerun.f90
+  ! skipping attenuation R_xx,..R_yz and epsilondev_xx,...epsilondev_yz  no information yet about NSPEC_ATTENUATION_AB
+  
+  ! note: no adjoint array evaluation, since it depends on SIMULATION_TYPE which can vary for each run
+  !         and is undependant of mesh databases
+
+  ! note: no dyamic arrays like for seismograms, receivers and sources, 
+  !         since it depends on number of timesteps and number of stations etc., which can also vary for each run
 
   end subroutine memory_eval
 

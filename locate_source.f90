@@ -54,7 +54,7 @@
 
   integer myrank
 
-! arrays containing coordinates of the points
+  ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic,ispec_is_elastic
@@ -66,7 +66,8 @@
 
   integer iprocloop
 
-  integer i,j,k,ispec,iglob,iglob_selected,inode,iface,isource,imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
+  integer i,j,k,ispec,iglob,iglob_selected,inode,iface,isource
+  integer imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
   integer iselected,jselected,iface_selected,iadjust,jadjust
   integer iproc(1)
 
@@ -121,7 +122,8 @@
   double precision, dimension(:), allocatable :: tmp_local
   double precision, dimension(:,:),allocatable :: tmp_all_local
 
-  double precision hdur(NSOURCES) !, hdur_gaussian(NSOURCES) !, t0
+  double precision hdur(NSOURCES) 
+  double precision :: f0,t0_ricker
 
   double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
@@ -150,15 +152,9 @@
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
 
-  ! for calculation of source time function
-  !integer it
-  !double precision time_source
-  !double precision, external :: comp_source_time_function
-
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
   
-
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
@@ -172,12 +168,6 @@
     if(hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
   enddo
   
-  ! convert the half duration for triangle STF to the one for gaussian STF
-  !hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
-
-  ! define t0 as the earliest start time
-  !t0 = - 1.5d0 * minval(t_cmt-hdur)
-
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -213,77 +203,77 @@
     ! set distance to huge initial value
     distmin = HUGEVAL
     if(num_free_surface_faces > 0) then
-    iglob_selected = 1
-    ! loop only on points inside the element
-    ! exclude edges to ensure this point is not shared with other elements
-        imin = 2
-        imax = NGLLX - 1
+      iglob_selected = 1
+      ! loop only on points inside the element
+      ! exclude edges to ensure this point is not shared with other elements
+      imin = 2
+      imax = NGLLX - 1
 
-        jmin = 2
-        jmax = NGLLY - 1
-    do iface=1,num_free_surface_faces
-          do j=jmin,jmax
-             do i=imin,imax
+      jmin = 2
+      jmax = NGLLY - 1
+      do iface=1,num_free_surface_faces
+        do j=jmin,jmax
+          do i=imin,imax
 
-                ispec = free_surface_ispec(iface)
-                igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
-                jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
-                kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
-                iglob = ibool(igll,jgll,kgll,ispec)
+            ispec = free_surface_ispec(iface)
+            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
+            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
+            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
+            iglob = ibool(igll,jgll,kgll,ispec)
 
-                ! keep this point if it is closer to the receiver
-                dist = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
+            ! keep this point if it is closer to the receiver
+            dist = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
                      (utm_y_source(isource)-dble(ystore(iglob)))**2)
-                if(dist < distmin) then
-                   distmin = dist
-                   iglob_selected = iglob
-                   iface_selected = iface
-                   iselected = i
-                   jselected = j
-                   altitude_source(1) = zstore(iglob_selected)
-                endif
-             enddo
+            if(dist < distmin) then
+              distmin = dist
+              iglob_selected = iglob
+              iface_selected = iface
+              iselected = i
+              jselected = j
+              altitude_source(1) = zstore(iglob_selected)
+            endif
           enddo
-          ! end of loop on all the elements on the free surface
-       end do
-!  weighted mean at current point of topography elevation of the four closest nodes   
-!  set distance to huge initial value
-       distmin = HUGEVAL
-       do j=jselected,jselected+1
-          do i=iselected,iselected+1
-             inode = 1
-             do jadjust=0,1
-                do iadjust= 0,1
-                   ispec = free_surface_ispec(iface_selected)
-                   igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-                   jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-                   kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-                   iglob = ibool(igll,jgll,kgll,ispec)
+        enddo
+        ! end of loop on all the elements on the free surface
+      end do
+      !  weighted mean at current point of topography elevation of the four closest nodes   
+      !  set distance to huge initial value
+      distmin = HUGEVAL
+      do j=jselected,jselected+1
+        do i=iselected,iselected+1
+          inode = 1
+          do jadjust=0,1
+            do iadjust= 0,1
+              ispec = free_surface_ispec(iface_selected)
+              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+              iglob = ibool(igll,jgll,kgll,ispec)
 
-                   elevation_node(inode) = zstore(iglob)
-                   dist_node(inode) = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
+              elevation_node(inode) = zstore(iglob)
+              dist_node(inode) = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
                         (utm_y_source(isource)-dble(ystore(iglob)))**2)
-                   inode = inode + 1
-                end do
-             end do
-             dist = sum(dist_node)
-             if(dist < distmin) then
-                distmin = dist
-                altitude_source(1) = (dist_node(1)/dist)*elevation_node(1) + &
+              inode = inode + 1
+            end do
+          end do
+          dist = sum(dist_node)
+          if(dist < distmin) then
+            distmin = dist
+            altitude_source(1) = (dist_node(1)/dist)*elevation_node(1) + &
                      (dist_node(2)/dist)*elevation_node(2) + &
                      (dist_node(3)/dist)*elevation_node(3) + &
                      (dist_node(4)/dist)*elevation_node(4) 
-             endif
-          end do
-       end do
+          endif
+        end do
+      end do
     end if
     !  MPI communications to determine the best slice
     distmin_ele(1)= distmin
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
     if(myrank == 0) then
-       iproc = minloc(distmin_ele_all)
-       altitude_source(1) = elevation_all(iproc(1))         
+      iproc = minloc(distmin_ele_all)
+      altitude_source(1) = elevation_all(iproc(1))         
     end if
     call bcast_all_dp(altitude_source,1)  
     elevation(isource) = altitude_source(1)
@@ -304,7 +294,8 @@
 
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
-    !z_target_source = depth(isource)
+    
+    ! depth in CMTSOLUTION given in km
     z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
 
     ! set distance to huge initial value
@@ -313,7 +304,6 @@
     ispec_selected_source(isource) = 0
 
     do ispec=1,NSPEC_AB
-
 
       ! define the interval in which we look for points
       if(USE_FORCE_POINT_SOURCE) then
@@ -351,13 +341,13 @@
               endif
             endif
 
-            !       keep this point if it is closer to the source
-            dist=dsqrt((x_target_source-dble(xstore(iglob)))**2 &
+            ! keep this point if it is closer to the source
+            dist = dsqrt((x_target_source-dble(xstore(iglob)))**2 &
                   +(y_target_source-dble(ystore(iglob)))**2 &
                   +(z_target_source-dble(zstore(iglob)))**2)
             if(dist < distmin) then
-              distmin=dist
-              ispec_selected_source(isource)=ispec
+              distmin = dist
+              ispec_selected_source(isource) = ispec
               ix_initial_guess_source = i
               iy_initial_guess_source = j
               iz_initial_guess_source = k
@@ -389,9 +379,9 @@
 
     ! sets whether acoustic (1) or elastic (2)
     if( ispec_is_acoustic( ispec_selected_source(isource) ) ) then
-      idomain(isource) = 1
+      idomain(isource) = IDOMAIN_ACOUSTIC
     else if( ispec_is_elastic( ispec_selected_source(isource) ) ) then
-      idomain(isource) = 2
+      idomain(isource) = IDOMAIN_ELASTIC
     else
       idomain(isource) = 0
     endif
@@ -745,31 +735,41 @@
         write(IMAIN,*)
         write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
         write(IMAIN,*) '               in element ',ispec_selected_source(isource)
-        if( idomain(isource) == 1 ) then
+        
+        if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
           write(IMAIN,*) '               in acoustic domain'
-        else if( idomain(isource) == 2 ) then
+        else if( idomain(isource) == IDOMAIN_ELASTIC ) then
           write(IMAIN,*) '               in elastic domain'
         else
-          write(IMAIN,*) '               in unknown domain'        
+          write(IMAIN,*) '               in unknown domain'  
         endif
         
         write(IMAIN,*)
         if(USE_FORCE_POINT_SOURCE) then
-          write(IMAIN,*) '  xi coordinate of source in that element: ',nint(xi_source(isource))
-          write(IMAIN,*) '  eta coordinate of source in that element: ',nint(eta_source(isource))
+          write(IMAIN,*) '  xi    coordinate of source in that element: ',nint(xi_source(isource))
+          write(IMAIN,*) '  eta   coordinate of source in that element: ',nint(eta_source(isource))
           write(IMAIN,*) '  gamma coordinate of source in that element: ',nint(gamma_source(isource))
-          write(IMAIN,*) 'nu1 = ',nu_source(1,:,isource)
-          write(IMAIN,*) 'nu2 = ',nu_source(2,:,isource)
-          write(IMAIN,*) 'nu3 = ',nu_source(3,:,isource)
-          write(IMAIN,*) 'at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
+          write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
+          write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
+          write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
+          write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
+          
+          ! prints frequency content for point forces
+          f0 = hdur(isource) 
+          t0_ricker = 1.2d0/f0 
+          write(IMAIN,*) '  using a source of dominant frequency ',f0
+          write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+          write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+          write(IMAIN,*) '  t0 = ',t0_ricker,'t_cmt = ',t_cmt(isource)
+
         else
-          write(IMAIN,*) '   xi coordinate of source in that element: ',xi_source(isource)
+          write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
-          write(IMAIN,*) 'gamma coordinate of source in that element: ',gamma_source(isource)
+          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
         endif
 
         ! add message if source is a Heaviside
-        if(hdur(isource) < 5.*DT) then
+        if(hdur(isource) <= 5.*DT) then
           write(IMAIN,*)
           write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
           write(IMAIN,*)
@@ -831,7 +831,7 @@
       endif
 
       ! checks CMTSOLUTION format for acoustic case
-      if( idomain(isource) == 1 ) then
+      if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
         if( Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
            Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL ) then
             write(IMAIN,*)
@@ -843,6 +843,12 @@
             write(IMAIN,*)
             call exit_mpi(myrank,'error acoustic source')
         endif
+      endif
+
+      ! checks source domain 
+      if( idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC ) then
+        ! only acoustic/elastic domain implement yet
+        call exit_MPI(myrank,'source located in unknown domain')
       endif
 
 ! end of loop on all the sources

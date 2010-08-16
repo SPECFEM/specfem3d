@@ -146,10 +146,7 @@
   allocate(ispec_is_acoustic(NSPEC_AB))
   allocate(ispec_is_elastic(NSPEC_AB))
   allocate(ispec_is_poroelastic(NSPEC_AB))
-    
-  ! ocean mass matrix
-  allocate(rmass_ocean_load(NGLOB_AB))  
-  
+      
   ! initializes adjoint simulations
   call initialize_simulation_adjoint()
   
