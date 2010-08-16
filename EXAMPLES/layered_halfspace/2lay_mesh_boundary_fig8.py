@@ -21,24 +21,32 @@ cubit.cmd('brick x 134000 y 134000 z 60000')
 cubit.cmd('volume 1 move x 67000 y 67000 z -30000')
 
 # create vertices for discontinuity
-cubit.cmd('split curve 9  distance 3000')
-cubit.cmd('split curve 10  distance 3000')
-cubit.cmd('split curve 11  distance 3000')
-cubit.cmd('split curve 12  distance 3000')
+distance = 3000
+cubit.cmd('split curve 9  distance '+str(distance))
+cubit.cmd('split curve 10  distance '+str(distance))
+cubit.cmd('split curve 11  distance '+str(distance))
+cubit.cmd('split curve 12  distance '+str(distance))
 
 # create surface for interface
+# surface at 3 km depth
 cubit.cmd('create surface vertex 9 10 12 11')
 
 cubit.cmd('section volume 1 with surface 7 keep normal')
 cubit.cmd('section volume 1 with surface 7 reverse')
 
 # create vertices for auxiliary interface to allow for refinement
-cubit.cmd('split curve 29  distance 9000')
-cubit.cmd('split curve 31  distance 9000')
-cubit.cmd('split curve 32  distance 9000')
-cubit.cmd('split curve 36  distance 9000')
+#distance = 9000
+# to have a surface at 25050 m depth, such that point force source can be located exactly
+# on a GLL point at that depth as in Komatitsch et al. (1999)
+distance = 22050
+cubit.cmd('split curve 29  distance '+str(distance))
+cubit.cmd('split curve 31  distance '+str(distance))
+cubit.cmd('split curve 32  distance '+str(distance))
+cubit.cmd('split curve 36  distance '+str(distance))
+
 
 # create surface for buffer interface to refine BELOW the discontinuity
+# surface at 3 km depth
 cubit.cmd('create surface vertex 25 26 28 27')
 
 cubit.cmd('section volume 3 with surface 19 keep normal')
@@ -50,15 +58,27 @@ cubit.cmd('merge all')
 cubit.cmd('imprint all')
 
 # Meshing the volumes
-cubit.cmd('volume 3 size 3589.2')
+## middle volume
+#cubit.cmd('volume 3 size 3589.2')
+cubit.cmd('volume 3 size 4500.')
 cubit.cmd('mesh volume 3')
 
+# refine boundary surface between top and middle volume
+# this will create a tripling layer from the bottom to the top in the middle volume
 cubit.cmd('refine surface 8 numsplit 1 bias 1.0 depth 1')
 
-cubit.cmd('volume 1 size 1196.4')
+#cubit.cmd('pause')
+
+## top volume
+#cubit.cmd('volume 1 size 1196.4')
+cubit.cmd('volume 1 size 1000.0')
 cubit.cmd('mesh volume 1')
 
-cubit.cmd('volume 5 size 4785.71')
+#cubit.cmd('pause')
+
+## bottom volume
+#cubit.cmd('volume 5 size 4785.71')
+cubit.cmd('volume 5 size 4500.')
 cubit.cmd('mesh volume 5')
 
 #### End of meshing 

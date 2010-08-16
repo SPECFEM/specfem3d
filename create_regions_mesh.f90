@@ -361,7 +361,8 @@ subroutine create_regions_mesh_ext(ibool, &
                         ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
 ! computes the approximate amount of static memory needed to run the solver
-  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh,static_memory_size)
+  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
+                  OCEANS,static_memory_size)
   call max_all_dp(static_memory_size, max_static_memory_size)
 
 ! checks the mesh, stability and resolved period

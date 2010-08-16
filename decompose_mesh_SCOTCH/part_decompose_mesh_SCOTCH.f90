@@ -581,9 +581,9 @@ contains
                             mat_prop(4,i), mat_prop(5,i), mat_prop(6,i)
     end do
     do i = 1, count_undef_mat
-       write(IIN_database,*) trim(undef_mat_prop(1,i)),trim(undef_mat_prop(2,i)), &
-                            trim(undef_mat_prop(3,i)),trim(undef_mat_prop(4,i)), &
-                            trim(undef_mat_prop(5,i)),trim(undef_mat_prop(6,i))
+       write(IIN_database,*) trim(undef_mat_prop(1,i)),' ',trim(undef_mat_prop(2,i)),' ', &
+                            trim(undef_mat_prop(3,i)),' ',trim(undef_mat_prop(4,i)),' ', &
+                            trim(undef_mat_prop(5,i)),' ',trim(undef_mat_prop(6,i))
     end do
 
   end subroutine  write_material_properties_database
@@ -1159,7 +1159,8 @@ contains
   !               expensive calculations in specfem simulations
   !--------------------------------------------------
 
-  subroutine acoustic_elastic_load (elmnts_load,nelmnts,nb_materials,num_material,mat_prop)
+  subroutine acoustic_elastic_load (elmnts_load,nelmnts,count_def_mat,count_undef_mat, &
+                                    num_material,mat_prop,undef_mat_prop)
   !
   ! note: 
   !   acoustic material = domainID 1  (stored in mat_prop(6,..) )
@@ -1168,32 +1169,50 @@ contains
     implicit none
 
     integer(long),intent(in) :: nelmnts
-    integer, intent(in)  :: nb_materials
+    integer, intent(in)  :: count_def_mat,count_undef_mat
     
     ! load weights
     integer,dimension(1:nelmnts),intent(out) :: elmnts_load
 
     ! materials  
     integer, dimension(1:nelmnts), intent(in)  :: num_material
-    double precision, dimension(6,nb_materials),intent(in)  :: mat_prop
+    double precision, dimension(6,count_def_mat),intent(in)  :: mat_prop
+    character (len=30), dimension(6,count_undef_mat),intent(in) :: undef_mat_prop
     
     ! local parameters
-    logical, dimension(nb_materials)  :: is_acoustic, is_elastic    
-    integer  :: i,el
-    
-    ! sets acoustic/elastic flags for materials
+    logical, dimension(-count_undef_mat:count_def_mat)  :: is_acoustic, is_elastic    
+    integer  :: i,el,idomain_id
+
+    ! initializes flags
     is_acoustic(:) = .false.
     is_elastic(:) = .false.
-    do i = 1, nb_materials
-       ! acoustic material has idomain_id 1
-       if (mat_prop(6,i) == 1 ) then
+    
+    ! sets acoustic/elastic flags for defined materials
+    do i = 1, count_def_mat
+       idomain_id = mat_prop(6,i)
+       ! acoustic material has idomain_id 1       
+       if (idomain_id == 1 ) then
           is_acoustic(i) = .true.
        endif
        ! elastic material has idomain_id 2
-       if (mat_prop(6,i) == 2 ) then
+       if (idomain_id == 2 ) then
           is_elastic(i) = .true.
        endif
     enddo
+
+    ! sets acoustic/elastic flags for undefined materials
+    do i = 1, count_undef_mat
+       read(undef_mat_prop(6,i),'(i)') idomain_id
+       ! acoustic material has idomain_id 1
+       if (idomain_id == 1 ) then
+          is_acoustic(-i) = .true.
+       endif
+       ! elastic material has idomain_id 2
+       if (idomain_id == 2 ) then
+          is_elastic(-i) = .true.
+       endif
+    enddo
+
 
     ! sets weights for elements
     do el = 0, nelmnts-1

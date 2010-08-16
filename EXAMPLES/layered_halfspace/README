@@ -2,6 +2,8 @@
 README
 ----------------------------------------------------------------------
 
+This example is used for validation with a layer-cake solution from Komatitsch et al. (1999),
+using a 2-layer model as shown in their Figure 8, left. 
 
 step-by-step tutorial:
 
@@ -70,13 +72,29 @@ step-by-step tutorial:
       
 4. run simulation:
 
+    - modify constants.h:
+        to use a vertical force source, with a Ricker wavelet source time function,
+        turn flag on for parameter USE_FORCE_POINT_SOURCE:
+          ...
+            logical, parameter :: USE_FORCE_POINT_SOURCE = .true.
+          ...
+
     - compile specfem3D:
       > make xspecfem3D
       
     - submit job script:
       > qsub go_solver_pbs.bash
 
+Optional:
+  Compare the solution traces: 
+    'OUTPUT_FILES/X31.BHZ.semd'
+  and 
+    'OUTPUT_FILES/X55.BHZ.semd' 
 
+  with the solutions of Komatitsch et al. (1999, Figure 9, bottom and top) provided in: 
+    'EXAMPLES/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Ux_file_Ycste_0031.txt'
+  and 
+    'EXAMPLES/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Ux_file_Ycste_0055.txt' 
 
     
     

@@ -466,6 +466,8 @@
 
   implicit none
 
+  include "constants.h"
+
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
   
@@ -481,6 +483,7 @@
 
   implicit none
 
+  include "constants.h"
 
   integer recvcount, dest, recvtag, req
   real(kind=CUSTOM_REAL), dimension(recvcount) :: recvbuf
@@ -544,6 +547,8 @@
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
   implicit none
+
+  include "constants.h"
   
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
@@ -575,7 +580,9 @@
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
   implicit none
-
+  
+  include "constants.h"
+  
   integer sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
 

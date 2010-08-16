@@ -36,7 +36,8 @@
 
   ! for external tomography....
   ! (regular spaced, xyz-block file in ascii)
-  character (len=80) :: TOMO_FILENAME = 'DATA/veryfast_tomography_abruzzo_complete.xyz' 
+  !character (len=80) :: TOMO_FILENAME = 'DATA/veryfast_tomography_abruzzo_complete.xyz' 
+  character (len=80) :: TOMO_FILENAME = 'DATA/tomography_model.xyz' 
   
   ! model dimensions
   double precision :: ORIG_X,ORIG_Y,ORIG_Z
@@ -144,6 +145,12 @@
   enddo 
   
   close(27)   
+
+  if( myrank == 0 ) then
+    write(IMAIN,*) 
+    write(IMAIN,*) 'tomography model: ',trim(TOMO_FILENAME)
+    write(IMAIN,*) 
+  endif
                                                                 
   end subroutine read_model_tomography
 

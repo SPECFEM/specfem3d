@@ -539,7 +539,7 @@ class mesh(object,mesh_tools):
         meshfile=open(mesh_name,'w')
         print 'Writing '+mesh_name+'.....'
         num_elems=cubit.get_hex_count()
-        print num_elems
+        print '  number of elements:',str(num_elems)
         meshfile.write(str(num_elems)+'\n')
         num_write=0
         for block,flag in zip(self.block_mat,self.block_flag):
@@ -554,7 +554,7 @@ class mesh(object,mesh_tools):
                 txt=txt+('%10i %10i %10i %10i %10i %10i %10i %10i\n')% nodes[:]
                 meshfile.write(txt)
         meshfile.close()
-        print 'Ok',str(num_elems)
+        print 'Ok'
     def material_write(self,mat_name):
         mat=open(mat_name,'w')
         print 'Writing '+mat_name+'.....'
@@ -569,6 +569,7 @@ class mesh(object,mesh_tools):
         print 'Writing '+nodecoord_name+'.....'
         node_list=cubit.parse_cubit_list('node','all')
         num_nodes=len(node_list)
+        print '  number of nodes:',str(num_nodes)        
         nodecoord.write('%10i\n' % num_nodes)
         #
         for node in node_list:

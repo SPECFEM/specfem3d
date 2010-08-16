@@ -3,7 +3,7 @@
 #############################################################
 ## modify to match your compiler defaults 
 ## (which were used to compile SCOTCH libraries from below as well)
-F90 = ifort      # use -warn
+F90 = ifort # use -g -traceback -check bounds -warn 
 #F90 = gfortran    # use -Wall
 
 ## modify to match your library paths
