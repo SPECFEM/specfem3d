@@ -116,7 +116,8 @@ module decompose_mesh_SCOTCH
   !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in 
   ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
-          status='old', form='formatted')
+          status='old', form='formatted',iostat=ierr)
+    if( ierr /= 0 ) stop 'error opening mesh_file'
     read(98,*) nspec
     allocate(elmnts(esize,nspec))
     do ispec = 1, nspec
@@ -157,8 +158,10 @@ module decompose_mesh_SCOTCH
 
   ! reads material associations
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
-          status='old', form='formatted')
+          status='old', form='formatted',iostat=ierr)
+    if( ierr /= 0 ) stop 'error opening materials_file'
     allocate(mat(2,nspec))
+    mat(:,:) = 0
     do ispec = 1, nspec
       ! format: # id_element #flag
       ! note: be aware that elements may not be sorted in materials_file
@@ -188,7 +191,9 @@ module decompose_mesh_SCOTCH
     count_def_mat = 0
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
-          status='old', form='formatted')
+          status='old', form='formatted',iostat=ierr)
+    if( ierr /= 0 ) stop 'error opening nummaterial_velocity_file'
+          
     ! note: format #material_domain_id #material_id #...      
     read(98,*,iostat=ierr) idummy,num_mat
     print *,'materials:'
@@ -215,21 +220,35 @@ module decompose_mesh_SCOTCH
     endif
     allocate(mat_prop(6,count_def_mat))
     allocate(undef_mat_prop(6,count_undef_mat))
+    mat_prop(:,:) = 0.d0
+    undef_mat_prop(:,:) = ''
+    
     ! reads in defined material properties
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
-          status='old', form='formatted')
-
-    ! note: entries in nummaterial_velocity_file must be sorted to list all
-    !          defined materials (material_id > 0) first, and afterwards list all
-    !          undefined materials (material_id < 0 )    
+          status='old', form='formatted', iostat=ierr)
+    if( ierr /= 0 ) stop 'error opening nummaterial_velocity_file'
+    
+    ! note: entries in nummaterial_velocity_file can be an unsorted list of all
+    !          defined materials (material_id > 0) and undefined materials (material_id < 0 )    
     do imat=1,count_def_mat
        ! material definitions
        !
        ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
        !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_flag #(5) anisotropy_flag
        !
-       read(98,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
+       !read(98,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
+       ! reads lines unti it reaches a defined material
+       num_mat = -1
+       do while( num_mat < 0 .and. ierr == 0)
+         read(98,'(A256)',iostat=ierr) line
+         read(line,*) idomain_id,num_mat
+       enddo
+       if( ierr /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
+       
+       ! reads in defined material properties
+       read(line,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
 
+       ! checks material_id bounds     
        if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
        
        !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
@@ -246,7 +265,9 @@ module decompose_mesh_SCOTCH
           stop 'wrong attenuation flag in mesh: too large, not supported yet - check with constants.h'
        endif
     end do
+    
     ! reads in undefined material properties
+    rewind(98,iostat=ierr) ! back to the beginning of the file
     do imat=1,count_undef_mat
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format: 
@@ -256,15 +277,21 @@ module decompose_mesh_SCOTCH
        !   - for tomography models 
        !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name 
        !        example:     2  -1 tomography elastic tomography_model.xyz 1
-       read(98,'(A256)') line
-
+       ! reads lines unti it reaches a defined material
+       num_mat = 1
+       do while( num_mat >= 0 .and. ierr == 0 )
+         read(98,'(A256)',iostat=ierr) line
+         read(line,*) idomain_id,num_mat
+       enddo
+       if( ierr /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
+        
        ! checks if interface or tomography definition 
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
          ! line will have 5 arguments, e.g.: 2  -1 interface 1 2 
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
-         undef_mat_prop(5,imat) = "1" ! dummy value
+         undef_mat_prop(5,imat) = "0" ! dummy value
        else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then 
          ! line will have 6 arguments, e.g.: 2  -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
@@ -307,7 +334,7 @@ module decompose_mesh_SCOTCH
           ! must point to an undefined material
           if( -num_mat > count_undef_mat) stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          endif
-       endif                                                                           
+       endif   
     end do
     close(98)
 
