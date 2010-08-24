@@ -178,7 +178,7 @@
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
     open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
-          status='old',action='read',form='unformatted')
+          status='old',action='read',form='unformatted',iostat=ios)
     read(27) NSPEC_AB
     read(27) NGLOB_AB 
     
@@ -198,24 +198,27 @@
     write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
     open(unit = 28,file = trim(local_data_file),status='old',&
-          action='read', iostat = ios,form ='unformatted')
+          action='read',form ='unformatted',iostat=ios)          
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
-    allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))    
-    read(28) data
+    
+    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)
+    if( ios /= 0 ) stop 'error allocating dat array'
+    
+    ! uses conversion to real values
+    if( CUSTOM_REAL == 8 ) then
+      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)    
+      if( ios /= 0 ) stop 'error allocating data array'
+      read(28) data
+      dat = sngl(data)
+      deallocate(data)
+    else
+      read(28) dat  
+    endif
     close(28)
     print *, trim(local_data_file)
-
-    ! uses conversion to real values
-    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    if( CUSTOM_REAL == 4 ) then
-      dat = data
-    else
-      dat = sngl(data)
-    endif
-
 
     ! writes point coordinates and scalar value to mesh file
     if (.not. HIGH_RESOLUTION_MESH) then
@@ -234,7 +237,7 @@
     np = np + numpoin
 
     ! cleans up memory allocations
-    deallocate(ibool,data,dat,xstore,ystore,zstore)
+    deallocate(ibool,dat,xstore,ystore,zstore)
     
   enddo  ! all slices for points
 
@@ -392,6 +395,11 @@
       nee = nee + NSPEC_AB
 
     endif ! HIGH_RESOLUTION_MESH      
+
+    ! frees arrays
+    if( allocated(mask_ibool) ) deallocate( mask_ibool)
+    if( allocated(ibool) ) deallocate(ibool)
+    
   enddo
     
   end subroutine cvd_count_totals_ext_mesh

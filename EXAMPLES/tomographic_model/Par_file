@@ -12,7 +12,7 @@ NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 1000
-DT                              = 0.05d0
+DT                              = 0.02d0
 
 # parameters describing the model
 OCEANS                          = .false.

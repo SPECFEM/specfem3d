@@ -25,7 +25,7 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-  subroutine specfem3D
+  subroutine specfem3D()
 
   use specfem_par
   

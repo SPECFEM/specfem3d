@@ -142,14 +142,12 @@
     vs_tomography(irecord) = vs_tomo
     rho_tomography(irecord) = rho_tomo
     z_tomography(irecord) = z_tomo
-  enddo 
-  
+  enddo   
   close(27)   
 
+  ! user output
   if( myrank == 0 ) then
-    write(IMAIN,*) 
-    write(IMAIN,*) 'tomography model: ',trim(TOMO_FILENAME)
-    write(IMAIN,*) 
+    write(IMAIN,*) '     tomography model: ',trim(TOMO_FILENAME)
   endif
                                                                 
   end subroutine read_model_tomography

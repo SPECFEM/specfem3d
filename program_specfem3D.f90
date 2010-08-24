@@ -29,7 +29,7 @@
   call init()
 
 ! run the main program
-  call specfem3D
+  call specfem3D()
 
 ! mpi finish
   call finalize()
