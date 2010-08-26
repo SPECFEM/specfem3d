@@ -24,11 +24,12 @@
 !=====================================================================
 
 !
-!---  create a movie of vertical component of surface displacement or velocity
-!---  in AVS or OpenDX format
+!---  create a movie of the vertical component of surface displacement or velocity
+!---  or a ShakeMap(R) (i.e. map of the maximum absolute value of the two horizontal components
+!---  of the velocity vector) in AVS, OpenDX or GMT format
 !
 
-  program create_movie_AVS_DX
+  program create_movie_shakemap
 
   implicit none
 
@@ -54,7 +55,7 @@
   integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
   integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4
 
-  logical USE_OPENDX,USE_AVS,plot_shaking_map
+  logical USE_OPENDX,USE_AVS,USE_GMT,plot_shaking_map
 
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: x,y,z,display
   real(kind=CUSTOM_REAL) xcoord,ycoord,zcoord
@@ -65,6 +66,9 @@
   character(len=256) outputname
 
   integer ipoin
+
+  ! GMT
+  double precision lat,long
 
   ! for sorting routine
   integer npointot,ilocnum,nglob,i,j,ielm,ieoff,ispecloc
@@ -224,12 +228,15 @@
   if(iformat == 1) then
     USE_OPENDX = .true.
     USE_AVS = .false.
+    USE_GMT = .false.
   else if(iformat == 2) then
     USE_OPENDX = .false.
     USE_AVS = .true.
+    USE_GMT = .false.
   else
     USE_OPENDX = .false.
     USE_AVS = .false.
+    USE_GMT = .true.
   endif
 
   ! define the total number of elements at the surface
@@ -630,6 +637,9 @@
           write(outputname,"('/AVS_shaking_map.inp')")
           open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
+       else if(USE_GMT) then
+          write(outputname,"('/gmt_shaking_map.xyz')")
+          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')      
         else
           stop 'wrong output format selected'
         endif
@@ -644,6 +654,9 @@
           write(outputname,"('/AVS_movie_',i6.6,'.inp')") ivalue
           open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
+       else if(USE_GMT) then
+          write(outputname,"('/gmt_movie_',i6.6,'.xyz')") ivalue
+          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
         else
           stop 'wrong output format selected'
         endif
@@ -651,8 +664,24 @@
       endif
 
 
-      if(.false.) then
-        ! GMT format not implemented yet        
+      if(USE_GMT) then
+       
+! output list of points
+         mask_point = .false.
+         do ispec=1,nspectot_AVS_max
+            ieoff = NGNOD2D_AVS_DX*(ispec-1)
+! four points for each element
+            do ilocnum = 1,NGNOD2D_AVS_DX
+               ibool_number = iglob(ilocnum+ieoff)
+               if(.not. mask_point(ibool_number)) then
+                  call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
+                       UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+                  write(11,*) long,lat,field_display(ilocnum+ieoff)
+               endif
+               mask_point(ibool_number) = .true.
+            enddo
+         enddo
+         
       else
 
         ! output list of points
@@ -750,15 +779,15 @@
       close(11)
 
     ! end of loop and test on all the time steps for all the movie images
-    endif
-  enddo ! it
+   endif
+enddo ! it
 
   print *
   print *,'done creating movie or shaking map'
   print *
   if(USE_OPENDX) print *,'DX files are stored in ', trim(OUTPUT_FILES), '/DX_*.dx'
   if(USE_AVS) print *,'AVS files are stored in ', trim(OUTPUT_FILES), '/AVS_*.inp'
-
+  if(USE_GMT) print *,'GMT files are stored in ', trim(OUTPUT_FILES), '/gmt_*.xyz'
   print *
 
 
@@ -785,7 +814,7 @@
     deallocate(display)
   endif
 
-  end program create_movie_AVS_DX
+  end program create_movie_shakemap
 
 !
 !=====================================================================
