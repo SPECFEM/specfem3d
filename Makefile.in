@@ -240,13 +240,8 @@ xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
 
-#@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) OUTPUT_FILES/values_from_mesher.h
-#@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
-
-@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o OUTPUT_FILES/surface_from_mesher.h $O/param_reader.o
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
-
-
+@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) OUTPUT_FILES/surface_from_mesher.h
+@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
 
 
 xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
