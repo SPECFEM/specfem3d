@@ -51,20 +51,21 @@
       write(27) displ
       write(27) veloc
       write(27) accel
+
+      if (ATTENUATION) then
+        write(27) R_xx
+        write(27) R_yy
+        write(27) R_xy
+        write(27) R_xz
+        write(27) R_yz
+        write(27) epsilondev_xx
+        write(27) epsilondev_yy
+        write(27) epsilondev_xy
+        write(27) epsilondev_xz
+        write(27) epsilondev_yz
+      endif
     endif
     
-    if (ATTENUATION) then
-      write(27) R_xx
-      write(27) R_yy
-      write(27) R_xy
-      write(27) R_xz
-      write(27) R_yz
-      write(27) epsilondev_xx
-      write(27) epsilondev_yy
-      write(27) epsilondev_xy
-      write(27) epsilondev_xz
-      write(27) epsilondev_yz
-    endif
     close(27)
 
 ! adjoint simulations

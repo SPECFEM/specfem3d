@@ -39,19 +39,28 @@ program combine_surf_data
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
   integer np, ne, npp, nee, npoint, nelement, njunk, n1, n2, n3, n4
-  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob
-  logical mask_ibool(NGLOB_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: data_3D
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: data_2D
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
+!  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+!  logical mask_ibool(NGLOB_AB)
+!  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
+  ! mesh coordinates
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
+  integer, dimension(:,:,:,:),allocatable :: ibool
+  logical, dimension(:),allocatable :: mask_ibool
+  integer :: NSPEC_AB,NGLOB_AB
+  
   real x, y, z
   real, dimension(:,:,:,:), allocatable :: dat3D
   real, dimension(:,:,:), allocatable :: dat2D
   character(len=256) :: sline, arg(8), filename, indir, outdir, prname, surfname
   character(len=256) :: mesh_file, local_file, local_data_file, local_ibool_file
   character(len=256) :: local_ibool_surf_file
-  integer :: num_ibool(NGLOB_AB)
+
+!  integer :: num_ibool(NGLOB_AB)
+  integer,dimension(:),allocatable :: num_ibool
+  
   logical :: HIGH_RESOLUTION_MESH,  FILE_ARRAY_IS_3D
   integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim
   integer,dimension(:), allocatable ::  ibelm_surf
@@ -132,8 +141,8 @@ program combine_surf_data
   mesh_file = trim(outdir) // '/' // trim(filename)//'.surf'
   call open_file(trim(mesh_file)//char(0))
 
-  nspec = NSPEC_AB
-  nglob = NGLOB_AB
+!  nspec = NSPEC_AB
+!  nglob = NGLOB_AB
 
   np = 0
 
@@ -146,6 +155,21 @@ program combine_surf_data
     print *, ' '
     print *, 'Reading slice ', iproc
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
+
+    ! gets number of elements and global points for this partition
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
+          status='old',action='read',form='unformatted',iostat=ios)
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB 
+    close(27)
+    nspec = NSPEC_AB
+    nglob = NGLOB_AB    
+    
+    ! allocates arrays
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))    
+    allocate(mask_ibool(NGLOB_AB))    
+    allocate(num_ibool(NGLOB_AB))    
+    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
 
     ! surface file
     local_ibool_surf_file = trim(prname) // 'ibelm_' //trim(surfname)// '.bin'
@@ -266,6 +290,9 @@ program combine_surf_data
     if (numpoin /= npoint) stop 'Error: number of points are not consistent'
     np = np + npoint
 
+    ! frees arrays
+    deallocate(ibool,mask_ibool,num_ibool,xstore,ystore,zstore)
+
   enddo  ! all slices for points
 
   if (np /=  npp) stop 'Error: Number of total points are not consistent'
@@ -281,6 +308,21 @@ program combine_surf_data
 
     print *, 'Reading slice ', iproc
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
+
+    ! gets number of elements and global points for this partition
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
+          status='old',action='read',form='unformatted',iostat=ios)
+    read(27) NSPEC_AB
+    read(27) NGLOB_AB 
+    close(27)
+    nspec = NSPEC_AB
+    nglob = NGLOB_AB    
+    
+    ! allocates arrays
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))    
+    allocate(mask_ibool(NGLOB_AB))    
+    allocate(num_ibool(NGLOB_AB))    
+
 
     np = npoint * (it-1)
 
@@ -350,6 +392,9 @@ program combine_surf_data
       enddo
     enddo
     ne = ne + nelement
+
+    ! frees arrays
+    deallocate(ibool,mask_ibool,num_ibool)
 
   enddo ! num_node
   if (ne /= nee) stop 'Number of total elements are not consistent'

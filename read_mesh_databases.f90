@@ -128,6 +128,24 @@
     allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
     allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
 
+    ! note: currently, they need to be defined, as they are used in the routine arguments 
+    !          for compute_forces_elastic_Deville()
+    allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+    allocate(R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+    allocate(R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+    allocate(R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
+    allocate(R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))  
+    
+    ! needed for attenuation and/or kernel computations
+    allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY))
+    allocate(epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY))
+    allocate(epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY))
+    allocate(epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY))
+    allocate(epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY))
+
+    ! note: needed for argument of deville routine
+    allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))                                      
+
     read(27) rmass
     if( OCEANS ) then
       ! ocean mass matrix
@@ -177,6 +195,7 @@
       call exit_MPI(myrank,'error attenuation flag entry exceeds range')
     endif
   endif        
+
   
 ! absorbing boundary surface
   read(27) num_abs_boundary_faces
@@ -432,6 +451,24 @@
     allocate(b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh))    
     allocate(b_buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
     allocate(b_buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+
+    ! allocates attenuation solids
+    if( ATTENUATION ) then
+      allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
+            b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) )
+    endif
+
+    ! note: these arrays are needed for attenuation and/or kernel computations          
+    allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+            b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+            b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+            b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
+            b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) )  
+    ! needed for kernel computations                                                            
+    allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))                                      
     
   endif
 
@@ -454,21 +491,6 @@
     allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
     allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
     
-  endif
-
-! allocates attenuation solids
-  if( ATTENUATION .and. SIMULATION_TYPE == 3 ) then
-    allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) )
-            
-    allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
-            b_epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
-            b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
-            b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL), &
-            b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL) )    
   endif
   
 ! ADJOINT moho

@@ -348,26 +348,8 @@
                    + deltat**4*tauinv(:,:)**3 / 24._CUSTOM_REAL
     gammaval(:,:) = deltat / 2._CUSTOM_REAL + deltat**2*tauinv(:,:) / 6._CUSTOM_REAL &
                     + deltat**3*tauinv(:,:)**2 / 24._CUSTOM_REAL
-  endif
 
-
-  !pll, to put elsewhere
-  ! note: currently, they need to be defined here, as they are used in the routine arguments 
-  !          for compute_forces_with_Deville()
-  allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
-  allocate(R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
-  allocate(R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
-  allocate(R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
-  allocate(R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS))
-  allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
-  allocate(epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
-  allocate(epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
-  allocate(epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
-  allocate(epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB))
-
-! clear memory variables if attenuation
-  if(ATTENUATION) then
-  
+    ! clear memory variables if attenuation
     ! initialize memory variables for attenuation
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
@@ -478,21 +460,22 @@
       read(27) b_displ
       read(27) b_veloc
       read(27) b_accel
-    endif
-    
-    ! memory variables if attenuation
-    if( ATTENUATION ) then
-       read(27) b_R_xx
-       read(27) b_R_yy
-       read(27) b_R_xy
-       read(27) b_R_xz
-       read(27) b_R_yz
-       read(27) b_epsilondev_xx
-       read(27) b_epsilondev_yy
-       read(27) b_epsilondev_xy
-       read(27) b_epsilondev_xz
-       read(27) b_epsilondev_yz
-    endif  
+
+      ! memory variables if attenuation
+      if( ATTENUATION ) then
+         read(27) b_R_xx
+         read(27) b_R_yy
+         read(27) b_R_xy
+         read(27) b_R_xz
+         read(27) b_R_yz
+         read(27) b_epsilondev_xx
+         read(27) b_epsilondev_yy
+         read(27) b_epsilondev_xy
+         read(27) b_epsilondev_xz
+         read(27) b_epsilondev_yz
+      endif  
+
+    endif    
 
     close(27)
   endif

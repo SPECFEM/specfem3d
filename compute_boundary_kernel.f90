@@ -23,8 +23,7 @@
 !
 !=====================================================================
 
-subroutine compute_boundary_kernel()
-
+  subroutine compute_boundary_kernel()
 
 ! isotropic topography kernel computation
 ! compare with Tromp et al. (2005), eq. (25), or see Liu & Tromp (2008), eq. (65)        

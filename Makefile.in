@@ -138,6 +138,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
 	$O/PML_init.o \
 	$O/compute_boundary_kernel.o \
+	$O/compute_kernels.o \
 	$O/compute_forces_acoustic.o \
 	$O/compute_forces_acoustic_pot.o \
 	$O/compute_forces_acoustic_PML.o \
@@ -196,6 +197,8 @@ LIBSPECFEM = $O/libspecfem.a
 @COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	check_buffers_2D \
 @COND_PYRE_FALSE@	combine_AVS_DX \
+@COND_PYRE_FALSE@	combine_vol_data \
+@COND_PYRE_FALSE@	combine_surf_data \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
@@ -572,6 +575,9 @@ $O/get_attenuation_model.o: constants.h get_attenuation_model.f90
 
 $O/compute_boundary_kernel.o: constants.h compute_boundary_kernel.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
+
+$O/compute_kernels.o: constants.h compute_kernels.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_kernels.o compute_kernels.f90
 
 $O/combine_vol_data.o: constants.h combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o combine_vol_data.f90
