@@ -94,7 +94,7 @@
 
     ! adjoint simulations: kernels
     if( SIMULATION_TYPE == 3 ) then
-      call it_update_adjointkernels()
+      call compute_kernels()
     endif
 
     ! outputs movie files
@@ -354,6 +354,12 @@
 
   if( it > 1 .and. it < NSTEP) then
     ! adjoint simulations
+
+! note backward/reconstructed wavefields: 
+!       storing wavefield displ() at time step it, corresponds to time (it-1)*DT - t0 (see routine write_seismograms_to_file )
+!       reconstucted wavefield b_displ() at it corresponds to time (NSTEP-it-1)*DT - t0   
+!       we read in the reconstructed wavefield at the end of the time iteration loop, i.e. after the Newark scheme,
+!       thus, indexing is NSTEP-it (rather than something like NSTEP-(it-1) )
     if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
       ! reads files content
       write(outputname,"('save_Q_arrays_',i6.6,'.bin')") NSTEP-it
@@ -401,109 +407,12 @@
         write(27) epsilondev_yz
       endif
       if( ACOUSTIC_SIMULATION ) then
-        write(27) b_potential_acoustic
-        write(27) b_potential_dot_acoustic
-        write(27) b_potential_dot_dot_acoustic        
+        write(27) potential_acoustic
+        write(27) potential_dot_acoustic
+        write(27) potential_dot_dot_acoustic        
       endif
       close(27)
     endif ! SIMULATION_TYPE
   endif ! it
 
   end subroutine it_store_attenuation_arrays
-
-!================================================================
-  
-  subroutine it_update_adjointkernels()
-
-! kernel calculations
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-  
-  implicit none
-  ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_displ_elm,accel_elm
-  real(kind=CUSTOM_REAL) :: kappal
-  integer :: i,j,k,ispec,iglob
-  
-  !elastic domains  
-  if(ELASTIC_SIMULATION ) then
-
-    ! NOTE: kappa and mu kernels have already been updated in compute_forces_elastic()
-    
-    ! density kernel update
-    do ispec = 1, NSPEC_AB
-      do k = 1, NGLLZ
-        do j = 1, NGLLY
-          do i = 1, NGLLX
-            iglob = ibool(i,j,k,ispec)
-            
-            ! note: takes displacement from backward/reconstructed (forward) field b_displ
-            !          and acceleration from adjoint field accel (containing adjoint sources)
-            !
-            ! note: : time integral summation uses deltat
-            !
-            ! compare with Tromp et al. (2005), eq. (14), which takes adjoint displacement
-            ! and forward acceleration, that is the symmetric form of what is calculated here
-            ! however, this kernel expression is symmetric with regards to interchange adjoint - forward field 
-            rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
-                                  + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
-          enddo
-        enddo
-      enddo
-    enddo
-
-    ! moho kernel
-    if (SAVE_MOHO_MESH) then
-      call compute_boundary_kernel()      
-    endif     
-    
-  endif ! elastic
-
-  ! acoustic domains  
-  if( ACOUSTIC_SIMULATION ) then
-  
-    do ispec=1,NSPEC_AB
-    
-      ! acoustic wave field
-      if( ispec_is_acoustic(ispec) ) then
-      
-        ! backward fields: displacement vector
-        call compute_gradient(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                        b_potential_acoustic, b_displ_elm,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore)
-        ! adjoint fields: acceleration vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_dot_acoustic, accel_elm,&
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore)
-
-        do k = 1, NGLLZ
-          do j = 1, NGLLY
-            do i = 1, NGLLX
-              iglob = ibool(i,j,k,ispec)
-            
-              ! density kernel
-              rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
-                        - deltat * dot_product(accel_elm(:,i,j,k), b_displ_elm(:,i,j,k))
-
-              ! bulk modulus kernel
-              kappal = kappastore(i,j,k,ispec)
-              kappa_ac_kl(i,j,k,ispec) = kappa_ac_kl(i,j,k,ispec) &
-                                    - deltat * kappal  &
-                                    * potential_dot_dot_acoustic(iglob)/kappal &
-                                    * b_potential_dot_dot_acoustic(iglob)/kappal 
-            enddo
-          enddo
-        enddo
-                        
-      endif ! ispec_is_acoustic
-    enddo
-  endif !acoustic
-
-  end subroutine it_update_adjointkernels
-  

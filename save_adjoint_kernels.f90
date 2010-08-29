@@ -33,6 +33,7 @@
   
   implicit none
   integer:: ispec,i,j,k,iglob
+  real(kind=CUSTOM_REAL) :: rhol,mul,kappal
   
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
@@ -46,29 +47,30 @@
             iglob = ibool(i,j,k,ispec)
             
             ! isotropic adjoint kernels (see e.g. Tromp et al. 2005)
+            rhol = rho_vs(i,j,k,ispec)**2 / mustore(i,j,k,ispec)
+            mul = mustore(i,j,k,ispec)
+            kappal = kappastore(i,j,k,ispec)
             
             ! density kernel
             ! multiplies with rho
-            rho_kl(i,j,k,ispec) = - rho_vs(i,j,k,ispec)**2 / mustore(i,j,k,ispec) * rho_kl(i,j,k,ispec) 
+            rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec) 
             
             ! shear modulus kernel
-            mu_kl(i,j,k,ispec) = - mustore(i,j,k,ispec) * mu_kl(i,j,k,ispec)
+            mu_kl(i,j,k,ispec) = - mul * mu_kl(i,j,k,ispec)
             
             ! bulk modulus kernel
-            kappa_kl(i,j,k,ispec) = - kappastore(i,j,k,ispec) * kappa_kl(i,j,k,ispec)
+            kappa_kl(i,j,k,ispec) = - kappal * kappa_kl(i,j,k,ispec)
             
             ! density prime kernel
             rhop_kl(i,j,k,ispec) = rho_kl(i,j,k,ispec) + kappa_kl(i,j,k,ispec) + mu_kl(i,j,k,ispec)
             
             ! vs kernel
             beta_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (mu_kl(i,j,k,ispec) &
-                  - 4._CUSTOM_REAL * mustore(i,j,k,ispec) &
-                    / (3._CUSTOM_REAL * kappastore(i,j,k,ispec)) * kappa_kl(i,j,k,ispec))
+                  - 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) * kappa_kl(i,j,k,ispec))
                   
             ! vp kernel
             alpha_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (1._CUSTOM_REAL &
-                  + 4._CUSTOM_REAL * mustore(i,j,k,ispec) &
-                    / (3._CUSTOM_REAL * kappastore(i,j,k,ispec))) * kappa_kl(i,j,k,ispec)
+                  + 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) ) * kappa_kl(i,j,k,ispec)
           enddo
         enddo
       enddo
@@ -84,7 +86,7 @@
             ! rho prime kernel
             rhop_ac_kl(i,j,k,ispec) = rho_ac_kl(i,j,k,ispec) + kappa_ac_kl(i,j,k,ispec)
             
-            ! vp kernel
+            ! kappa kernel
             alpha_ac_kl(i,j,k,ispec) = TWO *  kappa_ac_kl(i,j,k,ispec)
           enddo
         enddo

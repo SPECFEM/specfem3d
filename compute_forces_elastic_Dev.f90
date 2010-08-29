@@ -33,25 +33,21 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,USE_OLSEN_ATTENUATION, &
                                     one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
-                                    NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                    NSPEC_ATTENUATION_AB, &
+                                    R_xx,R_yy,R_xy,R_xz,R_yz, &
                                     epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-                                    epsilondev_xz,epsilondev_yz,iflag_attenuation_store, &
-                                    rho_vs, &
+                                    epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                                    iflag_attenuation_store,rho_vs, &
                                     ANISOTROPY,NSPEC_ANISO, &
                                     c11store,c12store,c13store,c14store,c15store,c16store,&
                                     c22store,c23store,c24store,c25store,c26store,c33store,&
                                     c34store,c35store,c36store,c44store,c45store,c46store,&
                                     c55store,c56store,c66store, &
-                                    SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                                    b_displ,b_accel,kappa_kl,mu_kl,deltat, &
-                                    NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ATT_AND_KERNEL, &
+                                    SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                                    NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &                                     
                                     is_moho_top,is_moho_bot, &
-                                    dsdx_top,dsdx_bot,b_dsdx_top,b_dsdx_bot, &
+                                    dsdx_top,dsdx_bot, &
                                     ispec2D_moho_top,ispec2D_moho_bot, &
-                                    b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                                    b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                                    b_epsilondev_xz,b_epsilondev_yz, &
-                                    b_alphaval,b_betaval,b_gammaval, &
                                     num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
                                     phase_ispec_inner_elastic)
                                     
@@ -62,8 +58,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                       NUM_REGIONS_ATTENUATION,N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS,m1,m2
   implicit none
-
-  !include "constants.h"
 
   integer :: NSPEC_AB,NGLOB_AB
 
@@ -83,20 +77,21 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
-! communication overlap
-  !logical, dimension(NSPEC_AB) :: ispec_is_inner
-  !logical :: phase_is_inner
-
 ! memory variables and standard linear solids for attenuation    
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION
+  logical :: COMPUTE_AND_STORE_STRAIN
+  integer :: NSPEC_STRAIN_ONLY, NSPEC_ADJOINT
   integer :: NSPEC_ATTENUATION_AB
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
   real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, &
+      alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
-       R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
+      R_xx,R_yy,R_xy,R_xz,R_yz
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vs
 
@@ -109,38 +104,20 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
             c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
 
-  !logical,dimension(NSPEC_AB) :: ispec_is_elastic
   integer :: iphase
   integer :: num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic
   integer, dimension(num_phase_ispec_elastic,2) :: phase_ispec_inner_elastic
 
 ! adjoint simulations
   integer :: SIMULATION_TYPE
-  integer :: NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ATT_AND_KERNEL
-  integer :: NGLOB_ADJOINT,NSPEC_ADJOINT
+  integer :: NSPEC_BOUN,NSPEC2D_MOHO 
 
   ! moho kernel
   real(kind=CUSTOM_REAL),dimension(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO):: &
-    dsdx_top,dsdx_bot,b_dsdx_top,b_dsdx_bot
+    dsdx_top,dsdx_bot 
   logical,dimension(NSPEC_BOUN) :: is_moho_top,is_moho_bot
   integer :: ispec2D_moho_top, ispec2D_moho_bot
-    
-  ! adjoint memory variables
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS) :: &
-       b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL) :: &
-       b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: b_alphaval,b_betaval,b_gammaval
-  
-  ! adjoint wavefields
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT):: b_displ,b_accel
-  ! adjoint kernels
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
-    mu_kl, kappa_kl
-  real(kind=CUSTOM_REAL) :: deltat
-  
-!adjoint
-
+      
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
@@ -184,7 +161,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
   real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
   real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
-  real(kind=CUSTOM_REAL) epsilon_trace_over_3
+  real(kind=CUSTOM_REAL) templ
   real(kind=CUSTOM_REAL) vs_val
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
@@ -205,71 +182,21 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
   
   integer i_SLS,iselected
-
   integer ispec,iglob,ispec_p,num_elements
   integer i,j,k
 
-  ! adjoint backward arrays
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_dummyx_loc,b_dummyy_loc,b_dummyz_loc, &
-    b_newtempx1,b_newtempx2,b_newtempx3,b_newtempy1,b_newtempy2,b_newtempy3,b_newtempz1,b_newtempz2,b_newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
-    b_tempx1,b_tempx2,b_tempx3,b_tempy1,b_tempy2,b_tempy3,b_tempz1,b_tempz2,b_tempz3
-  ! backward arrays: manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: b_B1_m1_m2_5points,b_B2_m1_m2_5points,b_B3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: b_C1_m1_m2_5points,b_C2_m1_m2_5points,b_C3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: b_E1_m1_m2_5points,b_E2_m1_m2_5points,b_E3_m1_m2_5points
-  equivalence(b_dummyx_loc,b_B1_m1_m2_5points)
-  equivalence(b_dummyy_loc,b_B2_m1_m2_5points)
-  equivalence(b_dummyz_loc,b_B3_m1_m2_5points)
-  equivalence(b_tempx1,b_C1_m1_m2_5points)
-  equivalence(b_tempy1,b_C2_m1_m2_5points)
-  equivalence(b_tempz1,b_C3_m1_m2_5points)
-  equivalence(b_newtempx1,b_E1_m1_m2_5points)
-  equivalence(b_newtempy1,b_E2_m1_m2_5points)
-  equivalence(b_newtempz1,b_E3_m1_m2_5points)
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
-    b_A1_mxm_m2_m1_5points,b_A2_mxm_m2_m1_5points,b_A3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    b_C1_mxm_m2_m1_5points,b_C2_mxm_m2_m1_5points,b_C3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
-    b_E1_mxm_m2_m1_5points,b_E2_mxm_m2_m1_5points,b_E3_mxm_m2_m1_5points
-  equivalence(b_dummyx_loc,b_A1_mxm_m2_m1_5points)
-  equivalence(b_dummyy_loc,b_A2_mxm_m2_m1_5points)
-  equivalence(b_dummyz_loc,b_A3_mxm_m2_m1_5points)
-  equivalence(b_tempx3,b_C1_mxm_m2_m1_5points)
-  equivalence(b_tempy3,b_C2_mxm_m2_m1_5points)
-  equivalence(b_tempz3,b_C3_mxm_m2_m1_5points)
-  equivalence(b_newtempx3,b_E1_mxm_m2_m1_5points)
-  equivalence(b_newtempy3,b_E2_mxm_m2_m1_5points)
-  equivalence(b_newtempz3,b_E3_mxm_m2_m1_5points)
-  real(kind=CUSTOM_REAL):: dsxx,dsxy,dsxz,dsyy,dsyz,dszz
-  real(kind=CUSTOM_REAL):: b_duxdxl,b_duxdyl,b_duxdzl,b_duydxl,b_duydyl,b_duydzl,b_duzdxl,b_duzdyl,b_duzdzl
-  real(kind=CUSTOM_REAL):: b_duxdxl_plus_duydyl,b_duxdxl_plus_duzdzl,b_duydyl_plus_duzdzl
-  real(kind=CUSTOM_REAL):: b_duxdyl_plus_duydxl,b_duzdxl_plus_duxdzl,b_duzdyl_plus_duydzl
-  real(kind=CUSTOM_REAL):: b_dsxx,b_dsxy,b_dsxz,b_dsyy,b_dsyz,b_dszz
-  real(kind=CUSTOM_REAL):: b_sigma_xx,b_sigma_yy,b_sigma_zz,b_sigma_xy,b_sigma_xz,b_sigma_yz
-  real(kind=CUSTOM_REAL):: kappa_k, mu_k
-  ! local adjoint attenuation
-  real(kind=CUSTOM_REAL) b_alphaval_loc,b_betaval_loc,b_gammaval_loc,b_Sn,b_Snp1
-  real(kind=CUSTOM_REAL) b_epsilon_trace_over_3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: b_epsilondev_xx_loc, &
-       b_epsilondev_yy_loc, b_epsilondev_xy_loc, b_epsilondev_xz_loc, b_epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) b_R_xx_val,b_R_yy_val
-  ! adjoint
+!  real(kind=CUSTOM_REAL):: dsxx,dsxy,dsxz,dsyy,dsyz,dszz
 
+  ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic
   else
     num_elements = nspec_inner_elastic
   endif
   
-! loops over all elements
-!  do ispec = 1,NSPEC_AB
-!    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-!      if( ispec_is_elastic(ispec) ) then
-
   do ispec_p = 1,num_elements
 
+        ! returns element id from stored element list
         ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
         ! adjoint simulations: moho kernel
@@ -289,13 +216,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                 dummyx_loc(i,j,k) = displ(1,iglob)
                 dummyy_loc(i,j,k) = displ(2,iglob)
                 dummyz_loc(i,j,k) = displ(3,iglob)
-
-                ! adjoint simulations
-                if( SIMULATION_TYPE == 3 ) then
-                  b_dummyx_loc(i,j,k) = b_displ(1,iglob)
-                  b_dummyy_loc(i,j,k) = b_displ(2,iglob)
-                  b_dummyz_loc(i,j,k) = b_displ(3,iglob)
-                endif
             enddo
           enddo
         enddo
@@ -321,26 +241,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
                                   hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
                                   hprime_xx(i,5)*B3_m1_m2_5points(5,j)
-                                  
-            ! adjoint simulations
-            if( SIMULATION_TYPE == 3 ) then
-              b_C1_m1_m2_5points(i,j) = hprime_xx(i,1)*b_B1_m1_m2_5points(1,j) + &
-                                  hprime_xx(i,2)*b_B1_m1_m2_5points(2,j) + &
-                                  hprime_xx(i,3)*b_B1_m1_m2_5points(3,j) + &
-                                  hprime_xx(i,4)*b_B1_m1_m2_5points(4,j) + &
-                                  hprime_xx(i,5)*b_B1_m1_m2_5points(5,j)
-              b_C2_m1_m2_5points(i,j) = hprime_xx(i,1)*b_B2_m1_m2_5points(1,j) + &
-                                  hprime_xx(i,2)*b_B2_m1_m2_5points(2,j) + &
-                                  hprime_xx(i,3)*b_B2_m1_m2_5points(3,j) + &
-                                  hprime_xx(i,4)*b_B2_m1_m2_5points(4,j) + &
-                                  hprime_xx(i,5)*b_B2_m1_m2_5points(5,j)
-              b_C3_m1_m2_5points(i,j) = hprime_xx(i,1)*b_B3_m1_m2_5points(1,j) + &
-                                  hprime_xx(i,2)*b_B3_m1_m2_5points(2,j) + &
-                                  hprime_xx(i,3)*b_B3_m1_m2_5points(3,j) + &
-                                  hprime_xx(i,4)*b_B3_m1_m2_5points(4,j) + &
-                                  hprime_xx(i,5)*b_B3_m1_m2_5points(5,j)                                  
-            endif ! adjoint
-                                  
           enddo
         enddo
         
@@ -365,25 +265,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
                             dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyz_loc(i,5,k)*hprime_xxT(5,j)
-
-              ! adjoint simulations
-              if( SIMULATION_TYPE == 3 ) then
-                b_tempx2(i,j,k) = b_dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
-                            b_dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
-                            b_dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
-                            b_dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
-                            b_dummyx_loc(i,5,k)*hprime_xxT(5,j)
-                b_tempy2(i,j,k) = b_dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
-                            b_dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
-                            b_dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
-                            b_dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
-                            b_dummyy_loc(i,5,k)*hprime_xxT(5,j)
-                b_tempz2(i,j,k) = b_dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
-                            b_dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
-                            b_dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
-                            b_dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
-                            b_dummyz_loc(i,5,k)*hprime_xxT(5,j)
-              endif ! adjoint
             enddo
           enddo
         enddo
@@ -406,25 +287,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
                                       A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
                                       A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-
-            ! adjoint simulations
-            if( SIMULATION_TYPE == 3 ) then
-              b_C1_mxm_m2_m1_5points(i,j) = b_A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                      b_A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                      b_A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                      b_A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                      b_A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-              b_C2_mxm_m2_m1_5points(i,j) = b_A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                      b_A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                      b_A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                      b_A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                      b_A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
-              b_C3_mxm_m2_m1_5points(i,j) = b_A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                      b_A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                      b_A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                      b_A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                      b_A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)            
-            endif ! adjoint                          
           enddo
         enddo
 
@@ -455,6 +317,31 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
               duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
 
+              ! save strain on the Moho boundary
+              if (SAVE_MOHO_MESH ) then
+                if (is_moho_top(ispec)) then
+                  dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
+                  dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
+                  dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
+                  dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
+                  dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
+                  dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
+                  dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
+                  dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
+                  dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
+                else if (is_moho_bot(ispec)) then
+                  dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
+                  dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
+                  dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
+                  dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
+                  dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
+                  dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
+                  dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
+                  dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
+                  dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
+                endif
+              endif
+
               ! precompute some sums to save CPU time
               duxdxl_plus_duydyl = duxdxl + duydyl
               duxdxl_plus_duzdzl = duxdxl + duzdzl
@@ -463,122 +350,22 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
               duzdxl_plus_duxdzl = duzdxl + duxdzl
               duzdyl_plus_duydzl = duzdyl + duydzl
 
-              kappal = kappastore(i,j,k,ispec)
-              mul = mustore(i,j,k,ispec)
-
-              ! adjoint simulations
-              if (SIMULATION_TYPE == 3) then
-                ! save strain on the Moho boundary
-                if (SAVE_MOHO_MESH ) then
-                  if (is_moho_top(ispec)) then
-                    dsdx_top(1,1,i,j,k,ispec2D_moho_top) = duxdxl
-                    dsdx_top(1,2,i,j,k,ispec2D_moho_top) = duxdyl
-                    dsdx_top(1,3,i,j,k,ispec2D_moho_top) = duxdzl
-                    dsdx_top(2,1,i,j,k,ispec2D_moho_top) = duydxl
-                    dsdx_top(2,2,i,j,k,ispec2D_moho_top) = duydyl
-                    dsdx_top(2,3,i,j,k,ispec2D_moho_top) = duydzl
-                    dsdx_top(3,1,i,j,k,ispec2D_moho_top) = duzdxl
-                    dsdx_top(3,2,i,j,k,ispec2D_moho_top) = duzdyl
-                    dsdx_top(3,3,i,j,k,ispec2D_moho_top) = duzdzl
-                  else if (is_moho_bot(ispec)) then
-                    dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = duxdxl
-                    dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = duxdyl
-                    dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = duxdzl
-                    dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = duydxl
-                    dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = duydyl
-                    dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = duydzl
-                    dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = duzdxl
-                    dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = duzdyl
-                    dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = duzdzl
-                  endif
-                endif
-              
-                dsxx = duxdxl
-                dsxy = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
-                dsxz = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
-                dsyy = duydyl
-                dsyz = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
-                dszz = duzdzl
-
-                b_duxdxl = xixl*b_tempx1(i,j,k) + etaxl*b_tempx2(i,j,k) + gammaxl*b_tempx3(i,j,k)
-                b_duxdyl = xiyl*b_tempx1(i,j,k) + etayl*b_tempx2(i,j,k) + gammayl*b_tempx3(i,j,k)
-                b_duxdzl = xizl*b_tempx1(i,j,k) + etazl*b_tempx2(i,j,k) + gammazl*b_tempx3(i,j,k)
-                b_duydxl = xixl*b_tempy1(i,j,k) + etaxl*b_tempy2(i,j,k) + gammaxl*b_tempy3(i,j,k)
-                b_duydyl = xiyl*b_tempy1(i,j,k) + etayl*b_tempy2(i,j,k) + gammayl*b_tempy3(i,j,k)
-                b_duydzl = xizl*b_tempy1(i,j,k) + etazl*b_tempy2(i,j,k) + gammazl*b_tempy3(i,j,k)
-                b_duzdxl = xixl*b_tempz1(i,j,k) + etaxl*b_tempz2(i,j,k) + gammaxl*b_tempz3(i,j,k)
-                b_duzdyl = xiyl*b_tempz1(i,j,k) + etayl*b_tempz2(i,j,k) + gammayl*b_tempz3(i,j,k)
-                b_duzdzl = xizl*b_tempz1(i,j,k) + etazl*b_tempz2(i,j,k) + gammazl*b_tempz3(i,j,k)
-
-                b_duxdxl_plus_duydyl = b_duxdxl + b_duydyl
-                b_duxdxl_plus_duzdzl = b_duxdxl + b_duzdzl
-                b_duydyl_plus_duzdzl = b_duydyl + b_duzdzl
-                b_duxdyl_plus_duydxl = b_duxdyl + b_duydxl
-                b_duzdxl_plus_duxdzl = b_duzdxl + b_duxdzl
-                b_duzdyl_plus_duydzl = b_duzdyl + b_duydzl
-
-                b_dsxx =  b_duxdxl
-                b_dsxy = 0.5_CUSTOM_REAL * b_duxdyl_plus_duydxl
-                b_dsxz = 0.5_CUSTOM_REAL * b_duzdxl_plus_duxdzl
-                b_dsyy =  b_duydyl
-                b_dsyz = 0.5_CUSTOM_REAL * b_duzdyl_plus_duydzl
-                b_dszz =  b_duzdzl
-
-                ! isotropic adjoint kernels: bulk (kappa) and shear (mu) kernels
-                kappa_k = (duxdxl + duydyl + duzdzl) *  (b_duxdxl + b_duydyl + b_duzdzl)
-                mu_k = dsxx * b_dsxx + dsyy * b_dsyy + dszz * b_dszz + &
-                      2._CUSTOM_REAL * (dsxy * b_dsxy + dsxz * b_dsxz + dsyz * b_dsyz) &
-                      - ONE_THIRD * kappa_k
-                      
-                kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) + deltat * kappa_k
-                mu_kl(i,j,k,ispec) = mu_kl(i,j,k,ispec) + 2._CUSTOM_REAL * deltat * mu_k
-
-                if (SAVE_MOHO_MESH) then
-                  if (is_moho_top(ispec)) then
-                    b_dsdx_top(1,1,i,j,k,ispec2D_moho_top) = b_duxdxl
-                    b_dsdx_top(1,2,i,j,k,ispec2D_moho_top) = b_duxdyl
-                    b_dsdx_top(1,3,i,j,k,ispec2D_moho_top) = b_duxdzl
-                    b_dsdx_top(2,1,i,j,k,ispec2D_moho_top) = b_duydxl
-                    b_dsdx_top(2,2,i,j,k,ispec2D_moho_top) = b_duydyl
-                    b_dsdx_top(2,3,i,j,k,ispec2D_moho_top) = b_duydzl
-                    b_dsdx_top(3,1,i,j,k,ispec2D_moho_top) = b_duzdxl
-                    b_dsdx_top(3,2,i,j,k,ispec2D_moho_top) = b_duzdyl
-                    b_dsdx_top(3,3,i,j,k,ispec2D_moho_top) = b_duzdzl
-                  else if (is_moho_bot(ispec)) then
-                    b_dsdx_bot(1,1,i,j,k,ispec2D_moho_bot) = b_duxdxl
-                    b_dsdx_bot(1,2,i,j,k,ispec2D_moho_bot) = b_duxdyl
-                    b_dsdx_bot(1,3,i,j,k,ispec2D_moho_bot) = b_duxdzl
-                    b_dsdx_bot(2,1,i,j,k,ispec2D_moho_bot) = b_duydxl
-                    b_dsdx_bot(2,2,i,j,k,ispec2D_moho_bot) = b_duydyl
-                    b_dsdx_bot(2,3,i,j,k,ispec2D_moho_bot) = b_duydzl
-                    b_dsdx_bot(3,1,i,j,k,ispec2D_moho_bot) = b_duzdxl
-                    b_dsdx_bot(3,2,i,j,k,ispec2D_moho_bot) = b_duzdyl
-                    b_dsdx_bot(3,3,i,j,k,ispec2D_moho_bot) = b_duzdzl
-                  endif
-                endif
-              endif ! adjoint
-
-
-              ! attenuation           
-              if(ATTENUATION) then
-                ! compute deviatoric strain
-                epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-                epsilondev_xx_loc(i,j,k) = duxdxl - epsilon_trace_over_3
-                epsilondev_yy_loc(i,j,k) = duydyl - epsilon_trace_over_3
+              ! computes deviatoric strain attenuation and/or for kernel calculations
+              if (COMPUTE_AND_STORE_STRAIN) then
+                templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+                if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
+                epsilondev_xx_loc(i,j,k) = duxdxl - templ
+                epsilondev_yy_loc(i,j,k) = duydyl - templ
                 epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
                 epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
                 epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
-                                
-                ! adjoint simulations                                
-                if (SIMULATION_TYPE == 3) then
-                  b_epsilon_trace_over_3 = ONE_THIRD * (b_duxdxl + b_duydyl + b_duzdzl)
-                  b_epsilondev_xx_loc(i,j,k) = b_duxdxl - b_epsilon_trace_over_3
-                  b_epsilondev_yy_loc(i,j,k) = b_duydyl - b_epsilon_trace_over_3
-                  b_epsilondev_xy_loc(i,j,k) = 0.5 * b_duxdyl_plus_duydxl
-                  b_epsilondev_xz_loc(i,j,k) = 0.5 * b_duzdxl_plus_duxdzl
-                  b_epsilondev_yz_loc(i,j,k) = 0.5 * b_duzdyl_plus_duydzl
-                endif ! adjoint
+              endif
 
+              kappal = kappastore(i,j,k,ispec)
+              mul = mustore(i,j,k,ispec)
+
+              ! attenuation           
+              if(ATTENUATION) then
                 ! uses scaling rule similar to Olsen et al. (2003) or mesh flag
                 if(USE_OLSEN_ATTENUATION) then
                   vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
@@ -616,18 +403,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                 c55 = c55store(i,j,k,ispec)
                 c56 = c56store(i,j,k,ispec)
                 c66 = c66store(i,j,k,ispec)
-                !if(ATTENUATION .and. not_fully_in_bedrock(ispec)) then
-                !   mul = c44
-                !   c11 = c11 + FOUR_THIRDS * minus_sum_beta * mul
-                !   c12 = c12 - TWO_THIRDS * minus_sum_beta * mul
-                !   c13 = c13 - TWO_THIRDS * minus_sum_beta * mul
-                !   c22 = c22 + FOUR_THIRDS * minus_sum_beta * mul
-                !   c23 = c23 - TWO_THIRDS * minus_sum_beta * mul
-                !   c33 = c33 + FOUR_THIRDS * minus_sum_beta * mul
-                !   c44 = c44 + minus_sum_beta * mul
-                !   c55 = c55 + minus_sum_beta * mul
-                !   c66 = c66 + minus_sum_beta * mul
-                !endif
 
                 sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl + &
                           c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl
@@ -642,21 +417,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                 sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl + &
                           c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl
 
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                  b_sigma_xx = c11*b_duxdxl + c16*b_duxdyl_plus_duydxl + c12*b_duydyl + &
-                       c15*b_duzdxl_plus_duxdzl + c14*b_duzdyl_plus_duydzl + c13*b_duzdzl
-                  b_sigma_yy = c12*b_duxdxl + c26*b_duxdyl_plus_duydxl + c22*b_duydyl + &
-                       c25*b_duzdxl_plus_duxdzl + c24*b_duzdyl_plus_duydzl + c23*b_duzdzl
-                  b_sigma_zz = c13*b_duxdxl + c36*b_duxdyl_plus_duydxl + c23*b_duydyl + &
-                       c35*b_duzdxl_plus_duxdzl + c34*b_duzdyl_plus_duydzl + c33*b_duzdzl
-                  b_sigma_xy = c16*b_duxdxl + c66*b_duxdyl_plus_duydxl + c26*b_duydyl + &
-                       c56*b_duzdxl_plus_duxdzl + c46*b_duzdyl_plus_duydzl + c36*b_duzdzl
-                  b_sigma_xz = c15*b_duxdxl + c56*b_duxdyl_plus_duydxl + c25*b_duydyl + &
-                       c55*b_duzdxl_plus_duxdzl + c45*b_duzdyl_plus_duydzl + c35*b_duzdzl
-                  b_sigma_yz = c14*b_duxdxl + c46*b_duxdyl_plus_duydxl + c24*b_duydyl + &
-                       c45*b_duzdxl_plus_duxdzl + c44*b_duzdyl_plus_duydzl + c34*b_duzdzl
-                endif ! adjoint
               else
 
   ! isotropic case
@@ -672,16 +432,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                 sigma_xz = mul*duzdxl_plus_duxdzl
                 sigma_yz = mul*duzdyl_plus_duydzl
 
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                  b_sigma_xx = lambdalplus2mul*b_duxdxl + lambdal*b_duydyl_plus_duzdzl
-                  b_sigma_yy = lambdalplus2mul*b_duydyl + lambdal*b_duxdxl_plus_duzdzl
-                  b_sigma_zz = lambdalplus2mul*b_duzdzl + lambdal*b_duxdxl_plus_duydyl                
-                  b_sigma_xy = mul*b_duxdyl_plus_duydxl
-                  b_sigma_xz = mul*b_duzdxl_plus_duxdzl
-                  b_sigma_yz = mul*b_duzdyl_plus_duydzl
-                endif !adjoint
-
               endif ! ANISOTROPY
               
               ! subtract memory variables if attenuation
@@ -695,18 +445,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-
-                  ! adjoint simulations
-                  if (SIMULATION_TYPE == 3) then
-                    b_R_xx_val = b_R_xx(i,j,k,ispec,i_sls)
-                    b_R_yy_val = b_R_yy(i,j,k,ispec,i_sls)
-                    b_sigma_xx = b_sigma_xx - b_R_xx_val
-                    b_sigma_yy = b_sigma_yy - b_R_yy_val
-                    b_sigma_zz = b_sigma_zz + b_R_xx_val + b_R_yy_val
-                    b_sigma_xy = b_sigma_xy - b_R_xy(i,j,k,ispec,i_sls)
-                    b_sigma_xz = b_sigma_xz - b_R_xz(i,j,k,ispec,i_sls)
-                    b_sigma_yz = b_sigma_yz - b_R_yz(i,j,k,ispec,i_sls)
-                  endif !adjoint                  
                 enddo               
               endif
         
@@ -722,19 +460,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
               tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl)
               tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl)
               tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl)
-
-              ! adjoint simulations
-              if (SIMULATION_TYPE == 3) then
-                b_tempx1(i,j,k) = jacobianl * (b_sigma_xx*xixl + b_sigma_xy*xiyl + b_sigma_xz*xizl)
-                b_tempy1(i,j,k) = jacobianl * (b_sigma_xy*xixl + b_sigma_yy*xiyl + b_sigma_yz*xizl)
-                b_tempz1(i,j,k) = jacobianl * (b_sigma_xz*xixl + b_sigma_yz*xiyl + b_sigma_zz*xizl)
-                b_tempx2(i,j,k) = jacobianl * (b_sigma_xx*etaxl + b_sigma_xy*etayl + b_sigma_xz*etazl)
-                b_tempy2(i,j,k) = jacobianl * (b_sigma_xy*etaxl + b_sigma_yy*etayl + b_sigma_yz*etazl)
-                b_tempz2(i,j,k) = jacobianl * (b_sigma_xz*etaxl + b_sigma_yz*etayl + b_sigma_zz*etazl)
-                b_tempx3(i,j,k) = jacobianl * (b_sigma_xx*gammaxl + b_sigma_xy*gammayl + b_sigma_xz*gammazl)
-                b_tempy3(i,j,k) = jacobianl * (b_sigma_xy*gammaxl + b_sigma_yy*gammayl + b_sigma_yz*gammazl)
-                b_tempz3(i,j,k) = jacobianl * (b_sigma_xz*gammaxl + b_sigma_yz*gammayl + b_sigma_zz*gammazl)
-              endif !adjoint
 
             enddo
           enddo
@@ -761,25 +486,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
                                   hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
                                   hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
-
-            ! adjoint simulations
-            if( SIMULATION_TYPE == 3 ) then
-              b_E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*b_C1_m1_m2_5points(1,j) + &
-                                  hprimewgll_xxT(i,2)*b_C1_m1_m2_5points(2,j) + &
-                                  hprimewgll_xxT(i,3)*b_C1_m1_m2_5points(3,j) + &
-                                  hprimewgll_xxT(i,4)*b_C1_m1_m2_5points(4,j) + &
-                                  hprimewgll_xxT(i,5)*b_C1_m1_m2_5points(5,j)
-              b_E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*b_C2_m1_m2_5points(1,j) + &
-                                  hprimewgll_xxT(i,2)*b_C2_m1_m2_5points(2,j) + &
-                                  hprimewgll_xxT(i,3)*b_C2_m1_m2_5points(3,j) + &
-                                  hprimewgll_xxT(i,4)*b_C2_m1_m2_5points(4,j) + &
-                                  hprimewgll_xxT(i,5)*b_C2_m1_m2_5points(5,j)
-              b_E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*b_C3_m1_m2_5points(1,j) + &
-                                  hprimewgll_xxT(i,2)*b_C3_m1_m2_5points(2,j) + &
-                                  hprimewgll_xxT(i,3)*b_C3_m1_m2_5points(3,j) + &
-                                  hprimewgll_xxT(i,4)*b_C3_m1_m2_5points(4,j) + &
-                                  hprimewgll_xxT(i,5)*b_C3_m1_m2_5points(5,j)
-            endif !adjoint
           enddo
         enddo
 
@@ -804,25 +510,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempz2(i,3,k)*hprimewgll_xx(3,j) + &
                                tempz2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempz2(i,5,k)*hprimewgll_xx(5,j)
-
-              ! adjoint simulations
-              if( SIMULATION_TYPE == 3 ) then
-                b_newtempx2(i,j,k) = b_tempx2(i,1,k)*hprimewgll_xx(1,j) + &
-                               b_tempx2(i,2,k)*hprimewgll_xx(2,j) + &
-                               b_tempx2(i,3,k)*hprimewgll_xx(3,j) + &
-                               b_tempx2(i,4,k)*hprimewgll_xx(4,j) + &
-                               b_tempx2(i,5,k)*hprimewgll_xx(5,j)
-                b_newtempy2(i,j,k) = b_tempy2(i,1,k)*hprimewgll_xx(1,j) + &
-                               b_tempy2(i,2,k)*hprimewgll_xx(2,j) + &
-                               b_tempy2(i,3,k)*hprimewgll_xx(3,j) + &
-                               b_tempy2(i,4,k)*hprimewgll_xx(4,j) + &
-                               b_tempy2(i,5,k)*hprimewgll_xx(5,j)
-                b_newtempz2(i,j,k) = b_tempz2(i,1,k)*hprimewgll_xx(1,j) + &
-                               b_tempz2(i,2,k)*hprimewgll_xx(2,j) + &
-                               b_tempz2(i,3,k)*hprimewgll_xx(3,j) + &
-                               b_tempz2(i,4,k)*hprimewgll_xx(4,j) + &
-                               b_tempz2(i,5,k)*hprimewgll_xx(5,j)
-              endif !adjoint
             enddo
           enddo
         enddo
@@ -845,25 +532,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
                                       C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
                                       C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-
-            ! adjoint simulations
-            if( SIMULATION_TYPE == 3 ) then
-              b_E1_mxm_m2_m1_5points(i,j) = b_C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                      b_C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                      b_C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                      b_C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                      b_C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-              b_E2_mxm_m2_m1_5points(i,j) = b_C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                      b_C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                      b_C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                      b_C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                      b_C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-              b_E3_mxm_m2_m1_5points(i,j) = b_C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                      b_C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                      b_C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                      b_C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                      b_C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
-            endif !adjoint
           enddo
         enddo
 
@@ -883,16 +551,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                 fac2*newtempy2(i,j,k) - fac3*newtempy3(i,j,k)
               accel(3,iglob) = accel(3,iglob) - fac1*newtempz1(i,j,k) - &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
-
-              ! adjoint simulations
-              if (SIMULATION_TYPE == 3) then
-                b_accel(1,iglob) = b_accel(1,iglob) - fac1*b_newtempx1(i,j,k) - &
-                                fac2*b_newtempx2(i,j,k) - fac3*b_newtempx3(i,j,k)
-                b_accel(2,iglob) = b_accel(2,iglob) - fac1*b_newtempy1(i,j,k) - &
-                                fac2*b_newtempy2(i,j,k) - fac3*b_newtempy3(i,j,k)
-                b_accel(3,iglob) = b_accel(3,iglob) - fac1*b_newtempz1(i,j,k) - &
-                                fac2*b_newtempz2(i,j,k) - fac3*b_newtempz3(i,j,k)
-              endif !adjoint
 
               !  update memory variables based upon the Runge-Kutta scheme
               if(ATTENUATION) then
@@ -941,39 +599,6 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                     R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
                                       betaval_loc * Sn + gammaval_loc * Snp1
                     
-                    !adjoint simulations
-                    if (SIMULATION_TYPE == 3) then
-                      b_alphaval_loc = b_alphaval(iselected,i_sls)
-                      b_betaval_loc = b_betaval(iselected,i_sls)
-                      b_gammaval_loc = b_gammaval(iselected,i_sls)
-                      ! term in xx
-                      b_Sn   = factor_loc * b_epsilondev_xx(i,j,k,ispec)
-                      b_Snp1   = factor_loc * b_epsilondev_xx_loc(i,j,k)
-                      b_R_xx(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xx(i,j,k,ispec,i_sls) + &
-                                            b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-                      ! term in yy
-                      b_Sn   = factor_loc * b_epsilondev_yy(i,j,k,ispec)
-                      b_Snp1   = factor_loc * b_epsilondev_yy_loc(i,j,k)
-                      b_R_yy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yy(i,j,k,ispec,i_sls) + &
-                                            b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-                      ! term in zz not computed since zero trace
-                      ! term in xy
-                      b_Sn   = factor_loc * b_epsilondev_xy(i,j,k,ispec)
-                      b_Snp1   = factor_loc * b_epsilondev_xy_loc(i,j,k)
-                      b_R_xy(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xy(i,j,k,ispec,i_sls) + &
-                                            b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-                      ! term in xz
-                      b_Sn   = factor_loc * b_epsilondev_xz(i,j,k,ispec)
-                      b_Snp1   = factor_loc * b_epsilondev_xz_loc(i,j,k)
-                      b_R_xz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_xz(i,j,k,ispec,i_sls) + &
-                                            b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-                      ! term in yz
-                      b_Sn   = factor_loc * b_epsilondev_yz(i,j,k,ispec)
-                      b_Snp1   = factor_loc * b_epsilondev_yz_loc(i,j,k)
-                      b_R_yz(i,j,k,ispec,i_sls) = b_alphaval_loc * b_R_yz(i,j,k,ispec,i_sls) + &
-                                            b_betaval_loc * b_Sn + b_gammaval_loc * b_Snp1
-                    endif !adjoint
-
                  enddo   ! end of loop on memory variables
 
               endif  !  end attenuation
@@ -983,152 +608,15 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
         enddo
 
         ! save deviatoric strain for Runge-Kutta scheme
-        if(ATTENUATION) then
+        if ( COMPUTE_AND_STORE_STRAIN ) then
           epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
           epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
           epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
           epsilondev_xz(:,:,:,ispec) = epsilondev_xz_loc(:,:,:)
           epsilondev_yz(:,:,:,ispec) = epsilondev_yz_loc(:,:,:)
-          ! adjoint simulations
-          if (SIMULATION_TYPE == 3) then
-            b_epsilondev_xx(:,:,:,ispec) = b_epsilondev_xx_loc(:,:,:)
-            b_epsilondev_yy(:,:,:,ispec) = b_epsilondev_yy_loc(:,:,:)
-            b_epsilondev_xy(:,:,:,ispec) = b_epsilondev_xy_loc(:,:,:)
-            b_epsilondev_xz(:,:,:,ispec) = b_epsilondev_xz_loc(:,:,:)
-            b_epsilondev_yz(:,:,:,ispec) = b_epsilondev_yz_loc(:,:,:)
-          endif !adjoint
         endif
-
-!      endif ! ispec_is_elastic
-      
-!    endif ! if (ispec_is_inner(ispec) .eqv. phase_is_inner)
 
   enddo  ! spectral element loop
 
 end subroutine compute_forces_elastic_Dev
 
-!
-!-------------------------------------------------------------------------------------------------
-!
-!
-!! subroutines adapted from Deville, Fischer and Mund, High-order methods
-!! for incompressible fluid flow, Cambridge University Press (2002),
-!! pages 386 and 389 and Figure 8.3.1
-!
-!  subroutine old_mxm_m1_m2_5points(A,B1,B2,B3,C1,C2,C3)
-!
-!  implicit none
-!
-!  include "constants.h"
-!
-!  real(kind=4), dimension(m1,NGLLX) :: A
-!  real(kind=4), dimension(NGLLX,m2) :: B1,B2,B3
-!  real(kind=4), dimension(m1,m2) :: C1,C2,C3
-!
-!  integer :: i,j
-!
-!  do j=1,m2
-!    do i=1,m1
-!
-!      C1(i,j) = A(i,1)*B1(1,j) + &
-!                A(i,2)*B1(2,j) + &
-!                A(i,3)*B1(3,j) + &
-!                A(i,4)*B1(4,j) + &
-!                A(i,5)*B1(5,j)
-!
-!      C2(i,j) = A(i,1)*B2(1,j) + &
-!                A(i,2)*B2(2,j) + &
-!                A(i,3)*B2(3,j) + &
-!                A(i,4)*B2(4,j) + &
-!                A(i,5)*B2(5,j)
-!
-!      C3(i,j) = A(i,1)*B3(1,j) + &
-!                A(i,2)*B3(2,j) + &
-!                A(i,3)*B3(3,j) + &
-!                A(i,4)*B3(4,j) + &
-!                A(i,5)*B3(5,j)
-!
-!    enddo
-!  enddo
-!
-!  end subroutine old_mxm_m1_m2_5points
-!
-!!---------
-!
-!  subroutine old_mxm_m1_m1_5points(A1,A2,A3,B,C1,C2,C3)
-!
-!  implicit none
-!
-!  include "constants.h"
-!
-!  real(kind=4), dimension(m1,NGLLX) :: A1,A2,A3
-!  real(kind=4), dimension(NGLLX,m1) :: B
-!  real(kind=4), dimension(m1,m1) :: C1,C2,C3
-!
-!  integer :: i,j
-!
-!  do j=1,m1
-!    do i=1,m1
-!
-!      C1(i,j) = A1(i,1)*B(1,j) + &
-!                A1(i,2)*B(2,j) + &
-!                A1(i,3)*B(3,j) + &
-!                A1(i,4)*B(4,j) + &
-!                A1(i,5)*B(5,j)
-!
-!      C2(i,j) = A2(i,1)*B(1,j) + &
-!                A2(i,2)*B(2,j) + &
-!                A2(i,3)*B(3,j) + &
-!                A2(i,4)*B(4,j) + &
-!                A2(i,5)*B(5,j)
-!
-!      C3(i,j) = A3(i,1)*B(1,j) + &
-!                A3(i,2)*B(2,j) + &
-!                A3(i,3)*B(3,j) + &
-!                A3(i,4)*B(4,j) + &
-!                A3(i,5)*B(5,j)
-!
-!    enddo
-!  enddo
-!
-!  end subroutine old_mxm_m1_m1_5points
-!
-!!---------
-!
-!  subroutine old_mxm_m2_m1_5points(A1,A2,A3,B,C1,C2,C3)
-!
-!  implicit none
-!
-!  include "constants.h"
-!
-!  real(kind=4), dimension(m2,NGLLX) :: A1,A2,A3
-!  real(kind=4), dimension(NGLLX,m1) :: B
-!  real(kind=4), dimension(m2,m1) :: C1,C2,C3
-!
-!  integer :: i,j
-!
-!  do j=1,m1
-!    do i=1,m2
-!
-!      C1(i,j) = A1(i,1)*B(1,j) + &
-!                A1(i,2)*B(2,j) + &
-!                A1(i,3)*B(3,j) + &
-!                A1(i,4)*B(4,j) + &
-!                A1(i,5)*B(5,j)
-!
-!      C2(i,j) = A2(i,1)*B(1,j) + &
-!                A2(i,2)*B(2,j) + &
-!                A2(i,3)*B(3,j) + &
-!                A2(i,4)*B(4,j) + &
-!                A2(i,5)*B(5,j)
-!
-!      C3(i,j) = A3(i,1)*B(1,j) + &
-!                A3(i,2)*B(2,j) + &
-!                A3(i,3)*B(3,j) + &
-!                A3(i,4)*B(4,j) + &
-!                A3(i,5)*B(5,j)
-!
-!    enddo
-!  enddo
-!
-!  end subroutine old_mxm_m2_m1_5points

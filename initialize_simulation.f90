@@ -114,6 +114,14 @@
     ! if attenuation is off, set dummy size of arrays to one
     NSPEC_ATTENUATION_AB = 1
   endif
+  ! needed for attenuation and/or kernel computations
+  if( ATTENUATION .or. SIMULATION_TYPE == 3 ) then
+    COMPUTE_AND_STORE_STRAIN = .true.
+    NSPEC_STRAIN_ONLY = NSPEC_AB
+  else
+    COMPUTE_AND_STORE_STRAIN = .false.  
+    NSPEC_STRAIN_ONLY = 1
+  endif  
 
   ! anisotropy arrays size
   if( ANISOTROPY ) then

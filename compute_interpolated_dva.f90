@@ -125,7 +125,7 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
 
 ! acoustic elements
-! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
+! returns displacement/velocity/pressure (dxd,..,vxd,..,axd,.. ) at receiver location
                         
   implicit none
   include 'constants.h'

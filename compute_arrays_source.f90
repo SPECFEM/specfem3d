@@ -196,7 +196,8 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
 
   integer icomp, itime, i, j, k, ios
   double precision :: junk
-  character(len=3),dimension(NDIM) :: comp = (/ "BHN", "BHE", "BHZ" /)
+  ! note: should have some order as orientation in write_seismograms_to_file()
+  character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
   character(len=256) :: filename
 
   !adj_sourcearray(:,:,:,:,:) = 0.

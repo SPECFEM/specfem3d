@@ -200,7 +200,7 @@
 
   if( count /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
 
-  !daniel: outputs found global points into vtk file
+  !daniel: outputs global points into vtk file
   !vtkfilename = prname(1:len_trim(prname))//'GIF_image_points'
   !call write_VTK_data_points(NGLOB_AB,xstore,ystore,zstore, &
   !                        iglob_coord,count,vtkfilename)

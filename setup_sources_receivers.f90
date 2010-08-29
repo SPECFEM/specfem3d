@@ -124,7 +124,9 @@ subroutine setup_sources()
   hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! define t0 as the earliest start time
-  t0 = - 1.5d0 * minval(t_cmt-hdur)  
+  ! note: an earlier start time also reduces numerical noise due to a 
+  !          non-zero offset at the beginning of the source time function
+  t0 = - 2.0d0 * minval(t_cmt-hdur)   ! - 1.5d0 * minval(t_cmt-hdur)  
 
   ! uses an earlier start time if source is acoustic with a gaussian source time function
   t0_ac = 0.0d0

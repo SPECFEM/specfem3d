@@ -259,6 +259,7 @@ module specfem_par_elastic
     R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
 
 ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
@@ -277,6 +278,10 @@ module specfem_par_elastic
             c55store,c56store,c66store
   integer :: NSPEC_ANISO
 
+! for attenuation and/or kernel simulations
+  integer :: NSPEC_STRAIN_ONLY
+  logical :: COMPUTE_AND_STORE_STRAIN
+  
 ! material flag
   logical, dimension(:), allocatable :: ispec_is_elastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_elastic
@@ -297,6 +302,8 @@ module specfem_par_elastic
     b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz      
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
+
   integer:: NSPEC_ATT_AND_KERNEL
 
   ! adjoint kernels
