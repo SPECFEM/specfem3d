@@ -141,7 +141,8 @@
 ! in which the source is a vertical force, normal force, impact etc.
   logical, parameter :: USE_FORCE_POINT_SOURCE = .false.
   double precision, parameter :: FACTOR_FORCE_SOURCE = 1.d15
-
+  integer, parameter :: COMPONENT_FORCE_SOURCE = 3  ! takes direction in comp E/N/Z = 1/2/3
+  
 ! the receivers can be located inside the model 
   logical, parameter :: RECVS_CAN_BE_BURIED_EXT_MESH = .true.
   logical, parameter :: SOURCES_CAN_BE_BURIED_EXT_MESH = .true.

@@ -108,6 +108,7 @@
                              ispec_selected_source(isource))
                                                         
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
+              ! note: for a Ricker source time function, a start time ~1.2 * main_period is a good choice
               t0 = 1.2d0/f0
                
               !if (it == 1 .and. myrank == 0) then
@@ -117,11 +118,13 @@
               !endif
                
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-t_cmt(isource),f0)              
+              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-t_cmt(isource),f0)
                
-              ! we use nu_source(:,3) here because we want a source normal to the surface (z-direction).
+              ! we use a force in a single direction along one of the components:
+              !  x/y/z or E/N/Z-direction would correspond to 1/2/3 = COMPONENT_FORCE_SOURCE
+              ! e.g. nu_source(:,3) here would be a source normal to the surface (z-direction).
               accel(:,iglob) = accel(:,iglob)  &
-                               + sngl( nu_source(:,3,isource) ) * stf_used
+                               + sngl( nu_source(:,COMPONENT_FORCE_SOURCE,isource) ) * stf_used
                
             else   
                
@@ -160,23 +163,24 @@
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields: 
-!       time for b_displ( it ) corresponds to (NSTEP - it - 1 )*DT - t0  ...
-!       since we start with saved wavefields b_displ( 0 ) = displ( NSTEP ) which correspond
-!       to a time (NSTEP - 1)*DT - t0 
+!       time for b_displ( it ) would correspond to (NSTEP - it - 1 )*DT - t0 
+!       if we read in saved wavefields b_displ() before Newark time scheme 
 !       (see sources for simulation_type 1 and seismograms)
-!       now, at the beginning of the time loop, the numerical Newark time scheme updates
-!       the wavefields, that is b_displ( it=1) corresponds now to time (NSTEP -1 - 1)*DT - t0
+!       since at the beginning of the time loop, the numerical Newark time scheme updates
+!       the wavefields, that is b_displ( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-! let's define the start time t  to (1-1)*DT - t0 = -t0, and the end time T to (NSTEP-1)*DT - t0
-! these are the start and end times of all seismograms
-!
+!       b_displ is now read in after Newark time scheme:
+!       we read the backward/reconstructed wavefield at the end of the first time loop, 
+!       such that b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       assuming that until that end the backward/reconstructed wavefield and adjoint fields
+!       have a zero contribution to adjoint kernels.
+!       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
+!       
 ! adjoint wavefields:
 !       since the adjoint source traces were derived from the seismograms, 
 !       it follows that for the adjoint wavefield, the time equivalent to ( T - t ) uses the time-reversed
 !       adjoint source traces which start at -t0 and end at time (NSTEP-1)*DT - t0
-!       for it=1: (NSTEP -1 - 1)*DT - t0 for backward wavefields corresponds to time T-1
-!                    and time (T-1) corresponds now to index (NSTEP -1) in the adjoint source array
-
+!       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
   
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
@@ -194,7 +198,7 @@
             do j=1,NGLLY
               do i=1,NGLLX
                 iglob = ibool(i,j,k,ispec_selected_rec(irec))
-                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it,:,i,j,k)
+                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
               enddo
             enddo
           enddo
@@ -204,6 +208,10 @@
     endif ! it
     
   endif !adjoint
+
+! note:  b_displ() is read in after Newark time scheme, thus
+!           b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3) then  
@@ -238,19 +246,18 @@
                !endif
 
                ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it-1)*DT-t0-t_cmt(isource),f0)
+               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-t_cmt(isource),f0)
                
-               ! we use nu_source(:,3) here because we want a source normal to the surface.
+               ! e.g. we use nu_source(:,3) here if we want a source normal to the surface.
                ! note: time step is now at NSTEP-it
                b_accel(:,iglob) = b_accel(:,iglob)  &
-                                  + sngl( nu_source(:,3,isource) ) * stf_used
-                              
+                                  + sngl( nu_source(:,COMPONENT_FORCE_SOURCE,isource) ) * stf_used                              
                
             else   
               
-              ! see note above: time step corresponds now to NSTEP-it-1 
+              ! see note above: time step corresponds now to NSTEP-it
               ! (also compare to it-1 for forward simulation)
-              stf = comp_source_time_function(dble(NSTEP-it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
 
               ! distinguish between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then

@@ -74,6 +74,7 @@
 
 ! adjoint simulations: 
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+    ! the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
     read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
     if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
       call exit_mpi(myrank,'Error reading absorbing contribution b_absorb_potential')

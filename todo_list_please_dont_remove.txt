@@ -2,6 +2,12 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
+NOTE (by Daniel): the 3D code here uses a potential of (density * displacement),
+                  identical to the 2D code (see also the note in compute_forces_acoustic.f90). 
+                  thus, the remark below is partly obsolete, having 
+                  acoustic-acoustic discontinuities in your 3D model is fine.
+
+
 Date: Fri, 23 Jul 2010 01:30:16 +0200
 From: Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
 To: Anne Sieminski <anne.sieminski@obs.ujf-grenoble.fr>
@@ -52,13 +58,14 @@ Cheers,
 
 Dimitri.
 
+
 On 06/23/2010 05:42 PM, Anne Sieminski wrote:
 > Bonjour Dimitri,
 >
 > Je vois que SPECFEM2D-6.0.0 (disponible sur le site de CIG) permet de
-> faire des calculs dans des modèles acoustiques. La même option est-elle
+> faire des calculs dans des modÃ‹les acoustiques. La mÃme option est-elle
 > en projet pour SPECFEM3D (ancien SPECFEM3D_BASIN) ? J'ai un peu perdu le
-> fil de toutes les nouveautés... Désolée !
+> fil de toutes les nouveautÃˆs... DÃˆsolÃˆe !
 >
 > Merci,
 > Anne
@@ -115,7 +122,7 @@ It would work for SPECFEM3D as well (with minor modifications).
 
 - should add support for parMETIS or PT-Scotch (i.e. decompose the mesh in parallel rather than serial; this will be required for very large meshes, too large to fit on a serial machine)
 
-- etudier comment lire un maillage CUBIT stocke au format natif de CUBIT (Exodus, base sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si necessaire d'après Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
+- etudier comment lire un maillage CUBIT stocke au format natif de CUBIT (Exodus, base sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si necessaire d'aprÃ‹s Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
 
 
 by Nicolas Le Goff :

@@ -365,9 +365,9 @@
               ! distinguish between single and double precision for reals
               ! note: compare time_t with time used for source term
               if(CUSTOM_REAL == SIZE_REAL) then
-                time_t = sngl( dble(NSTEP-isample-1)*DT - t0 )
+                time_t = sngl( dble(NSTEP-isample)*DT - t0 )
               else
-                time_t = dble(NSTEP-isample-1)*DT - t0
+                time_t = dble(NSTEP-isample)*DT - t0
               endif            
             endif
             
@@ -498,9 +498,9 @@
                     ! distinguish between single and double precision for reals
                     ! note: compare time_t with time used for source term
                     if(CUSTOM_REAL == SIZE_REAL) then
-                      time_t = sngl( dble(NSTEP-isample-1)*DT - t0 )
+                      time_t = sngl( dble(NSTEP-isample)*DT - t0 )
                     else
-                      time_t = dble(NSTEP-isample-1)*DT - t0
+                      time_t = dble(NSTEP-isample)*DT - t0
                     endif            
                   endif
                   
