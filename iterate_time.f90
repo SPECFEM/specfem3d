@@ -81,6 +81,12 @@
     
     ! poroelastic solver
     if( POROELASTIC_SIMULATION ) stop 'poroelastic simulation not implemented yet'
+
+    ! restores last time snapshot saved for backward/reconstruction of wavefields
+    ! note: this must be read in after the Newark time scheme
+    if( SIMULATION_TYPE == 3 .and. it == 1 ) then
+     call it_read_foward_arrays()
+    endif
     
     ! write the seismograms with time shift
     if (nrec_local > 0) then
@@ -338,9 +344,66 @@
 
 
   end subroutine it_update_displacement_scheme
-  
+
 !=====================================================================
 
+  subroutine it_read_foward_arrays()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
+
+  integer :: ier
+
+! restores last time snapshot saved for backward/reconstruction of wavefields
+! note: this is done here after the Newmark time scheme, otherwise the indexing for sources
+!          and adjoint sources will become more complicated
+!          that is, index it for adjoint sources will match index NSTEP - 1 for backward/reconstructed wavefields
+
+  ! reads in wavefields
+  open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',&
+        action='read',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error: opening save_forward_arrays'
+    print*,'path: ',trim(prname)//'save_forward_arrays.bin'
+    call exit_mpi(myrank,'error open file save_forward_arrays.bin')
+  endif
+
+  if( ACOUSTIC_SIMULATION ) then              
+    read(27) b_potential_acoustic
+    read(27) b_potential_dot_acoustic
+    read(27) b_potential_dot_dot_acoustic 
+  endif
+
+  ! elastic wavefields
+  if( ELASTIC_SIMULATION ) then    
+    read(27) b_displ
+    read(27) b_veloc
+    read(27) b_accel
+
+    ! memory variables if attenuation
+    if( ATTENUATION ) then
+       read(27) b_R_xx
+       read(27) b_R_yy
+       read(27) b_R_xy
+       read(27) b_R_xz
+       read(27) b_R_yz
+       read(27) b_epsilondev_xx
+       read(27) b_epsilondev_yy
+       read(27) b_epsilondev_xy
+       read(27) b_epsilondev_xz
+       read(27) b_epsilondev_yz
+    endif  
+
+  endif    
+
+  close(27)
+
+  end subroutine it_read_foward_arrays
+  
+!=====================================================================
   
   subroutine it_store_attenuation_arrays()
 

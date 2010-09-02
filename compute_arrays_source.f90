@@ -196,7 +196,7 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
 
   integer icomp, itime, i, j, k, ios
   double precision :: junk
-  ! note: should have some order as orientation in write_seismograms_to_file()
+  ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
   character(len=256) :: filename
 
@@ -213,7 +213,11 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
     
     ! reads in adjoint source trace
     do itime = 1, NSTEP
-      
+
+      ! things become a bit tricky because of the Newark time scheme at
+      ! the very beginning of the time loop. however, when we read in the backward/reconstructed
+      ! wavefields at the end of the first time loop, we can use the adjoint source index from 1 to NSTEP
+      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).      
       read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)      
       if( ios /= 0 ) &
         call exit_MPI(myrank, &

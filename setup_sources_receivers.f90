@@ -449,7 +449,7 @@ subroutine setup_sources_precompute_arrays()
   integer :: isource,ispec
   integer :: irec,irec_local
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
-  character(len=3),dimension(NDIM) :: comp = (/ "BHN", "BHE", "BHZ" /)
+  character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
   character(len=150) :: filename
 
   
@@ -491,7 +491,7 @@ subroutine setup_sources_precompute_arrays()
           ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
           factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
 
-          ! source array interpolated on all element gll points
+          ! source array interpolated on all element gll points (only used for non point sources)
           call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&
                         sourcearray,xigll,yigll,zigll,factor_source)
         endif
@@ -711,9 +711,17 @@ subroutine setup_sources_receivers_VTKfile()
     
     if( myrank == 0 ) then
       ! get the 3-D shape functions
-      xil = xi_source(isource)
-      etal = eta_source(isource)
-      gammal = gamma_source(isource)
+      if( USE_FORCE_POINT_SOURCE ) then
+        ! note: we switch xi,eta,gamma range to be [-1,1]
+        ! uses initial guess in xi, eta and gamma
+        xil = xigll(nint(xi_source(isource)))
+        etal = yigll(nint(eta_source(isource)))
+        gammal = zigll(nint(gamma_source(isource)))
+      else
+        xil = xi_source(isource)
+        etal = eta_source(isource)
+        gammal = gamma_source(isource)
+      endif
       call get_shape3D_single(myrank,shape3D,xil,etal,gammal)            
 
       ! interpolates source locations

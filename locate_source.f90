@@ -353,9 +353,12 @@
               iz_initial_guess_source = k
 
               ! store xi,eta,gamma and x,y,z of point found
+              ! note: they have range [1.0d0,NGLLX/Y/Z], used for point sources
+              !          see e.g. in compute_add_source_elastic.f90              
               xi_source(isource) = dble(ix_initial_guess_source)
               eta_source(isource) = dble(iy_initial_guess_source)
-              gamma_source(isource) = dble(iz_initial_guess_source)
+              gamma_source(isource) = dble(iz_initial_guess_source)              
+              
               x_found_source(isource) = xstore(iglob)
               y_found_source(isource) = ystore(iglob)
               z_found_source(isource) = zstore(iglob)
@@ -386,9 +389,15 @@
       idomain(isource) = 0
     endif
 
-    ! get normal to the face of the hexaedra if receiver is on the surface
+    ! get normal to the face of the hexahedra if receiver is on the surface
     if ((.not. SOURCES_CAN_BE_BURIED_EXT_MESH) .and. &
        .not. (ispec_selected_source(isource) == 0)) then
+       
+      ! note: at this point, xi_source,.. are in range [1.0d0,NGLLX/Y/Z] for point sources only,
+      !            for non-point sources the range is limited to [2.0d0,NGLLX/Y/Z - 1]
+      if( .not. USE_FORCE_POINT_SOURCE ) call exit_MPI(myrank,'error locate source: no point source at surface')
+      
+      ! initialize indices
       pt0_ix = -1
       pt0_iy = -1
       pt0_iz = -1
@@ -398,8 +407,9 @@
       pt2_ix = -1
       pt2_iy = -1
       pt2_iz = -1
-      ! we get two vectors of the face (three points) to compute the normal
-      if (xi_source(isource) == 1 .and. &
+      
+      ! we get two vectors of the face (three points) to compute the normal      
+      if (nint(xi_source(isource)) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected_source(isource)))) then
         pt0_ix = 1
         pt0_iy = NGLLY
@@ -411,7 +421,7 @@
         pt2_iy = NGLLY
         pt2_iz = NGLLZ
       endif
-      if (xi_source(isource) == NGLLX .and. &
+      if (nint(xi_source(isource)) == NGLLX .and. &
          iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec_selected_source(isource)))) then
         pt0_ix = NGLLX
         pt0_iy = 1
@@ -423,7 +433,7 @@
         pt2_iy = 1
         pt2_iz = NGLLZ
       endif
-      if (eta_source(isource) == 1 .and. &
+      if (nint(eta_source(isource)) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(2,1,2,ispec_selected_source(isource)))) then
         pt0_ix = 1
         pt0_iy = 1
@@ -435,7 +445,7 @@
         pt2_iy = 1
         pt2_iz = NGLLZ
       endif
-      if (eta_source(isource) == NGLLY .and. &
+      if (nint(eta_source(isource)) == NGLLY .and. &
          iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec_selected_source(isource)))) then
         pt0_ix = NGLLX
         pt0_iy = NGLLY
@@ -447,7 +457,7 @@
         pt2_iy = NGLLY
         pt2_iz = NGLLZ
       endif
-      if (gamma_source(isource) == 1 .and. &
+      if (nint(gamma_source(isource)) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(2,2,1,ispec_selected_source(isource)))) then
         pt0_ix = NGLLX
         pt0_iy = 1
@@ -459,7 +469,7 @@
         pt2_iy = NGLLY
         pt2_iz = 1
       endif
-      if (gamma_source(isource) == NGLLZ .and. &
+      if (nint(gamma_source(isource)) == NGLLZ .and. &
          iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec_selected_source(isource)))) then
         pt0_ix = 1
         pt0_iy = 1
@@ -475,7 +485,7 @@
       if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
          pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
          pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
-        stop 'error in computing normal for sources.'
+        call exit_mpi(myrank,'error in computing normal for sources.')
       endif
 
       u_vector(1) = xstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
@@ -519,15 +529,17 @@
       nu_source(3,2,isource) = v_vector(3)
       nu_source(3,3,isource) = w_vector(3)
 
-    endif ! of if (.not. RECEIVERS_CAN_BE_BURIED_EXT_MESH)
+    endif ! of if (.not. SOURCES_CAN_BE_BURIED_EXT_MESH)
 
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source
 ! *******************************************
 
+    ! for point sources, the location will be exactly at a GLL point
+    ! otherwise this tries to find best location
     if(.not. USE_FORCE_POINT_SOURCE) then
 
-      ! use initial guess in xi, eta and gamma
+      ! uses actual location interpolators, in range [-1,1]
       xi = xigll(ix_initial_guess_source)
       eta = yigll(iy_initial_guess_source)
       gamma = zigll(iz_initial_guess_source)
@@ -746,12 +758,16 @@
         
         write(IMAIN,*)
         if(USE_FORCE_POINT_SOURCE) then
-          write(IMAIN,*) '  xi    coordinate of source in that element: ',nint(xi_source(isource))
-          write(IMAIN,*) '  eta   coordinate of source in that element: ',nint(eta_source(isource))
-          write(IMAIN,*) '  gamma coordinate of source in that element: ',nint(gamma_source(isource))
+          write(IMAIN,*) '  i index of source in that element: ',nint(xi_source(isource))
+          write(IMAIN,*) '  j index of source in that element: ',nint(eta_source(isource))
+          write(IMAIN,*) '  k index of source in that element: ',nint(gamma_source(isource))
+          write(IMAIN,*)
+          write(IMAIN,*) '  component direction: ',COMPONENT_FORCE_SOURCE
+          write(IMAIN,*)
           write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
           write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
           write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
+          write(IMAIN,*)
           write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
           
           ! prints frequency content for point forces
@@ -761,11 +777,10 @@
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
           write(IMAIN,*) '  t0 = ',t0_ricker,'t_cmt = ',t_cmt(isource)
-
         else
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
-          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)        
         endif
 
         ! add message if source is a Heaviside
@@ -776,7 +791,11 @@
         endif
 
         write(IMAIN,*)
-        write(IMAIN,*) ' half duration: ',hdur(isource),' seconds'
+        if(USE_FORCE_POINT_SOURCE) then
+          write(IMAIN,*) ' half duration -> frequency: ',hdur(isource),' seconds**(-1)'
+        else
+          write(IMAIN,*) ' half duration: ',hdur(isource),' seconds'
+        endif
         write(IMAIN,*) '    time shift: ',t_cmt(isource),' seconds'
 
         write(IMAIN,*)

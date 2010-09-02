@@ -182,26 +182,28 @@
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
-!             idea is to start with the backward field b_potential.. at time (T)
+!             idea is to start with the backward field b_potential,.. at time (T)
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields: 
-!       time for b_potential..( it ) corresponds to (NSTEP - it - 1 )*DT - t0  ...
-!       since we start with saved wavefields b_potential..( 0 ) = potential..( NSTEP ) which correspond
-!       to a time (NSTEP - 1)*DT - t0 
+!       time for b_potential( it ) would correspond to (NSTEP - it - 1 )*DT - t0 
+!       if we read in saved wavefields b_potential() before Newark time scheme 
 !       (see sources for simulation_type 1 and seismograms)
-!       now, at the beginning of the time loop, the numerical Newark time scheme updates
-!       the wavefields, that is b_potential..( it=1) corresponds now to time (NSTEP -1 - 1)*DT - t0
+!       since at the beginning of the time loop, the numerical Newark time scheme updates
+!       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-! let's define the start time t  to (1-1)*DT - t0 = -t0, and the end time T to (NSTEP-1)*DT - t0
-! these are the start and end times of all seismograms
-!
+!       b_potential is now read in after Newark time scheme:
+!       we read the backward/reconstructed wavefield at the end of the first time loop, 
+!       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       assuming that until that end the backward/reconstructed wavefield and adjoint fields
+!       have a zero contribution to adjoint kernels.
+!       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
+!       
 ! adjoint wavefields:
 !       since the adjoint source traces were derived from the seismograms, 
 !       it follows that for the adjoint wavefield, the time equivalent to ( T - t ) uses the time-reversed
 !       adjoint source traces which start at -t0 and end at time (NSTEP-1)*DT - t0
-!       for it=1: (NSTEP -1 - 1)*DT - t0 for backward wavefields corresponds to time T-1
-!                    and time (T-1) corresponds now to index (NSTEP -1) in the adjoint source array
+!       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
@@ -220,9 +222,11 @@
               do i=1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 
-                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid                
+                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid      
+                ! note: it takes the first component of the adj_sourcearrays
+                !          the idea is to have e.g. a pressure source, where all 3 components would be the same                
                 potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                              - adj_sourcearrays(irec_local,NSTEP-it,1,i,j,k) / kappastore(i,j,k,ispec)
+                              - adj_sourcearrays(irec_local,NSTEP-it+1,1,i,j,k) / kappastore(i,j,k,ispec)
               enddo
             enddo
           enddo
@@ -230,6 +234,10 @@
       enddo ! nrec    
     endif ! it
   endif
+
+! note:  b_potential() is read in after Newark time scheme, thus
+!           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3) then  
@@ -267,7 +275,7 @@
 
               ! we use nu_source(:,3) here because we want a source normal to the surface.
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it-1)*DT-t0-t_cmt(isource),f0) 
+              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-t_cmt(isource),f0) 
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -283,7 +291,7 @@
             else   
 
               ! gaussian source time 
-              stf = comp_source_time_function_gauss(dble(NSTEP-it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
 
               ! distinguishes between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then

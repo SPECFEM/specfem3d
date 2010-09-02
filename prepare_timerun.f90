@@ -119,7 +119,7 @@
     potential_dot_acoustic(:) = 0._CUSTOM_REAL
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
     ! put negligible initial value to avoid very slow underflow trapping
-    if(FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic(:) = VERYSMALLVAL
+    if(FIX_UNDERFLOW_PROBLEM) potential_acoustic(:) = VERYSMALLVAL
   endif
   
   ! initialize elastic arrays to zero/verysmallvall
@@ -437,62 +437,48 @@
     b_gammaval(:,:) = b_deltat / 2._CUSTOM_REAL + b_deltat**2*tauinv(:,:) / 6._CUSTOM_REAL &
                       + b_deltat**3*tauinv(:,:)**2 / 24._CUSTOM_REAL
   endif
-      
-! kernel calculation, reads in last frame
-  if (SIMULATION_TYPE == 3)  then 
-    ! reads in wavefields
-    open(unit=27,file=trim(prname)//'save_forward_arrays.bin',status='old',&
-          action='read',form='unformatted',iostat=ier)
-    if( ier /= 0 ) then
-      print*,'error: opening save_forward_arrays'
-      print*,'path: ',trim(prname)//'save_forward_arrays.bin'
-      call exit_mpi(myrank,'error open file save_forward_arrays.bin')
-    endif
 
-    if( ACOUSTIC_SIMULATION ) then              
-      read(27) b_potential_acoustic
-      read(27) b_potential_dot_acoustic
-      read(27) b_potential_dot_dot_acoustic 
-    endif
-
-    ! elastic wavefields
-    if( ELASTIC_SIMULATION ) then    
-      read(27) b_displ
-      read(27) b_veloc
-      read(27) b_accel
-
-      ! memory variables if attenuation
-      if( ATTENUATION ) then
-         read(27) b_R_xx
-         read(27) b_R_yy
-         read(27) b_R_xy
-         read(27) b_R_xz
-         read(27) b_R_yz
-         read(27) b_epsilondev_xx
-         read(27) b_epsilondev_yy
-         read(27) b_epsilondev_xy
-         read(27) b_epsilondev_xz
-         read(27) b_epsilondev_yz
-      endif  
-
-    endif    
-
-    close(27)
-  endif
-
-! initializes adjoint kernels
+! initializes adjoint kernels and reconstructed/backward wavefields
   if (SIMULATION_TYPE == 3)  then 
     ! elastic domain
     if( ELASTIC_SIMULATION ) then
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
       mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
       kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+      ! reconstructed/backward elastic wavefields
+      b_displ = 0._CUSTOM_REAL
+      b_veloc = 0._CUSTOM_REAL
+      b_accel = 0._CUSTOM_REAL
+      if(FIX_UNDERFLOW_PROBLEM) b_displ = VERYSMALLVAL
+
+      ! memory variables if attenuation
+      if( ATTENUATION ) then
+         b_R_xx = 0._CUSTOM_REAL
+         b_R_yy = 0._CUSTOM_REAL
+         b_R_xy = 0._CUSTOM_REAL
+         b_R_xz = 0._CUSTOM_REAL
+         b_R_yz = 0._CUSTOM_REAL
+         b_epsilondev_xx = 0._CUSTOM_REAL
+         b_epsilondev_yy = 0._CUSTOM_REAL
+         b_epsilondev_xy = 0._CUSTOM_REAL
+         b_epsilondev_xz = 0._CUSTOM_REAL
+         b_epsilondev_yz = 0._CUSTOM_REAL
+      endif  
+      
     endif
     
     ! acoustic domain
     if( ACOUSTIC_SIMULATION ) then
       rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
       kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+      
+      ! reconstructed/backward acoustic potentials
+      b_potential_acoustic = 0._CUSTOM_REAL
+      b_potential_dot_acoustic = 0._CUSTOM_REAL
+      b_potential_dot_dot_acoustic = 0._CUSTOM_REAL
+      if(FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
+
     endif
   endif
 
