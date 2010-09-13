@@ -289,7 +289,7 @@ subroutine create_regions_mesh_ext(ibool, &
   call get_model(myrank,nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
                         materials_ext_mesh,nmat_ext_mesh, &
                         undef_mat_prop,nundefMat_ext_mesh, &
-                        ANISOTROPY)
+                        ANISOTROPY,LOCAL_PATH)
 
 ! sets up absorbing/free surface boundaries
   call sync_all()
