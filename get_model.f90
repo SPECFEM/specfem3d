@@ -26,7 +26,7 @@
   subroutine get_model(myrank,nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
                         materials_ext_mesh,nmat_ext_mesh, &
                         undef_mat_prop,nundefMat_ext_mesh, &
-                        ANISOTROPY)
+                        ANISOTROPY,LOCAL_PATH)
 
   use create_regions_mesh_ext_par
   implicit none
@@ -58,6 +58,13 @@
   ! gll point location
   double precision :: xloc,yloc,zloc
   integer :: iglob
+
+!<YANGL
+!!! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
+!!! mainly used for model update in iterative inversions
+  character(len=256) LOCAL_PATH,prname_lp
+  real, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: vp_read,vs_read,rho_read
+!>YANGL
 
   ! initializes element domain flags
   ispec_is_acoustic(:) = .false.
@@ -238,6 +245,12 @@
              c66store(i,j,k,ispec) = c66
            endif
 
+!<YANGL
+!!! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
+!!! can be used to compare elastic & acoustic reflections in exploration seismology
+! idomain_id = IDOMAIN_ACOUSTIC
+!>YANGL
+
            ! material domain
            !print*,'velocity model:',ispec,idomain_id
            if( idomain_id == IDOMAIN_ACOUSTIC ) then
@@ -275,6 +288,63 @@
 ! !! DK DK exclude circles around each station to make sure they are on the bedrock
 ! !! DK DK and not in the ice
 ! in case, see file model_interface_bedrock.f90: routine model_bedrock_store()
+
+
+!<YANGL
+!!! import the model from files in SPECFEM format
+!!! note that those those files should be saved in LOCAL_PATH
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! if only vp structure is available (as is often the case in exploration seismology),
+!!! comment out unneccessary lines
+
+!  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+!  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&
+!            status='unknown',action='read',form='unformatted')
+!  read(28) rho_read
+!  close(28)
+!
+!  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+!  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vp.bin',&
+!            status='unknown',action='read',form='unformatted')
+!  read(28) vp_read
+!  close(28)
+!
+!  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+!  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vs.bin',&
+!            status='unknown',action='read',form='unformatted')
+!  read(28) vs_read
+!  close(28)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! in cases where density structure is not given
+!!! modify according to your desire
+
+!  rho_read = 1000.0
+!  where ( mustore > 100.0 )  &
+!           rho_read = (1.6612 * (vp_read / 1000.0)     &
+!                      -0.4720 * (vp_read / 1000.0)**2  &
+!                      +0.0671 * (vp_read / 1000.0)**3  &
+!                      -0.0043 * (vp_read / 1000.0)**4  &
+!                      +0.000106*(vp_read / 1000.0)**5 )*1000.0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! in cases where shear wavespeed structure is not given
+!!! modify according to your desire
+
+!   vs_read = 0.0
+!   where ( mustore > 100.0 )       vs_read = vp_read / sqrt(3.0)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! update arrays that will be saved and used in the solver xspecfem3D
+!!! the following part is neccessary if you uncommented something above
+
+!  rhostore    = rho_read
+!  kappastore  = rhostore * ( vp_read * vp_read - FOUR_THIRDS * vs_read * vs_read )
+!  mustore     = rhostore * vs_read * vs_read
+!  rho_vp = rhostore * vp_read
+!  rho_vs = rhostore * vs_read
+!>YANGL
 
   end subroutine get_model
 
