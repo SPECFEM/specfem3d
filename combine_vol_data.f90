@@ -40,7 +40,7 @@
   include 'constants.h'
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: data
+  double precision,dimension(:,:,:,:),allocatable :: data
   ! real array for data
   real,dimension(:,:,:,:),allocatable :: dat
   
@@ -208,7 +208,7 @@
     if( ios /= 0 ) stop 'error allocating dat array'
     
     ! uses conversion to real values
-    if( CUSTOM_REAL == 8 ) then
+    if( CUSTOM_REAL == SIZE_DOUBLE ) then
       allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)    
       if( ios /= 0 ) stop 'error allocating data array'
       read(28) data
