@@ -286,7 +286,7 @@ subroutine compute_forces_acoustic()
 
   ! adjoint simulations  
   if (SIMULATION_TYPE == 3) &
-    b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + deltatover2*b_potential_dot_dot_acoustic(:)
+    b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + b_deltatover2*b_potential_dot_dot_acoustic(:)
 
   ! updates potential_dot_acoustic and potential_dot_dot_acoustic inside PML region for plotting seismograms/movies
   if(PML) call PML_acoustic_update_potentials(NGLOB_AB,NSPEC_AB, &
