@@ -34,7 +34,8 @@
   implicit none
   integer:: ispec,i,j,k,iglob
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
-  
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: weights_kernel
+
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
   
@@ -143,5 +144,24 @@
     close(27)
 
   endif
+
+!<YANGL
+  ! save weights for volume integration, in order to benchmark the kernels with analytical expressions
+  allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  do ispec = 1, NSPEC_AB
+  
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            weights_kernel(i,j,k,ispec) = wxgll(i) * wygll(j) * wzgll(k) * jacobian(i,j,k,ispec)
+          enddo ! i
+        enddo ! j
+      enddo ! k
+
+  enddo ! ispec
+  open(unit=27,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted')
+  write(27) weights_kernel
+  close(27)
+!>YANGL
 
   end subroutine save_adjoint_kernels
