@@ -85,9 +85,40 @@ AC_FC_FREEFORM()
 AC_PROG_CC
 
 
+#checks for Scotch
+
+export SCOTCH_LIBS
+
+AC_ARG_WITH([scotch-lib],
+AC_HELP_STRING([--with-scotch-lib],[tell where scotch library reside]),
+[
+ ac_scotch_libdir="$withval";
+])
+
+scotch_lib=""
+ac_save_ldflags=${LDFLAGS}
+if test -n "${ac_scotch_libdir}"; then
+ LDFLAGS="${LDFLAGS} -L${ac_scotch_libdir}";
+fi
+#AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
+AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_lib="yes";],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
+
+AC_MSG_CHECKING([wether scotch is usable])
+if test "x${scotch_lib}" = "xyes"; then
+ AC_DEFINE([HAVE_SCOTCH],[1],[defined if scotch is installed])
+ SCOTCH_LIBS="-L${ac_scotch_libdir} -lscotch -lscotcherr"
+ AC_MSG_RESULT([yes])
+else
+ AC_MSG_RESULT([no])
+fi
+LDFLAGS=${ac_save_ldflags}
+
+#AC_CHECK_LIB([scotch], [scotchfgraphmapinit])
+#AC_CHECK_LIB([scotcherr], [SCOTCH_errorPrint])
 
 # influential environment variables
 
+AC_ARG_VAR(SCOTCH_LIBS, [extra libraries for linking Scotch])
 AC_ARG_VAR(MPIFC, [MPI Fortran compiler command])
 AC_ARG_VAR(MPILIBS, [extra libraries for linking MPI programs])
 AC_ARG_VAR(MPICC, [MPI C compiler command])
@@ -173,7 +204,7 @@ fi
 # Checks for library functions.
 
 
-AC_CONFIG_FILES([Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS])
+AC_CONFIG_FILES([Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS meshfem3D/Makefile meshfem3D/precision.h meshfem3D/constants.h decompose_mesh_SCOTCH/Makefile])
 AC_OUTPUT
 
 

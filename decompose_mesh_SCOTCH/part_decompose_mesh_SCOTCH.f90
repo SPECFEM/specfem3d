@@ -373,7 +373,8 @@ contains
                               sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nb_materials, cs_material, num_material,nparts)
-
+     
+    integer, intent(in)  :: nb_materials,nparts
     integer(long), intent(in)  :: nelmnts, sup_neighbour
     integer, dimension(0:nelmnts-1), intent(in)  :: part
     integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
@@ -384,8 +385,6 @@ contains
     integer, dimension(1:nelmnts), intent(in)  :: num_material
     ! vs velocities
     double precision, dimension(1:nb_materials), intent(in)  :: cs_material
-    
-    integer, intent(in)  :: nb_materials,nparts
 
     ! local parameters  
     integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
@@ -1202,7 +1201,7 @@ contains
 
     ! sets acoustic/elastic flags for undefined materials
     do i = 1, count_undef_mat
-       read(undef_mat_prop(6,i),'(i)') idomain_id
+       read(undef_mat_prop(6,i),*) idomain_id
        ! acoustic material has idomain_id 1
        if (idomain_id == 1 ) then
           is_acoustic(-i) = .true.

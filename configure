@@ -643,6 +643,7 @@ PYTHON_LIBS
 PYTHON_LINKFORSHARED
 PYTHON_MODLIBS
 PYTHON_SYSLIBS
+PYTHON_LA_LDFLAGS
 FC
 FCFLAGS
 LDFLAGS
@@ -656,6 +657,7 @@ CFLAGS
 CPPFLAGS
 ac_ct_CC
 FCFLAGS_f90
+SCOTCH_LIBS
 MPIFC
 MPILIBS
 MPICC
@@ -679,6 +681,7 @@ LIBS
 CC
 CFLAGS
 CPPFLAGS
+SCOTCH_LIBS
 MPIFC
 MPILIBS
 MPICC
@@ -1265,6 +1268,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-pyre             build Pyrized version [default=no]
   --with-mpi              build parallel version [default=yes]
+  --with-scotch-lib       tell where scotch library reside
 
 Some influential environment variables:
   FC          Fortran compiler command
@@ -1276,6 +1280,7 @@ Some influential environment variables:
   CFLAGS      C compiler flags
   CPPFLAGS    C/C++/Objective C preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
+  SCOTCH_LIBS extra libraries for linking Scotch
   MPIFC       MPI Fortran compiler command
   MPILIBS     extra libraries for linking MPI programs
   MPICC       MPI C compiler command
@@ -1285,7 +1290,7 @@ Some influential environment variables:
               for critical subroutines
   LOCAL_PATH_IS_ALSO_GLOBAL
               files on a local path on each node are also seen as global with
-              same path [default=false]
+              same path [default=true]
   PYTHON      Python interpreter
   PYTHONPATH  Python module search path
 
@@ -1736,9 +1741,7 @@ else
   want_pyre=no
 fi
 
-
-
-if test "$want_pyre" = yes; then
+ if test "$want_pyre" = yes; then
   COND_PYRE_TRUE=
   COND_PYRE_FALSE='#'
 else
@@ -1755,9 +1758,7 @@ else
   want_mpi=yes
 fi
 
-
-
-if test "$want_mpi" = yes; then
+ if test "$want_mpi" = yes; then
   COND_MPI_TRUE=
   COND_MPI_FALSE='#'
 else
@@ -1974,13 +1975,19 @@ echo "${ECHO_T}$am_cv_python_pyexecdir" >&6; }
 
 
 
-# $Id: cit_python_sysconfig.m4 5301 2006-11-16 12:59:42Z leif $
+# $Id: cit_python.m4 16217 2010-02-02 23:44:16Z walter $
 
 { echo "$as_me:$LINENO: checking $am_display_PYTHON sysconfig" >&5
 echo $ECHO_N "checking $am_display_PYTHON sysconfig... $ECHO_C" >&6; }
 cat >sysconfig.py <<END_OF_PYTHON
+import os, sys
 from distutils import sysconfig
-print 'PYTHON_INCDIR="%s"' % sysconfig.get_python_inc()
+def cygpath(wpath):
+    s = os.popen('cygpath -u "%s"' % wpath)
+    path = s.read().strip()
+    s.close()
+    return path
+incdir = sysconfig.get_python_inc()
 keys = (
     'BLDLIBRARY',
     'LDFLAGS',
@@ -1993,20 +2000,58 @@ keys = (
     'LINKFORSHARED',
     'MODLIBS',
     'SYSLIBS',
+    'LA_LDFLAGS',
 )
-vars = sysconfig.get_config_vars()
-# transform AIX's python.exp
-vars['LINKFORSHARED'] = vars['LINKFORSHARED'].replace('Modules',vars['LIBPL'])
-if vars['LDLIBRARY'] == vars['LIBRARY']:
-    # "On systems without shared libraries, LDLIBRARY is the same as LIBRARY"
-    vars['BLDLIBRARY'] = "-L%(LIBPL)s -lpython%(VERSION)s" % vars
-elif vars['BLDLIBRARY']:
-    vars['BLDLIBRARY'] = "-L%(LIBDIR)s -lpython%(VERSION)s" % vars
+if os.name == "nt":
+    # We are running under Python for Windows (the real one...
+    # not Cygwin Python, under which 'os.name' is 'posix').
+    # We assume that we are still in the Cygwin POSIX environment,
+    # however (this is 'configure', after all); so we convert
+    # all Windows pathnames to POSIX pathnames using 'cygpath'.
+    incdir = cygpath(incdir)
+    vars = {}
+    libs = os.path.join(sys.prefix, "libs")
+    libs = cygpath(libs)
+    version = sysconfig.get_python_version()
+    version = version.replace('.', '')
+    vars['BLDLIBRARY'] = "-L%s -lpython%s" % (libs, version)
 else:
-    # "On Mac OS X frameworks, BLDLIBRARY is blank"
-    # See also Issue39.
-    framework = "%(PYTHONFRAMEWORKDIR)s/Versions/%(VERSION)s/%(PYTHONFRAMEWORK)s" % vars
-    vars['LINKFORSHARED'] = vars['LINKFORSHARED'].replace(framework, "-framework " + vars.get('PYTHONFRAMEWORK', 'Python'))
+    vars = sysconfig.get_config_vars()
+    # transform AIX's python.exp
+    vars['LINKFORSHARED'] = vars['LINKFORSHARED'].replace('Modules',vars['LIBPL'])
+    if vars['LDLIBRARY'] == vars['LIBRARY']:
+        # "On systems without shared libraries, LDLIBRARY is the same as LIBRARY"
+        vars['BLDLIBRARY'] = "-L%(LIBPL)s -lpython%(VERSION)s" % vars
+    elif vars['BLDLIBRARY']:
+        #     The 'mpicc' wrapper for LAM/MPI isn't very smart about "-L"
+        # options.  Adding "-L/usr/lib" can cause "-lmpi" to be found in /usr/lib
+        # instead of LAM's 'lib' directory.  Of course, avoiding "-L/usr/lib"
+        # doesn't really fix the problem, but it does make it much less likely;
+        # and "-L/usr/lib" is redundant and potentially problematic anyway.
+        #     Python 2.4 and later puts a symlink to libpython.so in LIBPL
+        # (/usr/lib/python2.x/config), which makes adding "-L$LIBDIR"
+        # (in addition to "-L$LIBPL") completely redundant.
+        #     But we still support Python 2.3, and we prefer shared to static,
+        # so we still add "-L$LIBDIR" when Python is installed in a non-standard
+        # location.  Note that the linker will still prefer shared over static
+        # with only "-L/usr/lib/python2.3/config" on the link line.
+        libdir = ""
+        if vars['LIBDIR'] != "/usr/lib":
+            libdir = "-L%(LIBDIR)s "
+        # Important: on Cygwin, the import library for libpython.dll is
+        # nested inside Python's 'config' directory (see Issue39).  This means
+        # that the linker always needs help finding "-lpython2.x" (in the form
+        # of "-L$LIBPL"), even for the "system" Python installed under /usr.
+        vars['BLDLIBRARY'] = (libdir + "-L%(LIBPL)s -lpython%(VERSION)s") % vars
+    else:
+        # "On Mac OS X frameworks, BLDLIBRARY is blank"
+        # See also Issue39.
+        framework = "%(PYTHONFRAMEWORKDIR)s/Versions/%(VERSION)s/%(PYTHONFRAMEWORK)s" % vars
+        PYTHONFRAMEWORK = vars.get('PYTHONFRAMEWORK', 'Python')
+        vars['LINKFORSHARED'] = vars['LINKFORSHARED'].replace(framework, "-framework " + PYTHONFRAMEWORK)
+        vars['LA_LDFLAGS'] = "-Wl,-framework,%s" % PYTHONFRAMEWORK
+vars['LDFLAGS'] = '' # only causes trouble (e.g., "-arch i386 -arch ppc" on Mac) -- see issue97
+print 'PYTHON_INCDIR="%s"' % incdir
 for key in keys:
     print 'PYTHON_%s="%s"' % (key, vars.get(key, ''))
 
@@ -2018,11 +2063,11 @@ echo "${ECHO_T}ok" >&6; }
 else
     { { echo "$as_me:$LINENO: error: \"failed
 
-Run '$PYTHON sysconfig.py' to see what wrong.
+Run '$PYTHON sysconfig.py' to see what went wrong.
 \"" >&5
 echo "$as_me: error: \"failed
 
-Run '$PYTHON sysconfig.py' to see what wrong.
+Run '$PYTHON sysconfig.py' to see what went wrong.
 \"" >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -2050,6 +2095,8 @@ PYTHON_LINKFORSHARED=$PYTHON_LINKFORSHARED
 PYTHON_MODLIBS=$PYTHON_MODLIBS
 
 PYTHON_SYSLIBS=$PYTHON_SYSLIBS
+
+PYTHON_LA_LDFLAGS=$PYTHON_LA_LDFLAGS
 
 
 fi
@@ -4971,8 +5018,98 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
 
+#checks for Scotch
+
+export SCOTCH_LIBS
+
+
+# Check whether --with-scotch-lib was given.
+if test "${with_scotch_lib+set}" = set; then
+  withval=$with_scotch_lib;
+ ac_scotch_libdir="$withval";
+
+fi
+
+
+scotch_lib=""
+ac_save_ldflags=${LDFLAGS}
+if test -n "${ac_scotch_libdir}"; then
+ LDFLAGS="${LDFLAGS} -L${ac_scotch_libdir}";
+fi
+#AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
+{ echo "$as_me:$LINENO: checking for scotchfarchinit  in -lscotch" >&5
+echo $ECHO_N "checking for scotchfarchinit  in -lscotch... $ECHO_C" >&6; }
+if test "${ac_cv_lib_scotch_scotchfarchinit_+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lscotch -lscotcherr $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call scotchfarchinit
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_fc_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  ac_cv_lib_scotch_scotchfarchinit_=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_scotch_scotchfarchinit_=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_lib_scotch_scotchfarchinit_" >&5
+echo "${ECHO_T}$ac_cv_lib_scotch_scotchfarchinit_" >&6; }
+if test $ac_cv_lib_scotch_scotchfarchinit_ = yes; then
+  scotch_lib="yes";
+else
+  scotch_lib="no";LDFLAGS=${ac_save_ldflags}
+fi
+
+
+{ echo "$as_me:$LINENO: checking wether scotch is usable" >&5
+echo $ECHO_N "checking wether scotch is usable... $ECHO_C" >&6; }
+if test "x${scotch_lib}" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_SCOTCH 1
+_ACEOF
+
+ SCOTCH_LIBS="-L${ac_scotch_libdir} -lscotch -lscotcherr"
+ { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+else
+ { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+LDFLAGS=${ac_save_ldflags}
+
+#AC_CHECK_LIB([scotch], [scotchfgraphmapinit])
+#AC_CHECK_LIB([scotcherr], [SCOTCH_errorPrint])
 
 # influential environment variables
+
 
 
 
@@ -5397,7 +5534,7 @@ fi
 # Checks for library functions.
 
 
-ac_config_files="$ac_config_files Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS"
+ac_config_files="$ac_config_files Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS meshfem3D/Makefile meshfem3D/precision.h meshfem3D/constants.h decompose_mesh_SCOTCH/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5972,6 +6109,10 @@ do
     "DATA/Par_file") CONFIG_FILES="$CONFIG_FILES DATA/Par_file" ;;
     "DATA/CMTSOLUTION") CONFIG_FILES="$CONFIG_FILES DATA/CMTSOLUTION" ;;
     "DATA/STATIONS") CONFIG_FILES="$CONFIG_FILES DATA/STATIONS" ;;
+    "meshfem3D/Makefile") CONFIG_FILES="$CONFIG_FILES meshfem3D/Makefile" ;;
+    "meshfem3D/precision.h") CONFIG_FILES="$CONFIG_FILES meshfem3D/precision.h" ;;
+    "meshfem3D/constants.h") CONFIG_FILES="$CONFIG_FILES meshfem3D/constants.h" ;;
+    "decompose_mesh_SCOTCH/Makefile") CONFIG_FILES="$CONFIG_FILES decompose_mesh_SCOTCH/Makefile" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -6097,6 +6238,7 @@ PYTHON_LIBS!$PYTHON_LIBS$ac_delim
 PYTHON_LINKFORSHARED!$PYTHON_LINKFORSHARED$ac_delim
 PYTHON_MODLIBS!$PYTHON_MODLIBS$ac_delim
 PYTHON_SYSLIBS!$PYTHON_SYSLIBS$ac_delim
+PYTHON_LA_LDFLAGS!$PYTHON_LA_LDFLAGS$ac_delim
 FC!$FC$ac_delim
 FCFLAGS!$FCFLAGS$ac_delim
 LDFLAGS!$LDFLAGS$ac_delim
@@ -6110,6 +6252,7 @@ CFLAGS!$CFLAGS$ac_delim
 CPPFLAGS!$CPPFLAGS$ac_delim
 ac_ct_CC!$ac_ct_CC$ac_delim
 FCFLAGS_f90!$FCFLAGS_f90$ac_delim
+SCOTCH_LIBS!$SCOTCH_LIBS$ac_delim
 MPIFC!$MPIFC$ac_delim
 MPILIBS!$MPILIBS$ac_delim
 MPICC!$MPICC$ac_delim
@@ -6124,7 +6267,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 89; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 91; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
