@@ -103,7 +103,7 @@ fi
 #AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
 AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_lib="yes";],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
 
-AC_MSG_CHECKING([wether scotch is usable])
+AC_MSG_CHECKING([whether scotch is usable])
 if test "x${scotch_lib}" = "xyes"; then
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if scotch is installed])
  SCOTCH_LIBS="-L${ac_scotch_libdir} -lscotch -lscotcherr"

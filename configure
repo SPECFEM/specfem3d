@@ -5088,8 +5088,8 @@ else
 fi
 
 
-{ echo "$as_me:$LINENO: checking wether scotch is usable" >&5
-echo $ECHO_N "checking wether scotch is usable... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking whether scotch is usable" >&5
+echo $ECHO_N "checking whether scotch is usable... $ECHO_C" >&6; }
 if test "x${scotch_lib}" = "xyes"; then
 
 cat >>confdefs.h <<\_ACEOF
