@@ -26,30 +26,30 @@
 # United States Government Sponsorship Acknowledged.
 #
 
-# decompose_mesh_SCOTCH/Makefile.  Generated from Makefile.in by configure.
+# @configure_input@
 
-FC = gfortran
-FCFLAGS = #-g -O2
-MPIFC = mpif90
-MPILIBS = 
-FLAGS_CHECK = $(FLAGS_NO_CHECK)
-FLAGS_NO_CHECK = -std=gnu -fimplicit-none -frange-check -O3 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow -fno-trapping-math
-FCFLAGS_f90 = 
-SCOTCH_LIBS = -L/opt/scotch/gcc64/lib -lscotch -lscotcherr
+FC = @FC@
+FCFLAGS = #@FCFLAGS@
+MPIFC = @MPIFC@
+MPILIBS = @MPILIBS@
+FLAGS_CHECK = @FLAGS_CHECK@
+FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
+FCFLAGS_f90 = @FCFLAGS_f90@
+SCOTCH_LIBS = @SCOTCH_LIBS@
 
-FCCOMPILE_CHECK = ${FC} ${FCFLAGS} $(FLAGS_CHECK)
-FCCOMPILE_NO_CHECK = ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
-MPIFCCOMPILE_CHECK = ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK)
-MPIFCCOMPILE_NO_CHECK = ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK)
-#FCLINK = $(MPIFCCOMPILE_NO_CHECK)
-##FCLINK = $(FCCOMPILE_NO_CHECK)
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK)
+FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK)
+MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK)
+#@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_NO_CHECK)
+#@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
 FCLINK = $(FCCOMPILE_NO_CHECK)
 
-CC = gcc
-CFLAGS = -g -O2 $(CPPFLAGS)
-CPPFLAGS =  $(COND_MPI_CPPFLAGS)
-COND_MPI_CPPFLAGS = -DWITH_MPI
-#COND_MPI_CPPFLAGS =
+CC = @CC@
+CFLAGS = @CFLAGS@ $(CPPFLAGS)
+CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
+@COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
+@COND_MPI_FALSE@COND_MPI_CPPFLAGS =
 
 AR = ar
 ARFLAGS = cru
@@ -91,13 +91,13 @@ DEC_OBJECTS = part_decompose_mesh_SCOTCH.o \
 
 
 # rules for the pure Fortran version
-xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS) 
-	${FCLINK} -o xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_LIBS) 
-
-# solver also depends on values from mesher
-#xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
-#	${FCLINK} -o xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
-#
+@COND_PYRE_FALSE@xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS) 
+@COND_PYRE_FALSE@	${FCLINK} -o xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_LIBS) 
+@COND_PYRE_FALSE@
+@COND_PYRE_FALSE@# solver also depends on values from mesher
+#@COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
+#@COND_PYRE_FALSE@	${FCLINK} -o xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+#@COND_PYRE_FALSE@
 
 
 
