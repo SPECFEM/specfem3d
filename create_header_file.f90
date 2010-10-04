@@ -33,7 +33,7 @@
   include "constants.h"
 
   integer NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
-  integer NSOURCES
+  integer NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC
 
 ! parameters to be computed based upon parameters above read from file
   integer NPROC
@@ -67,7 +67,8 @@
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_AVS_DX_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
-                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD)
+                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                        NTSTEP_BETWEEN_READ_ADJSRC)
 
 ! create include file for the solver
   call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &

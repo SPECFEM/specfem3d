@@ -234,6 +234,8 @@ module specfem_par
   ! norm of the backward displacement
    real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
 
+  ! length of reading blocks
+  integer :: NTSTEP_BETWEEN_READ_ADJSRC
   
 end module specfem_par
 

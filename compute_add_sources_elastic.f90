@@ -32,9 +32,12 @@
                         hdur,hdur_gaussian,t_cmt,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays,b_accel  )
+                        nadj_rec_local,adj_sourcearrays,b_accel, &
+                        NTSTEP_BETWEEN_READ_ADJSRC  )
 
-  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total  
+  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
+                        xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+                        station_name,network_name,adj_source_file
   implicit none
 
   include "constants.h"
@@ -69,8 +72,14 @@
   integer:: nrec
   integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   integer:: nadj_rec_local
-  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
+!<YANGL
+!  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
+  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
+  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
+  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
+  logical :: ibool_read_adj_arrays
+!>YANGL
   
 ! local parameters
   double precision :: f0
@@ -185,6 +194,40 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
   
+!<YANGL
+! read in adjoint sources block by block (for memory consideration)
+! e.g., in exploration experiments, both the number of receivers (nrec) and the number of time steps (NSTEP) are huge,
+! which may cause problems since we have a large array: adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
+
+  ! figure out if we need to read in a chunk of the adjoint source at this timestep
+  it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )   !chunk_number
+  ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
+
+  ! needs to read in a new chunk/block of the adjoint source
+  if(ibool_read_adj_arrays) then
+
+    irec_local = 0
+    do irec = 1, nrec
+      ! compute source arrays
+      if(myrank == islice_selected_rec(irec)) then
+        irec_local = irec_local + 1
+
+        ! reads in **sta**.**net**.**LH**.adj files
+        adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+        call compute_arrays_adjoint_source(myrank,adj_source_file, &
+                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                  adj_sourcearray, xigll,yigll,zigll, &
+                  it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+        do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+          adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
+        enddo
+
+      endif
+    enddo
+
+  endif ! if(ibool_read_adj_arrays)
+!>YANGL
+
     if( it < NSTEP ) then
     
       ! receivers act as sources    
@@ -198,7 +241,10 @@
             do j=1,NGLLY
               do i=1,NGLLX
                 iglob = ibool(i,j,k,ispec_selected_rec(irec))
-                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
+!<YANGL
+!                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
+                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC-mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:,i,j,k)
+!>YANGL
               enddo
             enddo
           enddo
