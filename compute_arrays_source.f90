@@ -164,25 +164,109 @@
   end subroutine multiply_arrays_source
 
 !=============================================================================
+!<YANGL
+! testing read in adjoint sources block by block
 
+!!!the original version
+!!!
+!!!subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
+!!!                    xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
+!!!                    xigll,yigll,zigll,NSTEP)
+!!!
+!!!
+!!!  implicit none
+!!!
+!!!  include 'constants.h'
+!!!
+!!!! input
+!!!  integer myrank, NSTEP
+!!!
+!!!  double precision xi_receiver, eta_receiver, gamma_receiver
+!!!
+!!!  character(len=*) adj_source_file
+!!!
+!!!! output
+!!!  real(kind=CUSTOM_REAL),dimension(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
+!!!
+!!!! Gauss-Lobatto-Legendre points of integration and weights
+!!!  double precision, dimension(NGLLX) :: xigll
+!!!  double precision, dimension(NGLLY) :: yigll
+!!!  double precision, dimension(NGLLZ) :: zigll
+!!!
+!!!  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
+!!!        hgammar(NGLLZ), hpgammar(NGLLZ)
+!!!        
+!!!  real(kind=CUSTOM_REAL) :: adj_src(NSTEP,NDIM)
+!!!
+!!!  integer icomp, itime, i, j, k, ios
+!!!  double precision :: junk
+!!!  ! note: should have same order as orientation in write_seismograms_to_file()
+!!!  character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
+!!!  character(len=256) :: filename
+!!!
+!!!  !adj_sourcearray(:,:,:,:,:) = 0.
+!!!  adj_src = 0._CUSTOM_REAL
+!!!  
+!!!  ! loops over components
+!!!  do icomp = 1, NDIM
+!!!
+!!!    filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+!!!    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
+!!!    if (ios /= 0) cycle ! cycles to next file    
+!!!    !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
+!!!    
+!!!    ! reads in adjoint source trace
+!!!    do itime = 1, NSTEP
+!!!
+!!!      ! things become a bit tricky because of the Newark time scheme at
+!!!      ! the very beginning of the time loop. however, when we read in the backward/reconstructed
+!!!      ! wavefields at the end of the first time loop, we can use the adjoint source index from 1 to NSTEP
+!!!      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).      
+!!!      read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)      
+!!!      if( ios /= 0 ) &
+!!!        call exit_MPI(myrank, &
+!!!          'file '//trim(filename)//' has wrong length, please check with your simulation duration')      
+!!!    enddo    
+!!!    close(IIN)
+!!!
+!!!  enddo
+!!!
+!!!  ! lagrange interpolators for receiver location
+!!!  call lagrange_any(xi_receiver,NGLLX,xigll,hxir,hpxir)
+!!!  call lagrange_any(eta_receiver,NGLLY,yigll,hetar,hpetar)
+!!!  call lagrange_any(gamma_receiver,NGLLZ,zigll,hgammar,hpgammar)
+!!!
+!!!  ! interpolates adjoint source onto GLL points within this element
+!!!  do k = 1, NGLLZ
+!!!    do j = 1, NGLLY
+!!!      do i = 1, NGLLX
+!!!        adj_sourcearray(:,:,i,j,k) = hxir(i) * hetar(j) * hgammar(k) * adj_src(:,:)
+!!!      enddo
+!!!    enddo
+!!!  enddo
+!!!
+!!!end subroutine compute_arrays_adjoint_source
+
+
+!!! test version
 subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
                     xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
-                    xigll,yigll,zigll,NSTEP)
-
+                    xigll,yigll,zigll, &
+                    it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
   implicit none
 
   include 'constants.h'
 
 ! input
-  integer myrank, NSTEP
+  integer myrank, NSTEP, it_sub_adj, NTSTEP_BETWEEN_READ_ADJSRC
 
   double precision xi_receiver, eta_receiver, gamma_receiver
 
   character(len=*) adj_source_file
 
 ! output
-  real(kind=CUSTOM_REAL),dimension(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
+  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
 
 ! Gauss-Lobatto-Legendre points of integration and weights
   double precision, dimension(NGLLX) :: xigll
@@ -192,13 +276,17 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
         
-  real(kind=CUSTOM_REAL) :: adj_src(NSTEP,NDIM)
+  real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
 
-  integer icomp, itime, i, j, k, ios
+  integer icomp, itime, i, j, k, ios, it_start, it_end
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
   character(len=256) :: filename
+
+  ! range of the block we need to read
+  it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
+  it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
 
   !adj_sourcearray(:,:,:,:,:) = 0.
   adj_src = 0._CUSTOM_REAL
@@ -212,16 +300,19 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
     !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
     
     ! reads in adjoint source trace
-    do itime = 1, NSTEP
-
-      ! things become a bit tricky because of the Newark time scheme at
-      ! the very beginning of the time loop. however, when we read in the backward/reconstructed
-      ! wavefields at the end of the first time loop, we can use the adjoint source index from 1 to NSTEP
-      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).      
-      read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)      
+    !! skip unused blocks 
+    do itime = 1, it_start-1
+      read(IIN,*,iostat=ios) junk, junk 
       if( ios /= 0 ) &
         call exit_MPI(myrank, &
-          'file '//trim(filename)//' has wrong length, please check with your simulation duration')      
+          'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')      
+    enddo    
+    !! read the block we need 
+    do itime = it_start, it_end
+      read(IIN,*,iostat=ios) junk, adj_src(itime-it_start+1,icomp)      
+      if( ios /= 0 ) &
+        call exit_MPI(myrank, &
+          'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')      
     enddo    
     close(IIN)
 
@@ -242,6 +333,8 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   enddo
 
 end subroutine compute_arrays_adjoint_source
+
+!>YANGL
 
 
 ! =======================================================================

@@ -550,8 +550,12 @@ subroutine setup_sources_precompute_arrays()
     endif
 
     ! reads in adjoint source traces
-    allocate(adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
-    allocate(adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+!<YANGL
+!    allocate(adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+!    allocate(adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ))
+!>YANGL
     adj_sourcearrays = 0._CUSTOM_REAL
     adj_sourcearray = 0._CUSTOM_REAL
 
@@ -567,7 +571,7 @@ subroutine setup_sources_precompute_arrays()
         
         call compute_arrays_adjoint_source(myrank, adj_source_file, &
                           xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
-                          adj_sourcearray, xigll,yigll,zigll,NSTEP)
+                          adj_sourcearray, xigll,yigll,zigll,1,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
 
         adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
 

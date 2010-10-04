@@ -204,7 +204,8 @@ subroutine compute_forces_acoustic()
                         sourcearrays,kappastore,ispec_is_acoustic,&
                         SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays,b_potential_dot_dot_acoustic )
+                        nadj_rec_local,adj_sourcearrays,b_potential_dot_dot_acoustic, &
+                        NTSTEP_BETWEEN_READ_ADJSRC )
 
 ! assemble all the contributions between slices using MPI
     if( phase_is_inner .eqv. .false. ) then

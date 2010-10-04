@@ -30,13 +30,14 @@
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
-                        SIMULATION_TYPE,SAVE_FORWARD )
+                        SIMULATION_TYPE,SAVE_FORWARD, &
+                        NTSTEP_BETWEEN_READ_ADJSRC )
 
   implicit none
 
   include "constants.h"
 
-  integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
+  integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
 
   double precision DT,HDUR_MOVIE
@@ -86,6 +87,13 @@
   endif  
   call read_value_integer(NSTEP, 'solver.NSTEP')
   if(err_occurred() /= 0) return
+!<YANGL
+! read in adjoint sources block by block
+! we shall later put this parameter in DATA/Par_file
+! the default value is to read in the whole trace
+! should you change the value, make sure "mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) == 0"
+  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+!>YANGL
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
   call read_value_logical(OCEANS, 'model.OCEANS')
