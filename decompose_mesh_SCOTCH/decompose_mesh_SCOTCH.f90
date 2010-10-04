@@ -311,8 +311,10 @@ module decompose_mesh_SCOTCH
        ! checks material_id
        read(undef_mat_prop(1,imat),*) num_mat
        !print *,'material_id: ',num_mat
-       if(num_mat > 0 .or. -num_mat > count_undef_mat)  stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
-       if(num_mat /= -imat)  stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."                            
+       if(num_mat > 0 .or. -num_mat > count_undef_mat)  &
+            stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
+       if(num_mat /= -imat)  &
+            stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."                            
 
        ! checks interface: flag_down/flag_up
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
@@ -320,19 +322,23 @@ module decompose_mesh_SCOTCH
          read( undef_mat_prop(3,imat),*) num_mat 
          if( num_mat > 0 ) then
           ! must point to a defined material
-          if( num_mat > count_def_mat) stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"
+          if( num_mat > count_def_mat) &
+               stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"
          else
           ! must point to an undefined material
-          if( -num_mat > count_undef_mat) stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"         
+          if( -num_mat > count_undef_mat) &
+               stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"         
          endif
          ! flag_up
          read( undef_mat_prop(4,imat),*) num_mat 
          if( num_mat > 0 ) then
           ! must point to a defined material
-          if( num_mat > count_def_mat) stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
+          if( num_mat > count_def_mat) &
+               stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          else
           ! must point to an undefined material
-          if( -num_mat > count_undef_mat) stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
+          if( -num_mat > count_undef_mat) &
+               stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          endif
        endif   
     end do

@@ -18,6 +18,9 @@
    the Fortran libraries. */
 #undef FC_MAIN
 
+/* defined if scotch is installed */
+#undef HAVE_SCOTCH
+
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
