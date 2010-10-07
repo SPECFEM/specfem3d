@@ -77,11 +77,11 @@
   integer:: nadj_rec_local
   real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
 !<YANGL
+  logical :: ibool_read_adj_arrays
+  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
 !  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
   real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
-  logical :: ibool_read_adj_arrays
 !>YANGL
   
 ! local parameters
@@ -272,7 +272,9 @@
 !                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
 !                              - adj_sourcearrays(irec_local,NSTEP-it+1,1,i,j,k) / kappastore(i,j,k,ispec)
                 potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                              - adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC-mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),1,i,j,k) / kappastore(i,j,k,ispec)
+                              - adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC &
+                              -mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),1,i,j,k) &
+                              / kappastore(i,j,k,ispec)
 !>YANGL
               enddo
             enddo
