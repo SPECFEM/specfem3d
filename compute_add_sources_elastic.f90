@@ -75,10 +75,10 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
 !<YANGL
 !  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
-  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
-  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
   logical :: ibool_read_adj_arrays
+  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
+  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
+  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
 !>YANGL
   
 ! local parameters
@@ -243,7 +243,8 @@
                 iglob = ibool(i,j,k,ispec_selected_rec(irec))
 !<YANGL
 !                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
-                accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC-mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:,i,j,k)
+                accel(:,iglob) = accel(:,iglob) + &
+                     adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC-mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:,i,j,k)
 !>YANGL
               enddo
             enddo

@@ -75,8 +75,6 @@ libspecfem_a_OBJECTS = \
 	$O/get_coupling_surfaces.o \
 	$O/get_model.o \
 	$O/get_MPI.o \
-	$O/get_MPI_cutplanes_eta.o \
-	$O/get_MPI_cutplanes_xi.o \
 	$O/get_attenuation_model.o \
 	$O/get_cmt.o \
 	$O/get_element_face.o \
@@ -195,7 +193,6 @@ LIBSPECFEM = $O/libspecfem.a
 @COND_PYRE_FALSE@DEFAULT = \
 @COND_PYRE_FALSE@	generate_databases \
 @COND_PYRE_FALSE@	specfem3D \
-@COND_PYRE_FALSE@	check_buffers_2D \
 @COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	combine_vol_data \
 @COND_PYRE_FALSE@	combine_surf_data \
@@ -229,7 +226,6 @@ specfem3D: xspecfem3D
 @COND_PYRE_FALSE@	${FCLINK} -o xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 
-check_buffers_2D: xcheck_buffers_2D
 combine_AVS_DX: xcombine_AVS_DX
 convolve_source_timefunction: xconvolve_source_timefunction
 create_header_file: xcreate_header_file
@@ -250,9 +246,6 @@ xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
 xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBSPECFEM)
 
-xcheck_buffers_2D: $O/check_buffers_2D.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o xcheck_buffers_2D $O/check_buffers_2D.o $(LIBSPECFEM)
-
 xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
 	${FCCOMPILE_CHECK} -o xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
 
@@ -262,7 +255,7 @@ xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* \
-        xgenerate_databases xspecfem3D xcombine_AVS_DX xcheck_buffers_2D \
+        xgenerate_databases xspecfem3D xcombine_AVS_DX \
         xconvolve_source_timefunction xcreate_header_file \
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
 
@@ -439,9 +432,6 @@ $O/combine_AVS_DX.o: constants.h combine_AVS_DX.f90
 $O/save_header_file.o: constants.h save_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_header_file.o save_header_file.f90
 
-$O/check_buffers_2D.o: constants.h check_buffers_2D.f90
-	${FCCOMPILE_CHECK} -c -o $O/check_buffers_2D.o check_buffers_2D.f90
-
 $O/read_parameter_file.o: constants.h read_parameter_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/read_parameter_file.o read_parameter_file.f90
 
@@ -474,12 +464,6 @@ $O/get_jacobian_boundaries.o: constants.h get_jacobian_boundaries.f90
 
 $O/get_flags_boundaries.o: constants.h get_flags_boundaries.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_flags_boundaries.o get_flags_boundaries.f90
-
-$O/get_MPI_cutplanes_xi.o: constants.h get_MPI_cutplanes_xi.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_MPI_cutplanes_xi.o get_MPI_cutplanes_xi.f90
-
-$O/get_MPI_cutplanes_eta.o: constants.h get_MPI_cutplanes_eta.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_MPI_cutplanes_eta.o get_MPI_cutplanes_eta.f90
 
 $O/get_cmt.o: constants.h get_cmt.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90
