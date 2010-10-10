@@ -2,11 +2,140 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
-NOTE (by Daniel): the 3D code here uses a potential of (density * displacement),
-                  identical to the 2D code (see also the note in compute_forces_acoustic.f90). 
-                  thus, the remark below is partly obsolete, having 
-                  acoustic-acoustic discontinuities in your 3D model is fine.
+- Partitioning should be done using a parallel partitioner such as ParMETIS and/or SCOTCH (PT-SCOTCH). Reading the (distributed or not) mesh, building the graph, distributing, and partitioning is not a problem, but redistributing the graph/mesh according to the partitioning obtained might well be. Should add support for parMETIS or PT-Scotch (i.e. decompose the mesh in parallel rather than serial; this will be required for very large meshes, too large to fit on a serial machine). Serial domain decomposition is already a limitation in the case of regional seismology, because serial meshes can be very large. One option would be to switch to ParMetis or PT-Scotch, i.e., the parallel version of these domain decomposition packages. I know that PT-Scotch works great and is pretty fast. Another option is ZOLTAN from Sandia National Labs, but I do not know if it is serial or parallel. I think adding support for PT-Scotch should not be too difficult if we give it a very simple initial "analytical" partition, e.g. if we have NSPEC spectral elements and NPROC domains, put the first 1..NPROC elements in domain 0, then NPROC+1...2*NPROC in domain 1 etc. That's your initial domain decomposition; then give that to ParMETIS or PT-Scotch and ask it to optimize by moving elements between partitions.
 
+- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back; that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it. 
+
+- there is something in SPECFEM3D that we noticed a few years ago
+regarding attenuation but never fixed: on page 813 of our 1999 paper
+I used a trick suggested by Robertsson et al. (1994) 
+to use a non-staggered Runge-Kutta (RK4) scheme for the attenuation
+equations while using a staggered finite-difference (Newmark)
+time scheme for all the other equations.
+(combining staggered and non-staggered formulations being difficult)
+The trick works fine in most cases but there is a hidden problem for very long
+simulations, and in particular for multi-orbit surface waves:
+because of that trick, the RK4 is not really a real Runge-Kutta scheme
+(because grad(displacement) is used as a source but not known half way between
+time steps, therefore I replaced it with an average between
+t and t + Delta_t, which implies that the approximation is not fourth-order
+accurate any more because of that smoothing/interpolation). Therefore
+dispersion due to attenuation is not very accurately computed in the case of
+very long runs; that matters mostly for surface waves.
+We should fix that one day. The only thing to do would be to design a better
+time integration scheme for the attenuation equation, without that trick; the rest
+(Newmark etc) is fine and does not need to change.
+
+- we could add support for the TetGen mesh creation package, and cut each
+tetrahedron into four hexahedra using the barycenter. This could help design
+meshes for sedimentary basins, in particular near basin edges. Celine Blitz is probably going to work on that in Oct, Nov and Dec 2010.
+
+- we could add support for different polynomial degrees in different elements (p-adaptivity)
+
+- we could add support for Discontinuous Galerkin, and/or for SEM on tetrahedra and pyramids
+
+- Regarding memory size (getting an estimate of memory consumption in SPECFEM3D),
+somebody should just cut and paste my SPECFEM3D_GLOBE routine
+"SPECFEM3D_GLOBE/version41_beta/src/memory_eval.f90", which
+I call from "SPECFEM3D_GLOBE/version41_beta/src/create_header_file.f90".
+It would work for SPECFEM3D as well (with minor modifications).
+
+- add SOURCESOLUTION in addition to CMTSOLUTION, to choose between a CMT source and a force source
+
+- put a flag to choose between a Ricker source and a Heaviside source when a force source is used
+(we can cut and paste the Heaviside implementation from the case of a CMT source)
+
+- automatic detection (coloring / flags) of the free surface and of the PML absorbing elements in CUBIT; read this from input files in the solver
+
+- Mila or Pieyre should add C-PML following Roland's 2D implementation
+
+- etudier comment lire un maillage CUBIT stocke au format natif de CUBIT (Exodus, base sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si necessaire d'apres Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
+
+
+by Nicolas Le Goff :
+--------------------
+
+DESIGN : 
+
+ - The subdivision of the mesh should be done inside meshfem3D (there is actually no point in doing it prior to pre_meshfem). The subdivision itself is already implemented, but we also have to subdivide the communications and any other similar data that concerns elements (absorbing boundaries, PML,...).
+
+ - Nearly all constants declared in constants.h concerning external meshes (look for string 'nlegoff') should be read/computed from a kind of Par_file. The same goes for the declaration of materials, done with a function in meshfem3D.f90 (and also right now in specfem3D.f90 in case of associating materials after pre_meshfem but we should get rid of it). There are also some variables declared as parameters used in create_movie_AVS_DX.f90.
+
+ - Materials should be associated to elements before pre_meshfem, but it is not always possible (that was the case for Celine Blitz's asteroid mesh with regolith because of limitations in the CUBIT software with huge meshes). An example of how we can isolate elements in contact with the envelope and associate them with another material is commented in specfem3D.f90 (look for string 'NL NL REGOLITH') tough it should in fact be inside meshfem3D, not specfem3D. Identifying the envelope is based on the NGLL points, so there is no problem with tranfering it to meshfem3D.
+
+
+MISC : 
+
+ - The following default options in flags.guess -qlanglvl=2003pure (for xlf) and -std=f2003 (for gfortran) causes some problems with intrinsics. There might be a better way than to simply remove these options.
+
+ - Reading the file DATA/STATIONS_FILTERED with pgf90 returned an error, because it considered that the lines were truncated, thus failed to read some data even when DATA/STATIONS_FILTERED was also generated by pgf90. Go figures. There might be a better workaround than simply removing writing of blanks ' ' (see rev).
+
+Add-ONS :
+
+ - Receivers distance to source along the surface computed for an asteroid can be done by computing the shortest path in a graph. No problem in serial, doing so in parallel might be tricky.
+
+ - Distinguish between elements in contact with the envelope, and those that are in contact with a fracture : source, receivers, ... anything based on the envelope detection will have to take into account those fractures. Really tricky without prior information on the mesh.
+
+ - Settle the issue of normal recording for the receivers. The normal is unique, but the plane can be described using two vectors at random (while conserving an orthonormal reference), so we have no reason to choose a pair of vectors compared to the others.i
+
+
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
+Things to add later to the manual:
+----------------------------------
+
+- Here is how to run the code:
+
+1/ create a CUBIT mesh 
+Possibly decimate it with "decimate_mesh"
+
+2/ check its quality with Dimitri's Fortran code "check_mesh_quality_CUBIT_Abaqus"
+
+3/ export it with Emanuele's scripts, in decompose_mesh_SCOTCH/OUTPUT_FILES
+
+2/ decompose it with "decompose_mesh_SCOTCH" and move the output in your "LOCAL_PATH" (see DATA/Par_file)
+
+4/ create databases and matrices with "generate_databases"
+
+5/ compile and run the solver "specfem3D"
+
+- remove old things from SPECFEM3D_BASIN in the manual and add new things
+related to CUBIT, METIS, SCOTCH etc. Add new figures showing the asteroid
+example etc
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
+Done:
+-----
+
+ - Added attenuation
+
+ - Added moment sources
+
+ - Put kernel calculations back
+
+- Regarding domain decomposition, METIS and ParMETIS can become inefficient
+for very large meshes. Pieyre has done detailed tests (Pieyre,
+could you please send the Excel file to all of us with a few lines
+of description of the figures?).
+SCOTCH (serial) and PT-SCOTCH (parallel) is then better.
+(faster, uses less memory etc.)
+Because of that, we have removed support for METIS in SPECFEM3D.
+It can still be called indirectly from SCOTCH (there is an option
+in SCOTCH to call METIS instead). But this is a bad idea because
+the partition obtained is worse.
+
+- NOTE (by Daniel Peter): the 3D code here uses a potential of (density * displacement),
+                  identical to the 2D code (see also the note in compute_forces_acoustic.f90). 
+                  thus, the remark below is obsolete, having 
+                  acoustic-acoustic discontinuities in your 3D model is fine.
 
 Date: Fri, 23 Jul 2010 01:30:16 +0200
 From: Dimitri Komatitsch <dimitri.komatitsch@univ-pau.fr>
@@ -58,156 +187,14 @@ Cheers,
 
 Dimitri.
 
-
 On 06/23/2010 05:42 PM, Anne Sieminski wrote:
 > Bonjour Dimitri,
 >
 > Je vois que SPECFEM2D-6.0.0 (disponible sur le site de CIG) permet de
-> faire des calculs dans des modËles acoustiques. La mÍme option est-elle
+> faire des calculs dans des modeles acoustiques. La meme option est-elle
 > en projet pour SPECFEM3D (ancien SPECFEM3D_BASIN) ? J'ai un peu perdu le
-> fil de toutes les nouveautÈs... DÈsolÈe !
+> fil de toutes les nouveautes... Desolee !
 >
 > Merci,
 > Anne
-
-- serial domain decomposition is already a limitation in the case of regional seismology, because serial meshes can be very large. One option would be to switch to ParMetis or PT-Scotch, i.e., the parallel version of these domain decomposition packages. I know that PT-Scotch works great and is pretty fast. Another option is ZOLTAN from Sandia National Labs, but I do not know if it is serial or parallel.
-
-- update the manual before the first official release of version 2.0
-
-- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back;
-that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it. 
-
-- there is something in SPECFEM3D that we noticed a few years ago
-regarding attenuation but never fixed: on page 813 of our 1999 paper
-I used a trick suggested by Robertsson et al. (1994) 
-to use a non-staggered Runge-Kutta (RK4) scheme for the attenuation
-equations while using a staggered finite-difference (Newmark)
-time scheme for all the other equations.
-(combining staggered and non-staggered formulations being difficult)
-The trick works fine in most cases but there is a hidden problem for very long
-simulations, and in particular for multi-orbit surface waves:
-because of that trick, the RK4 is not really a real Runge-Kutta scheme
-(because grad(displacement) is used as a source but not known half way between
-time steps, therefore I replaced it with an average between
-t and t + Delta_t, which implies that the approximation is not fourth-order
-accurate any more because of that smoothing/interpolation). Therefore
-dispersion due to attenuation is not very accurately computed in the case of
-very long runs; that matters mostly for surface waves.
-We should fix that one day. The only thing to do would be to design a better
-time integration scheme for the attenuation equation, without that trick; the rest
-(Newmark etc) is fine and does not need to change.
-
-- we could add support for the TetGen mesh creation package, and cut each
-tetrahedron into four hexahedra using the barycenter. This could help design
-meshes for sedimentary basins, in particular near basin edges
-
-- we could add support for different polynomial degrees in different elements (p-adaptivity)
-
-- we could add support for Discontinuous Galerkin, and/or for SEM on tetrahedra and pyramids
-
-- Regarding memory size (getting an estimate of memory consumption in SPECFEM3D),
-somebody should just cut and paste my SPECFEM3D_GLOBE routine
-"SPECFEM3D_GLOBE/version41_beta/src/memory_eval.f90", which
-I call from "SPECFEM3D_GLOBE/version41_beta/src/create_header_file.f90".
-It would work for SPECFEM3D as well (with minor modifications).
-
-- add SOURCESOLUTION in addition to CMTSOLUTION, to choose between a CMT source and a force source
-
-- put a flag to choose between a Ricker source and a Heaviside source when a force source is used
-(we can cut and paste the Heaviside implementation from the case of a CMT source)
-
-- automatic detection (coloring / flags) of the free surface and of the PML absorbing elements in CUBIT; read this from input files in the solver
-
-- Pieyre should add C-PML following Roland's 2D implementation
-
-- should add support for parMETIS or PT-Scotch (i.e. decompose the mesh in parallel rather than serial; this will be required for very large meshes, too large to fit on a serial machine)
-
-- etudier comment lire un maillage CUBIT stocke au format natif de CUBIT (Exodus, base sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si necessaire d'aprËs Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
-
-
-by Nicolas Le Goff :
---------------------
-
-DESIGN : 
-
- - The subdivision of the mesh should be done inside meshfem3D (there is actually no point in doing it prior to pre_meshfem). The subdivision itself is already implemented, but we also have to subdivide the communications and any other similar data that concerns elements (absorbing boundaries, PML,...).
-
- - Nearly all constants declared in constants.h concerning external meshes (look for string 'nlegoff') should be read/computed from a kind of Par_file. The same goes for the declaration of materials, done with a function in meshfem3D.f90 (and also right now in specfem3D.f90 in case of associating materials after pre_meshfem but we should get rid of it). There are also some variables declared as parameters used in create_movie_AVS_DX.f90.
-
- - Materials should be associated to elements before pre_meshfem, but it is not always possible (that was the case for Celine Blitz's asteroid mesh with regolith because of limitations in the CUBIT software with huge meshes). An example of how we can isolate elements in contact with the envelope and associate them with another material is commented in specfem3D.f90 (look for string 'NL NL REGOLITH') tough it should in fact be inside meshfem3D, not specfem3D. Identifying the envelope is based on the NGLL points, so there is no problem with tranfering it to meshfem3D.
-
- - Calculations on elements in specfem3D for regular meshes should be merged inside compute_forces (the basic calculation is okay, but not attenuation, absorbing boundaries, ...) as there is no reason to differenciate those. 
-
-MISC : 
-
- - The following default options in flags.guess -qlanglvl=2003pure (for xlf) and -std=f2003 (for gfortran) causes some problems with intrinsics. There might be a better way than to simply remove these options.
-
- - Reading the file DATA/STATIONS_FILTERED with pgf90 returned an error, because it considered that the lines were truncated, thus failed to read some data even when DATA/STATIONS_FILTERED was also generated by pgf90. Go figures. There might be a better workaround than simply removing writing of blanks ' ' (see rev).
-
-Add-ONS :
-
- - Receivers distance to source along the surface computed for an asteroid can be done by computing the shortest path in a graph. No problem in serial, doing so in parallel might be tricky.
-
- - Partitioning should be done in meshfem3D, using a parallel partitioner such as ParMETIS and/or SCOTCH (PT-SCOTCH). Reading the (distributed or not) mesh, building the graph, distributing, and partitioning is not a problem, but redistributing the graph/mesh according to the partitioning obtained might well be.
-
- - Adding absorbing boundaries, attenuation, PML, moment sources, ... for external meshes.
-
- - Differentiate between elements in contact with the envelope, and those that are in contact with a fracture : source, receivers, ... anything based on the envelope detection will have to take into account those fractures. Really tricky without prior information on the mesh.
-
- - Settle the issue of normal recording for the receivers. The normal is unique, but the plane can be described using two vectors at random (while conserving an orthonormal reference), so we have no reason to choose a pair of vectors compared to the others.i
-
-
-
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
-
-Things to add later to the manual:
-----------------------------------
-
-- Here is how to run the code:
-
-1/ create a CUBIT mesh 
-Possibly decimate it with "decimate_mesh"
-
-2/ check his quality with Dimitri's Fortran code
-"check_mesh_quality_CUBIT_Abaqus"
-
-3/ export it with Emanuele's scripts, in decompose_mesh_SCOTCH/OUTPUT_FILES
-
-2/ decompose it with "decompose_mesh_SCOTCH" and move the output in your "LOCAL_PATH" (see DATA/Par_file)
-
-4/ create databases and matrices with "generate_databases"
-
-5/ compile and run the solver "specfem3D"
-
-- remove old things from SPECFEM3D_BASIN in the manual and add new things
-related to CUBIT, METIS, SCOTCH etc. Add new figures showing the asteroid
-example etc
-
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
-
-Done:
------
-
- - Added attenuation
-
- - Added moment sources
-
- - Put kernel calculations back
-
-- Regarding domain decomposition, METIS and ParMETIS can become inefficient
-for very large meshes. Pieyre has done detailed tests (Pieyre,
-could you please send the Excel file to all of us with a few lines
-of description of the figures?).
-SCOTCH (serial) and PT-SCOTCH (parallel) is then better.
-(faster, uses less memory etc.)
-Because of that, we have removed support for METIS in SPECFEM3D.
-It can still be called indirectly from SCOTCH (there is an option
-in SCOTCH to call METIS instead). But this is a bad idea because
-the partition obtained is worse.
 
