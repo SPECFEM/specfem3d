@@ -51,6 +51,88 @@
 !
 ! or
 !
+! @ARTICLE{VaCaSaKoVi99,
+! author = {R. Vai and J. M. Castillo-Covarrubias and F. J. S\'anchez-Sesma and
+! D. Komatitsch and J. P. Vilotte},
+! title = {Elastic wave propagation in an irregularly layered medium},
+! journal = {Soil Dynamics and Earthquake Engineering},
+! year = {1999},
+! volume = {18},
+! pages = {11-18},
+! number = {1},
+! doi = {10.1016/S0267-7261(98)00027-X}}
+!
+! @ARTICLE{LeChKoHuTr09,
+! author = {Shiann Jong Lee and Yu Chang Chan and Dimitri Komatitsch and Bor
+! Shouh Huang and Jeroen Tromp},
+! title = {Effects of realistic surface topography on seismic ground motion
+! in the {Y}angminshan region of {T}aiwan based upon the spectral-element
+! method and {LiDAR DTM}},
+! journal = {Bull. Seismol. Soc. Am.},
+! year = {2009},
+! volume = {99},
+! pages = {681-693},
+! number = {2A},
+! doi = {10.1785/0120080264}}
+!
+! @ARTICLE{LeChLiKoHuTr08,
+! author = {Shiann Jong Lee and How Wei Chen and Qinya Liu and Dimitri Komatitsch
+! and Bor Shouh Huang and Jeroen Tromp},
+! title = {Three-Dimensional Simulations of Seismic Wave Propagation in the
+! {T}aipei Basin with Realistic Topography Based upon the Spectral-Element Method},
+! journal = {Bull. Seismol. Soc. Am.},
+! year = {2008},
+! volume = {98},
+! pages = {253-264},
+! number = {1},
+! doi = {10.1785/0120070033}}
+!
+! @ARTICLE{LeKoHuTr09,
+! author = {S. J. Lee and Dimitri Komatitsch and B. S. Huang and J. Tromp},
+! title = {Effects of topography on seismic wave propagation: An example from
+! northern {T}aiwan},
+! journal = {Bull. Seismol. Soc. Am.},
+! year = {2009},
+! volume = {99},
+! pages = {314-325},
+! number = {1},
+! doi = {10.1785/0120080020}}
+!
+! @ARTICLE{KoErGoMi10,
+! author = {Dimitri Komatitsch and Gordon Erlebacher and Dominik G\"oddeke and
+! David Mich\'ea},
+! title = {High-order finite-element seismic wave propagation modeling with
+! {MPI} on a large {GPU} cluster},
+! journal = {J. Comput. Phys.},
+! year = {2010},
+! volume = {229},
+! pages = {7692-7714},
+! number = {20},
+! doi = {10.1016/j.jcp.2010.06.024}}
+!
+! @ARTICLE{KoGoErMi10,
+! author = {Dimitri Komatitsch and Dominik G\"oddeke and Gordon Erlebacher and
+! David Mich\'ea},
+! title = {Modeling the propagation of elastic waves using spectral elements
+! on a cluster of 192 {GPU}s},
+! journal = {Computer Science Research and Development},
+! year = {2010},
+! volume = {25},
+! pages = {75-82},
+! number = {1-2},
+! doi = {10.1007/s00450-010-0109-1}}
+!
+! @ARTICLE{KoMiEr09,
+! author = {Dimitri Komatitsch and David Mich\'ea and Gordon Erlebacher},
+! title = {Porting a high-order finite-element earthquake modeling application
+! to {NVIDIA} graphics cards using {CUDA}},
+! journal = {Journal of Parallel and Distributed Computing},
+! year = {2009},
+! volume = {69},
+! pages = {451-460},
+! number = {5},
+! doi = {10.1016/j.jpdc.2009.01.006}}
+!
 ! @ARTICLE{LiPoKoTr04,
 ! author = {Qinya Liu and Jascha Polet and Dimitri Komatitsch and Jeroen Tromp},
 ! title = {Spectral-element moment tensor inversions for earthquakes in {S}outhern {C}alifornia},
