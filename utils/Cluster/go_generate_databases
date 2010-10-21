@@ -1,0 +1,57 @@
+#!/bin/csh
+
+# script to run the mesher
+
+# read DATA/Par_file to get information about the run
+
+# name of the file that contains the list of machines
+set machine_file = "mymachines"
+
+set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -d '=' -f 2 `
+
+# compute total number of processors needed
+set NPROC = `grep NPROC DATA/Par_file | cut -d '=' -f 2 `
+
+# total number of processors is the product of the values read
+@ numprocessors = $NPROC
+
+rm -r -f OUTPUT_FILES
+mkdir OUTPUT_FILES
+
+rm -f sources timestamp* PI* error_message* starttimeloop*
+
+if ( ! -d $my_local_path ) mkdir $my_local_path
+
+if ( -f $machine_file ) then
+  echo " "
+  echo using machine file \"$machine_file\"
+  echo " "
+  echo list of active machines:
+  echo " "
+  cat $machine_file
+  echo " "
+# this only used on a cluster if specifying list of machines
+# assumes the name of the machines is n001, n002 etc...
+# if name is different then change the  tr -d 'n' below
+  grep -v '#' $machine_file | tr -d ' ' | tr -d 'n' > OUTPUT_FILES/filtered_machines.txt
+endif
+
+echo NPROC = $NPROC
+echo " "
+echo starting MPI mesher on $numprocessors processors
+echo " "
+echo starting run in current directory $PWD
+echo " "
+echo mesh files will be saved in directory $my_local_path
+echo " "
+
+#### use this on Beowulf
+set MPIRUN="mpirun"
+$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xgenerate_databases
+
+#### use this on SGI
+# mpirun -np $numprocessors xgenerate_databases
+
+#### use this on Compaq Dec Alpha
+# dmpirun -np $numprocessors xgenerate_databases
+

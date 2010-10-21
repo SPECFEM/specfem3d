@@ -1,0 +1,122 @@
+#=====================================================================
+#
+#               S p e c f e m 3 D  V e r s i o n  1 . 4
+#               ---------------------------------------
+#
+#                 Dimitri Komatitsch and Jeroen Tromp
+#    Seismological Laboratory - California Institute of Technology
+#         (c) California Institute of Technology July 2005
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#=====================================================================
+#
+# United States Government Sponsorship Acknowledged.
+#
+
+# @configure_input@
+
+FC = @FC@
+FCFLAGS = #@FCFLAGS@
+MPIFC = @MPIFC@
+MPILIBS = @MPILIBS@
+FLAGS_CHECK = @FLAGS_CHECK@
+FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
+FCFLAGS_f90 = @FCFLAGS_f90@
+SCOTCH_LIBS = @SCOTCH_LIBS@
+
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK)
+FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK)
+MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK)
+#@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_NO_CHECK)
+#@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
+FCLINK = $(FCCOMPILE_NO_CHECK)
+
+CC = @CC@
+CFLAGS = @CFLAGS@ $(CPPFLAGS)
+CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
+@COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
+@COND_MPI_FALSE@COND_MPI_CPPFLAGS =
+
+AR = ar
+ARFLAGS = cru
+RANLIB = ranlib
+
+
+# E : executables directory
+E = ../../bin
+# O : objects directory
+O = ../../obj/dec
+
+# objects toggled between the parallel and serial version
+#COND_MPI_OBJECTS = $O/parallel.o
+#COND_MPI_OBJECTS = $O/serial.o
+
+####
+#### targets
+####
+
+# default targets for the Pyrized version
+DEFAULT = xdecompose_mesh_SCOTCH
+
+
+default: $(DEFAULT)
+
+all: clean default
+
+decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
+
+
+####
+#### rules for executables
+####
+
+
+#DEC_OBJETS = part_decompose_mesh_SCOTCH.o \
+                                decompose_mesh_SCOTCH.o \
+                                program_decompose_mesh_SCOTCH.o
+
+DEC_OBJECTS = part_decompose_mesh_SCOTCH.o \
+                decompose_mesh_SCOTCH.o \
+                program_decompose_mesh_SCOTCH.o
+
+DEC_OBJECTS_NEEDED = $O/part_decompose_mesh_SCOTCH.o \
+                $O/decompose_mesh_SCOTCH.o \
+                $O/program_decompose_mesh_SCOTCH.o
+
+# rules for the pure Fortran version
+@COND_PYRE_FALSE@xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS) 
+@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS_NEEDED) $(SCOTCH_LIBS) 
+@COND_PYRE_FALSE@
+
+
+
+clean:
+	rm -f *.o *.mod xdecompose_mesh_SCOTCH 
+####
+#### rule to build each .o file below
+####
+
+part_decompose_mesh_SCOTCH.o: part_decompose_mesh_SCOTCH.f90 
+	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.f90
+
+decompose_mesh_SCOTCH.o: decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.o
+	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.f90
+
+program_decompose_mesh_SCOTCH.o: program_decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.o
+	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh_SCOTCH.o program_decompose_mesh_SCOTCH.f90
+
+

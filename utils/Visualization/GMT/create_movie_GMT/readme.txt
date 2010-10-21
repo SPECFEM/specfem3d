@@ -1,0 +1,1 @@
+This is an ancient version that still uses the old read/compute_parameter_file subroutines. To compile properly, you need to copy over the right subroutines you used for your runs and modify them accordingly in the main program.

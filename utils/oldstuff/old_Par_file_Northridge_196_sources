@@ -1,0 +1,85 @@
+# ----------------------------------------------------------------
+#
+#    This is the parameter file
+#    Put variable names first and actual value after 27th column
+#
+# ----------------------------------------------------------------
+#
+<-                       ->
+#
+
+! number of elements along edge at surface (8 * multiple of NPROC below)
+NEX_XI                   = 456
+NEX_ETA                  = 384
+
+! number of MPI processors along xi and eta (can be different)
+NPROC_XI                 = 19
+NPROC_ETA                = 8
+
+! time step in seconds
+DT                       = 0.009
+
+! total number of time steps
+NSTEP                    = 15000
+
+! coordinates of mesh block in latitude/longitude and depth in km  -120.3d0
+LAT_MIN                  = 32.2d0
+LAT_MAX                  = 36.8d0
+LONG_MIN                 = -120.9d0
+LONG_MAX                 = -114.7d0
+DEPTH_BLOCK_KM           = 60.d0
+UTM_PROJECTION_ZONE      = 11
+
+! parameters describing the basin model
+TOPOGRAPHY               = .true.
+BASEMENT_MAP             = .true.
+MOHO_MAP_LUPEI           = .true.
+HAUKSSON_REGIONAL_MODEL  = .true.
+HARVARD_3D_GOCAD_MODEL   = .true.
+THICKNESS_TAPER_BLOCK_HR = 3000.d0
+THICKNESS_TAPER_BLOCK_MR = 15000.d0
+IMPOSE_MINIMUM_VP_GOCAD  = .true.
+VP_MIN_GOCAD             = 750.d0
+VP_VS_RATIO_GOCAD_TOP    = 2.0d0
+VP_VS_RATIO_GOCAD_BOTTOM = 1.732d0
+ATTENUATION              = .true.
+USE_OLSEN_ATTENUATION    = .true.
+OCEANS                   = .true.
+STACEY_ABS_CONDITIONS    = .true.
+
+! number of elements for full Earth
+NER_SEDIM                = 1
+NER_BASEMENT_SEDIM       = 2
+NER_16_BASEMENT          = 3
+NER_MOHO_16              = 4
+NER_BOTTOM_MOHO          = 7
+
+! path to store the local database files on each node
+LOCAL_PATH               = /scratch/DATABASES_MPI_DIMITRI
+
+! machine file for MPI
+MACHINE_FILE             = mymachines
+
+! interval in time steps for writing of seismograms
+NSEIS                    = 1000000
+
+! number of point sources
+NSOURCES                 = 196
+
+! for the movies
+SAVE_AVS_DX_MOVIE        = .false.
+SAVE_AVS_DX_SHAKEMAP     = .false.
+SAVE_DISPLACEMENT        = .false.
+USE_HIGHRES_FOR_MOVIES   = .false.
+NMOVIE                   = 200
+HDUR_MIN_MOVIES          = 0.4d0
+
+! interval at which we output time step info and max of norm of displacement
+ITAFF_TIME_STEPS         = 100
+
+! save AVS or OpenDX mesh files
+SAVE_AVS_DX_MESH_FILES   = .false.
+
+! print source time function
+PRINT_SOURCE_TIME_FUNCT  = .false.
+

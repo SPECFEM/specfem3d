@@ -1,0 +1,505 @@
+#=====================================================================
+#
+#               S p e c f e m 3 D  V e r s i o n  1 . 4
+#               ---------------------------------------
+#
+#                 Dimitri Komatitsch and Jeroen Tromp
+#    Seismological Laboratory - California Institute of Technology
+#         (c) California Institute of Technology July 2005
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#=====================================================================
+#
+# United States Government Sponsorship Acknowledged.
+#
+
+# @configure_input@
+
+FC = @FC@
+FCFLAGS = #@FCFLAGS@
+MPIFC = @MPIFC@
+MPILIBS = @MPILIBS@
+FLAGS_CHECK = @FLAGS_CHECK@
+FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
+FCFLAGS_f90 = @FCFLAGS_f90@
+
+SHARED = ../shared/
+# E : executables directory
+E = ../../bin
+# O : objects directory
+O = ../../obj/spec
+# L : libraries directory
+L = ../../lib
+
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I$(SHARED)
+FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) -I$(SHARED)
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I$(SHARED)
+MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK) -I$(SHARED)
+@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_NO_CHECK)
+@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
+
+CC = @CC@
+CFLAGS = @CFLAGS@ $(CPPFLAGS)
+CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
+@COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
+@COND_MPI_FALSE@COND_MPI_CPPFLAGS =
+
+AR = ar
+ARFLAGS = cru
+RANLIB = ranlib
+
+libspecfem_a_OBJECTS = \
+	$O/assemble_MPI_scalar.o \
+	$O/check_mesh_resolution.o \
+	$O/comp_source_time_function.o \
+	$O/compute_arrays_source.o \
+	$O/compute_parameters.o \
+	$O/create_header_file.o \
+	$O/create_name_database.o \
+	$O/create_serial_name_database.o \
+	$O/define_derivation_matrices.o \
+	$O/detect_surface.o \
+	$O/exit_mpi.o \
+	$O/get_attenuation_model.o \
+	$O/get_cmt.o \
+	$O/get_element_face.o \
+	$O/get_jacobian_boundaries.o \
+	$O/get_shape2D.o \
+	$O/get_shape3D.o \
+	$O/get_value_parameters.o \
+	$O/gll_library.o \
+	$O/hex_nodes.o \
+	$O/lagrange_poly.o \
+	$O/locate_receivers.o \
+	$O/locate_source.o \
+	$O/netlib_specfun_erf.o \
+	$O/param_reader.o \
+	$O/prepare_assemble_MPI.o \
+	$O/read_topo_bathy_file.o \
+	$O/read_parameter_file.o \
+	$O/read_value_parameters.o \
+	$O/recompute_jacobian.o \
+	$O/save_header_file.o \
+	$O/sort_array_coordinates.o \
+	$O/utm_geo.o \
+	$O/write_AVS_DX_global_data.o \
+	$O/write_AVS_DX_global_faces_data.o \
+	$O/write_AVS_DX_surface_data.o \
+	$O/write_VTK_data.o \
+	$(EMPTY_MACRO)
+
+# solver objects with statically allocated arrays; not dependent upon
+# values_from_mesher.h anymore
+SOLVER_ARRAY_OBJECTS = \
+	$O/specfem3D_par.o \
+	$O/PML_init.o \
+	$O/compute_boundary_kernel.o \
+	$O/compute_kernels.o \
+	$O/compute_forces_acoustic.o \
+	$O/compute_forces_acoustic_pot.o \
+	$O/compute_forces_acoustic_PML.o \
+	$O/compute_forces_elastic.o \
+	$O/compute_forces_elastic_Dev.o \
+	$O/compute_forces_elastic_noDev.o \
+	$O/compute_add_sources_acoustic.o \
+	$O/compute_add_sources_elastic.o \
+	$O/compute_coupling_acoustic_el.o \
+	$O/compute_coupling_elastic_ac.o \
+	$O/compute_stacey_acoustic.o \
+	$O/compute_stacey_elastic.o \
+	$O/compute_gradient.o \
+	$O/compute_interpolated_dva.o \
+	$O/initialize_simulation.o \
+	$O/read_mesh_databases.o \
+	$O/setup_GLL_points.o \
+	$O/write_movie_output.o \
+	$O/write_PNM_GIF_data.o \
+	$O/write_seismograms.o \
+	$O/detect_mesh_surfaces.o \
+	$O/setup_movie_meshes.o \
+	$O/read_topography_bathymetry.o \
+	$O/setup_sources_receivers.o \
+	$O/prepare_timerun.o \
+	$O/iterate_time.o \
+	$O/finalize_simulation.o \
+	$O/save_adjoint_kernels.o \
+	$O/specfem3D.o \
+	$O/assemble_MPI_vector.o \
+	$(EMPTY_MACRO)
+
+
+# objects toggled between the parallel and serial version
+@COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
+@COND_MPI_FALSE@COND_MPI_OBJECTS = $O/serial.o
+
+LIBSPECFEM = $L/libspecfem.a
+
+# objects for the pure Fortran version
+@COND_PYRE_FALSE@XGENERATE_DATABASES_OBJECTS = $O/program_generate_databases.o $(LIBSPECFEM)
+@COND_PYRE_FALSE@XSPECFEM_OBJECTS = $O/program_specfem3D.o $(SOLVER_ARRAY_OBJECTS) $(LIBSPECFEM)
+
+####
+#### targets
+####
+
+# default targets for the pure Fortran version
+@COND_PYRE_FALSE@DEFAULT = \
+@COND_PYRE_FALSE@	generate_databases \
+@COND_PYRE_FALSE@	specfem3D \
+@COND_PYRE_FALSE@	combine_AVS_DX \
+@COND_PYRE_FALSE@	combine_vol_data \
+@COND_PYRE_FALSE@	combine_surf_data \
+@COND_PYRE_FALSE@	convolve_source_timefunction \
+@COND_PYRE_FALSE@	$(EMPTY_MACRO)
+
+default: $(DEFAULT)
+
+all: clean default
+
+generate_databases: xgenerate_databases
+
+specfem3D: xspecfem3D
+
+
+####
+#### rules for executables
+####
+
+# rules for the pure Fortran version
+@COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xgenerate_databases $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@
+@COND_PYRE_FALSE@# solver also depends on values from mesher
+@COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS)
+@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@
+
+combine_AVS_DX: xcombine_AVS_DX
+convolve_source_timefunction: xconvolve_source_timefunction
+create_header_file: xcreate_header_file
+create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
+combine_vol_data: xcombine_vol_data
+combine_surf_data: xcombine_surf_data
+
+xconvolve_source_timefunction: $O/convolve_source_timefunction.o
+	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.o
+
+xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
+	${FCCOMPILE_CHECK} -o  ${E}/xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
+
+@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) OUTPUT_FILES/surface_from_mesher.h
+@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
+
+
+xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
+	${FCCOMPILE_CHECK} -o  ${E}/xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBSPECFEM)
+
+xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
+	${FCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
+
+xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
+	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
+
+
+clean:
+	rm -f $O/* *.o *.gnu *.mod OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* \
+        xgenerate_databases xspecfem3D xcombine_AVS_DX \
+        xconvolve_source_timefunction xcreate_header_file \
+        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
+
+###
+### rule for the archive library
+###
+
+$L/libspecfem.a: $(libspecfem_a_OBJECTS)
+	-rm -f $L/libspecfem.a
+	$(AR) $(ARFLAGS) $L/libspecfem.a $(libspecfem_a_OBJECTS)
+	$(RANLIB) $L/libspecfem.a
+
+####
+#### rule to build each .o file below
+####
+
+###
+### optimized flags (not dependent on values from mesher anymore)
+###
+
+$O/specfem3D_par.o: $(SHARED)constants.h specfem3D_par.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D_par.o specfem3D_par.f90
+
+$O/specfem3D.o: $(SHARED)constants.h specfem3D.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/specfem3D.o specfem3D.f90
+
+$O/compute_forces_elastic_noDev.o: $(SHARED)constants.h compute_forces_elastic_noDev.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic_noDev.o compute_forces_elastic_noDev.f90
+
+$O/compute_forces_elastic_Dev.o: $(SHARED)constants.h compute_forces_elastic_Dev.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic_Dev.o compute_forces_elastic_Dev.f90
+
+$O/compute_forces_elastic.o: $(SHARED)constants.h compute_forces_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic.o compute_forces_elastic.f90
+
+$O/compute_forces_acoustic.o: $(SHARED)constants.h compute_forces_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic.o compute_forces_acoustic.f90
+
+$O/compute_forces_acoustic_pot.o: $(SHARED)constants.h compute_forces_acoustic_pot.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic_pot.o compute_forces_acoustic_pot.f90
+
+$O/compute_forces_acoustic_PML.o: $(SHARED)constants.h compute_forces_acoustic_PML.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic_PML.o compute_forces_acoustic_PML.f90
+
+$O/compute_add_sources_acoustic.o: $(SHARED)constants.h compute_add_sources_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_add_sources_acoustic.o compute_add_sources_acoustic.f90
+
+$O/compute_add_sources_elastic.o: $(SHARED)constants.h compute_add_sources_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_add_sources_elastic.o compute_add_sources_elastic.f90
+
+$O/compute_coupling_acoustic_el.o: $(SHARED)constants.h compute_coupling_acoustic_el.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_acoustic_el.o compute_coupling_acoustic_el.f90
+
+$O/compute_coupling_elastic_ac.o: $(SHARED)constants.h compute_coupling_elastic_ac.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_elastic_ac.o compute_coupling_elastic_ac.f90
+
+$O/compute_stacey_acoustic.o: $(SHARED)constants.h compute_stacey_acoustic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_stacey_acoustic.o compute_stacey_acoustic.f90
+
+$O/compute_stacey_elastic.o: $(SHARED)constants.h compute_stacey_elastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_stacey_elastic.o compute_stacey_elastic.f90
+
+$O/compute_gradient.o: $(SHARED)constants.h compute_gradient.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_gradient.o compute_gradient.f90
+
+$O/compute_interpolated_dva.o: $(SHARED)constants.h compute_interpolated_dva.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_interpolated_dva.o compute_interpolated_dva.f90
+
+$O/initialize_simulation.o: $(SHARED)constants.h initialize_simulation.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/initialize_simulation.o initialize_simulation.f90
+
+$O/read_mesh_databases.o: $(SHARED)constants.h read_mesh_databases.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/read_mesh_databases.o read_mesh_databases.f90
+
+$O/setup_GLL_points.o: $(SHARED)constants.h setup_GLL_points.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_GLL_points.o setup_GLL_points.f90
+
+$O/detect_mesh_surfaces.o: $(SHARED)constants.h detect_mesh_surfaces.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/detect_mesh_surfaces.o detect_mesh_surfaces.f90
+
+$O/setup_movie_meshes.o: $(SHARED)constants.h setup_movie_meshes.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_movie_meshes.o setup_movie_meshes.f90
+
+$O/read_topography_bathymetry.o: $(SHARED)constants.h read_topography_bathymetry.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/read_topography_bathymetry.o read_topography_bathymetry.f90
+
+$O/setup_sources_receivers.o: $(SHARED)constants.h setup_sources_receivers.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/setup_sources_receivers.o setup_sources_receivers.f90
+
+$O/prepare_timerun.o: $(SHARED)constants.h prepare_timerun.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/prepare_timerun.o prepare_timerun.f90
+
+$O/iterate_time.o: $(SHARED)constants.h iterate_time.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/iterate_time.o iterate_time.f90
+
+$O/finalize_simulation.o: $(SHARED)constants.h finalize_simulation.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/finalize_simulation.o finalize_simulation.f90
+
+$O/assemble_MPI_vector.o: $(SHARED)constants.h assemble_MPI_vector.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_vector.o assemble_MPI_vector.f90
+
+$O/assemble_MPI_scalar.o: $(SHARED)constants.h ${SHARED}/assemble_MPI_scalar.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_scalar.o ${SHARED}/assemble_MPI_scalar.f90
+
+$O/save_adjoint_kernels.o: $(SHARED)constants.h save_adjoint_kernels.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/save_adjoint_kernels.o save_adjoint_kernels.f90
+
+$O/write_movie_output.o: $(SHARED)constants.h write_movie_output.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_movie_output.o write_movie_output.f90
+
+$O/write_PNM_GIF_data.o: $(SHARED)constants.h write_PNM_GIF_data.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_PNM_GIF_data.o write_PNM_GIF_data.f90
+
+$O/write_seismograms.o: $(SHARED)constants.h write_seismograms.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
+
+
+###
+### MPI compilation without optimization
+###
+
+$O/parallel.o: $(SHARED)constants.h ${SHARED}/parallel.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o ${SHARED}/parallel.f90
+
+###
+### serial compilation without optimization
+###
+
+$O/serial.o: $(SHARED)constants.h ${SHARED}/exit_mpi.f90
+	${FCCOMPILE_CHECK} -c -o $O/serial.o ${SHARED}/serial.f90
+
+$O/program_specfem3D.o: program_specfem3D.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_specfem3D.o program_specfem3D.f90
+
+$O/locate_source.o: $(SHARED)constants.h locate_source.f90
+	${FCCOMPILE_CHECK} -c -o $O/locate_source.o locate_source.f90
+
+$O/locate_receivers.o: $(SHARED)constants.h locate_receivers.f90
+	${FCCOMPILE_CHECK} -c -o $O/locate_receivers.o locate_receivers.f90
+
+$O/exit_mpi.o: $(SHARED)constants.h ${SHARED}/exit_mpi.f90
+	${FCCOMPILE_CHECK} -c -o $O/exit_mpi.o ${SHARED}/exit_mpi.f90
+
+$O/convolve_source_timefunction.o: ${SHARED}/convolve_source_timefunction.f90
+	${FCCOMPILE_CHECK} -c -o $O/convolve_source_timefunction.o ${SHARED}/convolve_source_timefunction.f90
+
+$O/program_create_header_file.o: ${SHARED}/program_create_header_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_create_header_file.o ${SHARED}/program_create_header_file.f90
+
+$O/create_header_file.o: ${SHARED}/create_header_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_header_file.o ${SHARED}/create_header_file.f90
+
+$O/combine_AVS_DX.o: $(SHARED)constants.h ${SHARED}/combine_AVS_DX.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_AVS_DX.o ${SHARED}/combine_AVS_DX.f90
+
+$O/save_header_file.o: $(SHARED)constants.h ${SHARED}/save_header_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/save_header_file.o ${SHARED}/save_header_file.f90
+
+$O/read_parameter_file.o: $(SHARED)constants.h ${SHARED}/read_parameter_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/read_parameter_file.o ${SHARED}/read_parameter_file.f90
+
+$O/read_value_parameters.o: $(SHARED)constants.h ${SHARED}/read_value_parameters.f90
+	${FCCOMPILE_CHECK} -c -o $O/read_value_parameters.o ${SHARED}/read_value_parameters.f90
+
+$O/get_value_parameters.o: $(SHARED)constants.h ${SHARED}/get_value_parameters.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_value_parameters.o ${SHARED}/get_value_parameters.f90
+
+$O/utm_geo.o: $(SHARED)constants.h ${SHARED}/utm_geo.f90
+	${FCCOMPILE_CHECK} -c -o $O/utm_geo.o ${SHARED}/utm_geo.f90
+
+$O/compute_parameters.o: $(SHARED)constants.h ${SHARED}/compute_parameters.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_parameters.o ${SHARED}/compute_parameters.f90
+
+$O/check_mesh_resolution.o: $(SHARED)constants.h ${SHARED}/check_mesh_resolution.f90
+	${FCCOMPILE_CHECK} -c -o $O/check_mesh_resolution.o ${SHARED}/check_mesh_resolution.f90
+
+$O/detect_surface.o: $(SHARED)constants.h ${SHARED}/detect_surface.f90
+	${FCCOMPILE_CHECK} -c -o $O/detect_surface.o ${SHARED}/detect_surface.f90
+
+$O/gll_library.o: $(SHARED)constants.h ${SHARED}/gll_library.f90
+	${FCCOMPILE_CHECK} -c -o $O/gll_library.o ${SHARED}/gll_library.f90
+
+$O/get_jacobian_boundaries.o: $(SHARED)constants.h ${SHARED}/get_jacobian_boundaries.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_jacobian_boundaries.o ${SHARED}/get_jacobian_boundaries.f90
+
+$O/get_flags_boundaries.o: $(SHARED)constants.h ${SHARED}/get_flags_boundaries.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_flags_boundaries.o ${SHARED}/get_flags_boundaries.f90
+
+$O/get_cmt.o: $(SHARED)constants.h ${SHARED}/get_cmt.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o  ${SHARED}/get_cmt.f90
+
+$O/create_movie_shakemap_AVS_DX_GMT.o: $(SHARED)constants.h ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 OUTPUT_FILES/surface_from_mesher.h
+	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o  ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90
+
+$O/get_element_face.o: $(SHARED)constants.h ${SHARED}/get_element_face.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_element_face.o  ${SHARED}/get_element_face.f90
+
+$O/write_AVS_DX_global_faces_data.o: $(SHARED)constants.h ${SHARED}/write_AVS_DX_global_faces_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_faces_data.o ${SHARED}/write_AVS_DX_global_faces_data.f90
+
+$O/write_AVS_DX_surface_data.o: $(SHARED)constants.h ${SHARED}/write_AVS_DX_surface_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_surface_data.o ${SHARED}/write_AVS_DX_surface_data.f90
+
+$O/write_AVS_DX_global_data.o: $(SHARED)constants.h ${SHARED}/write_AVS_DX_global_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_data.o ${SHARED}/write_AVS_DX_global_data.f90
+
+$O/write_VTK_data.o: $(SHARED)constants.h ${SHARED}/write_VTK_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o ${SHARED}/write_VTK_data.f90
+
+$O/get_shape3D.o: $(SHARED)constants.h ${SHARED}/get_shape3D.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_shape3D.o ${SHARED}/get_shape3D.f90
+
+$O/get_shape2D.o: $(SHARED)constants.h ${SHARED}/get_shape2D.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_shape2D.o ${SHARED}/get_shape2D.f90
+
+$O/hex_nodes.o: $(SHARED)constants.h ${SHARED}/hex_nodes.f90
+	${FCCOMPILE_CHECK} -c -o $O/hex_nodes.o ${SHARED}/hex_nodes.f90
+
+$O/netlib_specfun_erf.o: ${SHARED}/netlib_specfun_erf.f90
+	${FCCOMPILE_CHECK} -c -o $O/netlib_specfun_erf.o ${SHARED}/netlib_specfun_erf.f90
+
+$O/sort_array_coordinates.o: $(SHARED)constants.h ${SHARED}/sort_array_coordinates.f90
+	${FCCOMPILE_CHECK} -c -o $O/sort_array_coordinates.o ${SHARED}/sort_array_coordinates.f90
+
+$O/comp_source_time_function.o: $(SHARED)constants.h comp_source_time_function.f90
+	${FCCOMPILE_CHECK} -c -o $O/comp_source_time_function.o comp_source_time_function.f90
+
+$O/read_topo_bathy_file.o: $(SHARED)constants.h ${SHARED}/read_topo_bathy_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o ${SHARED}/read_topo_bathy_file.f90
+
+$O/lagrange_poly.o: $(SHARED)constants.h ${SHARED}/lagrange_poly.f90
+	${FCCOMPILE_CHECK} -c -o $O/lagrange_poly.o ${SHARED}/lagrange_poly.f90
+
+$O/recompute_jacobian.o: $(SHARED)constants.h ${SHARED}/recompute_jacobian.f90
+	${FCCOMPILE_CHECK} -c -o $O/recompute_jacobian.o ${SHARED}/recompute_jacobian.f90
+
+$O/create_name_database.o: $(SHARED)constants.h ${SHARED}/create_name_database.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o ${SHARED}/create_name_database.f90
+
+$O/create_serial_name_database.o: $(SHARED)constants.h ${SHARED}/create_serial_name_database.f90
+	${FCCOMPILE_CHECK} -c -o $O/create_serial_name_database.o ${SHARED}/create_serial_name_database.f90
+
+$O/define_derivation_matrices.o: $(SHARED)constants.h ${SHARED}/define_derivation_matrices.f90
+	${FCCOMPILE_CHECK} -c -o $O/define_derivation_matrices.o ${SHARED}/define_derivation_matrices.f90
+
+$O/compute_arrays_source.o: $(SHARED)constants.h ${SHARED}/compute_arrays_source.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_arrays_source.o ${SHARED}/compute_arrays_source.f90
+
+$O/get_attenuation_model.o: $(SHARED)constants.h ${SHARED}/get_attenuation_model.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_attenuation_model.o ${SHARED}/get_attenuation_model.f90
+
+$O/compute_boundary_kernel.o: $(SHARED)constants.h ${SHARED}/compute_boundary_kernel.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o ${SHARED}/compute_boundary_kernel.f90
+
+$O/compute_kernels.o: $(SHARED)constants.h ${SHARED}/compute_kernels.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_kernels.o ${SHARED}/compute_kernels.f90
+
+$O/combine_vol_data.o: $(SHARED)constants.h ${SHARED}/combine_vol_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o ${SHARED}/combine_vol_data.f90
+
+$O/combine_surf_data.o: $(SHARED)constants.h ${SHARED}/combine_surf_data.f90
+	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o ${SHARED}/combine_surf_data.f90
+
+$O/prepare_assemble_MPI.o: $(SHARED)constants.h ${SHARED}/prepare_assemble_MPI.f90
+	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o ${SHARED}/prepare_assemble_MPI.f90
+
+$O/PML_init.o: $(SHARED)constants.h PML_init.f90
+	${FCCOMPILE_CHECK} -c -o $O/PML_init.o PML_init.f90
+
+###
+### rule for the header file
+###
+
+@COND_PYRE_FALSE@OUTPUT_FILES/values_from_mesher.h: xcreate_header_file
+@COND_PYRE_FALSE@	./xcreate_header_file
+
+###
+### C files below
+###
+
+$O/param_reader.o: ${SHARED}/param_reader.c
+	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c
+
+$O/write_c_binary.o: ${SHARED}/write_c_binary.c
+	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c
+

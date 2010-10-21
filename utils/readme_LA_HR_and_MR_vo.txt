@@ -1,0 +1,26 @@
+
+High-res model:
+
+AXIS_O 371052.25 3774000 400 
+AXIS_U 46000 0 0 
+AXIS_V 0 -48750 0 
+AXIS_W 0 0 -9900 
+AXIS_MIN 0 0 0 
+AXIS_MAX 1 1 1 
+AXIS_N 185 196 100 
+AXIS_NAME " axis-1" " axis-2" " axis-3" 
+
+
+Medium-res model:
+
+
+AXIS_O 283000 3655000 -15000 
+AXIS_U 193000 0 0 
+AXIS_V 0 195000 0 
+AXIS_W 0 0 19800 
+AXIS_MIN 0 0 0 
+AXIS_MAX 1 1 1 
+AXIS_N 194 196 100 
+AXIS_NAME " axis-1" " axis-2" " axis-3" 
+
+

@@ -1,0 +1,2 @@
+\rm OUTPUT_FILES/*
+bsub -q normal -n 150 -K < remap.bash 

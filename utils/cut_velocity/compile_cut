@@ -1,0 +1,1 @@
+ifort -o ../xcut_velocity cut_velocity.f90 -fast -L../lib -lDRWFiles 

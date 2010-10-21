@@ -1,0 +1,38 @@
+ALHF:24461:CSMIP:Alhambra,Fremont School              :34.070 :-118.150 :
+ARL:24087:CSMIP:Arleta; Nordhoff Fire Sta            :34.236 :-118.439 :
+BLD:24157:CSMIP:LA; Baldwin Hills                    :34.009 :-118.361 :
+CAS:24278:CSMIP:Castaic; Old Ridge Route             :34.564 :-118.642 :
+ECC :05108:DWP  :Energy Cntrl Cntr-Grnd Flr           :34.259 :-118.336 :
+ENR:     :DWP  :Encino Reservoir Dam Abut            :34.149 :-118.514 :
+GRF:0141 :USGS :Griffith Park Obs                    :34.118 :-118.299 :
+HYSB:24303:CSMIP:LA; Hollywood Storage FF             :34.090 :-118.339 :
+JFP:0655 :USGS :Jensen Filt Plnt-Gen Bl Gnd          :34.312 :-118.496 :
+MNG:5080 :USGS :Monte Nido Fire Station              :34.078 :-118.693 :
+MOR:24283:CSMIP:Moorpark,Ventura Co. Fire            :34.288 :-118.881 :
+NH20:24464:CSMIP:No.Hollywood-20 stry hotel           :34.138 :-118.359 :
+NHL:24279:CSMIP:Newhall; LA Cnty Fire Sta            :34.387 :-118.530 :
+PARD:     :SCE  :Pardee                               :34.435 :-118.582 :
+PDM:24207:CSMIP:Pacoima Dam-Downstream               :34.334 :-118.396 :
+PIRU:24280:CSMIP:Lake Piru-Santa Felicia Dm           :34.460 :-118.753 :
+PKC:24088:CSMIP:Pacoima; Kagel Canyon                :34.288 :-118.375 :
+PTMG:25148:CSMIP:Point Mugu - Laguna Peak             :34.109 :-119.065 :
+RRS :05968:DWP  :Rinaldi Receiving Stan-FF            :34.281 :-118.479 :
+RSE :01105:DWP  :Receiving Stn E-Ground Flr           :34.176 :-118.360 :
+SCC:0757 :USGS :Sepulveda Canyon Cntrl Fac           :34.097 :-118.475 :
+SCR:?    :UCSB :Stone Canyon Reservoir Site          :34.106 :-118.454 :
+SCS:06273:DWP  :Sylmar Converter Sta E-ff            :34.312 :-118.481 :
+SHR:24322:CSMIP:Sherman Oaks;13 stry bldg            :34.154 :-118.465 :
+SMC:24538:CSMIP:Santa Monica City Hall Gnd           :34.011 :-118.490 :
+SSU:5108 :USGS :Canoga Pk,SantaSusana,B462           :34.231 :-118.713 :
+SVA:0637 :USGS :Sepulveda VA Hospital-grnd           :34.249 :-118.475 :
+SYL:24514:CSMIP:Sylmar-Olive View Pkg Lot            :34.326 :-118.444 :
+TPG:5081 :USGS :Topanga Fire Station                 :34.084 :-118.599 :
+U03:5303 :USC  :17645 Saticoy St,Northridge          :34.209 :-118.517 :
+U53:5353 :USC  :Canoga Pk;Topanga Cnyn Blvd          :34.212 :-118.601 :
+U55:5355 :USC  :Simi ValScl, 6334 Katherine          :34.264 :-118.666 :
+U56:5356 :USC  :Newhall,26835 PicoCnyn Blvd          :34.391 :-118.622 :
+U57:5357 :USC  :CnynCntry-16629 Lost Cyn Rd          :34.419 :-118.426 :
+VNY:24386:CSMIP:Van Nuys-7 story hotel               :34.221 :-118.471 :
+VSQZ:24047:CSMIP:Vasquez Rocks Park                   :34.492 :-118.327 :
+WOOD:24251:CSMIP:Wood Ranch Reservoir                 :34.240 :-118.820 :
+WVA:5082 :USGS :Wadsworth VA Hospital-North          :34.054 :-118.453 :

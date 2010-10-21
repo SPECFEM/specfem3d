@@ -18,7 +18,7 @@
    the Fortran libraries. */
 #undef FC_MAIN
 
-/* defined if scotch is installed */
+/* defined if Scotch is installed */
 #undef HAVE_SCOTCH
 
 /* Define to the address where bug reports for this package should be sent. */
@@ -32,6 +32,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
