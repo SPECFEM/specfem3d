@@ -55,8 +55,6 @@ RANLIB = ranlib
 
 ##.PHONY: clean default all backup bak generate_databases specfem3D meshfem3D 
 
-required: bin lib obj
-
 ####
 #### targets
 ####
@@ -77,6 +75,8 @@ required: bin lib obj
 default: $(DEFAULT)
 
 all: default
+
+required: bin lib obj
 
 backup:
 	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
