@@ -1,0 +1,2 @@
+\rm *.o remap_database
+mpif90 -o remap_database -fast remap_database.f90 exit_mpi.f90

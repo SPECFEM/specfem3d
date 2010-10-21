@@ -1,0 +1,48 @@
+#!/bin/csh
+
+# script to run the solver
+
+# read DATA/Par_file to get information about the run
+
+# name of the file that contains the list of machines
+set machine_file = "mymachines"
+
+set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -d '=' -f 2 `
+
+# compute total number of processors needed
+set NPROC = `grep NPROC DATA/Par_file | cut -d '=' -f 2 `
+
+# total number of processors is the product of the values read
+@ numprocessors = $NPROC
+
+rm -f sources error*txt starttimeloop* timestamp* PI* RECORDHEADERS
+
+if ( -f $machine_file ) then
+  echo " "
+  echo using machine file \"$machine_file\"
+  echo " "
+  echo list of active machines:
+  echo " "
+  cat $machine_file
+  echo " "
+endif
+
+echo NPROC = $NPROC
+echo " "
+echo starting MPI solver on $numprocessors processors
+echo " "
+echo starting run in current directory $PWD
+echo " "
+echo mesh files will be read from directory $my_local_path
+echo " "
+
+#### use this on Beowulf
+set MPIRUN="mpirun"
+$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xspecfem3D 
+
+#### use this on SGI
+# mpirun -np $numprocessors xspecfem3D
+
+#### use this on Compaq Dec Alpha
+# dmpirun -np $numprocessors xspecfem3D
+

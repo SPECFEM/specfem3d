@@ -1,0 +1,253 @@
+BACKGROUND
+=================
+This program collects 3D binary mesh and volume data files produced by SPECFEM3D_SESAME
+and writes VTK unstructured binary files or Ensight Gold binary files optionally.
+The VTK or the Ensight Gold files can then be visualized in VTK/ParaView. 
+See http://www.vtk.org, http://www.paraview.org, and http://www.ensight.com/ for details.
+VTK binary files are endianness dependent, i.e., the files written in Little Endian architecture 
+cannot be visualized in Big Endian architecture and vice versa. On the other hand, the Ensight
+Gold files are endianness independent, actual endianness can be set during the visualization within the paraView. 
+
+FEEDBACK
+=================
+Hom Nath Gharti, NORSAR
+homnath_AT_norsar_DOT_no
+
+TODO
+=================
+- support for parallel writing [not so important!]
+- support for 2D and surface data [not so important!]
+
+REVISION
+=================
+April 09,2010, HNG
+  - added support to read structured and flexible input file
+  - updated manual 
+April 08,2010, HNG
+  - added support to vector and tensor data for ParaView
+April 07,2010, HNG
+  - clean up codes
+  - updated manual
+April 06,2010, HNG
+  - clean up codes
+  - added support to medium resolution, parallel visualizaion, and data from global poins for VTK format
+March 25,2010, HNG
+  - added support for parallel visualization in Ensight format
+March 23,2010, HNG
+  - updated visualize_manual
+  - added support to 20 noded hexahedra elements only in Ensight format 
+  - added support to read binary files stored in global nodes only in Ensight format 
+  - changed nodal operations into do loops in visualize_collect.f90 for cleaner code 
+March 11,2010, HNG
+  - added support to display vector and symmeric tensor data in Ensight Gold
+  - added support to display vector to scalar data. This is necessary if we want to visualize the equivalent
+    scalar potential corresponding to the vector. The equivalent potential is determined by the 0.5*sum_of_vector_components
+March 09,2010, HNG
+  - integration to SPECFEM3D_SESAME
+
+PACKAGE STRUCTURE
+=================
+visualize/
+  bin/                  : where all object files and executable will be stored during compilation
+  input/                : contains input files
+  output/               : default output folder. output will be stored in this folder unless output path is defined in the input
+  src/                  : contains all source files
+    Makefile              : file required to compile the package
+    visualize_par.f90     : constants and global parameters
+    cfunc4fortran.c       : collection of C routines to be called from FORTRAN programs
+    string_process.f90    : contains routines to process strings
+    read_input.f90        : this routine read the structured input as described below
+    visualize.f90         : main driver program
+    visualize_collect.f90 : collection of routines to be used to collect data from processor/s
+    write_ensight.f90     : routine that writes serial/parallel Ensight gold files
+    write_vtu.f90         : routine that writes serial/parallel VTK files
+  tmp/                  : temporary storage
+  README                : brief description of the visualize package    
+  visualize_manual      : [this file] detail description of the visualize package.
+  
+   
+USAGE
+=================
+COMPILE:
+  - go to src/ folder
+  - check visualize_par.f90 for the consistency of constants with constants.h of SPECFEM3D_SESAME 
+  - edit Makefile if necessay
+  - type make 
+  >> make
+
+PREPARE INPUT:
+ - prepare input file, e.g., input/visualize_test.in
+  
+RUN:
+  ../bin/visualize [input filename]
+  e.g., ../bin/visualize visualize_test.in
+see visualize_test.in for input detail
+
+
+STATUS SUMMARY
+=================
+                            Ensight Gold      VTK     remarks
+---------------------------------------------------------------------------------
+- scalar to Scalar              yes           yes     for example, visualize divergence (or equivalent P potential)
+- vector to Vector              yes           yes     for example, visualize curl, velcoity fields
+- tensor to Tensor              yes           yes     for example, stress tensor
+- vector to Scalar              yes           yes     for example, equivalent S potential from curl_x, curl_y, curl_z
+- low resolution                yes           yes     eqivalent 8-noded hexahedron of a spectral element 
+- high resolution               yes           yes     eqivalent 8-noded hexahedron of a GLL element
+- medium resolution             yes           Yes     equivalent 20-noded hexahedron of a spectral element
+- data from local poits         yes           yes     this requires more space as a point has as many values as many sharing elements 
+- data from global point        yes           yes     this requires less space as a point has one value
+- parallel output               yes           yes     for visualization in parallel
+- parallel writing              no            no      write data in parallel for parallel output (not so important!)
+
+
+HOW TO VISUALIZE IN SERIAL
+==========================
+Requirement: ParaView should be built. Precompiled binaries available from ParaView web may work properly. 
+1. open a session
+2. open paraview client>> paraview
+3. In ParaView client: -> File -> Open
+   select appropriate serial file (.sos or .case file for Ensight Gold, and .pvd or .pvtu or .vtu for ParaView)
+   see ParaView wiki for more detail: http://paraview.org/Wiki/ParaView
+   
+HOW TO VISUALIZE IN PARALLEL
+============================
+Requirement: ParaView should be built enabling MPI. Precompiled binaries available from ParaView web may not work properly with the MPI version that currently you have. 
+1. open a session
+2. open paraview client>> paraview
+3. start ParaView server>> mpirun -np 8 pvserver -display :0
+4. In ParaView client: -> File -> Connect and connect to the appropriate server
+5. In ParaView client: ->Open
+   select appropriate paralle file (.sos file for Ensight Gold, and .pvd or .pvtu for ParaView)
+   see ParaView wiki for more detail: http://paraview.org/Wiki/ParaView
+
+INPUT FILE
+==========
+Input file can consist of blank lines, comment lines and legitimate input lines.
+	
+Blank lines contain only white-space characters. Comment lines contain '#' as the first character not neccesarily in the first column. Any number of blank lines or comment lines can be placed in the input files for user friendly input structure.
+
+Legitimate input lines are those required for program execution. Each line consists of line type, list of arguments, and corresponding values. All argument-value pair are separated by comma (,). If necessay, any legitimate input line can be continued to next line using '\' as an absolute last character of a line to be continued.
+
+Legitimate input lines have the format
+<line type> <arg1=val1>, <arg2=val2>, ......., <argn=valn>
+for example:
+output: path='../DATABASES_MPI_aaknes', ncomp=1, head='divergence_test',vname='p_potential', res=0, form=1
+
+All legitimate input lines should be written in lower case. Line type and argument-value pairs must be separated by space. Each argument-value pair must be separated by comma(,) and space/s. No space/s are recommended before line type and in between argument name and '=' or '=' and argument value. If argument value is string/character just write the FORTRAN 90 string, i.e., enclosed within the sigle quotes. If the argument value is the vector (i.e., multi-valued), just give a list of values separated by space (no comma!),e.g, list=0 1 2 3 4.
+
+LINE TYPES
+----------
+Only the following line types are recognized.
+ 
+input	: input information
+output  : output information
+procinfo: processor information 
+proclist: procesor list/s
+server  : server name and executable lists only required for multiprocessor Ensight Gold format
+
+ARGUMENTS
+---------
+Only the following arguments under each line types are recognized. 
+
+input:
+  path	: path where the input data are located [string]
+  dt    : actual time interval used for the simulation [s, real], this value is used only to display the actual time in the image frame/s.
+  nstep : number of image frames or number of time steps you want to generate image data for visualization [integer > 0]
+  start : time step number for the starting (first) image frame [integer], this can be any time step value which has the data output from the simulation
+  step  : time step interval for the image frames [integer], this can be any value which is multiple of the actual time step of the simulation for which we have the data output. for   example, if we have the data output for time steps 500, 1000, 1500, 2000, 2500 and so on in the time step of 500, value of step can be any of 500, 1000, 1500 etc. Obviously, the less the value the smoother is the movie/animation.
+  width : width of the time step format used to write the data output file name [integer], e.g, if we have a file name proc000001_div_it020400.bin, the number corresponding to the time step (i.e., after _it) has 6 digits, therefore set width=6
+  ncomp : number of components of the input data variable [integer from 1, 3, and 6]
+    1 -> scalar input, e.g, divergence
+    3 -> vector input, e.g., curl, displacement, velocity etc.
+    6 -> 9-component symmetric tensor which has 6 unique components, e.g, stress
+  head  : header for the file name after processor [ncomp strings], for 3 components, file headers should be in the order of x, y and z. for 6 component file headers should be in the order 11, 22, 33, 12, 13, 23. e.g., if we have a file name proc000001_div_it020400.bin, set head='_div_it'. if we have three files for curl proc000006_curl_x_it020400.bin, proc000006_curl_y_it020400.bin, and proc000006_curl_z_it020400.bin, set head='_curl_x_it _curl_y_it _curl_z_it' 
+  ext   : extension of data file name [string], e.g, for proc000001_div_it020400.bin, set ext='bin'
+  topo  : topology of the nodal data [integer from 0 and 1]
+    0 -> nodal data in local position, i.e., data output were written for all nodes for each element. this way we have the multiple values in sharing nodes, that requires more space.
+    1 -> nodal data in global position, i.e., data output were written for each global node. this way we have the single value for all nodes, that requires less space.
+
+output:
+  path  : path where the output image data will be located [string], default -> ../output
+  ncomp : number of components of the output data variable [integer from 1, 3, and 6]
+    1 -> scalar input, e.g, divergence
+    3 -> vector input, e.g., curl, displacement, velocity etc.
+    6 -> 9-component symmetric tensor which has 6 unique components, e.g, stress
+  head  : header for the image data file name [ncomp strings], appropriate processor counter, time counter, and extension will be appended to this header
+  vname : ouput variable name [string] this name is displaced in visualization
+  res 	: resolution of the image data [integer from 0, 1, and 2]
+    0 -> low resolution. only the 8 corners of a spectral element will be written
+    1 -> medium resolution. only the 20 points, which include 8 corners and all mid points of the lines of a spectral element, will be writen
+    2 -> high resolution. all GLL points will be written decomposing a spectral elements into (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) elements, where NGLL? is the gauss legendre lobatto points along ? direction in a spectral elemetn
+  form  : image data format [integer from 0 and 1]
+    0 -> VTK format. writes unstructured mesh and data in XML binary VTK files
+    1 -> Ensight Gold format. writes unstructured mesh and data in binary Ensight files
+
+procinfo:
+  head  : header of the processor used to write output data [string], if we have a data file  proc000001_div_it020400.bin, set head='proc'
+  width : width of the processor counter format used to write the data output file name [integer], e.g, if we have a file name proc000001_div_it020400.bin, the number corresponding to the processor counter (i.e., after proc) has 6 digits, therefore set width=6
+  nslice: number of output slices [integer > 0], this must be less or equal to the processors used for the simulation
+  npmax : maximum number of input processors in a slice [integer], this is used only to allocate size of related variables
+  
+proclist:
+  np    : number of procesor in a slice [integer > 0 and <= npmax], this is usually but not necessarily same for all slices
+  mode  : processor list input mode [integer from 0 and 1]
+    0 -> just a list. following variable 'list' will cotain all processor IDs
+    1 -> indicial input. following variable 'list' will contain first procesor ID, last processor ID and processor step
+  list  : list of the processor ID in each slice acording to 'mode' [integer scalar or vector], e.g, if mode=0, and we want to have processors 0, 1, 3, 4 in a slice, set list=0 1 3 4. if mode=1, and we want to have processors 0 to 8 in a slice, set list=0 8 1
+  
+server:
+  name  : name of a server for each slice [string], 
+  exec  : path to the executable for each slice to be used for the visualization [string], all slices will be in he same server give just one server and executble name.
+ 
+line type server: is necesary only if form=1 in output: line
+ 
+EXAMPLE INPUT FILE
+------------------
+
+# visualize_test_new.in
+# input information
+input: path='../DATABASES_MPI_aaknes', dt=0.000005, nstep=2, start=200, step=200, width=6, ncomp=1, head='_div_it', ext='bin', topo=0
+
+# output information
+output: path='../DATABASES_MPI_aaknes', ncomp=1, head='divergence_test',vname='p_potential', res=0, form=1
+
+# processor information
+procinfo: head='proc', width=6, nslice=8, npmax=1
+
+# processor list for each slice
+proclist: np=1, mode=0, list=0
+proclist: np=1, mode=0, list=1
+proclist: np=1, mode=0, list=2
+proclist: np=1, mode=0, list=3
+proclist: np=1, mode=0, list=4
+proclist: np=1, mode=0, list=5
+proclist: np=1, mode=0, list=6
+proclist: np=1, mode=0, list=7
+
+# server and executable list needed only for Ensight Gold format for each slice or only one if all processors are the same
+server: name='fasan.norsar.no', exec='/space/homnath/soft/paraview-3.7/bin/paraview'  
+
+OUTPUT DETAIL
+=================
+VTK format
+-------------------
+Following files are generated:
+- one .pvd file (ASCII) : This file is the collection of .pvtu files for all time steps. This file contains only the information not the data. This file can be visualized in ParaView.
+- .pvtu file for each time step (ASCII): This is parallel file which collects files for all the partitions/slices. This file contains only the information not the data. Each .pvtu file can also be visualized in ParaView.
+- .vtu file for each time step and each partition/slice (Binary): This file contains the mesh and the data. Each .pvtu file can also be visualized in ParaView.
+
+Ensight Gold format
+-------------------
+Following files are generated:
+- one .sos file (ASCII): This file is the collection of .case files for all partitions/slices. This file contains only the information not the data. This file can be visualized in ParaView.
+- .case file each patition/slice (ASCII): This file contains the information about the mesh, data, time steps. This file contains only the information not the data. Each .case file can also be visualized in ParaView.
+- .geo file for each partition/slice (Binary): This files contains the mesh. This file only cannot be visualized in ParaView.
+- .scl or .vec or .tns file each partition/slice (Binary): This files contains the data. This file only cannot be visualized in ParaView.
+
+The Ensight Gold format is supported in ParaView version later than 3.7.
+
+NOTES
+=================
+- in case of static geometry, Ensight files occupy less space than VTK files. Because Ensight files require only one mesh file for all transient data files, whereas VTK files require mesh data in all transient data files.
+- for vector and tensor data output, writing Ensight files are faster and require less temporary space than VTK files.

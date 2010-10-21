@@ -1,0 +1,2119 @@
+%% LyX 1.5.1 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[oneside,english,onecolumn]{book}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{amsmath}
+
+% figures
+\usepackage[pdftex]{graphicx}
+
+% we are running pdflatex, so convert .eps files to .pdf
+\usepackage{epstopdf}
+
+\usepackage{amssymb}
+\IfFileExists{url.sty}{\usepackage{url}}
+                      {\newcommand{\url}{\texttt}}
+\usepackage[authoryear]{natbib}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+\newcommand{\noun}[1]{\textsc{#1}}
+%% A simple dot to overcome graphicx limitations
+\newcommand{\lyxdot}{.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+\newenvironment{lyxcode}
+{\begin{list}{}{
+\setlength{\rightmargin}{\leftmargin}
+\setlength{\listparindent}{0pt}% needed for AMS classes
+\raggedright
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\normalfont\ttfamily}%
+ \item[]}
+{\end{list}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+%\renewcommand{\baselinestretch}{1.5}
+
+% figures
+\usepackage[dvips]{epsfig}
+
+\usepackage{wrapfig}
+
+
+% fonts
+\usepackage{times}
+
+% hyperlinks to sections and references
+\usepackage[pdftex,bookmarks=true,bookmarksnumbered=true,pdfpagemode=None,pdfstartview=FitH,pdfpagelayout=SinglePage,pdfborder={0 0 0}]{hyperref}
+
+\let\myUrl\url
+\renewcommand{\url}[1]{(\myUrl{#1})}
+
+% biblio GJI
+\bibliographystyle{abbrvnat}
+
+\newcommand{\toall}[1]{\textbf{*** All: #1 ***}}
+\newcommand{\tojeroen}[1]{\textbf{*** Jeroen: #1 ***}}
+\newcommand{\tobrian}[1]{\textbf{*** Brian: #1 ***}}
+\newcommand{\tovala}[1]{\textbf{*** Vala: #1 ***}}
+\newcommand{\tovalabrian}[1]{\textbf{*** Vala \& Brian: #1 ***}}
+\newcommand{\tovalaqinya}[1]{\textbf{*** Vala \& Qinya: #1 ***}}
+\newcommand{\toqinya}[1]{\textbf{*** Qinya: #1 ***}}
+\newcommand{\tomin}[1]{\textbf{*** Min: #1 ***}}
+\newcommand{\toalessia}[1]{\textbf{*** Alessia: #1 ***}}
+\newcommand{\todimitri}[1]{\textbf{*** Dimitri: #1 ***}}
+
+\newcommand{\nexxi}{\mbox{\texttt{NEX\_XI\/}}}
+\newcommand{\nexeta}{\mbox{\texttt{NEX\_ETA\/}}}
+\newcommand{\nprocxi}{\mbox{\texttt{NPROC\_XI\/}}}
+\newcommand{\nproceta}{\mbox{\texttt{NPROC\_ETA\/}}}
+\newcommand{\nchunks}{\mbox{\texttt{NCHUNKS\/}}}
+
+\usepackage{babel}
+\makeatother
+
+\begin{document}
+\thispagestyle{empty}\textbf{}%
+\begin{figure}[H]
+\noindent \includegraphics[width=0.75\paperwidth]{figures/specfem_3d-cover.pdf}
+\end{figure}
+
+
+
+\title{\textbf{SPECFEM3D}\\
+\textbf{User Manual}}
+
+
+\author{$\copyright$ California Institute of Technology (USA) and\\
+University of Pau / CNRS / INRIA (France)\\
+Version 2.0.0}
+
+\maketitle
+\newpage{}
+
+\tableofcontents{}
+
+
+\chapter{Introduction}
+
+The software package SPECFEM3D simulates seismic
+wave propagation at the local or regional scale
+based upon the spectral-element method (SEM).
+The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10}, with optimized efficiency because of its tensorized basis functions.
+Effects due to lateral variations in compressional-wave speed, shear-wave
+speed, density, a 3D crustal model, topography and bathymetry are
+included. For a detailed introduction to the SEM as applied to regional
+seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
+in particular \citet{KoLiTrSuStSh04}. If you use the 3D southern
+California model, please cite \citet{SuSh03} (LA), \citet{lovelyetal06}
+(Salton Trough), and \citet{hauksson2000} (southern California).
+The Moho map was determined by \citet{zhu&kanamori2000}. The 1D SoCal
+model was developed by \citet{DrHe90}. The package can accommodate
+full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
+variations in attenuation. Adjoint capabilities and finite-frequency
+kernel simulations are included \citep{LiTr06,TrKoLi08}.
+
+All SPECFEM3D\_GLOBE software is written in Fortran90 with full portability
+in mind, and conforms strictly to the Fortran95 standard. It uses
+no obsolete or obsolescent features of Fortran77. The package uses
+parallel programming based upon the Message Passing Interface (MPI)
+\citep{GrLuSk94,Pac97}.
+
+SPECFEM3D won the Gordon Bell award for best performance at the SuperComputing~2003
+conference in Phoenix, Arizona (USA) by running at 5 teraflops (sustained)
+on 1944 processors of the Japanese Earth Simulator using 14.6 billion
+degrees of freedom stored in 2.5 terabytes of memory; see \cite{KoTsChTr03}
+and the Gordon Bell Awards News Release \url{www.sc-conference.org/sc2003/nr_finalaward.html }
+for details. It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
+
+The next release of the code will include support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10}
+as well as Convolutional or Auxiliary Differential Equation Perfectly Matched absorbing Layers (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
+The next release will use the PT-Scotch and ParMetis parallel libraries for mesh partitioning.
+
+\section{Citation}
+
+If you use SPECFEM3D for your own research, please cite at least one
+of the following articles: \cite{TrKoLi08,VaCaSaKoVi99,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,KoMiEr09,KoErGoMi10,KoGoErMi10,WiKoScTr04,KoLiTrSuStSh04,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
+If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others: \cite{WiKoScTr04,JiTsKoTr05,KrJiKoTr06a,KrJiKoTr06b,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,ChFaKo04,FaChKo04,RiRiKoTrHe02,GoAmTaCaSmSaMaKo09,TrKo00,SaKoTr10}.
+The corresponding Bib\TeX{} entries may be found
+in file \texttt{USER\_MANUAL/bibliography.bib} or in comments at the
+beginning of file \texttt{specfem3D.f90}.
+
+\section{Support}
+
+This material is based upon work supported by the USA National Science
+Foundation under Grants No. EAR-0406751 and EAR-0711177, by the French
+CNRS, French INRIA Sud-Ouest MAGIQUE-3D, French ANR NUMASIS under
+Grant No. ANR-05-CIGC-002, and European FP6 Marie Curie International
+Reintegration Grant No. MIRG-CT-2005-017461. 
+Older versions of the code were initially developed by Dimitri Komatitsch at Institut de Physique du Globe (France)
+and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University (USA).
+Any opinions, findings,
+and conclusions or recommendations expressed in this material are
+those of the authors and do not necessarily reflect the views of the
+USA National Science Foundation, CNRS, INRIA, ANR or the European
+Marie Curie program.
+
+
+\chapter{\label{cha:Getting-Started}Getting Started}
+
+The SPECFEM3D software package comes in a gzipped tar ball. In the
+directory in which you want to install the package, type
+
+\begin{lyxcode}
+{\small tar~-zxvf~SPECFEM3D\_V2.0.0.tar.gz}{\small \par}
+\end{lyxcode}
+The directory \texttt{\small SPECFEM3D\_V2.0.0} will then contain
+the source code. To configure the software for your system, run the
+\texttt{configure} shell script. This script will attempt to guess
+the appropriate configuration values for your system. However, at
+a minimum, it is recommended that you explicitly specify the appropriate
+command names for your Fortran90 compiler and MPI package:
+
+\begin{lyxcode}
+./configure~FC=ifort~MPIFC=mpif90
+\end{lyxcode}
+
+
+The SPECFEM3D software package relies on the Scotch library to partition the meshes created with CUBIT. Because it is not standard, the path of this library needs to be set with the option \texttt{-{}-with-scotch-lib}. Just as an example:
+\begin{lyxcode}
+./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-lib=/opt/scotch/gcc64/lib
+\end{lyxcode} 
+
+To compile a serial version of the code for small meshes that fit
+on one compute node and can therefore be run serially, run \texttt{configure}
+with the \texttt{-{}-without-mpi} option to suppress all calls to
+MPI.
+
+A summary of the most important configuration variables follows.
+
+\begin{description}
+\item [{\texttt{F90}}] Path to the Fortran90 compiler.
+\item [{\texttt{MPIF90}}] Path to MPI Fortran90.
+\item [{\texttt{MPI\_FLAGS}}] Some systems require this flag to link to
+MPI libraries.
+\item [{\texttt{FLAGS\_CHECK}}] Compiler flag for non-critical subroutines.
+\item [{\texttt{FLAGS\_NO\_CHECK}}] Compiler flag for creating fast, production-run
+code for critical subroutines.
+\end{description}
+The \texttt{Makefile} contains a number of suggested entries for various
+compilers, e.g., Portland, Intel, Absoft, NAG, and Lahey. The software
+has run on a wide variety of compute platforms, e.g., various PC clusters
+and machines from Sun, SGI, IBM, Compaq, and NEC. Select the compiler
+you wish to use on your system and choose the related optimization
+flags. Note that the default flags in the \texttt{Makefile} are undoubtedly
+not optimal for your system, so we encourage you to experiment with
+these flags and to solicit advice from your systems administrator.
+Selecting the right compiler and optimization flags can make a tremendous
+difference in terms of performance. We welcome feedback on your experience
+with various compilers and flags.
+
+Now that you have set the compiler information, you need to select
+a number of flags in the \texttt{constants.h} file depending on your
+system:
+
+\begin{description}
+\item [{\texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL}}] Set to \texttt{.false.}
+on most cluster applications. For reasons of speed, the (parallel)
+mesher typically writes a (parallel) database for the solver on the
+local disks of the compute nodes. Some systems have no local disks,
+e.g., BlueGene or the Earth Simulator, and other systems have a fast
+parallel file system, in which case this flag should be set to \texttt{.true.}.
+Note that this flag is not used by the mesher or the solver; it is
+only used for some of the post-processing.
+\end{description}
+The package can run either in single or in double precision. The default
+is single precision mode because this requires exactly half as much
+memory. Select your preference by selecting the appropriate setting
+in the \texttt{constants.h} file:
+
+\begin{description}
+\item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
+and \texttt{SIZE\_DOUBLE} for double precision.
+\end{description}
+In the \texttt{precision.h} file:
+
+\begin{description}
+\item [{\texttt{CUSTOM\_MPI\_TYPE}}] Set to \texttt{MPI\_REAL} for single
+precision and \texttt{MPI\_DOUBLE\_PRECISION} for double precision.
+\end{description}
+On a new system, it is definitely worth experimenting with single
+versus double precision simulations to determine which is faster.
+Note that on many current processors (e.g., Intel, AMD, IBM Power),
+single precision calculations are often significantly faster; the
+difference can typically be 10\% to 25\%. It is therefore often worth
+using single precision if you can. We recommend running the same calculation
+once in single precision and in double precision on your system and
+comparing the seismograms. If they are identical, you should probably
+select single precision for your future runs.
+
+When running on an SGI add ``\texttt{setenv TRAP\_FPE OFF}'' to your
+.cshrc file \textit{before} compiling in order to turn underflow trapping
+off.
+
+Finally, before compiling make sure that the subdirectories \texttt{obj}
+and \texttt{OUTPUT\_FILES} exist within the directory with the source
+code (\texttt{SPECFEM3D\_V2.0.0}). The \texttt{go\_mesher} script
+discussed in Chapter~\ref{cha:Running-the-Mesher-Meshfem3D} automatically
+takes care of creating the \texttt{OUTPUT\_FILES} directory.
+
+Note that if you run very large meshes on a relatively small number
+of processors, the memory size needed on each processor might become
+greater than 2 gigabytes, which is the upper limit for 32-bit addressing;
+in this case, on some compilers you may need to add \char`\"{}\texttt{-mcmodel=medium}\char`\"{}
+to the compiler options otherwise the compiler will display an error
+message.
+
+
+\chapter{\label{cha:Mesh-Generation}Mesh Generation}
+
+\section{\label{cha:Running-the-Mesher-CUBIT}Meshing with \texttt{CUBIT}}
+\subsection{Exporting the Mesh}
+\subsection{Partitioning the Mesh with \texttt{xdecompose\_mesh\_SCOTCH}}
+
+The SPECFEM3D software package performs large scale simulations in a parallel 'Single Process Multiple Data' way. 
+The spectral element mesh created with CUBIT needs to be distributed on the processors. This partitioning is executed once and for all prior to
+the execution of the solver so it is referred to as a static mapping.    
+
+An efficient partitioning is important because it leverages the overall running time of the application.
+It amounts to balance the number of elements in each slice while minimizing the communication coasts
+resulting from the placement of adjacent elements to different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the Scotch library
+which provides efficent static mapping, graph and mesh partitioning routines. Scotch is a free software package downloadable from the web page \texttt{https://gforge.inria.fr/projects/scotch/}.
+\\
+ 
+Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path 
+of the Scotch library with the option \texttt{-{}-with-scotch-lib} of the \texttt{configure} script. Then you are ready to compile, 
+in the directory \texttt{decompose\_mesh\_SCOTCH} type '\texttt{make decompose\_mesh\_SCOTCH}'.
+If all paths and flags have been set correctly, the executable \texttt{xdecompose\_mesh\_SCOTCH} should be produced.
+
+The partitioning is done in serial, 
+the synopsis is :
+\begin{lyxcode}
+./decompose\_mesh\_SCOTCH  nparts  input\_directory output\_directory
+\end{lyxcode}
+
+All the files generated by the Python scripts must be placed in the \texttt{input\_directory} folder before running the program.  
+     
+
+\section{\label{cha:Running-the-Mesher-Meshfem3D}Meshing with \texttt{xmeshfem3D}}
+
+\noindent \begin{flushleft}
+%
+\begin{figure}[t]
+\noindent \begin{centering}
+\includegraphics[scale=0.5]{figures/socal_map_mpi}
+\par\end{centering}
+
+\caption{\label{fig:For-parallel-computing}For parallel computing purposes,
+the model block is subdivided in $\nprocxi\times\nproceta$ slices
+of elements. In this example we use $5^{2}=25$ processors. }
+
+\end{figure}
+
+\par\end{flushleft}
+
+You are now ready to compile the internal mesher. This is an alternative to CUBIT 
+for the mesh generation of relatively simple geological models. The mesher is no longer 
+dedicated to Southern California and more flexiblity is provided in this version of the package.
+   
+In the directory \texttt{meshfem3D} type `\texttt{make meshfem3D}'. If all paths and flags
+have been set correctly, the mesher should now compile and produce
+the executable \texttt{xmeshfem3D}.
+
+Input for the mesh generation program is provided through the parameter
+file \texttt{Par\_file}, which resides in the subdirectory \texttt{meshfem3D/DATA}.
+Before running the mesher, a number of parameters need to be set in
+the \texttt{Par\_file}. This requires a basic understanding of how
+the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
+and \citet{KoLiTrSuStSh04}.
+
+The mesher and the solver use UTM coordinates internally, therefore
+you need to define the zone number for the UTM projection (e.g., zone
+11 for Los Angeles). Use decimal values for latitude and longitude
+(no minutes/seconds). These values are approximate; the mesher will
+round them off to define a square mesh in UTM coordinates. When running
+benchmarks on rectangular models, turn the UTM projection off by using
+the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION}, in which case
+all `longitude' parameters simply refer to the $x$~axis, and all
+`latitude' parameters simply refer to the $y$~axis. To run the mesher
+for a global simulation, the following parameters need to be set in
+the \texttt{Par\_file}:
+
+\begin{description}
+\item [{\texttt{LATITUDE\_MIN}}] Minimum latitude in the block (negative
+for South).
+\item [{\texttt{LATITUDE\_MAX}}] Maximum latitude in the block.
+\item [{\texttt{LONGITUDE\_MIN}}] Minimum longitude in the block (negative
+for West).
+\item [{\texttt{LONGITUDE\_MAX}}] Maximum longitude in the block.
+\item [{\texttt{DEPTH\_BLOCK\_KM}}] Depth of bottom of mesh in kilometers.
+\item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
+which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
+\texttt{PROJECTION} is \texttt{.false.}.
+\item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
+when your model range is specified in the geographical coordinates,
+and needs to be \texttt{.true.} when your model is specified in a
+cartesian coordinates. \noun{UTM projection zone in which your simulation
+region resides.}
+\item [{\texttt{INTERFACES\_FILE }}] File in which contains the description of the topography and 
+of the interfaces between the different layers of the model, if any. 
+The number of spectral elements in the vertical direction within each layer is also defined in this file.
+
+\item [{$\nexxi$}] The number of spectral elements along one side of the
+block. This number \textit{must} be 8~$\times$~a multiple of $\nprocxi$
+defined below. Based upon benchmarks against semi-analytical discrete
+wavenumber synthetic seismograms \citep{KoLiTrSuStSh04}, determined
+that a $\nexxi=288$ run is accurate to a shortest period of roughly
+2~s. Therefore, since accuracy is determined by the number of grid
+points per shortest wavelength, for any particular value of $\nexxi$
+the simulation will be accurate to a shortest period determined by
+\begin{equation}
+\mbox{shortest period (s)}=(288/\nexxi)\times2.\label{eq:shortest_period}\end{equation}
+The number of grid points in each orthogonal direction of the reference
+element, i.e., the number of Gauss-Lobatto-Legendre points, is determined
+by \texttt{NGLLX} in the \texttt{constants.h} file. We generally use
+$\mbox{\texttt{NGLLX\/}}=5$, for a total of $5^{3}=125$ points per
+elements. We suggest not to change this value.
+\item [{$\nexeta$}] The number of spectral elements along the other side
+of the block. This number \textit{must} be 8~$\times$~a multiple
+of $\nproceta$ defined below.
+\item [{$\nprocxi$}] The number of processors or slices along one side
+of the block (see Figure~\ref{fig:For-parallel-computing}); we must
+have $\nexxi=8\times c\times\nprocxi$, where $c\ge1$ is a positive
+integer.
+\item [{$\nproceta$}] The number of processors or slices along the other
+side of the block; we must have $\nexeta=8\times c\times\nproceta$,
+where $c\ge1$ is a positive integer.
+\item [{\texttt{USE\_REGULAR\_MESH}}] set to be \texttt{.true.} if you want a perfectly regular
+mesh or \texttt{.false.} if you want to add doubling horizontal layers to coarsen the mesh. In this case, you
+also need to provide additional information by setting up the next three parameters.  
+\item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers. Must be set to \texttt{1} or \texttt{2} 
+if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}.
+\item [{\texttt{NZ\_DOUBLING\_1}}] The position of the first doubling layer (only interpreted
+if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}).
+\item [{\texttt{NZ\_DOUBLING\_2}}] The position of the second doubling layer (only interpreted
+if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.} and if \texttt{NDOUBLINGS} is set to \texttt{2}). 
+\item [{\texttt{CREATE\_ABAQUS\_FILES}}] Set this flag to \texttt{.true.} to save Abaqus FEA \url{www.simulia.com}
+mesh files for subsequent viewing. Turning the flag on generates files in the \texttt{LOCAL\_PATH} directory. 
+See Section~\ref{sec:Mesh-graphics} for a discussion of mesh viewing features.
+\item [{\texttt{CREATE\_DX\_FILES}}] Set this flag to \texttt{.true.} to save OpenDX \url{www.opendx.org}
+mesh files for subsequent viewing.
+\item [{\texttt{LOCAL\_PATH}}] Directory in which the databases generated
+by the mesher will be written. Generally one uses a directory on the
+local disk of the compute nodes, although on some machines these databases
+are written on a parallel (global) file system (see also the earlier
+discussion of the \texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL} flag in Chapter~\ref{cha:Getting-Started}).
+The mesher generates the necessary databases in parallel, one set
+for each of the $\nprocxi\times\nproceta$ slices that constitutes
+the mesh (see Figure~\ref{fig:For-parallel-computing}). After the
+mesher finishes, you can log in to one of the compute nodes and view
+the contents of the \texttt{LOCAL\_PATH} directory to see the (many)
+files generated by the mesher.
+\item [{\texttt{NMATERIALS}}] The number of different materials in your model. In the following lines, each material needs to be defined as :
+\begin{lyxcode}
+\texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q\_flag}  \texttt{anisotropy\_flag} \texttt{domain\_ID}
+\end{lyxcode}
+where
+\begin{itemize}
+     \item \texttt{Q\_flag}           : 0=no attenuation / standard \texttt{Q} attenutation value 
+     \item \texttt{anisotropy\_flag}  : 0=no anisotropy / 1,2,.. check with implementation in \texttt{aniso\_model.f90}
+     \item \texttt{domain\_id}        : 1=acoustic / 2=elastic / 3=poroelastic
+\end{itemize}
+\item [{\texttt{NMATERIALS}}] The number of regions in the mesh. 
+In the following lines, because the mesh is regular or 'almost regular', each region is defined as :
+\begin{lyxcode}
+  \texttt{XI\_begin}  \texttt{XI\_end}  \texttt{ETA\_begin}  \texttt{ETA\_end}  \texttt{material\_ID}
+\end{lyxcode}
+\end{description}
+
+The topography of the model is defined as a set of elevation
+ values on a regular 2D grid. It is also posible to
+define interfaces between the layers of the model in the same way. 
+
+The file defined in \texttt{INTERFACES\_FILE} contains the settings of the topography grid
+and of the interfaces grids. The number 
+of interfaces, including the topography, needs to be set at the first line. Then, from the bottom 
+to the top of the model, you need to define the grids with several parameters :
+ number of points along $x$ and $y$, minimal $x$ and $y$ coordinates, spacing between points and the file 
+in which the elevation values are stored. At the end of this file, you simply need to set the
+number of spectral elements in the vertical direction for each layer.\\
+
+Finally, depending on your system, you might need to provide a file that tells MPI what compute nodes
+to use for the simulations. The file must have a number of entries
+(one entry per line) at least equal to the number of processors needed
+for the run. A sample file is provided in the file \texttt{mymachines}.
+This file is not used by the mesher or solver, but is required by
+the \texttt{go\_mesher} and \texttt{go\_solver} default job submission
+scripts. See Chapter~\ref{cha:Scheduler} for information about running
+the code on a system with a scheduler, e.g., LSF.
+
+Now that you have set the appropriate parameters in the \texttt{Par\_file}
+and have compiled the mesher, you are ready to launch it! This is
+most easily accomplished based upon the \texttt{go\_mesher} script.
+When you run on a PC cluster, the script assumes that the nodes are
+named n001, n002, etc. If this is not the case, change the \texttt{tr
+-d `n'} line in the script. You may also need to edit the last command
+at the end of the script that invokes the \texttt{mpirun} command.
+See Chapter~\ref{cha:Scheduler} for information about running the
+code on a system with a scheduler, e.g., LSF.
+
+Mesher output is provided in the \texttt{OUTPUT\_FILES} directory
+in \texttt{output\_mesher.txt}; this file provides lots of details
+about the mesh that was generated. Alternatively, output can be directed
+to the screen instead by uncommenting a line in \texttt{constants.h}:
+
+\begin{lyxcode}
+!~uncomment~this~to~write~messages~to~the~screen~
+
+!~integer,~parameter~::~IMAIN~=~ISTANDARD\_OUTPUT
+\end{lyxcode}
+
+%% \section{Checking the MPI Buffers (Optional)}
+
+%% The mesher writes MPI communication tables in the \texttt{OUTPUT\_FILES}
+%% subdirectory in the files \texttt{addressing.txt}, \texttt{list\_messages\_corners.txt}
+%% and \texttt{list\_messages\_faces.txt}, and MPI communication buffers
+%% to the local disks. Use the four serial codes
+
+%% \begin{lyxcode}
+%% check\_buffers\_2D.f90
+
+%% check\_buffers\_1D.f90
+%% \end{lyxcode}
+%% to check that all the MPI buffers created by the mesher have been
+%% generated correctly. For example, typing `\texttt{make check\_buffers\_2D}'
+%% and then `\texttt{xcheck\_buffers\_2D}' checks the communication buffers
+%% between faces common to the mesh slices.
+
+%% \begin{quote}
+%% Please note that running these codes is optional because no information
+%% needed by the solver is generated.
+%% \end{quote}
+
+%%\section{\label{sec:quality}Checking the Mesh Quality (Optional)}
+
+The quality of the mesh may be inspected more precisely based upon the serial code
+\texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}. In the directory \texttt{check\_mesh\_quality\_CUBIT\_Abaqus}, type
+
+\begin{lyxcode}
+make~check\_mesh\_quality\_CUBIT\_Abaqus
+\end{lyxcode}
+and then use
+
+\begin{lyxcode}
+xcheck\_mesh\_quality\_CUBIT\_Abaqus
+\end{lyxcode}
+to generate an AVS output file (\texttt{\small AVS\_meshquality.inp}
+in AVS UCD format) or OpenDX output file (\texttt{\small DX\_meshquality.}~\\
+\texttt{\small dx}) that can be used to investigate mesh quality,
+e.g, skewness of elements and a Gnuplot histogram (\texttt{\small mesh\_quality\_}~\\
+\texttt{\small histogram.txt}) that can be plotted with gnuplot (type
+`\texttt{\small gnuplot plot\_mesh\_quality\_histogram.gnu}'). The
+histogram is also printed to the screen. If you want to start designing
+your own meshes, this tool is useful for viewing your creations. You
+are striving for meshes with elements with `cube-like' dimensions,
+e.g., the mesh should contain no very elongated or skewed elements.
+
+Running this code is optional because no information needed by the
+solver is generated.
+
+\chapter{\label{cha:Creating-Distributed-Databases}Creating the Distributed Databases}
+
+Either you previously used  \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile \texttt{xgenerate\_databases}. This program is going to create all the missing information needed by the SEM solver. In the main directory type '\texttt{make generate\_databases}'. Input for the program is provided through the main parameter file \texttt{Par\_file}, which resides in the subdirectory \texttt{DATA}. Before running \texttt{xgenerate\_databases}, a number of parameters need to be set in the \texttt{Par\_file}:
+
+\begin{description}
+\item [{\texttt{SIMULATION\_TYPE}}] is set to 1 for forward simulations,
+2 for adjoint simulations (see Section \ref{sec:Adjoint-simulation-finite})
+and 3 for kernel simulations (see Section \ref{sec:Finite-Frequency-Kernels}).
+\item [{\texttt{SAVE\_FORWARD}}] is only set to \texttt{.true.} for a forward
+simulation with the last frame of the simulation saved, as part of
+the finite-frequency kernel calculations (see Section \ref{sec:Finite-Frequency-Kernels}).
+For a regular forward simulation, leave \texttt{SIMULATION\_TYPE}
+and \texttt{SAVE\_FORWARD} at their default values.
+\item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
+which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
+\texttt{PROJECTION} is \texttt{.false.}.
+\item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
+when your model range is specified in the geographical coordinates,
+and needs to be \texttt{.true.} when your model is specified in a
+cartesian coordinates. \noun{UTM projection zone in which your simulation
+region resides.}
+\item [{\texttt{NPROC}}] The number of MPI processors, each one is assigned one slice of the whole mesh. 
+\item [{\texttt{NSTEP}}] The number of time steps of the simulation. This controls the
+length of the numerical simulation, i.e., twice the number of time steps
+requires twice as much CPU time. This feature is not used at the time
+of meshing but is required for the solver, i.e., you may change this
+parameter after running  \texttt{xgenerate\_databases}.
+\item [{\texttt{DT}}] The length of each time step in seconds. 
+If you used xmeshfem3D to generate your mesh, you should set the value suggested in \texttt{meshfem3D/OUTPUT\_FILES/output\_mesher.txt}.
+
+\item [{\texttt{OCEANS}}] Set to \texttt{.true.} if the effect of the oceans
+on seismic wave propagation should be incorporated based upon the
+approximate treatment discussed in \citet{KoTr02b}. This feature
+is inexpensive from a numerical perspective, both in terms of memory
+requirements and CPU time. This approximation is accurate at periods
+of roughly 20~s and longer. At shorter periods the effect of water
+phases/reverberations is not taken into account, even when the flag
+is on.
+\item [{\texttt{TOPOGRAPHY}}] Set to \texttt{.true.} if topography and
+bathymetry should be incorporated based upon model ETOPO5 \citep{Etopo5}.
+This feature adds no cost to the simulation.
+\item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
+be incorporated. Turning this feature on increases the memory requirements
+significantly (roughly by a factor of~1.5), and is numerically fairly
+expensive. See \citet{KoTr99,KoTr02a} for a discussion on the implementation
+of attenuation based upon standard linear solids.
+\item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
+want to use the attenuation model that scaled from the velocity model
+using Olsen's empirical relation (reference).
+\item [{\texttt{ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
+on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
+\item [{\texttt{RECORD\_LENGTH\_IN\_MINUTES}}] Choose the desired record
+length of the synthetic seismograms (in minutes). This controls the
+length of the numerical simulation, i.e., twice the record length
+requires twice as much CPU time. This feature is not used at the time
+of meshing but is required for the solver, i.e., you may change this
+parameter after running xgenerate\_databases.
+\item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
+to create a movie of seismic wave propagation on the Earth's surface.
+Turning this option on generates large output files. See Section \ref{sec:Movies}
+for a discussion on the generation of movies. This feature is only relevant for the solver.
+\item [{\texttt{MOVIE\_VOLUME}}] Set to \texttt{.false.}, unless you want
+to create a movie of seismic wave propagation in the Earth's interior.
+Turning this option on generates huge output files. See Section \ref{sec:Movies}
+for a discussion on the generation of movies. This feature is only relevant for the solver.
+\item [{\texttt{NTSTEP\_BETWEEN\_FRAMES}}] Determines the number of timesteps
+between movie frames. Typically you want to save a snapshot every
+100 timesteps. The smaller you make this number the more output will
+be generated! See Section \ref{sec:Movies} for a discussion on the
+generation of movies. This feature is only relevant for the solver.
+\item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
+create a ShakeMap\textregistered, i.e., a peak ground velocity map
+of the maximum absolute value of the two horizontal components of the velocity vector.
+\item [{\texttt{SAVE\_DISPLACEMENT}}] Set this flag to \texttt{.true.}
+if you want to save the displacement instead of velocity for the movie
+frames.
+\item [{\texttt{USE\_HIGHRES\_FOR\_MOVIES}}] Set this flag to \texttt{.true.}
+if you want to save the values at all the NGLL grid points for the
+movie frames.
+\item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
+save AVS \url{www.avs.com}, OpenDX \url{www.opendx.org}, or ParaView \url{www.paraview.org}
+mesh files for subsequent viewing. Turning the flag on generates large
+(distributed) files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
+for a discussion of mesh viewing features.
+\item [{\texttt{LOCAL\_PATH}}] Directory in which the databases and the synthetics 
+will be written. Generally one uses a directory on the
+local disk of the compute nodes, although on some machines these databases
+are written on a parallel (global) file system (see also the earlier
+discussion of the \texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL} flag in Chapter~\ref{cha:Getting-Started}).
+xgenerate\_databases generates the necessary databases in parallel, one set
+for each of the $\nprocxi\times\nproceta$ slices that constitutes
+the mesh (see Figure~\ref{fig:For-parallel-computing}). After the
+mesher finishes, you can log in to one of the compute nodes and view
+the contents of the \texttt{LOCAL\_PATH} directory to see the (many)
+files generated by xgenerate\_databases.
+\item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}}] This parameter specifies
+the interval at which basic information about a run is written to
+the file system (\texttt{timestamp{*}} files in the \texttt{OUTPUT\_FILES}
+directory). If you have access to a fast machine, set \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
+to a relatively high value (e.g., at least 100, or even 1000 or more)
+to avoid writing output text files too often. This feature is not
+used at the time of meshing. One can set this parameter to a larger
+value than the number of time steps to avoid writing output during
+the run.
+\item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}}] This parameter specifies
+the interval at which synthetic seismograms are written in the \texttt{LOCAL\_PATH}
+directory. If a run crashes, you may still find usable (but shorter
+than requested) seismograms in this directory. On a fast machine set
+\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
+to avoid writing to the seismograms too often. This feature is only relevant for the solver.
+\item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
+information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
+This feature is only relevant for the solver.
+\end{description}
+
+%% Another file generated by \texttt{xgenerate\_databases} is the header file \texttt{OUTPUT\_FILES/values\_from\_mesher.h}.
+%% This file specifies a number of constants and flags needed by the
+%% solver. These values are passed statically to the solver for reasons
+%% of speed. Some useful statistics about the mesh are also provided
+%% in this file.
+
+%% For a given model, set of nodes, and set of parameters in \texttt{Par\_file},
+%% one only needs to run the mesher once and for all, even if one wants
+%% to run several simulations with different sources and/or receivers
+%% (the source and receiver information is used in the solver only).
+
+\chapter{\label{cha:Running-the-Solver}Running the Solver \texttt{xspecfem3D}}
+
+Now that you have successfully generated the databases, you are ready to compile
+the solver. For reasons of speed, the solver uses static memory allocation.
+Therefore it needs to be recompiled (type `\texttt{make clean}' and
+`\texttt{make specfem3D}') every time one reruns \texttt{xgenerate\_databases}. To compile
+the solver one needs a file created by \texttt{xgenerate\_databases} in the directory
+\texttt{OUTPUT\_FILES} called \texttt{values\_from\_mesher.h}, which
+contains parameters describing the static size of the arrays as well
+as the setting of certain flags.
+
+The solver needs three input files in the \texttt{DATA} directory
+to run: the \texttt{Par\_file} which was discussed in detail in Chapters~\ref{cha:Running-the-Mesher-CUBIT} and~\ref{cha:Running-the-Mesher-Meshfem3D},
+the earthquake source parameter file \texttt{CMTSOLUTION}, and the
+stations file \texttt{STATIONS}. Most parameters in the \texttt{Par\_file}
+should be set prior to running the mesher. Only the following parameters
+may be changed after running \texttt{xgenerate\_databases}:
+
+\begin{itemize}
+\item the simulation type control parameters: \texttt{SIMULATION\_TYPE}
+and \texttt{SAVE\_FORWARD}
+\item the time step parameters \texttt{NSTEP} and \texttt{DT}
+\item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
+and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
+\item the ShakeMap\textregistered option \texttt{CREATE\_SHAKEMAP}
+\item the output information parameters \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
+and \texttt{NTSTEP\_BETWEEN\_OUTPUT\_}~\\
+\texttt{SEISMOS}
+\item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
+\end{itemize}
+Any other change to the \texttt{Par\_file} implies rerunning both
+the mesher and the solver.
+
+For any particular earthquake, the \texttt{CMTSOLUTION} file that
+represents the point source may be obtained directly from the Harvard Centroid-Moment Tensor (CMT) web page \url{www.seismology.harvard.edu}.
+It looks like this:
+
+\begin{lyxcode}
+{\small }%
+\begin{figure}[H]
+\noindent \begin{centering}
+{\small \includegraphics[width=1\textwidth]{figures/Hollywood_CMT} }
+\par\end{centering}{\small \par}
+
+\caption{\label{fig:CMTSOLUTION-file}\texttt{CMTSOLUTION} file based on the
+format from the Harvard CMT catalog. \textbf{M} is the moment tensor,
+$M_{0}${\small{} }is the seismic moment, and $M_{w}$ is the moment
+magnitude.}
+
+\end{figure}
+{\small \par}
+\end{lyxcode}
+The \texttt{CMTSOLUTION} should be edited in the following way:
+
+\begin{itemize}
+\item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
+will not run otherwise.) The time shift parameter would simply apply
+an overall time shift to the synthetics, something that can be done
+in the post-processing (see Section \ref{sec:Process-data-and-syn}).
+\item For point-source simulations (see finite sources, page \pageref{To-simulate-a})
+we recommend setting the source half-duration parameter \texttt{half
+duration} equal to zero, which corresponds to simulating a step source-time
+function, i.e., a moment-rate function that is a delta function. If
+\texttt{half duration} is not set to zero, the code will use a Gaussian
+(i.e., a signal with a shape similar to a `smoothed triangle', as
+explained in \citet{KoTr02a} and shown in Fig~\ref{fig:gauss.vs.triangle})
+source-time function with half-width \texttt{half duration}. We prefer
+to run the solver with \texttt{half duration} set to zero and convolve
+the resulting synthetic seismograms in post-processing after the run,
+because this way it is easy to use a variety of source-time functions
+(see Section \ref{sec:Process-data-and-syn}). \citet{KoTr02a} determined
+that the noise generated in the simulation by using a step source
+time function may be safely filtered out afterward based upon a convolution
+with the desired source time function and/or low-pass filtering. Use
+the serial code \texttt{convolve\_source\_timefunction.f90} and the
+script \texttt{convolve\_source\_timefunction.csh} for this purpose,
+or alternatively use signal-processing software packages such as SAC \url{www.llnl.gov/sac}.
+Type
+
+\begin{lyxcode}
+make~convolve\_source\_timefunction
+\end{lyxcode}
+to compile the code and then set the parameter \texttt{hdur} in \texttt{convolve\_source\_timefunction.csh}
+to the desired half-duration.
+
+\item The zero time of the simulation corresponds to the center of the triangle/Gaussian,
+or the centroid time of the earthquake. The start time of the simulation
+is $t=-1.5*\texttt{half duration}$ (the 1.5 is to make sure the moment
+rate function is very close to zero when starting the simulation).
+To convert to absolute time $t_{\mathrm{abs}}$, set
+
+\begin{lyxcode}
+$t_{\mathrm{abs}}=t_{\mathrm{pde}}+\texttt{time shift}+t_{\mathrm{synthetic}}$
+\end{lyxcode}
+where $t_{\mathrm{pde}}$ is the time given in the first line of the
+\texttt{CMTSOLUTION}, \texttt{time shift} is the corresponding value
+from the original \texttt{CMTSOLUTION} file and $t_{\mathrm{synthetic}}$
+is the time in the first column of the output seismogram.
+
+\end{itemize}
+%
+\begin{figure}
+\noindent \begin{centering}
+\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.eps}
+\par\end{centering}
+
+\caption{Comparison of the shape of a triangle and the Gaussian function actually
+used.}
+
+
+\label{fig:gauss.vs.triangle}
+\end{figure}
+
+
+Centroid latitude and longitude should be provided in geographical
+coordinates. The code converts these coordinates to geocentric coordinates~\citep{DaTr98}.
+Of course you may provide your own source representations by designing
+your own \texttt{CMTSOLUTION} file. Just make sure that the resulting
+file adheres to the Harvard CMT conventions (see Appendix~\ref{cha:Coordinates}).
+Note that the first line in the \texttt{CMTSOLUTION} file is the Preliminary Determination of Earthquakes (PDE) solution performed by the USGS NEIC, which is used as a seed for the Harvard CMT inversion. The PDE solution is based upon P waves and often gives the hypocenter of the earthquake, i.e., the rupture initiation point, whereas the CMT solution gives the `centroid location', which is the location with dominant moment release. The PDE solution is not used by our software package but must be present anyway in the first line of the file.
+
+\label{To-simulate-a}To simulate a kinematic rupture, i.e., a finite-source
+event, represented in terms of $N_{\mathrm{sources}}$ point sources,
+provide a \texttt{CMTSOLUTION} file that has $N_{\mathrm{sources}}$
+entries, one for each subevent (i.e., concatenate $N_{\mathrm{sources}}$
+\texttt{CMTSOLUTION} files to a single \texttt{CMTSOLUTION} file).
+At least one entry (not necessarily the first) must have a zero \texttt{time
+shift}, and all the other entries must have non-negative \texttt{time
+shift}. Each subevent can have its own half duration, latitude, longitude,
+depth, and moment tensor (effectively, the local moment-density tensor).
+
+Note that the zero in the synthetics does NOT represent the hypocentral
+time or centroid time in general, but the timing of the \textit{center}
+of the source triangle with zero \texttt{time shift} (Fig~\ref{fig:source_timing}).
+
+Although it is convenient to think of each source as a triangle, in
+the simulation they are actually Gaussians (as they have better frequency
+characteristics). The relationship between the triangle and the gaussian
+used is shown in Fig~\ref{fig:gauss.vs.triangle}. For finite fault
+simulations it is usually not advisable to use a zero half duration
+and convolve afterwards, since the half duration is generally fixed
+by the finite fault model.
+
+{\small }%
+\begin{figure}[H]
+\noindent \begin{centering}
+{\small \includegraphics[width=5in]{figures/source_timing.eps} }
+\par\end{centering}{\small \par}
+
+\caption{Example of timing for three sources. The center of the first source
+triangle is defined to be time zero. Note that this is NOT in general
+the hypocentral time, or the start time of the source (marked as tstart).
+The parameter \texttt{time shift} in the \texttt{CMTSOLUTION} file
+would be t1(=0), t2, t3 in this case, and the parameter \texttt{half
+duration} would be hdur1, hdur2, hdur3 for the sources 1, 2, 3 respectively.}
+
+
+{\small \label{fig:source_timing} }
+\end{figure}
+{\small \par}
+
+The solver can calculate seismograms at any number of stations for
+basically the same numerical cost, so the user is encouraged to include
+as many stations as conceivably useful in the \texttt{STATIONS} file,
+which looks like this:
+
+{\small }%
+\begin{figure}[H]
+\noindent \begin{centering}
+{\small \includegraphics{figures/STATIONS_basin_explained} }
+\par\end{centering}{\small \par}
+
+\caption{Sample \texttt{STATIONS} file. Station latitude and longitude should
+be provided in geographical coordinates. The width of the station
+label should be no more than 32 characters (see \texttt{MAX\_LENGTH\_STATION\_NAME}
+in the \texttt{constants.h} file), and the network label should be
+no more than 8 characters (see \texttt{MAX\_LENGTH\_NETWORK\_NAME}
+in the \texttt{constants.h} file).}
+
+\end{figure}
+{\small \par}
+
+Each line represents one station in the following format:
+
+\begin{lyxcode}
+{\small Station~Network~Latitude~(degrees)~Longitude~(degrees)~Elevation~(m)~burial~(m)~}{\small \par}
+\end{lyxcode}
+The mesher filters the list of stations in file \texttt{DATA/STATIONS}
+to exclude stations that are not located within the region given in
+the \texttt{Par\_file} (between \texttt{LATITUDE\_MIN} and \texttt{LATITUDE\_MAX}
+and between \texttt{LONGITUDE\_MIN} and \texttt{LONGITUDE\_MAX}).
+The filtered file is called \texttt{DATA/STATIONS\_FILTERED}.
+
+Solver output is provided in the \texttt{OUTPUT\_FILES} directory
+in the \texttt{output\_solver.txt} file. Output can be directed to
+the screen instead by uncommenting a line in \texttt{constants.h}:
+
+\begin{lyxcode}
+!~uncomment~this~to~write~messages~to~the~screen~
+
+!~integer,~parameter~::~IMAIN~=~ISTANDARD\_OUTPUT~
+\end{lyxcode}
+On PC clusters the seismogram files are generally written to the local
+disks (the path \texttt{LOCAL\_PATH} in the \texttt{Par\_file}) and
+need to be gathered at the end of the simulation.
+
+While the solver is running, its progress may be tracked by monitoring
+the `\texttt{\small timestamp{*}}' files in the \texttt{\small OUTPUT\_FILES}
+directory. These tiny files look something like this:
+
+\begin{lyxcode}
+Time~step~\#~~~~~~~~~~10000~
+
+Time:~~~~~108.4890~~~~~~seconds~
+
+Elapsed~time~in~seconds~=~~~~1153.28696703911~
+
+Elapsed~time~in~hh:mm:ss~=~~~~~0~h~19~m~13~s~
+
+Mean~elapsed~time~per~time~step~in~seconds~=~~~~~0.115328696703911~
+
+Max~norm~displacement~vector~U~in~all~slices~(m)~=~~~~1.0789589E-02~
+\end{lyxcode}
+The \texttt{\small timestamp{*}} files provide the \texttt{Mean elapsed
+time per time step in seconds}, which may be used to assess performance
+on various machines (assuming you are the only user on a node), as
+well as the \texttt{Max norm displacement vector U in all slices~(m)}.
+If something is wrong with the model, the mesh, or the source, you
+will see the code become unstable through exponentially growing values
+of the displacement and fluid potential with time, and ultimately
+the run will be terminated by the program. You can control the rate
+at which the timestamp files are written based upon the parameter
+\texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO} in the \texttt{Par\_file}.
+
+Having set the \texttt{Par\_file} parameters, and having provided
+the \texttt{CMTSOLUTION} and \texttt{STATIONS} files, you are now
+ready to launch the solver! This is most easily accomplished based
+upon the \texttt{go\_solver} script (See Chapter \ref{cha:Scheduler}
+for information about running through a scheduler, e.g., LSF). You
+may need to edit the last command at the end of the script that invokes
+the \texttt{mpirun} command. The \texttt{runall} script compiles and
+runs both mesher and solver in sequence. This is a safe approach that
+ensures using the correct combination of mesher output and solver
+input.
+
+It is important to realize that the CPU and memory requirements of
+the solver are closely tied to choices about attenuation (\texttt{ATTENUATION})
+and the nature of the model (i.e., isotropic models are cheaper than
+anisotropic models). We encourage you to run a variety of simulations
+with various flags turned on or off to develop a sense for what is
+involved.
+
+For the same model, one can rerun the solver for different events
+by simply changing the \texttt{CMTSOLUTION} file, or for different
+stations by changing the \texttt{STATIONS} file. There is no need
+to rerun the mesher. Of course it is best to include as many stations
+as possible, since this does not add to the cost of the simulation.
+
+
+\chapter{\label{cha:Adjoint-Simulations}Adjoint Simulations}
+
+Adjoint simulations are generally performed for two distinct applications.
+First, they can be used for earthquake source inversions, especially
+earthquakes with large ruptures such as the Lander's earthquake \citep{WaHe94}.
+Second, they can be used to generate finite-frequency sensitivity
+kernels that are a critical part of tomographic inversions based upon
+3D reference models \citep{TrTaLi05,LiTr06,TrKoLi08,LiTr08}. In either
+case, source parameter or velocity structure updates are sought to
+minimize a specific misfit function (e.g., waveform or traveltime
+differences), and the adjoint simulation provides a means of computing
+the gradient of the misfit function and further reducing it in successive
+iterations. Applications and procedures pertaining to source studies
+and finite-frequency kernels are discussed in Sections~\ref{sec:Adjoint-simulation-sources}
+and \ref{sec:Adjoint-simulation-finite}, respectively. The two related
+parameters in the \texttt{Par\_file} are \texttt{SIMULATION\_TYPE}
+(1 or 2) and the \texttt{SAVE\_FORWARD} (boolean).
+
+
+\section{\label{sec:Adjoint-simulation-sources}Adjoint Simulations for Sources}
+
+In the case where a specific misfit function is minimized to invert
+for the earthquake source parameters, the gradient of the misfit function
+with respect to these source parameters can be computed by placing
+time-reversed seismograms at the receivers and using them as sources
+in an adjoint simulation, and then the value of the gradient is obtained
+from the adjoint seismograms recorded at the original earthquake location.
+
+\begin{enumerate}
+\item \textbf{Prepare the adjoint sources} \label{enu:Prepare-the-adjoint}
+
+\begin{enumerate}
+\item First, run a regular forward simlation (\texttt{SIMULATION\_TYPE =
+1} and \texttt{SAVE\_FORWARD = .false.}). You can automatically set
+these two variables using the \texttt{\small UTILS/change\_simulation\_type.pl}
+script:
+
+\begin{lyxcode}
+UTILS/change\_simulation\_type.pl~-f~
+\end{lyxcode}
+and then collect the recorded seismograms at all the stations given
+in \texttt{DATA/STATIONS}.
+
+\item Then select the stations for which you want to compute the time-reversed
+adjoint sources and run the adjoint simulation, and compile them into
+the \texttt{DATA/STATIONS\_ADJOINT} file, which has the same format
+as the regular \texttt{DATA/STATIONS} file.
+
+\begin{itemize}
+\item Depending on what type of misfit function is used for the source inversion,
+adjoint sources need to be computed from the original recorded seismograms
+for the selected stations and saved in the \texttt{SEM/} directory
+with the format \texttt{STA.NT.BH?.adj}, where \texttt{STA}, \texttt{NT}
+are the station name and network code given in the \texttt{DATA/STATIONS\_ADJOINT}
+file, and \texttt{BH?} represents the component name of a particular
+adjoint seismogram.
+\item The adjoint seismograms are in the same format as the original seismogram
+(\texttt{STA.NT.BH?.sem?}), with the same start time, time interval
+and record length.
+\end{itemize}
+\item Notice that even if you choose to time reverse only one component
+from one specific station, you still need to supply all three components
+because the code is expecting them (you can set the other two components
+to be zero).
+\item Also note that since time-reversal is done in the code itself, no
+explicit time-reversing is needed for the preparation of the adjoint
+sources, i.e., the adjoint sources are in the same forward time sense
+as the original recorded seismograms.
+\end{enumerate}
+\item \textbf{Set the related parameters and run the adjoint simulation}\\
+In the \texttt{DATA/Par\_file}, set the two related parameters to
+be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
+More conveniently, use the scripts \texttt{UTILS/change\_simulation\_type.pl}
+to modify the \texttt{Par\_file} automatically (\texttt{change\_simulation\_type.pl
+-a}). Then run the solver to launch the adjoint simulation.
+\item \textbf{Collect the seismograms at the original source location}
+
+
+After the adjoint simulation has completed successfully, collect the
+seismograms from \texttt{LOCAL\_PATH}.
+
+\begin{itemize}
+\item These adjoint seismograms are recorded at the locations of the original
+earthquake sources given by the \texttt{DATA/CMTSOLUTION} file, and
+have names of the form \texttt{S?????.NT.S??.sem} for the six-component
+strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
+and \texttt{S?????.NT.BH?.sem} for the three-component displacements
+(\texttt{BHN,BHE,BHZ}) recorded at these locations.
+\item \texttt{S?????} denotes the source number; for example, if the original
+\texttt{CMTSOLUTION} provides only a point source, then the seismograms
+collected will start with \texttt{S00001}.
+\item These adjoint seismograms provide critical information for the computation
+of the gradient of the misfit function.
+\end{itemize}
+\end{enumerate}
+
+\section{\label{sec:Adjoint-simulation-finite}Adjoint Simulations for Finite-Frequency
+Kernels (Kernel Simulation)}
+
+Finite-frequency sensitivity kernels are computed in two successive
+simulations (please refer to \citet{LiTr06} and \citet{TrKoLi08} for details).
+
+\begin{enumerate}
+\item \textbf{Run a forward simulation with the state variables saved at
+the end of the simulation}
+
+
+Prepare the \texttt{\small CMTSOLUTION} and \texttt{\small STATIONS}
+files, set the parameters \texttt{\small SIMULATION\_TYPE}{\small{}
+}\texttt{\small =}{\small{} }\texttt{\small 1} and \texttt{\small SAVE\_FORWARD
+=}{\small{} }\texttt{\small .true.} in the \texttt{Par\_file} (\texttt{change\_simulation\_type
+-F}), and run the solver.
+
+\begin{itemize}
+\item Notice that attenuation is not implemented yet for the computation
+of finite-frequency kernels; therefore set \texttt{ATTENUATION = .false.}
+in the \texttt{Par\_file}.
+\item We also suggest you modify the half duration of the \texttt{CMTSOLUTION}
+to be similar to the accuracy of the simulation (see Equation \ref{eq:shortest_period})
+to avoid too much high-frequency noise in the forward wavefield, although
+theoretically the high-frequency noise should be eliminated when convolved
+with an adjoint wavefield with the proper frequency content.
+\item This forward simulation differs from the regular simulations (\texttt{\small SIMULATION\_TYPE}{\small{}
+}\texttt{\small =}{\small{} }\texttt{\small 1} and \texttt{\small SAVE\_FORWARD}{\small{}
+}\texttt{\small =}{\small{} }\texttt{\small .false.}) described in
+the previous chapters in that the state variables for the last time
+step of the simulation, including wavefields of the displacement,
+velocity, acceleration, etc., are saved to the \texttt{LOCAL\_PATH}
+to be used for the subsequent simulation.
+\item For regional simulations, the files recording the absorbing boundary
+contribution are also written to the \texttt{LOCAL\_PATH} when \texttt{SAVE\_FORWARD
+= .true.}.
+\end{itemize}
+\item \textbf{Prepare the adjoint sources}
+
+
+The adjoint sources need to be prepared the same way as described
+in the Section \ref{enu:Prepare-the-adjoint}.
+
+\begin{itemize}
+\item In the case of travel-time finite-frequency kernel for one source-receiver
+pair, i.e., point source from the \texttt{CMTSOLUTION}, and one station
+in the \texttt{STATIONS\_ADJOINT} list, we supply a sample program
+in \texttt{UTILS/xcut\_velocity} to cut a certain portion of the original
+displacement seismograms and convert it into the proper adjoint source
+to compute the finite-frequency kernel.
+
+\begin{lyxcode}
+xcut\_velocity~t1~t2~ifile{[}0-5]~E/N/Z-ascii-files~{[}baz]
+\end{lyxcode}
+where \texttt{t1} and \texttt{t2} are the start and end time of the
+portion you are interested in, \texttt{ifile} denotes the component
+of the seismograms to be used (0 for all three components, 1 for East,
+2 for North, and 3 for vertical, 4 for transverse, and 5 for radial
+component), \texttt{E/N/Z-ascii-files} indicate the three-component
+displacement seismograms in the right order, and \texttt{baz} is the
+back-azimuth of the station. Note that \texttt{baz} is only supplied
+when \texttt{ifile} = 4 or 5.
+
+\end{itemize}
+\item \textbf{Run the kernel simulation}
+
+
+With the successful forward simulation and the adjoint source ready
+in \texttt{SEM/}, set \texttt{SIMULATION\_TYPE = 3} and \texttt{SAVE\_FORWARD
+= .false.} in the \texttt{Par\_file(change\_simulation\_type.pl -b),}
+and rerun the solver.
+
+\begin{itemize}
+\item The adjoint simulation is launched together with the back reconstruction
+of the original forward wavefield from the state variables saved from
+the previous forward simulation, and the finite-frequency kernels
+are computed by the interaction of the reconstructed forward wavefield
+and the adjoint wavefield.
+\item The back-reconstructed seismograms at the original station locations
+are saved to the \texttt{LOCAL\_PATH} at the end of the kernel simulations,
+and can be collected to the local disk.
+\item These back-constructed seismograms can be compared with the time-reversed
+original seismograms to assess the accuracy of the backward reconstruction,
+and they should match very well.
+\item The arrays for density, P-wave speed and S-wave speed kernels are
+also saved in the \texttt{LOCAL\_PATH} with the names \texttt{proc??????\_rho(alpha,beta)\_kernel.bin},
+where \texttt{proc??????} represents the processor number, \texttt{rho(alpha,beta)}
+are the different types of kernels.
+\end{itemize}
+\end{enumerate}
+In general, the three steps need to be run sequentially to assure
+proper access to the necessary files. If the simulations are run through
+some cluster scheduling system (e.g., LSF), and the forward simulation
+and the subsequent kernel simulations cannot be assigned to the same
+set of computer nodes, the kernel simulation will not be able to access
+the database files saved by the forward simulation. Solutions for
+this dilemma are provided in Chapter~\ref{cha:Scheduler}. Visualization
+of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequency-Kernels}.
+
+
+\chapter{Graphics}
+
+
+\section{\label{sec:Mesh-graphics}Meshes}
+
+Use the serial code \texttt{combine\_AVS\_DX.f90} (type `\texttt{make
+combine\_AVS\_DX}' and then `\texttt{xcombine\_AVS\_DX}') to generate
+AVS \url{www.avs.com} output files (in AVS UCD format) or OpenDX \url{www.opendx.org}
+output files showing the mesh, the MPI partition (slices), the $\nchunks$
+chunks, the source and receiver location, etc. Use the AVS UCD files
+\texttt{AVS\_continent\_boundaries.inp} and \texttt{AVS\_plate\_boundaries.inp}
+or the OpenDX files \texttt{DX\_continent\_boundaries.dx} and \texttt{DX\_plate\_boundaries.dx}
+for reference.
+
+
+\section{\label{sec:Movies}Movies}
+
+To make a surface or volume movie of the simulation, set parameters
+\texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME}, and \texttt{NTSTEP\_BETWEEN\_FRAMES}
+in the \texttt{Par\_file}. Turning on the movie flags, in particular
+\texttt{MOVIE\_VOLUME}, produces large output files. \texttt{MOVIE\_VOLUME}
+files are saved in the \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE}
+output files are saved in the \texttt{OUTPUT\_FILES} directory. We
+save the velocity field. The look of a movie is determined by the
+half-duration of the source. The half-duration should be large enough
+so that the movie does not contain frequencies that are not resolved
+by the mesh, i.e., it should not contain numerical noise. This can
+be accomplished by selecting a CMT \texttt{HALF\_DURATION} > 1.1 $\times$
+smallest period (see figure \ref{fig:CMTSOLUTION-file}). When \texttt{MOVIE\_SURFACE}
+= .\texttt{true.}, the half duration of each source in the \texttt{CMTSOLUTION}
+file is replaced by
+
+\begin{quote}
+\[
+\sqrt{(}\mathrm{\mathtt{HALF\_DURATIO}\mathtt{N}^{2}}+\mathrm{\mathtt{HDUR\_MOVI}\mathtt{E}^{2}})\]
+\textbf{NOTE:} If \texttt{HDUR\_MOVIE} is set to 0.0, the code will
+select the appropriate value of 1.1 $\times$ smallest period. As
+usual, for a point source one can set \texttt{HALF\_DURATION} in the
+\texttt{Par\_file} to be 0.0 and \texttt{HDUR\_MOVIE} = 0.0 to get
+the highest frequencies resolved by the simulation, but for a finite
+source one would keep all the \texttt{HALF\_DURATIONs} as prescribed
+by the finite source model and set \texttt{HDUR\_MOVIE} = 0.0.
+\end{quote}
+
+\subsection{Movie Surface}
+
+When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
+flag turned on, the code outputs \texttt{moviedata??????} files in
+the \texttt{OUTPUT\_FILES} directory. The files are in a fairly complicated
+binary format, but there are two programs provided to convert the
+output into more user friendly formats. The first one, \texttt{create\_movie\_AVS\_DX.f90},
+outputs data in ASCII, OpenDX, AVS, or ParaView format. Run the code
+from the source directory (type `\texttt{make} \texttt{create\_movie\_AVS\_DX}'
+first) to create an input file in your format of choice. The code
+will prompt the user for input parameters. The second program \texttt{create\_movie\_GMT.f90}
+outputs ascii xyz files, convenient for use with GMT. This code uses
+significantly less memory than \texttt{create\_movie\_AVS\_DX.f90}
+and is therefore useful for high resolution runs.
+
+The \texttt{SPECFEM3D} code is running in near real-time to produce
+animations of southern California earthquakes via the web; see Southern California ShakeMovie\textregistered \url{www.shakemovie.caltech.edu}.
+
+
+\section{\label{sec:Finite-Frequency-Kernels}Finite-Frequency Kernels}
+
+The finite-frequency kernels computed as explained in Section \ref{sec:Adjoint-simulation-finite}
+are saved in the \texttt{LOCAL\_PATH} at the end of the simulation.
+Therefore, we first need to collect these files on the front end,
+combine them into one mesh file, and visualize them with some auxilliary
+programs.
+
+\begin{enumerate}
+\item \textbf{Create slice files}
+
+
+We will only discuss the case of one source-receiver pair, i.e., the
+so-called banana-doughnut kernels. Although it is possible to collect
+the kernel files from all slices on the front end, it usually takes
+up too much storage space (at least tens of gigabytes). Since the
+sensitivity kernels are the strongest along the source-receiver great
+circle path, it is sufficient to collect only the slices that are
+along or close to the great circle path.
+
+A Perl script \texttt{UTILS/slice\_number.pl} that calls MATLAB can
+help to figure out the slice numbers that lie along the great circle
+path (both the minor and major arcs), as well as the slice numbers
+required to produce a full picture of the inner core if your kernel
+also illuminates the inner core.
+
+\begin{enumerate}
+\item On machines where you have MATLAB access, copy the \texttt{CMTSOLUTION}
+file, \texttt{STATIONS\_ADJOINT}, and \texttt{Par\_file}, and run:
+
+\begin{lyxcode}
+{\small UTILS/slice\_number.pl~Par\_file~output\_solver.txt~slice\_file}{\small \par}
+\end{lyxcode}
+which will generate a \texttt{slices\_file}.
+
+\item For cases with multiple sources and multiple receivers, you need to
+provide a slice file before proceeding to the next step.
+\end{enumerate}
+\item \textbf{Collect the kernel files}
+
+
+After obtaining the slice files, you can collect the corresponding
+kernel files from the given slices.
+
+\begin{enumerate}
+\item You can use or modify the script \texttt{UTILS/copy\_databases.pl}
+to accomplish this:
+
+\begin{lyxcode}
+{\small UTILS/copy\_database.pl~slice\_file~lsf\_machine\_file~filename~{[}jobid]}{\small \par}
+\end{lyxcode}
+where \texttt{\small lsf\_machine\_file} is the machine file generated
+by the LSF scheduler, \texttt{\small filename} is the kernel name
+(e.g., \texttt{\small rho\_kernel}, \texttt{\small alpha\_kernel}
+and \texttt{\small beta\_kernel}), and the optional \texttt{\small jobid}
+is the name of the subdirectory under \texttt{\small LOCAL\_PATH}
+where all the kernel files are stored.
+
+\item After executing this script, all the necessary mesh topology files
+as well as the kernel array files are collected to the local directory
+of the front end.
+\end{enumerate}
+\item \textbf{Combine kernel files into one mesh file}
+
+
+We use an auxilliary program \texttt{combine\_paraview\_data.f90}
+to combine the kernel files from all slices into one mesh file.
+
+\begin{enumerate}
+\item Compile it in the global code directory:
+
+\begin{lyxcode}
+{\footnotesize make~combine\_paraview\_data~}{\footnotesize \par}
+
+{\footnotesize xcombine\_paraview\_data~slice\_list~filename~input\_dir~output\_dir~high/low-resolution~}{\footnotesize \par}
+\end{lyxcode}
+where \texttt{input\_dir} is the directory where all the individual
+kernel files are stored, and \texttt{output\_dir} is where the mesh
+file will be written.
+
+\item Use 1 for a high-resolution mesh, outputting all the GLL points to
+the mesh file, or use 0 for low resolution, outputting only the corner
+points of the elements to the mesh file.
+\item The output mesh file will have the name \texttt{filename\_rho(alpha,beta).mesh}
+\end{enumerate}
+\item \textbf{Convert mesh files into .vtu files}
+
+\begin{enumerate}
+\item We next convert the \texttt{.mesh} file into the VTU (Unstructured
+grid file) format which can be viewed in ParaView, for example:
+
+\begin{lyxcode}
+UTILS/mesh2vtu.pl~-i~file.mesh~-o~file.vtu
+\end{lyxcode}
+\item Notice that this Perl script uses a program \texttt{mesh2vtu} in the
+\texttt{UTILS/mesh2vtu} directory, which further uses the VTK \url{http://www.vtk.org/}
+run-time library for its execution. Therefore, make sure you have
+them properly set in the script according to your system.
+\end{enumerate}
+\item \textbf{Copy over the source and receiver .vtk file}
+
+
+In the case of a single source and a single receiver, the simulation
+also generates the \texttt{OUTPUT\_FILES/sr.vtk} file to describe
+the source and receiver locations, which can also be viewed in Paraview
+in the next step.
+
+\item \textbf{View the mesh in ParaView}
+
+
+Finally, we can view the mesh in ParaView \url{www.paraview.org}.
+
+\begin{enumerate}
+\item Open ParaView.
+\item From the top menu, \textsf{File} $\rightarrow$\textsf{Open data},
+select \texttt{file.vtu}, and click the \textsf{Accept} button.
+
+\begin{itemize}
+\item If the mesh file is of moderate size, it shows up on the screen; otherwise,
+only the bounding box is shown.
+\end{itemize}
+\item Click \textsf{Display Tab} $\rightarrow$ \textsf{Display Style} $\rightarrow$
+\textsf{Representation} and select \textsf{wireframe of surface} to
+display it.
+\item To create a cross-section of the volumetric mesh, choose \textsf{Filter}
+$\rightarrow$ \textsf{cut}, and under \textsf{Parameters Tab}, choose
+\textsf{Cut Function} $\rightarrow$ \textsf{plane}.
+\item Fill in center and normal information given by the \texttt{global\_slice\_number.pl}
+script (either from the standard output or from \texttt{normal\_plane.txt}
+file).
+\item To change the color scale, go to \textsf{Display Tab} $\rightarrow$
+\textsf{Color} $\rightarrow$ \textsf{Edit Color Map} and reselect
+lower and upper limits, or change the color scheme.
+\item Now load in the source and receiver location file by \textsf{File}
+$\rightarrow$ \textsf{Open data}, select \texttt{sr.vt}k, and click
+the \textsf{Accept} button. Choose \textsf{Filter} $\rightarrow$
+\textsf{Glyph}, and represent the points by `\textsf{spheres}'.
+\item For more information about ParaView, see the ParaView Users Guide \url{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}.
+\end{enumerate}
+\end{enumerate}
+%
+\begin{figure}[H]
+\noindent \begin{centering}
+\includegraphics[scale=0.6]{figures/3D-S-Kernel}
+\par\end{centering}
+
+\caption{(a) Top Panel: Vertical source-receiver cross-section of the S-wave
+finite-frequency sensitivity kernel $K_{\beta}$ for station GSC at
+an epicentral distance of 176 km from the September 3, 2002, Yorba
+Linda earthquake. Lower Panel: Vertical source-receiver cross-section
+of the 3D S-wave velocity model used for the spectral-element simulations
+\citep{KoLiTrSuStSh04}. (b) The same as (a) but for station HEC at
+an epicentral distance of 165 km \citep{LiTr06}.}
+
+
+\label{figure:P-wave-speed-finite-frequency}
+\end{figure}
+
+
+
+\chapter{\label{cha:Scheduler}Running through a Scheduler}
+
+The code is usually run on large parallel machines, often PC clusters,
+most of which use schedulers, i.e., queuing or batch management systems
+to manage the running of jobs from a large number of users. The following
+considerations need to be taken into account when running on a system
+that uses a scheduler:
+
+\begin{itemize}
+\item The processors/nodes to be used for each run are assigned dynamically
+by the scheduler, based on availability. Therefore, in order for the
+mesher and the solver (or between successive runs of the solver) to
+have access to the same database files (if they are stored on hard
+drives local to the nodes on which the code is run), they must be
+launched in sequence as a single job.
+\item On some systems, the nodes to which running jobs are assigned are
+not configured for compilation. It may therefore be necessary to pre-compile
+both the mesher and the solver. A small program provided in the distribution
+called \texttt{\small create\_header\_file.f90} can be used to directly
+create \texttt{\small OUTPUT\_FILES/values\_from\_mesher.h} using
+the information in the \texttt{\small DATA/Par\_file} without having
+to run the mesher (type \texttt{\small `make}{\small{} }\texttt{\small create\_header\_}~\\
+\texttt{\small file}' to compile it and `\texttt{\small xcreate\_header\_file}'
+to run it; refer to the sample scripts below). The solver can now
+be compiled as explained above.
+\item One feature of schedulers/queuing systems is that they allow submission
+of multiple jobs in a ``launch and forget'' mode. In order to take
+advantage of this property, care needs to be taken that output and
+intermediate files from separate jobs do not overwrite each other,
+or otherwise interfere with other running jobs.
+\end{itemize}
+We describe here in some detail a job submission procedure for the
+Caltech 1024-node cluster, CITerra, under the LSF scheduling system.
+We consider the submission of a regular forward simulation. The two
+main scripts are \texttt{\small run\_lsf.bash}, which compiles the
+Fortran code and submits the job to the scheduler, and \texttt{\small go\_mesher\_solver\_lsf}~\\
+\texttt{\small .bash}, which contains the instructions that make up
+the job itself. These scripts can be found in \texttt{\small UTILS/}
+directory and can straightforwardly be modified and adapted to meet
+more specific running needs.
+
+
+\section{\texttt{run\_lsf.bash}}
+
+This script first sets the job queue to be `normal'. It then compiles
+the mesher and solver together, figures out the number of processors
+required for this simulation from the \texttt{DATA/Par\_file}, and
+submits the LSF job.
+
+\begin{lyxcode}
+\#!/bin/bash
+
+\#~use~the~normal~queue~unless~otherwise~directed~queue=\char`\"{}-q~normal\char`\"{}~
+
+if~{[}~\$\#~-eq~1~];~then
+
+~~~~~~~~echo~\char`\"{}Setting~the~queue~to~\$1\char`\"{}
+
+~~~~~~~~queue=\char`\"{}-q~\$1\char`\"{}~
+
+fi~\\
+~\\
+\#~compile~the~mesher~and~the~solver~
+
+d=`date'~echo~\char`\"{}Starting~compilation~\$d\char`\"{}~
+
+make~clean~
+
+make~meshfem3D~
+
+make~create\_header\_file~
+
+xcreate\_header\_file~
+
+make~specfem3D~
+
+d=`date'~
+
+echo~\char`\"{}Finished~compilation~\$d\char`\"{}~\\
+~\\
+\#~compute~total~number~of~nodes~needed~
+
+NPROC\_XI=`grep~NPROC\_XI~DATA/Par\_file~|~cut~-c~34-~'~
+
+NPROC\_ETA=`grep~NPROC\_ETA~DATA/Par\_file~|~cut~-c~34-~'~~\\
+~\\
+\#~total~number~of~nodes~is~the~product~of~the~values~read~
+
+numnodes=\$((~\$NPROC\_XI~{*}~\$NPROC\_ETA~))~\\
+~\\
+echo~\char`\"{}Submitting~job\char`\"{}~
+
+bsub~\$queue~-n~\$numnodes~-W~60~-K~<go\_mesher\_solver\_lsf.bash~
+\end{lyxcode}
+
+\section{\texttt{go\_mesher\_solver\_lsf.bash}}
+
+This script describes the job itself, including setup steps that can
+only be done once the scheduler has assigned a job-ID and a set of
+compute nodes to the job, the \texttt{run\_lsf.bash} commands used
+to run the mesher and the solver, and calls to scripts that collect
+the output seismograms from the compute nodes and perform clean-up
+operations.
+
+\begin{enumerate}
+\item First the script directs the scheduler to save its own output and
+output from \texttt{stdout} into \texttt{\small OUTPUT\_FILES/\%J.o},
+where \texttt{\%J} is short-hand for the job-ID; it also tells the
+scheduler what version of \texttt{mpich} to use (\texttt{mpich\_gm})
+and how to name this job (\texttt{go\_mesher\_solver\_lsf}).
+\item The script then creates a list of the nodes allocated to this job
+by echoing the value of a dynamically set environment variable \texttt{LSB\_MCPU\_HOSTS}
+and parsing the output into a one-column list using the Perl script
+\texttt{UTILS/remap\_lsf\_machines.pl}. It then creates a set of scratch
+directories on these nodes (\texttt{\small /scratch/}~\\
+\texttt{\small \$USER/DATABASES\_MPI}) to be used as the \texttt{LOCAL\_PATH}
+for temporary storage of the database files. The scratch directories
+are created using \texttt{shmux}, a shell multiplexor that can execute
+the same commands on many hosts in parallel. \texttt{shmux} is available
+from Shmux \url{web.taranis.org/shmux/}. Make sure that the \texttt{LOCAL\_PATH}
+parameter in \texttt{DATA/Par\_file} is also set properly.
+\item The next portion of the script launches the mesher and then the solver
+using \texttt{run\_lsf.bash}.
+\item The final portion of the script collects the seismograms and performs
+clean up on the nodes, using the Perl scripts \texttt{collect\_seismo\_lsf\_multi.pl}
+and \texttt{cleanmulti.pl}.
+\end{enumerate}
+\begin{lyxcode}
+\#!/bin/bash~-v~
+
+\#BSUB~-o~OUTPUT\_FILES/\%J.o~
+
+\#BSUB~-a~mpich\_gm~
+
+\#BSUB~-J~go\_mesher\_solver\_lsf~\\
+~\\
+\#~set~up~local~scratch~directories
+
+BASEMPIDIR=/scratch/\$USER/DATABASES\_MPI
+
+mkdir~-p~OUTPUT\_FILE
+
+echo~\char`\"{}\$LSB\_MCPU\_HOSTS\char`\"{}~>~OUTPUT\_FILES/lsf\_machines~
+
+echo~\char`\"{}\$LSB\_JOBID\char`\"{}~>~OUTPUT\_FILES/jobid
+
+remap\_lsf\_machines.pl~OUTPUT\_FILES/lsf\_machines~>OUTPUT\_FILES/machines
+
+shmux~-M50~-Sall~-c~\char`\"{}rm~-r~-f~/scratch/\$USER;~\textbackslash{}
+
+~~~~~~mkdir~-p~/scratch/\$USER;~mkdir~-p~\$BASEMPIDIR\char`\"{}~\textbackslash{}
+
+~~~~~~-~<~OUTPUT\_FILES/machines~>/dev/null~\\
+~\\
+\#~run~the~specfem~program
+
+current\_pwd=\$PWD
+
+run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xmeshfem3D
+
+run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xspecfem3D~\\
+~\\
+\#~collect~seismograms~and~clean~up
+
+mkdir~-p~SEM
+
+cd~SEM
+
+collect\_seismo.pl~../OUTPUT\_FILES/lsf\_machines
+
+cleanbase.pl~../OUTPUT\_FILES/machines
+\end{lyxcode}
+
+\chapter{Post-Processing Scripts}
+
+Several post-processing scripts/programs are provided in the \texttt{UTILS/}
+directory, and most of them need to be adjusted when used on different
+systems, for example, the path of the executable programs. Here we
+only list the available scripts and provide a brief description, and
+you can either refer to the related sections for detailed usage or,
+in a lot of cases, type the script/program name without arguments
+for its usage.
+
+
+\section{Collect Synthetic Seismograms}
+
+The forward and adjoint simulations generate synthetic seismograms
+in the \texttt{LOCAL\_PATH}. For the forward simulation, the files
+are named \texttt{STA.NT.BH?.semd} for two-column time series, or
+\texttt{STA.NT.BH?.semd.sac} for ASCII SAC format, where STA and NT
+are the station name and network code, and \texttt{BH?} stands for
+the component name. The adjont simulations generate synthetic seismograms
+with the name \texttt{S?????.NT.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
+for details). The kernel simulations output the back-reconstructed
+synthetic seismogram in the name \texttt{STA.NT.BH?.semd}, mainly
+for the purpose of checking the accuracy of the reconstruction. Refer
+to Section \ref{sec:Adjoint-simulation-finite} for further details.
+
+To collect the synthetics onto the frontend, you can use the \texttt{UTILS/collect\_seismo.pl}
+machines script:
+
+\begin{lyxcode}
+collect\_seismo.pl~machines
+\end{lyxcode}
+
+\section{Clean Local Database}
+
+After all the simulations are done, the seismograms are collected,
+and the useful database files are copied to the frontend, you may
+need to clean the local scratch disk for the next simulation. This
+is especially important in the case of 1- or 2-chunk kernel simulation,
+where very large files are generated for the absorbing boundaries
+to help with the reconstruction of the regular forward wavefield.
+A sample script is provided in \texttt{UTILS/}:
+
+\begin{lyxcode}
+cleanbase.pl~machines
+\end{lyxcode}
+
+\section{Process Data and Synthetics\label{sec:Process-data-and-syn}}
+
+In many cases, the SEM synthetics are calculated and compared to data
+seismograms recorded at seismic stations. Since the SEM synthetics
+are accurate for a certain frequency range, both the original data
+and the synthetics need to be processed before a comparison can be
+made. We generally use the following scripts:
+
+
+\subsection{\texttt{process\_trinet\_data.pl}}
+
+This script cuts a given portion of the original data, filters it,
+transfers the data into a displacement record, and picks the first
+P and S arrivals. For more functionality, type `\texttt{process\_trinet\_data.pl}'
+without any argument. An example of the usage of the script:
+
+\begin{lyxcode}
+{\footnotesize process\_trinet\_data.pl~-m~CMTSOLUTION~-l~0/180~-t~2/40~-i~dir~-p~-x~bp~~9703873{*}.BH?.SAC}{\footnotesize \par}
+\end{lyxcode}
+which has cut all the sac files between 0 and 180 seconds, filtered
+them between 2 and 40 seconds, transfered them into displacement records
+using the polezero files in \texttt{dir} directory, picked the first
+P and S arrivals, and added suffix `\texttt{bp}' to the file names.
+
+Note that all of the scripts in this section actually use the SAC
+and/or IASP91 to do the core operations; therefore make sure that
+the SAC and IASP91 packages are installed properly on your system,
+and that all the environment variables are set properly before running
+these scripts.
+
+
+\subsection{\texttt{process\_trinet\_syn.pl}}
+
+This script converts the synthetic output from the SEM code from ASCII
+to SAC format, and performs similar operations as `\texttt{process\_trinet\_data.pl}'.
+An example of the usage of the script:
+
+\begin{lyxcode}
+{\footnotesize process\_trinet\_syn.pl~-m~CMTSOLUTION~-a~STATIONS~-l~0/180~-t~2/40~-p~-x~bp~syn/{*}.BH?.semd}{\footnotesize \par}
+\end{lyxcode}
+which will convert the synthetics into SAC format, add event and station
+information into the SAC headers, cut the SAC files between 0 and
+180 seconds, filter them between 2 and 40 seconds, pick the first
+P and S arrivals, and add the suffix `\texttt{bp}' to the file names.
+
+More options are available for this script, such as adding time shift
+to the origin time of the synthetics, convolving the synthetics with
+a triangular source time function with a given half duration, etc.
+Type \texttt{process\_trinet\_syn.pl} without any argument for a detailed
+usage.
+
+
+\subsection{\texttt{rotate.pl}}
+
+The original data and synthetics have three components: vertical (BHZ),
+north (BHN) and east (BHE). However, for most seismology applications,
+transverse and radial components are also desirable. Therefore, we
+need to rotate the horizontal components of both the data and the
+synthetics to the transverse and radial direction, and \texttt{\small rotate.pl}
+can be used to accomplish this:
+
+\begin{lyxcode}
+rotate.pl~-l~0~-L~180~-d~DATA/{*}.BHE.SAC.bp~
+
+rotate.pl~-l~0~-L~180~SEM/{*}.BHE.semd.sac.bp~
+\end{lyxcode}
+where the first command performs rotation on the SAC data obtained
+through Seismogram Transfer Program (STP) \url{http://www.data.scec.org/STP/stp.html},
+while the second command rotates the processed SEM synthetics.
+
+
+\section{Plot Movie Snapshots and Synthetic Shakemaps}
+
+
+\subsection{\texttt{movie2gif.pl}}
+
+With the movie data saved in \texttt{OUTPUT\_FILES/} at the end of
+a movie simulation (\texttt{\small MOVIE\_SURFACE=.true.}), you can
+run the \texttt{`create\_movie\_GMT}' code to convert these binary
+movie data into GMT xyz files for futher processing. A sample script
+\texttt{movie2gif.pl} is provided to do this conversion, and then
+plot the movie snapshots in GMT, for example:
+
+\begin{lyxcode}
+movie2gif.pl~-m~CMTSOLUTION~-g~-f~1/40~-n~-2~-p~
+\end{lyxcode}
+which for the first through the 40th movie frame, converts the \texttt{moviedata}
+files into GMT xyz files, interpolates them using the 'nearneighbor'
+command in GMT, and plots them on a 2D topography map. Note that `\texttt{-2}'
+and `\texttt{-p}' are both optional.
+
+
+\subsection{\texttt{plot\_shakemap.pl}}
+
+With the shakemap data saved in \texttt{OUTPUT\_FILES/} at the end
+of a shakemap simulation (\texttt{CREATE\_SHAKEMAP=.true.}), you can
+also run \texttt{`create\_movie\_GMT}' code to convert the binary
+shakemap data into GMT xyz files. A sample script \texttt{plot\_shakemap.pl}
+is provided to do this conversion, and then plot the shakemaps in
+GMT, for example:
+
+\begin{lyxcode}
+plot\_shakemap.pl~data\_dir~type(1,2,3)~CMTSOLUTION~
+\end{lyxcode}
+where \texttt{type=1} for a displacement shakemap, \texttt{2} for
+velocity, and \texttt{3} for acceleration.
+
+
+\section{Map Local Database}
+
+A sample program \texttt{remap\_database} is provided to map the local
+database from a set of machines to another set of machines. This is
+especially useful when you want to run mesher and solver, or different
+types of solvers separately through a scheduler (refer to Chapter~\ref{cha:Scheduler}).
+
+\begin{lyxcode}
+run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~remap\_database~old\_machines~150
+\end{lyxcode}
+where \texttt{old\_machines} is the LSF machine file used in the previous
+simulation, and \texttt{150} is the number of processors in total.
+
+
+\chapter*{\label{cha:Bug-Reports-and}Bug Reports and Suggestions for Improvements}
+
+To report bugs or suggest improvements to the code, please send an
+e-mail to the CIG Computational Seismology Mailing List \url{cig-seismo@geodynamics.org}
+or Jeroen Tromp \url{jtromp-AT-princeton.edu}, and/or use our online
+bug tracking system Roundup \url{www.geodynamics.org/roundup}.
+
+
+\chapter*{Notes \& Acknowledgments}
+
+In order to keep the software package thread-safe in case a multithreaded
+implementation of MPI is used, developers should not add modules or
+common blocks to the source code but rather use regular subroutine
+arguments (which can be grouped in ``derived types'' if needed for
+clarity).
+
+The Gauss-Lobatto-Legendre subroutines in \texttt{gll\_library.f90}
+are based in part on software libraries from the Massachusetts Institute
+of Technology, Department of Mechanical Engineering (Cambridge, Massachusetts, USA).
+The non-structured global numbering software was provided by Paul
+F. Fischer (Brown University, Providence, Rhode Island, USA, now at Argonne National Laboratory, USA).
+
+OpenDX \url{http://www.opendx.org} is open-source based on IBM Data
+Explorer, AVS \url{http://www.avs.com} is a trademark of Advanced
+Visualization Systems, and ParaView \url{http://www.paraview.com}
+is an open-source visualization platform.
+
+The main developers of the \texttt{SPECFEM3D} source code are Dimitri
+Komatitsch, Jeroen Tromp, and Qinya Liu. The following individuals
+(listed in alphabetical order) have also contributed to the development
+or improvement of the source code: Min Chen, Vala Hj\"orleifsd\'ottir,
+Jes\'us Labarta, and Leif Strand. The following individuals (listed in alphabetical
+order) contributed to this manual: Min Chen, Vala Hj\"orleifsd\'ottir,
+Sue Kientz, Dimitri Komatitsch, Qinya Liu, Alessia Maggi,
+Carl Tape, and Jeroen Tromp. The manual's cover graphic was created
+by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}.
+Older versions of the code were initially developed by Dimitri Komatitsch at Institut de Physique du Globe (France)
+and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University (USA).
+
+Please e-mail your feedback, questions, comments, and suggestions
+to Jeroen Tromp \url{jtromp-AT-princeton.edu} or to the CIG Computational Seismology Mailing List \url{cig-seismo@geodynamics.org}.
+
+
+\chapter*{Copyright}
+
+Main authors: Dimitri Komatitsch and Jeroen Tromp
+
+Seismological Laboratory, California Institute of Technology, USA,
+and University of Pau / CNRS / INRIA, France
+
+$\copyright$ California Institute of Technology and University of Pau / CNRS / INRIA, February 2010
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation (see Appendix \ref{cha:License}).
+
+\bibliography{bibliography}
+
+
+\appendix
+
+\chapter{\label{cha:Coordinates}Reference Frame Convention}
+
+The code uses the following convention for the Cartesian reference
+frame:
+
+\begin{itemize}
+\item the $x$ axis points East
+\item the $y$ axis points North
+\item the $z$ axis points up
+\end{itemize}
+Note that this convention is different from both the \citet{AkRi80}
+convention and the Harvard Centroid-Moment Tensor (CMT) convention.
+The Aki \& Richards convention is
+
+\begin{itemize}
+\item the $x$ axis points North
+\item the $y$ axis points East
+\item the $z$ axis points down
+\end{itemize}
+and the Harvard CMT convention is
+
+\begin{itemize}
+\item the $x$ axis points South
+\item the $y$ axis points East
+\item the $z$ axis points up
+\end{itemize}
+
+\chapter{\label{cha:License}License }
+
+\textbf{GNU GENERAL PUBLIC LICENSE Version 2, June 1991. Copyright
+(C) 1989, 1991 Free Software Foundation, Inc. 59 Temple Place, Suite
+330, Boston, MA 02111-1307 USA} \\
+Everyone is permitted to copy and distribute verbatim copies of this
+license document, but changing it is not allowed.
+
+
+\section*{Preamble}
+
+The licenses for most software are designed to take away your freedom
+to share and change it. By contrast, the GNU General Public License
+is intended to guarantee your freedom to share and change free software
+-- to make sure the software is free for all its users. This General
+Public License applies to most of the Free Software Foundation's software
+and to any other program whose authors commit to using it. (Some other
+Free Software Foundation software is covered by the GNU Library General
+Public License instead.) You can apply it to your programs, too.
+
+When we speak of free software, we are referring to freedom, not price.
+Our General Public Licenses are designed to make sure that you have
+the freedom to distribute copies of free software (and charge for
+this service if you wish), that you receive source code or can get
+it if you want it, that you can change the software or use pieces
+of it in new free programs; and that you know you can do these things.
+
+To protect your rights, we need to make restrictions that forbid anyone
+to deny you these rights or to ask you to surrender the rights. These
+restrictions translate to certain responsibilities for you if you
+distribute copies of the software, or if you modify it.
+
+For example, if you distribute copies of such a program, whether gratis
+or for a fee, you must give the recipients all the rights that you
+have. You must make sure that they, too, receive or can get the source
+code. And you must show them these terms so they know their rights.
+
+We protect your rights with two steps:
+
+\begin{enumerate}
+\item Copyright the software, and
+\item Offer you this license which gives you legal permission to copy, distribute
+and/or modify the software.
+\end{enumerate}
+Also, for each author's protection and ours, we want to make certain
+that everyone understands that there is no warranty for this free
+software. If the software is modified by someone else and passed on,
+we want its recipients to know that what they have is not the original,
+so that any problems introduced by others will not reflect on the
+original authors' reputations.
+
+Finally, any free program is threatened constantly by software patents.
+We wish to avoid the danger that redistributors of a free program
+will individually obtain patent licenses, in effect making the program
+proprietary. To prevent this, we have made it clear that any patent
+must be licensed for everyone's free use or not licensed at all.
+
+The precise terms and conditions for copying, distribution and modification
+follow.
+
+
+\section*{GNU GENERAL PUBLIC LICENSE TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION
+AND MODIFICATION }
+
+\begin{itemize}
+
+\item[0.]This License applies to any program or other work which
+contains a notice placed by the copyright holder saying it may be
+distributed under the terms of this General Public License. The ``Program''
+below refers to any such program or work, and a ``work based on the
+Program'' means either the Program or any derivative work under copyright
+law: that is to say, a work containing the Program or a portion of
+it, either verbatim or with modifications and/or translated into another
+language. (Hereinafter, translation is included without limitation
+in the term ``modification.'') Each licensee is addressed as ``you.''\\
+\\
+Activities other than copying, distribution and modification are not
+covered by this License; they are outside its scope. The act of running
+the Program is not restricted, and the output from the Program is
+covered only if its contents constitute a work based on the Program
+(independent of having been made by running the Program). Whether
+that is true depends on what the Program does.
+
+\end{itemize}
+
+\begin{enumerate}
+\item You may copy and distribute verbatim copies of the Program's source
+code as you receive it, in any medium, provided that you conspicuously
+and appropriately publish on each copy an appropriate copyright notice
+and disclaimer of warranty; keep intact all the notices that refer
+to this License and to the absence of any warranty; and give any other
+recipients of the Program a copy of this License along with the Program.
+
+
+You may charge a fee for the physical act of transferring a copy,
+and you may at your option offer warranty protection in exchange for
+a fee.
+
+\item You may modify your copy or copies of the Program or any portion of
+it, thus forming a work based on the Program, and copy and distribute
+such modifications or work under the terms of Section 1 above, provided
+that you also meet all of these conditions:
+
+\begin{enumerate}
+\item You must cause the modified files to carry prominent notices stating
+that you changed the files and the date of any change.
+\item You must cause any work that you distribute or publish, that in whole
+or in part contains or is derived from the Program or any part thereof,
+to be licensed as a whole at no charge to all third parties under
+the terms of this License.
+\item If the modified program normally reads commands interactively when
+run, you must cause it, when started running for such interactive
+use in the most ordinary way, to print or display an announcement
+including an appropriate copyright notice and a notice that there
+is no warranty (or else, saying that you provide a warranty) and that
+users may redistribute the program under these conditions, and telling
+the user how to view a copy of this License. (Exception: if the Program
+itself is interactive but does not normally print such an announcement,
+your work based on the Program is not required to print an announcement.)
+\end{enumerate}
+These requirements apply to the modified work as a whole. If identifiable
+sections of that work are not derived from the Program, and can be
+reasonably considered independent and separate works in themselves,
+then this License, and its terms, do not apply to those sections when
+you distribute them as separate works. But when you distribute the
+same sections as part of a whole which is a work based on the Program,
+the distribution of the whole must be on the terms of this License,
+whose permissions for other licensees extend to the entire whole,
+and thus to each and every part regardless of who wrote it.
+
+Thus, it is not the intent of this section to claim rights or contest
+your rights to work written entirely by you; rather, the intent is
+to exercise the right to control the distribution of derivative or
+collective works based on the Program.
+
+In addition, mere aggregation of another work not based on the Program
+with the Program (or with a work based on the Program) on a volume
+of a storage or distribution medium does not bring the other work
+under the scope of this License.
+
+\item You may copy and distribute the Program (or a work based on it, under
+Section 2) in object code or executable form under the terms of Sections
+1 and 2 above provided that you also do one of the following:
+
+\begin{enumerate}
+\item Accompany it with the complete corresponding machine-readable source
+code, which must be distributed under the terms of Sections 1 and
+2 above on a medium customarily used for software interchange; or,
+\item Accompany it with a written offer, valid for at least three years,
+to give any third party, for a charge no more than your cost of physically
+performing source distribution, a complete machine-readable copy of
+the corresponding source code, to be distributed under the terms of
+Sections 1 and 2 above on a medium customarily used for software interchange;
+or,
+\item Accompany it with the information you received as to the offer to
+distribute corresponding source code. (This alternative is allowed
+only for noncommercial distribution and only if you received the program
+in object code or executable form with such an offer, in accord with
+Subsection b above.)
+\end{enumerate}
+The source code for a work means the preferred form of the work for
+making modifications to it. For an executable work, complete source
+code means all the source code for all modules it contains, plus any
+associated interface definition files, plus the scripts used to control
+compilation and installation of the executable. However, as a special
+exception, the source code distributed need not include anything that
+is normally distributed (in either source or binary form) with the
+major components (compiler, kernel, and so on) of the operating system
+on which the executable runs, unless that component itself accompanies
+the executable.
+
+If distribution of executable or object code is made by offering access
+to copy from a designated place, then offering equivalent access to
+copy the source code from the same place counts as distribution of
+the source code, even though third parties are not compelled to copy
+the source along with the object code.
+
+\item You may not copy, modify, sublicense, or distribute the Program except
+as expressly provided under this License. Any attempt otherwise to
+copy, modify, sublicense or distribute the Program is void, and will
+automatically terminate your rights under this License. However, parties
+who have received copies, or rights, from you under this License will
+not have their licenses terminated so long as such parties remain
+in full compliance.
+\item You are not required to accept this License, since you have not signed
+it. However, nothing else grants you permission to modify or distribute
+the Program or its derivative works. These actions are prohibited
+by law if you do not accept this License. Therefore, by modifying
+or distributing the Program (or any work based on the Program), you
+indicate your acceptance of this License to do so, and all its terms
+and conditions for copying, distributing or modifying the Program
+or works based on it.
+\item Each time you redistribute the Program (or any work based on the Program),
+the recipient automatically receives a license from the original licensor
+to copy, distribute or modify the Program subject to these terms and
+conditions. You may not impose any further restrictions on the recipients'
+exercise of the rights granted herein. You are not responsible for
+enforcing compliance by third parties to this License.
+\item If, as a consequence of a court judgment or allegation of patent infringement
+or for any other reason (not limited to patent issues), conditions
+are imposed on you (whether by court order, agreement or otherwise)
+that contradict the conditions of this License, they do not excuse
+you from the conditions of this License. If you cannot distribute
+so as to satisfy simultaneously your obligations under this License
+and any other pertinent obligations, then as a consequence you may
+not distribute the Program at all. For example, if a patent license
+would not permit royalty-free redistribution of the Program by all
+those who receive copies directly or indirectly through you, then
+the only way you could satisfy both it and this License would be to
+refrain entirely from distribution of the Program.
+
+
+If any portion of this section is held invalid or unenforceable under
+any particular circumstance, the balance of the section is intended
+to apply and the section as a whole is intended to apply in other
+circumstances.
+
+It is not the purpose of this section to induce you to infringe any
+patents or other property right claims or to contest validity of any
+such claims; this section has the sole purpose of protecting the integrity
+of the free software distribution system, which is implemented by
+public license practices. Many people have made generous contributions
+to the wide range of software distributed through that system in reliance
+on consistent application of that system; it is up to the author/donor
+to decide if he or she is willing to distribute software through any
+other system and a licensee cannot impose that choice.
+
+This section is intended to make thoroughly clear what is believed
+to be a consequence of the rest of this License.
+
+\item If the distribution and/or use of the Program is restricted in certain
+countries either by patents or by copyrighted interfaces, the original
+copyright holder who places the Program under this License may add
+an explicit geographical distribution limitation excluding those countries,
+so that distribution is permitted only in or among countries not thus
+excluded. In such case, this License incorporates the limitation as
+if written in the body of this License.
+\item The Free Software Foundation may publish revised and/or new versions
+of the General Public License from time to time. Such new versions
+will be similar in spirit to the present version, but may differ in
+detail to address new problems or concerns.
+
+
+Each version is given a distinguishing version number. If the Program
+specifies a version number of this License which applies to it and
+``any later version,'' you have the option of following the terms
+and conditions either of that version or of any later version published
+by the Free Software Foundation. If the Program does not specify a
+version number of this License, you may choose any version ever published
+by the Free Software Foundation.
+
+\item If you wish to incorporate parts of the Program into other free programs
+whose distribution conditions are different, write to the author to
+ask for permission. For software which is copyrighted by the Free
+Software Foundation, write to the Free Software Foundation; we sometimes
+make exceptions for this. Our decision will be guided by the two goals
+of preserving the free status of all derivatives of our free software
+and of promoting the sharing and reuse of software generally.
+\end{enumerate}
+
+\subsection*{NO WARRANTY }
+
+\begin{itemize}
+
+\item[11.]BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS
+NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE
+LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS
+AND/OR OTHER PARTIES PROVIDE THE PROGRAM ``AS IS'' WITHOUT WARRANTY
+OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE
+PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME
+THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
+
+\item[12.]IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED
+TO IN WRITING WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY
+MODIFY AND/OR REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE
+TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR
+CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE
+PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED
+INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE
+OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER
+OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+\end{itemize}
+
+
+\section*{END OF TERMS AND CONDITIONS }
+
+
+\subsection*{How to Apply These Terms to Your New Programs}
+
+If you develop a new program, and you want it to be of the greatest
+possible use to the public, the best way to achieve this is to make
+it free software which everyone can redistribute and change under
+these terms.
+
+To do so, attach the following notices to the program. It is safest
+to attach them to the start of each source file to most effectively
+convey the exclusion of warranty; and each file should have at least
+the ``copyright'' line and a pointer to where the full notice is found.
+For example:
+
+\begin{quote}
+One line to give the program's name and a brief idea of what it does.
+Copyright {\footnotesize $\copyright$ (}year) (name of author)
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published
+by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software Foundation,
+Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+\end{quote}
+Also add information on how to contact you by electronic and paper
+mail.
+
+If the program is interactive, make it output a short notice like
+this when it starts in an interactive mode:
+
+\begin{quote}
+Gnomovision version 69, Copyright $\copyright$ year name of author Gnomovision
+comes with ABSOLUTELY NO WARRANTY; for details type `show w'. This
+is free software, and you are welcome to redistribute it under certain
+conditions; type `show c' for details.
+\end{quote}
+The hypothetical commands `show w' and `show c' should show the appropriate
+parts of the General Public License. Of course, the commands you use
+may be called something other than `show w' and `show c'; they could
+even be mouse-clicks or menu items -- whatever suits your program.
+
+You should also get your employer (if you work as a programmer) or
+your school, if any, to sign a ``copyright disclaimer'' for the program,
+if necessary. Here is a sample; alter the names:
+
+\begin{quote}
+Yoyodyne, Inc., hereby disclaims all copyright interest in the program
+`Gnomovision' (which makes passes at compilers) written by James Hacker.
+
+(signature of Ty Coon)\\
+1 April 1989 \\
+Ty Coon, President of Vice
+\end{quote}
+This General Public License does not permit incorporating your program
+into proprietary programs. If your program is a subroutine library,
+you may consider it more useful to permit linking proprietary applications
+with the library. If this is what you want to do, use the GNU Library
+General Public License instead of this License.
+\end{document}

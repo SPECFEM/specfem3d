@@ -1,0 +1,22 @@
+# input information
+input: path='../../DATABASES_MPI_aaknes', dt=0.000005, nstep=1, start=20000, step=200, width=6, ncomp=1, head='_div_it', ext='bin', topo=0
+
+# output information
+output: path='../../DATABASES_MPI_aaknes', ncomp=1, head='divergence_test',vname='p_potential', res=0, form=0
+
+# processor information
+procinfo: head='proc', width=6, nslice=8, npmax=1
+
+# processor list for each slice
+proclist: np=1, mode=0, list=0
+proclist: np=1, mode=0, list=1
+proclist: np=1, mode=0, list=2
+proclist: np=1, mode=0, list=3
+proclist: np=1, mode=0, list=4
+proclist: np=1, mode=0, list=5
+proclist: np=1, mode=0, list=6
+proclist: np=1, mode=0, list=7
+
+# server ans executabel list needed only for Ensight Gold format for each slice or only one if all processors are the same
+server: name='fasan.norsar.no', exec='/space/homnath/soft/paraview-3.7/bin/paraview'
+

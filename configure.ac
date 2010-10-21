@@ -11,7 +11,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 
 AC_PREREQ(2.61)
 AC_INIT([Specfem 3D], [1.4.0], [jtromp AT caltech.edu], [Specfem3D])
-AC_CONFIG_SRCDIR([specfem3D.f90])
+AC_CONFIG_SRCDIR([README])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -90,7 +90,7 @@ AC_PROG_CC
 export SCOTCH_LIBS
 
 AC_ARG_WITH([scotch-lib],
-AC_HELP_STRING([--with-scotch-lib],[tell where scotch library reside]),
+AC_HELP_STRING([--with-scotch-lib],[tell where Scotch library reside]),
 [
  ac_scotch_libdir="$withval";
 ])
@@ -103,9 +103,9 @@ fi
 #AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
 AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_lib="yes";],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
 
-AC_MSG_CHECKING([whether scotch is usable])
+AC_MSG_CHECKING([whether Scotch is usable])
 if test "x${scotch_lib}" = "xyes"; then
- AC_DEFINE([HAVE_SCOTCH],[1],[defined if scotch is installed])
+ AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
  SCOTCH_LIBS="-L${ac_scotch_libdir} -lscotch -lscotcherr"
  AC_MSG_RESULT([yes])
 else
@@ -204,7 +204,7 @@ fi
 # Checks for library functions.
 
 
-AC_CONFIG_FILES([Makefile constants.h precision.h DATA/Par_file DATA/CMTSOLUTION DATA/STATIONS meshfem3D/Makefile meshfem3D/precision.h meshfem3D/constants.h decompose_mesh_SCOTCH/Makefile])
+AC_CONFIG_FILES([Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h  src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h])
 AC_OUTPUT
 
 

@@ -1,0 +1,9 @@
+compile:
+	- go to src/ folder
+	- edit Makefile if necessary
+	- type make
+run:
+	- type ../bin/visualize [input_file_name]
+	e.g., ../bin/visualize visualize_test.in
+	
+see visualize_manual for detail
