@@ -1,0 +1,13 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+this directory is given for comparisons with solutions from Komatitsch & Tromp (1999,GJI):
+
+ - example given for 2-layer model (shown in Fig.8, left) 
+   with traces computed as shown in Fig.9
+
+
+seismogram outputs: 
+
+    Reference solutions can be found in subdirectory REF_SEIS/  
