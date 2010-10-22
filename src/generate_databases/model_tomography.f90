@@ -37,7 +37,7 @@
   ! for external tomography....
   ! (regular spaced, xyz-block file in ascii)
   !character (len=80) :: TOMO_FILENAME = 'DATA/veryfast_tomography_abruzzo_complete.xyz' 
-  character (len=80) :: TOMO_FILENAME = 'DATA/tomography_model.xyz' 
+  character (len=80) :: TOMO_FILENAME = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'tomography_model.xyz' 
   
   ! model dimensions
   double precision :: ORIG_X,ORIG_Y,ORIG_Z
