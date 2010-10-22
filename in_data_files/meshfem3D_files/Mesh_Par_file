@@ -34,7 +34,7 @@ CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 
 # path to store the databases files 
-LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
+LOCAL_PATH                      = ../../in_out_files/DATABASES_MPI
 
 # number of materials
 NMATERIALS                      = 4  
