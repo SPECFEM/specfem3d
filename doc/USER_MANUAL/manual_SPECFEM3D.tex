@@ -110,7 +110,9 @@ Version 2.0.0}
 The software package SPECFEM3D simulates seismic
 wave propagation at the local or regional scale
 based upon the spectral-element method (SEM).
-The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10}, with optimized efficiency because of its tensorized basis functions.
+The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions.
+Note that in many (most?) geological models in the context of seismic wave propagation studies
+a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient.
 Effects due to lateral variations in compressional-wave speed, shear-wave
 speed, density, a 3D crustal model, topography and bathymetry are
 included. For a detailed introduction to the SEM as applied to regional
