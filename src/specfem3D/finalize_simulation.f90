@@ -103,7 +103,8 @@
       
       ! source gradients  (for sources in elastic domains)          
       do irec_local = 1, nrec_local
-        write(outputname,'(a,i5.5)') 'OUTPUT_FILES/src_frechet.',number_receiver_global(irec_local)
+        write(outputname,'(a,i5.5)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
+            '/src_frechet.',number_receiver_global(irec_local)
         open(unit=27,file=trim(outputname),status='unknown')
         !
         ! r -> z, theta -> -y, phi -> x

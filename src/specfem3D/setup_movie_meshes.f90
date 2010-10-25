@@ -271,7 +271,7 @@
 
     ! updates number of surface elements in an include file for the movies
     if( nfaces_surface_glob_ext_mesh > 0 ) then
-      filename = 'OUTPUT_FILES/surface_from_mesher.h'
+      filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/surface_from_mesher.h'
       open(unit=IOUT,file=trim(filename),status='unknown')
       write(IOUT,*) '!'
       write(IOUT,*) '! this is the parameter file for static compilation for movie creation'
