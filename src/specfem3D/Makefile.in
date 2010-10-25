@@ -200,7 +200,7 @@ xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
 	${FCCOMPILE_CHECK} -o  ${E}/xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
 
-@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) OUTPUT_FILES/surface_from_mesher.h
+@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) ../../in_out_files/OUTPUT_FILES/surface_from_mesher.h
 @COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM)
 
 
@@ -498,8 +498,8 @@ $O/PML_init.o: $(SHARED)constants.h PML_init.f90
 ###
 
 $O/param_reader.o: ${SHARED}/param_reader.c
-	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c
+	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c -I../../
 
 $O/write_c_binary.o: ${SHARED}/write_c_binary.c
-	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c
+	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c -I../../
 

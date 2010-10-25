@@ -557,7 +557,7 @@
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL
+  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH
   use image_PNM_GIF_par,only: BINARY_FILE,VP_BACKGROUND,&
                         POWER_DISPLAY_COLOR,REMOVE_PNM_FILE
   implicit none
@@ -578,7 +578,7 @@
   integer, parameter :: ascii_code_of_zero = 48, ascii_code_of_carriage_return = 10
 
   ! open the image file
-  write(file_name,"('OUTPUT_FILES/image',i7.7,'.pnm')") it
+  write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it
 
   if(BINARY_FILE) then
     open(unit=27,file=file_name,status='unknown',access='direct',recl=1)
@@ -748,14 +748,16 @@
   close(27)
 
   ! open image file and create system command to convert image to more convenient format
-  write(system_command,"('cd OUTPUT_FILES ; convert image',i7.7,'.pnm image',i7.7,'.gif')") it,it
+  write(system_command,"('cd ',a,' ; convert image',i7.7,'.pnm image',i7.7,'.gif')") &
+       OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it,it
 
   ! call the system to convert image to GIF
   call system(system_command)
 
   ! removes pnm file
   if( REMOVE_PNM_FILE ) then
-    write(system_command,"('cd OUTPUT_FILES ; rm -f image',i7.7,'.pnm')") it
+    write(system_command,"('cd ',a,' ; rm -f image',i7.7,'.pnm')") &
+         OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)), it
     call system(system_command)  
   endif
 

@@ -84,20 +84,20 @@ backup:
 bak: backup
 
 mesh : meshfem3D
-
 gen : generate_databases
-
 spec : specfem3D
-
 dec : decompose_mesh_SCOTCH
 
 generate_databases: xgenerate_databases
-
 specfem3D: xspecfem3D
-
 meshfem3D: xmeshfem3D
-
 decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
+combine_AVS_DX: xcombine_AVS_DX
+convolve_source_timefunction: xconvolve_source_timefunction
+create_header_file: xcreate_header_file
+create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
+combine_vol_data: xcombine_vol_data
+combine_surf_data: xcombine_surf_data
 
 bin:
 	mkdir bin
@@ -131,6 +131,21 @@ xgenerate_databases:  required reqgen
 
 xdecompose_mesh_SCOTCH:  required reqdec
 	     (cd src/decompose_mesh_SCOTCH ; make)                                     
+
+xcombine_AVS_DX: required
+	(cd src/specfem3D ; make xcombine_AVS_DX)	
+
+xcreate_movie_shakemap_AVS_DX_GMT: required
+	(cd src/specfem3D ; make xcreate_movie_shakemap_AVS_DX_GMT)	
+
+xcombine_vol_data: required
+	(cd src/specfem3D ; make xcombine_vol_data)	
+
+xcombine_surf_data: required
+	(cd src/specfem3D ; make xcombine_surf_data)
+
+xconvolve_source_timefunction: required
+	(cd src/specfem3D ; make xconvolve_source_timefunction)
 
 clean: required
 	(rm -rf bin lib obj src/meshfem3D/*.mod src/generate_databases/*.mod src/specfem3D/*.mod)	
