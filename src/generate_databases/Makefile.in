@@ -43,6 +43,8 @@ E = ../../bin
 O = ../../obj/gen
 # L : libraries directory
 L = ../../lib
+# Output files directory
+OUTPUT=../../in_out_files/OUTPUT_FILES
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED}
 FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) -I${SHARED}
@@ -160,35 +162,9 @@ generate_databases: xgenerate_databases
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 
-combine_AVS_DX: xcombine_AVS_DX
-convolve_source_timefunction: xconvolve_source_timefunction
-create_header_file: xcreate_header_file
-create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
-combine_vol_data: xcombine_vol_data
-combine_surf_data: xcombine_surf_data
-
-xconvolve_source_timefunction: $O/convolve_source_timefunction.o
-	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.o
-
-xcreate_header_file: $O/program_create_header_file.o $(LIBGENDATABASES)
-	${FCCOMPILE_CHECK} -o  ${E}/xcreate_header_file $O/program_create_header_file.o $(LIBGENDATABASES)
-
-@COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBGENDATABASES) OUTPUT_FILES/surface_from_mesher.h
-@COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBGENDATABASES)
-
-
-xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBGENDATABASES)
-	${FCCOMPILE_CHECK} -o  ${E}/xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBGENDATABASES)
-
-xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
-	${FCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
-
-xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
-	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
-
 
 clean:
-	rm -f $O/* *.o *.gnu *.mod OUTPUT_FILES/timestamp* OUTPUT_FILES/starttime*txt work.pc* \
+	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
         xgenerate_databases xcombine_AVS_DX \
         xconvolve_source_timefunction xcreate_header_file \
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
@@ -301,8 +277,8 @@ $O/get_flags_boundaries.o:  ${SHARED}/constants.h get_flags_boundaries.f90
 $O/get_cmt.o:  ${SHARED}/constants.h ${SHARED}/get_cmt.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o ${SHARED}/get_cmt.f90 
 
-$O/create_movie_shakemap_AVS_DX_GMT.o:  ${SHARED}/constants.h ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 OUTPUT_FILES/surface_from_mesher.h
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 
+$O/create_movie_shakemap_AVS_DX_GMT.o:  ${SHARED}/constants.h ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 $(OUTPUT)/surface_from_mesher.h
+	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 -I$(OUTPUT)
 
 $O/get_element_face.o:  ${SHARED}/constants.h ${SHARED}/get_element_face.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_element_face.o ${SHARED}/get_element_face.f90 
@@ -405,7 +381,7 @@ $O/prepare_assemble_MPI.o:  ${SHARED}/constants.h ${SHARED}/prepare_assemble_MPI
 ### rule for the header file
 ###
 
-@COND_PYRE_FALSE@OUTPUT_FILES/values_from_mesher.h: xcreate_header_file
+@COND_PYRE_FALSE@$(OUTPUT)/values_from_mesher.h: xcreate_header_file
 @COND_PYRE_FALSE@	./xcreate_header_file
 
 ###
@@ -413,8 +389,8 @@ $O/prepare_assemble_MPI.o:  ${SHARED}/constants.h ${SHARED}/prepare_assemble_MPI
 ###
 
 $O/param_reader.o: ${SHARED}/param_reader.c
-	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c
+	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c -I../../
 
 $O/write_c_binary.o: ${SHARED}/write_c_binary.c
-	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c
+	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c -I../../
 

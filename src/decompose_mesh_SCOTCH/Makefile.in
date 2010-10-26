@@ -84,39 +84,30 @@ decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
 #### rules for executables
 ####
 
-
-#DEC_OBJETS = part_decompose_mesh_SCOTCH.o \
-                                decompose_mesh_SCOTCH.o \
-                                program_decompose_mesh_SCOTCH.o
-
-DEC_OBJECTS = part_decompose_mesh_SCOTCH.o \
-                decompose_mesh_SCOTCH.o \
-                program_decompose_mesh_SCOTCH.o
-
-DEC_OBJECTS_NEEDED = $O/part_decompose_mesh_SCOTCH.o \
+DEC_OBJECTS = $O/part_decompose_mesh_SCOTCH.o \
                 $O/decompose_mesh_SCOTCH.o \
                 $O/program_decompose_mesh_SCOTCH.o
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS) 
-@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS_NEEDED) $(SCOTCH_LIBS) 
+@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_LIBS) 
 @COND_PYRE_FALSE@
 
 
 
 clean:
-	rm -f *.o *.mod xdecompose_mesh_SCOTCH 
+	rm -f $O/*.o *.mod  $E/xdecompose_mesh_SCOTCH 
 ####
 #### rule to build each .o file below
 ####
 
-part_decompose_mesh_SCOTCH.o: part_decompose_mesh_SCOTCH.f90 
+$O/part_decompose_mesh_SCOTCH.o: part_decompose_mesh_SCOTCH.f90 
 	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.f90
 
-decompose_mesh_SCOTCH.o: decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.o
+$O/decompose_mesh_SCOTCH.o: decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.f90 $O/part_decompose_mesh_SCOTCH.o
 	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.f90
 
-program_decompose_mesh_SCOTCH.o: program_decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.o
+$O/program_decompose_mesh_SCOTCH.o: program_decompose_mesh_SCOTCH.f90 $O/part_decompose_mesh_SCOTCH.o $O/decompose_mesh_SCOTCH.o
 	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh_SCOTCH.o program_decompose_mesh_SCOTCH.f90
 
 

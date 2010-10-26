@@ -34,7 +34,7 @@
   implicit none
 
   include "constants.h"
-  include "OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))/surface_from_mesher.h"
+  include "surface_from_mesher.h"
   
 !-------------------------------------------------------------------------------------------------
 ! user parameters
@@ -831,9 +831,6 @@ enddo ! it
   implicit none
 
   include "constants.h"
-
-! number of points in each AVS or OpenDX quadrangular cell for movies
-  integer, parameter :: NGNOD2D_AVS_DX = 4
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! small value for double precision and to avoid sensitivity to roundoff
