@@ -100,25 +100,25 @@ combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
 
 bin:
-	mkdir bin
+	mkdir -p bin
 
 lib:
-	mkdir lib
+	mkdir -p lib
 
 obj:
-	mkdir obj
+	mkdir -p obj
 
 reqmesh:
-	(cd obj; mkdir mesh)	
+	(cd obj; mkdir -p mesh)	
 
 reqspec:
-	(cd obj; mkdir spec)
+	(cd obj; mkdir -p spec)
 
 reqdec:
-	(cd obj; mkdir dec)
+	(cd obj; mkdir -p dec)
 
 reqgen :
-	(cd obj; mkdir gen)
+	(cd obj; mkdir -p gen)
 
 xmeshfem3D:  required reqmesh 
 	     (cd src/meshfem3D; make)
