@@ -569,7 +569,7 @@ FLAGS_CHECK
 MPICC
 MPILIBS
 MPIFC
-SCOTCH_LIBS
+SCOTCH_PATH
 FCFLAGS_f90
 ac_ct_CC
 CPPFLAGS
@@ -655,7 +655,7 @@ enable_option_checking
 with_pyre
 with_mpi
 enable_double_precision
-with_scotch_lib
+with_scotch_path
 '
       ac_precious_vars='build_alias
 host_alias
@@ -667,7 +667,7 @@ LIBS
 CC
 CFLAGS
 CPPFLAGS
-SCOTCH_LIBS
+SCOTCH_PATH
 MPIFC
 MPILIBS
 MPICC
@@ -1294,7 +1294,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-pyre             build Pyrized version [default=no]
   --with-mpi              build parallel version [default=yes]
-  --with-scotch-lib       tell where Scotch library reside
+  --with-scotch-path      define the root path to Scotch (eg. /opt/scotch/)
 
 Some influential environment variables:
   FC          Fortran compiler command
@@ -1306,7 +1306,7 @@ Some influential environment variables:
   CFLAGS      C compiler flags
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
-  SCOTCH_LIBS extra libraries for linking Scotch
+  SCOTCH_PATH root path to Scotch
   MPIFC       MPI Fortran compiler command
   MPILIBS     extra libraries for linking MPI programs
   MPICC       MPI C compiler command
@@ -4703,21 +4703,21 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 #checks for Scotch
 
-export SCOTCH_LIBS
+export SCOTCH_PATH
 
 
-# Check whether --with-scotch-lib was given.
-if test "${with_scotch_lib+set}" = set; then :
-  withval=$with_scotch_lib;
- ac_scotch_libdir="$withval";
+# Check whether --with-scotch-path was given.
+if test "${with_scotch_path+set}" = set; then :
+  withval=$with_scotch_path;
+ ac_scotch_dir="$withval";
 
 fi
 
 
-scotch_lib=""
+scotch_dir=""
 ac_save_ldflags=${LDFLAGS}
-if test -n "${ac_scotch_libdir}"; then
- LDFLAGS="${LDFLAGS} -L${ac_scotch_libdir}";
+if test -n "${ac_scotch_dir}"; then
+ LDFLAGS="${LDFLAGS} -L${ac_scotch_dir}/lib";
 fi
 #AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for scotchfarchinit  in -lscotch" >&5
@@ -4744,19 +4744,19 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_scotch_scotchfarchinit_" >&5
 $as_echo "$ac_cv_lib_scotch_scotchfarchinit_" >&6; }
 if test "x$ac_cv_lib_scotch_scotchfarchinit_" = x""yes; then :
-  scotch_lib="yes";
+  scotch_dir="yes";
 else
-  scotch_lib="no";LDFLAGS=${ac_save_ldflags}
+  scotch_dir="no";LDFLAGS=${ac_save_ldflags}
 fi
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Scotch is usable" >&5
 $as_echo_n "checking whether Scotch is usable... " >&6; }
-if test "x${scotch_lib}" = "xyes"; then
+if test "x${scotch_dir}" = "xyes"; then
 
 $as_echo "#define HAVE_SCOTCH 1" >>confdefs.h
 
- SCOTCH_LIBS="-L${ac_scotch_libdir} -lscotch -lscotcherr"
+ SCOTCH_PATH="${ac_scotch_dir}"
  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else

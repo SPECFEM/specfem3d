@@ -18,8 +18,8 @@ to compile this executable xdecompose_mesh_SCOTCH for partitioning your mesh fil
 
   2. compile executable "xdecompose_mesh_SCOTCH" in this directory decompose_mesh_SCOTCH/:
   
-     make sure, you have the right location of your SCOTCH library defined
-     in the Makefile (SCOTCH_LIBS), then type:
+     make sure, you have the right location of SCOTCH defined
+     in the Makefile (SCOTCH_PATH), then type:
        
       > make
       

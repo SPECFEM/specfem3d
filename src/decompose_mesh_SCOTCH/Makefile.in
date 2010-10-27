@@ -35,7 +35,6 @@ MPILIBS = @MPILIBS@
 FLAGS_CHECK = @FLAGS_CHECK@
 FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
-SCOTCH_LIBS = @SCOTCH_LIBS@
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK)
 FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
@@ -50,6 +49,10 @@ CFLAGS = @CFLAGS@ $(CPPFLAGS)
 CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 @COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
 @COND_MPI_FALSE@COND_MPI_CPPFLAGS =
+
+SCOTCH_PATH = @SCOTCH_PATH@
+SCOTCH_LIBS = -L$(SCOTCH_PATH)/lib -lscotch -lscotcherr
+SCOTCH_INC = -I$(SCOTCH_PATH)/include
 
 AR = ar
 ARFLAGS = cru
@@ -90,7 +93,7 @@ DEC_OBJECTS = $O/part_decompose_mesh_SCOTCH.o \
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS) 
-@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_LIBS) 
+@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_INC)  $(SCOTCH_LIBS) 
 @COND_PYRE_FALSE@
 
 
@@ -102,12 +105,12 @@ clean:
 ####
 
 $O/part_decompose_mesh_SCOTCH.o: part_decompose_mesh_SCOTCH.f90 
-	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.f90
+	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)
 
 $O/decompose_mesh_SCOTCH.o: decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.f90 $O/part_decompose_mesh_SCOTCH.o
-	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.f90
+	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)
 
 $O/program_decompose_mesh_SCOTCH.o: program_decompose_mesh_SCOTCH.f90 $O/part_decompose_mesh_SCOTCH.o $O/decompose_mesh_SCOTCH.o
-	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh_SCOTCH.o program_decompose_mesh_SCOTCH.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh_SCOTCH.o program_decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)
 
 
