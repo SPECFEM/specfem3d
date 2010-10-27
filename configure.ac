@@ -87,26 +87,26 @@ AC_PROG_CC
 
 #checks for Scotch
 
-export SCOTCH_LIBS
+export SCOTCH_PATH
 
-AC_ARG_WITH([scotch-lib],
-AC_HELP_STRING([--with-scotch-lib],[tell where Scotch library reside]),
+AC_ARG_WITH([scotch-path],
+AC_HELP_STRING([--with-scotch-path],[define the root path to Scotch (eg. /opt/scotch/)]),
 [
- ac_scotch_libdir="$withval";
+ ac_scotch_dir="$withval";
 ])
 
-scotch_lib=""
+scotch_dir=""
 ac_save_ldflags=${LDFLAGS}
-if test -n "${ac_scotch_libdir}"; then
- LDFLAGS="${LDFLAGS} -L${ac_scotch_libdir}";
+if test -n "${ac_scotch_dir}"; then
+ LDFLAGS="${LDFLAGS} -L${ac_scotch_dir}/lib";
 fi
 #AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
-AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_lib="yes";],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
+AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_dir="yes";],[scotch_dir="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
 
 AC_MSG_CHECKING([whether Scotch is usable])
-if test "x${scotch_lib}" = "xyes"; then
+if test "x${scotch_dir}" = "xyes"; then
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
- SCOTCH_LIBS="-L${ac_scotch_libdir} -lscotch -lscotcherr"
+ SCOTCH_PATH="${ac_scotch_dir}"
  AC_MSG_RESULT([yes])
 else
  AC_MSG_RESULT([no])
@@ -118,7 +118,7 @@ LDFLAGS=${ac_save_ldflags}
 
 # influential environment variables
 
-AC_ARG_VAR(SCOTCH_LIBS, [extra libraries for linking Scotch])
+AC_ARG_VAR(SCOTCH_PATH, [root path to Scotch])
 AC_ARG_VAR(MPIFC, [MPI Fortran compiler command])
 AC_ARG_VAR(MPILIBS, [extra libraries for linking MPI programs])
 AC_ARG_VAR(MPICC, [MPI C compiler command])
