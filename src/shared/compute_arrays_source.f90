@@ -310,7 +310,7 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
     !! read the block we need 
     do itime = it_start, it_end
       read(IIN,*,iostat=ios) junk, adj_src(itime-it_start+1,icomp)     
-      if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
+      ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
       if( ios /= 0 ) &
         call exit_MPI(myrank, &
           'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')      
