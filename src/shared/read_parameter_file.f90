@@ -87,13 +87,16 @@
   endif  
   call read_value_integer(NSTEP, 'solver.NSTEP')
   if(err_occurred() /= 0) return
-!<YANGL
-! read in adjoint sources block by block
-! we shall later put this parameter in DATA/Par_file
-! the default value is to read in the whole trace
-! should you change the value, make sure "mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) == 0"
-  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-!>YANGL
+  !<YANGL
+  ! read in adjoint sources block by block
+  ! we shall later put this parameter in in_data_files/Par_file
+  ! the default value (0) is to read the whole trace at the same time
+  ! should you change the value, make sure "mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) == 0"
+  NTSTEP_BETWEEN_READ_ADJSRC = 0  ! later, this parameter should be given in Par_file
+  if (NTSTEP_BETWEEN_READ_ADJSRC == 0)  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+  if (mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) /= 0) &
+     stop 'mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) must be zero! change your Par_file'
+  !>YANGL
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
   call read_value_logical(OCEANS, 'model.OCEANS')
