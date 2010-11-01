@@ -94,8 +94,8 @@
   ! should you change the value, make sure "mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) == 0"
   NTSTEP_BETWEEN_READ_ADJSRC = 0  ! later, this parameter should be given in Par_file
   if (NTSTEP_BETWEEN_READ_ADJSRC == 0)  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-  if (mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) /= 0) &
-     stop 'mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) must be zero! change your Par_file'
+  if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) &
+     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! change your Par_file'
   !>YANGL
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
