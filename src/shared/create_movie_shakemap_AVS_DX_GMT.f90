@@ -48,9 +48,6 @@
 
 !-------------------------------------------------------------------------------------------------
 
-  ! number of points in each AVS or OpenDX quadrangular cell for movies
-  integer, parameter :: NGNOD2D_AVS_DX = 4
-
   integer it,it1,it2,ivalue,nspectot_AVS_max,ispec
   integer iformat,nframes,iframe,inumber,inorm,iscaling_shake
   integer ibool_number,ibool_number1,ibool_number2,ibool_number3,ibool_number4

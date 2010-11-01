@@ -57,7 +57,10 @@
             rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec) 
             
             ! shear modulus kernel
-            mu_kl(i,j,k,ispec) = - mul * mu_kl(i,j,k,ispec)
+            !<YANGL
+            ! mu_kl(i,j,k,ispec) = - mul * mu_kl(i,j,k,ispec)
+            mu_kl(i,j,k,ispec) = - 2 * mul * mu_kl(i,j,k,ispec)
+            !>YANGL
             
             ! bulk modulus kernel
             kappa_kl(i,j,k,ispec) = - kappal * kappa_kl(i,j,k,ispec)
@@ -145,7 +148,7 @@
 
   endif
 
-!<YANGL
+  !<YANGL
   ! save weights for volume integration, in order to benchmark the kernels with analytical expressions
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   do ispec = 1, NSPEC_AB
@@ -162,6 +165,6 @@
   open(unit=27,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted')
   write(27) weights_kernel
   close(27)
-!>YANGL
+  !>YANGL
 
   end subroutine save_adjoint_kernels

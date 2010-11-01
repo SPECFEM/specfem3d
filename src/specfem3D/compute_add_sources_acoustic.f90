@@ -76,13 +76,13 @@
   integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   integer:: nadj_rec_local
   real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
-!<YANGL
+  !<YANGL
   logical :: ibool_read_adj_arrays
   integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
-!  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
+  !  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
-!>YANGL
+  !>YANGL
   
 ! local parameters
   double precision :: f0
@@ -217,65 +217,69 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
-!<YANGL
-! read in adjoint sources block by block (for memory consideration)
-! e.g., in exploration experiments, both the number of receivers (nrec) and the number of time steps (NSTEP) are huge,
-! which may cause problems since we have a large array: adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
-
-  ! figure out if we need to read in a chunk of the adjoint source at this timestep
-  it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )   !chunk_number
-  ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
-
-  ! needs to read in a new chunk/block of the adjoint source
-  if(ibool_read_adj_arrays) then
-
-    irec_local = 0
-    do irec = 1, nrec
-      ! compute source arrays
-      if(myrank == islice_selected_rec(irec)) then
-        irec_local = irec_local + 1
-
-        ! reads in **sta**.**net**.**LH**.adj files
-        adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-        call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                  xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                  adj_sourcearray, xigll,yigll,zigll, &
-                  it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
-        do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-          adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-        enddo
-
-      endif
-    enddo
-
-  endif ! if(ibool_read_adj_arrays)
-!>YANGL
+    !<YANGL
+    ! read in adjoint sources block by block (for memory consideration)
+    ! e.g., in exploration experiments, both the number of receivers (nrec) and the number of time steps (NSTEP) are huge,
+    ! which may cause problems since we have a large array: adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
+  
+    ! figure out if we need to read in a chunk of the adjoint source at this timestep
+    it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )   !chunk_number
+    ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
+  
+    ! needs to read in a new chunk/block of the adjoint source 
+    ! note that for each partition, we divide it into two parts --- boundaries and interior --- indicated by 'phase_is_inner'
+    ! we first do calculations for the boudaries, and then start communication with other partitions while we calculate for the inner part
+    ! this must be done carefully, otherwise the adjoint sources may be added twice
+    if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
+  
+      irec_local = 0
+      do irec = 1, nrec
+        ! compute source arrays
+        if (myrank == islice_selected_rec(irec)) then
+          irec_local = irec_local + 1
+  
+          ! reads in **sta**.**net**.**LH**.adj files
+          adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+          call compute_arrays_adjoint_source(myrank,adj_source_file, &
+                    xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                    adj_sourcearray, xigll,yigll,zigll, &
+                    it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+          do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+            adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
+          enddo
+  
+        endif
+      enddo
+  
+    endif ! if(ibool_read_adj_arrays)
+    !>YANGL
 
     if( it < NSTEP ) then    
       ! receivers act as sources    
       irec_local = 0
       do irec = 1,nrec
         ! add the source (only if this proc carries the source)
-        if(myrank == islice_selected_rec(irec)) then
+        if (myrank == islice_selected_rec(irec)) then
           irec_local = irec_local + 1
           ! adds source array
           ispec = ispec_selected_rec(irec)
           do k = 1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
+            do j = 1,NGLLY
+              do i = 1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 
                 ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid      
                 ! note: it takes the first component of the adj_sourcearrays
                 !          the idea is to have e.g. a pressure source, where all 3 components would be the same                
-!<YANGL
-!                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-!                              - adj_sourcearrays(irec_local,NSTEP-it+1,1,i,j,k) / kappastore(i,j,k,ispec)
-                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                !<YANGL
+                ! potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                !                   - adj_sourcearrays(irec_local,NSTEP-it+1,1,i,j,k) / kappastore(i,j,k,ispec)
+                if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) &
+                   potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
                               - adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC &
                               -mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),1,i,j,k) &
                               / kappastore(i,j,k,ispec)
-!>YANGL
+                !>YANGL
               enddo
             enddo
           enddo

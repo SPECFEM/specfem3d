@@ -59,12 +59,12 @@
   double precision :: xloc,yloc,zloc
   integer :: iglob
 
-!<YANGL
-!!! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
-!!! mainly used for model update in iterative inversions
+  !<YANGL
+  !!! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
+  !!! can be used for importing updated model in iterative inversions
   character(len=256) LOCAL_PATH,prname_lp
   real, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: vp_read,vs_read,rho_read
-!>YANGL
+  !>YANGL
 
   ! initializes element domain flags
   ispec_is_acoustic(:) = .false.
@@ -245,11 +245,12 @@
              c66store(i,j,k,ispec) = c66
            endif
 
-!<YANGL
-!!! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
-!!! can be used to compare elastic & acoustic reflections in exploration seismology
-! idomain_id = IDOMAIN_ACOUSTIC
-!>YANGL
+           !<YANGL
+           !!! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
+           !!! can be used to compare elastic & acoustic reflections in exploration seismology
+           !!! do NOT use it unless you are confident
+           ! idomain_id = IDOMAIN_ACOUSTIC
+           !>YANGL
 
            ! material domain
            !print*,'velocity model:',ispec,idomain_id
@@ -296,7 +297,7 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! if only vp structure is available (as is often the case in exploration seismology),
-!!! comment out unneccessary lines
+!!! use lines for vp only 
 
 !  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
 !  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&
