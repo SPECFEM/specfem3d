@@ -35,7 +35,7 @@
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_displ_elm,accel_elm
-  real(kind=CUSTOM_REAL) :: kappal
+  real(kind=CUSTOM_REAL) :: kappal,rhol
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL), dimension(5) :: epsilondev_loc,b_epsilondev_loc
   
@@ -116,8 +116,9 @@
             iglob = ibool(i,j,k,ispec)
           
             ! density kernel
+            rhol = rhostore(i,j,k,ispec)
             rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
-                      - deltat * dot_product(accel_elm(:,i,j,k), b_displ_elm(:,i,j,k))
+                      - deltat * rhol * dot_product(accel_elm(:,i,j,k), b_displ_elm(:,i,j,k))
 
             ! bulk modulus kernel
             kappal = kappastore(i,j,k,ispec)

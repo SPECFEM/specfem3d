@@ -294,7 +294,7 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   ! loops over components
   do icomp = 1, NDIM
 
-    filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+    filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
     if (ios /= 0) cycle ! cycles to next file    
     !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
@@ -309,7 +309,8 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
     enddo    
     !! read the block we need 
     do itime = it_start, it_end
-      read(IIN,*,iostat=ios) junk, adj_src(itime-it_start+1,icomp)     
+      read(IIN,*,iostat=ios) junk, adj_src(itime-it_start+1,icomp)
+      !!! used to check whether we read the correct block
       ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
       if( ios /= 0 ) &
         call exit_MPI(myrank, &
