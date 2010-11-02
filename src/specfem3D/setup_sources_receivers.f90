@@ -442,7 +442,7 @@ end subroutine setup_receivers_check_acoustic
 !  
   
 subroutine setup_sources_precompute_arrays()
-
+  
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
@@ -526,7 +526,7 @@ subroutine setup_sources_precompute_arrays()
         ! checks **sta**.**net**.**BH**.adj files for correct number of time steps
         adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
         do icomp = 1,NDIM
-          filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+          filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
           open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
           if( ier == 0 ) then
             ! checks length of file

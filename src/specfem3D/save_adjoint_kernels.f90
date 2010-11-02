@@ -59,7 +59,7 @@
             ! shear modulus kernel
             !<YANGL
             ! mu_kl(i,j,k,ispec) = - mul * mu_kl(i,j,k,ispec)
-            mu_kl(i,j,k,ispec) = - 2 * mul * mu_kl(i,j,k,ispec)
+            mu_kl(i,j,k,ispec) = - 2._CUSTOM_REAL * mul * mu_kl(i,j,k,ispec)
             !>YANGL
             
             ! bulk modulus kernel
@@ -139,7 +139,7 @@
     open(unit=27,file=prname(1:len_trim(prname))//'kappa_acoustic_kernel.bin',status='unknown',form='unformatted')
     write(27) kappa_ac_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_prime_acoustic_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rhop_acoustic_kernel.bin',status='unknown',form='unformatted')
     write(27) rhop_ac_kl
     close(27)
     open(unit=27,file=prname(1:len_trim(prname))//'alpha_acoustic_kernel.bin',status='unknown',form='unformatted')
