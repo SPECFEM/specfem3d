@@ -112,19 +112,18 @@ wave propagation at the local or regional scale
 based upon the spectral-element method (SEM).
 The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions.
 Note that in many (most?) geological models in the context of seismic wave propagation studies
+(except for fault dynamic rupture studies)
 a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient.
 Effects due to lateral variations in compressional-wave speed, shear-wave
 speed, density, a 3D crustal model, topography and bathymetry are
 included. For a detailed introduction to the SEM as applied to regional
 seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
-in particular \citet{KoLiTrSuStSh04}. If you use the 3D southern
-California model, please cite \citet{SuSh03} (LA), \citet{lovelyetal06}
-(Salton Trough), and \citet{hauksson2000} (southern California).
-The Moho map was determined by \citet{zhu&kanamori2000}. The 1D SoCal
-model was developed by \citet{DrHe90}. The package can accommodate
+in particular \citet{KoLiTrSuStSh04}. The package can accommodate
 full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
 variations in attenuation. Adjoint capabilities and finite-frequency
 kernel simulations are included \citep{LiTr06,TrKoLi08}.
+
+The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team: in alphabetical order, C\'eline Blitz, Emiljana Jorgji, Dimitri Komatitsch, Nicolas Le Goff, Pieyre Le Loher, Roland Martin, David Mich\'ea, Jeroen Tromp \toall{add full list of developers here}.
 
 All SPECFEM3D\_GLOBE software is written in Fortran90 with full portability
 in mind, and conforms strictly to the Fortran95 standard. It uses
@@ -138,6 +137,7 @@ on 1944 processors of the Japanese Earth Simulator using 14.6 billion
 degrees of freedom stored in 2.5 terabytes of memory; see \cite{KoTsChTr03}
 and the Gordon Bell Awards News Release \url{www.sc-conference.org/sc2003/nr_finalaward.html }
 for details. It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
+It also won the BULL Joseph Fourier supercomputing award in 2010.
 
 The next release of the code will include support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10}
 as well as Convolutional or Auxiliary Differential Equation Perfectly Matched absorbing Layers (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
@@ -152,15 +152,19 @@ The corresponding Bib\TeX{} entries may be found
 in file \texttt{USER\_MANUAL/bibliography.bib} or in comments at the
 beginning of file \texttt{specfem3D.f90}.
 
+If you use the 3D southern
+California model, please cite \citet{SuSh03} (Los Angeles model), \citet{lovelyetal06}
+(Salton Trough), and \citet{hauksson2000} (southern California).
+The Moho map was determined by \citet{zhu&kanamori2000}. The 1D SoCal
+model was developed by \citet{DrHe90}.
+
 \section{Support}
 
 This material is based upon work supported by the USA National Science
 Foundation under Grants No. EAR-0406751 and EAR-0711177, by the French
 CNRS, French INRIA Sud-Ouest MAGIQUE-3D, French ANR NUMASIS under
 Grant No. ANR-05-CIGC-002, and European FP6 Marie Curie International
-Reintegration Grant No. MIRG-CT-2005-017461. 
-Older versions of the code were initially developed by Dimitri Komatitsch at Institut de Physique du Globe (France)
-and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University (USA).
+Reintegration Grant No. MIRG-CT-2005-017461.
 Any opinions, findings,
 and conclusions or recommendations expressed in this material are
 those of the authors and do not necessarily reflect the views of the
@@ -191,7 +195,7 @@ command names for your Fortran90 compiler and MPI package:
 The SPECFEM3D software package relies on the Scotch library to partition the meshes created with CUBIT. Because it is not standard, the path of this library needs to be set with the option \texttt{-{}-with-scotch-lib}. Just as an example:
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-lib=/opt/scotch/gcc64/lib
-\end{lyxcode} 
+\end{lyxcode}
 
 To compile a serial version of the code for small meshes that fit
 on one compute node and can therefore be run serially, run \texttt{configure}
@@ -284,29 +288,36 @@ message.
 \subsection{Exporting the Mesh}
 \subsection{Partitioning the Mesh with \texttt{xdecompose\_mesh\_SCOTCH}}
 
-The SPECFEM3D software package performs large scale simulations in a parallel 'Single Process Multiple Data' way. 
+The SPECFEM3D software package performs large scale simulations in a parallel 'Single Process Multiple Data' way.
 The spectral element mesh created with CUBIT needs to be distributed on the processors. This partitioning is executed once and for all prior to
-the execution of the solver so it is referred to as a static mapping.    
+the execution of the solver so it is referred to as a static mapping.
 
 An efficient partitioning is important because it leverages the overall running time of the application.
 It amounts to balance the number of elements in each slice while minimizing the communication coasts
 resulting from the placement of adjacent elements to different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the Scotch library
-which provides efficent static mapping, graph and mesh partitioning routines. Scotch is a free software package downloadable from the web page \texttt{https://gforge.inria.fr/projects/scotch/}.
+which provides efficent static mapping, graph and mesh partitioning routines. Scotch is a free software package developed by
+Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \texttt{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
 \\
- 
-Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path 
-of the Scotch library with the option \texttt{-{}-with-scotch-lib} of the \texttt{configure} script. Then you are ready to compile, 
+
+Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path
+of the Scotch library with the option \texttt{-{}-with-scotch-lib} of the \texttt{configure} script.
+For convenience we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
+in directory src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b. Please refer to file INSTALL.txt in that directory to see how to compile it.
+In the future you should be able to find for recent versions at http://www.labri.fr/perso/pelegrin/scotch/scotch\_en.html .
+\\
+
+Then you are ready to compile,
 in the directory \texttt{decompose\_mesh\_SCOTCH} type '\texttt{make decompose\_mesh\_SCOTCH}'.
 If all paths and flags have been set correctly, the executable \texttt{xdecompose\_mesh\_SCOTCH} should be produced.
 
-The partitioning is done in serial, 
-the synopsis is :
+The partitioning is done in serial for now (in the next release we will provide a parallel version of that code),
+the synopsis is:
 \begin{lyxcode}
 ./decompose\_mesh\_SCOTCH  nparts  input\_directory output\_directory
 \end{lyxcode}
 
-All the files generated by the Python scripts must be placed in the \texttt{input\_directory} folder before running the program.  
-     
+All the files generated by the Python scripts must be placed in the \texttt{input\_directory} folder before running the program.
+
 
 \section{\label{cha:Running-the-Mesher-Meshfem3D}Meshing with \texttt{xmeshfem3D}}
 
@@ -325,10 +336,10 @@ of elements. In this example we use $5^{2}=25$ processors. }
 
 \par\end{flushleft}
 
-You are now ready to compile the internal mesher. This is an alternative to CUBIT 
-for the mesh generation of relatively simple geological models. The mesher is no longer 
+You are now ready to compile the internal mesher. This is an alternative to CUBIT
+for the mesh generation of relatively simple geological models. The mesher is no longer
 dedicated to Southern California and more flexiblity is provided in this version of the package.
-   
+
 In the directory \texttt{meshfem3D} type `\texttt{make meshfem3D}'. If all paths and flags
 have been set correctly, the mesher should now compile and produce
 the executable \texttt{xmeshfem3D}.
@@ -368,8 +379,8 @@ when your model range is specified in the geographical coordinates,
 and needs to be \texttt{.true.} when your model is specified in a
 cartesian coordinates. \noun{UTM projection zone in which your simulation
 region resides.}
-\item [{\texttt{INTERFACES\_FILE }}] File in which contains the description of the topography and 
-of the interfaces between the different layers of the model, if any. 
+\item [{\texttt{INTERFACES\_FILE }}] File in which contains the description of the topography and
+of the interfaces between the different layers of the model, if any.
 The number of spectral elements in the vertical direction within each layer is also defined in this file.
 
 \item [{$\nexxi$}] The number of spectral elements along one side of the
@@ -399,15 +410,15 @@ side of the block; we must have $\nexeta=8\times c\times\nproceta$,
 where $c\ge1$ is a positive integer.
 \item [{\texttt{USE\_REGULAR\_MESH}}] set to be \texttt{.true.} if you want a perfectly regular
 mesh or \texttt{.false.} if you want to add doubling horizontal layers to coarsen the mesh. In this case, you
-also need to provide additional information by setting up the next three parameters.  
-\item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers. Must be set to \texttt{1} or \texttt{2} 
+also need to provide additional information by setting up the next three parameters.
+\item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers. Must be set to \texttt{1} or \texttt{2}
 if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}.
 \item [{\texttt{NZ\_DOUBLING\_1}}] The position of the first doubling layer (only interpreted
 if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}).
 \item [{\texttt{NZ\_DOUBLING\_2}}] The position of the second doubling layer (only interpreted
-if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.} and if \texttt{NDOUBLINGS} is set to \texttt{2}). 
+if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.} and if \texttt{NDOUBLINGS} is set to \texttt{2}).
 \item [{\texttt{CREATE\_ABAQUS\_FILES}}] Set this flag to \texttt{.true.} to save Abaqus FEA \url{www.simulia.com}
-mesh files for subsequent viewing. Turning the flag on generates files in the \texttt{LOCAL\_PATH} directory. 
+mesh files for subsequent viewing. Turning the flag on generates files in the \texttt{LOCAL\_PATH} directory.
 See Section~\ref{sec:Mesh-graphics} for a discussion of mesh viewing features.
 \item [{\texttt{CREATE\_DX\_FILES}}] Set this flag to \texttt{.true.} to save OpenDX \url{www.opendx.org}
 mesh files for subsequent viewing.
@@ -428,11 +439,11 @@ files generated by the mesher.
 \end{lyxcode}
 where
 \begin{itemize}
-     \item \texttt{Q\_flag}           : 0=no attenuation / standard \texttt{Q} attenutation value 
+     \item \texttt{Q\_flag}           : 0=no attenuation / standard \texttt{Q} attenutation value
      \item \texttt{anisotropy\_flag}  : 0=no anisotropy / 1,2,.. check with implementation in \texttt{aniso\_model.f90}
      \item \texttt{domain\_id}        : 1=acoustic / 2=elastic / 3=poroelastic
 \end{itemize}
-\item [{\texttt{NMATERIALS}}] The number of regions in the mesh. 
+\item [{\texttt{NMATERIALS}}] The number of regions in the mesh.
 In the following lines, because the mesh is regular or 'almost regular', each region is defined as :
 \begin{lyxcode}
   \texttt{XI\_begin}  \texttt{XI\_end}  \texttt{ETA\_begin}  \texttt{ETA\_end}  \texttt{material\_ID}
@@ -441,13 +452,13 @@ In the following lines, because the mesh is regular or 'almost regular', each re
 
 The topography of the model is defined as a set of elevation
  values on a regular 2D grid. It is also posible to
-define interfaces between the layers of the model in the same way. 
+define interfaces between the layers of the model in the same way.
 
 The file defined in \texttt{INTERFACES\_FILE} contains the settings of the topography grid
-and of the interfaces grids. The number 
-of interfaces, including the topography, needs to be set at the first line. Then, from the bottom 
+and of the interfaces grids. The number
+of interfaces, including the topography, needs to be set at the first line. Then, from the bottom
 to the top of the model, you need to define the grids with several parameters :
- number of points along $x$ and $y$, minimal $x$ and $y$ coordinates, spacing between points and the file 
+ number of points along $x$ and $y$, minimal $x$ and $y$ coordinates, spacing between points and the file
 in which the elevation values are stored. At the end of this file, you simply need to set the
 number of spectral elements in the vertical direction for each layer.\\
 
@@ -551,13 +562,13 @@ when your model range is specified in the geographical coordinates,
 and needs to be \texttt{.true.} when your model is specified in a
 cartesian coordinates. \noun{UTM projection zone in which your simulation
 region resides.}
-\item [{\texttt{NPROC}}] The number of MPI processors, each one is assigned one slice of the whole mesh. 
+\item [{\texttt{NPROC}}] The number of MPI processors, each one is assigned one slice of the whole mesh.
 \item [{\texttt{NSTEP}}] The number of time steps of the simulation. This controls the
 length of the numerical simulation, i.e., twice the number of time steps
 requires twice as much CPU time. This feature is not used at the time
 of meshing but is required for the solver, i.e., you may change this
 parameter after running  \texttt{xgenerate\_databases}.
-\item [{\texttt{DT}}] The length of each time step in seconds. 
+\item [{\texttt{DT}}] The length of each time step in seconds.
 If you used xmeshfem3D to generate your mesh, you should set the value suggested in \texttt{meshfem3D/OUTPUT\_FILES/output\_mesher.txt}.
 
 \item [{\texttt{OCEANS}}] Set to \texttt{.true.} if the effect of the oceans
@@ -614,7 +625,7 @@ save AVS \url{www.avs.com}, OpenDX \url{www.opendx.org}, or ParaView \url{www.pa
 mesh files for subsequent viewing. Turning the flag on generates large
 (distributed) files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
 for a discussion of mesh viewing features.
-\item [{\texttt{LOCAL\_PATH}}] Directory in which the databases and the synthetics 
+\item [{\texttt{LOCAL\_PATH}}] Directory in which the databases and the synthetics
 will be written. Generally one uses a directory on the
 local disk of the compute nodes, although on some machines these databases
 are written on a parallel (global) file system (see also the earlier
