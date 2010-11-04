@@ -57,18 +57,30 @@ by Dennis McRitchie (Princeton University, USA)
 
 FILE * fd;
 
-/*===============================================================
+/*===============================================================*/
+/*
+by Laurent Delphin (LDVenture)
+
+November 2, 2010
+
+building SpecFEM3DGlobe under Mac OS X (Snow Leopard):
+
+.. two string-based functions are not taken by gcc in charge (please kindly see
+the GNU gcc user amnual for further informations). [refers to strndup & strnlen]
+I have built them and integrated in the .c file.
+..
+
   NEW functions coded and added to make the make process operating.
-====*/
-size_t strnlen (const char *string, size_t maxlen)
+*/
+size_t mystrnlen (const char *string, size_t maxlen)
 {
   const char *end = memchr (string, '\0', maxlen);
   return end ? (size_t) (end - string) : maxlen;
 }
 
-char *strndup (char const *s, size_t n)
+char *mystrndup (char const *s, size_t n)
 {
-  size_t len = strnlen (s, n);
+  size_t len = mystrnlen (s, n);
   char *new = malloc (len + 1);
 
   if (new == NULL)
@@ -86,7 +98,7 @@ void param_open_(char * filename, int * length, int * ierr)
   char * blank;
 
   // Trim the file name.
-  fncopy = strndup(filename, *length);
+  fncopy = mystrndup(filename, *length);
   blank = strchr(fncopy, ' ');
   if (blank != NULL) {
     fncopy[blank - fncopy] = '\0';
@@ -118,7 +130,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
   char * value;
 
   // Trim the keyword name we're looking for.
-  namecopy = strndup(name, *name_len);
+  namecopy = mystrndup(name, *name_len);
   blank = strchr(namecopy, ' ');
   if (blank != NULL) {
     namecopy[blank - namecopy] = '\0';
@@ -175,7 +187,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
     }
     //    printf("Line read = %s\n", line);
     // If we have a match, extract the keyword from the line.
-    keyword = strndup(line+parameter[1].rm_so, parameter[1].rm_eo-parameter[1].rm_so);
+    keyword = mystrndup(line+parameter[1].rm_so, parameter[1].rm_eo-parameter[1].rm_so);
     // If the keyword is not the one we're looking for, check the next line.
     if (strcmp(keyword, namecopy2) != 0) {
       free(keyword);
@@ -184,7 +196,7 @@ void param_read_(char * string_read, int * string_read_len, char * name, int * n
     free(keyword);
     regfree(&compiled_pattern);
     // If it matches, extract the value from the line.
-    value = strndup(line+parameter[2].rm_so, parameter[2].rm_eo-parameter[2].rm_so);
+    value = mystrndup(line+parameter[2].rm_so, parameter[2].rm_eo-parameter[2].rm_so);
     // Clear out the return string with blanks, copy the value into it, and return.
     memset(string_read, ' ', *string_read_len);
     strncpy(string_read, value, strlen(value));

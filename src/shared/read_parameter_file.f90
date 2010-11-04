@@ -53,7 +53,7 @@
   double precision :: hdur,minval_hdur
   character(len=256) :: dummystring
   integer, external :: err_occurred
-
+  
   ! opens file Par_file
   call open_parameter_file()
 
@@ -126,7 +126,7 @@
   call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
   if(err_occurred() /= 0) return
   call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
-  if(err_occurred() /= 0) return
+  if(err_occurred() /= 0) return  
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO')
   if(err_occurred() /= 0) return
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
@@ -184,7 +184,7 @@
     stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
 
 ! close parameter file
-  call close_parameter_file()
+  call close_parameter_file()  
   
   end subroutine read_parameter_file
 

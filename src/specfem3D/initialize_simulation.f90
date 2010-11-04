@@ -175,6 +175,7 @@
   implicit none
 
   integer :: sizeprocs
+  integer :: ier
   
   ! sizeprocs returns number of processes started
   ! (should be equal to NPROC)
@@ -214,6 +215,30 @@
       stop 'MOVIE_SURFACE cannot be used when EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP is true'
     if( CREATE_SHAKEMAP ) &
       stop 'CREATE_SHAKEMAP cannot be used when EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP is true'
+  endif
+
+  ! checks directories
+  if( myrank == 0 ) then
+    ! tests if OUTPUT_FILES directory exists
+    call get_value_string(dummystring, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
+    ! note: inquire behaves differently when using intel ifort or gfortran compilers
+    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists ) 
+    open(IOUT,file=trim(dummystring)//'/dummy.txt',status='unknown',iostat=ier)
+    if( ier /= 0 ) then
+      print*,"OUTPUT_FILES directory does not work: ",trim(dummystring)
+      call exit_MPI(myrank,'error OUTPUT_FILES directory')
+    endif
+    close(IOUT,status='delete')
+    
+    ! tests if LOCAL_PATH directory exists
+    dummystring = adjustl(LOCAL_PATH)
+    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists ) 
+    open(IOUT,file=trim(dummystring)//'/dummy.txt',status='unknown',iostat=ier)
+    if( ier /= 0 ) then  
+      print*,"LOCAL_PATH directory does not work: ",trim(dummystring)
+      call exit_MPI(myrank,'error LOCAL_PATH directory')
+    endif
+    close(IOUT,status='delete')    
   endif
 
   end subroutine initialize_simulation_check
@@ -264,7 +289,3 @@
   endif
   
   end subroutine initialize_simulation_adjoint
-  
-  
-  
-  

@@ -316,8 +316,17 @@
 
       x_target(irec) = stutm_x(irec)
       y_target(irec) = stutm_y(irec)
-      z_target(irec) = elevation(irec) - stbur(irec)
-      !z_target(irec) = stbur(irec)
+      
+      
+!daniel      
+      !if( .not. SUPPRESS_UTM_PROJECTION ) then
+        ! burial depth in STATIONS file given in m
+        z_target(irec) = elevation(irec) - stbur(irec)
+      !else
+        ! alternative: burial depth is given as z value directly
+        !!z_target(irec) = stbur(irec)
+      !endif
+      
       !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
 ! examine top of the elements only (receivers always at the surface)
@@ -735,11 +744,13 @@
       if( SUPPRESS_UTM_PROJECTION ) then
         write(IMAIN,*) '     original x: ',sngl(stutm_x(irec))
         write(IMAIN,*) '     original y: ',sngl(stutm_y(irec))
+        !write(IMAIN,*) '     original z: ',sngl(stbur(irec))
       else
         write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
         write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))      
+        !write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'          
       endif
-        write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'  
+      write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'  
       write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
       write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
@@ -757,15 +768,19 @@
         write(IMAIN,*) '       gamma = ',gamma_receiver(irec)
       endif
       if( SUPPRESS_UTM_PROJECTION ) then
-         write(IMAIN,*) '         x: ',x_found(irec)
-         write(IMAIN,*) '         y: ',y_found(irec)
+        write(IMAIN,*) '         x: ',x_found(irec)
+        write(IMAIN,*) '         y: ',y_found(irec)
+        !daniel
+        !write(IMAIN,*) '         z: ',z_found(irec)
       else
-         write(IMAIN,*) '     UTM x: ',x_found(irec)
-         write(IMAIN,*) '     UTM y: ',y_found(irec)        
-        endif
-        write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
-        write(IMAIN,*) '         z: ',z_found(irec)
-        write(IMAIN,*)
+        write(IMAIN,*) '     UTM x: ',x_found(irec)
+        write(IMAIN,*) '     UTM y: ',y_found(irec)        
+        !write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
+        !write(IMAIN,*) '         z: ',z_found(irec)         
+      endif
+      write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
+      write(IMAIN,*) '         z: ',z_found(irec)
+      write(IMAIN,*)
       
 
 ! add warning if estimate is poor
@@ -878,6 +893,7 @@
   integer :: nrec, nrec_filtered, ios !, irec
 
   double precision :: stlat,stlon,stele,stbur,stutm_x,stutm_y
+  double precision :: minlat,minlon,maxlat,maxlon
   character(len=MAX_LENGTH_STATION_NAME) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
   character(len=256) :: dummystring
@@ -945,8 +961,8 @@
           write(IOUT,*) trim(station_name),' ',trim(network_name),' ',sngl(stlat), &
                        ' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
        endif
-    end if
- enddo
+      end if
+    enddo
     close(IIN)
     close(IOUT)
 
@@ -961,8 +977,23 @@
       write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered
       write(IMAIN,*) 
       write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'
-      write(IMAIN,*) '    latitude min/max : ',LATITUDE_MIN,LATITUDE_MAX
-      write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
+
+!daniel
+      if( SUPPRESS_UTM_PROJECTION ) then
+        write(IMAIN,*) '    latitude min/max : ',LATITUDE_MIN,LATITUDE_MAX
+        write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
+      else
+        ! convert edge locations from UTM back to lat/lon 
+        call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN,&
+             UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+        call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX,&
+             UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)      
+        write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
+        write(IMAIN,*) '    latitude min/max : ',minlat,maxlat
+        write(IMAIN,*) '    UTM x min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
+        write(IMAIN,*) '    UTM y min/max : ',LATITUDE_MIN,LATITUDE_MAX
+      endif
+
       write(IMAIN,*) 
     endif
 

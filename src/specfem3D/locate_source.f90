@@ -174,6 +174,18 @@
   ! get MPI starting time
   time_start = wtime()
 
+!daniel
+  ! user output
+  if( myrank == 0 ) then
+    if(SUPPRESS_UTM_PROJECTION ) then
+      write(IMAIN,*) 'no UTM projection:'
+      !write(IMAIN,*) '  (lon/lat/depth) becomes directly (x/y/z) coordinates'
+    else
+      write(IMAIN,*) 'UTM projection:'
+      write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
+    endif
+  endif
+
   ! loop on all the sources
   do isource = 1,NSOURCES
 
@@ -194,11 +206,11 @@
     Mxz(isource) = + moment_tensor(5,isource)
     Myz(isource) = - moment_tensor(4,isource)
     Mxy(isource) = - moment_tensor(6,isource)
-
+    
     ! gets UTM x,y
     call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource), &
                    UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
-
+    
     ! get approximate topography elevation at source long/lat coordinates
     ! set distance to huge initial value
     distmin = HUGEVAL
@@ -295,8 +307,14 @@
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
     
-    ! depth in CMTSOLUTION given in km
-    z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
+!daniel
+    !if( .not. SUPPRESS_UTM_PROJECTION ) then
+      ! depth in CMTSOLUTION given in km    
+      z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
+    !else
+      ! alternative: depth is given as z value directly
+      !!z_target_source = depth(isource)
+    !endif
 
     ! set distance to huge initial value
     distmin = HUGEVAL
@@ -807,9 +825,13 @@
         if( SUPPRESS_UTM_PROJECTION ) then
           write(IMAIN,*) '             x: ',utm_x_source(isource)
           write(IMAIN,*) '             y: ',utm_y_source(isource)
+          !daniel
+          !write(IMAIN,*) '         z: ',depth(isource),' km'
         else
           write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
           write(IMAIN,*) '         UTM y: ',utm_y_source(isource)        
+          !write(IMAIN,*) '         depth: ',depth(isource),' km'
+          !write(IMAIN,*) 'topo elevation: ',elevation(isource)
         endif
         write(IMAIN,*) '         depth: ',depth(isource),' km'
         write(IMAIN,*) 'topo elevation: ',elevation(isource)
@@ -823,6 +845,7 @@
         else
           write(IMAIN,*) '         UTM x: ',x_found_source(isource)
           write(IMAIN,*) '         UTM y: ',y_found_source(isource)        
+          !write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
         endif
         write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
         write(IMAIN,*) '             z: ',z_found_source(isource)
@@ -878,6 +901,10 @@
     write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance_source)),' m'
     write(IMAIN,*)
 
+    ! sets new utm coordinates for best locations
+    utm_x_source(:) = x_found_source(:)
+    utm_y_source(:) = y_found_source(:)
+
   endif     ! end of section executed by main process only
 
 ! main process broadcasts the results to all the slices
@@ -886,6 +913,8 @@
   call bcast_all_dp(xi_source,NSOURCES)
   call bcast_all_dp(eta_source,NSOURCES)
   call bcast_all_dp(gamma_source,NSOURCES)
+  call bcast_all_dp(utm_x_source,NSOURCES)
+  call bcast_all_dp(utm_y_source,NSOURCES)
 
 ! elapsed time since beginning of source detection
   if(myrank == 0) then
