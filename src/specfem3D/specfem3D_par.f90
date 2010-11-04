@@ -38,10 +38,10 @@ module specfem_par
 ! main parameter module for specfem simulations
 
   use constants
-  
+
   implicit none
 
-! attenuation  
+! attenuation
   integer :: NSPEC_ATTENUATION_AB
   integer, dimension(:,:,:,:),allocatable :: iflag_attenuation_store
 
@@ -56,7 +56,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: abs_boundary_jacobian2Dw
   integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
   integer, dimension(:), allocatable :: abs_boundary_ispec
-  integer :: num_abs_boundary_faces  
+  integer :: num_abs_boundary_faces
 
 ! free surface arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: free_surface_normal
@@ -83,7 +83,7 @@ module specfem_par
   real(kind=CUSTOM_REAL) deltat,deltatover2,deltatsqover2
 
 ! time loop step
-  integer :: it 
+  integer :: it
 
 ! parameters for the source
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
@@ -98,7 +98,7 @@ module specfem_par
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: NSOURCES
-  
+
 ! receiver information
   character(len=256) :: rec_filename,filtered_rec_filename,dummystring
   integer :: nrec,nrec_local,nrec_tot_found
@@ -149,11 +149,11 @@ module specfem_par
 
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS,ABSORBING_CONDITIONS,ANISOTROPY
-            
+
   logical :: SAVE_FORWARD,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
   logical :: SUPPRESS_UTM_PROJECTION
-  
+
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
 
   character(len=256) OUTPUT_FILES,LOCAL_PATH,prname,prname_Q
@@ -184,7 +184,7 @@ module specfem_par
   logical, dimension(:), allocatable :: iglob_is_surface_external_mesh
   logical, dimension(:), allocatable :: ispec_is_surface_external_mesh
 
-! MPI partition surfaces 
+! MPI partition surfaces
   logical, dimension(:), allocatable :: ispec_is_inner
 
 ! maximum of the norm of the displacement
@@ -226,7 +226,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,&
     Mzz_der,Mxy_der,Mxz_der,Myz_der
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps  
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
 
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
@@ -236,7 +236,7 @@ module specfem_par
 
   ! length of reading blocks
   integer :: NTSTEP_BETWEEN_READ_ADJSRC
-  
+
 end module specfem_par
 
 
@@ -249,14 +249,14 @@ module specfem_par_elastic
   use constants,only: CUSTOM_REAL,N_SLS,NUM_REGIONS_ATTENUATION
   implicit none
 
-! memory variables and standard linear solids for attenuation
-  double precision, dimension(N_SLS) :: tau_mu_dble,tau_sigma_dble,beta_dble
-  double precision factor_scale_dble,one_minus_sum_beta_dble
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: tau_mu,tau_sigma,beta
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: factor_scale,one_minus_sum_beta
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: &
-    tauinv,factor_common, alphaval,betaval,gammaval
-    
+  ! memory variables and standard linear solids for attenuation
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
+  real(kind=CUSTOM_REAL) :: min_resolved_period
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
+    alphaval,betaval,gammaval
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
     R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
@@ -265,7 +265,7 @@ module specfem_par_elastic
 
 ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
-  
+
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
@@ -283,7 +283,7 @@ module specfem_par_elastic
 ! for attenuation and/or kernel simulations
   integer :: NSPEC_STRAIN_ONLY
   logical :: COMPUTE_AND_STORE_STRAIN
-  
+
 ! material flag
   logical, dimension(:), allocatable :: ispec_is_elastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_elastic
@@ -292,18 +292,18 @@ module specfem_par_elastic
   logical :: ELASTIC_SIMULATION
 
 
-! ADJOINT elastic 
+! ADJOINT elastic
 
   ! (backward/reconstructed) wavefields
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_displ, b_veloc, b_accel
 
   ! backward attenuation arrays
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: &
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     b_alphaval, b_betaval, b_gammaval
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
     b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz      
+    b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
 
   integer:: NSPEC_ATT_AND_KERNEL
@@ -327,7 +327,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
-      
+
 end module specfem_par_elastic
 
 !=====================================================================
@@ -344,7 +344,7 @@ module specfem_par_acoustic
                         potential_dot_acoustic,potential_dot_dot_acoustic
 
 ! density
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore  
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
@@ -360,7 +360,7 @@ module specfem_par_acoustic
   logical, dimension(:), allocatable :: ispec_is_acoustic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_acoustic
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
-  
+
   logical :: ACOUSTIC_SIMULATION
 
 ! ADJOINT acoustic
@@ -401,7 +401,7 @@ module specfem_par_poroelastic
   logical, dimension(:), allocatable :: ispec_is_poroelastic
 
   logical :: POROELASTIC_SIMULATION
-  
+
 end module specfem_par_poroelastic
 
 
@@ -418,11 +418,11 @@ module specfem_par_movie
 ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
-  
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
                                 dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
 
-! shakemovies  
+! shakemovies
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_external_mesh
@@ -457,11 +457,11 @@ module specfem_par_movie
 
 ! movie parameters
   double precision :: HDUR_MOVIE
-  integer :: NTSTEP_BETWEEN_FRAMES  
+  integer :: NTSTEP_BETWEEN_FRAMES
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
             USE_HIGHRES_FOR_MOVIES
 
-  logical :: MOVIE_SIMULATION  
+  logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie
 

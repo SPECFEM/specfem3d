@@ -31,27 +31,26 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                     hprimewgll_xx,hprimewgll_xxT, &
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     kappastore,mustore,jacobian,ibool, &
-                                    ATTENUATION,USE_OLSEN_ATTENUATION, &
+                                    ATTENUATION, &
                                     one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
                                     NSPEC_ATTENUATION_AB, &
                                     R_xx,R_yy,R_xy,R_xz,R_yz, &
                                     epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                                    iflag_attenuation_store,rho_vs, &
                                     ANISOTROPY,NSPEC_ANISO, &
                                     c11store,c12store,c13store,c14store,c15store,c16store,&
                                     c22store,c23store,c24store,c25store,c26store,c33store,&
                                     c34store,c35store,c36store,c44store,c45store,c46store,&
                                     c55store,c56store,c66store, &
                                     SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                                    NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &                                     
+                                    NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                                     is_moho_top,is_moho_bot, &
                                     dsdx_top,dsdx_bot, &
                                     ispec2D_moho_top,ispec2D_moho_bot, &
                                     num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
                                     phase_ispec_inner_elastic)
-                                    
-                                    
+
+
 ! computes elastic tensor term
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
@@ -77,23 +76,21 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
-! memory variables and standard linear solids for attenuation    
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
+! memory variables and standard linear solids for attenuation
+  logical :: ATTENUATION
   logical :: COMPUTE_AND_STORE_STRAIN
   integer :: NSPEC_STRAIN_ONLY, NSPEC_ADJOINT
   integer :: NSPEC_ATTENUATION_AB
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, &
-      alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
       R_xx,R_yy,R_xy,R_xz,R_yz
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vs
 
 ! anisotropy
   logical :: ANISOTROPY
@@ -110,14 +107,14 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
 
 ! adjoint simulations
   integer :: SIMULATION_TYPE
-  integer :: NSPEC_BOUN,NSPEC2D_MOHO 
+  integer :: NSPEC_BOUN,NSPEC2D_MOHO
 
   ! moho kernel
   real(kind=CUSTOM_REAL),dimension(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO):: &
-    dsdx_top,dsdx_bot 
+    dsdx_top,dsdx_bot
   logical,dimension(NSPEC_BOUN) :: is_moho_top,is_moho_bot
   integer :: ispec2D_moho_top, ispec2D_moho_bot
-      
+
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
@@ -159,10 +156,10 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
-  real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
+  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3
+  real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc
+  real(kind=CUSTOM_REAL) Sn,Snp1
   real(kind=CUSTOM_REAL) templ
-  real(kind=CUSTOM_REAL) vs_val
 
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
@@ -180,8 +177,8 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   ! local anisotropy parameters
   real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-  
-  integer i_SLS,iselected
+
+  integer i_SLS
   integer ispec,iglob,ispec_p,num_elements
   integer i,j,k
 
@@ -193,7 +190,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   else
     num_elements = nspec_inner_elastic
   endif
-  
+
   do ispec_p = 1,num_elements
 
         ! returns element id from stored element list
@@ -208,7 +205,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
           endif
         endif ! adjoint
 
-        ! stores displacment values in local array      
+        ! stores displacment values in local array
         do k=1,NGLLZ
           do j=1,NGLLY
             do i=1,NGLLX
@@ -243,7 +240,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,5)*B3_m1_m2_5points(5,j)
           enddo
         enddo
-        
+
         !   call mxm_m1_m1_5points(dummyx_loc(1,1,k),dummyy_loc(1,1,k),dummyz_loc(1,1,k), &
         !          hprime_xxT,tempx2(1,1,k),tempy2(1,1,k),tempz2(1,1,k))
         do j=1,m1
@@ -364,20 +361,10 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
               kappal = kappastore(i,j,k,ispec)
               mul = mustore(i,j,k,ispec)
 
-              ! attenuation           
+              ! attenuation
               if(ATTENUATION) then
-                ! uses scaling rule similar to Olsen et al. (2003) or mesh flag
-                if(USE_OLSEN_ATTENUATION) then
-                  vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-                  call get_attenuation_model_olsen( vs_val, iselected )
-                else
-                  ! iflag from (CUBIT) mesh      
-                  iselected = iflag_attenuation_store(i,j,k,ispec)                
-                endif
-
                 ! use unrelaxed parameters if attenuation
-                mul = mul * one_minus_sum_beta(iselected)
-                 
+                mul  = mul * one_minus_sum_beta(i,j,k,ispec)
               endif
 
   ! full anisotropic case, stress calculations
@@ -433,21 +420,68 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                 sigma_yz = mul*duzdyl_plus_duydzl
 
               endif ! ANISOTROPY
-              
+
               ! subtract memory variables if attenuation
               if(ATTENUATION) then
-                do i_sls = 1,N_SLS
-                  R_xx_val = R_xx(i,j,k,ispec,i_sls)
-                  R_yy_val = R_yy(i,j,k,ispec,i_sls)
-                  sigma_xx = sigma_xx - R_xx_val
-                  sigma_yy = sigma_yy - R_yy_val
-                  sigma_zz = sigma_zz + R_xx_val + R_yy_val
+! way 1
+!                do i_sls = 1,N_SLS
+!                  R_xx_val = R_xx(i,j,k,ispec,i_sls)
+!                  R_yy_val = R_yy(i,j,k,ispec,i_sls)
+!                  sigma_xx = sigma_xx - R_xx_val
+!                  sigma_yy = sigma_yy - R_yy_val
+!                  sigma_zz = sigma_zz + R_xx_val + R_yy_val
+!                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
+!                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
+!                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
+!                enddo
+
+! way 2
+! note: this should help compilers to pipeline the code and make better use of the cache;
+!          depending on compilers, it can further decrease the computation time by ~ 30%.
+!          by default, N_SLS = 3, therefor we take steps of 3
+                do i_sls = 1,mod(N_SLS,3)
+                  R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
+                  R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
+                  sigma_xx = sigma_xx - R_xx_val1
+                  sigma_yy = sigma_yy - R_yy_val1
+                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                enddo               
+                enddo
+
+                do i_sls = mod(N_SLS,3)+1,N_SLS,3
+                  R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
+                  R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
+                  sigma_xx = sigma_xx - R_xx_val1
+                  sigma_yy = sigma_yy - R_yy_val1
+                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1
+                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
+                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
+                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
+
+                  R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
+                  R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
+                  sigma_xx = sigma_xx - R_xx_val2
+                  sigma_yy = sigma_yy - R_yy_val2
+                  sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2
+                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+1)
+                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
+                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
+
+                  R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
+                  R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
+                  sigma_xx = sigma_xx - R_xx_val3
+                  sigma_yy = sigma_yy - R_yy_val3
+                  sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3
+                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+2)
+                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+2)
+                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
+                enddo
+
+
               endif
-        
+
               ! form dot product with test vector, symmetric form
               tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl)
               tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl)
@@ -554,40 +588,32 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
 
               !  update memory variables based upon the Runge-Kutta scheme
               if(ATTENUATION) then
-                 
+
                  ! use Runge-Kutta scheme to march in time
                  do i_sls = 1,N_SLS
 
-                    ! get coefficients for that standard linear solid
-                    if( USE_OLSEN_ATTENUATION ) then
-                      vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-                      call get_attenuation_model_olsen( vs_val, iselected )
-                    else
-                      iselected = iflag_attenuation_store(i,j,k,ispec)
-                    endif
-                    
-                    factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
-                    
-                    alphaval_loc = alphaval(iselected,i_sls)
-                    betaval_loc = betaval(iselected,i_sls)
-                    gammaval_loc = gammaval(iselected,i_sls)
-                    
+                    factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+
+                    alphaval_loc = alphaval(i_sls)
+                    betaval_loc = betaval(i_sls)
+                    gammaval_loc = gammaval(i_sls)
+
                     ! term in xx
                     Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
                     Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
                     R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1      
+                                      betaval_loc * Sn + gammaval_loc * Snp1
                     ! term in yy
                     Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
                     Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
                     R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
                                       betaval_loc * Sn + gammaval_loc * Snp1
-                    ! term in zz not computed since zero trace                    
+                    ! term in zz not computed since zero trace
                     ! term in xy
                     Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
                     Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
                     R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1                  
+                                      betaval_loc * Sn + gammaval_loc * Snp1
                     ! term in xz
                     Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
                     Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
@@ -598,7 +624,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                     Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
                     R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
                                       betaval_loc * Sn + gammaval_loc * Snp1
-                    
+
                  enddo   ! end of loop on memory variables
 
               endif  !  end attenuation
@@ -619,4 +645,3 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   enddo  ! spectral element loop
 
 end subroutine compute_forces_elastic_Dev
-

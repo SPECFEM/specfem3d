@@ -54,15 +54,14 @@ subroutine compute_forces_elastic()
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION, &
+                        ATTENUATION, &
                         one_minus_sum_beta,factor_common, &
                         alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB, &
                         R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        iflag_attenuation_store, &
-                        rho_vs,ANISOTROPY,NSPEC_ANISO, &
+                        ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
                         c34store,c35store,c36store,c44store,c45store,c46store,&
@@ -81,15 +80,14 @@ subroutine compute_forces_elastic()
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,&
+                        ATTENUATION,&
                         one_minus_sum_beta,factor_common, &
                         alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB, &
                         R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        iflag_attenuation_store,&
-                        rho_vs,ANISOTROPY,NSPEC_ANISO, &
+                        ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
                         c34store,c35store,c36store,c44store,c45store,c46store,&
@@ -112,15 +110,14 @@ subroutine compute_forces_elastic()
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION, &
+                        ATTENUATION, &
                         one_minus_sum_beta,factor_common, &
                         b_alphaval,b_betaval,b_gammaval, &
                         NSPEC_ATTENUATION_AB, &
                         b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
                         b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                        iflag_attenuation_store, &
-                        rho_vs,ANISOTROPY,NSPEC_ANISO, &
+                        ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
                         c34store,c35store,c36store,c44store,c45store,c46store,&
@@ -140,15 +137,14 @@ subroutine compute_forces_elastic()
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION,&
+                        ATTENUATION,&
                         one_minus_sum_beta,factor_common, &
                         b_alphaval,b_betaval,b_gammaval,&
                         NSPEC_ATTENUATION_AB, &
                         b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
                         b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,&
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                        iflag_attenuation_store,&
-                        rho_vs,ANISOTROPY,NSPEC_ANISO, &
+                        ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
                         c34store,c35store,c36store,c44store,c45store,c46store,&

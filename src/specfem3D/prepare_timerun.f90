@@ -32,7 +32,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  
+
   implicit none
   character(len=256) :: plot_file
 
@@ -41,7 +41,7 @@
      MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_GIF_IMAGE ) then
     MOVIE_SIMULATION = .true.
   else
-    MOVIE_SIMULATION = .false.  
+    MOVIE_SIMULATION = .false.
   endif
 
   ! user info
@@ -121,7 +121,7 @@
     ! put negligible initial value to avoid very slow underflow trapping
     if(FIX_UNDERFLOW_PROBLEM) potential_acoustic(:) = VERYSMALLVAL
   endif
-  
+
   ! initialize elastic arrays to zero/verysmallvall
   if( ELASTIC_SIMULATION ) then
     displ(:,:) = 0._CUSTOM_REAL
@@ -147,29 +147,29 @@
     allocate(seismograms_d(NDIM,nrec_local,NSTEP))
     allocate(seismograms_v(NDIM,nrec_local,NSTEP))
     allocate(seismograms_a(NDIM,nrec_local,NSTEP))
-    
+
     ! initialize seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
-    seismograms_a(:,:,:) = 0._CUSTOM_REAL    
-  endif  
+    seismograms_a(:,:,:) = 0._CUSTOM_REAL
+  endif
 
   ! prepares attenuation arrays
   call prepare_timerun_attenuation()
 
-  ! initializes PML arrays  
-  if( ABSORBING_CONDITIONS  ) then    
-    if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then 
+  ! initializes PML arrays
+  if( ABSORBING_CONDITIONS  ) then
+    if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then
       write(IMAIN,*) 'NOTE: adjoint simulations and PML not supported yet...'
-    else  
-      if( ABSORB_USE_PML ) then 
-        call PML_initialize()              
+    else
+      if( ABSORB_USE_PML ) then
+        call PML_initialize()
       endif
     endif
   endif
 
   ! opens source time function file
-  if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then  
+  if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
     ! print the source-time function
     if(NSOURCES == 1) then
       plot_file = '/plot_source_time_function.txt'
@@ -182,7 +182,7 @@
     endif
     open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown')
   endif
-  
+
   ! user output
   if(myrank == 0) then
     write(IMAIN,*)
@@ -194,9 +194,9 @@
 
   ! prepares ADJOINT simulations
   call prepare_timerun_adjoint()
-  
+
   end subroutine prepare_timerun
-  
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -208,7 +208,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   implicit none
-    
+
 ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
@@ -227,9 +227,9 @@
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
-    
+
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass <= 0._CUSTOM_REAL) rmass = 1._CUSTOM_REAL    
+    where(rmass <= 0._CUSTOM_REAL) rmass = 1._CUSTOM_REAL
     rmass(:) = 1._CUSTOM_REAL / rmass(:)
 
     if(OCEANS ) then
@@ -239,10 +239,10 @@
     endif
 
   endif ! ELASTIC_SIMULATION
-  
+
   if(POROELASTIC_SIMULATION) then
-    
-    stop 'poroelastic simulation not implemented yet'  
+
+    stop 'poroelastic simulation not implemented yet'
     ! but would be something like this...
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -261,7 +261,7 @@
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
 
   endif ! POROELASTIC_SIMULATION
-  
+
   if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
 
@@ -280,74 +280,120 @@
   implicit none
 
   ! local parameters
-  double precision :: scale_factor
+  double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble
+  double precision factor_scale_dble,one_minus_sum_beta_dble
+  double precision :: Q_mu
+  double precision :: f_c_source
+  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: beta
+  real(kind=CUSTOM_REAL):: scale_factor
   real(kind=CUSTOM_REAL):: vs_val
   integer :: i,j,k,ispec
-  integer :: iattenuation,iselected
+  integer :: iselected ! iattenuation
 
-! if attenuation is on, shift PREM to right frequency
-! rescale mu in PREM to average frequency for attenuation
+
+  ! if attenuation is on, shift shear moduli to right frequency
+  ! rescale mu to average (central) frequency for attenuation
   if(ATTENUATION) then
 
-! get and store PREM attenuation model
-    do iattenuation = 1,NUM_REGIONS_ATTENUATION
+    ! initializes arrays
+    one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
+    factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
 
-      call get_attenuation_model(myrank,iattenuation,tau_mu_dble, &
-        tau_sigma_dble,beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
+    ! precalculates tau_sigma depending on period band (constant for all Q_mu)
+    call get_attenuation_constants(myrank,min_resolved_period,&
+              tau_sigma_dble,f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
-      ! distinguish between single and double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
-        tau_mu(iattenuation,:) = sngl(tau_mu_dble(:))
-        tau_sigma(iattenuation,:) = sngl(tau_sigma_dble(:))
-        beta(iattenuation,:) = sngl(beta_dble(:))
-        factor_scale(iattenuation) = sngl(factor_scale_dble)
-        one_minus_sum_beta(iattenuation) = sngl(one_minus_sum_beta_dble)
-      else
-        tau_mu(iattenuation,:) = tau_mu_dble(:)
-        tau_sigma(iattenuation,:) = tau_sigma_dble(:)
-        beta(iattenuation,:) = beta_dble(:)
-        factor_scale(iattenuation) = factor_scale_dble
-        one_minus_sum_beta(iattenuation) = one_minus_sum_beta_dble
-      endif
-    enddo
+    ! determines alphaval,betaval,gammaval for runge-kutta
+    if(CUSTOM_REAL == SIZE_REAL) then
+      tau_sigma(:) = sngl(tau_sigma_dble(:))
+    else
+      tau_sigma(:) = tau_sigma_dble(:)
+    endif
+    call get_attenuation_memory_values(tau_sigma,deltat,alphaval,betaval,gammaval)
 
-! rescale shear modulus according to attenuation model
+    ! precalculates the negative inverse of tau_sigma
+    tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
+
+    ! rescale shear modulus according to attenuation model
     do ispec = 1,NSPEC_AB
+
+      ! skips non elastic elements
+      if( ispec_is_elastic(ispec) .eqv. .false. ) cycle
+
+      ! determines attenuation factors for each GLL point
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
 
-            ! use scaling rule similar to Olsen et al. (2003)          
+            ! use scaling rule similar to Olsen et al. (2003)
             !! We might need to fix the attenuation part for the anisotropy case
             !! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
             if(USE_OLSEN_ATTENUATION) then
               vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-              call get_attenuation_model_olsen( vs_val, iselected )
-            else                        
-              ! takes iflag set in (CUBIT) mesh         
+              call get_attenuation_model_olsen( vs_val, Q_mu )
+            else
+              ! takes iflag set in (CUBIT) mesh
               iselected = iflag_attenuation_store(i,j,k,ispec)
+
+              ! attenuation zero flag
+              if( iselected == 0 ) cycle
+
+              ! determines Q_mu
+              select case(iselected)
+              case(IATTENUATION_SEDIMENTS_40)
+                Q_mu = 40.000000d0
+              case(IATTENUATION_SEDIMENTS_50)
+                Q_mu = 50.000000d0
+              case(IATTENUATION_SEDIMENTS_60)
+                Q_mu = 60.000000d0
+              case(IATTENUATION_SEDIMENTS_70)
+                Q_mu = 70.000000d0
+              case(IATTENUATION_SEDIMENTS_80)
+                Q_mu = 80.000000d0
+              case(IATTENUATION_SEDIMENTS_90)
+                Q_mu = 90.000000d0
+              case(IATTENUATION_SEDIMENTS_100)
+                Q_mu = 100.000000d0
+              case(IATTENUATION_SEDIMENTS_110)
+                Q_mu = 110.000000d0
+              case(IATTENUATION_SEDIMENTS_120)
+                Q_mu = 120.000000d0
+              case(IATTENUATION_SEDIMENTS_130)
+                Q_mu = 130.000000d0
+              case(IATTENUATION_SEDIMENTS_140)
+                Q_mu = 140.000000d0
+              case(IATTENUATION_SEDIMENTS_150)
+                Q_mu = 150.000000d0
+              case(IATTENUATION_BEDROCK)
+                Q_mu = 9000.d0
+              case default
+                call exit_MPI(myrank,'wrong attenuation flag in mesh')
+              end select
+
             endif
-            
-            ! scales only mu             
-            scale_factor = factor_scale(iselected)
+
+            ! gets beta, on_minus_sum_beta and factor_scale
+            call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
+                              f_c_source,tau_sigma_dble, &
+                              beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
+
+            ! stores factor for unrelaxed parameter
+            one_minus_sum_beta(i,j,k,ispec) = one_minus_sum_beta_dble
+
+            ! stores scale factor for runge-kutta
+            beta(:) = beta_dble(:)
+            factor_common(:,i,j,k,ispec) = 2._CUSTOM_REAL * beta(:) * tauinv(:)
+
+            ! scales only mu moduli
+            scale_factor = factor_scale_dble
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
-            
+
           enddo
         enddo
       enddo
     enddo
-
-! precompute Runge-Kutta coefficients if attenuation
-    tauinv(:,:) = - 1._CUSTOM_REAL / tau_sigma(:,:)
-    factor_common(:,:) = 2._CUSTOM_REAL * beta(:,:) * tauinv(:,:)
-    alphaval(:,:) = 1 + deltat*tauinv(:,:) + deltat**2*tauinv(:,:)**2 / 2._CUSTOM_REAL &
-                    + deltat**3*tauinv(:,:)**3 / 6._CUSTOM_REAL &
-                    + deltat**4*tauinv(:,:)**4 / 24._CUSTOM_REAL
-    betaval(:,:) = deltat / 2._CUSTOM_REAL + deltat**2*tauinv(:,:) / 3._CUSTOM_REAL &
-                   + deltat**3*tauinv(:,:)**2 / 8._CUSTOM_REAL &
-                   + deltat**4*tauinv(:,:)**3 / 24._CUSTOM_REAL
-    gammaval(:,:) = deltat / 2._CUSTOM_REAL + deltat**2*tauinv(:,:) / 6._CUSTOM_REAL &
-                    + deltat**3*tauinv(:,:)**2 / 24._CUSTOM_REAL
 
     ! clear memory variables if attenuation
     ! initialize memory variables for attenuation
@@ -370,7 +416,7 @@
       R_xz(:,:,:,:,:) = VERYSMALLVAL
       R_yz(:,:,:,:,:) = VERYSMALLVAL
     endif
-  endif  
+  endif
 
   end subroutine prepare_timerun_attenuation
 
@@ -390,7 +436,7 @@
   implicit none
 
   integer :: ier
-  
+
 ! seismograms
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2 ) then
     ! allocate Frechet derivatives array
@@ -405,15 +451,15 @@
     Mxz_der = 0._CUSTOM_REAL
     Myz_der = 0._CUSTOM_REAL
     sloc_der = 0._CUSTOM_REAL
-    
+
     allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
     seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-  endif  
+  endif
 
 ! timing
   if (SIMULATION_TYPE == 3) then
-  
-    ! backward/reconstructed wavefields: time stepping is in time-reversed sense 
+
+    ! backward/reconstructed wavefields: time stepping is in time-reversed sense
     ! (negative time increments)
     if(CUSTOM_REAL == SIZE_REAL) then
       b_deltat = - sngl(DT)
@@ -422,24 +468,19 @@
     endif
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
-    
+
   endif
 
 ! attenuation backward memories
   if( ATTENUATION .and. SIMULATION_TYPE == 3 ) then
-    ! precompute Runge-Kutta coefficients if attenuation  
-    b_alphaval(:,:) = 1 + b_deltat*tauinv(:,:) + b_deltat**2*tauinv(:,:)**2 / 2._CUSTOM_REAL &
-                      + b_deltat**3*tauinv(:,:)**3 / 6._CUSTOM_REAL &
-                      + b_deltat**4*tauinv(:,:)**4 / 24._CUSTOM_REAL
-    b_betaval(:,:) = b_deltat / 2._CUSTOM_REAL + b_deltat**2*tauinv(:,:) / 3._CUSTOM_REAL &
-                      + b_deltat**3*tauinv(:,:)**2 / 8._CUSTOM_REAL &
-                      + b_deltat**4*tauinv(:,:)**3 / 24._CUSTOM_REAL
-    b_gammaval(:,:) = b_deltat / 2._CUSTOM_REAL + b_deltat**2*tauinv(:,:) / 6._CUSTOM_REAL &
-                      + b_deltat**3*tauinv(:,:)**2 / 24._CUSTOM_REAL
+
+    ! precompute Runge-Kutta coefficients if attenuation
+    call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
+
   endif
 
 ! initializes adjoint kernels and reconstructed/backward wavefields
-  if (SIMULATION_TYPE == 3)  then 
+  if (SIMULATION_TYPE == 3)  then
     ! elastic domain
     if( ELASTIC_SIMULATION ) then
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
@@ -464,15 +505,15 @@
          b_epsilondev_xy = 0._CUSTOM_REAL
          b_epsilondev_xz = 0._CUSTOM_REAL
          b_epsilondev_yz = 0._CUSTOM_REAL
-      endif  
-      
+      endif
+
     endif
-    
+
     ! acoustic domain
     if( ACOUSTIC_SIMULATION ) then
       rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
       kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
-      
+
       ! reconstructed/backward acoustic potentials
       b_potential_acoustic = 0._CUSTOM_REAL
       b_potential_dot_acoustic = 0._CUSTOM_REAL
@@ -487,34 +528,36 @@
     ispec2D_moho_top = 0
     ispec2D_moho_bot = 0
   endif
-  
-! stacey absorbing fields will be reconstructed for adjoint simulations 
+
+! stacey absorbing fields will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
   if( ABSORBING_CONDITIONS ) then
-  
+
     ! opens absorbing wavefield saved/to-be-saved by forward simulations
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then
 
       b_num_abs_boundary_faces = num_abs_boundary_faces
-      
+
       ! elastic domains
       if( ELASTIC_SIMULATION) then
         ! allocates wavefield
         allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces))
-        
+
         b_reclen_field = CUSTOM_REAL * (NDIM * NGLLSQUARE * num_abs_boundary_faces)
-      
+
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
           open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
                 action='read',form='unformatted',access='direct', &
-                recl=b_reclen_field+2*4 )
+                recl=b_reclen_field+2*4,iostat=ier )
+          if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_field.bin file')
         else
           ! opens new file
           open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
                 form='unformatted',access='direct',&
-                recl=b_reclen_field+2*4 )
+                recl=b_reclen_field+2*4,iostat=ier )
+          if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_field.bin file')
         endif
       endif
 
@@ -522,32 +565,34 @@
       if( ACOUSTIC_SIMULATION) then
         ! allocates wavefield
         allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces))
-        
+
         b_reclen_potential = CUSTOM_REAL * (NGLLSQUARE * num_abs_boundary_faces)
-      
+
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
           open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='old',&
                 action='read',form='unformatted',access='direct', &
-                recl=b_reclen_potential+2*4 )
+                recl=b_reclen_potential+2*4,iostat=ier )
+          if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
         else
           ! opens new file
           open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='unknown',&
                 form='unformatted',access='direct',&
-                recl=b_reclen_potential+2*4 )
+                recl=b_reclen_potential+2*4,iostat=ier )
+          if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
         endif
-      endif      
-      
+      endif
+
     else
       ! dummy array
       b_num_abs_boundary_faces = 1
       if( ELASTIC_SIMULATION ) &
         allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces))
-        
+
       if( ACOUSTIC_SIMULATION ) &
         allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces))
-        
+
     endif
-  endif  
-  
+  endif
+
   end subroutine prepare_timerun_adjoint

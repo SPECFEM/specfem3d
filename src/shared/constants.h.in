@@ -266,6 +266,16 @@
 ! number of standard linear solids in parallel for attenuation
   integer, parameter :: N_SLS = 3
 
+! computation of standard linear solids
+! ATTENUATION_COMP_RESOLUTION: Number of Digits after decimal
+! ATTENUATION_COMP_MAXIMUM:    Maximum Q Value
+  integer, parameter :: ATTENUATION_COMP_RESOLUTION = 1
+  integer, parameter :: ATTENUATION_COMP_MAXIMUM    = 9000
+
+! reference frequency for target velocity values in velocity model
+! arbitrarily set to typical resolution of model (3 sec)
+  double precision, parameter :: ATTENUATION_f0_REFERENCE = 0.3d0
+
 ! define flag for regions for anisotropy
   integer, parameter :: IANISOTROPY_MODEL1 = 1
   integer, parameter :: IANISOTROPY_MODEL2 = 2  

@@ -30,12 +30,11 @@ subroutine compute_forces_elastic_noDev( iphase, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool,&
-                        ATTENUATION,USE_OLSEN_ATTENUATION,&
+                        ATTENUATION,&
                         one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        iflag_attenuation_store,rho_vs,&
                         ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
@@ -52,7 +51,7 @@ subroutine compute_forces_elastic_noDev( iphase, &
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       NUM_REGIONS_ATTENUATION,N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS
-                       
+
   implicit none
 
   !include "constants.h"
@@ -81,22 +80,20 @@ subroutine compute_forces_elastic_noDev( iphase, &
 !  logical, dimension(NSPEC_AB) :: ispec_is_inner
 !  logical :: phase_is_inner
 
-! memory variables and standard linear solids for attenuation    
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
-  logical :: COMPUTE_AND_STORE_STRAIN  
+! memory variables and standard linear solids for attenuation
+  logical :: ATTENUATION
+  logical :: COMPUTE_AND_STORE_STRAIN
   integer :: NSPEC_STRAIN_ONLY, NSPEC_ADJOINT
   integer :: NSPEC_ATTENUATION_AB
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: iflag_attenuation_store
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION) :: one_minus_sum_beta
-  real(kind=CUSTOM_REAL), dimension(NUM_REGIONS_ATTENUATION,N_SLS) :: factor_common, alphaval,betaval,gammaval
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
        R_xx,R_yy,R_xy,R_xz,R_yz
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vs
 
 ! anisotropy
   logical :: ANISOTROPY
@@ -122,7 +119,7 @@ subroutine compute_forces_elastic_noDev( iphase, &
     dsdx_top,dsdx_bot
   logical,dimension(NSPEC_BOUN) :: is_moho_top,is_moho_bot
   integer :: ispec2D_moho_top, ispec2D_moho_bot
-    
+
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
@@ -155,9 +152,8 @@ subroutine compute_forces_elastic_noDev( iphase, &
   real(kind=CUSTOM_REAL) R_xx_val,R_yy_val
   real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
   real(kind=CUSTOM_REAL) templ
-  real(kind=CUSTOM_REAL) vs_val
 
-  integer i_SLS,iselected
+  integer i_SLS
   integer ispec,iglob,ispec_p,num_elements
   integer i,j,k,l
 
@@ -173,7 +169,7 @@ subroutine compute_forces_elastic_noDev( iphase, &
     ispec = phase_ispec_inner_elastic(ispec_p,iphase)
 
     ! adjoint simulations: moho kernel
-    ! note: call this only once 
+    ! note: call this only once
     if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
       if (is_moho_top(ispec)) then
         ispec2D_moho_top = ispec2D_moho_top + 1
@@ -205,14 +201,14 @@ subroutine compute_forces_elastic_noDev( iphase, &
             tempy1l = tempy1l + displ(2,iglob)*hp1
             tempz1l = tempz1l + displ(3,iglob)*hp1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ   
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp2 = hprime_yy(j,l)
             iglob = ibool(i,l,k,ispec)
             tempx2l = tempx2l + displ(1,iglob)*hp2
             tempy2l = tempy2l + displ(2,iglob)*hp2
             tempz2l = tempz2l + displ(3,iglob)*hp2
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ   
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp3 = hprime_zz(k,l)
             iglob = ibool(i,j,l,ispec)
             tempx3l = tempx3l + displ(1,iglob)*hp3
@@ -292,18 +288,8 @@ subroutine compute_forces_elastic_noDev( iphase, &
           mul = mustore(i,j,k,ispec)
 
           if(ATTENUATION) then
-            ! uses scaling rule similar to Olsen et al. (2003) or mesh flag
-            if(USE_OLSEN_ATTENUATION) then
-              vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-              call get_attenuation_model_olsen( vs_val, iselected )
-            else
-              ! iflag from (CUBIT) mesh      
-              iselected = iflag_attenuation_store(i,j,k,ispec)                
-            endif
-
             ! use unrelaxed parameters if attenuation
-            mul = mul * one_minus_sum_beta(iselected)
-             
+            mul  = mul * one_minus_sum_beta(i,j,k,ispec)
           endif
 
           ! full anisotropic case, stress calculations
@@ -413,13 +399,13 @@ subroutine compute_forces_elastic_noDev( iphase, &
             tempy1l = tempy1l + tempy1(l,j,k)*fac1
             tempz1l = tempz1l + tempz1(l,j,k)*fac1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ     
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             fac2 = hprimewgll_yy(l,j)
             tempx2l = tempx2l + tempx2(i,l,k)*fac2
             tempy2l = tempy2l + tempy2(i,l,k)*fac2
             tempz2l = tempz2l + tempz2(i,l,k)*fac2
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ 
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             fac3 = hprimewgll_zz(l,k)
             tempx3l = tempx3l + tempx3(i,j,l)*fac3
             tempy3l = tempy3l + tempy3(i,j,l)*fac3
@@ -439,24 +425,16 @@ subroutine compute_forces_elastic_noDev( iphase, &
 
           !  update memory variables based upon the Runge-Kutta scheme
           if(ATTENUATION) then
-             
+
              ! use Runge-Kutta scheme to march in time
              do i_sls = 1,N_SLS
 
-                ! get coefficients for that standard linear solid
-                if( USE_OLSEN_ATTENUATION ) then
-                  vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-                  call get_attenuation_model_olsen( vs_val, iselected )
-                else
-                  iselected = iflag_attenuation_store(i,j,k,ispec)
-                endif
-                
-                factor_loc = mustore(i,j,k,ispec) * factor_common(iselected,i_sls)
-                
-                alphaval_loc = alphaval(iselected,i_sls)
-                betaval_loc = betaval(iselected,i_sls)
-                gammaval_loc = gammaval(iselected,i_sls)
-                
+                factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+
+                alphaval_loc = alphaval(i_sls)
+                betaval_loc = betaval(i_sls)
+                gammaval_loc = gammaval(i_sls)
+
                 ! term in xx
                 Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
                 Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
@@ -470,13 +448,13 @@ subroutine compute_forces_elastic_noDev( iphase, &
                                   betaval_loc * Sn + gammaval_loc * Snp1
 
                 ! term in zz not computed since zero trace
-                
+
                 ! term in xy
                 Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
                 Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
                 R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
                                   betaval_loc * Sn + gammaval_loc * Snp1
-              
+
                 ! term in xz
                 Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
                 Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
@@ -488,7 +466,7 @@ subroutine compute_forces_elastic_noDev( iphase, &
                 Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
                 R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
                                   betaval_loc * Sn + gammaval_loc * Snp1
-                
+
              enddo   ! end of loop on memory variables
 
           endif  !  end attenuation

@@ -51,7 +51,8 @@
             rhol = rho_vs(i,j,k,ispec)**2 / mustore(i,j,k,ispec)
             mul = mustore(i,j,k,ispec)
             kappal = kappastore(i,j,k,ispec)
-            
+
+            ! for a parameterization: (rho,mu,kappa) "primary" kernels            
             ! density kernel
             ! multiplies with rho
             rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec) 
@@ -64,7 +65,8 @@
             
             ! bulk modulus kernel
             kappa_kl(i,j,k,ispec) = - kappal * kappa_kl(i,j,k,ispec)
-            
+
+            ! for a parameterization: (rho,alpha,beta)            
             ! density prime kernel
             rhop_kl(i,j,k,ispec) = rho_kl(i,j,k,ispec) + kappa_kl(i,j,k,ispec) + mu_kl(i,j,k,ispec)
             
@@ -75,6 +77,13 @@
             ! vp kernel
             alpha_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (1._CUSTOM_REAL &
                   + 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) ) * kappa_kl(i,j,k,ispec)
+
+            ! for a parameterization: (rho,bulk, beta) 
+            ! where bulk wave speed is c = sqrt( kappa / rho)
+            ! note: rhoprime is the same as for (rho,alpha,beta) parameterization
+            !bulk_c_kl_crust_mantle(i,j,k,ispec) = 2._CUSTOM_REAL * kappa_kl(i,j,k,ispec)
+            !bulk_beta_kl_crust_mantle(i,j,k,ispec ) = 2._CUSTOM_REAL * mu_kl(i,j,k,ispec)
+                  
           enddo
         enddo
       enddo

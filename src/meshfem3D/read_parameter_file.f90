@@ -78,9 +78,9 @@ contains
 ! first dimension  : material_id
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision, dimension(:,:), pointer :: material_properties
-
+  
   integer i,ireg,imat,idoubl
-
+  
 ! open parameter file
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
        //'Mesh_Par_file',status='old',action='read')
@@ -153,7 +153,7 @@ contains
 ! file in which we store the databases
   call read_value_string(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')
   if(err_occurred() /= 0) return
- 
+
 ! read number of materials
   call read_value_integer(IIN,IGNORE_JUNK,NMATERIALS, 'mesher.NMATERIALS')
   if(err_occurred() /= 0) return

@@ -118,11 +118,12 @@ subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
 
   ! checks that found midpoint is close enough  
   !print*,'face:', midpoint_distances(iloc(1))
-  if( midpoint_distances(iloc(1)) > 1.e-5 * &
+  if( midpoint_distances(iloc(1)) > 1.e-4 * &
           (   (xcoord(1)-xcoord(2))**2 &
             + (ycoord(1)-ycoord(2))**2 &
             + (zcoord(1)-zcoord(2))**2 ) ) then
-    print*,'error element face midpoint distance:',midpoint_distances(iloc(1)),(xcoord(1)-xcoord(2))**2
+    print*,'error element face midpoint distance:',midpoint_distances(iloc(1)),&
+          ( (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2 )
     ! corner locations 
     do icorner=1,NGNOD2D      
       i = iface_all_corner_ijk(1,icorner,iloc(1))
@@ -132,6 +133,9 @@ subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
       print*,'error corner:',icorner,'xyz:',xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
     enddo
     ! stop
+    print*,'xcoord:', xcoord(:)
+    print*,'ycoord:', ycoord(:)
+    print*,'zcoord:', zcoord(:)
     stop 'error element face midpoint'
   else
     iface_id = iloc(1)

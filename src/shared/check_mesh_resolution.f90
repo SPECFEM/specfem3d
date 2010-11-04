@@ -26,11 +26,11 @@
 
   subroutine check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     kappastore,mustore,rho_vp,rho_vs, &
-                                    DT, model_speed_max )
+                                    DT, model_speed_max,min_resolved_period )
 
 ! check the mesh, stability and resolved period 
 !
-! returns: maximum velocity in model ( model_speed_max )
+! returns: maximum velocity in model ( model_speed_max ), minimum_period_resolved
   
   implicit none
   
@@ -41,7 +41,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
   double precision :: DT
-  real(kind=CUSTOM_REAL) :: model_speed_max
+  real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
   
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: vp_elem,vs_elem
@@ -294,6 +294,10 @@
     endif
   endif
   call bcast_all_cr(model_speed_max,1)
+
+  ! returns minimum period 
+  if( myrank == 0 ) min_resolved_period = pmax_glob
+  call bcast_all_cr(min_resolved_period,1)
   
   
   end subroutine

@@ -357,7 +357,7 @@
 
   use generate_databases_par
   implicit none
-
+  
 ! reads DATA/Par_file 
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
