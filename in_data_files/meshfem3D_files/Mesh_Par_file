@@ -18,37 +18,37 @@ NEX_XI                          = 64
 NEX_ETA                         = 64
 
 # number of MPI processors along xi and eta (can be different)
-NPROC_XI                        = 4 
+NPROC_XI                        = 4
 NPROC_ETA                       = 4
 
-# Regular/irregular mesh 
+# Regular/irregular mesh
 USE_REGULAR_MESH                = .false.
 # Only for irregular meshes, number of doubling layers (1 or 2) and their position
 NDOUBLINGS                      = 1
-# NZ_DOUGLING_1 is the parameter to set up if there is only one doubling layer 
-NZ_DOUGLING_1                   = 11 
+# NZ_DOUGLING_1 is the parameter to set up if there is only one doubling layer
+NZ_DOUGLING_1                   = 11
 NZ_DOUGLING_2                   = 0
 
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .false.
 CREATE_DX_FILES                 = .false.
 
-# path to store the databases files 
+# path to store the databases files
 LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
 
 # number of materials
-NMATERIALS                      = 4  
+NMATERIALS                      = 4
 # define the different materials in the model as :
-# #material_id  #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-#     Q_flag           : 0=no attenuation/1=IATTENUATION_SEDIMENTS_40, 2=..., 13=IATTENUATION_BEDROCK
+# #material_id  #rho  #vp  #vs  #Q_mu  #anisotropy_flag #domain_id
+#     Q_mu           : 0=no attenuation
 #     anisotropy_flag  : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
-#     domain_id        : 1=acoustic / 2=elastic 
-1  1200  1500  750  1  0  2
-2  1100  1600  800  3  0  1
+#     domain_id        : 1=acoustic / 2=elastic
+1  1200  1500  750  40.0  0  2
+2  1100  1600  800  50.0  0  1
 3  1000  1500  0    0  0  2
-4  1300  1400  700  2  0  2
-# number of regions 
-NREGIONS                        = 4             
+4  1300  1400  700  50.0  0  2
+# number of regions
+NREGIONS                        = 4
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
 1              64            1               64             1         4        1

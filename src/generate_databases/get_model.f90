@@ -48,10 +48,10 @@
   logical :: ANISOTROPY
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: vp,vs,rho
+  real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
                         c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-  integer :: ispec,i,j,k,iundef,iflag_atten
+  integer :: ispec,i,j,k,iundef
   integer :: iflag,flag_below,flag_above
   integer :: iflag_aniso,idomain_id,imaterial_id
 
@@ -110,13 +110,7 @@
               vs = materials_ext_mesh(3,imaterial_id)
 
               ! attenuation
-              iflag_atten = materials_ext_mesh(4,imaterial_id)
-              !change for piero :
-              !if(mat_ext_mesh(1,ispec) == 1) then
-              !   iflag_attenuation_store(i,j,k,ispec) = 1
-              !else
-              !   iflag_attenuation_store(i,j,k,ispec) = 2
-              !endif
+              qmu_atten = materials_ext_mesh(4,imaterial_id)
 
               ! anisotropy
               iflag_aniso = materials_ext_mesh(5,imaterial_id)
@@ -137,24 +131,18 @@
 
               ! see file model_interface_bedrock.f90: routine interface()
               !call interface(iflag,flag_below,flag_above,ispec,nspec,i,j,k,xstore,ystore,zstore,ibedrock)
-              
+
               ! dummy: takes 1. defined material
-              iflag = 1 
+              iflag = 1
               rho = materials_ext_mesh(1,iflag)
               vp = materials_ext_mesh(2,iflag)
               vs = materials_ext_mesh(3,iflag)
-              iflag_atten = materials_ext_mesh(4,iflag)
-              !change for piero :
-              !  if(iflag == 1) then
-              !     iflag_attenuation_store(i,j,k,ispec) = 1
-              !  else
-              !     iflag_attenuation_store(i,j,k,ispec) = 2
-              !  endif
+              qmu_atten = materials_ext_mesh(4,iflag)
               iflag_aniso = materials_ext_mesh(5,iflag)
               idomain_id = materials_ext_mesh(6,iflag)
 
            else if ( mat_ext_mesh(2,ispec) == 2 ) then
-           
+
               ! material definition undefined, uses definition from tomography model
               ! GLL point location
               iglob = ibool(i,j,k,ispec)
@@ -166,12 +154,12 @@
               call model_tomography(xloc,yloc,zloc, &
                                   rho,vp,vs)
 
-              iflag_atten = 1   ! attenuation: would use IATTENUATION_SEDIMENTS_40
+              qmu_atten = ATTENUATION_COMP_MAXIMUM   ! attenuation: arbitrary value, see maximum in constants.h
               iflag_aniso = 0   ! no anisotropy
-              
+
               ! sets acoustic/elastic domain as given in materials properties
               iundef = - imaterial_id    ! iundef must be positive
-              read(undef_mat_prop(6,iundef),*) idomain_id  
+              read(undef_mat_prop(6,iundef),*) idomain_id
               ! or
               !idomain_id = IDOMAIN_ELASTIC    ! forces to be elastic domain
 
@@ -185,7 +173,7 @@
            if( USE_MODEL_EXTERNAL_VALUES ) then
              call model_external_values(i,j,k,ispec,idomain_id,imaterial_id, &
                             nspec,ibool, &
-                            iflag_aniso,iflag_atten, &
+                            iflag_aniso,qmu_atten, &
                             rho,vp,vs, &
                             c11,c12,c13,c14,c15,c16, &
                             c22,c23,c24,c25,c26,c33, &
@@ -211,7 +199,7 @@
            mustore(i,j,k,ispec) = rho*vs*vs
 
            ! attenuation
-           iflag_attenuation_store(i,j,k,ispec) = iflag_atten
+           qmu_attenuation_store(i,j,k,ispec) = qmu_atten
 
            ! Stacey, a completer par la suite
            rho_vp(i,j,k,ispec) = rho*vp
@@ -297,7 +285,7 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! if only vp structure is available (as is often the case in exploration seismology),
-!!! use lines for vp only 
+!!! use lines for vp only
 
 !  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
 !  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&

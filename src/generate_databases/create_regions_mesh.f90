@@ -57,7 +57,7 @@ module create_regions_mesh_ext_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
 ! attenuation
-  integer, dimension(:,:,:,:), allocatable :: iflag_attenuation_store
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store
 
 ! 2D shape functions and their derivatives, weights
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top
@@ -341,7 +341,7 @@ subroutine create_regions_mesh_ext(ibool, &
   call save_arrays_solver_ext_mesh(nspec,nglob, &
                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,&
                         gammaxstore,gammaystore,gammazstore, &
-                        jacobianstore, rho_vp,rho_vs,iflag_attenuation_store, &
+                        jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
                         rhostore,kappastore,mustore, &
                         rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
                         OCEANS,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
@@ -416,7 +416,7 @@ subroutine create_regions_mesh_ext(ibool, &
   deallocate(xixstore,xiystore,xizstore,&
               etaxstore,etaystore,etazstore,&
               gammaxstore,gammaystore,gammazstore)
-  deallocate(jacobianstore,iflag_attenuation_store)
+  deallocate(jacobianstore,qmu_attenuation_store)
   deallocate(kappastore,mustore,rho_vp,rho_vs)
 
 end subroutine create_regions_mesh_ext
@@ -460,7 +460,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
   allocate( xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
 
-  allocate( iflag_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate( qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! create the name for the database of the current slide and region

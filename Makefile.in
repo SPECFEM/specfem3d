@@ -53,7 +53,7 @@ AR = ar
 ARFLAGS = cru
 RANLIB = ranlib
 
-##.PHONY: clean default all backup bak generate_databases specfem3D meshfem3D 
+##.PHONY: clean default all backup bak generate_databases specfem3D meshfem3D
 
 ####
 #### targets
@@ -79,7 +79,7 @@ all: default
 required: bin lib obj
 
 backup:
-	cp *f90 *h README_SPECFEM3D DATA/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
+	cp *f90 *h README_SPECFEM3D in_data_files/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
 
 bak: backup
 
@@ -109,7 +109,7 @@ obj:
 	mkdir -p obj
 
 reqmesh:
-	(cd obj; mkdir -p mesh)	
+	(cd obj; mkdir -p mesh)
 
 reqspec:
 	(cd obj; mkdir -p spec)
@@ -120,7 +120,7 @@ reqdec:
 reqgen :
 	(cd obj; mkdir -p gen)
 
-xmeshfem3D:  required reqmesh 
+xmeshfem3D:  required reqmesh
 	     (cd src/meshfem3D; make)
 
 xspecfem3D:  required reqspec
@@ -130,16 +130,16 @@ xgenerate_databases:  required reqgen
 	     (cd src/generate_databases ; make generate_databases)
 
 xdecompose_mesh_SCOTCH:  required reqdec
-	     (cd src/decompose_mesh_SCOTCH ; make)                                     
+	     (cd src/decompose_mesh_SCOTCH ; make)
 
 xcombine_AVS_DX: required
-	(cd src/specfem3D ; make xcombine_AVS_DX)	
+	(cd src/specfem3D ; make xcombine_AVS_DX)
 
 xcreate_movie_shakemap_AVS_DX_GMT: required
-	(cd src/specfem3D ; make xcreate_movie_shakemap_AVS_DX_GMT)	
+	(cd src/specfem3D ; make xcreate_movie_shakemap_AVS_DX_GMT)
 
 xcombine_vol_data: required
-	(cd src/specfem3D ; make xcombine_vol_data)	
+	(cd src/specfem3D ; make xcombine_vol_data)
 
 xcombine_surf_data: required
 	(cd src/specfem3D ; make xcombine_surf_data)
@@ -148,4 +148,4 @@ xconvolve_source_timefunction: required
 	(cd src/specfem3D ; make xconvolve_source_timefunction)
 
 clean: required
-	(rm -rf bin lib obj src/meshfem3D/*.mod src/generate_databases/*.mod src/specfem3D/*.mod)	
+	(rm -rf bin lib obj src/meshfem3D/*.mod src/generate_databases/*.mod src/specfem3D/*.mod)

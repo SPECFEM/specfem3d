@@ -1,5 +1,5 @@
 #!/bin/bash -v
-#BSUB -o OUTPUT_FILES/%J.o
+#BSUB -o in_out_files/OUTPUT_FILES/%J.o
 #BSUB -a mpich_gm
 #BSUB -J specfem_kernel
 
@@ -8,33 +8,35 @@
 
 BASEMPIDIR=/scratch/$USER/DATABASES_MPI
 
-echo "$LSB_MCPU_HOSTS" > OUTPUT_FILES/lsf_machines
-echo "$LSB_JOBID" > OUTPUT_FILES/jobid
+echo "$LSB_MCPU_HOSTS" > in_out_files/OUTPUT_FILES/lsf_machines
+echo "$LSB_JOBID" > in_out_files/OUTPUT_FILES/jobid
 
-remap_lsf_machines.pl OUTPUT_FILES/lsf_machines >OUTPUT_FILES/machines
+remap_lsf_machines.pl in_out_files/OUTPUT_FILES/lsf_machines > in_out_files/OUTPUT_FILES/machines
 
-shmux -M50 -Sall -c "mkdir -p /scratch/$USER/; mkdir -p $BASEMPIDIR.$LSB_JOBID" - < OUTPUT_FILES/machines >/dev/null
+shmux -M50 -Sall -c "mkdir -p /scratch/$USER/; mkdir -p $BASEMPIDIR.$LSB_JOBID" - < in_out_files/OUTPUT_FILES/machines >/dev/null
 
-sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < DATA/Par_file > DATA/Par_file.tmp
-mv DATA/Par_file.tmp DATA/Par_file
+sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < in_data_files/Par_file > in_data_files/Par_file.tmp
+mv in_data_files/Par_file.tmp in_data_files/Par_file
 
 current_pwd=$PWD
 
 change_simulation_type.pl -F
-mpirun.lsf --gm-no-shmem --gm-copy-env $current_pwd/xmeshfem3D
-mpirun.lsf --gm-no-shmem --gm-copy-env $current_pwd/xspecfem3D
+cd bin/
+mpirun.lsf --gm-no-shmem --gm-copy-env ./xmeshfem3D
+mpirun.lsf --gm-no-shmem --gm-copy-env ./xspecfem3D
 
 
 #### this is the part needs to be revised for each kernel simulation #####
-cd $current_pwd/SEM
-collect_seismo_lsf_multi.pl ../OUTPUT_FILES/lsf_machines ../DATA/Par_file
+cd $current_pwd/in_out_files/SEM
+collect_seismo_lsf_multi.pl ../in_out_files/OUTPUT_FILES/lsf_machines ../in_data_files/Par_file
 xcut_velocity 29.0 32.5 3 GSC*.semd
 rename .semd.adj .adj *.semd.ad
 cd $current_pwd
 ##########################################################################
 
 change_simulation_type.pl -b
-mpirun.lsf --gm-no-shmem --gm-copy-env $current_pwd/xspecfem3D
+cd bin/
+mpirun.lsf --gm-no-shmem --gm-copy-env ./xspecfem3D
 
-shmux -M50 -Sall -c "cp $BASEMPIDIR.$LSB_JOBID/*alpha_kernel.bin $current_pwd/MESH" - < OUTPUT_FILES/machines >/dev/null
+shmux -M50 -Sall -c "cp $BASEMPIDIR.$LSB_JOBID/*alpha_kernel.bin $current_pwd/MESH" - < in_out_files/OUTPUT_FILES/machines >/dev/null
 
