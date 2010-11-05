@@ -38,7 +38,7 @@
 ! ADD YOUR MODEL HERE
 !
 !---
- 
+
   ! only here to illustrate an example
   !  type model_external_variables
   !    sequence
@@ -54,10 +54,10 @@
 
   subroutine model_external_broadcast(myrank)
 
-! standard routine to setup model 
+! standard routine to setup model
 
   use external_model
-  
+
   implicit none
 
   include "constants.h"
@@ -65,7 +65,7 @@
   include 'mpif.h'
 
   integer :: myrank
-  
+
   ! local parameters
   integer :: idummy
 
@@ -78,14 +78,14 @@
 !
 !---
 
-  ! the variables read are declared and stored in structure MEXT_V      
+  ! the variables read are declared and stored in structure MEXT_V
   !if(myrank == 0) call read_external_model()
-      
+
   ! broadcast the information read on the master to the nodes
   !call MPI_BCAST(MEXT_V%dvs,size(MEXT_V%dvs),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 
   end subroutine model_external_broadcast
-  
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -94,7 +94,7 @@
 !  subroutine read_external_model()
 !
 !  use external_model
-!  
+!
 !  implicit none
 !
 !  include "constants.h"
@@ -114,7 +114,7 @@
 
   subroutine model_external_values(i,j,k,ispec,idomain_id,imaterial_id,&
                             nspec,ibool, &
-                            iflag_aniso,iflag_atten, &
+                            iflag_aniso,qmu_atten, &
                             rho,vp,vs, &
                             c11,c12,c13,c14,c15,c16, &
                             c22,c23,c24,c25,c26,c33, &
@@ -125,31 +125,31 @@
 
   use external_model
   use create_regions_mesh_ext_par
-  
+
   implicit none
 
   ! GLL point indices
   integer :: i,j,k,ispec
-  
+
   ! acoustic/elastic/.. domain flag ( 1 = acoustic / 2 = elastic / ... )
   integer :: idomain_id
-  
+
   ! associated material flag (in cubit, this would be the volume id number)
   integer :: imaterial_id
 
   ! local-to-global index array
   integer :: nspec
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  
+
   ! anisotropy flag
   integer :: iflag_aniso
-  
+
   ! attenuation flag
-  integer :: iflag_atten
-  
+  real(kind=CUSTOM_REAL) :: qmu_atten
+
   ! density, Vp and Vs
-  real(kind=CUSTOM_REAL) :: vp,vs,rho  
-  
+  real(kind=CUSTOM_REAL) :: vp,vs,rho
+
   ! all anisotropy coefficients
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
                         c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
@@ -166,7 +166,7 @@
 ! ADD YOUR MODEL HERE
 !
 !---
-  
+
   ! GLL point location
   iglob = ibool(i,j,k,ispec)
   x = xstore_dummy(iglob)
@@ -183,7 +183,7 @@
 
   ! depth in Z-direction
   depth = zmax - z
-  
+
   ! normalizes depth between 0 and 1
   if( abs( zmax - zmin ) > TINYVAL ) depth = depth / (zmax - zmin)
 
@@ -193,26 +193,26 @@
   !vp = 4.1875d0+3.9382d0*depth
   !vs = 2.1519d0+2.3481d0*depth
 
-  ! adds a velocity depth gradient 
-  ! (e.g. from PREM mantle gradients: 
-  !     vp : 3.9382*6371/5.5 
-  !     vs : 2.3481*6371/5.5 
+  ! adds a velocity depth gradient
+  ! (e.g. from PREM mantle gradients:
+  !     vp : 3.9382*6371/5.5
+  !     vs : 2.3481*6371/5.5
   !     rho : 0.6924*6371/5.5 )
   rho = rho + 802.d0 * depth
   vp = vp + 4562.d0 * depth
-  vs = vs + 2720.d0 * depth  
-  
+  vs = vs + 2720.d0 * depth
+
   ! adds anisotropic velocity values
   if( ANISOTROPY ) &
     call model_aniso(iflag_aniso,rho,vp,vs,c11,c12,c13,c14,c15,c16, &
                      c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45, &
-                     c46,c55,c56,c66) 
+                     c46,c55,c56,c66)
 
   ! to avoid compiler warnings
   idummy = imaterial_id
   idummy = idomain_id
-  idummy = iflag_atten
-      
+  idummy = qmu_atten
+
   end subroutine model_external_values
 
-  
+

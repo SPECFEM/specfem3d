@@ -2,7 +2,7 @@
 
 # compile and run the mesher and then the solver, then collect the seismograms
 
-set OUTDIR="SEM"
+set OUTDIR="in_out_files/SEM"
 
 sleep 1
 make clean
@@ -21,10 +21,10 @@ go_solver
 sleep 5
 if (! -d $OUTDIR) then
    mkdir $OUTDIR
-endif 
+endif
 cd $OUTDIR
-cp ../DATA/CMTSOLUTION .
-cp ../DATA/STATIONS .
-cp ../DATA/Par_file .
+cp ../../in_data_files/CMTSOLUTION .
+cp ../../in_data_files/STATIONS .
+cp ../../in_data_files/Par_file .
 collect_seismos < ../collect_seismos.in
 

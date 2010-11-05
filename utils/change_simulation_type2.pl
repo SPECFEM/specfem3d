@@ -8,7 +8,7 @@ sub Usage{
 print STDERR <<END;
 
 Usage:   change_simulation_type.pl  [-a|-f|-b|-F]
-         Changes SIMULATION_TYPE in DATA/Par_file
+         Changes SIMULATION_TYPE in in_data_files/Par_file
          -a -- change type to run adjoint calculation(2)
          -f -- change type to run forward calculation(1)
          -b -- change type to run both simultaneously(3)
@@ -20,7 +20,7 @@ exit(1);
 @ARGV == 1 or Usage();
 if(!getopts('abfF')) {die("check input arguments\n");}
 
-open(IN,"DATA/Par_file");
+open(IN,"in_data_files/Par_file");
 @file_to_modify=<IN>;
 close(IN);
 
@@ -54,7 +54,7 @@ foreach $file_to_modify (@file_to_modify){
   }
 }
 
-open(OUT,">DATA/Par_file") || die("No DATA/Par_file\n");
+open(OUT,">in_data_files/Par_file") || die("No in_data_files/Par_file\n");
 foreach $file_to_modify (@file_to_modify){
   print OUT "$file_to_modify";
 }

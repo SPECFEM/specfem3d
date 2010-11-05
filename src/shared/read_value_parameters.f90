@@ -99,7 +99,7 @@
 
   subroutine open_parameter_file()
 
-  include 'constants.h' 
+  include 'constants.h'
   integer ierr
   common /param_err_common/ ierr
   character(len=50) filename
@@ -239,7 +239,7 @@
 !
 !! suppress leading junk (up to the first equal sign, included)
 !  index_equal_sign = index(string_read,'=')
-!  if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in DATA/Par_file'
+!  if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in Par_file'
 !  string_read = string_read(index_equal_sign + 1:len_trim(string_read))
 !
 !! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
@@ -254,7 +254,7 @@
 !
 !  include "constants.h"
 !
-!  open(unit=IIN,file='DATA/Par_file',status='old',action='read')
+!  open(unit=IIN,file='in_data_files/Par_file',status='old',action='read')
 !
 !  end subroutine open_parameter_file
 !

@@ -6,8 +6,8 @@
 foreach extension (Mrr Mtt Mpp Mrt Mrp Mtp depth latitude longitude)
 
 # setup the calculation for the Frechet derivative with respect to ${extension}
-rm DATA/CMTSOLUTION
-mv DATA/CMTSOLUTION_${extension} DATA/CMTSOLUTION
+rm in_data_files/CMTSOLUTION
+mv in_data_files/CMTSOLUTION_${extension} in_data_files/CMTSOLUTION
 
 sleep 180
 go_solver_cmt
@@ -19,10 +19,10 @@ foreach file (*.semd)
   mv $file ${shortfile}.${extension}
 end
 cd ..
- 
+
 end
 
 # put the backup CMTSOLUTION file back
-rm DATA/CMTSOLUTION
-mv DATA/CMTSOLUTION_BACKUP DATA/CMTSOLUTION
+rm in_data_files/CMTSOLUTION
+mv in_data_files/CMTSOLUTION_BACKUP in_data_files/CMTSOLUTION
 

@@ -3,9 +3,9 @@
 module decompose_mesh_SCOTCH
 
   use part_decompose_mesh_SCOTCH
-  
+
   implicit none
-  
+
   include './scotchf.h'
 
 ! number of partitions
@@ -16,10 +16,10 @@ module decompose_mesh_SCOTCH
   integer, dimension(:,:), allocatable  :: elmnts
   integer, dimension(:,:), allocatable  :: mat
   integer, dimension(:), allocatable  :: part
-  
+
   integer :: nnodes
   double precision, dimension(:,:), allocatable  :: nodes_coords
-    
+
   integer, dimension(:), allocatable  :: xadj
   integer, dimension(:), allocatable  :: adjncy
   integer, dimension(:), allocatable  :: nnodes_elmnts
@@ -36,7 +36,7 @@ module decompose_mesh_SCOTCH
   integer, dimension(:), allocatable  :: my_nb_interfaces
   integer  ::  ninterfaces
   integer  :: my_ninterface
-  
+
   integer(long)  :: nsize           ! Max number of elements that contain the same node.
   integer  :: nb_edges
 
@@ -53,13 +53,13 @@ module decompose_mesh_SCOTCH
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
   integer, dimension(:), allocatable :: ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin
-  integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top 
+  integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
   ! moho surface (optional)
   integer :: nspec2D_moho
   integer, dimension(:), allocatable :: ibelm_moho
   integer, dimension(:,:), allocatable :: nodes_ibelm_moho
-  
+
   character(len=256)  :: prname
 
   logical, dimension(:), allocatable :: mask_nodes_elmnts
@@ -69,28 +69,28 @@ module decompose_mesh_SCOTCH
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
   character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
   integer  :: ierr,idummy
-  
+
   !pll
   double precision , dimension(:,:), allocatable :: mat_prop
   integer :: count_def_mat,count_undef_mat,imat
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
 ! default mesh file directory
-  character(len=256) :: localpath_name    
-  character(len=256) :: outputpath_name 
+  character(len=256) :: localpath_name
+  character(len=256) :: outputpath_name
 
-  integer :: q_flag,aniso_flag,idomain_id
-  double precision :: vp,vs,rho
+  integer :: aniso_flag,idomain_id
+  double precision :: vp,vs,rho,qmu
 
   contains
-  
+
   !----------------------------------------------------------------------------------------------
   ! reads in mesh files
   !----------------------------------------------------------------------------------------------
   subroutine read_mesh_files
     implicit none
     character(len=256)  :: line
-    
+
   ! sets number of nodes per element
     ngnod = esize
 
@@ -110,10 +110,10 @@ module decompose_mesh_SCOTCH
     end do
     close(98)
     print*, 'total number of nodes: '
-    print*, '  nnodes = ', nnodes 
+    print*, '  nnodes = ', nnodes
 
-  ! reads mesh elements indexing 
-  !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in 
+  ! reads mesh elements indexing
+  !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
   ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
           status='old', form='formatted',iostat=ierr)
@@ -125,10 +125,10 @@ module decompose_mesh_SCOTCH
 
       ! note: be aware that here we can have different node ordering for a cube element;
       !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
-      !         
-      !          guess here it assumes that spectral elements ordering is like first at the bottom of the element, anticlock-wise, i.e. 
+      !
+      !          guess here it assumes that spectral elements ordering is like first at the bottom of the element, anticlock-wise, i.e.
       !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
-      !          then top (positive z-direction) of element 
+      !          then top (positive z-direction) of element
       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
 
       !read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
@@ -139,18 +139,18 @@ module decompose_mesh_SCOTCH
 
       if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
 
-        
+
       !outputs info for each element to see ordering
       !print*,'ispec: ',ispec
       !print*,'  ',num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
-      !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)    
+      !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
       !print*,'elem:',num_elmnt
       !do i=1,8
       !  print*,' i ',i,'val :',elmnts(i,num_elmnt),&
       !    nodes_coords(1,elmnts(i,num_elmnt)),nodes_coords(2,elmnts(i,num_elmnt)),nodes_coords(3,elmnts(i,num_elmnt))
       !enddo
       !print*
-          
+
     end do
     close(98)
     print*, 'total number of spectral elements:'
@@ -165,7 +165,7 @@ module decompose_mesh_SCOTCH
     do ispec = 1, nspec
       ! format: # id_element #flag
       ! note: be aware that elements may not be sorted in materials_file
-      read(98,*) num_mat,mat(1,num_mat) !mat(1,ispec)!, mat(2,ispec) 
+      read(98,*) num_mat,mat(1,num_mat) !mat(1,ispec)!, mat(2,ispec)
       if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
     end do
     close(98)
@@ -173,12 +173,12 @@ module decompose_mesh_SCOTCH
   ! TODO:
   ! must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
     mat(2,:) = 1
-    
+
   ! reads material definitions
   !
   ! note: format of nummaterial_velocity_file must be
   !
-  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_flag  #(7)anisotropy_flag
+  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_mu  #(7)anisotropy_flag
   !
   ! where
   !     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
@@ -186,23 +186,23 @@ module decompose_mesh_SCOTCH
   !     rho                           : density
   !     vp                             : P-velocity
   !     vs                             : S-velocity
-  !     Q_flag                      : 0=no attenuation/1=IATTENUATION_SEDIMENTS_40, 2=..., 13=IATTENUATION_BEDROCK
+  !     Q_mu                      : 0=no attenuation
   !     anisotropy_flag        : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
     count_def_mat = 0
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
           status='old', form='formatted',iostat=ierr)
     if( ierr /= 0 ) stop 'error opening nummaterial_velocity_file'
-          
-    ! note: format #material_domain_id #material_id #...      
+
+    ! note: format #material_domain_id #material_id #...
     read(98,*,iostat=ierr) idummy,num_mat
     print *,'materials:'
     ! counts materials (defined/undefined)
     do while (ierr == 0)
-       print*, '  num_mat = ',num_mat       
-       if(num_mat > 0 ) then 
+       print*, '  num_mat = ',num_mat
+       if(num_mat > 0 ) then
           ! positive materials_id: velocity values will be defined
-          count_def_mat = count_def_mat + 1        
+          count_def_mat = count_def_mat + 1
        else
           ! negative materials_id: undefined material properties yet
           count_undef_mat = count_undef_mat + 1
@@ -222,21 +222,21 @@ module decompose_mesh_SCOTCH
     allocate(undef_mat_prop(6,count_undef_mat))
     mat_prop(:,:) = 0.d0
     undef_mat_prop(:,:) = ''
-    
+
     ! reads in defined material properties
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted', iostat=ierr)
     if( ierr /= 0 ) stop 'error opening nummaterial_velocity_file'
-    
+
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
-    !          defined materials (material_id > 0) and undefined materials (material_id < 0 )    
+    !          defined materials (material_id > 0) and undefined materials (material_id < 0 )
     do imat=1,count_def_mat
        ! material definitions
        !
        ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
-       !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_flag #(5) anisotropy_flag
+       !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_mu #(5) anisotropy_flag
        !
-       !read(98,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
+       !read(98,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
        ! reads lines unti it reaches a defined material
        num_mat = -1
        do while( num_mat < 0 .and. ierr == 0)
@@ -244,38 +244,34 @@ module decompose_mesh_SCOTCH
          read(line,*) idomain_id,num_mat
        enddo
        if( ierr /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
-       
-       ! reads in defined material properties
-       read(line,*) idomain_id,num_mat,rho,vp,vs,q_flag,aniso_flag
 
-       ! checks material_id bounds     
-       if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."    
-       
+       ! reads in defined material properties
+       read(line,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
+
+       ! checks material_id bounds
+       if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
+
        !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
        !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
        mat_prop(1,num_mat) = rho
        mat_prop(2,num_mat) = vp
        mat_prop(3,num_mat) = vs
-       mat_prop(4,num_mat) = q_flag
+       mat_prop(4,num_mat) = qmu
        mat_prop(5,num_mat) = aniso_flag
-       mat_prop(6,num_mat) = idomain_id       
+       mat_prop(6,num_mat) = idomain_id
 
-       !checks attenuation flag with integer range as defined in constants.h like IATTENUATION_SEDIMENTS_40, ....
-       if( int(mat_prop(4,num_mat)) > 13 ) then
-          stop 'wrong attenuation flag in mesh: too large, not supported yet - check with constants.h'
-       endif
     end do
-    
+
     ! reads in undefined material properties
     rewind(98,iostat=ierr) ! back to the beginning of the file
     do imat=1,count_undef_mat
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
-       !  format: 
+       !  format:
        !   - for interfaces
        !    #material_domain_id #material_id(<0) #type_name (="interface") #material_id_for_material_below #material_id_for_material_above
-       !        example:     2  -1 interface 1 2 
-       !   - for tomography models 
-       !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name 
+       !        example:     2  -1 interface 1 2
+       !   - for tomography models
+       !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name
        !        example:     2  -1 tomography elastic tomography_model.xyz 1
        ! reads lines unti it reaches a defined material
        num_mat = 1
@@ -284,22 +280,22 @@ module decompose_mesh_SCOTCH
          read(line,*) idomain_id,num_mat
        enddo
        if( ierr /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
-        
-       ! checks if interface or tomography definition 
+
+       ! checks if interface or tomography definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
-         ! line will have 5 arguments, e.g.: 2  -1 interface 1 2 
+         ! line will have 5 arguments, e.g.: 2  -1 interface 1 2
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
-       else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then 
+       else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
          ! line will have 6 arguments, e.g.: 2  -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
        else
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
        endif
-       
+
        !read(98,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
        !                 undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
 
@@ -307,19 +303,19 @@ module decompose_mesh_SCOTCH
        !print*,'properties:'
        !print*,undef_mat_prop(:,imat)
        !print*
-       
+
        ! checks material_id
        read(undef_mat_prop(1,imat),*) num_mat
        !print *,'material_id: ',num_mat
        if(num_mat > 0 .or. -num_mat > count_undef_mat)  &
             stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
        if(num_mat /= -imat)  &
-            stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."                            
+            stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."
 
        ! checks interface: flag_down/flag_up
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
          ! flag_down
-         read( undef_mat_prop(3,imat),*) num_mat 
+         read( undef_mat_prop(3,imat),*) num_mat
          if( num_mat > 0 ) then
           ! must point to a defined material
           if( num_mat > count_def_mat) &
@@ -327,10 +323,10 @@ module decompose_mesh_SCOTCH
          else
           ! must point to an undefined material
           if( -num_mat > count_undef_mat) &
-               stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"         
+               stop "ERROR: invalid flag_down in interface definition in nummaterial_velocity_file"
          endif
          ! flag_up
-         read( undef_mat_prop(4,imat),*) num_mat 
+         read( undef_mat_prop(4,imat),*) num_mat
          if( num_mat > 0 ) then
           ! must point to a defined material
           if( num_mat > count_def_mat) &
@@ -340,7 +336,7 @@ module decompose_mesh_SCOTCH
           if( -num_mat > count_undef_mat) &
                stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          endif
-       endif   
+       endif
     end do
     close(98)
 
@@ -353,11 +349,11 @@ module decompose_mesh_SCOTCH
       if( num_mat < 0 ) then
         ! finds undefined material property
         do imat=1,count_undef_mat
-          if( -imat == num_mat ) then 
+          if( -imat == num_mat ) then
             ! interface
             if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
               mat(2,ispec) = 1
-            ! tomography  
+            ! tomography
             elseif( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
               mat(2,ispec) = 2
             else
@@ -382,21 +378,21 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_xmin(nspec2D_xmin))
     allocate(nodes_ibelm_xmin(4,nspec2D_xmin))
-    do ispec2D = 1,nspec2D_xmin 
+    do ispec2D = 1,nspec2D_xmin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       ! note: ordering for CUBIT seems such that the normal of the face points outward of the element the face belongs to;
-      !         in other words, nodes are in increasing order such that when looking from within the element outwards, 
+      !         in other words, nodes are in increasing order such that when looking from within the element outwards,
       !         they are ordered clockwise
       !
-      !          doesn't necessarily have to start on top-rear, then bottom-rear, bottom-front, and finally top-front i.e.: 
+      !          doesn't necessarily have to start on top-rear, then bottom-rear, bottom-front, and finally top-front i.e.:
       !          point 1 = (0,1,1), point 2 = (0,1,0), point 3 = (0,0,0), point 4 = (0,0,1)
       read(98,*) ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
             nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)
 
-      !outputs info for each element for check of ordering          
+      !outputs info for each element for check of ordering
       !print*,'ispec2d:',ispec2d
       !print*,'  xmin:', ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
-      !      nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)     
+      !      nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)
       !do i=1,4
       !  print*,'i',i,'val:',ibelm_xmin(ispec2d),nodes_coords(1,nodes_ibelm_xmin(i,ispec2D)), &
       !      nodes_coords(2,nodes_ibelm_xmin(i,ispec2D)),nodes_coords(3,nodes_ibelm_xmin(i,ispec2D))
@@ -405,7 +401,7 @@ module decompose_mesh_SCOTCH
     end do
     close(98)
     print*, 'absorbing boundaries:'
-    print*, '  nspec2D_xmin = ', nspec2D_xmin 
+    print*, '  nspec2D_xmin = ', nspec2D_xmin
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
@@ -435,13 +431,13 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_ymin(nspec2D_ymin))
     allocate(nodes_ibelm_ymin(4,nspec2D_ymin))
-    do ispec2D = 1,nspec2D_ymin 
-      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face   
+    do ispec2D = 1,nspec2D_ymin
+      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_ymin(ispec2D), nodes_ibelm_ymin(1,ispec2D), nodes_ibelm_ymin(2,ispec2D),  &
             nodes_ibelm_ymin(3,ispec2D), nodes_ibelm_ymin(4,ispec2D)
     end do
     close(98)
-    print*, '  nspec2D_ymin = ', nspec2D_ymin 
+    print*, '  nspec2D_ymin = ', nspec2D_ymin
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
@@ -453,8 +449,8 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_ymax(nspec2D_ymax))
     allocate(nodes_ibelm_ymax(4,nspec2D_ymax))
-    do ispec2D = 1,nspec2D_ymax 
-      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face  
+    do ispec2D = 1,nspec2D_ymax
+      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_ymax(ispec2D), nodes_ibelm_ymax(1,ispec2D), nodes_ibelm_ymax(2,ispec2D),  &
             nodes_ibelm_ymax(3,ispec2D), nodes_ibelm_ymax(4,ispec2D)
     end do
@@ -471,13 +467,13 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_bottom(nspec2D_bottom))
     allocate(nodes_ibelm_bottom(4,nspec2D_bottom))
-    do ispec2D = 1,nspec2D_bottom 
-      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face   
+    do ispec2D = 1,nspec2D_bottom
+      ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_bottom(ispec2D), nodes_ibelm_bottom(1,ispec2D), nodes_ibelm_bottom(2,ispec2D), &
             nodes_ibelm_bottom(3,ispec2D), nodes_ibelm_bottom(4,ispec2D)
     end do
     close(98)
-    print*, '  nspec2D_bottom = ', nspec2D_bottom 
+    print*, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
@@ -489,7 +485,7 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_top(nspec2D_top))
     allocate(nodes_ibelm_top(4,nspec2D_top))
-    do ispec2D = 1,nspec2D_top 
+    do ispec2D = 1,nspec2D_top
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_top(ispec2D), nodes_ibelm_top(1,ispec2D), nodes_ibelm_top(2,ispec2D), &
              nodes_ibelm_top(3,ispec2D), nodes_ibelm_top(4,ispec2D)
@@ -516,13 +512,13 @@ module decompose_mesh_SCOTCH
     if( nspec2D_moho > 0 ) print*, '  nspec2D_moho = ', nspec2D_moho
 
   end subroutine read_mesh_files
-  
+
   !----------------------------------------------------------------------------------------------
   ! checks valence of nodes
   !----------------------------------------------------------------------------------------------
-  
+
   subroutine check_valence
-  
+
     allocate(mask_nodes_elmnts(nnodes))
     allocate(used_nodes_elmnts(nnodes))
     mask_nodes_elmnts(:) = .false.
@@ -549,7 +545,7 @@ module decompose_mesh_SCOTCH
   !----------------------------------------------------------------------------------------------
   ! divides model into partitions using scotch library functions
   !----------------------------------------------------------------------------------------------
-  
+
   subroutine scotch_partitioning
 
     implicit none
@@ -560,7 +556,7 @@ module decompose_mesh_SCOTCH
     allocate(xadj(1:nspec+1))
     allocate(adjncy(1:sup_neighbour*nspec))
     allocate(nnodes_elmnts(1:nnodes))
-    allocate(nodes_elmnts(1:nsize*nnodes))    
+    allocate(nodes_elmnts(1:nsize*nnodes))
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, 1)
     print*, 'mesh2dual: '
@@ -575,19 +571,19 @@ module decompose_mesh_SCOTCH
   ! initializes
   ! elements load array
     allocate(elmnts_load(1:nspec))
-    
+
     ! uniform load
-    elmnts_load(:) = 1 
-    
+    elmnts_load(:) = 1
+
     ! in case of acoustic/elastic simulation, weights elements accordingly
     call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                               mat(1,:),mat_prop,undef_mat_prop)
-    
+
   ! SCOTCH partitioning
 
     ! we use default strategy for partitioning, thus omit specifing explicit strategy .
 
-    ! workflow preferred by F. Pellegrini (SCOTCH): 
+    ! workflow preferred by F. Pellegrini (SCOTCH):
     !!This comes from the fact that, in version 5.1.8, the name
     !!for the "recursive bisection" method has changed from "b"
     !!("bipartitioning") to "r" ("recursive").
@@ -611,8 +607,8 @@ module decompose_mesh_SCOTCH
     call scotchfstratinit (scotchstrat(1), ierr)
      if (ierr /= 0) then
        stop 'ERROR : MAIN : Cannot initialize strat'
-    endif        
-    
+    endif
+
     !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ierr)
     ! if (ierr /= 0) then
     !   stop 'ERROR : MAIN : Cannot build strat'
@@ -627,7 +623,7 @@ module decompose_mesh_SCOTCH
     ! arguments: #(1) graph_structure       #(2) baseval(either 0/1)    #(3) number_of_vertices
     !                    #(4) adjacency_index_array         #(5) adjacency_end_index_array (optional)
     !                    #(6) vertex_load_array (optional) #(7) vertex_label_array
-    !                    #(7) number_of_arcs                    #(8) adjacency_array 
+    !                    #(7) number_of_arcs                    #(8) adjacency_array
     !                    #(9) arc_load_array (optional)      #(10) ierror
     call scotchfgraphbuild (scotchgraph (1), 0, nspec, &
                           xadj (1), xadj (1), &
@@ -641,8 +637,8 @@ module decompose_mesh_SCOTCH
     !                      xadj (1), xadj (1), &
     !                      nb_edges, adjncy (1), &
     !                      adjncy (1), ierr)
-                          
-                          
+
+
     if (ierr /= 0) then
        stop 'ERROR : MAIN : Cannot build graph'
     endif
@@ -681,7 +677,7 @@ module decompose_mesh_SCOTCH
                      sup_neighbour, nsize, nparts, part, &
                      nspec2D_moho,ibelm_moho,nodes_ibelm_moho )
 
-   
+
   ! local number of each element for each partition
     call Construct_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
 
@@ -689,7 +685,7 @@ module decompose_mesh_SCOTCH
     call Construct_glob2loc_nodes(nspec, nnodes,nsize, nnodes_elmnts, nodes_elmnts, part, &
          glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, nparts)
 
-  ! mpi interfaces 
+  ! mpi interfaces
     ! acoustic/elastic boundaries WILL BE SEPARATED into different MPI partitions
     call Construct_interfaces(nspec, sup_neighbour, part, elmnts, &
                              xadj, adjncy, tab_interfaces, &
@@ -703,11 +699,11 @@ module decompose_mesh_SCOTCH
     !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts)
 
   end subroutine scotch_partitioning
-  
+
   !----------------------------------------------------------------------------------------------
   ! writes out new Databases files for each partition
   !----------------------------------------------------------------------------------------------
-  
+
   subroutine write_mesh_databases
 
     allocate(my_interfaces(0:ninterfaces-1))
@@ -726,34 +722,34 @@ module decompose_mesh_SCOTCH
         print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
         stop 'error file open Database'
        endif
-   
-       ! gets number of nodes 
+
+       ! gets number of nodes
        call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 1)
 
-       ! gets number of spectral elements                           
+       ! gets number of spectral elements
        call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 1)
 
-       ! writes out node coordinate locations 
+       ! writes out node coordinate locations
        write(15,*) nnodes_loc
-       
+
        call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords,&
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
 
        call write_material_properties_database(15,count_def_mat,count_undef_mat, &
-                                  mat_prop, undef_mat_prop) 
-        
-       ! writes out spectral element indices 
+                                  mat_prop, undef_mat_prop)
+
+       ! writes out spectral element indices
        write(15,*) nspec_loc
-       
+
        call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 2)
-       
+
        ! writes out absorbing/free-surface boundaries
        call write_boundaries_database(15, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
                                   nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
@@ -764,7 +760,7 @@ module decompose_mesh_SCOTCH
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part)
 
-       ! gets number of MPI interfaces                           
+       ! gets number of MPI interfaces
        call Write_interfaces_database(15, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
@@ -772,20 +768,20 @@ module decompose_mesh_SCOTCH
 
        ! writes out MPI interfaces elements
        write(15,*) my_ninterface, maxval(my_nb_interfaces)
-       
+
        call Write_interfaces_database(15, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-                                  glob2loc_nodes, 2, nparts)       
+                                  glob2loc_nodes, 2, nparts)
 
-       ! writes out moho surface (optional) 
+       ! writes out moho surface (optional)
        call write_moho_surface_database(15, ipart, nspec, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, &
                                   nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
-        
+
        close(15)
-       
+
     end do
     print*, 'partitions: '
     print*, '  num = ',nparts
@@ -795,7 +791,7 @@ module decompose_mesh_SCOTCH
     print*
 
   end subroutine write_mesh_databases
-  
+
 !end program pre_meshfem3D
 
 end module decompose_mesh_SCOTCH

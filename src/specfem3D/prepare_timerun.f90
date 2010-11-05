@@ -290,8 +290,7 @@
   real(kind=CUSTOM_REAL):: scale_factor
   real(kind=CUSTOM_REAL):: vs_val
   integer :: i,j,k,ispec
-  integer :: iselected ! iattenuation
-
+  double precision :: qmin,qmax,qmin_all,qmax_all
 
   ! if attenuation is on, shift shear moduli to right frequency
   ! rescale mu to average (central) frequency for attenuation
@@ -302,8 +301,8 @@
     factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
 
     ! precalculates tau_sigma depending on period band (constant for all Q_mu)
-    call get_attenuation_constants(myrank,min_resolved_period,&
-              tau_sigma_dble,f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+    call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+              f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta
     if(CUSTOM_REAL == SIZE_REAL) then
@@ -317,6 +316,8 @@
     tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
 
     ! rescale shear modulus according to attenuation model
+    qmin = HUGEVAL
+    qmax = 0.0
     do ispec = 1,NSPEC_AB
 
       ! skips non elastic elements
@@ -327,52 +328,26 @@
         do j=1,NGLLY
           do i=1,NGLLX
 
-            ! use scaling rule similar to Olsen et al. (2003)
-            !! We might need to fix the attenuation part for the anisotropy case
-            !! At this stage, we turn the ATTENUATION flag off always, and still keep mustore
+            ! gets Q value
             if(USE_OLSEN_ATTENUATION) then
+              ! use scaling rule similar to Olsen et al. (2003)
               vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
               call get_attenuation_model_olsen( vs_val, Q_mu )
             else
-              ! takes iflag set in (CUBIT) mesh
-              iselected = iflag_attenuation_store(i,j,k,ispec)
+              ! takes Q set in (CUBIT) mesh
+              Q_mu = qmu_attenuation_store(i,j,k,ispec)
 
-              ! attenuation zero flag
-              if( iselected == 0 ) cycle
+              ! attenuation zero
+              if( Q_mu <= 1.e-5 ) cycle
 
-              ! determines Q_mu
-              select case(iselected)
-              case(IATTENUATION_SEDIMENTS_40)
-                Q_mu = 40.000000d0
-              case(IATTENUATION_SEDIMENTS_50)
-                Q_mu = 50.000000d0
-              case(IATTENUATION_SEDIMENTS_60)
-                Q_mu = 60.000000d0
-              case(IATTENUATION_SEDIMENTS_70)
-                Q_mu = 70.000000d0
-              case(IATTENUATION_SEDIMENTS_80)
-                Q_mu = 80.000000d0
-              case(IATTENUATION_SEDIMENTS_90)
-                Q_mu = 90.000000d0
-              case(IATTENUATION_SEDIMENTS_100)
-                Q_mu = 100.000000d0
-              case(IATTENUATION_SEDIMENTS_110)
-                Q_mu = 110.000000d0
-              case(IATTENUATION_SEDIMENTS_120)
-                Q_mu = 120.000000d0
-              case(IATTENUATION_SEDIMENTS_130)
-                Q_mu = 130.000000d0
-              case(IATTENUATION_SEDIMENTS_140)
-                Q_mu = 140.000000d0
-              case(IATTENUATION_SEDIMENTS_150)
-                Q_mu = 150.000000d0
-              case(IATTENUATION_BEDROCK)
-                Q_mu = 9000.d0
-              case default
-                call exit_MPI(myrank,'wrong attenuation flag in mesh')
-              end select
+              ! limits Q
+              if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
+              if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
 
             endif
+            ! statistics
+            if( Q_mu < qmin ) qmin = Q_mu
+            if( Q_mu > qmax ) qmax = Q_mu
 
             ! gets beta, on_minus_sum_beta and factor_scale
             call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
@@ -394,6 +369,22 @@
         enddo
       enddo
     enddo
+
+    ! statistics
+    call min_all_dp(qmin,qmin_all)
+    call max_all_dp(qmax,qmax_all)
+    ! user output
+    if( myrank == 0 ) then
+      write(IMAIN,*)
+      write(IMAIN,*) "attenuation: "
+      write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
+                    " frequency: ",sngl(ATTENUATION_f0_REFERENCE)
+      write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
+      write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
+                    " frequency: ",sngl(f_c_source)
+      write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
+      write(IMAIN,*)
+    endif
 
     ! clear memory variables if attenuation
     ! initialize memory variables for attenuation

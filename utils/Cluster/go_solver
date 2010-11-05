@@ -2,15 +2,15 @@
 
 # script to run the solver
 
-# read DATA/Par_file to get information about the run
+# read Par_file to get information about the run
 
 # name of the file that contains the list of machines
 set machine_file = "mymachines"
 
-set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -d '=' -f 2 `
+set my_local_path = `grep LOCAL_PATH in_data_files/Par_file | cut -d '=' -f 2 `
 
 # compute total number of processors needed
-set NPROC = `grep NPROC DATA/Par_file | cut -d '=' -f 2 `
+set NPROC = `grep NPROC in_data_files/Par_file | cut -d '=' -f 2 `
 
 # total number of processors is the product of the values read
 @ numprocessors = $NPROC
@@ -38,7 +38,7 @@ echo " "
 
 #### use this on Beowulf
 set MPIRUN="mpirun"
-$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xspecfem3D 
+$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xspecfem3D
 
 #### use this on SGI
 # mpirun -np $numprocessors xspecfem3D

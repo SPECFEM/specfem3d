@@ -40,13 +40,13 @@
   integer nglob
 
 ! MPI cartesian topology
-! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)  
+! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
   integer iproc_xi,iproc_eta
   integer NPROC_XI,NPROC_ETA
   logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
   integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
- 
+
 ! arrays with the mesh
   integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
 !  real(kind=CUSTOM_REAL) :: nodes_coords(nglob,3)
@@ -56,8 +56,6 @@
   integer true_material_num(nspec)
   double precision rho,vp,vs
 
-! attenuation flag
-  integer iattenuation
 
 ! boundary parameters locator
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
@@ -79,7 +77,7 @@
   character(len=150) prname
 
 ! for MPI interfaces
-  integer ::  nb_interfaces,nspec_interfaces_max,idoubl 
+  integer ::  nb_interfaces,nspec_interfaces_max,idoubl
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
@@ -103,8 +101,8 @@
   do ispec=1,nspec
       write(15,'(11i14)') ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
            ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
-           ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec) 
-  end do  
+           ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
+  end do
 
   ! Boundaries
   write(15,*) 1,nspec2D_xmin
@@ -113,9 +111,9 @@
   write(15,*) 4,nspec2D_ymax
   write(15,*) 5,NSPEC2D_BOTTOM
   write(15,*) 6,NSPEC2D_TOP
-  
+
   do i=1,nspec2D_xmin
-     write(15,*) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY,1,ibelm_xmin(i)),& 
+     write(15,*) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY,1,ibelm_xmin(i)),&
           ibool(1,1,NGLLZ,ibelm_xmin(i)),ibool(1,NGLLY,NGLLZ,ibelm_xmin(i))
   end do
   do i=1,nspec2D_xmax
@@ -161,8 +159,8 @@
   if(iproc_eta == NPROC_ETA-1) then
      nb_interfaces =  nb_interfaces -1
      interfaces(N) = .false.
-  end if 
-  
+  end if
+
   if((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
        interfaces(NW) = .true.
        nb_interfaces =  nb_interfaces +1
@@ -184,16 +182,16 @@
   if(interfaces(W))  nspec_interface(W) = count(iMPIcut_xi(1,:) .eqv. .true.)
   if(interfaces(E))  nspec_interface(E) = count(iMPIcut_xi(2,:) .eqv. .true.)
   if(interfaces(S))  nspec_interface(S) = count(iMPIcut_eta(1,:) .eqv. .true.)
-  if(interfaces(N))  nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)   
+  if(interfaces(N))  nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)
   if(interfaces(NW))  nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
   if(interfaces(NE))  nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
   if(interfaces(SE))  nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
   if(interfaces(SW))  nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
 
- 
+
   nspec_interfaces_max = maxval(nspec_interface)
-  
-  write(15,*) nb_interfaces,nspec_interfaces_max  
+
+  write(15,*) nb_interfaces,nspec_interfaces_max
 
   if(interfaces(W)) then
      write(15,*) addressing(iproc_xi-1,iproc_eta),nspec_interface(W)
@@ -218,7 +216,7 @@
              ibool(1,1,2,ispec),ibool(2,1,2,ispec)
      end do
   end if
-  
+
   if(interfaces(N)) then
      write(15,*) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
      do ispec = 1,nspec
@@ -235,7 +233,7 @@
         end if
      end do
   end if
-  
+
   if(interfaces(NE)) then
      write(15,*) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
      do ispec = 1,nspec
@@ -262,15 +260,15 @@
         end if
      end do
   end if
-  
+
   else
 
      write(15,*) 0,0
-     
+
   end if
 
   close(15)
-    
+
 
   end subroutine save_databases
 

@@ -28,9 +28,9 @@
 
 ! !  Piero
 !  module bedrock
-!  
+!
 !  real,dimension(:,:),allocatable :: ibedrock
-!  
+!
 !  end module bedrock
 
 !
@@ -39,10 +39,10 @@
 
 !  subroutine model_bedrock_broadcast(myrank)
 !
-!! standard routine to setup model 
+!! standard routine to setup model
 !
 !  use bedrock
-!  
+!
 !  implicit none
 !
 !  include "constants.h"
@@ -50,14 +50,14 @@
 !  include 'mpif.h'
 !
 !  integer :: myrank
-!  
+!
 !  ! local parameters
 !  integer :: idummy
 !
 !  ! dummy to ignore compiler warnings
 !  idummy = myrank
 !
-!  allocate(ibedrock(NX_TOPO_ANT,NY_TOPO_ANT))              
+!  allocate(ibedrock(NX_TOPO_ANT,NY_TOPO_ANT))
 
 !  if(myrank == 0) then
 !      call read_bedrock_file(ibedrock)
@@ -71,7 +71,7 @@
 ! call bcast_all_cr(ibedrock,NX_TOPO_ANT*NY_TOPO_ANT)
 
 !  end subroutine model_bedrock_broadcast
-  
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -80,7 +80,7 @@
 !  subroutine read_bedrock_file()
 !
 !  use bedrock
-!  
+!
 !  implicit none
 !
 !  include "constants.h"
@@ -103,7 +103,7 @@
 ! use bedrock
 !
 ! implicit none
-!  
+!
 ! !! DK DK store the position of the six stations to be able to
 ! !! DK DK exclude circles around each station to make sure they are on the bedrock
 ! !! DK DK and not in the ice
@@ -143,13 +143,13 @@
 !    ! if(doubling_index == IFLAG_ONE_LAYER_TOPOGRAPHY) then
 !     if(any(ibelm_top == ispec)) then
 !     doubling_value_found_for_Piero = IFLAG_ONE_LAYER_TOPOGRAPHY
-       
+
 !     else if(zmesh < Z_23p4km) then
 !        doubling_value_found_for_Piero = IFLAG_MANTLE_BELOW_23p4km
-       
+
 !     else if(zmesh < Z_14km) then
 !        doubling_value_found_for_Piero = IFLAG_14km_to_23p4km
-       
+
 !     else
 !        doubling_value_found_for_Piero = IFLAG_BEDROCK_down_to_14km
 !     endif
@@ -159,46 +159,46 @@
 !       do j = 1, NGLLY
 !         do i = 1, NGLLX
 
-           
+
 !            if(idoubling(ispec) == IFLAG_ONE_LAYER_TOPOGRAPHY .or. &
 !               idoubling(ispec) == IFLAG_BEDROCK_down_to_14km) then
-              
+
 !               ! since we have suppressed UTM projection for Piero Basini, UTMx is the same as long
 !               ! and UTMy is the same as lat
 !               long = xstore(i,j,k,ispec)
 !               lat = ystore(i,j,k,ispec)
-              
+
 !               ! get coordinate of corner in model
 !               icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 !               icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-              
+
 !               ! avoid edge effects and extend with identical point if outside model
 !               if(icornerlong < 1) icornerlong = 1
 !               if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
 !               if(icornerlat < 1) icornerlat = 1
 !               if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
-              
+
 !               ! compute coordinates of corner
 !               long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
 !               lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
-                   
+
 !               ! compute ratio for interpolation
 !               ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
 !               ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
-                   
+
 !               ! avoid edge effects
 !               if(ratio_xi < 0.) ratio_xi = 0.
 !               if(ratio_xi > 1.) ratio_xi = 1.
 !               if(ratio_eta < 0.) ratio_eta = 0.
 !               if(ratio_eta > 1.) ratio_eta = 1.
-                   
+
 !               ! interpolate elevation at current point
 !               elevation_bedrock = &
 !                    ibedrock(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
 !                    ibedrock(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
 !                    ibedrock(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
 !                    ibedrock(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-                   
+
 !               !! DK DK exclude circles around each station to make sure they are on the bedrock
 !               !! DK DK and not in the ice
 !               is_around_a_station = .false.
@@ -208,38 +208,38 @@
 !                     exit
 !                  endif
 !               enddo
-              
+
 !               ! define elastic parameters in the model
-              
+
 !               ! we are above the bedrock interface i.e. in the ice, and not too close to a station
 !               if(zmesh >= elevation_bedrock .and. .not. is_around_a_station) then
 !                  vp = 3800.d0
 !                  vs = 1900.d0
 !                  rho = 900.d0
-!                  iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_ICE
-                 
+!                  qmu_attenuation_store(i,j,k,ispec) = 1.0 ! IATTENUATION_ICE
+
 !                  ! we are below the bedrock interface i.e. in the bedrock, or close to a station
 !               else
 !                  vp = 5800.d0
 !                  vs = 3200.d0
 !                  rho = 2600.d0
-!                  iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_BEDROCK
+!                  qmu_attenuation_store(i,j,k,ispec) = 9000.0 ! IATTENUATION_BEDROCK
 !               endif
-              
+
 !            else if(idoubling(ispec) == IFLAG_14km_to_23p4km) then
 !               vp = 6800.d0
 !               vs = 3900.d0
 !               rho = 2900.d0
-!               iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_BEDROCK
-              
+!               qmu_attenuation_store(i,j,k,ispec) = 9000.0 ! IATTENUATION_BEDROCK
+
 !            else if(idoubling(ispec) == IFLAG_MANTLE_BELOW_23p4km) then
 !               vp = 8100.d0
 !               vs = 4480.d0
 !               rho = 3380.d0
-!               iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_BEDROCK
-              
+!               qmu_attenuation_store(i,j,k,ispec) = 9000.0 ! IATTENUATION_BEDROCK
+
 !            endif
-           
+
 !                 !pll  8/06
 !                     if(CUSTOM_REAL == SIZE_REAL) then
 !                        rhostore(i,j,k,ispec) = sngl(rho)
@@ -250,17 +250,17 @@
 !                        vpstore(i,j,k,ispec) = vp
 !                        vsstore(i,j,k,ispec) = vs
 !                     end if
-                
+
 !                 kappastore(i,j,k,ispec) = rhostore(i,j,k,ispec)*(vpstore(i,j,k,ispec)*vpstore(i,j,k,ispec) - &
 !                      4.d0*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec)/3.d0)
 !                 mustore(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)*&
 !                      vsstore(i,j,k,ispec)
-           
-!                 ! Stacey, a completer par la suite  
+
+!                 ! Stacey, a completer par la suite
 !                 rho_vp(i,j,k,ispec) = rhostore(i,j,k,ispec)*vpstore(i,j,k,ispec)
 !                 rho_vs(i,j,k,ispec) = rhostore(i,j,k,ispec)*vsstore(i,j,k,ispec)
 !                 !end pll
-                
+
 !                 !      kappastore(i,j,k,ispec) = materials_ext_mesh(1,mat_ext_mesh(ispec))* &
 !                 !       (materials_ext_mesh(2,mat_ext_mesh(ispec))*materials_ext_mesh(2,mat_ext_mesh(ispec)) - &
 !                 !        4.d0*materials_ext_mesh(3,mat_ext_mesh(ispec))*materials_ext_mesh(3,mat_ext_mesh(ispec))/3.d0)
@@ -271,8 +271,8 @@
 !           enddo
 !        enddo
 !     enddo
-!  
-!  end subroutine 
+!
+!  end subroutine
 
 
 !
@@ -379,12 +379,12 @@
 ! ! we are above the bedrock interface i.e. in the ice, and not too close to a station
 !   if(zstore(i,j,k,ispec) >= elevation_bedrock .and. .not. is_around_a_station) then
 !      iflag = flag_above
-!      !iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_ICE
+!      !qmu_attenuation_store(i,j,k,ispec) = 1.0 ! IATTENUATION_ICE
 !      ! we are below the bedrock interface i.e. in the bedrock, or close to a station
 !   else
 !      iflag = flag_below
-!      !iflag_attenuation_store(i,j,k,ispec) = IATTENUATION_BEDROCK
+!      !qmu_attenuation_store(i,j,k,ispec) = 9000.0 ! IATTENUATION_BEDROCK
 !   endif
-    
+
 
 ! end subroutine interface

@@ -41,7 +41,7 @@
   integer, parameter :: NGNOD2D_AVS_DX_HIGHRES = NGLLSQUARE
 
 !! DK DK this code is based on a version of SPECFEM3D_BASIN without
-!! DK DK the USE_HIGHRES_FOR_MOVIES flag in DATA/Par_file
+!! DK DK the USE_HIGHRES_FOR_MOVIES flag in Par_file
 !! DK DK should merge this code with newer version of basin code at some point
 
 ! threshold in percent of the maximum below which we cut the amplitude

@@ -100,7 +100,7 @@
   endif
 
   ! limits Q_mu value range
-  if( Q_mu < 40.0d0 ) Q_mu = 40.0d0
+  if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
   if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
 
 
@@ -143,8 +143,8 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_constants(myrank,min_resolved_period, &
-                                  tau_sigma,f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+  subroutine get_attenuation_constants(min_resolved_period,tau_sigma, &
+                              f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
 ! returns period band constants tau_sigma and center frequency f_c_source
 
@@ -152,7 +152,6 @@
 
   include "constants.h"
 
-  integer:: myrank
   real(kind=CUSTOM_REAL) :: min_resolved_period
   double precision, dimension(N_SLS) :: tau_sigma
   double precision :: f_c_source
@@ -179,20 +178,6 @@
   !tau_sigma(1) =  7.957747154594766669788441504352d0
   !tau_sigma(2) =  1.125395395196382652969191440206d0
   !tau_sigma(3) =  0.159154943091895345608222100964d0
-
-  ! user output
-  if( myrank == 0 ) then
-    write(IMAIN,*)
-    write(IMAIN,*) "attenuation: "
-    write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
-                  " frequency: ",sngl(ATTENUATION_f0_REFERENCE)
-    write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
-    write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
-                  " frequency: ",sngl(f_c_source)
-    write(IMAIN,*)
-    ! debug output
-    !write(IMAIN,*) "  tau_sigma: ",sngl(tau_sigma(:))
-  endif
 
   end subroutine get_attenuation_constants
 

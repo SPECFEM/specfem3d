@@ -25,7 +25,7 @@
 
 ! generic tomography file
 !
-! note: the idea is to use an external, tomography velocity model 
+! note: the idea is to use an external, tomography velocity model
 !
 ! most of the routines here are place-holders, please add/implement your own routines
 !
@@ -36,23 +36,23 @@
 
   ! for external tomography....
   ! (regular spaced, xyz-block file in ascii)
-  !character (len=80) :: TOMO_FILENAME = 'DATA/veryfast_tomography_abruzzo_complete.xyz' 
-  character (len=80) :: TOMO_FILENAME = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'tomography_model.xyz' 
-  
+  !character (len=80) :: TOMO_FILENAME = '../in_data_files/veryfast_tomography_abruzzo_complete.xyz'
+  character (len=80) :: TOMO_FILENAME = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'tomography_model.xyz'
+
   ! model dimensions
   double precision :: ORIG_X,ORIG_Y,ORIG_Z
-  double precision :: END_X,END_Y,END_Z   
-  double precision :: SPACING_X,SPACING_Y,SPACING_Z  
+  double precision :: END_X,END_Y,END_Z
+  double precision :: SPACING_X,SPACING_Y,SPACING_Z
 
-  ! model parameter records    
-  real(kind=CUSTOM_REAL), dimension (:), allocatable :: vp_tomography,vs_tomography,rho_tomography,z_tomography 
+  ! model parameter records
+  real(kind=CUSTOM_REAL), dimension (:), allocatable :: vp_tomography,vs_tomography,rho_tomography,z_tomography
 
   ! model entries
-  integer :: NX,NY,NZ    
+  integer :: NX,NY,NZ
   integer :: nrecord
 
   ! min/max statistics
-  double precision :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX      
+  double precision :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
 
   end module tomography
 
@@ -66,7 +66,7 @@
 
   ! include "constants.h"
   ! include "precision.h"
-  ! include 'mpif.h'  
+  ! include 'mpif.h'
   integer :: myrank
 
   ! all processes read in same file
@@ -74,13 +74,13 @@
   call read_model_tomography(myrank)
 
   ! otherwise:
-  
-  ! only master reads in model file      
-  !if(myrank == 0) call read_external_model()      
+
+  ! only master reads in model file
+  !if(myrank == 0) call read_external_model()
   ! broadcast the information read on the master to the nodes, e.g.
   !call MPI_BCAST(nrecord,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
   !if( myrank /= 0 ) allocate( vp_tomography(1:nrecord) )
-  !call MPI_BCAST(vp_tomography,size(vp_tomography),CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)  
+  !call MPI_BCAST(vp_tomography,size(vp_tomography),CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
 
   end subroutine model_tomography_broadcast
 
@@ -93,63 +93,63 @@
 ! start magnoni 29/11/09
 ! read Vp Vs and rho from extracted text file
 
-! assuming that only tomography undefined material is allowed.... 
+! assuming that only tomography undefined material is allowed....
 ! and all the tomographic regions are collect inside one file called TOMO_FILENAME with homogenous resolution
-! this could be problematic for example if the tomographic regions have different resolution 
-! leading to a waste of memory and cpu time in the partitioning process 
+! this could be problematic for example if the tomographic regions have different resolution
+! leading to a waste of memory and cpu time in the partitioning process
 
   use tomography
-  
+
   implicit none
 
   integer :: myrank
-  
+
   ! local parameters
-  real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo      
+  real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   integer :: irecord,ier
 
   !TOMO_FILENAME='DATA/veryfast_tomography_abruzzo_complete.xyz'
   ! probably the simple position for the filename is the constat.h
   ! but it is also possible to include the name of the file in the material file (therefore in the undef_mat_prop)
-  ! if we want more than one tomofile (Examples: 2 file with a differente resolution 
-  ! as in los angeles case we need to loop over mat_ext_mesh(1,ispec)... 
-  ! it is a possible solution )      
+  ! if we want more than one tomofile (Examples: 2 file with a differente resolution
+  ! as in los angeles case we need to loop over mat_ext_mesh(1,ispec)...
+  ! it is a possible solution )
   !  magnoni 1/12/09
-  open(unit=27,file=TOMO_FILENAME,status='old',iostat=ier) 
+  open(unit=27,file=TOMO_FILENAME,status='old',iostat=ier)
   if( ier /= 0 ) call exit_MPI(myrank,'error reading tomography file')
-  
-  ! reads in model dimensions
-  read(27,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z  
-  read(27,*) SPACING_X, SPACING_Y, SPACING_Z 
-  read(27,*) NX, NY, NZ 
-  read(27,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX 
 
-  nrecord = NX*NY*NZ   
+  ! reads in model dimensions
+  read(27,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
+  read(27,*) SPACING_X, SPACING_Y, SPACING_Z
+  read(27,*) NX, NY, NZ
+  read(27,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
+
+  nrecord = NX*NY*NZ
 
   ! allocates model records
   allocate(vp_tomography(1:nrecord), &
           vs_tomography(1:nrecord), &
           rho_tomography(1:nrecord), &
-          z_tomography(1:nrecord),stat=ier) 
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays') 
+          z_tomography(1:nrecord),stat=ier)
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! reads in record sections
-  do irecord = 1,nrecord   
-    read(27,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo      
-    
+  do irecord = 1,nrecord
+    read(27,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+
     ! stores record values
     vp_tomography(irecord) = vp_tomo
     vs_tomography(irecord) = vs_tomo
     rho_tomography(irecord) = rho_tomo
     z_tomography(irecord) = z_tomo
-  enddo   
-  close(27)   
+  enddo
+  close(27)
 
   ! user output
   if( myrank == 0 ) then
     write(IMAIN,*) '     tomography model: ',trim(TOMO_FILENAME)
   endif
-                                                                
+
   end subroutine read_model_tomography
 
 
@@ -158,7 +158,7 @@
 !
 
 
-  subroutine model_tomography(x_eval,y_eval,z_eval, &                      
+  subroutine model_tomography(x_eval,y_eval,z_eval, &
                              rho_final,vp_final,vs_final)
 
   use tomography
@@ -168,7 +168,7 @@
   !integer, intent(in) :: NX,NY,NZ
   !real(kind=CUSTOM_REAL), dimension(1:NX*NY*NZ), intent(in) :: vp_tomography,vs_tomography,rho_tomography,z_tomography
   !double precision, intent(in) :: ORIG_X,ORIG_Y,ORIG_Z,SPACING_X,SPACING_Y,SPACING_Z
-  !double precision, intent(in) :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX  
+  !double precision, intent(in) :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
 
   double precision, intent(in) :: x_eval,y_eval,z_eval
   real(kind=CUSTOM_REAL), intent(out) :: vp_final,vs_final,rho_final
@@ -238,7 +238,7 @@
   if(z_tomography(p4+1) == z_tomography(p0+1)) then
           gamma_interp_z1 = 1.d0
       else
-          gamma_interp_z1 = (z_eval-z_tomography(p0+1))/(z_tomography(p4+1)-z_tomography(p0+1))   
+          gamma_interp_z1 = (z_eval-z_tomography(p0+1))/(z_tomography(p4+1)-z_tomography(p0+1))
   endif
   if(gamma_interp_z1 > 1.d0) then
           gamma_interp_z1 = 1.d0
@@ -246,8 +246,8 @@
   if(gamma_interp_z1 < 0.d0) then
           gamma_interp_z1 = 0.d0
   endif
-      
-     
+
+
   if(z_tomography(p5+1) == z_tomography(p1+1)) then
           gamma_interp_z2 = 1.d0
       else
@@ -259,8 +259,8 @@
   if(gamma_interp_z2 < 0.d0) then
           gamma_interp_z2 = 0.d0
   endif
-      
-     
+
+
   if(z_tomography(p6+1) == z_tomography(p2+1)) then
           gamma_interp_z3 = 1.d0
       else
@@ -272,8 +272,8 @@
   if(gamma_interp_z3 < 0.d0) then
           gamma_interp_z3 = 0.d0
   endif
-      
-     
+
+
   if(z_tomography(p7+1) == z_tomography(p3+1)) then
           gamma_interp_z4 = 1.d0
       else
@@ -285,7 +285,7 @@
   if(gamma_interp_z4 < 0.d0) then
           gamma_interp_z4 = 0.d0
   endif
-      
+
   gamma_interp_z5 = 1. - gamma_interp_z1
   gamma_interp_z6 = 1. - gamma_interp_z2
   gamma_interp_z7 = 1. - gamma_interp_z3
@@ -328,7 +328,7 @@
      vp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
      vp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
      vp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
-    
+
   vs_final = &
      vs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
      vs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
@@ -338,7 +338,7 @@
      vs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
      vs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
      vs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
-         
+
   rho_final = &
      rho1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + &
      rho2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + &
@@ -348,7 +348,7 @@
      rho6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + &
      rho7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + &
      rho8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
-              
+
   ! impose minimum and maximum velocity and density if needed
   if(vp_final < VP_MIN) vp_final = VP_MIN
   if(vs_final < VS_MIN) vs_final = VS_MIN
