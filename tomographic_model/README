@@ -9,33 +9,33 @@ step-by-step tutorial:
 
 
 1. configure package:
-   
+
    - From the SPECFEM3D root directory SPECFEM3D/
      configure the package, e.g. using intel's ifort compiler:
      > cd SPECFEM3D
-     > ./configure F90=ifort  
+     > ./configure F90=ifort
 
      If successful, this will generate the files:
      Makefile, constants.h, and precision.h, among others
 
-   - copy two run scripts from SPECFEM3D/UTILS/Cluster/
+   - copy two run scripts from SPECFEM3D/utils/Cluster/
      into SPECFEM3D/, e.g.,
      pbs/go_generate_databases_pbs.bash
      pbs/go_solver_pbs.bash
- 
+
 
 2.a create mesh:
 
-   - change to the examples directory SPECFEM3D/EXAMPLES/tomographic_model:
-     > cd EXAMPLES/tomographic_model
+   - change to the examples directory SPECFEM3D/examples/tomographic_model:
+     > cd examples/tomographic_model
 
    - open the cubit GUI:
      > claro (or cubit)
-     
-     then run meshing script: 
+
+     then run meshing script:
      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "tomoblock_mesh.py"
-    
-     if everything goes fine, this creates all the mesh files in a subdirectory MESH/:     
+
+     if everything goes fine, this creates all the mesh files in a subdirectory MESH/:
         MESH/absorbing_surface_file_bottom
         MESH/absorbing_surface_file_xmax
         MESH/absorbing_surface_file_xmin
@@ -46,24 +46,25 @@ step-by-step tutorial:
         MESH/mesh_file
         MESH/nodes_coords_file
         MESH/nummaterial_velocity_file
-     
+
      the cubit graphics window should show a mesh similar to the file homogeneous.png
 
 2.b create tomography_model file:
 
-    in EXAMPLES/tomographic_model, run bash script:
-    
+    in examples/tomographic_model, run bash script:
+
     > sh create_tomography_model_file.sh
-    
+
     which creates an example model: tomography_model.xyz
-    ( elastic model with a constant velocity gradient with depth) 
-    
-    copy this file into directory SPECFEM3D/DATA/
-    
+    ( elastic model with a constant velocity gradient with depth)
+
+    copy this file into directory SPECFEM3D/in_data_files/
+
 
 3. decompose mesh files:
 
-   - compile decomposer in directory SPECFEM3D/decompose_mesh_SCOTCH/:
+   - compile decomposer in directory:
+     > cd SPECFEM3D/
      > make
 
      NOTE 1: check that the two scotch libraries are properly specified in Makefile
@@ -71,37 +72,37 @@ step-by-step tutorial:
               for the SCOTCH libraries
 
    - run decomposer in directory
-     (example assumes 4 partitions with mesh files in ../EXAMPLES/homogeneous_halfspace/MESH/)
-     > ./xdecompose_mesh_SCOTCH 4 ../EXAMPLES/tomographic_model/MESH/ ../DATABASES_MPI/ 
-            
+     (example assumes 4 partitions with mesh files in ../examples/homogeneous_halfspace/MESH/)
+     > ./bin/xdecompose_mesh_SCOTCH 4 ../examples/tomographic_model/MESH/ ../in_out_files/DATABASES_MPI/
+
      this creates mesh partitions "proc000***_Database" in directory DATABASES_MPI/.
-     (you can then specify "DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
+     (you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
 
 
 4. generate databases:
 
-   - compile generate_databases from SPECFEM3D/ :    
+   - compile generate_databases from SPECFEM3D/ :
      > cd SPECFEM3D
      > make xgenerate_databases
-     
+
    - submit job script
      > qsub go_generate_databases_pbs.bash
 
      NOTE: this script will need to be tailored to your cluster, e.g.,
      > bsub < go_generate_databases_lsf.bash
 
-     this will create binary mesh files, e.g. "proc000***_external_mesh.bin" 
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory DATABASES_MPI/.
 
 
 5. run simulation:
 
    - copy three files -- Par_file CMTSOLUTION STATIONS -- from
-      SPECFEM3D/EXAMPLES/tomographic_model/ to SPECFEM3D/DATA/
+      SPECFEM3D/examples/tomographic_model/ to SPECFEM3D/in_data_files/
 
    - compile specfem3D:
      > make xspecfem3D
-      
+
    - submit job script:
      > qsub go_solver_pbs.bash
 
@@ -111,7 +112,7 @@ step-by-step tutorial:
              and you can track the progress with the timestamp files
 
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 672 (ls -1 *semd | wc) in the directory OUTPUT_FILES,
+     of 672 (ls -1 *semd | wc) in the directory in_out_files/OUTPUT_FILES,
      as well as 3 timestamp****** files
 
 

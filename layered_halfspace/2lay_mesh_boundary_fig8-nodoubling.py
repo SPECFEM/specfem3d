@@ -8,7 +8,7 @@
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 
 import os
 import sys
@@ -64,7 +64,7 @@ cubit.cmd('mesh volume 1')
 cubit.cmd('volume 5 size '+str(elementsize))
 cubit.cmd('mesh volume 5')
 
-#### End of meshing 
+#### End of meshing
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
@@ -79,7 +79,7 @@ cubit.cmd('block 1 attribute index 1 1  ')     # volume 1
 cubit.cmd('block 1 attribute index 2 2800 ')  # vp
 cubit.cmd('block 1 attribute index 3 1500 ')  # vs
 cubit.cmd('block 1 attribute index 4 2300 ')  # rho
-cubit.cmd('block 1 attribute index 5 6 ')     # Q_flag  
+cubit.cmd('block 1 attribute index 5 9000. ')     # Q_mu
 cubit.cmd('block 1 attribute index 6 0 ')     # anisotropy_flag
 
 cubit.cmd('block 2 name "elastic 2" ')        # elastic material region
@@ -88,16 +88,16 @@ cubit.cmd('block 2 attribute index 1 2  ')     # volume 2
 cubit.cmd('block 2 attribute index 2 7500 ')  # vp
 cubit.cmd('block 2 attribute index 3 4300 ')  # vs
 cubit.cmd('block 2 attribute index 4 3200 ')  # rho
-cubit.cmd('block 2 attribute index 5 6')      # Q_flag 
+cubit.cmd('block 2 attribute index 5 9000.0')      # Q_mu
 cubit.cmd('block 2 attribute index 6 0 ')     # anisotropy_flag
 
 cubit.cmd('block 3 name "elastic 3" ')        # elastic material region
 cubit.cmd('block 3 attribute count 6')
-cubit.cmd('block 3 attribute index 1 3  ')     # same material properties as for volume 2 
+cubit.cmd('block 3 attribute index 1 3  ')     # same material properties as for volume 2
 cubit.cmd('block 3 attribute index 2 7500 ')
 cubit.cmd('block 3 attribute index 3 4300 ')
 cubit.cmd('block 3 attribute index 4 3200 ')
-cubit.cmd('block 3 attribute index 5 6')
+cubit.cmd('block 3 attribute index 5 9000.0')
 cubit.cmd('block 3 attribute index 6 0')
 
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
@@ -106,7 +106,7 @@ cubit.cmd('save as "meshing.cub" overwrite')
 #### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT
 
 os.system('mkdir -p MESH')
-cubit2specfem3d.export2SESAME('MESH') 
+cubit2specfem3d.export2SESAME('MESH')
 
 # all files needed by SCOTCH are now in directory MESH
 

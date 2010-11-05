@@ -2,7 +2,7 @@
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 
 import os
 import sys
@@ -23,7 +23,7 @@ cubit.cmd('volume 2 size '+str(elementsize))
 cubit.cmd('mesh volume 1 2')
 
 
-#### End of meshing 
+#### End of meshing
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
@@ -45,7 +45,7 @@ cubit.cmd('block 2 attribute index 1 2')      # flag for material: 2 for 2. mate
 cubit.cmd('block 2 attribute index 2 3000')   # vp
 cubit.cmd('block 2 attribute index 3 0.1')   # vs
 cubit.cmd('block 2 attribute index 4 2300')   # rho
-cubit.cmd('block 2 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
+cubit.cmd('block 2 attribute index 5 9000.0')     # Q_mu
 cubit.cmd('block 2 attribute index 6 0 ')      # anisotropy_flag
 
 
@@ -55,6 +55,6 @@ cubit.cmd('save as "meshing.cub" overwrite')
 #### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT
 
 os.system('mkdir -p MESH')
-cubit2specfem3d.export2SESAME('MESH') 
+cubit2specfem3d.export2SESAME('MESH')
 
 # all files needed by SCOTCH are now in directory MESH

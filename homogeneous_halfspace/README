@@ -9,33 +9,33 @@ step-by-step tutorial:
 
 
 1. configure package:
-   
+
    - From the SPECFEM3D root directory SPECFEM3D/
      configure the package, e.g. using intel's ifort compiler:
      > cd SPECFEM3D
-     > ./configure F90=ifort  
+     > ./configure F90=ifort --with-scotch-path=/my_path_to_scotch
 
      If successful, this will generate the files:
      Makefile, constants.h, and precision.h, among others
 
-   - copy two run scripts from SPECFEM3D/UTILS/Cluster/
+   - copy two run scripts from SPECFEM3D/utils/Cluster/
      into SPECFEM3D/, e.g.,
      pbs/go_generate_databases_pbs.bash
      pbs/go_solver_pbs.bash
- 
+
 
 2. create mesh:
 
-   - change to the examples directory SPECFEM3D/EXAMPLES/homogeneous_halfspace:
-     > cd EXAMPLES/homogeneous_halfspace
+   - change to the examples directory SPECFEM3D/examples/homogeneous_halfspace:
+     > cd examples/homogeneous_halfspace
 
    - open the cubit GUI:
      > claro (or cubit)
-     
-     then run meshing script: 
+
+     then run meshing script:
      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
-    
-     if everything goes fine, this creates all the mesh files in a subdirectory MESH/:     
+
+     if everything goes fine, this creates all the mesh files in a subdirectory MESH/:
         MESH/absorbing_surface_file_bottom
         MESH/absorbing_surface_file_xmax
         MESH/absorbing_surface_file_xmin
@@ -46,12 +46,12 @@ step-by-step tutorial:
         MESH/mesh_file
         MESH/nodes_coords_file
         MESH/nummaterial_velocity_file
-     
+
      the cubit graphics window should show a mesh similar to the file homogeneous.png
 
 3. decompose mesh files:
 
-   - compile decomposer in directory SPECFEM3D/decompose_mesh_SCOTCH/:
+   - compile decomposer in directory SPECFEM3D/:
      > make
 
      NOTE 1: check that the two scotch libraries are properly specified in Makefile
@@ -59,37 +59,37 @@ step-by-step tutorial:
               for the SCOTCH libraries
 
    - run decomposer in directory
-     (example assumes 4 partitions with mesh files in ../EXAMPLES/homogeneous_halfspace/MESH/)
-     > ./xdecompose_mesh_SCOTCH 4 ../EXAMPLES/homogeneous_halfspace/MESH/ ../DATABASES_MPI/ 
-            
-     this creates mesh partitions "proc000***_Database" in directory DATABASES_MPI/.
-     (you can then specify "DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
+     (example assumes 4 partitions with mesh files in ../examples/homogeneous_halfspace/MESH/)
+     > ./bin/xdecompose_mesh_SCOTCH 4 ../examples/homogeneous_halfspace/MESH/ ../in_out_files/DATABASES_MPI/
+
+     this creates mesh partitions "proc000***_Database" in directory in_out_files/DATABASES_MPI/.
+     (you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
 
 
 4. generate databases:
 
-   - compile generate_databases from SPECFEM3D/ :    
+   - compile generate_databases from SPECFEM3D/ :
      > cd SPECFEM3D
      > make xgenerate_databases
-     
+
    - submit job script
      > qsub go_generate_databases_pbs.bash
 
      NOTE: this script will need to be tailored to your cluster, e.g.,
      > bsub < go_generate_databases_lsf.bash
 
-     this will create binary mesh files, e.g. "proc000***_external_mesh.bin" 
-     in directory DATABASES_MPI/.
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory in_out_files/DATABASES_MPI/.
 
 
 5. run simulation:
 
    - copy three files -- Par_file CMTSOLUTION STATIONS -- from
-      SPECFEM3D/EXAMPLES/homogeneous_halfspace/ to SPECFEM3D/DATA/
+      SPECFEM3D/examples/homogeneous_halfspace/ to SPECFEM3D/in_data_files/
 
    - compile specfem3D:
      > make xspecfem3D
-      
+
    - submit job script:
      > qsub go_solver_pbs.bash
 
@@ -103,11 +103,11 @@ step-by-step tutorial:
      as well as 3 timestamp****** files
 
 
-6. check with 6 reference seismograms in 
-      SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS/    
+6. check with 6 reference seismograms in
+      SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
 
    - execute gnuplot script
-     > cd SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS 
+     > cd SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS
      > gnuplot
 
          gnuplot> load "X1-50.BHZ.gnuplot"
@@ -128,9 +128,9 @@ step-by-step tutorial:
          gnuplot> quit
 
 
-7. plot your output seismograms in SPECFEM3D/OUTPUT_FILES/
+7. plot your output seismograms in SPECFEM3D/in_out_files/OUTPUT_FILES/
 
-   - copy gnuplot script X1-50.BHZ.gnuplot to OUTPUT_FILES/
+   - copy gnuplot script X1-50.BHZ.gnuplot to in_out_files/OUTPUT_FILES/
    - execute same commands as above
    - you should see the same image as generated from the reference seismograms,
       but the record length is a bit longer (42.4500 vs 41.24350)

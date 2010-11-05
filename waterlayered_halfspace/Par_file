@@ -1,14 +1,14 @@
 
 # forward or adjoint simulation:
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
-SIMULATION_TYPE                 = 1   
+SIMULATION_TYPE                 = 1
 SAVE_FORWARD                    = .false.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
-# number of MPI processors 
+# number of MPI processors
 NPROC                           = 4
 
 # time step parameters
@@ -38,7 +38,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = DATABASES_MPI
+LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
