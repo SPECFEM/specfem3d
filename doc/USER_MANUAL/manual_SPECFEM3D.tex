@@ -113,12 +113,13 @@ based upon the spectral-element method (SEM).
 The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions.
 Note that in many (most?) geological models in the context of seismic wave propagation studies
 (except for fault dynamic rupture studies)
-a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient.
+a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient. For a detailed introduction to the SEM as applied to regional
+seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
+in particular \citet{KoLiTrSuStSh04}.
+
 Effects due to lateral variations in compressional-wave speed, shear-wave
 speed, density, a 3D crustal model, topography and bathymetry are
-included. For a detailed introduction to the SEM as applied to regional
-seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
-in particular \citet{KoLiTrSuStSh04}. The package can accommodate
+included. The package can accommodate
 full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
 variations in attenuation. Adjoint capabilities and finite-frequency
 kernel simulations are included \citep{LiTr06,TrKoLi08}.
@@ -132,16 +133,14 @@ parallel programming based upon the Message Passing Interface (MPI)
 \citep{GrLuSk94,Pac97}.
 
 SPECFEM3D won the Gordon Bell award for best performance at the SuperComputing~2003
-conference in Phoenix, Arizona (USA) by running at 5 teraflops (sustained)
-on 1944 processors of the Japanese Earth Simulator using 14.6 billion
-degrees of freedom stored in 2.5 terabytes of memory; see \cite{KoTsChTr03}
-and the Gordon Bell Awards News Release \url{www.sc-conference.org/sc2003/nr_finalaward.html }
-for details. It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
+conference in Phoenix, Arizona (USA) (see \cite{KoTsChTr03}
+and \url{www.sc-conference.org/sc2003/nr_finalaward.html}).
+It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
 It also won the BULL Joseph Fourier supercomputing award in 2010.
 
 The next release of the code will include support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10}
 as well as Convolutional or Auxiliary Differential Equation Perfectly Matched absorbing Layers (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
-The next release will use the PT-Scotch and ParMetis parallel libraries for mesh partitioning.
+The next release will use the PT-Scotch parallel library for mesh partitioning.
 
 \section{Citation}
 
