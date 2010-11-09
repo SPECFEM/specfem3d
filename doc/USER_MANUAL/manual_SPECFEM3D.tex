@@ -125,7 +125,7 @@ full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
 variations in attenuation. Adjoint capabilities and finite-frequency
 kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09}.
 
-The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team: in alphabetical order, C\'eline Blitz, Emiljana Jorgji, Dimitri Komatitsch, Nicolas Le Goff, Pieyre Le Loher, Roland Martin, David Mich\'ea, Jeroen Tromp \toall{add full list of developers here}.
+The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team: in alphabetical order, C\'eline Blitz, Emiljana Jorgji, Dimitri Komatitsch, Nicolas Le Goff, Pieyre Le Loher, Roland Martin, David Mich\'ea, Jeroen Tromp \toall{add full list of developers here and update the AUTHORS file accordingly}.
 
 All SPECFEM3D\_GLOBE software is written in Fortran90 with full portability
 in mind, and conforms strictly to the Fortran95 standard. It uses
@@ -499,7 +499,9 @@ dedicated to Southern California and more flexiblity is provided in this version
 
 In the main directory type `\texttt{make meshfem3D}'. If all paths and flags
 have been set correctly, the mesher should now compile and produce
-the executable \texttt{bin/xmeshfem3D}.
+the executable \texttt{bin/xmeshfem3D}. Please note that  
+\texttt{xmeshfem3D} must be called directly from the \texttt{bin/} directory, 
+as most of the binaries of the package.
 
 Input for the mesh generation program is provided through the parameter
 file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{in\_data\_files/meshfem3D\_files/}.
@@ -649,30 +651,6 @@ to the screen instead by uncommenting a line in \texttt{constants.h}:
 !~integer,~parameter~::~IMAIN~=~ISTANDARD\_OUTPUT
 \end{lyxcode}
 
-%% \section{Checking the MPI Buffers (Optional)}
-
-%% The mesher writes MPI communication tables in the \texttt{OUTPUT\_FILES}
-%% subdirectory in the files \texttt{addressing.txt}, \texttt{list\_messages\_corners.txt}
-%% and \texttt{list\_messages\_faces.txt}, and MPI communication buffers
-%% to the local disks. Use the four serial codes
-
-%% \begin{lyxcode}
-%% check\_buffers\_2D.f90
-
-%% check\_buffers\_1D.f90
-%% \end{lyxcode}
-%% to check that all the MPI buffers created by the mesher have been
-%% generated correctly. For example, typing `\texttt{make check\_buffers\_2D}'
-%% and then `\texttt{xcheck\_buffers\_2D}' checks the communication buffers
-%% between faces common to the mesh slices.
-
-%% \begin{quote}
-%% Please note that running these codes is optional because no information
-%% needed by the solver is generated.
-%% \end{quote}
-
-%%\section{\label{sec:quality}Checking the Mesh Quality (Optional)}
-
 The quality of the mesh may be inspected more precisely based upon the serial code
 in the file  ~\\
 \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}. In the directory \texttt{check\_mesh\_quality\_CUBIT\_Abaqus}, type
@@ -714,7 +692,10 @@ Either you previously used  \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCO
 \end{figure}
 
 
-In the main directory type '\texttt{make generate\_databases}'. Input for the program is provided through the main parameter file \texttt{Par\_file}, which resides in the subdirectory \texttt{in\_data\_files/}. Before running \texttt{xgenerate\_databases}, a number of parameters need to be set in the \texttt{Par\_file}:
+In the main directory type '\texttt{make generate\_databases}'. Input for the program is provided through 
+the main parameter file \texttt{Par\_file}, which resides in the subdirectory \texttt{in\_data\_files/}. Please note that  
+\texttt{xgenerate\_databases} must be called directly from the \texttt{bin/} directory, as most of the binaries of the package.
+Before running \texttt{xgenerate\_databases}, a number of parameters need to be set in the \texttt{Par\_file}:
 
 \begin{description}
 \item [{\texttt{SIMULATION\_TYPE}}] is set to 1 for forward simulations,
@@ -842,6 +823,9 @@ This feature is only relevant for the solver.
 
 Now that you have successfully generated the databases, you are ready to compile
 the solver. In the main directory type `\texttt{make specfem3D}'.
+Please note that \texttt{xspecfem3D} must be called directly from 
+the \texttt{bin/} directory, as most of the binaries of the package.
+
 %obsolete
 %For reasons of speed, the solver uses static memory allocation.
 %Therefore it needs to be recompiled (type `\texttt{make clean}' and
