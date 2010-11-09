@@ -193,11 +193,11 @@ command names for your Fortran90 compiler and MPI package:
 
 
 The SPECFEM3D software package relies on the Scotch library to partition the meshes created with CUBIT.
-Note that we use CUBIT to create meshes of hexahedra, but other packages can be used as well, for instance GiD from http://gid.cimne.upc.es or Gmsh from http://geuz.org/gmsh. Even mesh creation packages that generate tetrahedra, for instance TetGen from http://tetgen.berlios.de, can be used because each tetrahedron can then easily be decomposed into four hexahedra as shown in the picture of the TetGen logo at http://tetgen.berlios.de/figs/Delaunay-Voronoi-3D.gif; while this approach does not generate hexahedra of optimal quality, it can ease mesh creation in some situations and it has been shown that the spectral-element method can very accurately handle distorted mesh elements \citep{OlSe11}.
+Note that we use CUBIT to create meshes of hexahedra, but other packages can be used as well, for instance GiD from \url{http://gid.cimne.upc.es} or Gmsh from \url{http://geuz.org/gmsh}. Even mesh creation packages that generate tetrahedra, for instance TetGen from \url{http://tetgen.berlios.de}, can be used because each tetrahedron can then easily be decomposed into four hexahedra as shown in the picture of the TetGen logo at \url{http://tetgen.berlios.de/figs/Delaunay-Voronoi-3D.gif}; while this approach does not generate hexahedra of optimal quality, it can ease mesh creation in some situations and it has been shown that the spectral-element method can very accurately handle distorted mesh elements \citep{OlSe11}.
 
-The path to the SCOTCH library needs to be set with the option \texttt{-{}-with-scotch-lib}. Just as an example:
+The path to the SCOTCH installation needs to be set with the option \texttt{-{}-with-scotch-path}. Just as an example:
 \begin{lyxcode}
-./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-lib=/opt/scotch/gcc64/lib
+./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-path=/opt/scotch
 \end{lyxcode}
 
 To compile a serial version of the code for small meshes that fit
@@ -216,6 +216,8 @@ MPI libraries.
 \item [{\texttt{FLAGS\_NO\_CHECK}}] Compiler flag for creating fast, production-run
 code for critical subroutines.
 \end{description}
+The configuration scripts automatically creates for each executable a corresponding
+\texttt{Makefile} in the \texttt{src/} subdirectoy.
 The \texttt{Makefile} contains a number of suggested entries for various
 compilers, e.g., Portland, Intel, Absoft, NAG, and Lahey. The software
 has run on a wide variety of compute platforms, e.g., various PC clusters
@@ -271,11 +273,12 @@ When running on an SGI add ``\texttt{setenv TRAP\_FPE OFF}'' to your
 .cshrc file \textit{before} compiling in order to turn underflow trapping
 off.
 
-Finally, before compiling make sure that the subdirectories \texttt{obj}
-and \texttt{OUTPUT\_FILES} exist within the directory with the source
-code (\texttt{SPECFEM3D\_V2.0.0}). The \texttt{go\_mesher} script
-discussed in Chapter~\ref{cha:Running-the-Mesher-Meshfem3D} automatically
-takes care of creating the \texttt{OUTPUT\_FILES} directory.
+% obsolete
+%Finally, before compiling make sure that the subdirectories \texttt{obj}
+%and \texttt{OUTPUT\_FILES} exist within the directory with the source
+%code (\texttt{SPECFEM3D\_V2.0.0}). The \texttt{go\_mesher} script
+%discussed in Chapter~\ref{cha:Running-the-Mesher-Meshfem3D} automatically
+%takes care of creating the \texttt{OUTPUT\_FILES} directory.
 
 Note that if you run very large meshes on a relatively small number
 of processors, the memory size needed on each processor might become
@@ -287,9 +290,146 @@ message.
 
 \chapter{\label{cha:Mesh-Generation}Mesh Generation}
 
+The first step in running a spectral-element method computation consists of constructing a high-quality mesh for the region under consideration. We provide two possibilities to do so: (1) relying on an external, hexahedral mesher CUBIT or (2) using the provided, internal mesher \texttt{xmeshfem3D}. In the following, we explain these two approaches.
+
+
 \section{\label{cha:Running-the-Mesher-CUBIT}Meshing with \texttt{CUBIT}}
-\subsection{Exporting the Mesh}
+
+CUBIT is a meshing tool suite for the creation of finite-element meshes for arbitrarily shaped models. It has been developed and maintained at Sandia National Laboratories and can be purchased for a small academic institutional fee at \url{http://cubit.sandia.gov}.
+Our experience showed that using CUBIT greatly facilitates and speeds up the generation and preparation of hexahedral, conforming meshes for a variety of geophysical models with increasing complexity. 
+
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.6\textwidth]{figures/mount-cubit.jpg}
+\par\end{centering}
+
+\caption{Example of the graphical user interface of CUBIT. The hexahedral mesh shown in the main display consists of a hexahedral discretization of a single volume with topography.}
+
+\label{fig:mount.cubit}
+\end{figure}
+
+The basic steps in creating a load-balanced, partitioned mesh with CUBIT are: 
+\begin{description}
+\item [1.] setting up a hexahedral mesh with CUBIT, 
+\item [2.] exporting the CUBIT mesh into a specfem3d file format and 
+\item [3.] partitioning the specfem3d mesh files for a chosen number of cores. 
+\end{description}
+
+Examples are provided in the SPECFEM3D package in the subdirectory \texttt{examples/}. Please feel free to contribute your own example to this package by contacting the CIG Computational Seismology Mailing List  \url{cig-seismo@geodynamics.org}. 
+
+
+\subsection{Creating the Mesh with CUBIT}
+
+For the installation and handling of the CUBIT meshing tool suite, please refer to the CUBIT user manual and documentation. 
+In order to give you a basic understanding of how to use CUBIT for our purposes, examples are provided in the SPECFEM3D package in the subdirectory \texttt{examples/}. For your convenience, the following examples are provided in the subdirectory \texttt{examples/}:
+\begin{description}
+\item [{\texttt{homogeneous\_halfspace}}] Basic example creates a single block model and assigns elastic material parameters.
+\item [{\texttt{layered\_halfspace}}]  Combines two different, elastic material volumes and creates a refinement layer between the two. This example can be compared for validation against the solutions provided in subdirectory ~\\
+\texttt{VALIDATION\_3D\_SEM\_SIMPLER\_LAYER\_SOURCE\_DEPTH/}.
+\item [{\texttt{waterlayered\_halfspace}}] Combines an acoustic and elastic material volume as in a schematic marine survey example.
+\item [{\texttt{tomographic\_model}}] Creates a single block model whose material properties will have to be read in from a tomographic model file during the databases creation by \texttt{xgenerate\_databases}. 
+\end{description}
+
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.45\textwidth]{figures/example-homogeneous.jpg}
+\includegraphics[width=.45\textwidth]{figures/example-2layers.jpg} \\
+\includegraphics[width=.45\textwidth]{figures/example-water.jpg}
+\includegraphics[width=.45\textwidth]{figures/example-tomo.jpg}
+\par\end{centering}
+
+\caption{Screenshots of the CUBIT examples provided in subdirectory  \texttt{examples/}: homogeneous halfspace, layered halfspace, waterlayered halfspace and tomographic model.}
+
+\label{fig:examples.cubit}
+\end{figure}
+
+
+In each example subdirectory you will find a \texttt{README} file, which explains in a step-by-step tutorial the workflow for the example.
+Please feel free to contribute your own example to this package by contacting the CIG Computational Seismology Mailing List  \url{cig-seismo@geodynamics.org}. 
+
+
+\subsection{Exporting the Mesh with \texttt{cubit2specfem3d.py} }
+
+Once the geometric model volumes in CUBIT are meshed, you prepare the model for the exportation with the definition of the material blocks and of the boundary surfaces. Thus, prior to exporting the mesh, you need to define blocks specifying the materials and absorbing boundaries in CUBIT.
+This process could be done automatically using the script \texttt{boundary\_definition.py} if the mesh meets some conditions or manually, following the block convention: 
+
+\begin{description}
+\item [material\_name] Each material should have a specific block defined by a unique name. The name convention of the material is to start with either 'elastic' or 'acoustic'. It must be then followed by a unique identifier, e.g. 'elastic 1', 'elastic 2', etc.
+The additional attributes to the block define the material description. 
+
+For an elastic material:
+\begin{description}
+\item [material\_id] An integer value which is unique for this material. 
+\item [Vp] P-Velocity of the material (given in m/s).
+\item [Vs] S-Velocity of the material (given in m/s).
+\item [rho] density of the material (given in kg/$m^3$).
+\item [Q] quality factor to use in case of a simulation with attenuation turned on. It should be between 1 and 9000. In case no attenuation information is available, it can be set to zero. Please note, that the Vp- and Vs-velocities are given for a reference frequency. To change this reference frequency, you change the value of 
+\texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+\item [anisotropic\_flag] Flag describing the anisotropic model to use in case an anisotropic simulation should be conducted. See the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for an implementation of the anisotropic models. In case no anisotropy is available, it can be set to zero.
+\end{description}
+Note that this material block has to be defined using all the volumes which belong to this elastic material. For volumes belonging to another, different material, you will need to define a new material block.
+
+For an acoustic material:
+\begin{description}
+\item [material\_id] An integer value which is unique for this material. 
+\item [Vp] P-Velocity of the material (given in m/s).
+\item [0] S-Velocity of the material is ignored.
+\item [rho] density of the material (given in kg/$m^3$).
+\end{description}
+
+
+\item [face\_topo] Block definition for the surface which defines the free surface (which can have topography). The name of this block must be 'face\_topo', the block has to be defined using all the surfaces which constitute the complete free surface of the model.
+
+\item [face\_abs\_xmin] Block definition for the faces on the absorbing boundaries, one block for each surface with x=Xmin. 
+\item [face\_abs\_xmax] Block definition for the faces on the absorbing boundaries, one block for each surface with x=Xmax.
+\item [face\_abs\_ymin] Block definition for the faces on the absorbing boundaries, one block for each surface with y=Ymin.
+\item [face\_abs\_ymax] Block definition for the faces on the absorbing boundaries, one block for each surface with y=Ymax.
+\item [face\_abs\_bottom] Block definition for the faces on the absorbing boundaries, one block for each surface with z=bottom.
+\end{description}
+
+
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.45\textwidth]{figures/mount-surface.jpg}
+\includegraphics[width=.45\textwidth]{figures/mount-abs.jpg}
+\par\end{centering}
+
+\caption{Example of the block definitions for the free surface 'face\_topo' (left) and the absorbing boundaries, defined in a single block 'face\_abs\_xmin' (right) in CUBIT.}
+
+\label{fig:mount.abs}
+\end{figure}
+
+Optionally, instead of specifying for each surface at the boundaries a single block like mentioned above, you can also specify a single block for all boundary surfaces and name it as one of the absorbing blocks above, e.g. 'face\_abs\_xmin'. 
+
+After the block definitions are done, you export the mesh using the script \texttt{cubit2specfem3d.py} provided in each of the example directories. If the export was successful, you should find the following files a the subdirectory \texttt{MESH/}:
+\begin{description}
+\item [nummaterial\_velocity\_file] Defines the material properties. For fully defined materials, the formats is:
+\begin{lyxcode}
+\texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q}  \texttt{anisotropy\_flag} 
+\end{lyxcode}
+where 
+\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-velocity in $m \, s^{-1}$, \texttt{Vs}  the S-velocity in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
+For a tomographic model, the material definition format is: 
+\begin{lyxcode}
+\texttt{domain\_ID} \texttt{material\_ID}  \texttt{tomography}  \texttt{name}  
+\end{lyxcode}
+where
+\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a negative, unique identifier, \texttt{tomography} keyword for tomographic material definition and \texttt{name} the name of the tomography file. The name is not used so far, rather change the filename defined in the file ~\\
+\texttt{src/generate\_databases/model\_tomography.f90}.
+\item [materials\_file] Contains the material associations for each element. 
+\item [nodes\_coords\_file] Contains the point locations in Cartesian coordinates of the mesh element corners.
+\item [mesh\_file] Contains the mesh element connectivity.
+\item [free\_surface\_file] Contains the free surface connectivity.
+\item [absorbing\_surface\_file\_xmax] Contains the surface connectivity of the absorbing boundary surface at the Xmax.
+\item [absorbing\_surface\_file\_xmin] Contains the surface connectivity of the absorbing boundary surface at the Xmin.
+\item [absorbing\_surface\_file\_ymax] Contains the surface connectivity of the absorbing boundary surface at the Ymax.
+\item [absorbing\_surface\_file\_ymin] Contains the surface connectivity of the absorbing boundary surface at the Ymin.
+\item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom.
+\end{description}
+
+
 \subsection{Partitioning the Mesh with \texttt{xdecompose\_mesh\_SCOTCH}}
+
 
 The SPECFEM3D software package performs large scale simulations in a parallel 'Single Process Multiple Data' way.
 The spectral element mesh created with CUBIT needs to be distributed on the processors. This partitioning is executed once and for all prior to
@@ -299,24 +439,37 @@ An efficient partitioning is important because it leverages the overall running 
 It amounts to balance the number of elements in each slice while minimizing the communication coasts
 resulting from the placement of adjacent elements to different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the Scotch library
 which provides efficent static mapping, graph and mesh partitioning routines. Scotch is a free software package developed by
-Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \texttt{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
+Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
 \\
 
 Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path
-of the Scotch library with the option \texttt{-{}-with-scotch-lib} of the \texttt{configure} script.
+of the Scotch library with the option \texttt{-{}-with-scotch-path} of the \texttt{configure} script.
 For convenience we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
-in directory src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b. Please refer to file INSTALL.txt in that directory to see how to compile it.
-In the future you should be able to find for recent versions at http://www.labri.fr/perso/pelegrin/scotch/scotch\_en.html .
+in directory ~\\
+\texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}. Please refer to file INSTALL.txt in that directory to see how to compile it.
+In the future you should be able to find for recent versions at  \url{http://www.labri.fr/perso/pelegrin/scotch/scotch\_en.html} .
 \\
 
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.45\textwidth]{figures/mount-partitions.jpg}
+\includegraphics[width=.45\textwidth]{figures/mount-partitions2.jpg}
+\par\end{centering}
+
+\caption{Example of a mesh partitioning onto four cores. Each single core partition is colored differently. The executable \texttt{xdecompose\_mesh\_SCOTCH} can equally distribute the mesh on any arbitrary number of cores.}
+
+
+\label{fig:mount.partitions}
+\end{figure}
+
 Then you are ready to compile,
-in the directory \texttt{decompose\_mesh\_SCOTCH} type '\texttt{make decompose\_mesh\_SCOTCH}'.
-If all paths and flags have been set correctly, the executable \texttt{xdecompose\_mesh\_SCOTCH} should be produced.
+in the main directory type '\texttt{make decompose\_mesh\_SCOTCH}'.
+If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh\_SCOTCH} should be produced.
 
 The partitioning is done in serial for now (in the next release we will provide a parallel version of that code),
 the synopsis is:
 \begin{lyxcode}
-./decompose\_mesh\_SCOTCH  nparts  input\_directory output\_directory
+./bin/xdecompose\_mesh\_SCOTCH  nparts  input\_directory output\_directory
 \end{lyxcode}
 
 All the files generated by the Python scripts must be placed in the \texttt{input\_directory} folder before running the program.
@@ -326,7 +479,7 @@ All the files generated by the Python scripts must be placed in the \texttt{inpu
 
 \noindent \begin{flushleft}
 %
-\begin{figure}[t]
+\begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[scale=0.5]{figures/socal_map_mpi}
 \par\end{centering}
@@ -339,18 +492,19 @@ of elements. In this example we use $5^{2}=25$ processors. }
 
 \par\end{flushleft}
 
-You are now ready to compile the internal mesher. This is an alternative to CUBIT
+In case you successfully ran the configuration script, you are also ready to compile the internal mesher. 
+This is an alternative to CUBIT
 for the mesh generation of relatively simple geological models. The mesher is no longer
 dedicated to Southern California and more flexiblity is provided in this version of the package.
 
-In the directory \texttt{meshfem3D} type `\texttt{make meshfem3D}'. If all paths and flags
+In the main directory type `\texttt{make meshfem3D}'. If all paths and flags
 have been set correctly, the mesher should now compile and produce
-the executable \texttt{xmeshfem3D}.
+the executable \texttt{bin/xmeshfem3D}.
 
 Input for the mesh generation program is provided through the parameter
-file \texttt{Par\_file}, which resides in the subdirectory \texttt{meshfem3D/DATA}.
+file \texttt{Mesh\_Par\_file}, which resides in the subdirectory \texttt{in\_data\_files/meshfem3D\_files/}.
 Before running the mesher, a number of parameters need to be set in
-the \texttt{Par\_file}. This requires a basic understanding of how
+the \texttt{Mesh\_Par\_file}. This requires a basic understanding of how
 the SEM is implemented, and we encourage you to read \citet{KoVi98,KoTr99}
 and \citet{KoLiTrSuStSh04}.
 
@@ -364,7 +518,7 @@ the flag \texttt{\small SUPPRESS\_UTM\_PROJECTION}, in which case
 all `longitude' parameters simply refer to the $x$~axis, and all
 `latitude' parameters simply refer to the $y$~axis. To run the mesher
 for a global simulation, the following parameters need to be set in
-the \texttt{Par\_file}:
+the \texttt{Mesh\_Par\_file}:
 
 \begin{description}
 \item [{\texttt{LATITUDE\_MIN}}] Minimum latitude in the block (negative
@@ -438,11 +592,11 @@ the contents of the \texttt{LOCAL\_PATH} directory to see the (many)
 files generated by the mesher.
 \item [{\texttt{NMATERIALS}}] The number of different materials in your model. In the following lines, each material needs to be defined as :
 \begin{lyxcode}
-\texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q\_flag}  \texttt{anisotropy\_flag} \texttt{domain\_ID}
+\texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q}  \texttt{anisotropy\_flag} \texttt{domain\_ID}
 \end{lyxcode}
 where
 \begin{itemize}
-     \item \texttt{Q\_flag}           : 0=no attenuation / standard \texttt{Q} attenutation value
+     \item \texttt{Q}           : 0=no attenuation / standard \texttt{Q} attenutation value
      \item \texttt{anisotropy\_flag}  : 0=no anisotropy / 1,2,.. check with implementation in \texttt{aniso\_model.f90}
      \item \texttt{domain\_id}        : 1=acoustic / 2=elastic / 3=poroelastic
 \end{itemize}
@@ -484,7 +638,7 @@ at the end of the script that invokes the \texttt{mpirun} command.
 See Chapter~\ref{cha:Scheduler} for information about running the
 code on a system with a scheduler, e.g., LSF.
 
-Mesher output is provided in the \texttt{OUTPUT\_FILES} directory
+Mesher output is provided in the \texttt{in\_out\_files/OUTPUT\_FILES} directory
 in \texttt{output\_mesher.txt}; this file provides lots of details
 about the mesh that was generated. Alternatively, output can be directed
 to the screen instead by uncommenting a line in \texttt{constants.h}:
@@ -520,6 +674,7 @@ to the screen instead by uncommenting a line in \texttt{constants.h}:
 %%\section{\label{sec:quality}Checking the Mesh Quality (Optional)}
 
 The quality of the mesh may be inspected more precisely based upon the serial code
+in the file  ~\\
 \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}. In the directory \texttt{check\_mesh\_quality\_CUBIT\_Abaqus}, type
 
 \begin{lyxcode}
@@ -546,7 +701,20 @@ solver is generated.
 
 \chapter{\label{cha:Creating-Distributed-Databases}Creating the Distributed Databases}
 
-Either you previously used  \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile \texttt{xgenerate\_databases}. This program is going to create all the missing information needed by the SEM solver. In the main directory type '\texttt{make generate\_databases}'. Input for the program is provided through the main parameter file \texttt{Par\_file}, which resides in the subdirectory \texttt{DATA}. Before running \texttt{xgenerate\_databases}, a number of parameters need to be set in the \texttt{Par\_file}:
+Either you previously used  \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile \texttt{xgenerate\_databases}. This program is going to create all the missing information needed by the SEM solver. 
+
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.6\textwidth]{figures/workflow.jpg}
+\par\end{centering}
+
+\caption{Schematic workflow for a SPECFEM3D simulation. The exectable \texttt{xgenerate\_databases} creates the GLL mesh points and assigns the specific model parameters.}
+
+\label{fig:workflow.databases}
+\end{figure}
+
+
+In the main directory type '\texttt{make generate\_databases}'. Input for the program is provided through the main parameter file \texttt{Par\_file}, which resides in the subdirectory \texttt{in\_data\_files/}. Before running \texttt{xgenerate\_databases}, a number of parameters need to be set in the \texttt{Par\_file}:
 
 \begin{description}
 \item [{\texttt{SIMULATION\_TYPE}}] is set to 1 for forward simulations,
@@ -572,7 +740,7 @@ requires twice as much CPU time. This feature is not used at the time
 of meshing but is required for the solver, i.e., you may change this
 parameter after running  \texttt{xgenerate\_databases}.
 \item [{\texttt{DT}}] The length of each time step in seconds.
-If you used xmeshfem3D to generate your mesh, you should set the value suggested in \texttt{meshfem3D/OUTPUT\_FILES/output\_mesher.txt}.
+If you used xmeshfem3D to generate your mesh, you should set the value suggested in \texttt{in\_out\_files/OUTPUT\_FILES/output\_mesher.txt}.
 
 \item [{\texttt{OCEANS}}] Set to \texttt{.true.} if the effect of the oceans
 on seismic wave propagation should be incorporated based upon the
@@ -600,7 +768,7 @@ length of the synthetic seismograms (in minutes). This controls the
 length of the numerical simulation, i.e., twice the record length
 requires twice as much CPU time. This feature is not used at the time
 of meshing but is required for the solver, i.e., you may change this
-parameter after running xgenerate\_databases.
+parameter after running \texttt{xgenerate\_databases}.
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
 Turning this option on generates large output files. See Section \ref{sec:Movies}
@@ -633,15 +801,15 @@ will be written. Generally one uses a directory on the
 local disk of the compute nodes, although on some machines these databases
 are written on a parallel (global) file system (see also the earlier
 discussion of the \texttt{LOCAL\_PATH\_IS\_ALSO\_GLOBAL} flag in Chapter~\ref{cha:Getting-Started}).
-xgenerate\_databases generates the necessary databases in parallel, one set
+\texttt{xgenerate\_databases} generates the necessary databases in parallel, one set
 for each of the $\nprocxi\times\nproceta$ slices that constitutes
 the mesh (see Figure~\ref{fig:For-parallel-computing}). After the
 mesher finishes, you can log in to one of the compute nodes and view
 the contents of the \texttt{LOCAL\_PATH} directory to see the (many)
-files generated by xgenerate\_databases.
+files generated by \texttt{xgenerate\_databases}.
 \item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}}] This parameter specifies
 the interval at which basic information about a run is written to
-the file system (\texttt{timestamp{*}} files in the \texttt{OUTPUT\_FILES}
+the file system (\texttt{timestamp{*}} files in the \texttt{in\_out\_files/OUTPUT\_FILES}
 directory). If you have access to a fast machine, set \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
 to a relatively high value (e.g., at least 100, or even 1000 or more)
 to avoid writing output text files too often. This feature is not
@@ -655,7 +823,7 @@ than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only relevant for the solver.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
-information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
+information about the source time function in the file \texttt{in\_out\_files/OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
 \end{description}
 
@@ -673,19 +841,27 @@ This feature is only relevant for the solver.
 \chapter{\label{cha:Running-the-Solver}Running the Solver \texttt{xspecfem3D}}
 
 Now that you have successfully generated the databases, you are ready to compile
-the solver. For reasons of speed, the solver uses static memory allocation.
-Therefore it needs to be recompiled (type `\texttt{make clean}' and
-`\texttt{make specfem3D}') every time one reruns \texttt{xgenerate\_databases}. To compile
-the solver one needs a file created by \texttt{xgenerate\_databases} in the directory
-\texttt{OUTPUT\_FILES} called \texttt{values\_from\_mesher.h}, which
-contains parameters describing the static size of the arrays as well
-as the setting of certain flags.
+the solver. In the main directory type `\texttt{make specfem3D}'.
+%obsolete
+%For reasons of speed, the solver uses static memory allocation.
+%Therefore it needs to be recompiled (type `\texttt{make clean}' and
+%`\texttt{make specfem3D}') every time one reruns \texttt{xgenerate\_databases}. To compile
+%the solver one needs a file created by \texttt{xgenerate\_databases} in the directory
+%\texttt{OUTPUT\_FILES} called \texttt{values\_from\_mesher.h}, which
+%contains parameters describing the static size of the arrays as well
+%as the setting of certain flags.
 
-The solver needs three input files in the \texttt{DATA} directory
-to run: the \texttt{Par\_file} which was discussed in detail in Chapters~\ref{cha:Running-the-Mesher-CUBIT} and~\ref{cha:Running-the-Mesher-Meshfem3D},
-the earthquake source parameter file \texttt{CMTSOLUTION}, and the
-stations file \texttt{STATIONS}. Most parameters in the \texttt{Par\_file}
-should be set prior to running the mesher. Only the following parameters
+The solver needs three input files in the \texttt{in\_data\_files/} directory
+to run: 
+\begin{description}
+\item [{\texttt{Par\_file}}] the main parameter file which was discussed in detail in the previous 
+Chapter~\ref{cha:Creating-Distributed-Databases},
+\item [{\texttt{CMTSOLUTION}}] the earthquake source parameter file, and 
+\item [{\texttt{STATIONS}}] the stations file. 
+\end{description}
+
+Most parameters in the \texttt{Par\_file}
+should be set prior to running the databases generation. Only the following parameters
 may be changed after running \texttt{xgenerate\_databases}:
 
 \begin{itemize}
@@ -701,7 +877,7 @@ and \texttt{NTSTEP\_BETWEEN\_OUTPUT\_}~\\
 \item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
 \end{itemize}
 Any other change to the \texttt{Par\_file} implies rerunning both
-the mesher and the solver.
+the generate\_databases and the solver.
 
 For any particular earthquake, the \texttt{CMTSOLUTION} file that
 represents the point source may be obtained directly from the Harvard Centroid-Moment Tensor (CMT) web page \url{www.seismology.harvard.edu}.
@@ -857,13 +1033,13 @@ Each line represents one station in the following format:
 \begin{lyxcode}
 {\small Station~Network~Latitude~(degrees)~Longitude~(degrees)~Elevation~(m)~burial~(m)~}{\small \par}
 \end{lyxcode}
-The mesher filters the list of stations in file \texttt{DATA/STATIONS}
+The mesher filters the list of stations in file \texttt{in\_data\_files/STATIONS}
 to exclude stations that are not located within the region given in
 the \texttt{Par\_file} (between \texttt{LATITUDE\_MIN} and \texttt{LATITUDE\_MAX}
 and between \texttt{LONGITUDE\_MIN} and \texttt{LONGITUDE\_MAX}).
-The filtered file is called \texttt{DATA/STATIONS\_FILTERED}.
+The filtered file is called \texttt{in\_data\_files/STATIONS\_FILTERED}.
 
-Solver output is provided in the \texttt{OUTPUT\_FILES} directory
+Solver output is provided in the \texttt{in\_out\_files/OUTPUT\_FILES} directory
 in the \texttt{output\_solver.txt} file. Output can be directed to
 the screen instead by uncommenting a line in \texttt{constants.h}:
 
@@ -877,8 +1053,9 @@ disks (the path \texttt{LOCAL\_PATH} in the \texttt{Par\_file}) and
 need to be gathered at the end of the simulation.
 
 While the solver is running, its progress may be tracked by monitoring
-the `\texttt{\small timestamp{*}}' files in the \texttt{\small OUTPUT\_FILES}
-directory. These tiny files look something like this:
+the `\texttt{\small timestamp{*}}' files in the ~\\
+\texttt{\small in\_out\_files/OUTPUT\_FILES} directory. 
+These tiny files look something like this:
 
 \begin{lyxcode}
 Time~step~\#~~~~~~~~~~10000~
@@ -970,19 +1147,19 @@ script:
 UTILS/change\_simulation\_type.pl~-f~
 \end{lyxcode}
 and then collect the recorded seismograms at all the stations given
-in \texttt{DATA/STATIONS}.
+in \texttt{in\_data\_files/STATIONS}.
 
 \item Then select the stations for which you want to compute the time-reversed
 adjoint sources and run the adjoint simulation, and compile them into
-the \texttt{DATA/STATIONS\_ADJOINT} file, which has the same format
-as the regular \texttt{DATA/STATIONS} file.
+the \texttt{in\_data\_files/STATIONS\_ADJOINT} file, which has the same format
+as the regular \texttt{in\_data\_files/STATIONS} file.
 
 \begin{itemize}
 \item Depending on what type of misfit function is used for the source inversion,
 adjoint sources need to be computed from the original recorded seismograms
 for the selected stations and saved in the \texttt{SEM/} directory
 with the format \texttt{STA.NT.BH?.adj}, where \texttt{STA}, \texttt{NT}
-are the station name and network code given in the \texttt{DATA/STATIONS\_ADJOINT}
+are the station name and network code given in the \texttt{in\_data\_files/STATIONS\_ADJOINT}
 file, and \texttt{BH?} represents the component name of a particular
 adjoint seismogram.
 \item The adjoint seismograms are in the same format as the original seismogram
@@ -999,7 +1176,7 @@ sources, i.e., the adjoint sources are in the same forward time sense
 as the original recorded seismograms.
 \end{enumerate}
 \item \textbf{Set the related parameters and run the adjoint simulation}\\
-In the \texttt{DATA/Par\_file}, set the two related parameters to
+In the \texttt{in\_data\_files/Par\_file}, set the two related parameters to
 be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
 More conveniently, use the scripts \texttt{UTILS/change\_simulation\_type.pl}
 to modify the \texttt{Par\_file} automatically (\texttt{change\_simulation\_type.pl
@@ -1012,10 +1189,11 @@ seismograms from \texttt{LOCAL\_PATH}.
 
 \begin{itemize}
 \item These adjoint seismograms are recorded at the locations of the original
-earthquake sources given by the \texttt{DATA/CMTSOLUTION} file, and
+earthquake sources given by the \texttt{in\_data\_files/CMTSOLUTION} file, and
 have names of the form \texttt{S?????.NT.S??.sem} for the six-component
-strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
-and \texttt{S?????.NT.BH?.sem} for the three-component displacements
+strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations, 
+and ~\\
+\texttt{S?????.NT.BH?.sem} for the three-component displacements
 (\texttt{BHN,BHE,BHZ}) recorded at these locations.
 \item \texttt{S?????} denotes the source number; for example, if the original
 \texttt{CMTSOLUTION} provides only a point source, then the seismograms
@@ -1147,7 +1325,7 @@ To make a surface or volume movie of the simulation, set parameters
 in the \texttt{Par\_file}. Turning on the movie flags, in particular
 \texttt{MOVIE\_VOLUME}, produces large output files. \texttt{MOVIE\_VOLUME}
 files are saved in the \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE}
-output files are saved in the \texttt{OUTPUT\_FILES} directory. We
+output files are saved in the \texttt{in\_out\_files/OUTPUT\_FILES} directory. We
 save the velocity field. The look of a movie is determined by the
 half-duration of the source. The half-duration should be large enough
 so that the movie does not contain frequencies that are not resolved
@@ -1173,7 +1351,7 @@ by the finite source model and set \texttt{HDUR\_MOVIE} = 0.0.
 
 When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
 flag turned on, the code outputs \texttt{moviedata??????} files in
-the \texttt{OUTPUT\_FILES} directory. The files are in a fairly complicated
+the \texttt{in\_out\_files/OUTPUT\_FILES} directory. The files are in a fairly complicated
 binary format, but there are two programs provided to convert the
 output into more user friendly formats. The first one, \texttt{create\_movie\_AVS\_DX.f90},
 outputs data in ASCII, OpenDX, AVS, or ParaView format. Run the code
@@ -1291,7 +1469,8 @@ them properly set in the script according to your system.
 
 
 In the case of a single source and a single receiver, the simulation
-also generates the \texttt{OUTPUT\_FILES/sr.vtk} file to describe
+also generates the file \texttt{sr.vtk} located in the 
+\texttt{in\_out\_files/OUTPUT\_FILES/} directory to describe
 the source and receiver locations, which can also be viewed in Paraview
 in the next step.
 
@@ -1365,14 +1544,16 @@ drives local to the nodes on which the code is run), they must be
 launched in sequence as a single job.
 \item On some systems, the nodes to which running jobs are assigned are
 not configured for compilation. It may therefore be necessary to pre-compile
-both the mesher and the solver. A small program provided in the distribution
-called \texttt{\small create\_header\_file.f90} can be used to directly
-create \texttt{\small OUTPUT\_FILES/values\_from\_mesher.h} using
-the information in the \texttt{\small DATA/Par\_file} without having
-to run the mesher (type \texttt{\small `make}{\small{} }\texttt{\small create\_header\_}~\\
-\texttt{\small file}' to compile it and `\texttt{\small xcreate\_header\_file}'
-to run it; refer to the sample scripts below). The solver can now
-be compiled as explained above.
+both the mesher and the solver. 
+%obsolete
+%A small program provided in the distribution
+%called \texttt{\small create\_header\_file.f90} can be used to directly
+%create \texttt{\small in\_out\_files/OUTPUT\_FILES/values\_from\_mesher.h} using
+%the information in the \texttt{\small in\_data\_files/Par\_file} without having
+%to run the mesher (type \texttt{\small `make}{\small{} }\texttt{\small create\_header\_}~\\
+%\texttt{\small file}' to compile it and `\texttt{\small xcreate\_header\_file}'
+%to run it; refer to the sample scripts below). The solver can now
+%be compiled as explained above.
 \item One feature of schedulers/queuing systems is that they allow submission
 of multiple jobs in a ``launch and forget'' mode. In order to take
 advantage of this property, care needs to be taken that output and
@@ -1394,7 +1575,7 @@ more specific running needs.
 
 This script first sets the job queue to be `normal'. It then compiles
 the mesher and solver together, figures out the number of processors
-required for this simulation from the \texttt{DATA/Par\_file}, and
+required for this simulation from the \texttt{in\_data\_files/Par\_file}, and
 submits the LSF job.
 
 \begin{lyxcode}
@@ -1416,11 +1597,7 @@ d=`date'~echo~\char`\"{}Starting~compilation~\$d\char`\"{}~
 
 make~clean~
 
-make~meshfem3D~
-
-make~create\_header\_file~
-
-xcreate\_header\_file~
+make~generate\_databases~
 
 make~specfem3D~
 
@@ -1430,13 +1607,12 @@ echo~\char`\"{}Finished~compilation~\$d\char`\"{}~\\
 ~\\
 \#~compute~total~number~of~nodes~needed~
 
-NPROC\_XI=`grep~NPROC\_XI~DATA/Par\_file~|~cut~-c~34-~'~
+NPROC=`grep~NPROC~in\_data\_files/Par\_file~|~cut~-c~34-~'~
 
-NPROC\_ETA=`grep~NPROC\_ETA~DATA/Par\_file~|~cut~-c~34-~'~~\\
 ~\\
 \#~total~number~of~nodes~is~the~product~of~the~values~read~
 
-numnodes=\$((~\$NPROC\_XI~{*}~\$NPROC\_ETA~))~\\
+numnodes=\$((~\$NPROC))~\\
 ~\\
 echo~\char`\"{}Submitting~job\char`\"{}~
 
@@ -1454,7 +1630,8 @@ operations.
 
 \begin{enumerate}
 \item First the script directs the scheduler to save its own output and
-output from \texttt{stdout} into \texttt{\small OUTPUT\_FILES/\%J.o},
+output from \texttt{stdout} into ~\\
+\texttt{\small in\_out\_files/OUTPUT\_FILES/\%J.o},
 where \texttt{\%J} is short-hand for the job-ID; it also tells the
 scheduler what version of \texttt{mpich} to use (\texttt{mpich\_gm})
 and how to name this job (\texttt{go\_mesher\_solver\_lsf}).
@@ -1468,7 +1645,7 @@ for temporary storage of the database files. The scratch directories
 are created using \texttt{shmux}, a shell multiplexor that can execute
 the same commands on many hosts in parallel. \texttt{shmux} is available
 from Shmux \url{web.taranis.org/shmux/}. Make sure that the \texttt{LOCAL\_PATH}
-parameter in \texttt{DATA/Par\_file} is also set properly.
+parameter in \texttt{in\_data\_files/Par\_file} is also set properly.
 \item The next portion of the script launches the mesher and then the solver
 using \texttt{run\_lsf.bash}.
 \item The final portion of the script collects the seismograms and performs
@@ -1478,7 +1655,7 @@ and \texttt{cleanmulti.pl}.
 \begin{lyxcode}
 \#!/bin/bash~-v~
 
-\#BSUB~-o~OUTPUT\_FILES/\%J.o~
+\#BSUB~-o~in\_out\_files/OUTPUT\_FILES/\%J.o~
 
 \#BSUB~-a~mpich\_gm~
 
@@ -1488,23 +1665,25 @@ and \texttt{cleanmulti.pl}.
 
 BASEMPIDIR=/scratch/\$USER/DATABASES\_MPI
 
-mkdir~-p~OUTPUT\_FILE
+mkdir~-p~in\_out\_files/OUTPUT\_FILE
 
-echo~\char`\"{}\$LSB\_MCPU\_HOSTS\char`\"{}~>~OUTPUT\_FILES/lsf\_machines~
+echo~\char`\"{}\$LSB\_MCPU\_HOSTS\char`\"{}~>~in\_out\_files/OUTPUT\_FILES/lsf\_machines~
 
-echo~\char`\"{}\$LSB\_JOBID\char`\"{}~>~OUTPUT\_FILES/jobid
+echo~\char`\"{}\$LSB\_JOBID\char`\"{}~>~in\_out\_files/OUTPUT\_FILES/jobid
 
-remap\_lsf\_machines.pl~OUTPUT\_FILES/lsf\_machines~>OUTPUT\_FILES/machines
+remap\_lsf\_machines.pl~in\_out\_files/OUTPUT\_FILES/lsf\_machines~> in\_out\_files/OUTPUT\_FILES/machines
 
 shmux~-M50~-Sall~-c~\char`\"{}rm~-r~-f~/scratch/\$USER;~\textbackslash{}
 
 ~~~~~~mkdir~-p~/scratch/\$USER;~mkdir~-p~\$BASEMPIDIR\char`\"{}~\textbackslash{}
 
-~~~~~~-~<~OUTPUT\_FILES/machines~>/dev/null~\\
+~~~~~~-~<~in\_out\_files/OUTPUT\_FILES/machines~>/dev/null~\\
 ~\\
 \#~run~the~specfem~program
 
-current\_pwd=\$PWD
+current\_pwd=\$PWD \\
+
+cd bin/ \\
 
 run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xmeshfem3D
 
@@ -1512,9 +1691,11 @@ run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~\$current\_pwd/xspecfem3D~\\
 ~\\
 \#~collect~seismograms~and~clean~up
 
-mkdir~-p~SEM
+cd current\_pwd \\
 
-cd~SEM
+mkdir~-p~in\_out\_files/SEM
+
+cd~in\_out\_files/SEM
 
 collect\_seismo.pl~../OUTPUT\_FILES/lsf\_machines
 
@@ -1643,7 +1824,7 @@ while the second command rotates the processed SEM synthetics.
 
 \subsection{\texttt{movie2gif.pl}}
 
-With the movie data saved in \texttt{OUTPUT\_FILES/} at the end of
+With the movie data saved in \texttt{in\_out\_files/OUTPUT\_FILES/} at the end of
 a movie simulation (\texttt{\small MOVIE\_SURFACE=.true.}), you can
 run the \texttt{`create\_movie\_GMT}' code to convert these binary
 movie data into GMT xyz files for futher processing. A sample script
@@ -1661,8 +1842,9 @@ and `\texttt{-p}' are both optional.
 
 \subsection{\texttt{plot\_shakemap.pl}}
 
-With the shakemap data saved in \texttt{OUTPUT\_FILES/} at the end
-of a shakemap simulation (\texttt{CREATE\_SHAKEMAP=.true.}), you can
+With the shakemap data saved in \texttt{in\_out\_files/OUTPUT\_FILES/} at the end
+of a shakemap simulation ~\\
+(\texttt{CREATE\_SHAKEMAP=.true.}), you can
 also run \texttt{`create\_movie\_GMT}' code to convert the binary
 shakemap data into GMT xyz files. A sample script \texttt{plot\_shakemap.pl}
 is provided to do this conversion, and then plot the shakemaps in
