@@ -292,7 +292,7 @@
   integer :: i,j,k,ispec
   double precision :: qmin,qmax,qmin_all,qmax_all
 
-  ! if attenuation is on, shift shear moduli to right frequency
+  ! if attenuation is on, shift shear moduli to center frequency of absorption period band, i.e.
   ! rescale mu to average (central) frequency for attenuation
   if(ATTENUATION) then
 
@@ -300,7 +300,9 @@
     one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
     factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
 
-    ! precalculates tau_sigma depending on period band (constant for all Q_mu)
+    ! gets stress relaxation times tau_sigma, i.e.
+    ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
+    ! determines central frequency f_c_source of attenuation period band
     call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
@@ -328,7 +330,8 @@
         do j=1,NGLLY
           do i=1,NGLLX
 
-            ! gets Q value
+            ! shear moduli attenuation
+            ! gets Q_mu value
             if(USE_OLSEN_ATTENUATION) then
               ! use scaling rule similar to Olsen et al. (2003)
               vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
@@ -350,6 +353,7 @@
             if( Q_mu > qmax ) qmax = Q_mu
 
             ! gets beta, on_minus_sum_beta and factor_scale
+            ! based on calculation of strain relaxation times tau_mu
             call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                               f_c_source,tau_sigma_dble, &
                               beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
@@ -358,6 +362,9 @@
             one_minus_sum_beta(i,j,k,ispec) = one_minus_sum_beta_dble
 
             ! stores scale factor for runge-kutta
+            ! using factor for modulus defect Delta M_i = - M_relaxed
+            ! see e.g. Savage et al. (BSSA, 2010): eq. 11
+            !     precomputes factor: 2 ( 1 - tau_mu_i / tau_sigma_i ) / tau_sigma_i
             beta(:) = beta_dble(:)
             factor_common(:,i,j,k,ispec) = 2._CUSTOM_REAL * beta(:) * tauinv(:)
 

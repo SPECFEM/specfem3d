@@ -113,6 +113,8 @@
 
   subroutine get_attenuation_memory_values(tau_s, deltat, alphaval,betaval,gammaval)
 
+! returns: runge-kutta scheme terms alphaval, betaval and gammaval
+
   implicit none
 
   include 'constants.h'
@@ -127,6 +129,7 @@
   tauinv(:) = - 1._CUSTOM_REAL / tau_s(:)
 
   ! runge-kutta coefficients
+  ! see e.g.: Savage et al. (BSSA, 2010): eq. (11)
   alphaval(:) = 1.0 + deltat*tauinv(:) + deltat**2 * tauinv(:)**2 / 2._CUSTOM_REAL &
                     + deltat**3 * tauinv(:)**3 / 6._CUSTOM_REAL &
                     + deltat**4 * tauinv(:)**4 / 24._CUSTOM_REAL
@@ -146,7 +149,7 @@
   subroutine get_attenuation_constants(min_resolved_period,tau_sigma, &
                               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
-! returns period band constants tau_sigma and center frequency f_c_source
+! returns: period band constants tau_sigma and center frequency f_c_source
 
   implicit none
 
@@ -166,11 +169,12 @@
   !min_resolved_period = 0.943
   call get_attenuation_periods(min_period,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
-  !  sets up tau_sigma, center frequencies for standard linear solids
+  !  sets up stress relaxation times tau_sigma,
+  ! equally spaced based on number of standard linear solids and period band
   call get_attenuation_tau_sigma(tau_sigma,N_SLS,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
-  ! sets up omega_not , central frequency
-  ! logarithmic mean of frequency interval
+  ! sets up central frequency
+  ! logarithmic mean of frequency interval of absorption band
   call get_attenuation_source_frequency(f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! debug
@@ -190,7 +194,7 @@
                               f_c_source,tau_sigma, &
                               beta,one_minus_sum_beta,factor_scale)
 
-! returns attenuation mechanisms beta,one_minus_sum_beta,factor_scale
+! returns: attenuation mechanisms beta,one_minus_sum_beta,factor_scale
 
 ! variable frequency range
 ! variable period range
@@ -233,6 +237,10 @@
 
   subroutine get_attenuation_property_values(tau_s, tau_mu, beta, one_minus_sum_beta)
 
+! coefficients useful for calculation between relaxed and unrelaxed moduli
+!
+! returns: coefficients beta, one_minus_sum_beta
+
   implicit none
 
   include "constants.h"
@@ -245,10 +253,15 @@
   double precision,dimension(N_SLS) :: tauinv
   integer :: i
 
+  ! inverse of stress relaxation times
   tauinv(:) = -1.0d0 / tau_s(:)
 
+  ! see e.g. Komatitsch & Tromp 1999, eq. (7)
+
+  ! coefficients beta
   beta(:) = 1.0d0 - tau_mu(:) / tau_s(:)
 
+  ! sum of coefficients beta
   one_minus_sum_beta = 1.0d0
   do i = 1,N_SLS
      one_minus_sum_beta = one_minus_sum_beta - beta(i)
@@ -262,12 +275,15 @@
 
   subroutine get_attenuation_scale_factor(myrank, f_c_source, tau_mu, tau_sigma, Q_mu, scale_factor)
 
+! returns: physical dispersion scaling factor scale_factor
+
   implicit none
 
   include "constants.h"
 
   integer :: myrank
   double precision :: scale_factor, Q_mu, f_c_source
+  ! strain and stress relaxation times
   double precision, dimension(N_SLS) :: tau_mu, tau_sigma
 
   ! local parameters
@@ -292,17 +308,25 @@
   factor_scale_mu0 = ONE + TWO * log(f_c_source / ATTENUATION_f0_REFERENCE ) / (PI * Q_mu)
 
   !--- compute a, b and Omega parameters
+  ! see e.g.:
+  !   Liu et al. (1976): eq. 25
+  !   using complex modulus Mc = M_R / ( A - i B )
+  !   or
+  !   Savage et al. (BSSA, 2010): eq. (5) and (6)
+  !   complex modulus: M(t) = M_1(t) + i M_2(t)
   a_val = ONE
   b_val = ZERO
-
   do i = 1,N_SLS
+    ! real part M_1 of complex modulus
     a_val = a_val - w_c_source * w_c_source * tau_mu(i) * &
       (tau_mu(i) - tau_sigma(i)) / (1.d0 + w_c_source * w_c_source * tau_mu(i) * tau_mu(i))
+    ! imaginary part M_2 of complex modulus
     b_val = b_val + w_c_source * (tau_mu(i) - tau_sigma(i)) / &
       (1.d0 + w_c_source * w_c_source * tau_mu(i) * tau_mu(i))
   enddo
 
-  big_omega = a_val*(sqrt(1.d0 + b_val*b_val/(a_val*a_val))-1.d0)
+  ! see e.g. Liu et al. (1976): Omega used in equation (20)
+  big_omega = a_val * ( sqrt(1.d0 + b_val*b_val/(a_val*a_val)) - 1.d0 )
 
   !--- quantity by which to scale mu to get mu_relaxed
   factor_scale_mu = b_val * b_val / (TWO * big_omega)
@@ -311,7 +335,7 @@
   scale_factor = factor_scale_mu * factor_scale_mu0
 
   !--- check that the correction factor is close to one
-  if(scale_factor < 0.9 .or. scale_factor > 1.1) then
+  if(scale_factor < 0.7 .or. scale_factor > 1.3) then
      write(*,*) "  scale factor: ", scale_factor
      call exit_MPI(myrank,'incorrect correction factor in attenuation model')
   endif
@@ -381,6 +405,7 @@
 
   subroutine get_attenuation_tau_sigma(tau_s, nsls, min_period, max_period)
 
+! Determines stress relaxation times tau_sigma
 ! Sets the Tau_sigma (tau_s) to be equally spaced in log10 frequency
 
   implicit none
@@ -459,7 +484,10 @@
 !      Velocity dispersion due to anelasticity: implications for seismology and mantle composition
 !      Geophys, J. R. asts. Soc, Vol 47, pp. 41-58
 !
-!   The methodology can be found in Savage and Tromp, 2006, unpublished
+!   The methodology can be found in:
+!       Savage, B, D. Komatitsch and J. Tromp, 2010.
+!       Effects of 3D Attenuation on Seismic Wave Amplitude and Phase Measurements
+!       BSSA, 100, 3, p. 1241-1251.
 !
 ! modifications:
 !  - minor modifications by Daniel Peter, november 2010
@@ -468,7 +496,8 @@
   subroutine get_attenuation_tau_mu(Qmu_in,tau_s,tau_mu,min_period,max_period)
 
 ! includes min_period, max_period, and N_SLS
-! determines tau_mu
+!
+! returns: determines strain relaxation times tau_mu
 
   implicit none
 
