@@ -19,19 +19,25 @@ change_simulation_type.pl -f
 #change_simulation_type.pl -b
 make clean
 make meshfem3D
-make create_header_file
-xcreate_header_file
+make generate_databases
 make specfem3D
 d=`date`
 echo "Finished compilation $d"
 
-# compute total number of nodes needed
-NPROC_XI=`grep NPROC_XI in_data_files/Par_file | cut -d = -f 2 `
-NPROC_ETA=`grep NPROC_ETA in_data_files/Par_file | cut -d = -f 2`
+# get total number of nodes needed for solver
+NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
 
-
+# compute total number of nodes needed for mesher
+NPROC_XI=`grep NPROC_XI in_data_files/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `
+NPROC_ETA=`grep NPROC_ETA in_data_files/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `
 # total number of nodes is the product of the values read
 numnodes=$(( $NPROC_XI * $NPROC_ETA ))
+
+# checks total number of nodes
+if [ $numnodes -neq $NPROC ]; then
+  echo "error number of procs mismatch: ",$NPROC_XI,$NPROC_ETA," with ",$NPROC
+  exit
+fi
 
 echo "Submitting job"
 bsub $queue -n $numnodes -W 60 -K < go_mesher_solver_lsf_basin.forward

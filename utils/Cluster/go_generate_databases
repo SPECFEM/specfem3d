@@ -24,9 +24,9 @@ if ( ! -d $my_local_path ) mkdir $my_local_path
 
 if ( -f $machine_file ) then
   echo " "
-  echo using machine file \"$machine_file\"
+  echo "using machine file $machine_file"
   echo " "
-  echo list of active machines:
+  echo "list of active machines:"
   echo " "
   cat $machine_file
   echo " "
@@ -38,16 +38,17 @@ endif
 
 echo NPROC = $NPROC
 echo " "
-echo starting MPI mesher on $numprocessors processors
+echo "starting MPI mesher on $numprocessors processors"
 echo " "
-echo starting run in current directory $PWD
+echo "starting run in current directory $PWD"
 echo " "
-echo mesh files will be saved in directory $my_local_path
+echo "mesh files will be saved in directory $my_local_path"
 echo " "
 
 #### use this on Beowulf
 set MPIRUN="mpirun"
-$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors $PWD/xgenerate_databases
+cd $PWD/bin
+$MPIRUN -nolocal -machinefile $machine_file -np $numprocessors ./xgenerate_databases
 
 #### use this on SGI
 # mpirun -np $numprocessors xgenerate_databases
