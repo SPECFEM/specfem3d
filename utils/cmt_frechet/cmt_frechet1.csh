@@ -2,6 +2,10 @@
 
 # set up frechet derivative calculations for the CMTSOLUTION
 # Qinya Liu, May 2007, Caltech
+#
+# NOTE: this script uses a local script "collect_seismos" used at Caltech.
+#             Please modify for your own purposes.
+#
 
 foreach extension (Mrr Mtt Mpp Mrt Mrp Mtp depth latitude longitude)
 

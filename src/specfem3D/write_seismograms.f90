@@ -27,14 +27,14 @@
   subroutine write_seismograms()
 
 ! writes the seismograms with time shift
-  
+
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
-  use specfem_par_poroelastic  
+  use specfem_par_poroelastic
   implicit none
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element  
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
   double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
   integer :: irec_local,irec
   integer :: iglob,ispec,i,j,k
@@ -42,7 +42,7 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NDIM):: eps_s
   real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
   real(kind=CUSTOM_REAL):: stf_deltat
-  double precision :: stf 
+  double precision :: stf
 
   do irec_local = 1,nrec_local
 
@@ -55,17 +55,17 @@
       ! receiver's spectral element
       ispec = ispec_selected_rec(irec)
 
-      ! elastic wave field    
-      if( ispec_is_elastic(ispec) ) then        
+      ! elastic wave field
+      if( ispec_is_elastic(ispec) ) then
         ! interpolates displ/veloc/accel at receiver locations
         call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
                         hgammar_store(irec_local,:), &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)                                     
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif !elastic
-        
+
       ! acoustic wave field
       if( ispec_is_acoustic(ispec) ) then
         ! displacement vector
@@ -80,7 +80,7 @@
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore)
-                        
+
         ! interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
                         potential_dot_dot_acoustic,NGLOB_AB, &
@@ -88,25 +88,25 @@
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
                         hgammar_store(irec_local,:), &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)                            
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! acoustic
 
-    !adjoint simulations        
+    !adjoint simulations
     else if (SIMULATION_TYPE == 2) then
 
       ! adjoint source is placed at receiver
       ispec = ispec_selected_source(irec)
 
-      ! elastic wave field    
+      ! elastic wave field
       if( ispec_is_elastic(ispec) ) then
-        ! interpolates displ/veloc/accel at receiver locations      
+        ! interpolates displ/veloc/accel at receiver locations
         call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
                         hgammar_store(irec_local,:), &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)     
-      
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+
         ! stores elements displacement field
         do k = 1,NGLLZ
           do j = 1,NGLLY
@@ -153,7 +153,7 @@
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore)
-                        
+
         ! interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
                         potential_dot_dot_acoustic,NGLOB_AB, &
@@ -161,23 +161,23 @@
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
                         hgammar_store(irec_local,:), &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)                            
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! acoustic
 
-    !adjoint simulations                
+    !adjoint simulations
     else if (SIMULATION_TYPE == 3) then
-      
+
       ispec = ispec_selected_rec(irec)
 
-      ! elastic wave field    
-      if( ispec_is_elastic(ispec) ) then        
-        ! backward fields: interpolates displ/veloc/accel at receiver locations            
+      ! elastic wave field
+      if( ispec_is_elastic(ispec) ) then
+        ! backward fields: interpolates displ/veloc/accel at receiver locations
         call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
                         hgammar_store(irec_local,:), &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)                   
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! elastic
 
       ! acoustic wave field
@@ -194,7 +194,7 @@
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore)
-                        
+
         ! backward fields: interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
                         b_potential_dot_dot_acoustic,NGLOB_ADJOINT, &
@@ -202,9 +202,9 @@
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
                         hgammar_store(irec_local,:), &
-                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)                            
-      endif ! acoustic        
-        
+                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
+      endif ! acoustic
+
     endif ! SIMULATION_TYPE
 
 ! store North, East and Vertical components
@@ -272,12 +272,12 @@
   character(len=1) component
   character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
-! parameters for master collects seismograms  
+! parameters for master collects seismograms
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
   real(kind=CUSTOM_REAL) :: time_t
   integer :: nrec_local_received,NPROCTOT,total_seismos,receiver,sender
   integer :: iproc,ier
-   
+
 ! save displacement, velocity or acceleration
   if(istore == 1) then
     component = 'd'
@@ -328,16 +328,16 @@
            network_name(irec)(1:length_network_name),chn,component
 
         ! directory to store seismograms
-        if( USE_OUTPUT_FILES_PATH ) then      
-          final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'        
-        else      
+        if( USE_OUTPUT_FILES_PATH ) then
+          final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+        else
           ! suppress white spaces if any
           clean_LOCAL_PATH = adjustl(LOCAL_PATH)
           ! create full final local path
-          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'        
+          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
         endif
-      
-            
+
+
 ! save seismograms in text format with no subsampling.
 ! Because we do not subsample the output, this can result in large files
 ! if the simulation uses many time steps. However, subsampling the output
@@ -349,7 +349,7 @@
         ! subtract half duration of the source to make sure travel time is correct
         do isample = 1,min(it,NSTEP)
           if(irecord == 1) then
-          
+
             ! forward simulation
             if( SIMULATION_TYPE == 1 ) then
               ! distinguish between single and double precision for reals
@@ -368,11 +368,11 @@
                 time_t = sngl( dble(NSTEP-isample)*DT - t0 )
               else
                 time_t = dble(NSTEP-isample)*DT - t0
-              endif            
+              endif
             endif
-            
+
             write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
-            
+
           else
             call exit_MPI(myrank,'incorrect record label')
           endif
@@ -391,13 +391,13 @@
     allocate(one_seismogram(NDIM,NSTEP),stat=ier)
     if(ier /= 0) stop 'error while allocating one temporary seismogram'
 
-  
+
     if(myrank == 0) then ! on the master, gather all the seismograms
 
       total_seismos = 0
 
       ! loop on all the slices
-      call world_size(NPROCTOT)      
+      call world_size(NPROCTOT)
       do iproc = 0,NPROCTOT-1
 
         ! receive except from proc 0, which is me and therefore I already have this value
@@ -408,7 +408,7 @@
         else
           nrec_local_received = nrec_local
         endif
-         
+
         if (nrec_local_received > 0) then
           do irec_local = 1,nrec_local_received
             ! receive except from proc 0, which is myself and therefore I already have these values
@@ -419,7 +419,7 @@
             else
               call recv_i(irec,1,sender,itag)
               if(irec < 1 .or. irec > nrec) call exit_MPI(myrank,'error while receiving global receiver number')
-              
+
               call recvv_cr(one_seismogram,NDIM*NSTEP,sender,itag)
             endif
 
@@ -456,13 +456,13 @@
                 network_name(irec)(1:length_network_name),chn,component
 
               ! directory to store seismograms
-              if( USE_OUTPUT_FILES_PATH ) then      
-                final_LOCAL_PATH = 'OUTPUT_FILES'//'/'        
-              else      
+              if( USE_OUTPUT_FILES_PATH ) then
+                final_LOCAL_PATH = 'OUTPUT_FILES'//'/'
+              else
                 ! suppress white spaces if any
                 clean_LOCAL_PATH = adjustl(LOCAL_PATH)
                 ! create full final local path
-                final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'        
+                final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
               endif
 
 ! save seismograms in text format with no subsampling.
@@ -482,7 +482,7 @@
                   !else
                   !  write(IOUT,*) dble(isample-1)*DT - t0,' ',one_seismogram(iorientation,isample)
                   !endif
-                  
+
                   ! forward simulation
                   if( SIMULATION_TYPE == 1 ) then
                     ! distinguish between single and double precision for reals
@@ -501,11 +501,11 @@
                       time_t = sngl( dble(NSTEP-isample)*DT - t0 )
                     else
                       time_t = dble(NSTEP-isample)*DT - t0
-                    endif            
+                    endif
                   endif
-                  
+
                   write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
-                  
+
                 else
                   call exit_MPI(myrank,'incorrect record label')
                 endif
@@ -532,16 +532,16 @@
            ! get global number of that receiver
            irec = number_receiver_global(irec_local)
            call send_i(irec,1,receiver,itag)
-           
+
            ! sends seismogram of that receiver
            one_seismogram(:,:) = seismograms(:,irec_local,:)
            call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
          enddo
        endif
     endif ! myrank
-  
+
     deallocate(one_seismogram)
-    
+
   endif ! WRITE_SEISMOGRAMS_BY_MASTER
 
   end subroutine write_seismograms_to_file
@@ -608,11 +608,16 @@
       write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
            'NT',chn,component
 
-      ! suppress white spaces if any
-      clean_LOCAL_PATH = adjustl(LOCAL_PATH)
+      ! directory to store seismograms
+      if( USE_OUTPUT_FILES_PATH ) then
+        final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+      else
+        ! suppress white spaces if any
+        clean_LOCAL_PATH = adjustl(LOCAL_PATH)
+        ! create full final local path
+        final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+      endif
 
-      ! create full final local path
-      final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
 
       ! save seismograms in text format with no subsampling.
       ! Because we do not subsample the output, this can result in large files
@@ -701,11 +706,15 @@
         write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
            'NT',chn,component
 
-        ! suppress white spaces if any
-        clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-
-        ! create full final local path
-        final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+        ! directory to store seismograms
+        if( USE_OUTPUT_FILES_PATH ) then
+          final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+        else
+          ! suppress white spaces if any
+          clean_LOCAL_PATH = adjustl(LOCAL_PATH)
+          ! create full final local path
+          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+        endif
 
         ! save seismograms in text format with no subsampling.
         ! Because we do not subsample the output, this can result in large files

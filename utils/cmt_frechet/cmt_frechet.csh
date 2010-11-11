@@ -1,18 +1,20 @@
 #!/bin/csh
-
+#
+# NOTE: this script uses a local script "collect_seismos" used at Caltech.
+#             Please modify for your own purposes.
+#
 sleep 1
 make clean
 sleep 1
-make meshfem3D
-sleep 160
-go_mesher
-
-sleep 5
-make clean
-sleep 2
+make generate_databases
+sleep 1
 make specfem3D
 
+sleep 10
+go_generate_databases
+
 # save the CMTSOLUTION and the STATIONS file
+mkdir -p CMT_FRECHET
 cp in_data_files/CMTSOLUTION CMT_FRECHET
 cp in_data_files/STATIONS CMT_FRECHET
 

@@ -18,9 +18,9 @@ rm -f sources error*txt starttimeloop* timestamp* PI* RECORDHEADERS
 
 if ( -f $list_of_machines ) then
   echo " "
-  echo using machine file \"$list_of_machines\"
+  echo "using machine file $list_of_machines"
   echo " "
-  echo list of active machines:
+  echo "list of active machines:"
   echo " "
   cat $list_of_machines
   echo " "
@@ -29,15 +29,16 @@ endif
 echo NPROC_XI = $NPROC_XI
 echo NPROC_ETA = $NPROC_ETA
 echo " "
-echo starting MPI solver on $numprocessors processors
+echo "starting MPI solver on $numprocessors processors"
 echo " "
-echo starting run in current directory $PWD
+echo "starting run in current directory $PWD"
 echo " "
-echo mesh files will be read from directory $my_local_path
+echo "mesh files will be read from directory $my_local_path"
 echo " "
 
 #### use this on Beowulf
-mpirun -nolocal -machinefile $list_of_machines -np $numprocessors $PWD/xspecfem3D
+cd $PWD/bin
+mpirun -nolocal -machinefile $list_of_machines -np $numprocessors ./xspecfem3D
 
 #### use this on SGI
 # mpirun -np $numprocessors xspecfem3D

@@ -15,20 +15,27 @@ remap_lsf_machines.pl in_out_files/OUTPUT_FILES/lsf_machines > in_out_files/OUTP
 
 shmux -M50 -Sall -c "mkdir -p /scratch/$USER/; mkdir -p $BASEMPIDIR.$LSB_JOBID" - < in_out_files/OUTPUT_FILES/machines >/dev/null
 
-sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < in_data_files/Par_file > in_data_files/Par_file.tmp
-mv in_data_files/Par_file.tmp in_data_files/Par_file
+# main parameter file
+sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < in_data_files/Par_file > Par_file.tmp
+mv Par_file.tmp in_data_files/Par_file
+
+# mesher parameter file
+sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < in_data_files/meshfem3D_files/Mesh_Par_file > Par_file.tmp
+mv Par_file.tmp in_data_files/meshfem3D_files/Mesh_Par_file
 
 current_pwd=$PWD
 
 change_simulation_type.pl -F
 cd bin/
 mpirun.lsf --gm-no-shmem --gm-copy-env ./xmeshfem3D
+mpirun.lsf --gm-no-shmem --gm-copy-env ./xgenerate_databases
 mpirun.lsf --gm-no-shmem --gm-copy-env ./xspecfem3D
 
 
 #### this is the part needs to be revised for each kernel simulation #####
+mkdir -p $current_pwd/in_out_files/SEM
 cd $current_pwd/in_out_files/SEM
-collect_seismo_lsf_multi.pl ../in_out_files/OUTPUT_FILES/lsf_machines ../in_data_files/Par_file
+collect_seismo_lsf_multi.pl $current_pwd/in_out_files/OUTPUT_FILES/lsf_machines $current_pwd/in_data_files/Par_file
 xcut_velocity 29.0 32.5 3 GSC*.semd
 rename .semd.adj .adj *.semd.ad
 cd $current_pwd
