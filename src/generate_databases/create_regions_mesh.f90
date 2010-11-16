@@ -126,7 +126,7 @@ subroutine create_regions_mesh_ext(ibool, &
                         nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
                         nodes_ibelm_bottom,nodes_ibelm_top, &
                         SAVE_MESH_FILES,nglob, &
-                        ANISOTROPY,NPROC,OCEANS, &
+                        ANISOTROPY,NPROC,OCEANS,ATTENUATION,USE_OLSEN_ATTENUATION, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)
@@ -198,6 +198,7 @@ subroutine create_regions_mesh_ext(ibool, &
   logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
   logical :: OCEANS
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
 
 ! use integer array to store topography values
   integer :: UTM_PROJECTION_ZONE
@@ -371,6 +372,14 @@ subroutine create_regions_mesh_ext(ibool, &
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             kappastore,mustore,rho_vp,rho_vs, &
                             -1.0d0, model_speed_max,min_resolved_period )
+
+! saves binary mesh files for attenuation
+  if( ATTENUATION ) then
+    call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION, &
+                          mustore,rho_vs,qmu_attenuation_store, &
+                          ispec_is_elastic,min_resolved_period,prname)
+  endif
+
 
 ! VTK file output
 !  if( SAVE_MESH_FILES ) then

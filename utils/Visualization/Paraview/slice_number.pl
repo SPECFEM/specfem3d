@@ -8,24 +8,32 @@
 
 use POSIX;
 
-if (@ARGV != 3) {die("usage: basin_slice_number.pl Par_file output_solver.txt slice_file\n");}
+if (@ARGV != 3) {die("usage: slice_number.pl Mesh_Par_file output_solver.txt slice_file\n");}
 
 $par_file = $ARGV[0];
 $output = $ARGV[1];
 $slice_file = $ARGV[2];
 
 if (not -f $par_file) {die("check if $par_file exists or not\n");}
-
 if (not -f $output) {die("check if $output exists or not\n");}
 
+# utm conversion
+# for installation: see utils/Visualization/sph2utm_Qinya_Liu.tar.gz
+$sph2utm="/opt/seismo-util/bin/sph2utm";
+if (! -e $sph2utm) {die(" No $sph2utm file\n");}
+
+# gets parameters
 ($nproc) = split(" ",`grep NPROC_XI $par_file | cut -d = -f 2 `);
+if ( $nproc < 1 ) {die ("check if NPROC_XI is > 1 in Mesh_Par_file\n");}
+
 ($lat1) = split(" ",`grep LATITUDE_MIN $par_file | cut -d = -f 2 `);
 ($lon1) = split(" ",`grep LONGITUDE_MIN $par_file | cut -d = -f 2 `);
 ($lat2) = split(" ",`grep LATITUDE_MAX $par_file | cut -d = -f 2 `);
 ($lon2) = split(" ",`grep LONGITUDE_MAX $par_file | cut -d = -f 2 `);
+
 # UTM coordinates of the corners of the model
-(undef,undef,$x1,undef,undef,$y1) = split(" ",`echo $lon1 $lat1 | sph2utm | grep x`);
-(undef,undef,$x2,undef,undef,$y2) = split(" ",`echo $lon2 $lat2 | sph2utm | grep x`);
+(undef,undef,$x1,undef,undef,$y1) = split(" ",`echo $lon1 $lat1 | $sph2utm | grep x`);
+(undef,undef,$x2,undef,undef,$y2) = split(" ",`echo $lon2 $lat2 | $sph2utm | grep x`);
 
 # source and receiver UTM coordinates
 (undef,undef,$xs) = split(" ",`grep "^          UTM x" $output`);
@@ -34,6 +42,10 @@ if (not -f $output) {die("check if $output exists or not\n");}
 (undef,undef,undef,$yr) = split(" ",`grep "^         original UTM y:" $output`);
 
 #print "$x1,$xs,$x2\n$y1,$ys,$y2\n";
+if( "$xs" == "" ){ die("source UTM x not found\n");}
+if( "$ys" == "" ){ die("source UTM y not found\n");}
+if( "$xr" == "" ){ die("receiver UTM x not found\n");}
+if( "$yr" == "" ){ die("receiver UTM y not found\n");}
 
 # approximate slice location of the source sslice (nxs, nys), and the receiver rslice(nxr,nyr)
 $dx = ($x2-$x1)/$nproc;
@@ -42,9 +54,9 @@ $nxs = floor(($xs-$x1)/$dx); $nys = floor(($ys-$y1)/$dy); $sslice = $nys * $npro
 $nxr = floor(($xr-$x1)/$dx); $nyr = floor(($yr-$y1)/$dy); $rslice = $nyr * $nproc + $nxr;
 
 # double check with output files
-($s_slice) = split(" ",`grep "source located in slice" $output| cut -c 36- `);
+($s_slice) = split(" ",`grep "source located in slice" $output | cut -c 36- `);
 (undef,undef,$r_slice) = split(" ",`grep "^  in slice" $output`);
-if ($sslice != $s_slice || $rslice != $r_slice) {die("Check source and receiver slice numbers\n");}
+if ($sslice != $s_slice || $rslice != $r_slice) {die("Check source and receiver slice numbers:\n  source: $s");}
 
 print "NPROC = $nproc;  source slice = $s_slice; receiver slice = $r_slice\n";
 
