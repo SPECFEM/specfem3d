@@ -809,7 +809,7 @@
                         nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
                         nodes_ibelm_bottom,nodes_ibelm_top, &
                         SAVE_MESH_FILES,nglob, &
-                        ANISOTROPY,NPROC,OCEANS, &
+                        ANISOTROPY,NPROC,OCEANS,ATTENUATION,USE_OLSEN_ATTENUATION, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)

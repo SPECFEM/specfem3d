@@ -110,6 +110,169 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION, &
+                          mustore,rho_vs,qmu_attenuation_store, &
+                          ispec_is_elastic,min_resolved_period,prname)
+
+! precalculates attenuation arrays and stores arrays into files
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: myrank,nspec
+  logical :: USE_OLSEN_ATTENUATION
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: mustore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: qmu_attenuation_store
+
+  logical, dimension(nspec) :: ispec_is_elastic
+  real(kind=CUSTOM_REAL) :: min_resolved_period
+  character(len=256) :: prname
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor
+  double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble
+  double precision factor_scale_dble,one_minus_sum_beta_dble
+  double precision :: Q_mu
+  double precision :: f_c_source
+  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: beta
+  real(kind=CUSTOM_REAL):: vs_val
+  integer :: i,j,k,ispec,ier
+  double precision :: qmin,qmax,qmin_all,qmax_all
+
+  ! initializes arrays
+  allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,nspec), &
+          factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
+          scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
+
+  one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
+  factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
+  scale_factor(:,:,:,:) = 1._CUSTOM_REAL
+
+
+  ! gets stress relaxation times tau_sigma, i.e.
+  ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
+  ! determines central frequency f_c_source of attenuation period band
+  call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+              f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+
+  ! user output
+  if( myrank == 0 ) then
+    write(IMAIN,*)
+    write(IMAIN,*) "attenuation: "
+    write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
+                  " frequency: ",sngl(ATTENUATION_f0_REFERENCE)
+    write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
+    write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
+                  " frequency: ",sngl(f_c_source)
+  endif
+
+  ! determines inverse of tau_sigma
+  if(CUSTOM_REAL == SIZE_REAL) then
+    tau_sigma(:) = sngl(tau_sigma_dble(:))
+  else
+    tau_sigma(:) = tau_sigma_dble(:)
+  endif
+  ! precalculates the negative inverse of tau_sigma
+  tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
+
+  ! precalculates factors for shear modulus scaling according to attenuation model
+  qmin = HUGEVAL
+  qmax = 0.0
+  do ispec = 1,nspec
+
+    ! skips non elastic elements
+    if( ispec_is_elastic(ispec) .eqv. .false. ) cycle
+
+    ! determines attenuation factors for each GLL point
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+
+          ! shear moduli attenuation
+          ! gets Q_mu value
+          if(USE_OLSEN_ATTENUATION) then
+            ! use scaling rule similar to Olsen et al. (2003)
+            vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
+            call get_attenuation_model_olsen( vs_val, Q_mu )
+          else
+            ! takes Q set in (CUBIT) mesh
+            Q_mu = qmu_attenuation_store(i,j,k,ispec)
+
+            ! attenuation zero
+            if( Q_mu <= 1.e-5 ) cycle
+
+            ! limits Q
+            if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
+            if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
+
+          endif
+          ! statistics
+          if( Q_mu < qmin ) qmin = Q_mu
+          if( Q_mu > qmax ) qmax = Q_mu
+
+          ! gets beta, on_minus_sum_beta and factor_scale
+          ! based on calculation of strain relaxation times tau_eps
+          call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
+                            f_c_source,tau_sigma_dble, &
+                            beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
+
+          ! stores factor for unrelaxed parameter
+          one_minus_sum_beta(i,j,k,ispec) = one_minus_sum_beta_dble
+
+          ! stores factor for runge-kutta scheme
+          ! using factor for modulus defect Delta M_i = - M_relaxed
+          ! see e.g. Savage et al. (BSSA, 2010): eq. 11
+          !     precomputes factor: 2 ( 1 - tau_eps_i / tau_sigma_i ) / tau_sigma_i
+          beta(:) = beta_dble(:)
+          factor_common(:,i,j,k,ispec) = 2._CUSTOM_REAL * beta(:) * tauinv(:)
+
+          ! stores scale factor for mu moduli
+          scale_factor(i,j,k,ispec) = factor_scale_dble
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! stores attenuation arrays into files
+  open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
+        status='unknown',action='write',form='unformatted',iostat=ier)
+  if( ier /= 0 ) then
+    print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+    call exit_mpi(myrank,'error opening attenuation.bin file')
+  endif
+  write(27) nspec
+  write(27) one_minus_sum_beta
+  write(27) factor_common
+  write(27) scale_factor
+  close(27)
+
+  deallocate(one_minus_sum_beta,factor_common,scale_factor)
+
+  ! statistics
+  call min_all_dp(qmin,qmin_all)
+  call max_all_dp(qmax,qmax_all)
+  ! user output
+  if( myrank == 0 ) then
+    write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
+    write(IMAIN,*)
+  endif
+
+  end subroutine get_attenuation_model
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
 
   subroutine get_attenuation_memory_values(tau_s, deltat, alphaval,betaval,gammaval)
 
@@ -216,17 +379,17 @@
   double precision :: one_minus_sum_beta
   double precision :: factor_scale
   ! local parameters
-  double precision, dimension(N_SLS) :: tau_mu
+  double precision, dimension(N_SLS) :: tau_eps
 
-  ! determines tau_mu for Q_mu
-  call get_attenuation_tau_mu(Q_mu,tau_sigma,tau_mu, &
+  ! determines tau_eps for Q_mu
+  call get_attenuation_tau_eps(Q_mu,tau_sigma,tau_eps, &
                               MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! determines one_minus_sum_beta
-  call get_attenuation_property_values(tau_sigma,tau_mu,beta,one_minus_sum_beta)
+  call get_attenuation_property_values(tau_sigma,tau_eps,beta,one_minus_sum_beta)
 
   ! determines the "scale factor"
-  call get_attenuation_scale_factor(myrank,f_c_source,tau_mu,tau_sigma,Q_mu,factor_scale)
+  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale)
 
   end subroutine get_attenuation_factors
 
@@ -235,7 +398,7 @@
 !
 
 
-  subroutine get_attenuation_property_values(tau_s, tau_mu, beta, one_minus_sum_beta)
+  subroutine get_attenuation_property_values(tau_s, tau_eps, beta, one_minus_sum_beta)
 
 ! coefficients useful for calculation between relaxed and unrelaxed moduli
 !
@@ -245,7 +408,7 @@
 
   include "constants.h"
 
-  double precision,dimension(N_SLS),intent(in) :: tau_s, tau_mu
+  double precision,dimension(N_SLS),intent(in) :: tau_s, tau_eps
   double precision,dimension(N_SLS),intent(out) :: beta
   double precision,intent(out):: one_minus_sum_beta
 
@@ -259,7 +422,7 @@
   ! see e.g. Komatitsch & Tromp 1999, eq. (7)
 
   ! coefficients beta
-  beta(:) = 1.0d0 - tau_mu(:) / tau_s(:)
+  beta(:) = 1.0d0 - tau_eps(:) / tau_s(:)
 
   ! sum of coefficients beta
   one_minus_sum_beta = 1.0d0
@@ -273,7 +436,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_scale_factor(myrank, f_c_source, tau_mu, tau_sigma, Q_mu, scale_factor)
+  subroutine get_attenuation_scale_factor(myrank, f_c_source, tau_eps, tau_sigma, Q_mu, scale_factor)
 
 ! returns: physical dispersion scaling factor scale_factor
 
@@ -284,7 +447,7 @@
   integer :: myrank
   double precision :: scale_factor, Q_mu, f_c_source
   ! strain and stress relaxation times
-  double precision, dimension(N_SLS) :: tau_mu, tau_sigma
+  double precision, dimension(N_SLS) :: tau_eps, tau_sigma
 
   ! local parameters
   double precision w_c_source
@@ -318,11 +481,11 @@
   b_val = ZERO
   do i = 1,N_SLS
     ! real part M_1 of complex modulus
-    a_val = a_val - w_c_source * w_c_source * tau_mu(i) * &
-      (tau_mu(i) - tau_sigma(i)) / (1.d0 + w_c_source * w_c_source * tau_mu(i) * tau_mu(i))
+    a_val = a_val - w_c_source * w_c_source * tau_eps(i) * &
+      (tau_eps(i) - tau_sigma(i)) / (1.d0 + w_c_source * w_c_source * tau_eps(i) * tau_eps(i))
     ! imaginary part M_2 of complex modulus
-    b_val = b_val + w_c_source * (tau_mu(i) - tau_sigma(i)) / &
-      (1.d0 + w_c_source * w_c_source * tau_mu(i) * tau_mu(i))
+    b_val = b_val + w_c_source * (tau_eps(i) - tau_sigma(i)) / &
+      (1.d0 + w_c_source * w_c_source * tau_eps(i) * tau_eps(i))
   enddo
 
   ! see e.g. Liu et al. (1976): Omega used in equation (20)
@@ -336,7 +499,9 @@
 
   !--- check that the correction factor is close to one
   if(scale_factor < 0.7 .or. scale_factor > 1.3) then
-     write(*,*) "  scale factor: ", scale_factor
+     write(*,*) "error : in get_attenuation_scale_factor() "
+     write(*,*) "  scale factor: ", scale_factor, " should be between 0.7 and 1.3"
+     write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
      call exit_MPI(myrank,'incorrect correction factor in attenuation model')
   endif
 
@@ -493,11 +658,11 @@
 !  - minor modifications by Daniel Peter, november 2010
 !--------------------------------------------------------------------------------------------------
 
-  subroutine get_attenuation_tau_mu(Qmu_in,tau_s,tau_mu,min_period,max_period)
+  subroutine get_attenuation_tau_eps(Qmu_in,tau_s,tau_eps,min_period,max_period)
 
 ! includes min_period, max_period, and N_SLS
 !
-! returns: determines strain relaxation times tau_mu
+! returns: determines strain relaxation times tau_eps
 
   implicit none
 
@@ -507,7 +672,7 @@
 !...
 
   double precision :: Qmu_in
-  double precision, dimension(N_SLS) :: tau_s, tau_mu
+  double precision, dimension(N_SLS) :: tau_s, tau_eps
   double precision :: min_period,max_period
 
   ! local parameters
@@ -515,7 +680,7 @@
   ! model_attenuation_storage_var
   type model_attenuation_storage_var
     sequence
-    double precision, dimension(:,:), pointer :: tau_mu_storage
+    double precision, dimension(:,:), pointer :: tau_eps_storage
     double precision, dimension(:), pointer :: Qmu_storage
     integer Q_resolution
     integer Q_max
@@ -538,23 +703,23 @@
 
   ! READ
   rw = 1
-  call model_attenuation_storage(Qmu_in, tau_mu, rw, AM_S)
+  call model_attenuation_storage(Qmu_in, tau_eps, rw, AM_S)
   if(rw > 0) return
 
-  call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Qmu_in, tau_s, tau_mu, AS_V)
+  call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Qmu_in, tau_s, tau_eps, AS_V)
 
   ! WRITE
   rw = -1
-  call model_attenuation_storage(Qmu_in, tau_mu, rw, AM_S)
+  call model_attenuation_storage(Qmu_in, tau_eps, rw, AM_S)
 
-  end subroutine get_attenuation_tau_mu
+  end subroutine get_attenuation_tau_eps
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
 
-  subroutine model_attenuation_storage(Qmu, tau_mu, rw, AM_S)
+  subroutine model_attenuation_storage(Qmu, tau_eps, rw, AM_S)
 
   implicit none
   include 'constants.h'
@@ -562,7 +727,7 @@
 ! model_attenuation_storage_var
   type model_attenuation_storage_var
     sequence
-    double precision, dimension(:,:), pointer :: tau_mu_storage
+    double precision, dimension(:,:), pointer :: tau_eps_storage
     double precision, dimension(:), pointer :: Qmu_storage
     integer Q_resolution
     integer Q_max
@@ -572,7 +737,7 @@
 ! model_attenuation_storage_var
 
   double precision Qmu, Qmu_new
-  double precision, dimension(N_SLS) :: tau_mu
+  double precision, dimension(N_SLS) :: tau_eps
   integer rw
 
   integer Qtmp
@@ -584,7 +749,7 @@
      AM_S%Q_resolution = 10**ATTENUATION_COMP_RESOLUTION
      AM_S%Q_max        = ATTENUATION_COMP_MAXIMUM
      Qtmp         = AM_S%Q_resolution * AM_S%Q_max
-     allocate(AM_S%tau_mu_storage(N_SLS, Qtmp))
+     allocate(AM_S%tau_eps_storage(N_SLS, Qtmp))
      allocate(AM_S%Qmu_storage(Qtmp))
      AM_S%Qmu_storage(:) = -1
   endif
@@ -598,7 +763,7 @@
 
   if(rw > 0 .AND. Qmu <= ZERO_TOL) then
      Qmu = 0.0d0;
-     tau_mu(:) = 0.0d0;
+     tau_eps(:) = 0.0d0;
      return
   endif
   ! Generate index for Storage Array
@@ -621,7 +786,7 @@
      ! READ
      if(AM_S%Qmu_storage(Qtmp) > 0) then
         ! READ SUCCESSFUL
-        tau_mu(:)   = AM_S%tau_mu_storage(:, Qtmp)
+        tau_eps(:)   = AM_S%tau_eps_storage(:, Qtmp)
         Qmu        = AM_S%Qmu_storage(Qtmp)
         rw = 1
      else
@@ -630,7 +795,7 @@
      endif
   else
      ! WRITE SUCCESSFUL
-     AM_S%tau_mu_storage(:,Qtmp)    = tau_mu(:)
+     AM_S%tau_eps_storage(:,Qtmp)    = tau_eps(:)
      AM_S%Qmu_storage(Qtmp)        = Qmu
      rw = 1
   endif
@@ -641,7 +806,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine attenuation_invert_by_simplex(t2, t1, n, Q_real, tau_s, tau_mu, AS_V)
+  subroutine attenuation_invert_by_simplex(t2, t1, n, Q_real, tau_s, tau_eps, AS_V)
 
   implicit none
 
@@ -666,7 +831,7 @@
   double precision  Q_real
 !  double precision  omega_not
   integer  n
-  double precision, dimension(n)   :: tau_s, tau_mu
+  double precision, dimension(n)   :: tau_s, tau_eps
 
   ! Internal
   integer i, iterations, err,prnt
@@ -716,16 +881,16 @@
   ! Shove the paramters into the module
   call attenuation_simplex_setup(nf,n,f,Q_real,tau_s,AS_V)
 
-  ! Set the Tau_epsilon (tau_mu) to an initial value at omega*tau = 1
-  ! tan_delta = 1/Q = (tau_mu - tau_s)/(2 * sqrt(tau e*tau_s))
-  !    if we assume tau_mu =~ tau_s
+  ! Set the Tau_epsilon (tau_eps) to an initial value at omega*tau = 1
+  ! tan_delta = 1/Q = (tau_eps - tau_s)/(2 * sqrt(tau e*tau_s))
+  !    if we assume tau_eps =~ tau_s
   !    we get the equation below
   do i = 1,n
-     tau_mu(i) = tau_s(i) + (tau_s(i) * 2.0d0/Q_real)
+     tau_eps(i) = tau_s(i) + (tau_s(i) * 2.0d0/Q_real)
   enddo
 
-  ! Run a simplex search to determine the optimum values of tau_mu
-  call fminsearch(attenuation_eval, tau_mu, n, iterations, min_value, prnt, err,AS_V)
+  ! Run a simplex search to determine the optimum values of tau_eps
+  call fminsearch(attenuation_eval, tau_eps, n, iterations, min_value, prnt, err,AS_V)
   if(err > 0) then
      write(*,*)'Search did not converge for an attenuation of ', Q_real
      write(*,*)'    Iterations: ', iterations
@@ -833,16 +998,16 @@
 
    ! Input
   double precision, dimension(AS_V%nsls) :: Xin
-  double precision, dimension(AS_V%nsls) :: tau_mu
+  double precision, dimension(AS_V%nsls) :: tau_eps
 
   double precision, dimension(AS_V%nf)   :: A, B, tan_delta
 
   integer i
   double precision xi, iQ2
 
-  tau_mu = Xin
+  tau_eps = Xin
 
-  call attenuation_maxwell(AS_V%nf,AS_V%nsls,AS_V%f,AS_V%tau_s,tau_mu,B,A)
+  call attenuation_maxwell(AS_V%nf,AS_V%nsls,AS_V%f,AS_V%tau_s,tau_eps,B,A)
 
   tan_delta = B / A
 
@@ -859,7 +1024,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine attenuation_maxwell(nf,nsls,f,tau_s,tau_mu,B,A)
+  subroutine attenuation_maxwell(nf,nsls,f,tau_s,tau_eps,B,A)
 
 !   - Computes the Moduli (Maxwell Solid) for a series of
 !         Standard Linear Solids
@@ -875,7 +1040,7 @@
 !                dimension(nf)
 !     tau_s = Tau_sigma  Stress relaxation time (see References)
 !                dimension(nsls)
-!     tau_mu = Tau_epislon Strain relaxation time (see References)
+!     tau_eps = Tau_epislon Strain relaxation time (see References)
 !                dimension(nsls)!
 !   Output
 !     B     = Real Moduli      ( M2 Dahlen and Tromp pp.203 )
@@ -895,7 +1060,7 @@
   ! Input
   integer nf, nsls
   double precision, dimension(nf)   :: f
-  double precision, dimension(nsls) :: tau_s, tau_mu
+  double precision, dimension(nsls) :: tau_s, tau_eps
   ! Output
   double precision, dimension(nf)   :: A,B
 
@@ -909,10 +1074,10 @@
   do i = 1,nf
      w = 2.0d0 * PI * 10**f(i)
      do j = 1,nsls
-        !        write(*,*)j,tau_s(j),tau_mu(j)
+        !        write(*,*)j,tau_s(j),tau_eps(j)
         demon = 1.0d0 + w**2 * tau_s(j)**2
-        A(i) = A(i) + ((1.0d0 + (w**2 * tau_mu(j) * tau_s(j)))/ demon)
-        B(i) = B(i) + ((w * (tau_mu(j) - tau_s(j))) / demon)
+        A(i) = A(i) + ((1.0d0 + (w**2 * tau_eps(j) * tau_s(j)))/ demon)
+        B(i) = B(i) + ((w * (tau_eps(j) - tau_s(j))) / demon)
      end do
       !     write(*,*)A(i),B(i),10**f(i)
   enddo

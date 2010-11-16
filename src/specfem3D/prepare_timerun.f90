@@ -280,17 +280,12 @@
   implicit none
 
   ! local parameters
-  double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble
-  double precision factor_scale_dble,one_minus_sum_beta_dble
-  double precision :: Q_mu
+  double precision, dimension(N_SLS) :: tau_sigma_dble
   double precision :: f_c_source
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: beta
-  real(kind=CUSTOM_REAL):: scale_factor
-  real(kind=CUSTOM_REAL):: vs_val
-  integer :: i,j,k,ispec
-  double precision :: qmin,qmax,qmin_all,qmax_all
+  real(kind=CUSTOM_REAL):: scale_factorl
+  integer :: i,j,k,ispec,ier
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor
 
   ! if attenuation is on, shift shear moduli to center frequency of absorption period band, i.e.
   ! rescale mu to average (central) frequency for attenuation
@@ -300,13 +295,36 @@
     one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
     factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
 
+    allocate( scale_factor(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if( ier /= 0 ) call exit_mpi(myrank,'error allocation scale_factor')
+    scale_factor(:,:,:,:) = 1._CUSTOM_REAL
+
+    ! reads in attenuation arrays
+    open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
+          status='old',action='read',form='unformatted',iostat=ier)
+    if( ier /= 0 ) then
+      print*,'error: could not open ',prname(1:len_trim(prname))//'attenuation.bin'
+      call exit_mpi(myrank,'error opening attenuation.bin file')
+    endif
+    read(27) ispec
+    if( ispec /= NSPEC_ATTENUATION_AB ) then
+      close(27)
+      print*,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
+      call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
+    endif
+    read(27) one_minus_sum_beta
+    read(27) factor_common
+    read(27) scale_factor
+    close(27)
+
+
     ! gets stress relaxation times tau_sigma, i.e.
     ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
     ! determines central frequency f_c_source of attenuation period band
     call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
-    ! determines alphaval,betaval,gammaval for runge-kutta
+    ! determines alphaval,betaval,gammaval for runge-kutta scheme
     if(CUSTOM_REAL == SIZE_REAL) then
       tau_sigma(:) = sngl(tau_sigma_dble(:))
     else
@@ -314,12 +332,7 @@
     endif
     call get_attenuation_memory_values(tau_sigma,deltat,alphaval,betaval,gammaval)
 
-    ! precalculates the negative inverse of tau_sigma
-    tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
-
-    ! rescale shear modulus according to attenuation model
-    qmin = HUGEVAL
-    qmax = 0.0
+    ! shifts shear moduli
     do ispec = 1,NSPEC_AB
 
       ! skips non elastic elements
@@ -330,56 +343,18 @@
         do j=1,NGLLY
           do i=1,NGLLX
 
-            ! shear moduli attenuation
-            ! gets Q_mu value
-            if(USE_OLSEN_ATTENUATION) then
-              ! use scaling rule similar to Olsen et al. (2003)
-              vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-              call get_attenuation_model_olsen( vs_val, Q_mu )
-            else
-              ! takes Q set in (CUBIT) mesh
-              Q_mu = qmu_attenuation_store(i,j,k,ispec)
-
-              ! attenuation zero
-              if( Q_mu <= 1.e-5 ) cycle
-
-              ! limits Q
-              if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
-              if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
-
-            endif
-            ! statistics
-            if( Q_mu < qmin ) qmin = Q_mu
-            if( Q_mu > qmax ) qmax = Q_mu
-
-            ! gets beta, on_minus_sum_beta and factor_scale
-            ! based on calculation of strain relaxation times tau_mu
-            call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
-                              f_c_source,tau_sigma_dble, &
-                              beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
-
-            ! stores factor for unrelaxed parameter
-            one_minus_sum_beta(i,j,k,ispec) = one_minus_sum_beta_dble
-
-            ! stores scale factor for runge-kutta
-            ! using factor for modulus defect Delta M_i = - M_relaxed
-            ! see e.g. Savage et al. (BSSA, 2010): eq. 11
-            !     precomputes factor: 2 ( 1 - tau_mu_i / tau_sigma_i ) / tau_sigma_i
-            beta(:) = beta_dble(:)
-            factor_common(:,i,j,k,ispec) = 2._CUSTOM_REAL * beta(:) * tauinv(:)
-
             ! scales only mu moduli
-            scale_factor = factor_scale_dble
-            mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factor
+            scale_factorl = scale_factor(i,j,k,ispec)
+            mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
           enddo
         enddo
       enddo
     enddo
 
+    deallocate(scale_factor)
+
     ! statistics
-    call min_all_dp(qmin,qmin_all)
-    call max_all_dp(qmax,qmax_all)
     ! user output
     if( myrank == 0 ) then
       write(IMAIN,*)
@@ -389,7 +364,6 @@
       write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
       write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
                     " frequency: ",sngl(f_c_source)
-      write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
       write(IMAIN,*)
     endif
 

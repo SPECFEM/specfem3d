@@ -105,7 +105,6 @@
     allocate(rmass(NGLOB_AB))
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
     allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
     allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
@@ -159,8 +158,6 @@
     !pll
     read(27) rho_vp
     read(27) rho_vs
-    ! attenuation
-    read(27) qmu_attenuation_store
 
   else
     ! no elastic attenuation & anisotropy
@@ -188,19 +185,6 @@
      close(27)
      call exit_mpi(myrank,'error no simulation type defined')
   endif
-
-  ! checks attenuation values: see maximum defined in constants.h
-  if( ATTENUATION ) then
-    if( minval(qmu_attenuation_store(:,:,:,:)) < 0 ) then
-      close(27)
-      call exit_MPI(myrank,'error attenuation Q minimum exceeds range')
-    endif
-    if( maxval(qmu_attenuation_store(:,:,:,:)) > ATTENUATION_COMP_MAXIMUM ) then
-      close(27)
-      call exit_MPI(myrank,'error attenuation flag entry maximum exceeds range')
-    endif
-  endif
-
 
 ! absorbing boundary surface
   read(27) num_abs_boundary_faces

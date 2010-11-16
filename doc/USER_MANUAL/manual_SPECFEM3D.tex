@@ -920,7 +920,7 @@ may be changed after running \texttt{xgenerate\_databases}:
 \item the simulation type control parameters: \texttt{SIMULATION\_TYPE}
 and \texttt{SAVE\_FORWARD}
 \item the time step parameters \texttt{NSTEP} and \texttt{DT}
-\item the attenuation control parameters \texttt{ATTENUATION} and \texttt{USE\_OLSEN\_ATTENUATION}
+%\item the attenuation control parameters \texttt{ATTENUATION} and \texttt{USE\_OLSEN\_ATTENUATION}
 \item the absorbing boundary control parameter \texttt{ABSORBING\_CONDITIONS}
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
 and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
@@ -1194,11 +1194,11 @@ from the adjoint seismograms recorded at the original earthquake location.
 \begin{enumerate}
 \item First, run a regular forward simlation (\texttt{SIMULATION\_TYPE =
 1} and \texttt{SAVE\_FORWARD = .false.}). You can automatically set
-these two variables using the \texttt{\small UTILS/change\_simulation\_type.pl}
+these two variables using the \texttt{\small utils/change\_simulation\_type.pl}
 script:
 
 \begin{lyxcode}
-UTILS/change\_simulation\_type.pl~-f~
+utils/change\_simulation\_type.pl~-f~
 \end{lyxcode}
 and then collect the recorded seismograms at all the stations given
 in \texttt{in\_data\_files/STATIONS}.
@@ -1211,7 +1211,7 @@ as the regular \texttt{in\_data\_files/STATIONS} file.
 \begin{itemize}
 \item Depending on what type of misfit function is used for the source inversion,
 adjoint sources need to be computed from the original recorded seismograms
-for the selected stations and saved in the \texttt{SEM/} directory
+for the selected stations and saved in the \texttt{in\_out\_files/SEM/} directory
 with the format \texttt{STA.NT.BH?.adj}, where \texttt{STA}, \texttt{NT}
 are the station name and network code given in the \texttt{in\_data\_files/STATIONS\_ADJOINT}
 file, and \texttt{BH?} represents the component name of a particular
@@ -1232,7 +1232,7 @@ as the original recorded seismograms.
 \item \textbf{Set the related parameters and run the adjoint simulation}\\
 In the \texttt{in\_data\_files/Par\_file}, set the two related parameters to
 be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
-More conveniently, use the scripts \texttt{UTILS/change\_simulation\_type.pl}
+More conveniently, use the scripts \texttt{utils/change\_simulation\_type.pl}
 to modify the \texttt{Par\_file} automatically (\texttt{change\_simulation\_type.pl
 -a}). Then run the solver to launch the adjoint simulation.
 \item \textbf{Collect the seismograms at the original source location}
@@ -1304,7 +1304,7 @@ in the Section \ref{enu:Prepare-the-adjoint}.
 \item In the case of travel-time finite-frequency kernel for one source-receiver
 pair, i.e., point source from the \texttt{CMTSOLUTION}, and one station
 in the \texttt{STATIONS\_ADJOINT} list, we supply a sample program
-in \texttt{UTILS/xcut\_velocity} to cut a certain portion of the original
+in \texttt{utils/cut\_velocity/xcut\_velocity} to cut a certain portion of the original
 displacement seismograms and convert it into the proper adjoint source
 to compute the finite-frequency kernel.
 
@@ -1325,7 +1325,7 @@ when \texttt{ifile} = 4 or 5.
 
 
 With the successful forward simulation and the adjoint source ready
-in \texttt{SEM/}, set \texttt{SIMULATION\_TYPE = 3} and \texttt{SAVE\_FORWARD
+in the \texttt{in\_out\_files/SEM/} directory, set \texttt{SIMULATION\_TYPE = 3} and \texttt{SAVE\_FORWARD
 = .false.} in the \texttt{Par\_file(change\_simulation\_type.pl -b),}
 and rerun the solver.
 
@@ -1440,18 +1440,17 @@ sensitivity kernels are the strongest along the source-receiver great
 circle path, it is sufficient to collect only the slices that are
 along or close to the great circle path.
 
-A Perl script \texttt{UTILS/slice\_number.pl} that calls MATLAB can
+A Perl script \texttt{slice\_number.pl} located in directory \texttt{utils/Visualization/Paraview/} can
 help to figure out the slice numbers that lie along the great circle
-path (both the minor and major arcs), as well as the slice numbers
-required to produce a full picture of the inner core if your kernel
-also illuminates the inner core.
+path. It applies to meshes created with the internal mesher \texttt{xmeshfem3D}.
+
 
 \begin{enumerate}
-\item On machines where you have MATLAB access, copy the \texttt{CMTSOLUTION}
-file, \texttt{STATIONS\_ADJOINT}, and \texttt{Par\_file}, and run:
+\item On machines where you have access to the script, copy the \texttt{Mesh\_Par\_file}, and
+\texttt{output\_solver} files, and run:
 
 \begin{lyxcode}
-{\small UTILS/slice\_number.pl~Par\_file~output\_solver.txt~slice\_file}{\small \par}
+{\small slice\_number.pl~Mesh\_Par\_file~output\_solver.txt~slice\_file}{\small \par}
 \end{lyxcode}
 which will generate a \texttt{slices\_file}.
 
@@ -1465,11 +1464,11 @@ After obtaining the slice files, you can collect the corresponding
 kernel files from the given slices.
 
 \begin{enumerate}
-\item You can use or modify the script \texttt{UTILS/copy\_databases.pl}
+\item You can use or modify the script \texttt{utils/copy\_basin\_database.pl}
 to accomplish this:
 
 \begin{lyxcode}
-{\small UTILS/copy\_database.pl~slice\_file~lsf\_machine\_file~filename~{[}jobid]}{\small \par}
+{\small utils/copy\_database.pl~slice\_file~lsf\_machine\_file~filename~{[}jobid]}{\small \par}
 \end{lyxcode}
 where \texttt{\small lsf\_machine\_file} is the machine file generated
 by the LSF scheduler, \texttt{\small filename} is the kernel name
@@ -1485,16 +1484,16 @@ of the front end.
 \item \textbf{Combine kernel files into one mesh file}
 
 
-We use an auxilliary program \texttt{combine\_paraview\_data.f90}
+We use an auxilliary program \texttt{combine\_vol\_data.f90}
 to combine the kernel files from all slices into one mesh file.
 
 \begin{enumerate}
-\item Compile it in the global code directory:
+\item Compile it in the root directory:
 
 \begin{lyxcode}
-{\footnotesize make~combine\_paraview\_data~}{\footnotesize \par}
+{\footnotesize make~combine\_vol\_data~}{\footnotesize \par}
 
-{\footnotesize xcombine\_paraview\_data~slice\_list~filename~input\_dir~output\_dir~high/low-resolution~}{\footnotesize \par}
+{\footnotesize ./bin/xcombine\_vol\_data~slice\_list~filename~input\_dir~output\_dir~high/low-resolution~}{\footnotesize \par}
 \end{lyxcode}
 where \texttt{input\_dir} is the directory where all the individual
 kernel files are stored, and \texttt{output\_dir} is where the mesh
@@ -1509,13 +1508,14 @@ points of the elements to the mesh file.
 
 \begin{enumerate}
 \item We next convert the \texttt{.mesh} file into the VTU (Unstructured
-grid file) format which can be viewed in ParaView, for example:
+grid file) format which can be viewed in ParaView. For this task, you can use and modify the script \texttt{mesh2vtu.pl}
+located in directory \texttt{utils/Visualization/Paraview/}, for example:
 
 \begin{lyxcode}
-UTILS/mesh2vtu.pl~-i~file.mesh~-o~file.vtu
+mesh2vtu.pl~-i~file.mesh~-o~file.vtu
 \end{lyxcode}
 \item Notice that this Perl script uses a program \texttt{mesh2vtu} in the
-\texttt{UTILS/mesh2vtu} directory, which further uses the VTK \url{http://www.vtk.org/}
+\texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further uses the VTK \url{http://www.vtk.org/}
 run-time library for its execution. Therefore, make sure you have
 them properly set in the script according to your system.
 \end{enumerate}
@@ -1614,7 +1614,7 @@ advantage of this property, care needs to be taken that output and
 intermediate files from separate jobs do not overwrite each other,
 or otherwise interfere with other running jobs.
 \end{itemize}
-Examples of job scripts can be found in \texttt{\small UTILS/Cluster/}
+Examples of job scripts can be found in the \texttt{\small utils/Cluster/}
 directory and can straightforwardly be modified and adapted to meet
 more specific running needs.
 
@@ -1625,7 +1625,7 @@ to create mesh partitions. The two
 main scripts are \texttt{\small run\_lsf.bash}, which compiles the
 Fortran code and submits the job to the scheduler, and \texttt{\small go\_mesher\_solver\_lsf\_basin.forward},
 which contains the instructions that make up
-the job itself. These scripts can be found in \texttt{\small UTILS/Cluster/lsf/} directory
+the job itself. These scripts can be found in \texttt{\small utils/Cluster/lsf/} directory
 
 
 \section{Job submission \texttt{run\_lsf.bash}}
@@ -1716,7 +1716,7 @@ and how to name this job (\texttt{go\_mesher\_solver\_lsf}).
 \item The script then creates a list of the nodes allocated to this job
 by echoing the value of a dynamically set environment variable \texttt{LSB\_MCPU\_HOSTS}
 and parsing the output into a one-column list using the Perl script
-\texttt{UTILS/remap\_lsf\_machines.pl}. It then creates a set of scratch
+\texttt{utils/Cluster/lsf/remap\_lsf\_machines.pl}. It then creates a set of scratch
 directories on these nodes (\texttt{\small /scratch/}~\\
 \texttt{\small \$USER/DATABASES\_MPI}) to be used as the \texttt{LOCAL\_PATH}
 for temporary storage of the database files. The scratch directories
@@ -1784,7 +1784,7 @@ cleanbase.pl~../OUTPUT\_FILES/machines
 
 \chapter{Post-Processing Scripts}
 
-Several post-processing scripts/programs are provided in the \texttt{UTILS/}
+Several post-processing scripts/programs are provided in the \texttt{utils/}
 directory, and most of them need to be adjusted when used on different
 systems, for example, the path of the executable programs. Here we
 only list a few of the available scripts and provide a brief description, and
@@ -1799,7 +1799,7 @@ seismograms recorded at seismic stations. Since the SEM synthetics
 are accurate for a certain frequency range, both the original data
 and the synthetics need to be processed before a comparison can be
 made. We generally use the following scripts provided in the ~\\
-\texttt{UTILS/seis\_process/} directory:
+\texttt{utils/seis\_process/} directory:
 
 
 \subsection{Data processing script \texttt{process\_trinet\_data.pl}}
@@ -1884,7 +1884,7 @@ You do have two options to change this default output behavior, given in the mai
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.} to have only the master process writing out seismograms. This can be useful on a cluster, where only the master process node has access to the output directory.
 \item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to have the seismograms output to \texttt{LOCAL\_PATH} directory specified in the main parameter file \texttt{in\_data\_files/Par\_file}.
 In this case, you could collect the synthetics onto the frontend using the \texttt{collect\_seismo\_lsf\_multi.pl} script
-located in the \texttt{UTILS/Cluster/lsf/} directory. The usage of the script would be e.g.:
+located in the \texttt{utils/Cluster/lsf/} directory. The usage of the script would be e.g.:
 
 \begin{lyxcode}
 collect\_seismo.pl~machines~in\_data\_files/Par\_file
@@ -1902,7 +1902,7 @@ need to clean the local scratch disk for the next simulation. This
 is especially important in the case of kernel simulation,
 where very large files are generated for the absorbing boundaries
 to help with the reconstruction of the regular forward wavefield.
-A sample script is provided in \texttt{UTILS/}:
+A sample script is provided in \texttt{utils/}:
 
 \begin{lyxcode}
 cleanbase.pl~machines

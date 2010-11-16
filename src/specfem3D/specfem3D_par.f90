@@ -43,7 +43,6 @@ module specfem_par
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: qmu_attenuation_store
 
 ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO

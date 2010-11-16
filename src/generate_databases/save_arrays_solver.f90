@@ -188,8 +188,7 @@
     !pll Stacey
     write(IOUT) rho_vp
     write(IOUT) rho_vs
-    ! attenuation q values
-    write(IOUT) qmu_attenuation_store
+
   endif
 
 ! poroelastic
