@@ -627,9 +627,9 @@ These files will be needed for creating the distributed databases, and have to r
 \end{lyxcode}
 where
 \begin{itemize}
-     \item \texttt{Q}           : 0=no attenuation / standard \texttt{Q} attenuation value
+     \item \texttt{Q}           : quality factor
      \item \texttt{anisotropy\_flag}  : 0=no anisotropy / 1,2,.. check with implementation in \texttt{aniso\_model.f90}
-     \item \texttt{domain\_id}        : 1=acoustic / 2=elastic / 3=poroelastic
+     \item \texttt{domain\_id}        : 1=acoustic / 2=elastic 
 \end{itemize}
 \item [{\texttt{NMATERIALS}}] The number of regions in the mesh.
 In the following lines, because the mesh is regular or 'almost regular', each region is defined as :
@@ -642,13 +642,13 @@ The topography of the model is defined as a set of elevation
  values on a regular 2D grid. It is also posible to
 define interfaces between the layers of the model in the same way.
 
-The file defined in \texttt{INTERFACES\_FILE} contains the settings of the topography grid
-and of the interfaces grids. The number
-of interfaces, including the topography, needs to be set at the first line. Then, from the bottom
-to the top of the model, you need to define the grids with several parameters :
- number of points along $x$ and $y$, minimal $x$ and $y$ coordinates, spacing between points and the file
-in which the elevation values are stored. At the end of this file, you simply need to set the
-number of spectral elements in the vertical direction for each layer.\\
+The file defined in the \texttt{INTERFACES\_FILE} parameter of \texttt{Mesh\_Par\_File} contains the settings of the topography grid
+and of the interfaces grids. The number of interfaces, including the topography, needs to be set at the first line. Then, from the bottom
+to the top of the model, you need to define the grids with several parameters : {\texttt{SUPPRESS\_UTM\_PROJECTION}
+as described previously, number of points along $x$ and $y$, minimal $x$ and $y$ coordinates, spacing between points and the name of the file 
+which contains the elevation values (in $y$.$x$ increasing order).  
+At the end of this file, you simply need to set the
+number of spectral elements in the vertical direction for each layer. We provide a few models in the {\texttt{examples/}} directory.  \\
 
 Finally, depending on your system, you might need to provide a file that tells MPI what compute nodes
 to use for the simulations. The file must have a number of entries
