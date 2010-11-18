@@ -90,6 +90,8 @@
   integer, Parameter :: IOSTF = 71
 ! I/O unit for interface file
   integer, parameter :: IIN_INTERFACES = 43
+! I/O unit for noise simulations
+  integer, parameter :: IIN_NOISE = 44,IOUT_NOISE = 45
 
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
@@ -130,6 +132,7 @@
   character(len=256), parameter :: IN_DATA_FILES_PATH = '../in_data_files/'   
   character(len=256), parameter :: MF_IN_DATA_FILES_PATH = '../in_data_files/meshfem3D_files/' 
   character(len=256), parameter :: OUTPUT_FILES_PATH = '../in_out_files/OUTPUT_FILES/'
+
 
 ! ---------------------------------------------------------------------------------------
 ! LQY -- Following 3 variables stays here temporarily,

@@ -33,11 +33,20 @@
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &
-                        NTSTEP_BETWEEN_READ_ADJSRC  )
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY  )
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
-                        station_name,network_name,adj_source_file
+                        station_name,network_name,adj_source_file, &
+!<YANGL NOISE_TOMOGRAPHY
+                        LOCAL_PATH,wgllwgll_xy,free_surface_ispec,free_surface_jacobian2Dw, &
+                        noise_sourcearray,irec_master_noise, &
+                        normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+
+  use specfem_par_movie,only: nfaces_surface_ext_mesh, &
+                        store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh
+!>YANGL
+
   implicit none
 
   include "constants.h"
@@ -76,7 +85,7 @@
   !<YANGL
   ! real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   logical :: ibool_read_adj_arrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
+  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
   !>YANGL
@@ -343,6 +352,51 @@
     call sum_all_cr(stf_used_total,stf_used_total_all)
     if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
   endif
+
+  !<YANGL
+  ! for noise simulations
+  ! we have two loops indicated by phase_is_inner ("inner points" or "boudanry points")
+  ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
+  ! because boundary points are claculated first!
+  if( .not. phase_is_inner ) then 
+    if ( NOISE_TOMOGRAPHY == 1 ) then
+       ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
+       ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
+       ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
+       ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
+       call add_source_master_rec_noise(myrank,nrec, & 
+                                NSTEP,accel,noise_sourcearray, &
+                                ibool,islice_selected_rec,ispec_selected_rec, &
+                                it,irec_master_noise, &
+                                nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+    elseif ( NOISE_TOMOGRAPHY == 2 ) then
+       ! second step of noise tomography, i.e., read the surface movie saved at every timestep
+       ! use the movie to drive the ensemble forward wavefield
+       call noise_read_add_surface_movie(myrank,NGLLX*NGLLY*nfaces_surface_ext_mesh,accel, &
+                              normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                              store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh, &
+                              free_surface_ispec,ibool,nfaces_surface_ext_mesh, &
+                              1,NSTEP-it+1,LOCAL_PATH,free_surface_jacobian2Dw,wgllwgll_xy, &
+                              nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+        ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
+        ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
+        ! note the ensemble forward sources are generally distributed on the surface of the earth
+        ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
+        ! therefore, we must add it here, before applying the inverse of mass matrix
+    elseif ( NOISE_TOMOGRAPHY == 3 ) then
+        ! third step of noise tomography, i.e., read the surface movie saved at every timestep
+        ! use the movie to reconstruct the ensemble forward wavefield
+        ! the ensemble adjoint wavefield is done as usual
+        ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
+        call noise_read_add_surface_movie(myrank,NGLLX*NGLLY*nfaces_surface_ext_mesh,b_accel, &
+                              normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                              store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh, &
+                              free_surface_ispec,ibool,nfaces_surface_ext_mesh, &
+                              1,it,LOCAL_PATH,free_surface_jacobian2Dw,wgllwgll_xy, &
+                              nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+    endif
+  endif
+  !>YANGL
 
 
   end subroutine compute_add_sources_elastic

@@ -30,7 +30,8 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  
+  use specfem_par_movie,only: nfaces_surface_ext_mesh
+
   implicit none
   integer:: ispec,i,j,k,iglob
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
@@ -176,4 +177,12 @@
   close(27)
   !>YANGL
 
+  !<YANGL
+  ! for noise simulations --- noise strength kernel
+    if (NOISE_TOMOGRAPHY == 3) then
+       call save_kernels_strength_noise(myrank,LOCAL_PATH, &
+                                        sigma_kl,1.0,1.0, &
+                                        nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+    endif
+  !>YANGL
   end subroutine save_adjoint_kernels

@@ -31,14 +31,15 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  
+  use specfem_par_movie,only: nfaces_surface_ext_mesh 
+
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_displ_elm,accel_elm
   real(kind=CUSTOM_REAL) :: kappal,rhol
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL), dimension(5) :: epsilondev_loc,b_epsilondev_loc
-  
+
   ! updates kernels
   do ispec = 1, NSPEC_AB
 
@@ -139,4 +140,13 @@
       call compute_boundary_kernel()          
   endif 
 
+  !<YANGL
+  ! for noise simulations --- source strength kernel
+  if (NOISE_TOMOGRAPHY == 3)  &
+     call compute_kernels_strength_noise(myrank,ibool, &
+                        sigma_kl,displ,deltat,it, &
+                        NGLLX*NGLLY*nfaces_surface_ext_mesh,normal_x_noise,normal_y_noise,normal_z_noise, &
+                        nfaces_surface_ext_mesh,free_surface_ispec,LOCAL_PATH, &
+                        nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+  !>YANGL
   end subroutine compute_kernels
