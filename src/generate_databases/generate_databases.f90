@@ -283,6 +283,9 @@
   integer,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
 
+! flag for noise simulation
+  integer :: NOISE_TOMOGRAPHY
+
   end module generate_databases_par
 
 !
@@ -367,7 +370,7 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -422,6 +425,21 @@
     MOVIE_SURFACE = .false.
     CREATE_SHAKEMAP = .false.
   endif
+  !<YANGL
+  ! for noise simulations, we need to save movies at the surface (where the noise is generated)
+  ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
+  ! 
+  if ( NOISE_TOMOGRAPHY /= 0 ) then
+    MOVIE_SURFACE = .true.
+    CREATE_SHAKEMAP = .false.
+    if( ( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) .and. myrank == 0 ) then
+        write(IMAIN,*) 'error: when running noise simulations ( NOISE_TOMOGRAPHY /= 0 ),'
+        write(IMAIN,*) '       we can NOT use EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP'
+        write(IMAIN,*) '       change EXTERNAL_MESH_MOVIE_SURFACE & EXTERNAL_MESH_CREATE_SHAKEMAP in constant.h'
+        call exit_MPI(myrank,'incompatible NOISE_TOMOGRAPHY, EXTERNAL_MESH_MOVIE_SURFACE, EXTERNAL_MESH_CREATE_SHAKEMAP')
+    endif
+  endif
+  !>YANGL
 
 
   if(myrank == 0) then

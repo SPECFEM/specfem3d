@@ -31,7 +31,7 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
                         SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC )
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY )
 
   implicit none
 
@@ -39,6 +39,7 @@
 
   integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
+  integer NOISE_TOMOGRAPHY
 
   double precision DT,HDUR_MOVIE
 
@@ -59,6 +60,8 @@
 
   ! reads in parameters
   call read_value_integer(SIMULATION_TYPE, 'solver.SIMULATION_TYPE')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NOISE_TOMOGRAPHY, 'solver.NOISE_TOMOGRAPHY')
   if(err_occurred() /= 0) return
   call read_value_logical(SAVE_FORWARD, 'solver.SAVE_FORWARD')
   if(err_occurred() /= 0) return
@@ -87,18 +90,19 @@
   endif  
   call read_value_integer(NSTEP, 'solver.NSTEP')
   if(err_occurred() /= 0) return
-  !<YANGL
-  ! read in adjoint sources block by block
-  ! we shall later put this parameter in in_data_files/Par_file
-  ! the default value (0) is to read the whole trace at the same time
-  ! should you change the value, make sure "mod(NTSTEP_BETWEEN_READ_ADJSRC,NSTEP) == 0"
-  NTSTEP_BETWEEN_READ_ADJSRC = 0  ! later, this parameter should be given in Par_file
-  if (NTSTEP_BETWEEN_READ_ADJSRC == 0)  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-  if (mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0) &
-     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! change your Par_file'
-  !>YANGL
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
+  !<YANGL
+  ! double the number of time steps, if running noise simulations (+/- branches)
+  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
+  ! read in adjoint sources block by block
+  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC')
+  if(err_occurred() /= 0) return
+  ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
+  if ( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) &
+     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
+  !>YANGL
   call read_value_logical(OCEANS, 'model.OCEANS')
   if(err_occurred() /= 0) return
   call read_value_logical(ATTENUATION, 'model.ATTENUATION')
@@ -121,6 +125,22 @@
   if(err_occurred() /= 0) return
   call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'solver.USE_HIGHRES_FOR_MOVIES')
   if(err_occurred() /= 0) return
+  !<YANGL
+  ! for noise simulations, we need to save movies at the surface (where the noise is generated)
+  ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
+  if ( NOISE_TOMOGRAPHY /= 0 ) then
+    MOVIE_SURFACE = .true.
+    CREATE_SHAKEMAP = .false.           ! CREATE_SHAKEMAP and MOVIE_SURFACE cannot be both .true.
+    USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
+    ! since there are several flags involving surface movies, check compatability
+    if ( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
+        print*, 'error: when running noise simulations ( NOISE_TOMOGRAPHY /= 0 ),'
+        print*, '       we can NOT use EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP'
+        print*, '       change EXTERNAL_MESH_MOVIE_SURFACE & EXTERNAL_MESH_CREATE_SHAKEMAP in constant.h'
+        stop 'incompatible NOISE_TOMOGRAPHY, EXTERNAL_MESH_MOVIE_SURFACE, EXTERNAL_MESH_CREATE_SHAKEMAP'
+    endif
+  endif
+  !>YANGL
   call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
   if(err_occurred() /= 0) return
   call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')

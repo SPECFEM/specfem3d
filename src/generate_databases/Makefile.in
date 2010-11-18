@@ -112,6 +112,7 @@ libgendatabases_a_OBJECTS = \
 	$O/write_AVS_DX_surface_data.o \
 	$O/write_VTK_data.o \
 	$O/memory_eval.o \
+	$O/noise_tomography.o \
 	$(EMPTY_MACRO)
 
 
@@ -374,6 +375,8 @@ $O/combine_surf_data.o:  ${SHARED}/constants.h ${SHARED}/combine_surf_data.f90
 $O/prepare_assemble_MPI.o:  ${SHARED}/constants.h ${SHARED}/prepare_assemble_MPI.f90
 	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o ${SHARED}/prepare_assemble_MPI.f90 
 
+$O/noise_tomography.o: $(SHARED)/constants.h ${SHARED}/noise_tomography.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/noise_tomography.o ${SHARED}/noise_tomography.f90
 
 
 

@@ -210,7 +210,7 @@ subroutine compute_forces_elastic()
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &
-                        NTSTEP_BETWEEN_READ_ADJSRC )
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY )
     
 ! assemble all the contributions between slices using MPI
     if( phase_is_inner .eqv. .false. ) then 
