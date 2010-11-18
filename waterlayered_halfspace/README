@@ -2,6 +2,10 @@
 README
 ----------------------------------------------------------------------
 
+This example creates a layered model as in example layered_halfspace/
+with a water layer on top and an elastic layer below, using CUBIT.
+It then runs a forward simulation which couples acoustic & elastic waves.
+
 
 step-by-step tutorial:
 

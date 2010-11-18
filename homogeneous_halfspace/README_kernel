@@ -2,6 +2,9 @@
 README - single travel-time adjoint kernel
 ----------------------------------------------------------------------
 
+This example creates a travel-time adjoint source for a single receiver
+station and runs a kernel simulation.
+
 note: make yourself familiar with how to run a forward simulation.
       a detailed step-by-step tutorial is given in the file
       /SPECFEM3D/examples/homogeneous_halfspace/README
@@ -21,12 +24,14 @@ step-by-step kernel tutorial:
      > ./UTILS/change_simulation_type.pl -F
 
      or change manually in /SPECFEM3D/in_data_files/Par_file:
+     ...
      # forward or adjoint simulation
      SIMULATION_TYPE                 = 1
      SAVE_FORWARD                    = .true.
+     ...
 
    - run the forward simulation, submitting the job script:
-     > qsub go_solver_pbs.sesame.bash
+     > qsub go_solver_pbs.bash
 
    you should have now the necessary seismograms in directory in_out_files/OUTPUT_FILES/:
      ...
@@ -46,7 +51,7 @@ step-by-step kernel tutorial:
      e.g. using the seismograms from station 20, and create the
      corresponding adjoint source files:
      > cd /SPECFEM3D
-     > ./UTILS/cut_velocity/xcut_velocity 15. 21. 0 in_out_files/OUTPUT_FILES/X20.DB.BH*.semd
+     > ./UTILS/cut_velocity/xcut_velocity 10. 25. 0 in_out_files/OUTPUT_FILES/X20.DB.BH*.semd
 
    - make designated directory for adjoint sources:
      > mkdir in_out_files/SEM/
@@ -78,7 +83,7 @@ step-by-step kernel tutorial:
 
 
    - run the backward simulation, submitting the job script:
-     > qsub go_solver_pbs.sesame.bash
+     > qsub go_solver_pbs.bash
 
 
      this will create adjoint kernel files in directory in_out_files/DATABASES_MPI/
@@ -92,14 +97,23 @@ step-by-step kernel tutorial:
 
 
    - visualize with Paraview, e.g. :
+      > cd /SPECFEM3D
+      > make xcombine_vol_data
+      > cd bin/
+      > ./xcombine_vol_data 0 3 kappa_kernel ../in_out_files/DATABASES_MPI/ ../in_out_files/OUTPUT_FILES/ 1
 
-     > ./xcombine_vol_data slices.txt  kappa_kernel in_out_files/DATABASES_MPI/ in_out_files/OUTPUT_FILES/ 1
+     where we use the partitions with id 0 to 3 to include all 4 processor partitions.
 
-        where slices.txt contains numbers from 0 to 3 to include all 4 processor partitions
 
-     > mesh2vtu.pl -i in_out_files/OUTPUT_FILES/kappa_kernel.mesh -o in_out_files/OUTPUT_FILES/kappa_kernel.vtu
+     To convert the mesh format to VTK, you can use utils/Visualization/Paraview/mesh2vtu:
+      > cd utils/Visualization/Paraview/mesh2vtu
+     Modify the Makefile according to your library paths and compile mesh2vtu:
+      > make
+     the modify the paths to your mesh2vtu installation in the utils/Visualization/Paraview/mesh2vtu.pl file,
+     and run:
+      > mesh2vtu.pl -i in_out_files/OUTPUT_FILES/kappa_kernel.mesh -o in_out_files/OUTPUT_FILES/kappa_kernel.vtu
 
-        which creates the *.vtu file:  Paraview -> Menu File -> Open ...
+     which creates the *.vtu file:  Paraview -> Menu File -> Open ...
                                        (and choose the kappa_kernel.vtu)
 
 

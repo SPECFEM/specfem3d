@@ -2,6 +2,9 @@
 README
 ----------------------------------------------------------------------
 
+This examples creates a homogeneous halfspace, i.e. a single volume block with a
+constant elastic material property, using CUBIT and runs a forward simulation.
+
 step-by-step tutorial:
 
 0. check that all software is available (or that modules are loaded):
@@ -55,14 +58,18 @@ step-by-step tutorial:
 3. decompose mesh files:
 
    - compile decomposer in directory SPECFEM3D/:
-     > make
+     > make xdecompose_mesh_SCOTCH
 
    - run decomposer
      (example assumes 4 partitions with mesh files in ../examples/homogeneous_halfspace/MESH/)
      > ./bin/xdecompose_mesh_SCOTCH 4 examples/homogeneous_halfspace/MESH/ in_out_files/DATABASES_MPI/
 
      this creates mesh partitions "proc000***_Database" in directory in_out_files/DATABASES_MPI/.
-     (you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
+
+     you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH".
+
+     (for your convenience, these resulting database files are also provided in the example's
+      DATABASES-default/ directory for comparison.)
 
 
 4. generate databases:
@@ -82,9 +89,6 @@ step-by-step tutorial:
 
 
 5. run simulation:
-
-   - copy three files -- Par_file CMTSOLUTION STATIONS -- from
-      SPECFEM3D/examples/homogeneous_halfspace/ to SPECFEM3D/in_data_files/
 
    - compile specfem3D:
      > make xspecfem3D

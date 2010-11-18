@@ -2,6 +2,9 @@
 README
 ----------------------------------------------------------------------
 
+This example creates a single volume block and assigns a tomographic model
+as material property to run a forward simulation.
+
 step-by-step tutorial:
 
 0. check that all software is available (or that modules are loaded):

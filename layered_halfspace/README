@@ -2,7 +2,9 @@
 README
 ----------------------------------------------------------------------
 
-This example is used for validation with a layer-cake solution from Komatitsch et al. (1999),
+This example creates a layered model, with three volumes and two different material
+descriptions, using CUBIT.
+It is used for validation with a layer-cake solution from Komatitsch et al. (1999),
 using a 2-layer model as shown in their Figure 8, left.
 
 step-by-step tutorial:
