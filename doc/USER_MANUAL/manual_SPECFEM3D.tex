@@ -94,42 +94,27 @@
 \title{\textbf{SPECFEM3D}\\
 \textbf{User Manual}}
 
-
-\author{$\copyright$ California Institute of Technology (USA) and\\
+\author{$\copyright$ Princeton University (USA) and\\
 University of Pau / CNRS / INRIA (France)\\
-Version 2.0.0}
+Version 2.0.0 \\
+"Sesame" 
+}
+
 
 \maketitle
-\newpage{}
 
-\tableofcontents{}
+\section*{Authors}
+The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. \\
 
+%Older versions of the code were initially developed by Dimitri Komatitsch at Institut de Physique du Globe (France)
+%and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University (USA).
 
-\chapter{Introduction}
-
-The software package SPECFEM3D simulates seismic
-wave propagation at the local or regional scale
-based upon the spectral-element method (SEM).
-The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06,WiStBuGh10}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions.
-In particular, it can accurately handle very distorted mesh elements \citep{OlSe11}.
-Note that in many (most?) geological models in the context of seismic wave propagation studies
-(except for fault dynamic rupture studies)
-a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient. For a detailed introduction to the SEM as applied to regional
-seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
-in particular \citet{KoLiTrSuStSh04}.
-
-Effects due to lateral variations in compressional-wave speed, shear-wave
-speed, density, a 3D crustal model, topography and bathymetry are
-included. The package can accommodate
-full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
-variations in attenuation. Adjoint capabilities and finite-frequency
-kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09}.
-
-The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team: in alphabetical order,
+Since then it has been developed and maintained by a development team: in alphabetical order,
 Emanuele Casarotti,
 Min Chen,
 Vala Hj\"orleifsd\'ottir,
 Emiljana Jorgji,
+Jes\'us Labarta,
 Sue Kientz,
 Dimitri Komatitsch,
 Qinya Liu,
@@ -144,12 +129,77 @@ Daniel Peter,
 Brian Savage,
 Leif Strand,
 Carl Tape,
-Jeroen Tromp
-\toall{add full list of developers here and update the AUTHORS file accordingly}.
+Jeroen Tromp.\\
 
-\toall{We should also update the Adobe Illustrator / PDF cover page as well at some point}
 
-All SPECFEM3D\_GLOBE software is written in Fortran90 with full portability
+\toall{add full list of developers here and update the AUTHORS file accordingly} \\
+
+%The main developers of the \texttt{SPECFEM3D} source code are Dimitri
+%Komatitsch, Jeroen Tromp, and Qinya Liu. The following individuals
+%(listed in alphabetical order) have also contributed to the development
+%or improvement of the source code: Min Chen, Vala Hj\"orleifsd\'ottir,
+%Jes\'us Labarta, and Leif Strand. The following individuals (listed in alphabetical
+%order) contributed to this manual: Min Chen, Vala Hj\"orleifsd\'ottir,
+%Sue Kientz, Dimitri Komatitsch, Qinya Liu, Alessia Maggi,
+%Carl Tape, and Jeroen Tromp. 
+
+The manual's cover graphic was created
+by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}. \\
+
+\toall{We should also update the Adobe Illustrator / PDF cover page as well at some point} \\
+
+
+
+\newpage{}
+
+\tableofcontents{}
+
+
+\chapter{Introduction}
+
+The software package SPECFEM3D simulates seismic
+wave propagation at the local or regional scale
+based upon the spectral-element method (SEM).
+The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,Kop06,WiStBuGh10}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,BeLaPi06,DuKa06,DeSeWh08,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions.
+In particular, it can accurately handle very distorted mesh elements \citep{OlSe11}.
+Note that in most geological models in the context of seismic wave propagation studies
+(except for fault dynamic rupture studies)
+a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient. For a detailed introduction to the SEM as applied to regional
+seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
+in particular \citet{KoLiTrSuStSh04}.
+
+Effects due to lateral variations in compressional-wave speed, shear-wave
+speed, density, a 3D crustal model, topography and bathymetry are
+included. The package can accommodate
+full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
+variations in attenuation \citep{SaKoTr10}. Adjoint capabilities and finite-frequency
+kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09}.
+
+%The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team: in alphabetical order,
+%Emanuele Casarotti,
+%Min Chen,
+%Vala Hj\"orleifsd\'ottir,
+%Emiljana Jorgji,
+%Sue Kientz,
+%Dimitri Komatitsch,
+%Qinya Liu,
+%Yang Luo,
+%Nicolas Le Goff,
+%Pieyre Le Loher,
+%Alessia Maggi,
+%Roland Martin,
+%Dennis McRitchie,
+%David Mich\'ea,
+%Daniel Peter,
+%Brian Savage,
+%Leif Strand,
+%Carl Tape,
+%Jeroen Tromp
+%\toall{add full list of developers here and update the AUTHORS file accordingly}.
+
+%\toall{We should also update the Adobe Illustrator / PDF cover page as well at some point}
+
+All SPECFEM3D software is written in Fortran90 with full portability
 in mind, and conforms strictly to the Fortran95 standard. It uses
 no obsolete or obsolescent features of Fortran77. The package uses
 parallel programming based upon the Message Passing Interface (MPI)
@@ -168,17 +218,53 @@ The next release will use the PT-Scotch parallel library for mesh partitioning.
 \section{Citation}
 
 If you use SPECFEM3D for your own research, please cite at least one
-of the following articles: \cite{TrKoLi08,VaCaSaKoVi99,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,KoMiEr09,KoErGoMi10,KoGoErMi10,WiKoScTr04,KoLiTrSuStSh04,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
-If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others: \cite{WiKoScTr04,JiTsKoTr05,KrJiKoTr06a,KrJiKoTr06b,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,ChFaKo04,FaChKo04,RiRiKoTrHe02,GoAmTaCaSmSaMaKo09,TrKo00,SaKoTr10}.
+of the following articles: 
+
+%\cite{TrKoLi08,VaCaSaKoVi99,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,KoMiEr09,KoErGoMi10,KoGoErMi10,WiKoScTr04,KoLiTrSuStSh04,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
+
+%If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others: \cite{WiKoScTr04,JiTsKoTr05,KrJiKoTr06a,KrJiKoTr06b,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,ChFaKo04,FaChKo04,RiRiKoTrHe02,GoAmTaCaSmSaMaKo09,TrKo00,SaKoTr10}.
+
+\begin{description}
+
+\item [Forward simulations] ~\\
+\cite{TrKoLi08,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,KoGoErMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}
+
+\item [Adjoint simulations] ~\\
+\cite{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoLi08,TrKoHjLiZhPeBoMcFrTrHu10}
+
+\item [Southern California simulations] ~\\
+\cite{KoLiTrSuStSh04,KrJiKoTr06a,KrJiKoTr06b}.
+
+If you use the 3D southern California model, please cite 
+\citet{SuSh03} (Los Angeles model), 
+\citet{lovelyetal06} (Salton Trough), and
+\citet{hauksson2000} (southern California).
+The Moho map was determined by 
+\citet{zhu&kanamori2000}. 
+The 1D SoCal model was developed by \citet{DrHe90}.
+
+\end{description}
+
+\noindent
+If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others: 
+
+\begin{description}
+
+\item [Anisotropy] ~\\
+\cite{ChTr07,JiTsKoTr05,ChFaKo04,FaChKo04,RiRiKoTrHe02,TrKo00}.
+
+\item [Attenuation] ~\\
+\cite{SaKoTr10,KoTr02a,KoTr99}.
+
+\item [Topography] ~\\
+\cite{LeKoHuTr09,LeChKoHuTr09,LeChLiKoHuTr08,GoAmTaCaSmSaMaKo09,WiKoScTr04}.
+
+\end{description}
+
 The corresponding Bib\TeX{} entries may be found
 in file \texttt{USER\_MANUAL/bibliography.bib} or in comments at the
 beginning of file \texttt{specfem3D.f90}.
 
-If you use the 3D southern
-California model, please cite \citet{SuSh03} (Los Angeles model), \citet{lovelyetal06}
-(Salton Trough), and \citet{hauksson2000} (southern California).
-The Moho map was determined by \citet{zhu&kanamori2000}. The 1D SoCal
-model was developed by \citet{DrHe90}.
 
 \section{Support}
 
@@ -214,7 +300,7 @@ command names for your Fortran90 compiler and MPI package:
 \end{lyxcode}
 
 
-The SPECFEM3D software package relies on the Scotch library to partition the meshes created with CUBIT.
+The SPECFEM3D software package relies on the Scotch library to partition meshes created with CUBIT.
 Note that we use CUBIT to create meshes of hexahedra, but other packages can be used as well, for instance GiD from \url{http://gid.cimne.upc.es} or Gmsh from \url{http://geuz.org/gmsh}. Even mesh creation packages that generate tetrahedra, for instance TetGen from \url{http://tetgen.berlios.de}, can be used because each tetrahedron can then easily be decomposed into four hexahedra as shown in the picture of the TetGen logo at \url{http://tetgen.berlios.de/figs/Delaunay-Voronoi-3D.gif}; while this approach does not generate hexahedra of optimal quality, it can ease mesh creation in some situations and it has been shown that the spectral-element method can very accurately handle distorted mesh elements \citep{OlSe11}.
 
 The path to the SCOTCH installation needs to be set with the option \texttt{-{}-with-scotch-path}. Just as an example:
@@ -238,7 +324,7 @@ MPI libraries.
 \item [{\texttt{FLAGS\_NO\_CHECK}}] Compiler flag for creating fast, production-run
 code for critical subroutines.
 \end{description}
-The configuration scripts automatically creates for each executable a corresponding
+The configuration script automatically creates for each executable a corresponding
 \texttt{Makefile} in the \texttt{src/} subdirectoy.
 The \texttt{Makefile} contains a number of suggested entries for various
 compilers, e.g., Portland, Intel, Absoft, NAG, and Lahey. The software
@@ -288,7 +374,7 @@ single precision calculations are often significantly faster; the
 difference can typically be 10\% to 25\%. It is therefore often worth
 using single precision if you can. We recommend running the same calculation
 once in single precision and in double precision on your system and
-comparing the seismograms. If they are identical, you should probably
+then comparing the seismograms. If they are identical, you should probably
 select single precision for your future runs.
 
 When running on an SGI add ``\texttt{setenv TRAP\_FPE OFF}'' to your
@@ -312,7 +398,7 @@ message.
 
 \chapter{\label{cha:Mesh-Generation}Mesh Generation}
 
-The first step in running a spectral-element method computation consists of constructing a high-quality mesh for the region under consideration. We provide two possibilities to do so: (1) relying on an external, hexahedral mesher CUBIT or (2) using the provided, internal mesher \texttt{xmeshfem3D}. In the following, we explain these two approaches.
+The first step in running a spectral-element simulation consists of constructing a high-quality mesh for the region under consideration. We provide two possibilities to do so: (1) relying on the external, hexahedral mesher CUBIT, or (2) using the provided, internal mesher \texttt{xmeshfem3D}. In the following, we explain these two approaches.
 
 
 \section{\label{cha:Running-the-Mesher-CUBIT}Meshing with \texttt{CUBIT}}
@@ -333,19 +419,19 @@ Our experience showed that using CUBIT greatly facilitates and speeds up the gen
 The basic steps in creating a load-balanced, partitioned mesh with CUBIT are:
 \begin{description}
 \item [1.] setting up a hexahedral mesh with CUBIT,
-\item [2.] exporting the CUBIT mesh into a specfem3d file format and
-\item [3.] partitioning the specfem3d mesh files for a chosen number of cores.
+\item [2.] exporting the CUBIT mesh into a SPECFEM3D file format and
+\item [3.] partitioning the SPECFEM3D mesh files for a chosen number of cores.
 \end{description}
 
-Examples are provided in the SPECFEM3D package in the subdirectory \texttt{examples/}. Please feel free to contribute your own example to this package by contacting the CIG Computational Seismology Mailing List  \url{cig-seismo@geodynamics.org}.
+Examples are provided in the SPECFEM3D package in the subdirectory \texttt{examples/}. We strongly encourage you to contribute your own example to this package by contacting the CIG Computational Seismology Mailing List  \url{cig-seismo@geodynamics.org}.
 
 
 \subsection{Creating the Mesh with CUBIT}
 
 For the installation and handling of the CUBIT meshing tool suite, please refer to the CUBIT user manual and documentation.
-In order to give you a basic understanding of how to use CUBIT for our purposes, examples are provided in the SPECFEM3D package in the subdirectory \texttt{examples/}. For your convenience, the following examples are provided in the subdirectory \texttt{examples/}:
+In order to give you a basic understanding of how to use CUBIT for our purposes, examples are provided in the SPECFEM3D package in the subdirectory \texttt{examples/}:
 \begin{description}
-\item [{\texttt{homogeneous\_halfspace}}] Basic example creates a single block model and assigns elastic material parameters.
+\item [{\texttt{homogeneous\_halfspace}}] Creates a single block model and assigns elastic material parameters.
 \item [{\texttt{layered\_halfspace}}]  Combines two different, elastic material volumes and creates a refinement layer between the two. This example can be compared for validation against the solutions provided in subdirectory ~\\
 \texttt{VALIDATION\_3D\_SEM\_SIMPLER\_LAYER\_SOURCE\_DEPTH/}.
 \item [{\texttt{waterlayered\_halfspace}}] Combines an acoustic and elastic material volume as in a schematic marine survey example.
@@ -360,7 +446,7 @@ In order to give you a basic understanding of how to use CUBIT for our purposes,
 \includegraphics[width=.45\textwidth]{figures/example-tomo.jpg}
 \par\end{centering}
 
-\caption{Screenshots of the CUBIT examples provided in subdirectory  \texttt{examples/}: homogeneous halfspace (top-left), layered halfspace (top-right), waterlayered halfspace (bottom-left) and tomographic model (bottom-right).}
+\caption{Screenshots of the CUBIT examples provided in subdirectory  \texttt{examples/}: homogeneous halfspace (top-left), layered halfspace (top-right), water layered halfspace (bottom-left) and tomographic model (bottom-right).}
 
 \label{fig:examples.cubit}
 \end{figure}
@@ -373,7 +459,7 @@ Please feel free to contribute your own example to this package by contacting th
 \subsection{Exporting the Mesh with \texttt{cubit2specfem3d.py} }
 \label{subsec:Exporting-the-Mesh}
 
-Once the geometric model volumes in CUBIT are meshed, you prepare the model for the exportation with the definition of the material blocks and of the boundary surfaces. Thus, prior to exporting the mesh, you need to define blocks specifying the materials and absorbing boundaries in CUBIT.
+Once the geometric model volumes in CUBIT are meshed, you prepare the model for exportation with the definition of material blocks and boundary surfaces. Thus, prior to exporting the mesh, you need to define blocks specifying the materials and absorbing boundaries in CUBIT.
 This process could be done automatically using the script \texttt{boundary\_definition.py} if the mesh meets some conditions or manually, following the block convention:
 
 \begin{description}
@@ -383,10 +469,10 @@ The additional attributes to the block define the material description.
 For an elastic material:
 \begin{description}
 \item [material\_id] An integer value which is unique for this material.
-\item [Vp] P-Velocity of the material (given in m/s).
-\item [Vs] S-Velocity of the material (given in m/s).
-\item [rho] density of the material (given in kg/$m^3$).
-\item [Q] quality factor to use in case of a simulation with attenuation turned on. It should be between 1 and 9000. In case no attenuation information is available, it can be set to zero. Please note that your Vp- and Vs-velocities are given for a reference frequency. To change this reference frequency, you change the value of
+\item [Vp] P-wave speed of the material (given in m/s).
+\item [Vs] S-wave speed of the material (given in m/s).
+\item [rho] density of the material (given in kg/m$^3$).
+\item [Q] quality factor to use in case of a simulation with attenuation turned on. It should be between 1 and 9000. In case no attenuation information is available, it can be set to zero. Please note that your Vp- and Vs-speeds are given for a reference frequency. To change this reference frequency, you change the value of
 \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
 \item [anisotropic\_flag] Flag describing the anisotropic model to use in case an anisotropic simulation should be conducted. See the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for an implementation of the anisotropic models. In case no anisotropy is available, it can be set to zero.
 \end{description}
@@ -395,9 +481,9 @@ Note that this material block has to be defined using all the volumes which belo
 For an acoustic material:
 \begin{description}
 \item [material\_id] An integer value which is unique for this material.
-\item [Vp] P-Velocity of the material (given in m/s).
-\item [0] S-Velocity of the material is ignored.
-\item [rho] density of the material (given in kg/$m^3$).
+\item [Vp] P-wave speed of the material (given in m/s).
+\item [0] S-wave speed of the material is ignored.
+\item [rho] density of the material (given in kg/m$^3$).
 \end{description}
 
 
@@ -432,7 +518,7 @@ After the block definitions are done, you export the mesh using the script \text
 \texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q}  \texttt{anisotropy\_flag}
 \end{lyxcode}
 where
-\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-velocity in $m \, s^{-1}$, \texttt{vs}  the S-velocity in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
+\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
 For a tomographic model, the material definition format is:
 \begin{lyxcode}
 \texttt{domain\_ID} \texttt{material\_ID}  \texttt{tomography}  \texttt{name}
@@ -451,17 +537,51 @@ where
 \item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom.
 \end{description}
 
+These mesh files are needed as input files for the partitioner  \texttt{xdecompose\_mesh\_SCOTCH}
+to load-balance the mesh. Please see the next section for further details.
+
+
+\subsubsection*{Checking the mesh quality}
+The quality of the mesh may be inspected more precisely based upon the serial code
+in the file  ~\\
+\texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}. 
+Running this code is optional because no information needed by the
+solver is generated.
+
+
+Prior to running and compiling this code, you have to export your mesh in CUBIT to an ABAQUS (.inp) format.
+You also have to determine a number of parameters of your mesh, such as the number of nodes and number of elements
+and modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90} source file. Then, 
+in the directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus}, type
+\begin{lyxcode}
+{\small ./compile\_all.csh}{\small \par}
+\end{lyxcode}
+and use
+\begin{lyxcode}
+{\small xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
+\end{lyxcode}
+to generate an AVS output file (\texttt{\small AVS\_meshquality.inp}
+in AVS UCD format) or OpenDX output file (\texttt{\small DX\_meshquality.}~\\
+\texttt{\small dx}) that can be used to investigate mesh quality,
+e.g, skewness of elements and a Gnuplot histogram (\texttt{\small mesh\_quality\_}~\\
+\texttt{\small histogram.txt}) that can be plotted with gnuplot (type
+`\texttt{\small gnuplot plot\_mesh\_quality\_histogram.gnu}'). The
+histogram is also printed to the screen. If you want to start designing
+your own meshes, this tool is useful for viewing your creations. You
+are striving for meshes with elements with `cube-like' dimensions,
+e.g., the mesh should contain no very elongated or skewed elements.
+
 
 \subsection{Partitioning the Mesh with \texttt{xdecompose\_mesh\_SCOTCH}}
 
 
 The SPECFEM3D software package performs large scale simulations in a parallel 'Single Process Multiple Data' way.
-The spectral element mesh created with CUBIT needs to be distributed on the processors. This partitioning is executed once and for all prior to
+The spectral-element mesh created with CUBIT needs to be distributed on the processors. This partitioning is executed once and for all prior to
 the execution of the solver so it is referred to as a static mapping.
 
 An efficient partitioning is important because it leverages the overall running time of the application.
-It amounts to balance the number of elements in each slice while minimizing the communication coasts
-resulting from the placement of adjacent elements to different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the Scotch library
+It amounts to balance the number of elements in each slice while minimizing the communication costs
+resulting from the placement of adjacent elements on different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the Scotch library
 which provides efficent static mapping, graph and mesh partitioning routines. Scotch is a free software package developed by
 Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
 \\
@@ -471,7 +591,7 @@ of the Scotch library with the option \texttt{-{}-with-scotch-path} of the \text
 For convenience we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
 in directory ~\\
 \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}. Please refer to file INSTALL.txt in that directory to see how to compile it.
-In the future you should be able to find for recent versions at  \url{http://www.labri.fr/perso/pelegrin/scotch/scotch\_en.html} .
+In the future you should be able to find more recent versions at  \url{http://www.labri.fr/perso/pelegrin/scotch/scotch\_en.html} .
 \\
 
 \begin{figure}[htbp]
@@ -486,7 +606,7 @@ In the future you should be able to find for recent versions at  \url{http://www
 \label{fig:mount.partitions}
 \end{figure}
 
-Then you are ready to compile,
+When you are ready to compile,
 in the main directory type '\texttt{make decompose\_mesh\_SCOTCH}'.
 If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh\_SCOTCH} should be produced.
 
@@ -497,7 +617,7 @@ the synopsis is:
 \end{lyxcode}
 where
 \begin{itemize}
-     \item \texttt{nparts} is the number of partitions, i.e. number of cores for the parallel simulations,
+     \item \texttt{nparts} is the number of partitions, i.e., the number of cores for the parallel simulations,
      \item \texttt{input\_directory} is the directory which holds all the files generated by the Python script \texttt{cubit2specfem3d.py} explained in the previous Section~\ref{subsec:Exporting-the-Mesh}, e.g. \texttt{MESH/}, and
      \item \texttt{output\_directory} is the directory for the output of this partitioner which stores ACII-format files named like \texttt{proc******\_Database} for each partition. These files will be needed for creating the distributed databases, and have to reside in the directory  \texttt{LOCAL\_PATH} specified in the main \texttt{Par\_file}, e.g. in directory \texttt{in\_out\_files/DATABASES\_MPI}. Please see Chapter~\ref{cha:Creating-Distributed-Databases} for further details.
 \end{itemize}
@@ -562,11 +682,11 @@ for West).
 which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
 \texttt{PROJECTION} is \texttt{.false.}.
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
-when your model range is specified in the geographical coordinates,
-and needs to be \texttt{.true.} when your model is specified in a
-cartesian coordinates. \noun{UTM projection zone in which your simulation
+when your model range is specified in geographical coordinates,
+and needs to be \texttt{.true.} when your model is specified in
+Cartesian coordinates. \noun{UTM projection zone in which your simulation
 region resides.}
-\item [{\texttt{INTERFACES\_FILE }}] File in which contains the description of the topography and
+\item [{\texttt{INTERFACES\_FILE }}] File which contains the description of the topography and
 of the interfaces between the different layers of the model, if any.
 The number of spectral elements in the vertical direction within each layer is also defined in this file.
 
@@ -627,9 +747,9 @@ These files will be needed for creating the distributed databases, and have to r
 \end{lyxcode}
 where
 \begin{itemize}
-     \item \texttt{Q}           : quality factor
+     \item \texttt{Q}           : quality factor (0=no attenuation)
      \item \texttt{anisotropy\_flag}  : 0=no anisotropy / 1,2,.. check with implementation in \texttt{aniso\_model.f90}
-     \item \texttt{domain\_id}        : 1=acoustic / 2=elastic 
+     \item \texttt{domain\_id}        : 1=acoustic / 2=elastic
 \end{itemize}
 \item [{\texttt{NMATERIALS}}] The number of regions in the mesh.
 In the following lines, because the mesh is regular or 'almost regular', each region is defined as :
@@ -638,17 +758,19 @@ In the following lines, because the mesh is regular or 'almost regular', each re
 \end{lyxcode}
 \end{description}
 
-The topography of the model is defined as a set of elevation
- values on a regular 2D grid. It is also posible to
+The \texttt{INTERFACES\_FILE} parameter of \texttt{Mesh\_Par\_File} defines the file which contains the settings of the topography grid and of the interfaces grids. Topography is defined as a set of elevation values on a regular 2D grid. It is also possible to
 define interfaces between the layers of the model in the same way.
-
-The file defined in the \texttt{INTERFACES\_FILE} parameter of \texttt{Mesh\_Par\_File} contains the settings of the topography grid
-and of the interfaces grids. The number of interfaces, including the topography, needs to be set at the first line. Then, from the bottom
-to the top of the model, you need to define the grids with several parameters : {\texttt{SUPPRESS\_UTM\_PROJECTION}
-as described previously, number of points along $x$ and $y$, minimal $x$ and $y$ coordinates, spacing between points and the name of the file 
-which contains the elevation values (in $y$.$x$ increasing order).  
-At the end of this file, you simply need to set the
-number of spectral elements in the vertical direction for each layer. We provide a few models in the {\texttt{examples/}} directory.  \\
+The file needs to define several parameters:
+\begin{itemize} 
+\item The number of interfaces, including the topography. This needs to be set at the first line. Then, from the bottom
+to the top of the model, you need to define the grids with: 
+\item \texttt{SUPPRESS\_UTM\_PROJECTION} flag as described previously, 
+\item number of points along $x$ and $y$ direction (NXI and NETA), 
+\item minimal $x$ and $y$ coordinates (LONG\_MIN and LAT\_MIN), 
+\item spacing between points along $x$ and $y$ (SPACING\_XI and SPACING\_ETA) and 
+\item the name of the file which contains the elevation values (in $y$.$x$ increasing order). 
+\end{itemize}
+At the end of this file, you simply need to set the number of spectral elements in the vertical direction for each layer. We provide a few models in the {\texttt{examples/}} directory.  \\
 
 Finally, depending on your system, you might need to provide a file that tells MPI what compute nodes
 to use for the simulations. The file must have a number of entries
@@ -659,7 +781,7 @@ the \texttt{go\_mesher} and \texttt{go\_solver} default job submission
 scripts. See Chapter~\ref{cha:Scheduler} for information about running
 the code on a system with a scheduler, e.g., LSF.
 
-Now that you have set the appropriate parameters in the \texttt{Par\_file}
+Now that you have set the appropriate parameters in the \texttt{Mesh\_Par\_file}
 and have compiled the mesher, you are ready to launch it! This is
 most easily accomplished based upon the \texttt{go\_mesher} script.
 When you run on a PC cluster, the script assumes that the nodes are
@@ -671,51 +793,28 @@ code on a system with a scheduler, e.g., LSF.
 
 Mesher output is provided in the \texttt{in\_out\_files/OUTPUT\_FILES} directory
 in \texttt{output\_mesher.txt}; this file provides lots of details
-about the mesh that was generated. Alternatively, output can be directed
+about the mesh that was generated. Please note that the mesher suggests a time step \texttt{DT} to run
+the solver with. The mesher output file also contains a table about the quality of the mesh to indicate
+possible problems with the distortions of elements. 
+Alternatively, output can be directed
 to the screen instead by uncommenting a line in \texttt{constants.h}:
-
 \begin{lyxcode}
 !~uncomment~this~to~write~messages~to~the~screen~
 
 !~integer,~parameter~::~IMAIN~=~ISTANDARD\_OUTPUT
 \end{lyxcode}
 
-The quality of the mesh may be inspected more precisely based upon the serial code
-in the file  ~\\
-\texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}. In the directory \texttt{check\_mesh\_quality\_CUBIT\_Abaqus}, type
-
-\begin{lyxcode}
-make~check\_mesh\_quality\_CUBIT\_Abaqus
-\end{lyxcode}
-and then use
-
-\begin{lyxcode}
-xcheck\_mesh\_quality\_CUBIT\_Abaqus
-\end{lyxcode}
-to generate an AVS output file (\texttt{\small AVS\_meshquality.inp}
-in AVS UCD format) or OpenDX output file (\texttt{\small DX\_meshquality.}~\\
-\texttt{\small dx}) that can be used to investigate mesh quality,
-e.g, skewness of elements and a Gnuplot histogram (\texttt{\small mesh\_quality\_}~\\
-\texttt{\small histogram.txt}) that can be plotted with gnuplot (type
-`\texttt{\small gnuplot plot\_mesh\_quality\_histogram.gnu}'). The
-histogram is also printed to the screen. If you want to start designing
-your own meshes, this tool is useful for viewing your creations. You
-are striving for meshes with elements with `cube-like' dimensions,
-e.g., the mesh should contain no very elongated or skewed elements.
-
-Running this code is optional because no information needed by the
-solver is generated.
 
 \chapter{\label{cha:Creating-Distributed-Databases}Creating the Distributed Databases}
 
-Either you previously used  \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile \texttt{xgenerate\_databases}. This program is going to create all the missing information needed by the SEM solver.
+After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile \texttt{xgenerate\_databases}. This program is going to create all the missing information needed by the SEM solver.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=.6\textwidth]{figures/workflow.jpg}
 \par\end{centering}
 
-\caption{Schematic workflow for a SPECFEM3D simulation. The exectable \texttt{xgenerate\_databases} creates the GLL mesh points and assigns the specific model parameters.}
+\caption{Schematic workflow for a SPECFEM3D simulation. The exectable \texttt{xgenerate\_databases} creates the GLL mesh points and assigns specific model parameters.}
 
 \label{fig:workflow.databases}
 \end{figure}
@@ -778,8 +877,8 @@ Please note that the Vp- and Vs-velocities of your model are given for a referen
 To change this reference frequency, you change the value of
 \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
 \item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
-want to use the attenuation model that scaled from the velocity model
-using Olsen's empirical relation (reference).
+want to use the attenuation model that scaled from the S-wave speed model
+using Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you
 want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
 \item [{\texttt{ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
@@ -818,7 +917,7 @@ When this parameter is set to be 0, a default half duration that corresponds to 
 Otherwise, it adds this half duration to the half duration specified in the source file \texttt{CMTSOLUTION},
 thus simulates longer periods to make the movie images look smoother.
 \item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
-save AVS \url{www.avs.com}, OpenDX \url{www.opendx.org}, or ParaView \url{www.paraview.org}
+save ParaView \url{www.paraview.org}
 mesh files for subsequent viewing. Turning the flag on generates large
 (distributed) files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
 for a discussion of mesh viewing features.
@@ -877,7 +976,7 @@ $\Delta t < C ~\mathrm{min}_\Omega (~ h / v ~)$
 where $C$ is the so-called Courant number and $\Omega$ denotes the model volume.
 The distance $h$ depends on the mesh element size and the number of
 GLL points \texttt{NGLL} specified in the main constants file \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
-The wave speed $v$ is determined based on your model's P- (or S-) velocity values.
+The wave speed $v$ is determined based on your model's P- (or S-) wave speed values.
 
 The database generator \texttt{xgenerate\_databases}, as well as the internal mesher \texttt{xmeshfem3D}, are trying
 to evaluate the value of $\Delta t$ for empirically chosen Courant numbers $C \sim 0.3$.
@@ -1326,7 +1425,7 @@ when \texttt{ifile} = 4 or 5.
 
 With the successful forward simulation and the adjoint source ready
 in the \texttt{in\_out\_files/SEM/} directory, set \texttt{SIMULATION\_TYPE = 3} and \texttt{SAVE\_FORWARD
-= .false.} in the \texttt{Par\_file(change\_simulation\_type.pl -b),}
+= .false.} in the \texttt{Par\_file} (you can use \texttt{change\_simulation\_type.pl -b}),
 and rerun the solver.
 
 \begin{itemize}
@@ -1362,14 +1461,40 @@ of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequenc
 
 \section{\label{sec:Mesh-graphics}Meshes}
 
-Use the serial code \texttt{combine\_AVS\_DX.f90} (type `\texttt{make
-combine\_AVS\_DX}' and then `\texttt{xcombine\_AVS\_DX}') to generate
-AVS \url{www.avs.com} output files (in AVS UCD format) or OpenDX \url{www.opendx.org}
-output files showing the mesh, the MPI partition (slices), the $\nchunks$
-chunks, the source and receiver location, etc. Use the AVS UCD files
-\texttt{AVS\_continent\_boundaries.inp} and \texttt{AVS\_plate\_boundaries.inp}
-or the OpenDX files \texttt{DX\_continent\_boundaries.dx} and \texttt{DX\_plate\_boundaries.dx}
-for reference.
+In case you used the internal mesher \texttt{xmeshfem3D} to create and partition your mesh,
+you can output mesh files in ABAQUS (.INP) and DX (.dx) format to visualize them. For this, you must set either the
+flag \texttt{CREATE\_DX\_FILES} or \texttt{CREATE\_ABAQUS\_FILES} to \texttt{.true.}  
+in the mesher's parameter file \texttt{Mesh\_Par\_file}
+prior to running the mesher (see Chapter~\ref{cha:Running-the-Mesher-Meshfem3D} for details).
+You can then use AVS \url{www.avs.com} or OpenDX \url{www.opendx.org}
+to visualize the mesh and MPI partition (slices).
+
+% obsolete: only for global package...
+%Use the serial code \texttt{combine\_AVS\_DX.f90} (type `\texttt{make
+%combine\_AVS\_DX}' and then `\texttt{xcombine\_AVS\_DX}') to generate
+%AVS \url{www.avs.com} output files (in AVS UCD format) or OpenDX \url{www.opendx.org}
+%output files showing the mesh, the MPI partition (slices), the $\nchunks$
+%chunks, the source and receiver location, etc. 
+%Use the AVS UCD files \texttt{AVS\_continent\_boundaries.inp} and \texttt{AVS\_plate\_boundaries.inp}
+%or the OpenDX files \texttt{DX\_continent\_boundaries.dx} and \texttt{DX\_plate\_boundaries.dx}
+%for reference.
+
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.49\textwidth]{figures/vtk_mesh_vp.jpg}
+\includegraphics[width=.49\textwidth]{figures/vtk_mesh_vs.jpg}
+\par\end{centering}
+
+\caption{Visualization using Paraview of VTK files created by \texttt{xgenerate\_databases} showing P- and S-wave velocities assigned to the mesh points. The mesh was created by \texttt{xmeshfem3D} for 4 processors.}
+
+\label{fig:vtk.mesh}
+\end{figure}
+
+
+You have also the option to visualize the distributed databases produced by \texttt{xgenerate\_databases}
+using Paraview \url{www.paraview.org}. For this, you must set the flag \texttt{SAVE\_MESH\_FILES} to \texttt{.true.}
+in the main parameter file \texttt{Par\_file} (see Chapter~\ref{cha:Main-Parameter} for details).
+This will create VTK files for each single partition. You can then use Paraview \url{www.paraview.org} to visualized these partitions.
 
 
 \section{\label{sec:Movies}Movies}
@@ -1406,15 +1531,41 @@ by the finite source model and set \texttt{HDUR\_MOVIE} = 0.0.
 When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
 flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{in\_out\_files/OUTPUT\_FILES} directory. The files are in a fairly complicated
-binary format, but there are two programs provided to convert the
-output into more user friendly formats. The first one, \texttt{create\_movie\_AVS\_DX.f90},
-outputs data in ASCII, OpenDX, AVS, or ParaView format. Run the code
-from the source directory (type `\texttt{make} \texttt{create\_movie\_AVS\_DX}'
-first) to create an input file in your format of choice. The code
-will prompt the user for input parameters. The second program \texttt{create\_movie\_GMT.f90}
-outputs ascii xyz files, convenient for use with GMT. This code uses
-significantly less memory than \texttt{create\_movie\_AVS\_DX.f90}
-and is therefore useful for high resolution runs.
+binary format, but there is a program provided to convert the
+output into more user friendly formats: 
+
+\begin{description}
+\item [\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}] 
+From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90}, it
+outputs data in ASCII, OpenDX, or AVS format (also readable in ParaView). 
+Before compiling the code, make sure you have the file \texttt{surface\_from\_mesher.h}
+in the  \texttt{in\_out\_files/OUTPUT\_FILES/} directory. This file will be created by the solver run.
+Then type `\texttt{make} \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT}'
+and run the executable \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
+in the \texttt{bin/} subdirectory. It will create visualization files in your format of choice. The code
+will prompt the user for input parameters. 
+
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.32\textwidth]{figures/movie_surf_1.jpg}
+\includegraphics[width=.32\textwidth]{figures/movie_surf_2.jpg}
+\includegraphics[width=.32\textwidth]{figures/movie_surf_3.jpg}
+\par\end{centering}
+
+\caption{Visualization using AVS files created by \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT} showing 
+movie snapshots of vertical velocity components at different times.}
+
+\label{fig:movie.surf}
+\end{figure}
+
+% uses obsolete routines...
+%\item [\texttt{xcreate\_movie\_GMT}]
+%From \texttt{create\_movie\_GMT.f90},
+%outputs ascii xyz files, convenient for use with GMT. This code uses
+%significantly less memory than \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90}
+%and is therefore useful for high resolution runs.
+
+\end{description}
 
 The \texttt{SPECFEM3D} code is running in near real-time to produce
 animations of southern California earthquakes via the web; see Southern California ShakeMovie\textregistered \url{www.shakemovie.caltech.edu}.
@@ -1571,7 +1722,7 @@ the \textsf{Accept} button. Choose \textsf{Filter} $\rightarrow$
 finite-frequency sensitivity kernel $K_{\beta}$ for station GSC at
 an epicentral distance of 176 km from the September 3, 2002, Yorba
 Linda earthquake. Lower Panel: Vertical source-receiver cross-section
-of the 3D S-wave velocity model used for the spectral-element simulations
+of the 3D S-wave speed model used for the spectral-element simulations
 \citep{KoLiTrSuStSh04}. (b) The same as (a) but for station HEC at
 an epicentral distance of 165 km \citep{LiTr06}.}
 
@@ -1935,7 +2086,7 @@ and `\texttt{-p}' are both optional.
 With the shakemap data saved in \texttt{in\_out\_files/OUTPUT\_FILES/} at the end
 of a shakemap simulation ~\\
 (\texttt{CREATE\_SHAKEMAP=.true.}), you can
-also run \texttt{`create\_movie\_GMT}' code to convert the binary
+also run \texttt{`create\_movie\_shakemap\_AVS\_DX\_GMT}' code to convert the binary
 shakemap data into GMT xyz files. A sample script \texttt{plot\_shakemap.pl}
 is provided to do this conversion, and then plot the shakemaps in
 GMT, for example:
@@ -1988,17 +2139,17 @@ Explorer, AVS \url{http://www.avs.com} is a trademark of Advanced
 Visualization Systems, and ParaView \url{http://www.paraview.com}
 is an open-source visualization platform.
 
-The main developers of the \texttt{SPECFEM3D} source code are Dimitri
-Komatitsch, Jeroen Tromp, and Qinya Liu. The following individuals
-(listed in alphabetical order) have also contributed to the development
-or improvement of the source code: Min Chen, Vala Hj\"orleifsd\'ottir,
-Jes\'us Labarta, and Leif Strand. The following individuals (listed in alphabetical
-order) contributed to this manual: Min Chen, Vala Hj\"orleifsd\'ottir,
-Sue Kientz, Dimitri Komatitsch, Qinya Liu, Alessia Maggi,
-Carl Tape, and Jeroen Tromp. The manual's cover graphic was created
-by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}.
-Older versions of the code were initially developed by Dimitri Komatitsch at Institut de Physique du Globe (France)
-and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University (USA).
+%The main developers of the \texttt{SPECFEM3D} source code are Dimitri
+%Komatitsch, Jeroen Tromp, and Qinya Liu. The following individuals
+%(listed in alphabetical order) have also contributed to the development
+%or improvement of the source code: Min Chen, Vala Hj\"orleifsd\'ottir,
+%Jes\'us Labarta, and Leif Strand. The following individuals (listed in alphabetical
+%order) contributed to this manual: Min Chen, Vala Hj\"orleifsd\'ottir,
+%Sue Kientz, Dimitri Komatitsch, Qinya Liu, Alessia Maggi,
+%Carl Tape, and Jeroen Tromp. The manual's cover graphic was created
+%by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}.
+%Older versions of the code were initially developed by Dimitri Komatitsch at Institut de Physique du Globe (France)
+%and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University (USA).
 
 Please e-mail your feedback, questions, comments, and suggestions
 to Jeroen Tromp \url{jtromp-AT-princeton.edu} or to the CIG Computational Seismology Mailing List \url{cig-seismo@geodynamics.org}.
@@ -2008,10 +2159,10 @@ to Jeroen Tromp \url{jtromp-AT-princeton.edu} or to the CIG Computational Seismo
 
 Main authors: Dimitri Komatitsch and Jeroen Tromp
 
-Seismological Laboratory, California Institute of Technology, USA,
+Princeton University, USA,
 and University of Pau / CNRS / INRIA, France
 
-$\copyright$ California Institute of Technology and University of Pau / CNRS / INRIA, February 2010
+$\copyright$ Princeton University and University of Pau / CNRS / INRIA, February 2010
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published

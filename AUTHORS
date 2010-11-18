@@ -1,12 +1,19 @@
   AUTHORS in alphabetical order :
 ---------------------------------
 
-The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team, in alphabetical order:
+The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp
+at Harvard University, then Caltech and Princeton, USA, starting in 1998,
+based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte
+at IPG in Paris, France from 1994 to 1997.
+
+Since then it has been developed and maintained by a development team,
+in alphabetical order:
 
 Emanuele Casarotti,
 Min Chen,
 Vala Hjörleifsdóttir,
 Emiljana Jorgji,
+Jesus Labarta,
 Sue Kientz,
 Dimitri Komatitsch,
 Qinya Liu,

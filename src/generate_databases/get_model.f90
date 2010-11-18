@@ -261,10 +261,19 @@
 
   ! checks material domains
   do ispec=1,nspec
+    ! checks if domain is set
     if( (ispec_is_acoustic(ispec) .eqv. .false.) &
           .and. (ispec_is_elastic(ispec) .eqv. .false.) &
           .and. (ispec_is_poroelastic(ispec) .eqv. .false.) ) then
       print*,'error material domain not assigned to element:',ispec
+      print*,'acoustic: ',ispec_is_acoustic(ispec)
+      print*,'elastic: ',ispec_is_elastic(ispec)
+      print*,'poroelastic: ',ispec_is_poroelastic(ispec)
+      stop 'error material domain index element'
+    endif
+    ! checks if domain is unique
+    if( ispec_is_acoustic(ispec) .eqv. .true. .and. ispec_is_elastic(ispec) .eqv. .true. ) then
+      print*,'error material domain assigned twice to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)
       print*,'poroelastic: ',ispec_is_poroelastic(ispec)
