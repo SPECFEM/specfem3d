@@ -1,6 +1,7 @@
 
 # forward or adjoint simulation
 SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
+NOISE_TOMOGRAPHY                = 0   # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
 SAVE_FORWARD                    = .false.
 
 # UTM projection parameters
@@ -13,6 +14,7 @@ NPROC                           = 4
 # time step parameters
 NSTEP                           = 1000
 DT                              = 0.05d0
+NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at the same time
 
 # parameters describing the model
 OCEANS                          = .false.
