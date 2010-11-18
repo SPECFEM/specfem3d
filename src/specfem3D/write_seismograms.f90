@@ -274,9 +274,10 @@
 
 ! parameters for master collects seismograms
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: tr 
   real(kind=CUSTOM_REAL) :: time_t
   integer :: nrec_local_received,NPROCTOT,total_seismos,receiver,sender
-  integer :: iproc,ier
+  integer :: iproc,ier,nt_s
 
 ! save displacement, velocity or acceleration
   if(istore == 1) then
@@ -343,7 +344,17 @@
 ! if the simulation uses many time steps. However, subsampling the output
 ! here would result in a loss of accuracy when one later convolves
 ! the results with the source time function
-        open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)),status='unknown')
+
+        if(SEISMOGRAMS_BINARY)then
+           ! binary format case
+           open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
+                sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
+           tr(:)=0
+        else
+           ! ASCII format case
+           open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
+                sisname(1:len_trim(sisname)),status='unknown')
+        end if
 
         ! make sure we never write more than the maximum number of time steps
         ! subtract half duration of the source to make sure travel time is correct
@@ -371,7 +382,14 @@
               endif
             endif
 
-            write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
+            if(SEISMOGRAMS_BINARY) then
+               ! binary format case 
+               tr(isample)=seismograms(iorientation,irec_local,isample)
+               write(IOUT,rec=1) tr   
+            else
+               ! ASCII format case
+               write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
+            end if
 
           else
             call exit_MPI(myrank,'incorrect record label')

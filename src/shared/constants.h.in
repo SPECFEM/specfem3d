@@ -71,6 +71,9 @@
 ! for optimized routines by Deville et al. (2002)
   integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
 
+! ouput format of seismograms, ASCII or binary 
+  logical, parameter :: SEISMOGRAMS_BINARY = .false.
+  
 ! input, output and main MPI I/O files
   integer, parameter :: ISTANDARD_OUTPUT = 6
   integer, parameter :: IIN = 40,IOUT = 41
