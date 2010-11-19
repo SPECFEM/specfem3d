@@ -42,7 +42,7 @@ function [] = NOISE_TOMOGRAPHY(NSTEP,dt,Tmin,Tmax,NOISE_MODEL)
 % the source time function has been saved in:
 % /data2/yangl/3D_NOISE/S_squared
 % S_squared should be put into directory:
-% ./NOISE_TOMOGRAPHY/ in the SPECFEM3D package
+% in_out_files/NOISE_TOMOGRAPHY/ in the SPECFEM3D package
 
 
 clf;
@@ -162,5 +162,5 @@ fprintf('\n*************************************************************\n');
 fprintf('the source time function has been saved in:\n');
 fprintf([DIR '/S_squared\n']);
 fprintf('S_squared should be put into directory:\n');
-fprintf('./NOISE_TOMOGRAPHY/ in the SPECFEM3D package\n');
+fprintf('in_out_files/NOISE_TOMOGRAPHY/ in the SPECFEM3D package\n');
 fprintf('*************************************************************\n');

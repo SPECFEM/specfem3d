@@ -30,6 +30,10 @@ kernel="beta_kernel"
 mkdir -p $in_out_files/SEM 
 mkdir -p $in_out_files/NOISE_TOMOGRAPHY
 
+# create directories for storing kernels (first contribution and second contribution)
+mkdir -p $in_out_files/NOISE_TOMOGRAPHY/1st
+mkdir -p $in_out_files/NOISE_TOMOGRAPHY/2nd
+
 # copy noise input files
 cp $script_dir/NOISE_TOMOGRAPHY/S_squared                $in_out_files/NOISE_TOMOGRAPHY/
 cp $script_dir/NOISE_TOMOGRAPHY/irec_master_noise*       $in_out_files/NOISE_TOMOGRAPHY/
@@ -90,6 +94,9 @@ cp $in_out_files/SEM/adj_sources_contribution1           $in_out_files/SEM/X2.DB
 cp $in_data_files/Par_file_step3                         $in_data_files/Par_file
 mpirun -np 4 ./xspecfem3D
 
+# store kernels
+cp $in_out_files/DATABASES_MPI/*kernel*                  $in_out_files/NOISE_TOMOGRAPHY/1st/
+
 # visualization (refer to other examples, if you don't know the visualization process very well)
 # note that "xcombine_vol_data" is compiled by "make combine_vol_data"
 # this program generates a file "$in_out_files/OUTPUT_FILES/$kernel.mesh"
@@ -126,6 +133,9 @@ cp $in_out_files/SEM/adj_sources_contribution2           $in_out_files/SEM/X1.DB
 # step 3 of noise simulation
 cp $in_data_files/Par_file_step3                         $in_data_files/Par_file
 mpirun -np 4 ./xspecfem3D
+
+# store kernels
+cp $in_out_files/DATABASES_MPI/*kernel*                  $in_out_files/NOISE_TOMOGRAPHY/2nd/
 
 # visualization (refer to other examples, if you don't know the visualization process very well)
 # this program generates a file "$in_out_files/OUTPUT_FILES/$kernel.mesh"
