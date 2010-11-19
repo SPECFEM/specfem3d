@@ -14,7 +14,6 @@ NPROC                           = 4
 # time step parameters
 NSTEP                           = 1000
 DT                              = 0.05d0
-NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at the same time
 
 # parameters describing the model
 OCEANS                          = .false.
@@ -46,6 +45,9 @@ NTSTEP_BETWEEN_OUTPUT_INFO      = 500
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# interval in time steps for reading adjoint traces
+NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at the same time
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.

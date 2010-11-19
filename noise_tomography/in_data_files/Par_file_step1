@@ -1,19 +1,20 @@
 
 # forward or adjoint simulation
 SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
-NOISE_TOMOGRAPHY                = 0   # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
-SAVE_FORWARD                    = .false.
+NOISE_TOMOGRAPHY                = 1
+SAVE_FORWARD                    = .true.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 6
+NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 6000
-DT                              = 0.0065d0
+NSTEP                           = 1500
+DT                              = 0.05d0
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # parameters describing the model
 OCEANS                          = .false.
@@ -26,30 +27,26 @@ ANISOTROPY                      = .false.
 ABSORBING_CONDITIONS            = .true.
 
 # save AVS or OpenDX movies
-MOVIE_SURFACE                   = .false.
+MOVIE_SURFACE                   = .true.
 MOVIE_VOLUME                    = .false.
-NTSTEP_BETWEEN_FRAMES           = 200
+NTSTEP_BETWEEN_FRAMES           = 100
 CREATE_SHAKEMAP                 = .false.
 SAVE_DISPLACEMENT               = .false.
-USE_HIGHRES_FOR_MOVIES          = .false.
+USE_HIGHRES_FOR_MOVIES          = .true.
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .true.
+SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 500
+NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
-# interval in time steps for reading adjoint traces
-NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at the same time
-
 # print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .false.
-
+PRINT_SOURCE_TIME_FUNCTION      = .true.
 
