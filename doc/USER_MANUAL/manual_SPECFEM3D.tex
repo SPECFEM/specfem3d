@@ -1443,6 +1443,252 @@ the database files saved by the forward simulation. Solutions for
 this dilemma are provided in Chapter~\ref{cha:Scheduler}. Visualization
 of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequency-Kernels}.
 
+%<YANGL
+\chapter{Noise Cross-correlation Simulations}
+
+Besides earthquake simulations, SPECFEM3D includes functionality for seismic noise tomography as well.
+In order to proceed successfully in this chapter, it is critical that you have already familiarized yourself
+with procedures for meshing (Chapter \ref{cha:Mesh-Generation}), 
+creating distributed databases (Chapter \ref{cha:Creating-Distributed-Databases}),
+running earthquake simulations (Chapters \ref{cha:Running-the-Solver}) 
+and adjoint simulations (Chapter \ref{cha:Adjoint-Simulations}).
+Also, make sure you read the paper `Noise cross-correlation sensitivity kernels' \citep{trompetal2010},
+in order to understand noise simulations from a theoretical perspective.
+
+\section{Input Parameter Files}
+
+As usual, the three main input files are crucial: \texttt{Par\_file}, \texttt{CMTSOLUTION} and \texttt{STATIONS}.
+Unless otherwise specified, those input files should be located in directory \texttt{in\_data\_files/}.\\
+
+\texttt{CMTSOLUTION} is required for all simulations.
+At a first glance, it may seem unexpected to have it here,
+since the noise simulations should have nothing to do with the earthquake -- \texttt{CMTSOLUTION}.
+However, for noise simulations, it is critical to have no earthquakes. 
+In other words, the moment tensor specified in \texttt{CMTSOLUTION} must be set to zero manually!\\
+
+\texttt{STATIONS} remains the same as in previous earthquake simulations,
+except that the order of receivers listed in \texttt{STATIONS} is now important.
+The order will be used to determine the `master' receiver,
+i.e., the one that simultaneously cross correlates with the others.\\
+
+\texttt{Par\_file} also requires careful attention.
+A parameter called \texttt{NOISE\_TOMOGRAPHY} has been added which specifies the type of simulation to be run.
+\texttt{NOISE\_TOMOGRAPHY} is an integer with possible values 0, 1, 2 and 3.
+For example, when \texttt{NOISE\_TOMOGRAPHY} equals 0, a regular earthquake simulation will be run.
+When it is 1/2/3, you are about to run
+step 1/2/3 of the noise simulations respectively.
+Should you be confused by the three steps, refer to \citet{trompetal2010} for details.\\
+
+Another change to \texttt{Par\_file} involves the parameter \texttt{NSTEP}.
+While for regular earthquake simulations this parameter specifies the length of synthetic seismograms generated,
+for noise simulations it specifies the length of the seismograms used to compute cross correlations.
+The actual cross correlations are thus twice this length, i.e., $2~\mathrm{NSTEP}-1$.
+The code automatically makes the modification accordingly, if \texttt{NOISE\_TOMOGRAPHY} is not zero.\\
+
+There are other parameters in \texttt{Par\_file} which should be given specific values.
+For instance, since the first two steps for calculating noise sensitivity kernels correspond to
+forward simulations, \texttt{SIMULATION\_TYPE} must be 1 when \texttt{NOISE\_TOMOGRAPHY} equals 1 or 2.
+Also, we have to reconstruct the ensemble forward wavefields in adjoint simulations,
+therefore we need to set \texttt{SAVE\_FORWARD} to \texttt{.true.} for the second step,
+i.e., when \texttt{NOISE\_TOMOGRAPHY} equals 2.
+The third step is for kernel constructions. Hence \texttt{SIMULATION\_TYPE} should be 3, whereas
+\texttt{SAVE\_FORWARD} must be \texttt{.false.}.\\
+
+Finally, for most system architectures,
+please make sure that \texttt{LOCAL\_PATH} in \texttt{Par\_file} is in fact local, not globally shared. 
+Because we have to save the wavefields at the earth's surface at every time step,
+it is quite problematic to have a globally shared \texttt{LOCAL\_PATH}, 
+in terms of both disk storage and I/O speed.
+
+
+\section{Noise Simulations: Step by Step}
+
+Proper parameters in those parameter files are not enough for noise simulations to run.
+We have more parameters to specify:
+for example, the ensemble-averaged noise spectrum, the noise distribution etc.
+However, since there are a few `new' files, it is better to introduce them sequentially.
+In this section, standard procedures for noise simulations are described.
+
+\subsection{Pre-simulation}
+
+\begin{itemize}
+
+\item
+As usual, we first configure the software package using:
+
+\texttt{./configure FC=ifort MPIFC=mpif90}
+
+Use the following if SCOTCH is needed:
+
+\texttt{./configure FC=ifort MPIFC=mpif90 --with-scotch-path=/opt/scotch}\\
+
+
+\item
+Next, we need to compile the source code using:
+
+\texttt{make generate\_databases}
+
+\texttt{make specfem3D} \\
+
+
+\item
+Before we can run noise simulations, we have to specify the noise statistics,
+e.g., the ensemble-averaged noise spectrum.
+Matlab scripts are provided to help you to generate the necessary file.
+
+\texttt{examples/noise\_tomography/NOISE\_TOMOGRAPHY.m}  (main program)\\
+\texttt{examples/noise\_tomography/PetersonNoiseModel.m}
+
+In Matlab, simply run:
+
+\texttt{NOISE\_TOMOGRAPHY(NSTEP, DT, Tmin, Tmax, NOISE\_MODEL)}\\
+
+\texttt{DT} is given in \texttt{Par\_file},
+but \texttt{NSTEP} is NOT the one specified in \texttt{Par\_file}.
+Instead, you have to feed $2~\mathrm{NSTEP}-1$ to account for the doubled length of cross correlations.
+\texttt{Tmin} and \texttt{Tmax} correspond to the period range you are interested in,
+whereas \texttt{NOISE\_MODEL} denotes the noise model you will be using.
+Details can be found in the Matlab script.
+
+After running the Matlab script, you will be given the following information (plus a figure in Matlab):
+
+\texttt{*************************************************************}\\
+\texttt{the source time function has been saved in:}\\
+\texttt{/data2/yangl/3D\_NOISE/S\_squared} (note this path must be different)\\
+\texttt{S\_squared should be put into directory:}\\
+\texttt{in\_out\_files/NOISE\_TOMOGRAPHY/ in the SPECFEM3D package}\\
+
+In other words, the Matlab script creates a file called \texttt{S\_squared},
+which is the first `new' input file we encounter for noise simulations.
+
+One may choose a flat noise spectrum rather than Peterson's noise model.
+This can be done easily by modifying the Matlab script a little.
+
+\item
+Create a new directory in the SPECFEM3D package, name it as \texttt{in\_out\_files/NOISE\_TOMOGRAPHY/}.
+We will add some parameter files later in this folder.
+
+\item
+Put the Matlab-generated-file \texttt{S\_squared} in \texttt{in\_out\_files/NOISE\_TOMOGRAPHY/}.
+
+That's to say, you will have a file \texttt{in\_out\_files/NOISE\_TOMOGRAPHY/S\_squared} in the SPECFEM3D package.
+
+\item
+Create a file called \texttt{in\_out\_files/NOISE\_TOMOGRAPHY/irec\_master\_noise}. Note that this file is located
+in directory \texttt{in\_out\_files/NOISE\_TOMOGRAPHY/} as well. In general, all noise simulation related parameter
+files go into that directory.
+\texttt{irec\_master\_noise} contains only one integer, which is the ID
+of the `master' receiver. For example, if this file contains 5, it means that the fifth receiver
+listed in \texttt{in\_data\_files/STATIONS} becomes the `master'. That's why we mentioned previously that
+the order of receivers in \texttt{in\_data\_files/STATIONS} is important.
+
+Note that in regional simulations, the \texttt{in\_data\_files/STATIONS}
+might contain receivers which are outside of our computational domains.
+Therefore, the integer in \texttt{irec\_master\_noise}
+is actually the ID in \texttt{in\_data\_files/STATIONS\_FILTERED} 
+(which is generated by \texttt{bin/xgenerate\_databases}).
+
+\item
+Create a file called \texttt{in\_out\_files/NOISE\_TOMOGRAPHY/nu\_master}. This file holds three numbers,
+forming a (unit) vector. It describes which component we are cross-correlating at the `master'
+receiver, i.e., ${\hat{\bf \nu}}^{\alpha}$ in \citet{trompetal2010}.
+The three numbers correspond to E/N/Z components respectively.
+Most often, the vertical component is used, and in those cases the three numbers should be 0, 0 and 1.
+
+\item
+Describe the noise direction and distributions in \texttt{src/shared/noise\_tomography.f90}.
+Search for a subroutine called \texttt{noise\_distribution\_direction}
+in \texttt{noise\_tomography.f90}. It is actually located at the very beginning
+of \texttt{noise\_tomography.f90}. The default assumes vertical noise and a uniform distribution
+across the whole free surface of the model. It should be quite self-explanatory for modifications.
+Should you modify this part, you have to re-compile the source code.
+
+\end{itemize}
+
+
+
+\subsection{Simulations}
+
+With all of the above done, we can finally launch our simulations.
+Again, please make sure that the \texttt{LOCAL\_PATH} in \texttt{in\_data\_files/Par\_file} is not globally shared.
+It is quite problematic to have a globally shared \texttt{LOCAL\_PATH}, in terms of both disk storage and
+speed of I/O (we have to save the wavefields at the earth's surface at every time step).
+
+As discussed in \citet{trompetal2010}, it takes three steps/simulations to obtain one contribution
+of the ensemble sensitivity kernels:
+
+\begin{itemize}
+\item
+Step 1: simulation for generating wavefields\\
+\texttt{SIMULATION\_TYPE=1}\\
+\texttt{NOISE\_TOMOGRAPHY=1}\\
+\texttt{SAVE\_FORWARD} not used, can be either .true. or .false.
+
+\item
+Step 2: simulation for ensemble forward wavefields\\
+\texttt{SIMULATION\_TYPE=1}\\
+\texttt{NOISE\_TOMOGRAPHY=2}\\
+\texttt{SAVE\_FORWARD=.true.}
+
+\item
+Step 3: simulation for ensemble adjoint wavefields and sensitivity kernels\\
+\texttt{SIMULATION\_TYPE=3}\\
+\texttt{NOISE\_TOMOGRAPHY=3}\\
+\texttt{SAVE\_FORWARD=.false.}
+
+Note Step 3 is an adjoint simulation, please refer to previous chapters on how to prepare adjoint sources
+and other necessary files, as well as how adjoint simulations work.
+
+\end{itemize}
+
+Note that it's better to run the three steps continuously within the same job, 
+otherwise you have to collect the saved surface movies from the old nodes/CPUs to the new nodes/CPUs.
+This process varies from cluster to cluster and thus cannot be discussed here.
+Please ask your cluster administrator for information/configuration of the cluster you are using.\\
+
+\subsection{Post-simulation}
+
+After those simulations, you have all stuff you need, either in the \texttt{in\_out\_files/OUTPUT\_FILES/} or
+in the directory specified by \texttt{LOCAL\_PATH} in \texttt{in\_data\_files/Par\_file}
+(which are most probably on local nodes).
+Collect whatever you want from the local nodes to your workstation, and then visualize them.
+This process is the same as what you may have done for regular earthquake simulations.
+Refer to other chapters if you have problems.\\
+
+Simply speaking, two outputs are the most interesting: the simulated ensemble cross correlations and
+one contribution of the ensemble sensitivity kernels.\\
+
+The simulated ensemble cross correlations are obtained after the second simulation (Step 2).
+Seismograms in \texttt{in\_out\_files/OUTPUT\_FILES/} are actually the simulated ensemble cross correlations.
+Collect them immediately after Step 2, or the Step 3 will overwrite them.
+Note that we have a `master' receiver specified by \texttt{irec\_master\_noise},
+the seismogram at one station corresponds to the cross correlation between that station and the `master'.
+Since the seismograms have three components, we may obtain cross correlations
+for different components as well, not necessarily the cross correlations between vertical components.\\
+
+One contribution of the ensemble cross-correlation sensitivity kernels are obtained after Step 3,
+stored in the \texttt{in\_data\_files/LOCAL\_PATH} on local nodes.
+The ensemble kernel files are named the same as regular earthquake kernels.\\
+
+You need to run another three simulations to get the other contribution of the ensemble kernels,
+using different forward and adjoint sources given in \citet{trompetal2010}.
+
+\section{Example}
+
+In order to illustrate noise simulations in an easy way, one example is provided in \texttt{examples/noise\_tomography/}.
+See \texttt{examples/noise\_tomography/README\_NOISE\_TOMOGRAPHY} for explanations. \\
+
+Note, however, that they are created for a specific workstation (CLOVER@PRINCETON),
+which has at least 4 cores with `mpif90' working properly. \\
+
+If your workstation is suitable, you can run the example in \texttt{examples/noise\_tomography/} using:\\
+
+\texttt{./pre-processing}\\
+
+Even if this script does not work on your workstation, the procedure it describes is universal.
+You may review the whole process described in the last section by following the commands in \texttt{pre-processing},
+which should contain enough explanations for all the commands.
+%>YANGL
 
 \chapter{Graphics}
 
