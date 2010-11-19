@@ -92,17 +92,6 @@
   if(err_occurred() /= 0) return
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
-  !<YANGL
-  ! double the number of time steps, if running noise simulations (+/- branches)
-  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
-  ! read in adjoint sources block by block
-  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC')
-  if(err_occurred() /= 0) return
-  ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
-  if ( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) &
-     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
-  !>YANGL
   call read_value_logical(OCEANS, 'model.OCEANS')
   if(err_occurred() /= 0) return
   call read_value_logical(ATTENUATION, 'model.ATTENUATION')
@@ -125,7 +114,26 @@
   if(err_occurred() /= 0) return
   call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'solver.USE_HIGHRES_FOR_MOVIES')
   if(err_occurred() /= 0) return
+  call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
+  if(err_occurred() /= 0) return
+  call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
+  if(err_occurred() /= 0) return
+  call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
+  if(err_occurred() /= 0) return  
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
+  if(err_occurred() /= 0) return
   !<YANGL
+  ! double the number of time steps, if running noise simulations (+/- branches)
+  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
+  ! read in adjoint sources block by block
+  call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC')
+  if(err_occurred() /= 0) return
+  ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
+  if ( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) &
+     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if ( NOISE_TOMOGRAPHY /= 0 ) then
@@ -141,16 +149,6 @@
     endif
   endif
   !>YANGL
-  call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
-  if(err_occurred() /= 0) return
-  call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
-  if(err_occurred() /= 0) return
-  call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
-  if(err_occurred() /= 0) return  
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO')
-  if(err_occurred() /= 0) return
-  call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
-  if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
 
