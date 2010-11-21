@@ -29,10 +29,10 @@ module PML_par
 
   !--------------------------------------------------------------------
   ! USER PARAMETERS
-  
-  ! damping profile coefficients: 
+
+  ! damping profile coefficients:
   !   R: theoretical reflection coefficient after discretization
-  real(kind=CUSTOM_REAL),parameter:: PML_damp_R = 1.e-3 
+  real(kind=CUSTOM_REAL),parameter:: PML_damp_R = 1.e-3
 
   ! number of element layers for PML region
   ! default is 2 element layers
@@ -40,12 +40,12 @@ module PML_par
 
   ! additional absorbing, Sommerfeld (^Stacey) condition at the boundaries
   logical,parameter:: PML_USE_SOMMERFELD = .false.
-  
+
   !--------------------------------------------------------------------
 
   real(kind=CUSTOM_REAL):: PML_width
   real(kind=CUSTOM_REAL):: PML_width_min,PML_width_max
-  
+
   ! PML element type flag
   integer,dimension(:),allocatable :: ispec_is_PML_inum
 
@@ -55,20 +55,20 @@ module PML_par
   ! PML spectral elements
   integer,dimension(:),allocatable :: PML_ispec
   integer :: num_PML_ispec
-  
+
   ! PML normal for each PML spectral element
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: PML_normal
   ! PML damping coefficients d & dprime
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: PML_damping_d,PML_damping_dprime
 
   !real(kind=CUSTOM_REAL),dimension(:),allocatable :: PML_damping_d_global
-  
+
   ! PML interface
   integer,dimension(:),allocatable :: iglob_is_PML_interface
-  
+
   ! mask ibool needed for time marching
-  logical,dimension(:),allocatable :: PML_mask_ibool  
-  
+  logical,dimension(:),allocatable :: PML_mask_ibool
+
   ! PML damping flag
   logical:: PML = .false.
 
@@ -83,7 +83,7 @@ module PML_par_acoustic
   ! temporary: chi2_t = (\partial_t + d ) chi2
 
   use constants,only: CUSTOM_REAL
-  
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
                         chi1,chi2,chi2_t,chi3,chi4
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
@@ -99,8 +99,8 @@ end module PML_par_acoustic
 
 subroutine PML_damping_profile_l(d,x,vp,delta)
 
-! calculates damping coefficient value d  for a given 
-!   x: distance x and 
+! calculates damping coefficient value d  for a given
+!   x: distance x and
 !   vp: p-velocity alpha
 !   delta: PML width
 !
@@ -110,16 +110,16 @@ subroutine PML_damping_profile_l(d,x,vp,delta)
   real(kind=CUSTOM_REAL),intent(out):: d
   real(kind=CUSTOM_REAL),intent(in):: x,vp,delta
 
-  ! damping profile coefficients: 
+  ! damping profile coefficients:
   !   d : damping function of (x)
   !   vp:  P-velocity
-  !   delta: width of PML layer 
+  !   delta: width of PML layer
   !   R: theoretical reflection coefficient after discretization
-  
+
   ! damping profile function: d = f(x)
   ! Komatitsch & Tromp, 2003: eq. 24 page 150
-  d = 3.0*vp/(2.0*delta)*log(1.0/PML_damp_R)*x*x/(delta*delta) 
-  
+  d = 3.0*vp/(2.0*delta)*log(1.0/PML_damp_R)*x*x/(delta*delta)
+
 end subroutine PML_damping_profile_l
 
 !
@@ -151,16 +151,16 @@ subroutine PML_initialize()
     write(IMAIN,*)
     write(IMAIN,*) 'incorporating PML  '
     write(IMAIN,*)
-  endif  
-  
+  endif
+
   ! PML element type array: 1 = face, 2 = edge, 3 = corner
-  allocate(ispec_is_PML_inum(NSPEC_AB))  
+  allocate(ispec_is_PML_inum(NSPEC_AB))
   num_PML_ispec = 0
-  
+
   ! PML interface points between PML and "regular" region
   allocate(iglob_is_PML_interface(NGLOB_AB))
   iglob_is_PML_interface(:) = 0
-  
+
   ! PML global points
   allocate(iglob_is_PML(NGLOB_AB))
   iglob_is_PML(:) = 0
@@ -168,8 +168,8 @@ subroutine PML_initialize()
   ! PML ibool mask
   allocate(PML_mask_ibool(NGLOB_AB))
   PML_mask_ibool(:) = .false.
-  
-  ! determines dominant wavelength based on maximum model speed 
+
+  ! determines dominant wavelength based on maximum model speed
   ! and source half time duration
   hdur_max = maxval(hdur(:))
   if( hdur_max > 0.0 ) then
@@ -188,16 +188,16 @@ subroutine PML_initialize()
       call PML_set_firstlayer()
     else
       ! adds an additional element layer based on adjacent elements on PML interface points
-      call PML_add_layer()    
+      call PML_add_layer()
     endif
-    
+
     ! update global interface points of PML region to "regular" domain
-    call PML_determine_interfacePoints()  
-    
+    call PML_determine_interfacePoints()
+
     ! optional? update PML width according to dominant wavelength
     !call PML_get_width()
     ! checks with wavelength criteria
-    !if( dominant_wavelength > 0.0 ) then    
+    !if( dominant_wavelength > 0.0 ) then
     !  if( PML_width > dominant_wavelength/2.0 ) then
     !    PML_LAYERS = ilayer
     !    exit
@@ -206,8 +206,8 @@ subroutine PML_initialize()
     !  endif
     !endif
   enddo
-  
-  ! checks PML normals at edges and corners, 
+
+  ! checks PML normals at edges and corners,
   ! tries to gather elements at edges & corners
   do ilayer=1,PML_LAYERS-1
     call PML_update_normals(ilayer)
@@ -221,7 +221,7 @@ subroutine PML_initialize()
   call PML_set_local_dampingcoeff()
 
   ! pre-calculates derivatives of damping coefficients
-  call PML_determine_dprime()  
+  call PML_determine_dprime()
 
   ! wavefield array initialization
   allocate(chi1(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
@@ -255,15 +255,15 @@ subroutine PML_initialize()
   chi1_dot_dot = 0._CUSTOM_REAL
   chi2_t_dot_dot = 0._CUSTOM_REAL
   chi3_dot_dot = 0._CUSTOM_REAL
-  chi4_dot_dot = 0._CUSTOM_REAL    
-  if(FIX_UNDERFLOW_PROBLEM) then 
+  chi4_dot_dot = 0._CUSTOM_REAL
+  if(FIX_UNDERFLOW_PROBLEM) then
     chi1_dot_dot = VERYSMALLVAL
     chi2_t_dot_dot = VERYSMALLVAL
     chi3_dot_dot = VERYSMALLVAL
-    chi4_dot_dot = VERYSMALLVAL    
+    chi4_dot_dot = VERYSMALLVAL
   endif
 
-  ! statistics user output    
+  ! statistics user output
   d = maxval(abs(PML_damping_d(:,:,:,:)))
   if( d > TINYVAL ) then
     sign = maxval(PML_damping_d(:,:,:,:)) / maxval(abs(PML_damping_d(:,:,:,:)))
@@ -273,7 +273,7 @@ subroutine PML_initialize()
   dprime = maxval(abs(PML_damping_dprime(:,:,:,:)))
   call max_all_cr(d,d_glob)
   call max_all_cr(dprime,dprime_glob)
-  call sum_all_i(num_PML_ispec,count)  
+  call sum_all_i(num_PML_ispec,count)
   if( myrank == 0 ) then
     write(IMAIN,*)
     write(IMAIN,*) 'PML region: '
@@ -286,10 +286,10 @@ subroutine PML_initialize()
     write(IMAIN,*) '    maximum dprime : ',sign*dprime_glob
     write(IMAIN,*)
   endif
-  
+
   ! VTK file output
   call PML_output_VTKs()
-    
+
 end subroutine PML_initialize
 
 !
@@ -308,7 +308,7 @@ subroutine PML_set_firstlayer()
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: temp_ispec_pml_normal
-  integer,dimension(:),allocatable:: temp_is_pml_elem  
+  integer,dimension(:),allocatable:: temp_is_pml_elem
   integer:: iface,count,new_elemts,ispec,icorner,igll,iglobf
   integer:: i,j,k,iglobcount,iglobcorners(NGNOD)
   integer,dimension(3,NGNOD),parameter :: ielem_corner_ijk = &
@@ -325,16 +325,16 @@ subroutine PML_set_firstlayer()
   do iface=1,num_abs_boundary_faces
     ! gets spectral elements with boundary face
     ispec = abs_boundary_ispec(iface)
-           
+
     ! counts new PML elements
     if( temp_is_pml_elem(ispec) == 0 ) count = count + 1
-    
+
     ! counts number of occurrences
     !  1 : element with 1 face to regular one,
     !  2 : element with 2 faces (elements at edges)
     !  3 : element with 3 faces (elements at corners)
-    temp_is_pml_elem(ispec) = temp_is_pml_elem(ispec) + 1    
-    
+    temp_is_pml_elem(ispec) = temp_is_pml_elem(ispec) + 1
+
     ! adds contribution to element normal
     temp_ispec_pml_normal(:,ispec) = temp_ispec_pml_normal(:,ispec) + abs_boundary_normal(:,1,iface)
   enddo
@@ -346,37 +346,37 @@ subroutine PML_set_firstlayer()
   do ispec = 1,NSPEC_AB
     ! only elements not recognized so far
     if( temp_is_pml_elem(ispec) > 0 ) cycle
-    
+
     ! stores global indices of element corners
     do icorner=1,NGNOD
       i = ielem_corner_ijk(1,icorner)
       j = ielem_corner_ijk(2,icorner)
-      k = ielem_corner_ijk(3,icorner)      
-      iglobcorners(icorner) = ibool(i,j,k,ispec)      
+      k = ielem_corner_ijk(3,icorner)
+      iglobcorners(icorner) = ibool(i,j,k,ispec)
     enddo
-    
-    ! checks if element has an edge (two corner points) on a absorbing boundary    
+
+    ! checks if element has an edge (two corner points) on a absorbing boundary
     ! (refers mainly to elements in doubling layers)
     do iface=1,num_abs_boundary_faces
       ! checks if already encountered this element
       if( abs_boundary_ispec(iface) == ispec ) exit
-          
+
       ! loops over face points
       iglobcount = 0
       do igll=1,NGLLSQUARE
         i = abs_boundary_ijk(1,igll,iface)
         j = abs_boundary_ijk(2,igll,iface)
-        k = abs_boundary_ijk(3,igll,iface)    
+        k = abs_boundary_ijk(3,igll,iface)
         iglobf = ibool(i,j,k,abs_boundary_ispec(iface))
         ! checks with corners
         do icorner=1,NGNOD
           if( iglobcorners(icorner) == iglobf ) iglobcount = iglobcount + 1
         enddo
       enddo
-      
+
       ! adds as pml element
       if( iglobcount >= 2 ) then
-        ! counter        
+        ! counter
         if( temp_is_pml_elem(ispec) == 0 ) count = count + 1
         temp_is_pml_elem(ispec) = temp_is_pml_elem(ispec) + 1
         ! updates normal
@@ -385,16 +385,16 @@ subroutine PML_set_firstlayer()
         exit
       endif
     enddo ! iface
-    
+
   enddo
   new_elemts = new_elemts + count
 
   ! stores PML element indices and resulting normal
   call PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
-  
+
   deallocate( temp_is_pml_elem)
-  deallocate( temp_ispec_pml_normal)  
-  
+  deallocate( temp_ispec_pml_normal)
+
 end subroutine PML_set_firstlayer
 
 !
@@ -409,11 +409,11 @@ subroutine PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
   use specfem_par,only: NSPEC_AB,myrank
   use constants,only: NDIM,TINYVAL
   implicit none
-  
+
   integer:: temp_is_pml_elem(NSPEC_AB)
   real(kind=CUSTOM_REAL):: temp_ispec_pml_normal(NDIM,NSPEC_AB)
   integer:: new_elemts
-  
+
   ! local parameters
   real(kind=CUSTOM_REAL) :: length
   integer :: ispec,ispecPML
@@ -422,22 +422,22 @@ subroutine PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
   ispec_is_PML_inum(:) = temp_is_pml_elem(:)
 
   ! sets new number of elements
-  num_PML_ispec = new_elemts    
+  num_PML_ispec = new_elemts
 
   ! re-allocates arrays
   if( allocated(PML_normal) ) deallocate(PML_normal)
   if( allocated(PML_ispec) ) deallocate(PML_ispec)
   allocate(PML_ispec(num_PML_ispec))
   allocate(PML_normal(NDIM,num_PML_ispec))
-  
+
   ! stores PML elements flags and normals
   ispecPML = 0
   do ispec=1,NSPEC_AB
     if( ispec_is_PML_inum(ispec) > 0 ) then
       ! stores indices
       ispecPML = ispecPML+1
-      PML_ispec(ispecPML) = ispec   
-          
+      PML_ispec(ispecPML) = ispec
+
       ! gets resulting element normal
       PML_normal(:,ispecPML) = temp_ispec_pml_normal(:,ispec)
 
@@ -453,7 +453,7 @@ subroutine PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
       else
         ! normalizes normal
         PML_normal(:,ispecPML) = PML_normal(:,ispecPML)/length
-      endif      
+      endif
     endif
   enddo
   if( ispecPML /= num_PML_ispec) call exit_mpi(myrank,'PML add layer count error')
@@ -484,14 +484,14 @@ subroutine PML_determine_interfacePoints()
 
   ! PML interface points array
   iglob_is_PML_interface(:) = 0
-  
+
   ! temporary arrays
-  allocate(temp_regulardomain(NGLOB_AB))    
+  allocate(temp_regulardomain(NGLOB_AB))
   temp_regulardomain(:) = 0
-  
+
   ! global PML points
   iglob_is_PML(:) = 0
-  
+
   ! sets flags on PML and regular domain points
   do ispec=1,NSPEC_AB
     do k=1,NGLLZ
@@ -501,7 +501,7 @@ subroutine PML_determine_interfacePoints()
           ! sets flag for PML/regular domain
           if( ispec_is_PML_inum(ispec) > 0 ) then
             ! global points
-            iglob_is_PML(iglob) = iglob_is_PML(iglob) + 1                        
+            iglob_is_PML(iglob) = iglob_is_PML(iglob) + 1
           else
             ! not a PML point
             temp_regulardomain(iglob) = temp_regulardomain(iglob) + 1
@@ -510,17 +510,17 @@ subroutine PML_determine_interfacePoints()
       enddo
     enddo
   enddo
-  
+
   ! assemble on MPI interfaces
   call assemble_MPI_scalar_i_ext_mesh(NPROC,NGLOB_AB,iglob_is_PML, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                        my_neighbours_ext_mesh)  
+                        my_neighbours_ext_mesh)
   call assemble_MPI_scalar_i_ext_mesh(NPROC,NGLOB_AB,temp_regulardomain, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                        my_neighbours_ext_mesh)  
-                        
+                        my_neighbours_ext_mesh)
+
   ! stores interface points
   do ispec=1,NSPEC_AB
     do k=1,NGLLZ
@@ -530,7 +530,7 @@ subroutine PML_determine_interfacePoints()
           ! checks if it belongs to both, PML and regular domain
           if( temp_regulardomain(iglob) > 0 .and. iglob_is_PML(iglob) > 0 ) then
             ! increases flag on global point
-            iglob_is_PML_interface(iglob) = iglob_is_PML_interface(iglob) + 1            
+            iglob_is_PML_interface(iglob) = iglob_is_PML_interface(iglob) + 1
           endif
         enddo
       enddo
@@ -566,27 +566,27 @@ subroutine PML_get_width()
   ! loops over domain surface
   width = HUGEVAL
   do iface=1,num_abs_boundary_faces
-  
+
     ispec = abs_boundary_ispec(iface)
 
     ! avoids taking corner or edge elements for width
     if( ispec_is_PML_inum(ispec) > 1 ) cycle
-    
+
     ! determines smallest distance to interface points
     do iglob=1,NGLOB_AB
-      if( iglob_is_PML_interface(iglob) > 0 ) then                    
+      if( iglob_is_PML_interface(iglob) > 0 ) then
         ! loops over face points
         do igll=1,NGLLSQUARE
           i = abs_boundary_ijk(1,igll,iface)
           j = abs_boundary_ijk(2,igll,iface)
           k = abs_boundary_ijk(3,igll,iface)
-    
+
           ! takes distance between two points
           iglobf = ibool(i,j,k,ispec)
           length =  sqrt((xstore(iglobf)-xstore(iglob))**2 &
                        + (ystore(iglobf)-ystore(iglob))**2 &
                        + (zstore(iglobf)-zstore(iglob))**2 )
-          
+
           ! checks length
           if( length < TINYVAL ) then
             print*,'PML:',myrank,'length:',length
@@ -596,27 +596,27 @@ subroutine PML_get_width()
             print*,'  iglob xyz:',xstore(iglob),ystore(iglob),zstore(iglob)
             call exit_mpi(myrank,'PML length zero error')
           endif
-                
-          ! updates minimum width      
+
+          ! updates minimum width
           if( length < width ) width = length
-          
-        enddo        
-      endif      
+
+        enddo
+      endif
     enddo
   enddo
-  
+
   ! determines maximum width on all MPI processes
   ! all process gets overall maximum
   call max_all_all_cr(width,PML_width_max)
   call min_all_all_cr(width,PML_width_min)
-  
+
   ! sets PML width
   if( PML_width_min > TINYVAL ) then
     PML_width = PML_width_min
   else
     PML_width = PML_width_max
   endif
-    
+
   ! checks
   if( PML_width < TINYVAL ) call exit_mpi(myrank,'PML width error: width too small')
 
@@ -632,7 +632,7 @@ subroutine PML_set_local_dampingcoeff()
 
   use specfem_par,only: ibool,xstore,ystore,zstore,myrank, &
                         kappastore,mustore,NGLOB_AB,&
-                        abs_boundary_ispec,abs_boundary_ijk,num_abs_boundary_faces                        
+                        abs_boundary_ispec,abs_boundary_ijk,num_abs_boundary_faces
   use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,rhostore
   use specfem_par_elastic,only: ELASTIC_SIMULATION,rho_vp
   use PML_par
@@ -647,18 +647,18 @@ subroutine PML_set_local_dampingcoeff()
 
   integer:: i,j,k,ispec,iglob,ispecPML,iglobf
   integer:: ispecB,igll,iface
-  
+
   ! stores damping coefficient
-  allocate( PML_damping_d(NGLLX,NGLLY,NGLLZ,num_PML_ispec))    
-  PML_damping_d(:,:,:,:) = 0._CUSTOM_REAL    
-  
-  ! loops over all PML elements             
+  allocate( PML_damping_d(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+  PML_damping_d(:,:,:,:) = 0._CUSTOM_REAL
+
+  ! loops over all PML elements
   do ispecPML=1,num_PML_ispec
-  
+
     ispec = PML_ispec(ispecPML)
 
     ! determines smallest distance to interface points
-    ! and determines smallest distance to absorbing boundary points 
+    ! and determines smallest distance to absorbing boundary points
     ! (note: MPI partitioning not considered here yet; might be a problem)
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -671,29 +671,29 @@ subroutine PML_set_local_dampingcoeff()
             PML_damping_d(i,j,k,ispecPML) = 0._CUSTOM_REAL
             cycle
           endif
-          
+
           ! distance to PML interface points
           dist = HUGEVAL
           do iglob=1,NGLOB_AB
-            if( iglob_is_PML_interface(iglob) > 0 ) then                    
+            if( iglob_is_PML_interface(iglob) > 0 ) then
               ! distance to interface
               length =  (xstore(iglobf)-xstore(iglob))**2 &
                       + (ystore(iglobf)-ystore(iglob))**2 &
-                      + (zstore(iglobf)-zstore(iglob))**2              
-              if( length < dist ) dist = length 
-            endif                    
+                      + (zstore(iglobf)-zstore(iglob))**2
+              if( length < dist ) dist = length
+            endif
           enddo !iglob
-          !dist = distances(i,j,k) 
+          !dist = distances(i,j,k)
           if( dist >= HUGEVAL ) then
             dist = PML_width_max
           else
-            dist = sqrt( dist ) 
-          endif          
+            dist = sqrt( dist )
+          endif
 
           ! distance to boundary points
           width = HUGEVAL
           do iface=1,num_abs_boundary_faces
-            ispecB = abs_boundary_ispec(iface)      
+            ispecB = abs_boundary_ispec(iface)
             do igll=1,NGLLSQUARE
               iglob = ibool(abs_boundary_ijk(1,igll,iface),&
                              abs_boundary_ijk(2,igll,iface),&
@@ -701,7 +701,7 @@ subroutine PML_set_local_dampingcoeff()
               ! distance to boundary
               length =  (xstore(iglobf)-xstore(iglob))**2 &
                       + (ystore(iglobf)-ystore(iglob))**2 &
-                      + (zstore(iglobf)-zstore(iglob))**2 
+                      + (zstore(iglobf)-zstore(iglob))**2
               if( length < width ) width = length
             enddo
           enddo ! iface
@@ -710,9 +710,9 @@ subroutine PML_set_local_dampingcoeff()
             width = PML_width_max
           else
             width = sqrt( width ) + dist
-          endif          
-          
-          ! checks width 
+          endif
+
+          ! checks width
           if( width < TINYVAL ) then
             print*,'error: pml width ',width
             print*,'ijk:',ispec,i,j,k
@@ -720,8 +720,8 @@ subroutine PML_set_local_dampingcoeff()
             print*,'dist:',dist
             print*,'pml min/max:',PML_width_max,PML_width_min
             call exit_mpi(myrank,'PML error getting width')
-          endif          
-              
+          endif
+
           ! P-velocity
           if( ACOUSTIC_SIMULATION ) then
             vp = sqrt( kappastore(i,j,k,ispec)/rhostore(i,j,k,ispec) )
@@ -730,14 +730,14 @@ subroutine PML_set_local_dampingcoeff()
                         / rho_vp(i,j,k,ispec)
           else
             call exit_mpi(myrank,'PML error getting vp')
-          endif          
-          
+          endif
+
           ! gets damping coefficient
           call PML_damping_profile_l(d,dist,vp,width)
-              
-          ! stores d & dprime for this element's GLL points              
-          PML_damping_d(i,j,k,ispecPML) = d          
-          
+
+          ! stores d & dprime for this element's GLL points
+          PML_damping_d(i,j,k,ispecPML) = d
+
         enddo
       enddo
     enddo
@@ -764,18 +764,18 @@ subroutine PML_determine_dprime()
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   real(kind=CUSTOM_REAL) :: nx,ny,nz
   real(kind=CUSTOM_REAL) :: d_dx,d_dy,d_dz,tempd_dx,tempd_dy,tempd_dz
-  integer :: ispec,i,j,k,l,ispecPML 
+  integer :: ispec,i,j,k,l,ispecPML
 
   ! dprime derivatives
-  allocate( PML_damping_dprime(NGLLX,NGLLY,NGLLZ,num_PML_ispec))  
-  PML_damping_dprime(:,:,:,:) = 0._CUSTOM_REAL  
+  allocate( PML_damping_dprime(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+  PML_damping_dprime(:,:,:,:) = 0._CUSTOM_REAL
 
-  ! loops over all PML elements           
+  ! loops over all PML elements
   do ispecPML=1,num_PML_ispec
-  
+
     ispec = PML_ispec(ispecPML)
-    
-    ! PML normal 
+
+    ! PML normal
     nx = PML_normal(1,ispecPML)
     ny = PML_normal(2,ispecPML)
     nz = PML_normal(3,ispecPML)
@@ -789,12 +789,12 @@ subroutine PML_determine_dprime()
           ! we can merge the loops because NGLLX == NGLLY == NGLLZ
           tempd_dx = 0._CUSTOM_REAL
           tempd_dy = 0._CUSTOM_REAL
-          tempd_dz = 0._CUSTOM_REAL          
+          tempd_dz = 0._CUSTOM_REAL
           do l = 1,NGLLX
             tempd_dx = tempd_dx + PML_damping_d(l,j,k,ispecPML)*hprime_xx(i,l)
             tempd_dy = tempd_dy + PML_damping_d(i,l,k,ispecPML)*hprime_yy(j,l)
             tempd_dz = tempd_dz + PML_damping_d(i,j,l,ispecPML)*hprime_zz(k,l)
-          enddo 
+          enddo
 
           ! get derivatives of potential with respect to x, y and z
           xixl = xix(i,j,k,ispec)
@@ -806,7 +806,7 @@ subroutine PML_determine_dprime()
           gammaxl = gammax(i,j,k,ispec)
           gammayl = gammay(i,j,k,ispec)
           gammazl = gammaz(i,j,k,ispec)
-          
+
           ! derivatives dprime
           d_dx = xixl*tempd_dx + etaxl*tempd_dy + gammaxl*tempd_dz
           d_dy = xiyl*tempd_dx + etayl*tempd_dy + gammayl*tempd_dz
@@ -838,7 +838,7 @@ subroutine PML_add_layer()
                         ibool,myrank,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh,NPROC                        
+                        my_neighbours_ext_mesh,NPROC
   use constants,only: NDIM,TINYVAL,NGLLX,NGLLY,NGLLZ,NGNOD2D
   implicit none
 
@@ -848,59 +848,59 @@ subroutine PML_add_layer()
   integer,dimension(:),allocatable:: is_pml_elem
   integer:: i,j,k,iglob,count,ispecPML,ispec,new_elemts
   integer :: iface,icorner,ipmlcorners
-  
+
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
-       reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/)) ! xmin  
+       reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/)) ! xmin
   integer,dimension(3,4),parameter :: iface2_corner_ijk = &
-       reshape((/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /),(/3,4/)) ! xmax  
+       reshape((/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /),(/3,4/)) ! xmax
   integer,dimension(3,4),parameter :: iface3_corner_ijk = &
-       reshape((/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /),(/3,4/)) ! ymin  
+       reshape((/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /),(/3,4/)) ! ymin
   integer,dimension(3,4),parameter :: iface4_corner_ijk = &
-       reshape((/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /),(/3,4/)) ! ymax  
+       reshape((/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /),(/3,4/)) ! ymax
   integer,dimension(3,4),parameter :: iface5_corner_ijk = &
-       reshape((/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),(/3,4/)) ! bottom    
+       reshape((/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),(/3,4/)) ! bottom
   integer,dimension(3,4),parameter :: iface6_corner_ijk = &
-       reshape((/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/)) ! top  
+       reshape((/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/)) ! top
   integer,dimension(3,4,6),parameter :: iface_all_corner_ijk = &
        reshape((/ iface1_corner_ijk,iface2_corner_ijk, &
                   iface3_corner_ijk,iface4_corner_ijk, &
                   iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/)) ! all faces
-  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)               
+  ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)
   integer,dimension(3,6),parameter :: iface_all_midpointijk = &
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))
   logical :: is_done
-  
+
   ! temporary arrays
   allocate(is_pml_elem(NSPEC_AB))
   allocate(iglob_pml_normal(NDIM,NGLOB_AB))
   allocate(ispec_pml_normal(NDIM,NSPEC_AB))
-  
+
   iglob_pml_normal(:,:) = 0._CUSTOM_REAL
   ispec_pml_normal(:,:) = 0._CUSTOM_REAL
 
-  ! sets pml normals on PML interface, global points  
+  ! sets pml normals on PML interface, global points
   do ispecPML=1,num_PML_ispec
 
     ispec = PML_ispec(ispecPML)
     ! checks
     if( ispec_is_PML_inum(ispec) < 1 ) call exit_mpi(myrank,'PML error add ispec layer')
-    
-    ! starts from first layer elements 
+
+    ! starts from first layer elements
     ! stores normal information on temporary global points
-    if( ispec_is_PML_inum(ispec) >= 1 ) then          
+    if( ispec_is_PML_inum(ispec) >= 1 ) then
       ! stores PML normal on interface points
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)            
-            if( iglob_is_PML_interface(iglob) > 0 ) then     
-              iglob_pml_normal(:,iglob) = iglob_pml_normal(:,iglob) + PML_normal(:,ispecPML)            
-            endif  
+            iglob = ibool(i,j,k,ispec)
+            if( iglob_is_PML_interface(iglob) > 0 ) then
+              iglob_pml_normal(:,iglob) = iglob_pml_normal(:,iglob) + PML_normal(:,ispecPML)
+            endif
           enddo
         enddo
       enddo
     endif
-    
+
   enddo
 
   ! assembles with other MPI processes
@@ -910,17 +910,17 @@ subroutine PML_add_layer()
                         my_neighbours_ext_mesh)
 
 
-  ! adds new elements sharing PML interface 
+  ! adds new elements sharing PML interface
   count = 0
   is_pml_elem(:) = 0
   do ispec=1,NSPEC_AB
-  
+
     ! checks if we already have this element set as pml element in first layer
     is_done = .false.
     do ispecPML=1,num_PML_ispec
       if( PML_ispec(ispecPML) == ispec ) then
         ! adds as pml element
-        if(is_pml_elem(ispec) == 0) count = count + 1        
+        if(is_pml_elem(ispec) == 0) count = count + 1
         ! copies normal
         ispec_pml_normal(:,ispec) = PML_normal(:,ispecPML)
         ! copies element type flag
@@ -929,9 +929,9 @@ subroutine PML_add_layer()
         is_done = .true.
         exit
       endif
-    enddo  
+    enddo
     if( is_done ) cycle
-    
+
     ! loops over element faces
     do iface=1,6
       ipmlcorners = 0
@@ -942,23 +942,23 @@ subroutine PML_add_layer()
         iglob = ibool(i,j,k,ispec)
         if( iglob_is_PML_interface(iglob) > 0 ) ipmlcorners = ipmlcorners + 1
       enddo
-    
+
       ! face is pml interface
-      if( ipmlcorners == NGNOD2D ) then              
+      if( ipmlcorners == NGNOD2D ) then
         ! counts new pml elements
         if(is_pml_elem(ispec) == 0) count = count + 1
-        
+
         ! increments flag
-        is_pml_elem(ispec) = is_pml_elem(ispec) + 1            
-        
-        ! sets normal    
+        is_pml_elem(ispec) = is_pml_elem(ispec) + 1
+
+        ! sets normal
         ! reference midpoint on face
         i = iface_all_midpointijk(1,iface)
         j = iface_all_midpointijk(2,iface)
-        k = iface_all_midpointijk(3,iface)      
+        k = iface_all_midpointijk(3,iface)
         iglob = ibool(i,j,k,ispec)
-        if( iglob_is_PML_interface(iglob) < 1 ) call exit_mpi(myrank,'PML error midpoint interface')  
-        
+        if( iglob_is_PML_interface(iglob) < 1 ) call exit_mpi(myrank,'PML error midpoint interface')
+
         ! checks new normal
         if( sqrt(iglob_pml_normal(1,iglob)**2+iglob_pml_normal(2,iglob)**2 &
                 +iglob_pml_normal(3,iglob)**2) < TINYVAL ) then
@@ -967,15 +967,15 @@ subroutine PML_add_layer()
           print*,'ijk ispec',i,j,k,ispec
           call exit_mpi(myrank,'PML add layer has new normal length error')
         endif
-        
-        ! adds contribution to normal 
-        ispec_pml_normal(:,ispec) = ispec_pml_normal(:,ispec) + iglob_pml_normal(:,iglob)        
+
+        ! adds contribution to normal
+        ispec_pml_normal(:,ispec) = ispec_pml_normal(:,ispec) + iglob_pml_normal(:,iglob)
       endif
-      
-    enddo ! iface    
+
+    enddo ! iface
   enddo ! ispec
   new_elemts = count
-  
+
   ! adds new pml elements to PML region
   call PML_set_elements(is_pml_elem,ispec_pml_normal,new_elemts)
 
@@ -994,7 +994,7 @@ subroutine PML_update_normals(ilayer)
                         ibool,myrank,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh,NPROC                        
+                        my_neighbours_ext_mesh,NPROC
   use constants,only: NGNOD2D,NGLLX,NGLLY,NGLLZ
   implicit none
   integer :: ilayer
@@ -1004,19 +1004,19 @@ subroutine PML_update_normals(ilayer)
   integer :: iface,icorner
   integer :: ipmlcorners,ipmledges,ipmlsngl
   integer :: ipmlcorners_tot,ipmledges_tot,ipmlsngl_tot
-  
+
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
-       reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/)) ! xmin  
+       reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/)) ! xmin
   integer,dimension(3,4),parameter :: iface2_corner_ijk = &
-       reshape((/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /),(/3,4/)) ! xmax  
+       reshape((/ NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ  /),(/3,4/)) ! xmax
   integer,dimension(3,4),parameter :: iface3_corner_ijk = &
-       reshape((/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /),(/3,4/)) ! ymin  
+       reshape((/ 1,1,1, 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,1,1  /),(/3,4/)) ! ymin
   integer,dimension(3,4),parameter :: iface4_corner_ijk = &
-       reshape((/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /),(/3,4/)) ! ymax  
+       reshape((/ 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ /),(/3,4/)) ! ymax
   integer,dimension(3,4),parameter :: iface5_corner_ijk = &
-       reshape((/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),(/3,4/)) ! bottom  
+       reshape((/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),(/3,4/)) ! bottom
   integer,dimension(3,4),parameter :: iface6_corner_ijk = &
-       reshape((/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/)) ! top    
+       reshape((/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/)) ! top
   integer,dimension(3,4,6),parameter :: iface_all_corner_ijk = &
        reshape((/ iface1_corner_ijk,iface2_corner_ijk, &
                   iface3_corner_ijk,iface4_corner_ijk, &
@@ -1029,12 +1029,12 @@ subroutine PML_update_normals(ilayer)
 
   ! checks normals for elements adjacent to edge/corner elements
   ! assigns element information to each global point
-  ! (note: mpi partitioning/interface between elements not considered yet)    
+  ! (note: mpi partitioning/interface between elements not considered yet)
   allocate(iglob_nadj(NGLOB_AB),iglob_adj(2,32,NGLOB_AB))
   iglob_nadj(:) = 0
   iglob_adj(:,:,:) = 0
   do ispecPML=1,num_PML_ispec
-    ispec = PML_ispec(ispecPML)    
+    ispec = PML_ispec(ispecPML)
     ! sets element corners
     do iface=1,2
       do icorner=1,NGNOD2D
@@ -1055,20 +1055,23 @@ subroutine PML_update_normals(ilayer)
     print*,'max number of adjacents:',maxval(iglob_nadj(:)),maxloc(iglob_nadj(:))
     call exit_mpi(myrank,'error iglob number of adj')
   endif
-    
+
   ! finds neighbors based on common nodes  and changes type and normal accordingly
   ! for edges and corners
   allocate(ispec_is_PML_inum_org(NSPEC_AB))
   ispec_is_PML_inum_org(:) = ispec_is_PML_inum(:)
   do ispecPML=1,num_PML_ispec
     ispec = PML_ispec(ispecPML)
-    
+
     ! only non-corner elements
     if( ispec_is_PML_inum_org(ispec) <= 2 ) then
       ipmlsngl_tot = 0
       ipmlcorners_tot = 0
       ipmledges_tot = 0
       ipmlinterface = 0
+      ispecPMLngb_edge = 0
+      ispecPMLngb_corner = 0
+      ispecPMLngb_sngl = 0
       ! loops over element corners
       do iface=1,2
         ! checks corner neighbors
@@ -1079,7 +1082,7 @@ subroutine PML_update_normals(ilayer)
           ! adjacent elements
           ipmlsngl = 0
           ipmlcorners = 0
-          ipmledges = 0          
+          ipmledges = 0
           do iadj=1,iglob_nadj(iglob)
             ispecngb = iglob_adj(1,iadj,iglob)
             if( ispecngb /= ispec ) then
@@ -1097,22 +1100,22 @@ subroutine PML_update_normals(ilayer)
               if( ispec_is_PML_inum_org(ispecngb) == 2 ) then
                 ipmledges = ipmledges + 1
                 ispecPMLngb_edge = iglob_adj(2,iadj,iglob)
-              endif            
+              endif
             endif
-          enddo  
-          if( ipmlsngl > 0 ) ipmlsngl_tot = ipmlsngl_tot + 1        
+          enddo
+          if( ipmlsngl > 0 ) ipmlsngl_tot = ipmlsngl_tot + 1
           if( ipmlcorners > 0 ) ipmlcorners_tot = ipmlcorners_tot + 1
           if( ipmledges > 0 ) ipmledges_tot = ipmledges_tot + 1
-          
+
           ! interface points
           if( iglob_is_PML_interface(iglob) > 0 ) ipmlinterface = ipmlinterface + 1
-          
-        enddo !icorner        
+
+        enddo !icorner
       enddo
-    
+
       ! elements inside PML
       if( ipmlinterface < 4 ) then
-      
+
         ! shares two faces with edge elements, so it becomes an edge element too
         if( ispec_is_PML_inum_org(ispec) == 1 ) then
           if( ipmledges_tot >= 6 ) then
@@ -1122,30 +1125,30 @@ subroutine PML_update_normals(ilayer)
           if( ipmlcorners_tot >= 5 ) then
             ispec_is_PML_inum(ispec) = 3
             PML_normal(:,ispecPML) = PML_normal(:,ispecPMLngb_corner)
-          endif        
+          endif
         else if( ispec_is_PML_inum_org(ispec) == 2 ) then
-        
-        ! shares at least a face and a face edge with a corner element, 
+
+        ! shares at least a face and a face edge with a corner element,
         ! so it becomes a corner element too
           if( ipmlcorners_tot >= 5 ) then
             ispec_is_PML_inum(ispec) = 3
             PML_normal(:,ispecPML) = PML_normal(:,ispecPMLngb_corner)
           endif
-        endif            
+        endif
       endif
       ! avoid elements between two edges and next to corner to become edge elements
       if( ispec_is_PML_inum(ispec) == 2 .and. ilayer > 1 ) then
-        if( ipmlsngl_tot == 8 .and. ipmlcorners_tot == 2 ) then 
+        if( ipmlsngl_tot == 8 .and. ipmlcorners_tot == 2 ) then
           ispec_is_PML_inum(ispec) = 1
           PML_normal(:,ispecPML) = PML_normal(:,ispecPMLngb_sngl)
         endif
       endif
-      
-    endif  
+
+    endif
   enddo
   deallocate(iglob_adj,iglob_nadj)
   deallocate(ispec_is_PML_inum_org)
-  
+
 end subroutine PML_update_normals
 
 !
@@ -1154,12 +1157,12 @@ end subroutine PML_update_normals
 
 subroutine PML_output_VTKs()
 
-! outputs informations about PML elements 
+! outputs informations about PML elements
 
   use PML_par
   use specfem_par,only: NGLOB_AB,NSPEC_AB,myrank, &
                         prname,ibool,xstore,ystore,zstore
-  use constants,only: NGLLX,NGLLY,NGLLZ,IMAIN                        
+  use constants,only: NGLLX,NGLLY,NGLLZ,IMAIN
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: ispec_normal
@@ -1173,8 +1176,8 @@ subroutine PML_output_VTKs()
     vtkfilename = prname(1:len_trim(prname))//'PML_ispec_inum'
     call write_VTK_data_elem_i(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool,&
                           ispec_is_PML_inum,vtkfilename)
-  endif  
-  
+  endif
+
   ! interface points
   if( .false. ) then
     ! puts global points in a temporary array for plotting
@@ -1183,7 +1186,7 @@ subroutine PML_output_VTKs()
       if( iglob_is_PML_interface(iglob) > 0 ) then
         count = count+1
       endif
-    enddo      
+    enddo
     allocate(temp_iglob(count))
     count = 0
     do iglob=1,NGLOB_AB
@@ -1208,9 +1211,9 @@ subroutine PML_output_VTKs()
     enddo
     vtkfilename = prname(1:len_trim(prname))//'PML_normals'
     call write_VTK_data_elem_vectors(NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,ibool, &
-                          ispec_normal,vtkfilename)  
-    deallocate(ispec_normal)                        
-  endif  
+                          ispec_normal,vtkfilename)
+    deallocate(ispec_normal)
+  endif
 
   ! pml damping coefficients
   if( .false. ) then
@@ -1224,7 +1227,7 @@ subroutine PML_output_VTKs()
     call write_VTK_data_gll_cr(NSPEC_AB,NGLOB_AB, &
               xstore,ystore,zstore,ibool, &
               temp_gllvalues,vtkfilename)
-    deallocate(temp_gllvalues)    
+    deallocate(temp_gllvalues)
   endif ! VTK file output
 
   if(myrank == 0) write(IMAIN,*)

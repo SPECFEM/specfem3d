@@ -23,7 +23,7 @@
 !
 !=====================================================================
 
-module readParFile 
+module readParFile
 contains
 
   subroutine read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
@@ -49,7 +49,7 @@ contains
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
 
-  character(len=150) LOCAL_PATH
+  character(len=256) LOCAL_PATH
   character(len=50) INTERFACES_FILE
 
 ! local variables
@@ -57,7 +57,7 @@ contains
 
   double precision DEPTH_BLOCK_KM!,RECORD_LENGTH_IN_SECONDS,hdur,minval_hdur
 
-!  character(len=150) dummystring
+!  character(len=256) dummystring
   integer ierr
   integer, external :: err_occurred
 
@@ -65,11 +65,11 @@ contains
   integer NSUBREGIONS
   integer ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
   integer iz_beg_region,iz_end_region,imaterial_number
-!  definition of the different regions of the model in the mesh (nx,ny,nz) 
-!  #1 #2 : nx_begining,nx_end  
-!  #3 #4 : ny_begining,ny_end 
-!  #5 #6 : nz_begining,nz_end   
-!     #7 : material number 
+!  definition of the different regions of the model in the mesh (nx,ny,nz)
+!  #1 #2 : nx_begining,nx_end
+!  #3 #4 : ny_begining,ny_end
+!  #5 #6 : nz_begining,nz_end
+!     #7 : material number
   integer, dimension(:,:), pointer :: subregions
 
 ! material properties
@@ -78,9 +78,9 @@ contains
 ! first dimension  : material_id
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision, dimension(:,:), pointer :: material_properties
-  
+
   integer i,ireg,imat,idoubl
-  
+
 ! open parameter file
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
        //'Mesh_Par_file',status='old',action='read')
@@ -160,8 +160,8 @@ contains
 
 ! read materials properties
   allocate(material_properties(NMATERIALS,6),stat=ierr)
-  if(ierr /= 0) print*,"Allocation error of material_properties" 
-   
+  if(ierr /= 0) print*,"Allocation error of material_properties"
+
   do imat =1,NMATERIALS
      call read_material_parameters(IIN,i,rho,vp,vs,Q_flag,anisotropy_flag,domain_id)
      if (i /= imat) stop "Incorrect material ID"

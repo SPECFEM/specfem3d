@@ -54,7 +54,7 @@
   double precision :: hdur,minval_hdur
   character(len=256) :: dummystring
   integer, external :: err_occurred
-  
+
   ! opens file Par_file
   call open_parameter_file()
 
@@ -69,7 +69,7 @@
   if(err_occurred() /= 0) return
   call read_value_logical(SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
   if(err_occurred() /= 0) return
-  ! total number of processors 
+  ! total number of processors
   call read_value_integer(NPROC, 'mesher.NPROC')
   if(err_occurred() /= 0) then
     ! checks if it's using an old Par_file format
@@ -86,8 +86,8 @@
       print*,'NPROC           =    <my_number_of_desired_processes> '
       return
     endif
-    NPROC = nproc_eta_old * nproc_xi_old    
-  endif  
+    NPROC = nproc_eta_old * nproc_xi_old
+  endif
   call read_value_integer(NSTEP, 'solver.NSTEP')
   if(err_occurred() /= 0) return
   call read_value_double_precision(DT, 'solver.DT')
@@ -119,7 +119,7 @@
   call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
   if(err_occurred() /= 0) return
   call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
-  if(err_occurred() /= 0) return  
+  if(err_occurred() /= 0) return
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO')
   if(err_occurred() /= 0) return
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
@@ -132,8 +132,11 @@
   if(err_occurred() /= 0) return
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
   if ( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) &
-     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
+  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
+    print*,'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
+    print*,'      change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
+    stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
+  endif
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if ( NOISE_TOMOGRAPHY /= 0 ) then
@@ -157,7 +160,7 @@
   ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
   call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION',&
        IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
-  
+
   open(unit=1,file=CMTSOLUTION,iostat=ios,status='old',action='read')
   if(ios /= 0) stop 'error opening CMTSOLUTION file'
 
@@ -202,7 +205,7 @@
     stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
 
 ! close parameter file
-  call close_parameter_file()  
-  
+  call close_parameter_file()
+
   end subroutine read_parameter_file
 

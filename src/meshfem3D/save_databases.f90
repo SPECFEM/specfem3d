@@ -54,7 +54,7 @@
 
 
   integer true_material_num(nspec)
-  double precision rho,vp,vs
+  !double precision rho,vp,vs
 
 
 ! boundary parameters locator
@@ -74,7 +74,7 @@
   integer i,ispec,iglob
 
 ! name of the database files
-  character(len=150) prname
+  character(len=256) prname
 
 ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max,idoubl

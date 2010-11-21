@@ -32,7 +32,7 @@
   use createRegMesh
   implicit none
   include "constants.h"
- 
+
 !=============================================================================!
 !                                                                             !
 !  meshfem3D produces a spectral element grid for a local or regional model.  !
@@ -189,13 +189,13 @@
 ! auxiliary variables to generate the mesh
   integer ix,iy,ir
 
-  double precision xin,etan,rn
-  double precision x_current,y_current,z_top,z_bot
+  double precision xin,etan !,rn
+  double precision x_current,y_current !,z_top,z_bot
 
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
 
   integer, dimension(:,:,:,:), allocatable :: ibool
- 
+
 ! arrays with the mesh in double precision
   double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
 
@@ -208,11 +208,11 @@
   integer, dimension(:,:), allocatable :: addressing
 
 ! use integer array to store topography values
-  integer icornerlat,icornerlong,NX_TOPO,NY_TOPO
-  double precision lat,long,elevation,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  integer icornerlat,icornerlong !,NX_TOPO,NY_TOPO
+  double precision lat,long !,elevation,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
-  character(len=100) topo_file
-  integer, dimension(:,:), allocatable :: itopo_bathy
+  !character(len=100) topo_file
+  !integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! timer MPI
   double precision, external :: wtime
@@ -227,23 +227,22 @@
              NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
-  double precision Z_DEPTH_BLOCK,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
+  double precision Z_DEPTH_BLOCK !,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  logical HARVARD_3D_GOCAD_MODEL,TOPOGRAPHY,&
-          IMPOSE_MINIMUM_VP_GOCAD,HAUKSSON_REGIONAL_MODEL, &
-          BASEMENT_MAP,MOHO_MAP_LUPEI
+  !logical TOPOGRAPHY,MOHO_MAP_LUPEI
+  !logical BASEMENT_MAP,HAUKSSON_REGIONAL_MODEL,HARVARD_3D_GOCAD_MODEL,IMPOSE_MINIMUM_VP_GOCAD
 
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
-! Mesh files for visualization 
+! Mesh files for visualization
   logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
 
 ! doublings parameters
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
 
-  character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
+  character(len=256) OUTPUT_FILES,LOCAL_PATH !,MODEL
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -257,17 +256,17 @@
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
 
   double precision min_elevation,max_elevation
-  double precision min_elevation_all,max_elevation_all
+  !double precision min_elevation_all,max_elevation_all
 
 ! for tapered basement map
-  integer icorner_x,icorner_y
-  integer iz_basement
-  double precision x_corner,y_corner
-  character(len=150) BASEMENT_MAP_FILE
+  !integer icorner_x,icorner_y
+  !integer iz_basement
+  !double precision x_corner,y_corner
+  !character(len=256) BASEMENT_MAP_FILE
 
 ! interfaces parameters
   logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
-  integer ipoint_current,ilayer,interface_current
+  integer ilayer,interface_current ! ipoint_current
   integer number_of_interfaces,number_of_layers
   integer max_npx_interface,max_npy_interface
   integer npx_interface_bottom,npy_interface_bottom
@@ -287,11 +286,11 @@
 
 ! subregions parameters
   integer NSUBREGIONS
-!  definition of the different regions of the model in the mesh (nx,ny,nz) 
-!  #1 #2 : nx_begining,nx_end  
-!  #3 #4 : ny_begining,ny_end 
-!  #5 #6 : nz_begining,nz_end   
-!     #7 : material number 
+!  definition of the different regions of the model in the mesh (nx,ny,nz)
+!  #1 #2 : nx_begining,nx_end
+!  #3 #4 : ny_begining,ny_end
+!  #5 #6 : nz_begining,nz_end
+!     #7 : material number
   integer, dimension(:,:), pointer :: subregions
 
 ! material properties
@@ -327,7 +326,7 @@
     write(IMAIN,*)
   endif
 
- ! nullify(subregions,material_properties) 
+ ! nullify(subregions,material_properties)
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
         NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
@@ -358,16 +357,16 @@
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
-     
+
      call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
           npx_interface_bottom,npy_interface_bottom,&
           orig_x_interface_bottom,orig_y_interface_bottom,spacing_x_interface_bottom,spacing_y_interface_bottom)
- 
+
      max_npx_interface = max(npx_interface_bottom,max_npx_interface)
      max_npy_interface = max(npy_interface_bottom,max_npy_interface)
 
      if((max_npx_interface < 2) .or.(max_npy_interface < 2)) stop 'not enough interface points (minimum is 2x2)'
-     
+
   enddo
 
   ! define number of layers
@@ -563,17 +562,17 @@
      do ilayer = 1,number_of_layers
 
         ! read top interface
-        call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,& 
+        call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
              npx_interface_top,npy_interface_top,&
-             orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top) 
-        
+             orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top)
+
         !npoints_interface_top = npx_interface_top * npy_interface
         ! loop on all the points describing this interface
         open(unit=45,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
              //interface_top_file,status='old')
         do iy=1,npy_interface_top
            do ix=1,npx_interface_top
-              call read_value_double_precision(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP') 
+              call read_value_double_precision(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
            enddo
         enddo
         close(45)
@@ -597,10 +596,10 @@
               etan=dble(iy)/dble(npy)
               y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
-! get bottom interface value 
+! get bottom interface value
 ! project x and y in UTM back to long/lat since topo file is in long/lat
               call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_BOTTOM)
-                 
+
 ! get coordinate of corner in bathy/topo model
               icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
               icornerlat = int((lat - orig_y_interface_bottom) / spacing_x_interface_bottom) + 1

@@ -27,7 +27,7 @@ program convert_movie_real_to_double
 
   double precision min_field_current,max_field_current,max_absol
 
-  character(len=150) outputname,outputname1
+  character(len=256) outputname,outputname1
 
   integer iproc,ipoin
 
@@ -63,7 +63,7 @@ program convert_movie_real_to_double
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=150) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname 
+  character(len=256) LOCAL_PATH,clean_LOCAL_PATH,final_LOCAL_PATH,prname
   ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
   integer NER
@@ -178,10 +178,10 @@ program convert_movie_real_to_double
      outputname1 =  trim(outputname)//'.new'
      open(unit=IIN,file=outputname,status='old',form='unformatted',iostat=ios1)
      open(unit=IOUT,file=outputname1,form='unformatted',iostat=ios2)
-      
+
      if (ios1 /= 0 .or. ios2 /= 0) then
         print *, 'Error opening file ', trim(outputname), ' and ', trim(outputname1)
-        stop 
+        stop
      else
        print *, 'reading file ', trim(outputname)
        print *, 'writing file ', trim(outputname1)
@@ -199,7 +199,7 @@ program convert_movie_real_to_double
    close(IOUT)
 
  end do
- 
+
 
 
  end program convert_movie_real_to_double

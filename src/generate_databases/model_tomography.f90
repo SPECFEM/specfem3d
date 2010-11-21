@@ -34,10 +34,11 @@
 
   include "constants.h"
 
-  ! for external tomography....
+  ! for external tomography:
+  ! file must be in ../in_data/files/ directory
   ! (regular spaced, xyz-block file in ascii)
-  !character (len=80) :: TOMO_FILENAME = '../in_data_files/veryfast_tomography_abruzzo_complete.xyz'
-  character (len=80) :: TOMO_FILENAME = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'tomography_model.xyz'
+  !character (len=80) :: TOMO_FILENAME = 'veryfast_tomography_abruzzo_complete.xyz'
+  character (len=80) :: TOMO_FILENAME = 'tomography_model.xyz'
 
   ! model dimensions
   double precision :: ORIG_X,ORIG_Y,ORIG_Z
@@ -107,6 +108,7 @@
   ! local parameters
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   integer :: irecord,ier
+  character(len=256):: filename
 
   !TOMO_FILENAME='DATA/veryfast_tomography_abruzzo_complete.xyz'
   ! probably the simple position for the filename is the constat.h
@@ -115,7 +117,8 @@
   ! as in los angeles case we need to loop over mat_ext_mesh(1,ispec)...
   ! it is a possible solution )
   !  magnoni 1/12/09
-  open(unit=27,file=TOMO_FILENAME,status='old',iostat=ier)
+  filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//trim(TOMO_FILENAME)
+  open(unit=27,file=trim(filename),status='old',action='read',iostat=ier)
   if( ier /= 0 ) call exit_MPI(myrank,'error reading tomography file')
 
   ! reads in model dimensions

@@ -137,7 +137,7 @@
 ! **************
 
 
-! get MPI starting time
+  ! get MPI starting time
   time_start = wtime()
 
   if(myrank == 0) then
@@ -148,7 +148,7 @@
     write(IMAIN,*)
   endif
 
-! define topology of the control element
+  ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
   if(myrank == 0) then
@@ -158,11 +158,11 @@
     write(IMAIN,*) '*****************************************************************'
   endif
 
-! get number of stations from receiver file
+  ! get number of stations from receiver file
   open(unit=1,file=trim(rec_filename),status='old',action='read',iostat=ios)
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
-! allocate memory for arrays using number of stations
+  ! allocate memory for arrays using number of stations
   allocate(stlat(nrec))
   allocate(stlon(nrec))
   allocate(stele(nrec))
@@ -193,150 +193,140 @@
   allocate(final_distance_all(nrec,0:NPROC-1))
   allocate(nu_all(3,3,nrec,0:NPROC-1))
 
-! loop on all the stations
+  ! loop on all the stations
   do irec=1,nrec
 
     read(1,*,iostat=ios) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
-! convert station location to UTM 
+    ! convert station location to UTM
     call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),&
                 UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
-! compute horizontal distance between source and receiver in km
+    ! compute horizontal distance between source and receiver in km
     horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 + (stutm_x(irec)-utm_x_source)**2) / 1000.
 
-! print some information about stations
+    ! print some information about stations
     if(myrank == 0) &
         write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
                        '.',network_name(irec)(1:len_trim(network_name(irec))), &
                        '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
 
-! get approximate topography elevation at source long/lat coordinates
-!   set distance to huge initial value
+    ! get approximate topography elevation at source long/lat coordinates
+    !   set distance to huge initial value
     distmin = HUGEVAL
     if(num_free_surface_faces > 0) then
-    iglob_selected = 1
-! loop only on points inside the element
-! exclude edges to ensure this point is not shared with other elements
-        imin = 2
-        imax = NGLLX - 1
+      iglob_selected = 1
+      ! loop only on points inside the element
+      ! exclude edges to ensure this point is not shared with other elements
+      imin = 2
+      imax = NGLLX - 1
+      jmin = 2
+      jmax = NGLLY - 1
+      do iface=1,num_free_surface_faces
+        do j=jmin,jmax
+          do i=imin,imax
 
-        jmin = 2
-        jmax = NGLLY - 1
-    do iface=1,num_free_surface_faces
-          do j=jmin,jmax
-             do i=imin,imax
+            ispec = free_surface_ispec(iface)
+            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
+            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
+            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
+            iglob = ibool(igll,jgll,kgll,ispec)
 
-                ispec = free_surface_ispec(iface)
-                igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
-                jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
-                kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
-                iglob = ibool(igll,jgll,kgll,ispec)
-
- !           keep this point if it is closer to the receiver
-                dist = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
-                     (stutm_y(irec)-dble(ystore(iglob)))**2)
-                if(dist < distmin) then
-                   distmin = dist
-                   iglob_selected = iglob
-                   iface_selected = iface
-                   iselected = i
-                   jselected = j
-                   altitude_rec(1) = zstore(iglob_selected)
-                endif
-             enddo
+            ! keep this point if it is closer to the receiver
+            dist = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
+                       (stutm_y(irec)-dble(ystore(iglob)))**2)
+            if(dist < distmin) then
+              distmin = dist
+              iglob_selected = iglob
+              iface_selected = iface
+              iselected = i
+              jselected = j
+              altitude_rec(1) = zstore(iglob_selected)
+            endif
           enddo
-          ! end of loop on all the elements on the free surface
-       end do
-!  weighted mean at current point of topography elevation of the four closest nodes     
-!  set distance to huge initial value
-       distmin = HUGEVAL
-       do j=jselected,jselected+1
-          do i=iselected,iselected+1
-             inode = 1
-             do jadjust=0,1
-                do iadjust= 0,1
-                   ispec = free_surface_ispec(iface_selected)
-                   igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-                   jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-                   kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-                   iglob = ibool(igll,jgll,kgll,ispec)
+        enddo
+      ! end of loop on all the elements on the free surface
+      end do
+      !  weighted mean at current point of topography elevation of the four closest nodes
+      !  set distance to huge initial value
+      distmin = HUGEVAL
+      do j=jselected,jselected+1
+        do i=iselected,iselected+1
+          inode = 1
+          do jadjust=0,1
+            do iadjust= 0,1
+              ispec = free_surface_ispec(iface_selected)
+              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+              iglob = ibool(igll,jgll,kgll,ispec)
 
-                   elevation_node(inode) = zstore(iglob)
-                   dist_node(inode) = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
-                        (stutm_y(irec)-dble(ystore(iglob)))**2)
-                   inode = inode + 1
-                end do
-             end do
-             dist = sum(dist_node)
-             if(dist < distmin) then
-                distmin = dist
-                altitude_rec(1) = (dist_node(1)/dist)*elevation_node(1) + &
-                     (dist_node(2)/dist)*elevation_node(2) + &
-                     (dist_node(3)/dist)*elevation_node(3) + &
-                     (dist_node(4)/dist)*elevation_node(4) 
-             endif
+              elevation_node(inode) = zstore(iglob)
+              dist_node(inode) = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
+                          (stutm_y(irec)-dble(ystore(iglob)))**2)
+              inode = inode + 1
+            end do
           end do
-       end do
+          dist = sum(dist_node)
+          if(dist < distmin) then
+            distmin = dist
+            altitude_rec(1) = (dist_node(1)/dist)*elevation_node(1) + &
+                       (dist_node(2)/dist)*elevation_node(2) + &
+                       (dist_node(3)/dist)*elevation_node(3) + &
+                       (dist_node(4)/dist)*elevation_node(4)
+          endif
+        end do
+      end do
     end if
-!  MPI communications to determine the best slice
+    !  MPI communications to determine the best slice
     distmin_ele(1)= distmin
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_rec,1,elevation_all,1,NPROC)
     if(myrank == 0) then
-       iproc = minloc(distmin_ele_all)
-       altitude_rec(1) = elevation_all(iproc(1))         
+      iproc = minloc(distmin_ele_all)
+      altitude_rec(1) = elevation_all(iproc(1))
     end if
-    call bcast_all_dp(altitude_rec,1)  
+    call bcast_all_dp(altitude_rec,1)
     elevation(irec) = altitude_rec(1)
 
-! reset distance to huge initial value
-  distmin=HUGEVAL
+    ! reset distance to huge initial value
+    distmin=HUGEVAL
 
 !     get the Cartesian components of n in the model: nu
 
-! orientation consistent with the UTM projection
+    ! orientation consistent with the UTM projection
+    ! X coordinate - East
+    nu(1,1,irec) = 1.d0
+    nu(1,2,irec) = 0.d0
+    nu(1,3,irec) = 0.d0
+    ! Y coordinate - North
+    nu(2,1,irec) = 0.d0
+    nu(2,2,irec) = 1.d0
+    nu(2,3,irec) = 0.d0
+    ! Z coordinate - Vertical
+    nu(3,1,irec) = 0.d0
+    nu(3,2,irec) = 0.d0
+    nu(3,3,irec) = 1.d0
 
-!     East
-      nu(1,1,irec) = 1.d0
-      nu(1,2,irec) = 0.d0
-      nu(1,3,irec) = 0.d0
+    x_target(irec) = stutm_x(irec)
+    y_target(irec) = stutm_y(irec)
 
-!     North
-      nu(2,1,irec) = 0.d0
-      nu(2,2,irec) = 1.d0
-      nu(2,3,irec) = 0.d0
+    ! receiver's Z coordinate
+    if( USE_SOURCES_RECVS_Z ) then
+      ! alternative: burial depth is given as z value directly
+      z_target(irec) = stbur(irec)
+    else
+      ! burial depth in STATIONS file given in m
+      z_target(irec) = elevation(irec) - stbur(irec)
+    endif
+    !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
-!     Vertical
-      nu(3,1,irec) = 0.d0
-      nu(3,2,irec) = 0.d0
-      nu(3,3,irec) = 1.d0
+    ! determines closest GLL point
+    ispec_selected_rec(irec) = 0
+    do ispec=1,NSPEC_AB
 
-
-      x_target(irec) = stutm_x(irec)
-      y_target(irec) = stutm_y(irec)
-      
-      
-!daniel      
-      !if( .not. SUPPRESS_UTM_PROJECTION ) then
-        ! burial depth in STATIONS file given in m
-        z_target(irec) = elevation(irec) - stbur(irec)
-      !else
-        ! alternative: burial depth is given as z value directly
-        !!z_target(irec) = stbur(irec)
-      !endif
-      
-      !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
-
-! examine top of the elements only (receivers always at the surface)
-!      k = NGLLZ
-
-      ispec_selected_rec(irec) = 0
-
-      do ispec=1,NSPEC_AB
-
-! define the interval in which we look for points
+      ! define the interval in which we look for points
       if(FASTER_RECEIVERS_POINTS_ONLY) then
         imin = 1
         imax = NGLLX
@@ -348,8 +338,8 @@
         kmax = NGLLZ
 
       else
-! loop only on points inside the element
-! exclude edges to ensure this point is not shared with other elements
+        ! loop only on points inside the element
+        ! exclude edges to ensure this point is not shared with other elements
         imin = 2
         imax = NGLLX - 1
 
@@ -360,7 +350,7 @@
         kmax = NGLLZ - 1
       endif
 
-        do k = kmin,kmax
+      do k = kmin,kmax
         do j = jmin,jmax
           do i = imin,imax
 
@@ -376,7 +366,7 @@
                         +(y_target(irec)-dble(ystore(iglob)))**2 &
                         +(z_target(irec)-dble(zstore(iglob)))**2)
 
-!           keep this point if it is closer to the receiver
+            ! keep this point if it is closer to the receiver
             if(dist < distmin) then
               distmin = dist
               ispec_selected_rec(irec) = ispec
@@ -394,178 +384,177 @@
 
           enddo
         enddo
-       enddo
-
-! compute final distance between asked and found (converted to km)
-  final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
-    (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
-!      endif
-
-! end of loop on all the spectral elements in current slice
       enddo
 
-  if (ispec_selected_rec(irec) == 0) then
-    final_distance(irec) = HUGEVAL
-  endif
+      ! compute final distance between asked and found (converted to km)
+      final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
+        (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
 
-! get normal to the face of the hexaedra if receiver is on the surface
-  if ((.not. RECVS_CAN_BE_BURIED_EXT_MESH) .and. &
+    ! end of loop on all the spectral elements in current slice
+    enddo
+
+    if (ispec_selected_rec(irec) == 0) then
+      final_distance(irec) = HUGEVAL
+    endif
+
+    ! get normal to the face of the hexaedra if receiver is on the surface
+    if ((.not. RECVS_CAN_BE_BURIED_EXT_MESH) .and. &
        .not. (ispec_selected_rec(irec) == 0)) then
-    pt0_ix = -1
-    pt0_iy = -1
-    pt0_iz = -1
-    pt1_ix = -1
-    pt1_iy = -1
-    pt1_iz = -1
-    pt2_ix = -1
-    pt2_iy = -1
-    pt2_iz = -1
-! we get two vectors of the face (three points) to compute the normal
-    if (ix_initial_guess(irec) == 1 .and. &
+      pt0_ix = -1
+      pt0_iy = -1
+      pt0_iz = -1
+      pt1_ix = -1
+      pt1_iy = -1
+      pt1_iz = -1
+      pt2_ix = -1
+      pt2_iy = -1
+      pt2_iz = -1
+      ! we get two vectors of the face (three points) to compute the normal
+      if (ix_initial_guess(irec) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected_rec(irec)))) then
-      pt0_ix = 1
-      pt0_iy = NGLLY
-      pt0_iz = 1
-      pt1_ix = 1
-      pt1_iy = 1
-      pt1_iz = 1
-      pt2_ix = 1
-      pt2_iy = NGLLY
-      pt2_iz = NGLLZ
-    endif
-    if (ix_initial_guess(irec) == NGLLX .and. &
+        pt0_ix = 1
+        pt0_iy = NGLLY
+        pt0_iz = 1
+        pt1_ix = 1
+        pt1_iy = 1
+        pt1_iz = 1
+        pt2_ix = 1
+        pt2_iy = NGLLY
+        pt2_iz = NGLLZ
+      endif
+      if (ix_initial_guess(irec) == NGLLX .and. &
          iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec_selected_rec(irec)))) then
-      pt0_ix = NGLLX
-      pt0_iy = 1
-      pt0_iz = 1
-      pt1_ix = NGLLX
-      pt1_iy = NGLLY
-      pt1_iz = 1
-      pt2_ix = NGLLX
-      pt2_iy = 1
-      pt2_iz = NGLLZ
-    endif
-    if (iy_initial_guess(irec) == 1 .and. &
+        pt0_ix = NGLLX
+        pt0_iy = 1
+        pt0_iz = 1
+        pt1_ix = NGLLX
+        pt1_iy = NGLLY
+        pt1_iz = 1
+        pt2_ix = NGLLX
+        pt2_iy = 1
+        pt2_iz = NGLLZ
+      endif
+      if (iy_initial_guess(irec) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(2,1,2,ispec_selected_rec(irec)))) then
-      pt0_ix = 1
-      pt0_iy = 1
-      pt0_iz = 1
-      pt1_ix = NGLLX
-      pt1_iy = 1
-      pt1_iz = 1
-      pt2_ix = 1
-      pt2_iy = 1
-      pt2_iz = NGLLZ
-    endif
-    if (iy_initial_guess(irec) == NGLLY .and. &
+        pt0_ix = 1
+        pt0_iy = 1
+        pt0_iz = 1
+        pt1_ix = NGLLX
+        pt1_iy = 1
+        pt1_iz = 1
+        pt2_ix = 1
+        pt2_iy = 1
+        pt2_iz = NGLLZ
+      endif
+      if (iy_initial_guess(irec) == NGLLY .and. &
          iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec_selected_rec(irec)))) then
-      pt0_ix = NGLLX
-      pt0_iy = NGLLY
-      pt0_iz = 1
-      pt1_ix = 1
-      pt1_iy = NGLLY
-      pt1_iz = 1
-      pt2_ix = NGLLX
-      pt2_iy = NGLLY
-      pt2_iz = NGLLZ
-    endif
-    if (iz_initial_guess(irec) == 1 .and. &
+        pt0_ix = NGLLX
+        pt0_iy = NGLLY
+        pt0_iz = 1
+        pt1_ix = 1
+        pt1_iy = NGLLY
+        pt1_iz = 1
+        pt2_ix = NGLLX
+        pt2_iy = NGLLY
+        pt2_iz = NGLLZ
+      endif
+      if (iz_initial_guess(irec) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(2,2,1,ispec_selected_rec(irec)))) then
-      pt0_ix = NGLLX
-      pt0_iy = 1
-      pt0_iz = 1
-      pt1_ix = 1
-      pt1_iy = 1
-      pt1_iz = 1
-      pt2_ix = NGLLX
-      pt2_iy = NGLLY
-      pt2_iz = 1
-    endif
-    if (iz_initial_guess(irec) == NGLLZ .and. &
+        pt0_ix = NGLLX
+        pt0_iy = 1
+        pt0_iz = 1
+        pt1_ix = 1
+        pt1_iy = 1
+        pt1_iz = 1
+        pt2_ix = NGLLX
+        pt2_iy = NGLLY
+        pt2_iz = 1
+      endif
+      if (iz_initial_guess(irec) == NGLLZ .and. &
          iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec_selected_rec(irec)))) then
-      pt0_ix = 1
-      pt0_iy = 1
-      pt0_iz = NGLLZ
-      pt1_ix = NGLLX
-      pt1_iy = 1
-      pt1_iz = NGLLZ
-      pt2_ix = 1
-      pt2_iy = NGLLY
-      pt2_iz = NGLLZ
-    endif
-
-    if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
-         pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
-         pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
-       stop 'error in computing normal for receivers.'
-    endif
-
-    u_vector(1) = xstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_rec(irec))) &
-         - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
-    u_vector(2) = ystore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_rec(irec))) &
-         - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
-    u_vector(3) = zstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_rec(irec))) &
-         - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
-    v_vector(1) = xstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_rec(irec))) &
-         - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
-    v_vector(2) = ystore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_rec(irec))) &
-         - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
-    v_vector(3) = zstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_rec(irec))) &
-         - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
-
-! cross product
-    w_vector(1) = u_vector(2)*v_vector(3) - u_vector(3)*v_vector(2)
-    w_vector(2) = u_vector(3)*v_vector(1) - u_vector(1)*v_vector(3)
-    w_vector(3) = u_vector(1)*v_vector(2) - u_vector(2)*v_vector(1)
-
-! normalize vector w
-    w_vector(:) = w_vector(:)/sqrt(w_vector(1)**2+w_vector(2)**2+w_vector(3)**2)
-
-! build the two other vectors for a direct base: we normalize u, and v=w^u
-    u_vector(:) = u_vector(:)/sqrt(u_vector(1)**2+u_vector(2)**2+u_vector(3)**2)
-    v_vector(1) = w_vector(2)*u_vector(3) - w_vector(3)*u_vector(2)
-    v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)
-    v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
-
-! build rotation matrice nu for seismograms
-    if (EXT_MESH_RECV_NORMAL) then
-!     East (u)
-      nu(1,1,irec) = u_vector(1)
-      nu(1,2,irec) = v_vector(1)
-      nu(1,3,irec) = w_vector(1)
-
-!     North (v)
-      nu(2,1,irec) = u_vector(2)
-      nu(2,2,irec) = v_vector(2)
-      nu(2,3,irec) = w_vector(2)
-
-!     Vertical (w)
-      nu(3,1,irec) = u_vector(3)
-      nu(3,2,irec) = v_vector(3)
-      nu(3,3,irec) = w_vector(3)
-      else
-!     East
-      nu(1,1,irec) = 1.d0
-      nu(1,2,irec) = 0.d0
-      nu(1,3,irec) = 0.d0
-
-!     North
-      nu(2,1,irec) = 0.d0
-      nu(2,2,irec) = 1.d0
-      nu(2,3,irec) = 0.d0
-
-!     Vertical
-      nu(3,1,irec) = 0.d0
-      nu(3,2,irec) = 0.d0
-      nu(3,3,irec) = 1.d0
+        pt0_ix = 1
+        pt0_iy = 1
+        pt0_iz = NGLLZ
+        pt1_ix = NGLLX
+        pt1_iy = 1
+        pt1_iz = NGLLZ
+        pt2_ix = 1
+        pt2_iy = NGLLY
+        pt2_iz = NGLLZ
       endif
 
-  endif ! of if (.not. RECVS_CAN_BE_BURIED_EXT_MESH)
+      if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
+         pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
+         pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
+        stop 'error in computing normal for receivers.'
+      endif
 
-! end of loop on all the stations
+      u_vector(1) = xstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_rec(irec))) &
+           - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
+      u_vector(2) = ystore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_rec(irec))) &
+           - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
+      u_vector(3) = zstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_rec(irec))) &
+           - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
+      v_vector(1) = xstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_rec(irec))) &
+           - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
+      v_vector(2) = ystore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_rec(irec))) &
+           - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
+      v_vector(3) = zstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_rec(irec))) &
+           - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_rec(irec)))
+
+      ! cross product
+      w_vector(1) = u_vector(2)*v_vector(3) - u_vector(3)*v_vector(2)
+      w_vector(2) = u_vector(3)*v_vector(1) - u_vector(1)*v_vector(3)
+      w_vector(3) = u_vector(1)*v_vector(2) - u_vector(2)*v_vector(1)
+
+      ! normalize vector w
+      w_vector(:) = w_vector(:)/sqrt(w_vector(1)**2+w_vector(2)**2+w_vector(3)**2)
+
+      ! build the two other vectors for a direct base: we normalize u, and v=w^u
+      u_vector(:) = u_vector(:)/sqrt(u_vector(1)**2+u_vector(2)**2+u_vector(3)**2)
+      v_vector(1) = w_vector(2)*u_vector(3) - w_vector(3)*u_vector(2)
+      v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)
+      v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
+
+      ! build rotation matrice nu for seismograms
+      if (EXT_MESH_RECV_NORMAL) then
+        !     East (u)
+        nu(1,1,irec) = u_vector(1)
+        nu(1,2,irec) = v_vector(1)
+        nu(1,3,irec) = w_vector(1)
+
+        !     North (v)
+        nu(2,1,irec) = u_vector(2)
+        nu(2,2,irec) = v_vector(2)
+        nu(2,3,irec) = w_vector(2)
+
+        !     Vertical (w)
+        nu(3,1,irec) = u_vector(3)
+        nu(3,2,irec) = v_vector(3)
+        nu(3,3,irec) = w_vector(3)
+      else
+        !     East
+        nu(1,1,irec) = 1.d0
+        nu(1,2,irec) = 0.d0
+        nu(1,3,irec) = 0.d0
+
+        !     North
+        nu(2,1,irec) = 0.d0
+        nu(2,2,irec) = 1.d0
+        nu(2,3,irec) = 0.d0
+
+        !     Vertical
+        nu(3,1,irec) = 0.d0
+        nu(3,2,irec) = 0.d0
+        nu(3,3,irec) = 1.d0
+      endif
+
+    endif ! of if (.not. RECVS_CAN_BE_BURIED_EXT_MESH)
+
+  ! end of loop on all the stations
   enddo
 
-! close receiver file
+  ! close receiver file
   close(1)
 
 ! ****************************************
@@ -574,126 +563,124 @@
 
   if(.not. FASTER_RECEIVERS_POINTS_ONLY) then
 
-! loop on all the receivers to iterate in that slice
+    ! loop on all the receivers to iterate in that slice
     do irec = 1,nrec
 
-        ispec_iterate = ispec_selected_rec(irec)
+      ispec_iterate = ispec_selected_rec(irec)
 
-! use initial guess in xi and eta
+      ! use initial guess in xi and eta
+      xi = xigll(ix_initial_guess(irec))
+      eta = yigll(iy_initial_guess(irec))
+      gamma = zigll(iz_initial_guess(irec))
 
-        xi = xigll(ix_initial_guess(irec))
-        eta = yigll(iy_initial_guess(irec))
-        gamma = zigll(iz_initial_guess(irec))
+      ! define coordinates of the control points of the element
+      do ia=1,NGNOD
 
-! define coordinates of the control points of the element
+        if(iaddx(ia) == 0) then
+          iax = 1
+        else if(iaddx(ia) == 1) then
+          iax = (NGLLX+1)/2
+        else if(iaddx(ia) == 2) then
+          iax = NGLLX
+        else
+          call exit_MPI(myrank,'incorrect value of iaddx')
+        endif
 
-        do ia=1,NGNOD
+        if(iaddy(ia) == 0) then
+          iay = 1
+        else if(iaddy(ia) == 1) then
+          iay = (NGLLY+1)/2
+        else if(iaddy(ia) == 2) then
+          iay = NGLLY
+        else
+          call exit_MPI(myrank,'incorrect value of iaddy')
+        endif
 
-          if(iaddx(ia) == 0) then
-            iax = 1
-          else if(iaddx(ia) == 1) then
-            iax = (NGLLX+1)/2
-          else if(iaddx(ia) == 2) then
-            iax = NGLLX
-          else
-            call exit_MPI(myrank,'incorrect value of iaddx')
-          endif
+        if(iaddz(ia) == 0) then
+          iaz = 1
+        else if(iaddz(ia) == 1) then
+          iaz = (NGLLZ+1)/2
+        else if(iaddz(ia) == 2) then
+          iaz = NGLLZ
+        else
+          call exit_MPI(myrank,'incorrect value of iaddz')
+        endif
 
-          if(iaddy(ia) == 0) then
-            iay = 1
-          else if(iaddy(ia) == 1) then
-            iay = (NGLLY+1)/2
-          else if(iaddy(ia) == 2) then
-            iay = NGLLY
-          else
-            call exit_MPI(myrank,'incorrect value of iaddy')
-          endif
+        iglob = ibool(iax,iay,iaz,ispec_iterate)
+        xelm(ia) = dble(xstore(iglob))
+        yelm(ia) = dble(ystore(iglob))
+        zelm(ia) = dble(zstore(iglob))
 
-          if(iaddz(ia) == 0) then
-            iaz = 1
-          else if(iaddz(ia) == 1) then
-            iaz = (NGLLZ+1)/2
-          else if(iaddz(ia) == 2) then
-            iaz = NGLLZ
-          else
-            call exit_MPI(myrank,'incorrect value of iaddz')
-          endif
+      enddo
 
-          iglob = ibool(iax,iay,iaz,ispec_iterate)
-          xelm(ia) = dble(xstore(iglob))
-          yelm(ia) = dble(ystore(iglob))
-          zelm(ia) = dble(zstore(iglob))
+      ! iterate to solve the non linear system
+      do iter_loop = 1,NUM_ITER
 
-        enddo
+        ! impose receiver exactly at the surface
+        !    gamma = 1.d0
 
-! iterate to solve the non linear system
-        do iter_loop = 1,NUM_ITER
-
-! impose receiver exactly at the surface
-!    gamma = 1.d0
-
-! recompute jacobian for the new point
-          call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                  xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-
-! compute distance to target location
-          dx = - (x - x_target(irec))
-          dy = - (y - y_target(irec))
-          dz = - (z - z_target(irec))
-
-! compute increments
-! gamma does not change since we know the receiver is exactly on the surface
-          dxi  = xix*dx + xiy*dy + xiz*dz
-          deta = etax*dx + etay*dy + etaz*dz
-          dgamma = gammax*dx + gammay*dy + gammaz*dz
-
-! update values
-          xi = xi + dxi
-          eta = eta + deta
-          gamma = gamma + dgamma
-
-! impose that we stay in that element
-! (useful if user gives a receiver outside the mesh for instance)
-! we can go slightly outside the [1,1] segment since with finite elements
-! the polynomial solution is defined everywhere
-! this can be useful for convergence of itertive scheme with distorted elements
-          if (xi > 1.10d0) xi = 1.10d0
-          if (xi < -1.10d0) xi = -1.10d0
-          if (eta > 1.10d0) eta = 1.10d0
-          if (eta < -1.10d0) eta = -1.10d0
-          if (gamma > 1.10d0) gamma = 1.10d0
-          if (gamma < -1.10d0) gamma = -1.10d0
-
-! end of non linear iterations
-        enddo
-
-! impose receiver exactly at the surface after final iteration
-!  gamma = 1.d0
-
-! compute final coordinates of point found
+        ! recompute jacobian for the new point
         call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
-! store xi,eta and x,y,z of point found
-        xi_receiver(irec) = xi
-        eta_receiver(irec) = eta
-        gamma_receiver(irec) = gamma
-        x_found(irec) = x
-        y_found(irec) = y
-        z_found(irec) = z
+        ! compute distance to target location
+        dx = - (x - x_target(irec))
+        dy = - (y - y_target(irec))
+        dz = - (z - z_target(irec))
 
-! compute final distance between asked and found (converted to km)
-        final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
-          (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
+        ! compute increments
+        ! gamma does not change since we know the receiver is exactly on the surface
+        dxi  = xix*dx + xiy*dy + xiz*dz
+        deta = etax*dx + etay*dy + etaz*dz
+        dgamma = gammax*dx + gammay*dy + gammaz*dz
+
+        ! update values
+        xi = xi + dxi
+        eta = eta + deta
+        gamma = gamma + dgamma
+
+        ! impose that we stay in that element
+        ! (useful if user gives a receiver outside the mesh for instance)
+        ! we can go slightly outside the [1,1] segment since with finite elements
+        ! the polynomial solution is defined everywhere
+        ! this can be useful for convergence of itertive scheme with distorted elements
+        if (xi > 1.10d0) xi = 1.10d0
+        if (xi < -1.10d0) xi = -1.10d0
+        if (eta > 1.10d0) eta = 1.10d0
+        if (eta < -1.10d0) eta = -1.10d0
+        if (gamma > 1.10d0) gamma = 1.10d0
+        if (gamma < -1.10d0) gamma = -1.10d0
+
+      ! end of non linear iterations
+      enddo
+
+      ! impose receiver exactly at the surface after final iteration
+      !  gamma = 1.d0
+
+      ! compute final coordinates of point found
+      call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+
+      ! store xi,eta and x,y,z of point found
+      xi_receiver(irec) = xi
+      eta_receiver(irec) = eta
+      gamma_receiver(irec) = gamma
+      x_found(irec) = x
+      y_found(irec) = y
+      z_found(irec) = z
+
+      ! compute final distance between asked and found (converted to km)
+      final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
+        (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
 
     enddo
 
   endif ! of if (.not. FASTER_RECEIVERS_POINTS_ONLY)
 
-! synchronize all the processes to make sure all the estimates are available
+  ! synchronize all the processes to make sure all the estimates are available
   call sync_all()
 
-! for MPI version, gather information from all the nodes
+  ! for MPI version, gather information from all the nodes
   ispec_selected_rec_all(:,:) = -1
   call gather_all_i(ispec_selected_rec,nrec,ispec_selected_rec_all,nrec,NPROC)
   call gather_all_dp(xi_receiver,nrec,xi_receiver_all,nrec,NPROC)
@@ -705,13 +692,13 @@
   call gather_all_dp(z_found,nrec,z_found_all,nrec,NPROC)
   call gather_all_dp(nu,3*3*nrec,nu_all,3*3*nrec,NPROC)
 
-! this is executed by main process only
+  ! this is executed by main process only
   if(myrank == 0) then
 
-! check that the gather operation went well
+    ! check that the gather operation went well
     if(any(ispec_selected_rec_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for receivers')
 
-! MPI loop on all the results to determine the best slice
+    ! MPI loop on all the results to determine the best slice
     islice_selected_rec(:) = -1
     do irec = 1,nrec
     distmin = HUGEVAL
@@ -744,13 +731,15 @@
       if( SUPPRESS_UTM_PROJECTION ) then
         write(IMAIN,*) '     original x: ',sngl(stutm_x(irec))
         write(IMAIN,*) '     original y: ',sngl(stutm_y(irec))
-        !write(IMAIN,*) '     original z: ',sngl(stbur(irec))
       else
         write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
-        write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))      
-        !write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'          
+        write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))
       endif
-      write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'  
+      if( USE_SOURCES_RECVS_Z ) then
+        write(IMAIN,*) '     original z: ',sngl(stbur(irec))
+      else
+        write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'
+      endif
       write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
       write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
@@ -770,21 +759,21 @@
       if( SUPPRESS_UTM_PROJECTION ) then
         write(IMAIN,*) '         x: ',x_found(irec)
         write(IMAIN,*) '         y: ',y_found(irec)
-        !daniel
-        !write(IMAIN,*) '         z: ',z_found(irec)
       else
         write(IMAIN,*) '     UTM x: ',x_found(irec)
-        write(IMAIN,*) '     UTM y: ',y_found(irec)        
-        !write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
-        !write(IMAIN,*) '         z: ',z_found(irec)         
+        write(IMAIN,*) '     UTM y: ',y_found(irec)
       endif
-      write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
-      write(IMAIN,*) '         z: ',z_found(irec)
+      if( USE_SOURCES_RECVS_Z ) then
+        write(IMAIN,*) '         z: ',z_found(irec)
+      else
+        write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
+        write(IMAIN,*) '         z: ',z_found(irec)
+      endif
       write(IMAIN,*)
-      
 
-! add warning if estimate is poor
-! (usually means receiver outside the mesh given by the user)
+
+      ! add warning if estimate is poor
+      ! (usually means receiver outside the mesh given by the user)
       if(final_distance(irec) > 3000.d0) then
         write(IMAIN,*) '*******************************************************'
         write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
@@ -793,16 +782,16 @@
 
       write(IMAIN,*)
 
-   enddo
+    enddo
 
-! compute maximal distance for all the receivers
+    ! compute maximal distance for all the receivers
     final_distance_max = maxval(final_distance(:))
 
-! display maximum error for all the receivers
+    ! display maximum error for all the receivers
     write(IMAIN,*) 'maximum error in location of all the receivers: ',sngl(final_distance_max),' m'
 
-! add warning if estimate is poor
-! (usually means receiver outside the mesh given by the user)
+    ! add warning if estimate is poor
+    ! (usually means receiver outside the mesh given by the user)
     if(final_distance_max > 1000.d0) then
       write(IMAIN,*)
       write(IMAIN,*) '************************************************************'
@@ -812,17 +801,17 @@
       write(IMAIN,*) '************************************************************'
     endif
 
-! get the base pathname for output files
+    ! get the base pathname for output files
     call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
-! write the list of stations and associated epicentral distance
+    ! write the list of stations and associated epicentral distance
     open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
     do irec=1,nrec
       write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
     enddo
     close(27)
 
-! elapsed time since beginning of mesh generation
+    ! elapsed time since beginning of mesh generation
     tCPU = wtime() - time_start
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
@@ -832,16 +821,16 @@
 
   endif    ! end of section executed by main process only
 
-! main process broadcasts the results to all the slices
+  ! main process broadcasts the results to all the slices
   call bcast_all_i(islice_selected_rec,nrec)
   call bcast_all_i(ispec_selected_rec,nrec)
   call bcast_all_dp(xi_receiver,nrec)
   call bcast_all_dp(eta_receiver,nrec)
   call bcast_all_dp(gamma_receiver,nrec)
-! synchronize all the processes to make sure everybody has finished
+  ! synchronize all the processes to make sure everybody has finished
   call sync_all()
 
-! deallocate arrays
+  ! deallocate arrays
   deallocate(stlat)
   deallocate(stlon)
   deallocate(stele)
@@ -890,7 +879,7 @@
 ! output
   integer :: nfilter
 
-  integer :: nrec, nrec_filtered, ios !, irec
+  integer :: nrec, nrec_filtered, ios
 
   double precision :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   double precision :: minlat,minlon,maxlat,maxlon
@@ -924,8 +913,8 @@
     if( len_trim(dummystring) > 0 ) then
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
-    
-        ! convert station location to UTM 
+
+        ! convert station location to UTM
         call utm_geo(stlon,stlat,stutm_x,stutm_y,&
              UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
@@ -941,8 +930,6 @@
   if (myrank == 0) then
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ios)
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
-    !write(IOUT,*) nrec_filtered
-    !do irec = 1,nrec
     do while(ios == 0)
       read(IIN,"(a256)",iostat = ios) dummystring
       if( ios /= 0 ) exit
@@ -951,8 +938,8 @@
       if( len_trim(dummystring) > 0 ) then
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
-        
-        ! convert station location to UTM 
+
+        ! convert station location to UTM
         call utm_geo(stlon,stlat,stutm_x,stutm_y,&
              UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
@@ -972,34 +959,33 @@
     write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
     write(IMAIN,*)
 
-    if( nrec_filtered < 1 ) then    
+    if( nrec_filtered < 1 ) then
       write(IMAIN,*) 'error filtered stations:'
       write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered
-      write(IMAIN,*) 
+      write(IMAIN,*)
       write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'
 
-!daniel
       if( SUPPRESS_UTM_PROJECTION ) then
         write(IMAIN,*) '    latitude min/max : ',LATITUDE_MIN,LATITUDE_MAX
         write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
       else
-        ! convert edge locations from UTM back to lat/lon 
+        ! convert edge locations from UTM back to lat/lon
         call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN,&
              UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
         call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX,&
-             UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)      
+             UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
         write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
         write(IMAIN,*) '    latitude min/max : ',minlat,maxlat
         write(IMAIN,*) '    UTM x min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
         write(IMAIN,*) '    UTM y min/max : ',LATITUDE_MIN,LATITUDE_MAX
       endif
 
-      write(IMAIN,*) 
+      write(IMAIN,*)
     endif
 
   endif
 
   nfilter = nrec_filtered
-  
+
   end subroutine station_filter
 

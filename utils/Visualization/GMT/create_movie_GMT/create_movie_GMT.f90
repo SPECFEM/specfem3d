@@ -49,7 +49,7 @@ program create_movie_GMT
 
   double precision min_field_current,max_field_current,max_absol
 
-  character(len=150) outputname
+  character(len=256) outputname
 
   integer iproc,ipoin
 
@@ -83,7 +83,7 @@ program create_movie_GMT
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
-  character(len=150) LOCAL_PATH,MODEL,CMTSOLUTION
+  character(len=256) LOCAL_PATH,MODEL,CMTSOLUTION
 
 
   ! parameters deduced from parameters read from file
@@ -127,7 +127,7 @@ program create_movie_GMT
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
         SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD)
- 
+
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
@@ -142,7 +142,7 @@ program create_movie_GMT
   print *
 
   print *, 'DT = ', DT , ' NSTEP = ', NSTEP
-  print * 
+  print *
 
   if(SAVE_DISPLACEMENT) then
      print *,'Vertical displacement will be shown in movie'
@@ -250,7 +250,7 @@ program create_movie_GMT
      open(unit=IOUT,file=outputname,status='old',form='unformatted',iostat=ios1)
      if (ios1 /= 0) then
         print *, 'Error opening file ', trim(outputname)
-        stop 
+        stop
      else
        print *, 'reading file ', trim(outputname)
      endif
@@ -270,7 +270,7 @@ program create_movie_GMT
                    UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
 !     print *
 !     print *, 'max long = ', long, '  max lat = ', lat
-  
+
      ! clear number of elements kept
      ispec = 0
 

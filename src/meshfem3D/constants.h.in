@@ -134,21 +134,21 @@
   integer, parameter :: IFLAG_HALFSPACE_MOHO = 5
 
 ! define flag for regions for attenuation
-  integer, parameter :: NUM_REGIONS_ATTENUATION = 13
-
-  integer, parameter :: IATTENUATION_SEDIMENTS_40 = 1
-  integer, parameter :: IATTENUATION_SEDIMENTS_50 = 2
-  integer, parameter :: IATTENUATION_SEDIMENTS_60 = 3
-  integer, parameter :: IATTENUATION_SEDIMENTS_70 = 4
-  integer, parameter :: IATTENUATION_SEDIMENTS_80 = 5
-  integer, parameter :: IATTENUATION_SEDIMENTS_90 = 6
-  integer, parameter :: IATTENUATION_SEDIMENTS_100 = 7
-  integer, parameter :: IATTENUATION_SEDIMENTS_110 = 8
-  integer, parameter :: IATTENUATION_SEDIMENTS_120 = 9
-  integer, parameter :: IATTENUATION_SEDIMENTS_130 = 10
-  integer, parameter :: IATTENUATION_SEDIMENTS_140 = 11
-  integer, parameter :: IATTENUATION_SEDIMENTS_150 = 12
-  integer, parameter :: IATTENUATION_BEDROCK = 13
+!  integer, parameter :: NUM_REGIONS_ATTENUATION = 13
+!
+!  integer, parameter :: IATTENUATION_SEDIMENTS_40 = 1
+!  integer, parameter :: IATTENUATION_SEDIMENTS_50 = 2
+!  integer, parameter :: IATTENUATION_SEDIMENTS_60 = 3
+!  integer, parameter :: IATTENUATION_SEDIMENTS_70 = 4
+!  integer, parameter :: IATTENUATION_SEDIMENTS_80 = 5
+!  integer, parameter :: IATTENUATION_SEDIMENTS_90 = 6
+!  integer, parameter :: IATTENUATION_SEDIMENTS_100 = 7
+!  integer, parameter :: IATTENUATION_SEDIMENTS_110 = 8
+!  integer, parameter :: IATTENUATION_SEDIMENTS_120 = 9
+!  integer, parameter :: IATTENUATION_SEDIMENTS_130 = 10
+!  integer, parameter :: IATTENUATION_SEDIMENTS_140 = 11
+!  integer, parameter :: IATTENUATION_SEDIMENTS_150 = 12
+!  integer, parameter :: IATTENUATION_BEDROCK = 13
 
 ! Olsen's constant for Q_mu = constant * v_s attenuation rule
   real, parameter :: OLSEN_ATTENUATION_RATIO = 0.05
@@ -163,7 +163,7 @@
   integer, parameter :: ETA_MAX = 4
   integer, parameter :: BOTTOM = 5
 
-! number of GLL points not set in the mesher, do not modify this value 
+! number of GLL points not set in the mesher, do not modify this value
   integer, parameter :: NGLLX = 2
   integer, parameter :: NGLLY = NGLLX
   integer, parameter :: NGLLZ = NGLLX
