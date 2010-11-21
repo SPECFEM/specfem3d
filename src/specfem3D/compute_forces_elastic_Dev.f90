@@ -54,7 +54,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
 ! computes elastic tensor term
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
-                      NUM_REGIONS_ATTENUATION,N_SLS,SAVE_MOHO_MESH, &
+                      N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS,m1,m2
   implicit none
 

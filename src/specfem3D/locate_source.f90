@@ -122,7 +122,7 @@
   double precision, dimension(:), allocatable :: tmp_local
   double precision, dimension(:,:),allocatable :: tmp_all_local
 
-  double precision hdur(NSOURCES) 
+  double precision hdur(NSOURCES)
   double precision :: f0,t0_ricker
 
   double precision, dimension(NSOURCES) :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
@@ -154,7 +154,7 @@
 
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
-  
+
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
@@ -167,22 +167,23 @@
     ! replace with very short error function
     if(hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
   enddo
-  
+
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
   ! get MPI starting time
   time_start = wtime()
 
-!daniel
   ! user output
   if( myrank == 0 ) then
     if(SUPPRESS_UTM_PROJECTION ) then
       write(IMAIN,*) 'no UTM projection:'
-      !write(IMAIN,*) '  (lon/lat/depth) becomes directly (x/y/z) coordinates'
     else
       write(IMAIN,*) 'UTM projection:'
       write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
+    endif
+    if( USE_SOURCES_RECVS_Z ) then
+      write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
     endif
   endif
 
@@ -206,11 +207,11 @@
     Mxz(isource) = + moment_tensor(5,isource)
     Myz(isource) = - moment_tensor(4,isource)
     Mxy(isource) = - moment_tensor(6,isource)
-    
+
     ! gets UTM x,y
     call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource), &
                    UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
-    
+
     ! get approximate topography elevation at source long/lat coordinates
     ! set distance to huge initial value
     distmin = HUGEVAL
@@ -248,7 +249,7 @@
         enddo
         ! end of loop on all the elements on the free surface
       end do
-      !  weighted mean at current point of topography elevation of the four closest nodes   
+      !  weighted mean at current point of topography elevation of the four closest nodes
       !  set distance to huge initial value
       distmin = HUGEVAL
       do j=jselected,jselected+1
@@ -274,7 +275,7 @@
             altitude_source(1) = (dist_node(1)/dist)*elevation_node(1) + &
                      (dist_node(2)/dist)*elevation_node(2) + &
                      (dist_node(3)/dist)*elevation_node(3) + &
-                     (dist_node(4)/dist)*elevation_node(4) 
+                     (dist_node(4)/dist)*elevation_node(4)
           endif
         end do
       end do
@@ -285,9 +286,9 @@
     call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
     if(myrank == 0) then
       iproc = minloc(distmin_ele_all)
-      altitude_source(1) = elevation_all(iproc(1))         
+      altitude_source(1) = elevation_all(iproc(1))
     end if
-    call bcast_all_dp(altitude_source,1)  
+    call bcast_all_dp(altitude_source,1)
     elevation(isource) = altitude_source(1)
 
     ! orientation consistent with the UTM projection
@@ -306,15 +307,15 @@
 
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
-    
-!daniel
-    !if( .not. SUPPRESS_UTM_PROJECTION ) then
-      ! depth in CMTSOLUTION given in km    
-      z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
-    !else
+
+    ! source Z coordinate
+    if( USE_SOURCES_RECVS_Z ) then
       ! alternative: depth is given as z value directly
-      !!z_target_source = depth(isource)
-    !endif
+      z_target_source = depth(isource)
+    else
+      ! depth in CMTSOLUTION given in km
+      z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
+    endif
 
     ! set distance to huge initial value
     distmin = HUGEVAL
@@ -372,11 +373,11 @@
 
               ! store xi,eta,gamma and x,y,z of point found
               ! note: they have range [1.0d0,NGLLX/Y/Z], used for point sources
-              !          see e.g. in compute_add_source_elastic.f90              
+              !          see e.g. in compute_add_source_elastic.f90
               xi_source(isource) = dble(ix_initial_guess_source)
               eta_source(isource) = dble(iy_initial_guess_source)
-              gamma_source(isource) = dble(iz_initial_guess_source)              
-              
+              gamma_source(isource) = dble(iz_initial_guess_source)
+
               x_found_source(isource) = xstore(iglob)
               y_found_source(isource) = ystore(iglob)
               z_found_source(isource) = zstore(iglob)
@@ -410,11 +411,11 @@
     ! get normal to the face of the hexahedra if receiver is on the surface
     if ((.not. SOURCES_CAN_BE_BURIED_EXT_MESH) .and. &
        .not. (ispec_selected_source(isource) == 0)) then
-       
+
       ! note: at this point, xi_source,.. are in range [1.0d0,NGLLX/Y/Z] for point sources only,
       !            for non-point sources the range is limited to [2.0d0,NGLLX/Y/Z - 1]
       if( .not. USE_FORCE_POINT_SOURCE ) call exit_MPI(myrank,'error locate source: no point source at surface')
-      
+
       ! initialize indices
       pt0_ix = -1
       pt0_iy = -1
@@ -425,8 +426,8 @@
       pt2_ix = -1
       pt2_iy = -1
       pt2_iz = -1
-      
-      ! we get two vectors of the face (three points) to compute the normal      
+
+      ! we get two vectors of the face (three points) to compute the normal
       if (nint(xi_source(isource)) == 1 .and. &
          iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected_source(isource)))) then
         pt0_ix = 1
@@ -669,31 +670,31 @@
 
     ! avoids warnings about temporary creations of arrays for function call by compiler
     allocate(tmp_i_local(ng),tmp_i_all_local(ng,0:NPROC-1))
-    tmp_i_local(:) = ispec_selected_source(ns:ne)    
+    tmp_i_local(:) = ispec_selected_source(ns:ne)
     call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
     ispec_selected_source_all(1:ng,:) = tmp_i_all_local(:,:)
 
     ! acoustic/elastic domain
-    tmp_i_local(:) = idomain(ns:ne)    
+    tmp_i_local(:) = idomain(ns:ne)
     call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
     idomain_all(1:ng,:) = tmp_i_all_local(:,:)
 
     deallocate(tmp_i_local,tmp_i_all_local)
-    
+
     ! avoids warnings about temporary creations of arrays for function call by compiler
-    allocate(tmp_local(ng),tmp_all_local(ng,0:NPROC-1))    
+    allocate(tmp_local(ng),tmp_all_local(ng,0:NPROC-1))
     tmp_local(:) = xi_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     xi_source_all(1:ng,:) = tmp_all_local(:,:)
-        
+
     tmp_local(:) = eta_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     eta_source_all(1:ng,:) = tmp_all_local(:,:)
-    
+
     tmp_local(:) = gamma_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    gamma_source_all(1:ng,:) = tmp_all_local(:,:)        
-    
+    gamma_source_all(1:ng,:) = tmp_all_local(:,:)
+
     tmp_local(:) = final_distance_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     final_distance_source_all(1:ng,:) = tmp_all_local(:,:)
@@ -705,7 +706,7 @@
     tmp_local(:) = y_found_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     y_found_source_all(1:ng,:) = tmp_all_local(:,:)
-    
+
     tmp_local(:) = z_found_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     z_found_source_all(1:ng,:) = tmp_all_local(:,:)
@@ -765,15 +766,15 @@
         write(IMAIN,*)
         write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
         write(IMAIN,*) '               in element ',ispec_selected_source(isource)
-        
+
         if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
           write(IMAIN,*) '               in acoustic domain'
         else if( idomain(isource) == IDOMAIN_ELASTIC ) then
           write(IMAIN,*) '               in elastic domain'
         else
-          write(IMAIN,*) '               in unknown domain'  
+          write(IMAIN,*) '               in unknown domain'
         endif
-        
+
         write(IMAIN,*)
         if(USE_FORCE_POINT_SOURCE) then
           write(IMAIN,*) '  i index of source in that element: ',nint(xi_source(isource))
@@ -787,10 +788,10 @@
           write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
           write(IMAIN,*)
           write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
-          
+
           ! prints frequency content for point forces
-          f0 = hdur(isource) 
-          t0_ricker = 1.2d0/f0 
+          f0 = hdur(isource)
+          t0_ricker = 1.2d0/f0
           write(IMAIN,*) '  using a source of dominant frequency ',f0
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
@@ -798,7 +799,7 @@
         else
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
-          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)        
+          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
         endif
 
         ! add message if source is a Heaviside
@@ -825,16 +826,16 @@
         if( SUPPRESS_UTM_PROJECTION ) then
           write(IMAIN,*) '             x: ',utm_x_source(isource)
           write(IMAIN,*) '             y: ',utm_y_source(isource)
-          !daniel
-          !write(IMAIN,*) '         z: ',depth(isource),' km'
         else
           write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
-          write(IMAIN,*) '         UTM y: ',utm_y_source(isource)        
-          !write(IMAIN,*) '         depth: ',depth(isource),' km'
-          !write(IMAIN,*) 'topo elevation: ',elevation(isource)
+          write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
         endif
-        write(IMAIN,*) '         depth: ',depth(isource),' km'
-        write(IMAIN,*) 'topo elevation: ',elevation(isource)
+        if( USE_SOURCES_RECVS_Z ) then
+          write(IMAIN,*) '         z: ',depth(isource),' km'
+        else
+          write(IMAIN,*) '         depth: ',depth(isource),' km'
+          write(IMAIN,*) 'topo elevation: ',elevation(isource)
+        endif
 
         write(IMAIN,*)
         write(IMAIN,*) 'position of the source that will be used:'
@@ -844,11 +845,14 @@
           write(IMAIN,*) '             y: ',y_found_source(isource)
         else
           write(IMAIN,*) '         UTM x: ',x_found_source(isource)
-          write(IMAIN,*) '         UTM y: ',y_found_source(isource)        
-          !write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
+          write(IMAIN,*) '         UTM y: ',y_found_source(isource)
         endif
-        write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
-        write(IMAIN,*) '             z: ',z_found_source(isource)
+        if( USE_SOURCES_RECVS_Z ) then
+          write(IMAIN,*) '             z: ',z_found_source(isource)
+        else
+          write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'
+          write(IMAIN,*) '             z: ',z_found_source(isource)
+        endif
         write(IMAIN,*)
 
         ! display error in location estimate
@@ -887,16 +891,16 @@
         endif
       endif
 
-      ! checks source domain 
+      ! checks source domain
       if( idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC ) then
         ! only acoustic/elastic domain implement yet
         call exit_MPI(myrank,'source located in unknown domain')
       endif
 
-! end of loop on all the sources
+    ! end of loop on all the sources
     enddo
 
-! display maximum error in location estimate
+    ! display maximum error in location estimate
     write(IMAIN,*)
     write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance_source)),' m'
     write(IMAIN,*)
@@ -907,7 +911,7 @@
 
   endif     ! end of section executed by main process only
 
-! main process broadcasts the results to all the slices
+  ! main process broadcasts the results to all the slices
   call bcast_all_i(islice_selected_source,NSOURCES)
   call bcast_all_i(ispec_selected_source,NSOURCES)
   call bcast_all_dp(xi_source,NSOURCES)
@@ -916,7 +920,7 @@
   call bcast_all_dp(utm_x_source,NSOURCES)
   call bcast_all_dp(utm_y_source,NSOURCES)
 
-! elapsed time since beginning of source detection
+  ! elapsed time since beginning of source detection
   if(myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)

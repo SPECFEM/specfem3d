@@ -59,7 +59,7 @@
   integer nspec2Dtheor1,nspec2Dtheor2
 
 ! processor identification
-  character(len=150) prname
+  character(len=256) prname
 
 ! theoretical number of surface elements in the buffers
 ! cut planes along xi=constant correspond to ETA faces

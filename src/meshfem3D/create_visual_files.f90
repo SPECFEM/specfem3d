@@ -31,7 +31,7 @@
 
   include "constants.h"
 
-! Mesh files for visualization 
+! Mesh files for visualization
   logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
 
 ! number of spectral elements in each block
@@ -41,7 +41,7 @@
   integer nglob
 
 ! name of the database files
-  character(len=150) prname
+  character(len=256) prname
 
 ! arrays with the mesh
   integer true_material_num(nspec)
@@ -65,7 +65,7 @@
      end do
      write(64,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'
      do ispec=1,nspec
-        write(64,'(i10,8(a,i10))') ispec,',',ibool(1,1,2,ispec),',',ibool(1,1,1,ispec),',',ibool(1,2,1,ispec), & 
+        write(64,'(i10,8(a,i10))') ispec,',',ibool(1,1,2,ispec),',',ibool(1,1,1,ispec),',',ibool(1,2,1,ispec), &
              ',',ibool(1,2,2,ispec),',',ibool(2,1,2,ispec),',',ibool(2,1,1,ispec),',',ibool(2,2,1,ispec),',', &
              ibool(2,2,2,ispec)
      end do
@@ -93,10 +93,10 @@
 
         ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
         ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
-        ! in the case of OpenDX, node numbers start at zero     
+        ! in the case of OpenDX, node numbers start at zero
         write(66,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
              ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(1,2,2,ispec)-1,ibool(2,2,2,ispec)-1,&
-             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(1,2,1,ispec)-1,ibool(2,2,1,ispec)-1   
+             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(1,2,1,ispec)-1,ibool(2,2,1,ispec)-1
      enddo
 
 

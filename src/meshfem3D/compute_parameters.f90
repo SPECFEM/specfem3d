@@ -54,21 +54,29 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
        NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
-  integer NEX_DOUBLING_SEDIM_XI,NEX_DOUBLING_SEDIM_ETA
-  integer NEX_DOUBLING_SEDIM_PER_PROC_XI,NEX_DOUBLING_SEDIM_PER_PROC_ETA
+  !integer NEX_DOUBLING_SEDIM_XI,NEX_DOUBLING_SEDIM_ETA
+  !integer NEX_DOUBLING_SEDIM_PER_PROC_XI,NEX_DOUBLING_SEDIM_PER_PROC_ETA
   integer NSPEC2D_DOUBLING_A_XI,NSPEC2D_DOUBLING_A_ETA
   integer NSPEC2D_DOUBLING_B_XI,NSPEC2D_DOUBLING_B_ETA
   integer NSPEC_DOUBLING_AB
   integer NUM_DOUBLING_BRICKS
   integer NUM2D_DOUBLING_BRICKS_XI,NUM2D_DOUBLING_BRICKS_ETA
-  integer nglob_no_doubling_volume,nglob_no_doubling_surface
-  integer nblocks_xi,nblocks_eta
-  integer nglob_surface_typeA,nglob_surface_typeB
+  !integer nglob_no_doubling_volume,nglob_no_doubling_surface
+  !integer nblocks_xi,nblocks_eta
+  !integer nglob_surface_typeA,nglob_surface_typeB
   integer NSPEC1D_RADIAL_BEDROCK,NPOIN1D_RADIAL_BEDROCK
 
   integer NSPEC_NO_DOUBLING,NSPEC2D_NO_DOUBLING_XI,NSPEC2D_NO_DOUBLING_ETA
 
   logical USE_REGULAR_MESH
+
+! to avoid compiler warnings
+  integer idummy
+  idummy = NER_BOTTOM_MOHO
+  idummy = NER_MOHO_16
+  idummy = NER_16_BASEMENT
+  idummy = NER_BASEMENT_SEDIM
+  idummy = NER_SEDIM
 
 
   ! number of elements horizontally in each slice (i.e. per processor)
@@ -162,11 +170,11 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
 
      NSPEC2D_NO_DOUBLING_XI = &
           (NEX_PER_PROC_XI/2)*NER_REGULAR1 &
-          + NEX_PER_PROC_XI*NER_REGULAR2 
+          + NEX_PER_PROC_XI*NER_REGULAR2
 
      NSPEC2D_NO_DOUBLING_ETA = &
           (NEX_PER_PROC_ETA/2)*NER_REGULAR1 &
-          +NEX_PER_PROC_ETA*NER_REGULAR2 
+          +NEX_PER_PROC_ETA*NER_REGULAR2
 
      ! exact number of surface elements in the doubling regions
 
@@ -235,8 +243,8 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
      ! compute number of points in blocks with no doubling
      ! exclude the four surfaces in contact with the doubling regions
 
-     NGLOB_NO_DOUBLING = (NEX_PER_PROC_XI/2 + 1)*(NEX_PER_PROC_ETA/2 + 1)*NER_REGULAR1 & 
-          + (NEX_PER_PROC_XI + 1)*(NEX_PER_PROC_ETA + 1)*NER_REGULAR2 
+     NGLOB_NO_DOUBLING = (NEX_PER_PROC_XI/2 + 1)*(NEX_PER_PROC_ETA/2 + 1)*NER_REGULAR1 &
+          + (NEX_PER_PROC_XI + 1)*(NEX_PER_PROC_ETA + 1)*NER_REGULAR2
 
      NGLOB_AB = NGLOB_DOUBLING + NGLOB_NO_DOUBLING
 
@@ -347,9 +355,9 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
      ! compute number of points in blocks with no doubling
      ! exclude the four surfaces in contact with the doubling regions
 
-     NGLOB_NO_DOUBLING = (NEX_PER_PROC_XI/4 + 1)*(NEX_PER_PROC_ETA/4 + 1)*NER_REGULAR1 & 
+     NGLOB_NO_DOUBLING = (NEX_PER_PROC_XI/4 + 1)*(NEX_PER_PROC_ETA/4 + 1)*NER_REGULAR1 &
           + (NEX_PER_PROC_XI/2 + 1)*(NEX_PER_PROC_ETA/2 + 1)*(NER_REGULAR2 - 1) &
-          + (NEX_PER_PROC_XI + 1)*(NEX_PER_PROC_ETA + 1)*NER_REGULAR3 
+          + (NEX_PER_PROC_XI + 1)*(NEX_PER_PROC_ETA + 1)*NER_REGULAR3
 
      NGLOB_AB = NGLOB_DOUBLING + NGLOB_NO_DOUBLING
 

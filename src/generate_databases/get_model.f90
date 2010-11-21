@@ -63,7 +63,7 @@
   !!! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
   !!! can be used for importing updated model in iterative inversions
   character(len=256) LOCAL_PATH,prname_lp
-  real, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: vp_read,vs_read,rho_read
+  !real, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: vp_read,vs_read,rho_read
   !>YANGL
 
   ! initializes element domain flags
@@ -295,6 +295,10 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! if only vp structure is available (as is often the case in exploration seismology),
 !!! use lines for vp only
+
+  ! to avoid compiler warning
+  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+
 
 !  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
 !  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&

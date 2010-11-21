@@ -32,7 +32,7 @@
   integer iproc
 
 ! name of the database file
-  character(len=150) prname,procname,LOCAL_PATH,clean_LOCAL_PATH
+  character(len=256) prname,procname,LOCAL_PATH,clean_LOCAL_PATH
 
 ! create the name for the database of the current slide and region
   write(procname,"('/proc',i6.6,'_')") iproc

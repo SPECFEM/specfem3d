@@ -47,13 +47,16 @@
     integer iaddz(NGNOD)
     integer ner_layer(nblayers)
 
-!  definition of the different regions of the model in the mesh (nx,ny,nz) 
-!  #1 #2 : nx_begining,nx_end  
-!  #3 #4 : ny_begining,ny_end 
-!  #5 #6 : nz_begining,nz_end   
-!     #7 : material number 
+!  definition of the different regions of the model in the mesh (nx,ny,nz)
+!  #1 #2 : nx_begining,nx_end
+!  #3 #4 : ny_begining,ny_end
+!  #5 #6 : nz_begining,nz_end
+!     #7 : material number
     integer subregions(nbsubregions,7)
 
+    ! to avoid compiler warnings
+    integer idummy
+    idummy = ner_layer(1)
 ! **************
 
      call usual_hex_nodes(iaddx,iaddy,iaddz)
@@ -70,7 +73,7 @@
      iy2=2*(subregions(isubregion,4) - iproc_eta*NEX_PER_PROC_ETA - 1)
      if(iy2 > 2*(NEX_PER_PROC_XI - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
      diy=2
-    
+
      ir1=2*(subregions(isubregion,5) - 1)
      ir2=2*(subregions(isubregion,6) - 1)
      dir=2
@@ -103,7 +106,7 @@
     integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir
     integer iax,iay,iar
     integer nblayers
-    integer num_material
+    !integer num_material
     integer ndoublings
 
 ! topology of the elements
@@ -112,7 +115,13 @@
     integer iaddz(NGNOD)
     integer ner_layer(nblayers)
     integer ner_doublings(2)
-    
+
+    ! to avoid compiler warnings
+    integer idummy
+    idummy = ner_layer(1)
+    idummy = iproc_xi
+    idummy = iproc_eta
+
 ! **************
 
 !
@@ -130,7 +139,7 @@
      iy1=0
      iy2=2*(NEX_PER_PROC_ETA - 1)
      diy=2
-    
+
      ir1=0
      ir2=2*(NER - 1)
      dir=2
@@ -140,7 +149,7 @@
      iar=1
 
   else
-     if(ndoublings == 1) then 
+     if(ndoublings == 1) then
 
         select case (isubregion)
 
@@ -148,15 +157,15 @@
            ix1=0
            ix2=2*(NEX_PER_PROC_XI - 1)
            dix=4
-           
+
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=4
-           
+
            ir1=0
-           ir2=2*(ner_doublings(1) -2 -1) 
+           ir2=2*(ner_doublings(1) -2 -1)
            dir=2
-           
+
            iax=2
            iay=2
            iar=1
@@ -170,55 +179,55 @@
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=8
-    
-           ir1=2*(ner_doublings(1) - 2) 
-           ir2=2*(ner_doublings(1) - 2)  
+
+           ir1=2*(ner_doublings(1) - 2)
+           ir2=2*(ner_doublings(1) - 2)
            dir=2
-        
+
            iax=4
            iay=4
            iar=2
-        
-        case (3)  
-           
+
+        case (3)
+
            ix1=0
            ix2=2*(NEX_PER_PROC_XI - 1)
            dix=2
-           
+
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=2
-    
-           ir1=2*(ner_doublings(1)) 
-           ir2=2*(NER - 1) 
+
+           ir1=2*(ner_doublings(1))
+           ir2=2*(NER - 1)
            dir=2
-        
+
            iax=1
            iay=1
            iar=1
-           
+
         case default
            stop 'Wrong number of subregions'
 
         end select
-        
-     else if(ndoublings == 2) then 
-        
+
+     else if(ndoublings == 2) then
+
         select case (isubregion)
 
         case (1)
            ix1=0
            ix2=2*(NEX_PER_PROC_XI - 1)
            dix=8
-           
+
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=8
-           
+
            ir1=0
-           ir2=2*(ner_doublings(2) -2 -1) 
+           ir2=2*(ner_doublings(2) -2 -1)
            dir=2
-           
+
            iax=4
            iay=4
            iar=1
@@ -232,30 +241,30 @@
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=16
-    
-           ir1=2*(ner_doublings(2) - 2) 
-           ir2=2*(ner_doublings(2) - 2)  
+
+           ir1=2*(ner_doublings(2) - 2)
+           ir2=2*(ner_doublings(2) - 2)
            dir=2
-        
+
            iax=8
            iay=8
            iar=2
-        
+
 
         case (3)
 
            ix1=0
            ix2=2*(NEX_PER_PROC_XI - 1)
            dix=4
-           
+
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=4
-           
+
            ir1=2*ner_doublings(2)
-           ir2=2*(ner_doublings(1) -2 -1) 
+           ir2=2*(ner_doublings(1) -2 -1)
            dir=2
-           
+
            iax=2
            iay=2
            iar=1
@@ -269,33 +278,33 @@
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=8
-    
-           ir1=2*(ner_doublings(1) - 2) 
-           ir2=2*(ner_doublings(1) - 2)  
+
+           ir1=2*(ner_doublings(1) - 2)
+           ir2=2*(ner_doublings(1) - 2)
            dir=2
-        
+
            iax=4
            iay=4
            iar=2
 
-        case (5)  
-           
+        case (5)
+
            ix1=0
            ix2=2*(NEX_PER_PROC_XI - 1)
            dix=2
-           
+
            iy1=0
            iy2=2*(NEX_PER_PROC_ETA - 1)
            diy=2
-    
-           ir1=2*(ner_doublings(1)) 
-           ir2=2*(NER - 1) 
+
+           ir1=2*(ner_doublings(1))
+           ir2=2*(NER - 1)
            dir=2
-        
+
            iax=1
            iay=1
            iar=1
-           
+
         case default
            stop 'Wrong number of subregions'
 
@@ -304,7 +313,7 @@
 
      else
         stop 'Wrong number of doublings'
-        
+
      end if
 
   end if
@@ -374,9 +383,9 @@
 
 !     doubling_index = IFLAG_BASEMENT_TOPO
 
-!   else 
+!   else
 
-        
+
 !     iy1=0
 !     iy2=npy-2
 !     diy=2

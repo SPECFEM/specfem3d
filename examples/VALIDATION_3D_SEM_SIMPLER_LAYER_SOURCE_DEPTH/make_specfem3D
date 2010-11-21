@@ -1,1 +1,0 @@
-gfortran -ffixed-line-length-132 -O3 -o xspecfem3D specfem3D.f plotpost.f

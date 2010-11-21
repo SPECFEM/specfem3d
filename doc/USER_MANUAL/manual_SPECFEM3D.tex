@@ -97,7 +97,7 @@
 \author{$\copyright$ Princeton University (USA) and\\
 University of Pau / CNRS / INRIA (France)\\
 Version 2.0.0 \\
-"Sesame" 
+"Sesame"
 }
 
 
@@ -107,10 +107,14 @@ Version 2.0.0 \\
 The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. \\
 
 Since then it has been developed and maintained by a development team: in alphabetical order,
+Piero Basini,
+Ebru Bozdag,
 Emanuele Casarotti,
 Min Chen,
+Hom Nath Gharti,
 Vala Hj\"orleifsd\'ottir,
 Emiljana Jorgji,
+Sue Kientz,
 Dimitri Komatitsch,
 Jes\'us Labarta,
 Nicolas Le Goff,
@@ -118,9 +122,11 @@ Pieyre Le Loher,
 Qinya Liu,
 Yang Luo,
 Alessia Maggi,
+Federica Magnoni,
 Roland Martin,
 Dennis McRitchie,
 David Mich\'ea,
+Tarje Nissen-Meyer,
 Daniel Peter,
 Brian Savage,
 Leif Strand,
@@ -206,7 +212,7 @@ The next release will use the PT-Scotch parallel library for mesh partitioning.
 \section{Citation}
 
 If you use SPECFEM3D for your own research, please cite at least one
-of the following articles: 
+of the following articles:
 
 %\cite{TrKoLi08,VaCaSaKoVi99,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,KoMiEr09,KoErGoMi10,KoGoErMi10,WiKoScTr04,KoLiTrSuStSh04,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
 
@@ -223,18 +229,18 @@ of the following articles:
 \item [Southern California simulations] ~\\
 \cite{KoLiTrSuStSh04,KrJiKoTr06a,KrJiKoTr06b}.
 
-If you use the 3D southern California model, please cite 
-\citet{SuSh03} (Los Angeles model), 
+If you use the 3D southern California model, please cite
+\citet{SuSh03} (Los Angeles model),
 \citet{lovelyetal06} (Salton Trough), and
 \citet{hauksson2000} (southern California).
-The Moho map was determined by 
-\citet{zhu&kanamori2000}. 
+The Moho map was determined by
+\citet{zhu&kanamori2000}.
 The 1D SoCal model was developed by \citet{DrHe90}.
 
 \end{description}
 
 \noindent
-If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others: 
+If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others:
 
 \begin{description}
 
@@ -532,14 +538,14 @@ to load-balance the mesh. Please see the next section for further details.
 \subsubsection*{Checking the mesh quality}
 The quality of the mesh may be inspected more precisely based upon the serial code
 in the file  ~\\
-\texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}. 
+\texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}.
 Running this code is optional because no information needed by the
 solver is generated.
 
 
 Prior to running and compiling this code, you have to export your mesh in CUBIT to an ABAQUS (.inp) format.
 You also have to determine a number of parameters of your mesh, such as the number of nodes and number of elements
-and modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90} source file. Then, 
+and modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90} source file. Then,
 in the directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus}, type
 \begin{lyxcode}
 {\small ./compile\_all.csh}{\small \par}
@@ -749,14 +755,14 @@ In the following lines, because the mesh is regular or 'almost regular', each re
 The \texttt{INTERFACES\_FILE} parameter of \texttt{Mesh\_Par\_File} defines the file which contains the settings of the topography grid and of the interfaces grids. Topography is defined as a set of elevation values on a regular 2D grid. It is also possible to
 define interfaces between the layers of the model in the same way.
 The file needs to define several parameters:
-\begin{itemize} 
+\begin{itemize}
 \item The number of interfaces, including the topography. This needs to be set at the first line. Then, from the bottom
-to the top of the model, you need to define the grids with: 
-\item \texttt{SUPPRESS\_UTM\_PROJECTION} flag as described previously, 
-\item number of points along $x$ and $y$ direction (NXI and NETA), 
-\item minimal $x$ and $y$ coordinates (LONG\_MIN and LAT\_MIN), 
-\item spacing between points along $x$ and $y$ (SPACING\_XI and SPACING\_ETA) and 
-\item the name of the file which contains the elevation values (in $y$.$x$ increasing order). 
+to the top of the model, you need to define the grids with:
+\item \texttt{SUPPRESS\_UTM\_PROJECTION} flag as described previously,
+\item number of points along $x$ and $y$ direction (NXI and NETA),
+\item minimal $x$ and $y$ coordinates (LONG\_MIN and LAT\_MIN),
+\item spacing between points along $x$ and $y$ (SPACING\_XI and SPACING\_ETA) and
+\item the name of the file which contains the elevation values (in $y$.$x$ increasing order).
 \end{itemize}
 At the end of this file, you simply need to set the number of spectral elements in the vertical direction for each layer. We provide a few models in the {\texttt{examples/}} directory.  \\
 
@@ -783,7 +789,7 @@ Mesher output is provided in the \texttt{in\_out\_files/OUTPUT\_FILES} directory
 in \texttt{output\_mesher.txt}; this file provides lots of details
 about the mesh that was generated. Please note that the mesher suggests a time step \texttt{DT} to run
 the solver with. The mesher output file also contains a table about the quality of the mesh to indicate
-possible problems with the distortions of elements. 
+possible problems with the distortions of elements.
 Alternatively, output can be directed
 to the screen instead by uncommenting a line in \texttt{constants.h}:
 \begin{lyxcode}
@@ -1448,9 +1454,9 @@ of the finite-frequency kernels is discussed in Section~\ref{sec:Finite-Frequenc
 
 Besides earthquake simulations, SPECFEM3D includes functionality for seismic noise tomography as well.
 In order to proceed successfully in this chapter, it is critical that you have already familiarized yourself
-with procedures for meshing (Chapter \ref{cha:Mesh-Generation}), 
+with procedures for meshing (Chapter \ref{cha:Mesh-Generation}),
 creating distributed databases (Chapter \ref{cha:Creating-Distributed-Databases}),
-running earthquake simulations (Chapters \ref{cha:Running-the-Solver}) 
+running earthquake simulations (Chapters \ref{cha:Running-the-Solver})
 and adjoint simulations (Chapter \ref{cha:Adjoint-Simulations}).
 Also, make sure you read the paper `Noise cross-correlation sensitivity kernels' \citep{trompetal2010},
 in order to understand noise simulations from a theoretical perspective.
@@ -1463,7 +1469,7 @@ Unless otherwise specified, those input files should be located in directory \te
 \texttt{CMTSOLUTION} is required for all simulations.
 At a first glance, it may seem unexpected to have it here,
 since the noise simulations should have nothing to do with the earthquake -- \texttt{CMTSOLUTION}.
-However, for noise simulations, it is critical to have no earthquakes. 
+However, for noise simulations, it is critical to have no earthquakes.
 In other words, the moment tensor specified in \texttt{CMTSOLUTION} must be set to zero manually!\\
 
 \texttt{STATIONS} remains the same as in previous earthquake simulations,
@@ -1495,9 +1501,9 @@ The third step is for kernel constructions. Hence \texttt{SIMULATION\_TYPE} shou
 \texttt{SAVE\_FORWARD} must be \texttt{.false.}.\\
 
 Finally, for most system architectures,
-please make sure that \texttt{LOCAL\_PATH} in \texttt{Par\_file} is in fact local, not globally shared. 
+please make sure that \texttt{LOCAL\_PATH} in \texttt{Par\_file} is in fact local, not globally shared.
 Because we have to save the wavefields at the earth's surface at every time step,
-it is quite problematic to have a globally shared \texttt{LOCAL\_PATH}, 
+it is quite problematic to have a globally shared \texttt{LOCAL\_PATH},
 in terms of both disk storage and I/O speed.
 
 
@@ -1585,7 +1591,7 @@ the order of receivers in \texttt{in\_data\_files/STATIONS} is important.
 Note that in regional simulations, the \texttt{in\_data\_files/STATIONS}
 might contain receivers which are outside of our computational domains.
 Therefore, the integer in \texttt{irec\_master\_noise}
-is actually the ID in \texttt{in\_data\_files/STATIONS\_FILTERED} 
+is actually the ID in \texttt{in\_data\_files/STATIONS\_FILTERED}
 (which is generated by \texttt{bin/xgenerate\_databases}).
 
 \item
@@ -1641,7 +1647,7 @@ and other necessary files, as well as how adjoint simulations work.
 
 \end{itemize}
 
-Note that it's better to run the three steps continuously within the same job, 
+Note that it's better to run the three steps continuously within the same job,
 otherwise you have to collect the saved surface movies from the old nodes/CPUs to the new nodes/CPUs.
 This process varies from cluster to cluster and thus cannot be discussed here.
 Please ask your cluster administrator for information/configuration of the cluster you are using.\\
@@ -1676,17 +1682,17 @@ using different forward and adjoint sources given in \citet{trompetal2010}.
 \section{Example}
 
 In order to illustrate noise simulations in an easy way, one example is provided in \texttt{examples/noise\_tomography/}.
-See \texttt{examples/noise\_tomography/README\_NOISE\_TOMOGRAPHY} for explanations. \\
+See \texttt{examples/noise\_tomography/README} for explanations. \\
 
 Note, however, that they are created for a specific workstation (CLOVER@PRINCETON),
 which has at least 4 cores with `mpif90' working properly. \\
 
 If your workstation is suitable, you can run the example in \texttt{examples/noise\_tomography/} using:\\
 
-\texttt{./pre-processing}\\
+\texttt{./pre-processing.sh}\\
 
 Even if this script does not work on your workstation, the procedure it describes is universal.
-You may review the whole process described in the last section by following the commands in \texttt{pre-processing},
+You may review the whole process described in the last section by following the commands in \texttt{pre-processing.sh},
 which should contain enough explanations for all the commands.
 %>YANGL
 
@@ -1697,7 +1703,7 @@ which should contain enough explanations for all the commands.
 
 In case you used the internal mesher \texttt{xmeshfem3D} to create and partition your mesh,
 you can output mesh files in ABAQUS (.INP) and DX (.dx) format to visualize them. For this, you must set either the
-flag \texttt{CREATE\_DX\_FILES} or \texttt{CREATE\_ABAQUS\_FILES} to \texttt{.true.}  
+flag \texttt{CREATE\_DX\_FILES} or \texttt{CREATE\_ABAQUS\_FILES} to \texttt{.true.}
 in the mesher's parameter file \texttt{Mesh\_Par\_file}
 prior to running the mesher (see Chapter~\ref{cha:Running-the-Mesher-Meshfem3D} for details).
 You can then use AVS \url{www.avs.com} or OpenDX \url{www.opendx.org}
@@ -1708,7 +1714,7 @@ to visualize the mesh and MPI partition (slices).
 %combine\_AVS\_DX}' and then `\texttt{xcombine\_AVS\_DX}') to generate
 %AVS \url{www.avs.com} output files (in AVS UCD format) or OpenDX \url{www.opendx.org}
 %output files showing the mesh, the MPI partition (slices), the $\nchunks$
-%chunks, the source and receiver location, etc. 
+%chunks, the source and receiver location, etc.
 %Use the AVS UCD files \texttt{AVS\_continent\_boundaries.inp} and \texttt{AVS\_plate\_boundaries.inp}
 %or the OpenDX files \texttt{DX\_continent\_boundaries.dx} and \texttt{DX\_plate\_boundaries.dx}
 %for reference.
@@ -1766,18 +1772,18 @@ When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
 flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{in\_out\_files/OUTPUT\_FILES} directory. The files are in a fairly complicated
 binary format, but there is a program provided to convert the
-output into more user friendly formats: 
+output into more user friendly formats:
 
 \begin{description}
-\item [\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}] 
+\item [\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}]
 From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90}, it
-outputs data in ASCII, OpenDX, or AVS format (also readable in ParaView). 
+outputs data in ASCII, OpenDX, or AVS format (also readable in ParaView).
 Before compiling the code, make sure you have the file \texttt{surface\_from\_mesher.h}
 in the  \texttt{in\_out\_files/OUTPUT\_FILES/} directory. This file will be created by the solver run.
 Then type `\texttt{make} \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT}'
 and run the executable \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
 in the \texttt{bin/} subdirectory. It will create visualization files in your format of choice. The code
-will prompt the user for input parameters. 
+will prompt the user for input parameters.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
@@ -1786,7 +1792,7 @@ will prompt the user for input parameters.
 \includegraphics[width=.32\textwidth]{figures/movie_surf_3.jpg}
 \par\end{centering}
 
-\caption{Visualization using AVS files created by \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT} showing 
+\caption{Visualization using AVS files created by \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT} showing
 movie snapshots of vertical velocity components at different times.}
 
 \label{fig:movie.surf}
@@ -2433,6 +2439,80 @@ and the Harvard CMT convention is
 \item the $y$ axis points East
 \item the $z$ axis points up
 \end{itemize}
+
+The SPECFEM3D software code internally uses Cartesian coordinates.
+%This requires to convert the given locations for sources and receiver locations.
+Sources and receiver locations are read in from the
+\texttt{CMTSOLUTION} and \texttt{STATIONS} file.
+Note that e.g. the \texttt{CMTSOLUTION} file denotes the location by "longitude/latitude/depth". We read in
+longitude as $x$ coordinate, latitude as $y$ coordinate.
+In case the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.false.}
+in the main parameter file (see Chapter~\ref{cha:Creating-Distributed-Databases}),
+the $x$/$y$ coordinates have to be given in degrees and are converted to Cartesian coordinates
+using a UTM conversion with the specified UTM zone.
+The value for depth (given in $km$ in \texttt{CMTSOLUTION}) or burial depth (given in $m$ in \texttt{STATIONS})
+is evaluated with respect to the surface of the mesh at the specified $x$/$y$ location to find the corresponding $z$ coordinate.
+It is possible to use this depth value directly as $z$ coordinate by
+changing the flag \texttt{USE\_SOURCES\_RECVS\_Z} to \texttt{.true.} in the file \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
+
+
+The seismogram output directions are given in Cartesian $x$/$y$/$z$ directions and not rotated any further.
+For the labeling of the seismograms, we name "$x$/$y$/$z$" to "BHE/BHN/BHZ" components.
+Changing flags in \texttt{constants.h} in the \texttt{src/shared/} subdirectory only rotates the seismogram outputs
+if receivers are forced to be located at the surface (\texttt{RECVS\_CAN\_BE\_BURIED\_EXT\_MESH} set to \texttt{.false.}) and the normal to the surface at the receiver location should be used (\texttt{EXT\_MESH\_RECV\_NORMAL} set to
+\texttt{.true.}) as vertical. In this case, the outputs are rotated to have the BHZ component normal to the surface of the mesh, BHE and BHN are somewhat arbitrary orthogonal directions along the surface.
+
+
+
+\chapter{\label{cha:Troubleshooting}Troubleshooting}
+
+
+\section*{FAQ}
+
+\begin{description}
+\item [configuration fails:]
+
+   Examine the log file 'config.log'. It contains detailed informations.
+   In many cases, the path's to these specific compiler commands F90,
+   CC and MPIF90 won't be correct if `./configure` fails.
+
+   Please make sure that you have a working installation of a Fortran compiler,
+   a C compiler and an MPI implementation. You should be able to compile this
+   little program code:
+
+\begin{lyxcode}
+
+      program main ~\\
+        include 'mpif.h' ~\\
+        integer, parameter :: CUSTOM\_MPI\_TYPE = MPI\_REAL ~\\
+        integer ier ~\\
+        call MPI\_INIT(ier) ~\\
+        call MPI\_BARRIER(MPI\_COMM\_WORLD,ier) ~\\
+        call MPI\_FINALIZE(ier) ~\\
+      end
+
+\end{lyxcode}
+
+
+\item [compilation fails stating:] ~\\
+\begin{lyxcode}
+    ...  ~\\
+    obj/program\_generate\_databases.o: In function `MAIN\_\_':  ~\\
+    program\_generate\_databases.f90:(.text+0x14): undefined reference to `\_gfortran\_set\_std'  ~\\
+    ...  ~\\
+\end{lyxcode}
+
+  Make sure you're pointing to the right 'mpif90' wrapper command.
+
+  Normally, this message will appear when you're mixing two different Fortran
+  compilers. That is, using e.g. gfortran to compile non-MPI files
+  and mpif90, wrapper provided for e.g. ifort, to compile MPI-files.
+
+  fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/bin/mpif90
+
+\end{description}
+
+
 
 \chapter{\label{cha:License}License }
 

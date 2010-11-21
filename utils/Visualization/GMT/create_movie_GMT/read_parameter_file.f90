@@ -55,14 +55,14 @@
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
-  character(len=150) LOCAL_PATH,MODEL,CMTSOLUTION
+  character(len=256) LOCAL_PATH,MODEL,CMTSOLUTION
 
 ! local variables
   integer ios,icounter,isource,idummy,NEX_MAX
 
   double precision DEPTH_BLOCK_KM,RECORD_LENGTH_IN_SECONDS,hdur,minval_hdur
 
-  character(len=150) dummystring
+  character(len=256) dummystring
 
   integer, external :: err_occurred
 

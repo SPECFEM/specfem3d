@@ -43,8 +43,8 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
   include "constants.h"
 
   integer :: NPOIN                    ! number of nodes
-  integer :: NSPEC 
-  double precision :: VP_MAX           ! maximum vp in volume block id 3 
+  integer :: NSPEC
+  double precision :: VP_MAX           ! maximum vp in volume block id 3
 
   !------------------------------------------------------------------------------------------------
 
@@ -54,25 +54,25 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
   integer, dimension(NGNOD,NSPEC) :: ibool
 
-  integer :: i,ispec,iread,ispec_min_edge_length,ispec_max_edge_length,ispec_max_skewness, &
-       ispec_max_skewness_MPI,ispec_begin,ispec_end,ispec_to_output,ier,skewness_max_rank,NSPEC_ALL_SLICES
+  integer :: ispec,ispec_min_edge_length,ispec_max_edge_length,ispec_max_skewness, &
+       ispec_max_skewness_MPI,skewness_max_rank,NSPEC_ALL_SLICES
 
   ! for quality of mesh
   double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
   double precision :: equiangle_skewness_min,edge_aspect_ratio_min,diagonal_aspect_ratio_min
   double precision :: equiangle_skewness_max,edge_aspect_ratio_max,diagonal_aspect_ratio_max
-  double precision :: skewness_AVS_DX_min,skewness_AVS_DX_max,distance_min,distance_max
+  double precision :: distance_min,distance_max
   double precision :: distmin,distmax
 
-  double precision :: equiangle_skewness_min_MPI,edge_aspect_ratio_min_MPI,diagonal_aspect_ratio_min_MPI
+  !double precision :: equiangle_skewness_min_MPI,edge_aspect_ratio_min_MPI,diagonal_aspect_ratio_min_MPI
   double precision :: equiangle_skewness_max_MPI,edge_aspect_ratio_max_MPI,diagonal_aspect_ratio_max_MPI
-  double precision :: skewness_AVS_DX_min_MPI,skewness_AVS_DX_max_MPI,distance_min_MPI,distance_max_MPI
-  double precision :: distmin_MPI,distmax_MPI
-
+  double precision :: distance_min_MPI,distance_max_MPI
+  !double precision :: distmin_MPI,distmax_MPI,skewness_AVS_DX_max_MPI,skewness_AVS_DX_max
+  ! double precision :: skewness_AVS_DX_min_MPI,skewness_AVS_DX_min
   ! for stability
   double precision :: dt_suggested,dt_suggested_max,dt_suggested_max_MPI
   double precision :: stability,stability_min,stability_max,max_CFL_stability_limit
-  double precision :: stability_MPI,stability_min_MPI,stability_max_MPI,max_CFL_stability_limit_MPI
+  double precision :: stability_max_MPI !,max_CFL_stability_limit_MPI,stability_MPI,stability_min_MPI
 
   ! For MPI maxloc reduction
   double precision, dimension(2) :: buf_maxloc_send,buf_maxloc_recv
@@ -85,10 +85,10 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
   double precision :: current_percent,total_percent
 
   ! to export elements that have a certain skewness range to OpenDX
-  integer :: ntotspecAVS_DX
-  logical :: USE_OPENDX
+  !integer :: ntotspecAVS_DX
+  !logical :: USE_OPENDX
 
-  character(len=256):: line
+  !character(len=256):: line
 
 
   if (myrank == 0) then
@@ -151,7 +151,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
   call max_all_dp(distance_max,distance_max_MPI)
 
   buf_maxloc_send(1) = equiangle_skewness_max
-  buf_maxloc_send(2) = myrank 
+  buf_maxloc_send(2) = myrank
   call maxloc_all_dp(buf_maxloc_send,buf_maxloc_recv)
   equiangle_skewness_max_MPI = buf_maxloc_recv(1)
   skewness_max_rank = int(buf_maxloc_recv(2))
@@ -162,8 +162,8 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
   call max_all_dp(edge_aspect_ratio_max,edge_aspect_ratio_max_MPI)
   call max_all_dp(diagonal_aspect_ratio_max,diagonal_aspect_ratio_max_MPI)
-  
- 
+
+
 
   if((myrank == skewness_max_rank) .and. (myrank /= 0)) then
      call send_i(ispec_max_skewness,1,0)
@@ -343,7 +343,7 @@ subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_s
 
   include "constants.h"
 
-  integer :: true_NGLLX = 5 
+  integer :: true_NGLLX = 5
 
   integer :: iface,icorner,ispec,NSPEC,NPOIN,i
 

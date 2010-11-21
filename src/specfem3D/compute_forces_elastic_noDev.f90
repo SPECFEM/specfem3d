@@ -49,7 +49,7 @@ subroutine compute_forces_elastic_noDev( iphase, &
                         phase_ispec_inner_elastic  )
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
-                      NUM_REGIONS_ATTENUATION,N_SLS,SAVE_MOHO_MESH, &
+                      N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS
 
   implicit none

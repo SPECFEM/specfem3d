@@ -280,7 +280,7 @@
 
   integer :: nglob,nglob_total,nspec_total
 
-  integer,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
+  logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
 
 ! flag for noise simulation
@@ -428,7 +428,7 @@
   !<YANGL
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-  ! 
+  !
   if ( NOISE_TOMOGRAPHY /= 0 ) then
     MOVIE_SURFACE = .true.
     CREATE_SHAKEMAP = .false.

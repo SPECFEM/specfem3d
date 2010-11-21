@@ -67,9 +67,9 @@ contains
     integer, dimension(2) :: ner_doublings
 
     double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
-    double precision horiz_size,vert_size
+    !double precision horiz_size,vert_size
 
-    character(len=150) LOCAL_PATH
+    character(len=256) LOCAL_PATH
 
     integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
@@ -93,11 +93,11 @@ contains
     integer true_material_num(nspec)
     integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
-    !  definition of the different regions of the model in the mesh (nx,ny,nz) 
-    !  #1 #2 : nx_begining,nx_end  
-    !  #3 #4 : ny_begining,ny_end 
-    !  #5 #6 : nz_begining,nz_end   
-    !     #7 : material number 
+    !  definition of the different regions of the model in the mesh (nx,ny,nz)
+    !  #1 #2 : nx_begining,nx_end
+    !  #3 #4 : ny_begining,ny_end
+    !  #5 #6 : nz_begining,nz_end
+    !     #7 : material number
     integer subregions(nsubregions,7)
 
     ! layers of the model
@@ -134,12 +134,12 @@ contains
     logical, dimension(:,:), allocatable :: iMPIcut_xi,iMPIcut_eta
 
     ! name of the database file
-    character(len=150) prname,prname2
+    character(len=256) prname !,prname2
 
     ! number of elements on the boundaries
     integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
 
-    integer i,j,k,ia,ispec,ispec_superbrick,itype_element,ipoin
+    integer i,j,k,ia,ispec,ispec_superbrick ! itype_element ,ipoin
     integer iproc_xi,iproc_eta
 
     ! flag indicating whether point is in the sediments
@@ -161,6 +161,14 @@ contains
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
 
+    ! to avoid compiler warnings
+    integer idummy
+    idummy = NSPEC2D_A_ETA
+    idummy = NSPEC2D_B_ETA
+    idummy = NSPEC2D_A_XI
+    idummy = NSPEC2D_B_XI
+    idummy = npx
+    idummy = npy
 
     ! **************
 
@@ -212,7 +220,7 @@ contains
           do iy = iy1,iy2,diy
              do ix = ix1,ix2,dix
 
-                material_num(ir,ix,iy) = imaterial_number 
+                material_num(ir,ix,iy) = imaterial_number
 
                 ! end of loop on all the mesh points in current subregion
              enddo
@@ -273,7 +281,7 @@ contains
 
                    true_material_num(ispec) = material_num(ir,ix,iy)
 
-                   ! store coordinates 
+                   ! store coordinates
                    call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
 
                    ! detect mesh boundaries
@@ -282,7 +290,7 @@ contains
                         iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
                         UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
 
-                else             ! Irregular subregion case 
+                else             ! Irregular subregion case
 
                    ! loop on all the elements in the mesh doubling superbrick
                    do ispec_superbrick = 1,nspec_sb
@@ -295,7 +303,7 @@ contains
 
                          xelm(ia) = xgrid(offset_z,offset_x,offset_y)
                          yelm(ia) = ygrid(offset_z,offset_x,offset_y)
-                         zelm(ia) = zgrid(offset_z,offset_x,offset_y)             
+                         zelm(ia) = zgrid(offset_z,offset_x,offset_y)
                       enddo
 
                       ! add one spectral element to the list and store its material number
@@ -308,7 +316,7 @@ contains
                       doubling_index = IFLAG_BASEMENT_TOPO
                       true_material_num(ispec) = material_num(ir,ix,iy)
 
-                      ! store coordinates 
+                      ! store coordinates
                       call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
 
                       ! detect mesh boundaries

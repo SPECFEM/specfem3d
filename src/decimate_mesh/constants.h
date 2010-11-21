@@ -113,7 +113,7 @@
 ! the scratch disk to save the state variables saved in the forward
 ! simulation, this can be a global scratch disk in case you run out of
 ! space on the local scratch disk
-  character(len=150), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
+  character(len=256), parameter :: LOCAL_PATH_Q = '/ibrixfs1/scratch/lqy/DATABASES_MPI_Q/'
 
 !------------------------------------------------------
 ! nlegoff -- Variables that should be read/computed elsewhere.
@@ -126,7 +126,7 @@
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .true.
   logical, parameter :: FASTER_SOURCES_POINTS_ONLY = .true.
 
-! the receivers can be located inside the model 
+! the receivers can be located inside the model
   logical, parameter :: RECVS_CAN_BE_BURIED_EXT_MESH = .false.
   logical, parameter :: SOURCES_CAN_BE_BURIED_EXT_MESH = .false.
 

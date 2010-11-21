@@ -32,12 +32,12 @@
 
 ! locates sources and determines simulation start time t0
   call setup_sources()
- 
+
 ! reads in stations file and locates receivers
   call setup_receivers()
 
 ! pre-compute source arrays
-  call setup_sources_precompute_arrays()  
+  call setup_sources_precompute_arrays()
 
 ! pre-compute receiver interpolation factors
   call setup_receivers_precompute_intp()
@@ -45,34 +45,34 @@
 ! write source and receiver VTK files for Paraview
   call setup_sources_receivers_VTKfile()
 
-! user output  
+! user output
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)
     write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
-    if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'    
+    if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
   endif
 
 end subroutine setup_sources_receivers
-  
+
 !
 !-------------------------------------------------------------------------------------------------
-!  
-  
+!
+
 subroutine setup_sources()
 
   use specfem_par
   use specfem_par_acoustic
-  use specfem_par_elastic  
+  use specfem_par_elastic
   use specfem_par_movie
   implicit none
-  
+
   double precision :: t0_ac
   integer :: yr,jda,ho,mi
   integer :: isource,ispec
-  
+
 ! allocate arrays for source
   allocate(islice_selected_source(NSOURCES))
   allocate(ispec_selected_source(NSOURCES))
@@ -95,7 +95,7 @@ subroutine setup_sources()
 ! locate sources in the mesh
 !
 ! returns:  islice_selected_source & ispec_selected_source,
-!                xi_source, eta_source & gamma_source 
+!                xi_source, eta_source & gamma_source
   call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
           t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
@@ -124,15 +124,15 @@ subroutine setup_sources()
   hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! define t0 as the earliest start time
-  ! note: an earlier start time also reduces numerical noise due to a 
+  ! note: an earlier start time also reduces numerical noise due to a
   !          non-zero offset at the beginning of the source time function
-  t0 = - 2.0d0 * minval(t_cmt-hdur)   ! - 1.5d0 * minval(t_cmt-hdur)  
+  t0 = - 2.0d0 * minval(t_cmt-hdur)   ! - 1.5d0 * minval(t_cmt-hdur)
 
   ! uses an earlier start time if source is acoustic with a gaussian source time function
   t0_ac = 0.0d0
-  do isource = 1,NSOURCES  
-    if( myrank == islice_selected_source(isource) ) then    
-      ispec = ispec_selected_source(isource)      
+  do isource = 1,NSOURCES
+    if( myrank == islice_selected_source(isource) ) then
+      ispec = ispec_selected_source(isource)
       if( ispec_is_acoustic(ispec) ) then
         t0_ac = - 3.0d0 * ( t_cmt(isource) - hdur(isource) )
         if(  t0_ac > t0 ) t0 = t0_ac
@@ -147,14 +147,14 @@ subroutine setup_sources()
 
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
-  
+
 end subroutine setup_sources
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
-  
+
 subroutine setup_sources_check_acoustic()
 
 ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
@@ -162,96 +162,96 @@ subroutine setup_sources_check_acoustic()
   use specfem_par
   use specfem_par_acoustic
   implicit none
-  
+
   integer :: isource,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
   logical :: is_on,is_on_all
 
 ! outputs a warning in case of an acoustic source lying on the free surface
   do isource = 1,NSOURCES
-    ! checks if source is close to face 
-    is_on = .false. 
-  
-    ! only receivers in this process  
+    ! checks if source is close to face
+    is_on = .false.
+
+    ! only receivers in this process
     if( myrank == islice_selected_source(isource) ) then
 
       ispec = ispec_selected_source(isource)
       ! only if receiver is in an acoustic element
       if( ispec_is_acoustic(ispec) ) then
-                  
+
         ! checks with free surface face
         do iface = 1,num_free_surface_faces
-  
+
           if( ispec == free_surface_ispec(iface) ) then
-          
-            ! determine face 
+
+            ! determine face
             ixmin = minval( free_surface_ijk(1,:,iface) )
             ixmax = maxval( free_surface_ijk(1,:,iface) )
-           
+
             iymin = minval( free_surface_ijk(2,:,iface) )
             iymax = maxval( free_surface_ijk(2,:,iface) )
-           
+
             izmin = minval( free_surface_ijk(3,:,iface) )
             izmax = maxval( free_surface_ijk(3,:,iface) )
-           
+
             if( .not. USE_FORCE_POINT_SOURCE ) then
-              ! xmin face 
+              ! xmin face
               if(ixmin==1 .and. ixmax==1) then
                 if( xi_source(isource) < -0.99d0) is_on = .true.
-              ! xmax face 
+              ! xmax face
               else if(ixmin==NGLLX .and. ixmax==NGLLX) then
                 if( xi_source(isource) > 0.99d0) is_on = .true.
-              ! ymin face 
+              ! ymin face
               else if(iymin==1 .and. iymax==1) then
                 if( eta_source(isource) < -0.99d0) is_on = .true.
-              ! ymax face 
+              ! ymax face
               else if(iymin==NGLLY .and. iymax==NGLLY) then
                 if( eta_source(isource) > 0.99d0) is_on = .true.
-              ! zmin face 
+              ! zmin face
               else if(izmin==1 .and. izmax==1 ) then
                 if( gamma_source(isource) < -0.99d0) is_on = .true.
-              ! zmax face 
+              ! zmax face
               else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
                 if( gamma_source(isource) > 0.99d0) is_on = .true.
               endif
             else
-              ! note: for use_force_point_source xi/eta/gamma_source values are in the range [1,NGLL*]            
-              ! xmin face 
+              ! note: for use_force_point_source xi/eta/gamma_source values are in the range [1,NGLL*]
+              ! xmin face
               if(ixmin==1 .and. ixmax==1) then
                 if( nint(xi_source(isource)) == 1) is_on = .true.
-              ! xmax face 
+              ! xmax face
               else if(ixmin==NGLLX .and. ixmax==NGLLX) then
                 if( nint(xi_source(isource)) == NGLLX) is_on = .true.
-              ! ymin face 
+              ! ymin face
               else if(iymin==1 .and. iymax==1) then
                 if( nint(eta_source(isource)) == 1) is_on = .true.
-              ! ymax face 
+              ! ymax face
               else if(iymin==NGLLY .and. iymax==NGLLY) then
                 if( nint(eta_source(isource)) == NGLLY) is_on = .true.
-              ! zmin face 
+              ! zmin face
               else if(izmin==1 .and. izmax==1 ) then
                 if( nint(gamma_source(isource)) == 1) is_on = .true.
-              ! zmax face 
+              ! zmax face
               else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
                 if( nint(gamma_source(isource)) ==NGLLZ) is_on = .true.
-              endif              
+              endif
             endif
-            
+
           endif ! free_surface_ispec
         enddo ! iface
       endif ! ispec_is_acoustic
     endif ! islice_selected_rec
-    
-    ! user output    
+
+    ! user output
     call any_all_l( is_on, is_on_all )
-    if( myrank == 0 .and. is_on_all ) then       
+    if( myrank == 0 .and. is_on_all ) then
       write(IMAIN,*) '**********************************************************************'
       write(IMAIN,*) '*** source: ',isource,'                                          ***'
       write(IMAIN,*) '*** Warning: acoustic source located exactly on the free surface ***'
       write(IMAIN,*) '*** will be zeroed                                                                           ***'
       write(IMAIN,*) '**********************************************************************'
       write(IMAIN,*)
-    endif    
-    
+    endif
+
   enddo ! num_free_surface_faces
 
 
@@ -259,17 +259,17 @@ end subroutine setup_sources_check_acoustic
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 subroutine setup_receivers()
 
   use specfem_par
   use specfem_par_acoustic
   implicit none
-  
+
   integer :: irec,isource !,ios
-  
-! reads in station file  
+
+! reads in station file
   if (SIMULATION_TYPE == 1) then
      call get_value_string(rec_filename, 'solver.STATIONS', &
           IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS')
@@ -349,13 +349,13 @@ subroutine setup_receivers()
 
 ! checks if acoustic receiver is exactly on the free surface because pressure is zero there
   call setup_receivers_check_acoustic()
-  
+
 end subroutine setup_receivers
 
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 subroutine setup_receivers_check_acoustic()
 
@@ -364,66 +364,66 @@ subroutine setup_receivers_check_acoustic()
   use specfem_par
   use specfem_par_acoustic
   implicit none
-  
+
   integer :: irec,ixmin,ixmax,iymin,iymax,izmin,izmax,iface,ispec
   logical :: is_on,is_on_all
 
 ! outputs a warning in case the receiver is lying on the free surface
   do irec = 1,nrec
-  
-    ! checks if receiver is close to face 
-    is_on = .false. 
-  
-    ! only receivers in this process  
+
+    ! checks if receiver is close to face
+    is_on = .false.
+
+    ! only receivers in this process
     if( myrank == islice_selected_rec(irec) ) then
 
       ispec = ispec_selected_rec(irec)
       ! only if receiver is in an acoustic element
       if( ispec_is_acoustic(ispec) ) then
-        
+
         ! checks with free surface face
         do iface = 1,num_free_surface_faces
-  
+
           if( ispec == free_surface_ispec(iface) ) then
-          
-            ! determine face 
+
+            ! determine face
             ixmin = minval( free_surface_ijk(1,:,iface) )
             ixmax = maxval( free_surface_ijk(1,:,iface) )
-           
+
             iymin = minval( free_surface_ijk(2,:,iface) )
             iymax = maxval( free_surface_ijk(2,:,iface) )
-           
+
             izmin = minval( free_surface_ijk(3,:,iface) )
             izmax = maxval( free_surface_ijk(3,:,iface) )
-           
-            ! xmin face 
+
+            ! xmin face
             if(ixmin==1 .and. ixmax==1) then
               if( xi_receiver(irec) < -0.99d0) is_on = .true.
-            ! xmax face 
+            ! xmax face
             else if(ixmin==NGLLX .and. ixmax==NGLLX) then
               if( xi_receiver(irec) > 0.99d0) is_on = .true.
-            ! ymin face 
+            ! ymin face
             else if(iymin==1 .and. iymax==1) then
               if( eta_receiver(irec) < -0.99d0) is_on = .true.
-            ! ymax face 
+            ! ymax face
             else if(iymin==NGLLY .and. iymax==NGLLY) then
               if( eta_receiver(irec) > 0.99d0) is_on = .true.
-            ! zmin face 
+            ! zmin face
             else if(izmin==1 .and. izmax==1 ) then
               if( gamma_receiver(irec) < -0.99d0) is_on = .true.
-            ! zmax face 
+            ! zmax face
             else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
               if( gamma_receiver(irec) > 0.99d0) is_on = .true.
             endif
-                
+
           endif ! free_surface_ispec
         enddo ! iface
       endif ! ispec_is_acoustic
     endif ! islice_selected_rec
-    
-    ! user output    
+
+    ! user output
     call any_all_l( is_on, is_on_all )
-    if( myrank == 0 .and. is_on_all ) then       
+    if( myrank == 0 .and. is_on_all ) then
       write(IMAIN,*) '**********************************************************************'
       write(IMAIN,*) '*** station:',irec,'                                          ***'
       write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
@@ -431,7 +431,7 @@ subroutine setup_receivers_check_acoustic()
       write(IMAIN,*) '**********************************************************************'
       write(IMAIN,*)
     endif
-        
+
   enddo ! num_free_surface_faces
 
 end subroutine setup_receivers_check_acoustic
@@ -439,25 +439,25 @@ end subroutine setup_receivers_check_acoustic
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
-  
+!
+
 subroutine setup_sources_precompute_arrays()
-  
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   implicit none
-  
+
   real(kind=CUSTOM_REAL) :: factor_source
   real(kind=CUSTOM_REAL) :: junk
   integer :: isource,ispec
-  integer :: irec,irec_local
+  integer :: irec !,irec_local
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
   character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
-  character(len=150) :: filename
+  character(len=256) :: filename
 
-  
-! forward simulations  
+
+! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
     allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
@@ -471,9 +471,9 @@ subroutine setup_sources_precompute_arrays()
 
       !   compute source arrays in source slice
       if(myrank == islice_selected_source(isource)) then
-      
+
         ispec = ispec_selected_source(isource)
-        
+
         ! elastic moment tensor source
         if( ispec_is_elastic(ispec) ) then
           call compute_arrays_source(ispec, &
@@ -482,10 +482,10 @@ subroutine setup_sources_precompute_arrays()
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         xigll,yigll,zigll,NSPEC_AB)
         endif
-        
-        ! acoustic case 
+
+        ! acoustic case
         if( ispec_is_acoustic(ispec) ) then
-          ! scalar moment of moment tensor values read in from CMTSOLUTION 
+          ! scalar moment of moment tensor values read in from CMTSOLUTION
           ! note: M0 by Dahlen and Tromp, eq. 5.91
           factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
                                     + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
@@ -499,27 +499,27 @@ subroutine setup_sources_precompute_arrays()
           call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&
                         sourcearray,xigll,yigll,zigll,factor_source)
         endif
-        
+
         ! stores source excitations
         sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
-        
+
       endif
     enddo
   endif
 
-! ADJOINT simulations  
+! ADJOINT simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-  
+
     ! counts local receivers which become adjoint sources
     nadj_rec_local = 0
     ! temporary counter to check if any files are found at all
-    nadj_files_found = 0    
+    nadj_files_found = 0
     do irec = 1,nrec
       if( myrank == islice_selected_rec(irec) ) then
         ! checks that the source slice number is okay
         if(islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
               call exit_MPI(myrank,'something is wrong with the source slice number in adjoint simulation')
-              
+
         ! updates counter
         nadj_rec_local = nadj_rec_local + 1
 
@@ -532,7 +532,7 @@ subroutine setup_sources_precompute_arrays()
           if( ier == 0 ) then
             ! checks length of file
             itime = 0
-            do while(ier == 0) 
+            do while(ier == 0)
               read(IIN,*,iostat=ier) junk,junk
               if( ier == 0 ) itime = itime + 1
             enddo
@@ -542,7 +542,7 @@ subroutine setup_sources_precompute_arrays()
             nadj_files_found = nadj_files_found + 1
           endif
           close(IIN)
-        enddo        
+        enddo
       endif
     enddo
     ! checks if any adjoint source files found at all
@@ -570,9 +570,9 @@ subroutine setup_sources_precompute_arrays()
     !!!   if( myrank == islice_selected_rec(irec) ) then
     !!!     irec_local = irec_local + 1
 
-    !!!     ! reads in **sta**.**net**.**BH**.adj files        
+    !!!     ! reads in **sta**.**net**.**BH**.adj files
     !!!     adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-    !!!     
+    !!!
     !!!     call compute_arrays_adjoint_source(myrank, adj_source_file, &
     !!!                       xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
     !!!                       adj_sourcearray, xigll,yigll,zigll,1,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
@@ -593,15 +593,15 @@ end subroutine setup_sources_precompute_arrays
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 subroutine setup_receivers_precompute_intp()
 
   use specfem_par
   implicit none
-  
+
   integer :: irec,irec_local,isource
-  
+
 ! stores local receivers interpolation factors
   if (nrec_local > 0) then
   ! allocate Lagrange interpolators for receivers
@@ -665,26 +665,26 @@ subroutine setup_receivers_precompute_intp()
       call exit_MPI(myrank,'problem when dispatching the receivers')
     endif
   endif
-  
+
 
 end subroutine setup_receivers_precompute_intp
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 subroutine setup_sources_receivers_VTKfile()
 
   use specfem_par
   implicit none
 
-  double precision :: shape3D(NGNOD)  
+  double precision :: shape3D(NGNOD)
   double precision :: xil,etal,gammal
   double precision :: xmesh,ymesh,zmesh
-  
-  real(kind=CUSTOM_REAL),dimension(NGNOD) :: xelm,yelm,zelm  
-  
+
+  real(kind=CUSTOM_REAL),dimension(NGNOD) :: xelm,yelm,zelm
+
   integer :: ia,ispec,isource,irec
-  
+
   if (myrank == 0) then
     ! vtk file
     open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
@@ -694,12 +694,12 @@ subroutine setup_sources_receivers_VTKfile()
     write(IOVTK,'(a)') 'DATASET POLYDATA'
     write(IOVTK, '(a,i6,a)') 'POINTS ', NSOURCES+nrec, ' float'
   endif
-  
+
   ! sources
-  do isource=1,NSOURCES    
+  do isource=1,NSOURCES
     ! spectral element id
     ispec = ispec_selected_source(isource)
-    
+
     ! gets element ancor nodes
     if( myrank == islice_selected_source(isource) ) then
       ! find the coordinates of the eight corner nodes of the element
@@ -719,7 +719,7 @@ subroutine setup_sources_receivers_VTKfile()
         call sendv_cr(zelm,NGNOD,0,0)
       endif
     endif
-    
+
     if( myrank == 0 ) then
       ! get the 3-D shape functions
       if( USE_FORCE_POINT_SOURCE ) then
@@ -733,12 +733,12 @@ subroutine setup_sources_receivers_VTKfile()
         etal = eta_source(isource)
         gammal = gamma_source(isource)
       endif
-      call get_shape3D_single(myrank,shape3D,xil,etal,gammal)            
+      call get_shape3D_single(myrank,shape3D,xil,etal,gammal)
 
       ! interpolates source locations
       xmesh = 0.0
       ymesh = 0.0
-      zmesh = 0.0      
+      zmesh = 0.0
       do ia=1,NGNOD
         xmesh = xmesh + shape3D(ia)*xelm(ia)
         ymesh = ymesh + shape3D(ia)*yelm(ia)
@@ -753,7 +753,7 @@ subroutine setup_sources_receivers_VTKfile()
   ! receivers
   do irec=1,nrec
     ispec = ispec_selected_rec(irec)
-          
+
     ! find the coordinates of the eight corner nodes of the element
     if( myrank == islice_selected_rec(irec) ) then
       call get_shape3D_element_corners(xelm,yelm,zelm,ispec,&
@@ -774,21 +774,21 @@ subroutine setup_sources_receivers_VTKfile()
 
     if( myrank == 0 ) then
       ! get the 3-D shape functions
-      if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then      
+      if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
         xil = xi_receiver(irec)
         etal = eta_receiver(irec)
         gammal = gamma_receiver(irec)
       else
         xil = xi_source(irec)
         etal = eta_source(irec)
-        gammal = gamma_source(irec)      
+        gammal = gamma_source(irec)
       endif
-      call get_shape3D_single(myrank,shape3D,xil,etal,gammal)            
-      
-      ! interpolates receiver locations        
+      call get_shape3D_single(myrank,shape3D,xil,etal,gammal)
+
+      ! interpolates receiver locations
       xmesh = 0.0
       ymesh = 0.0
-      zmesh = 0.0      
+      zmesh = 0.0
       do ia=1,NGNOD
         xmesh = xmesh + shape3D(ia)*xelm(ia)
         ymesh = ymesh + shape3D(ia)*yelm(ia)
@@ -796,10 +796,10 @@ subroutine setup_sources_receivers_VTKfile()
       enddo
 
       ! writes out to VTK file
-      write(IOVTK,*) xmesh,ymesh,zmesh      
+      write(IOVTK,*) xmesh,ymesh,zmesh
     endif
   enddo
-  
+
   ! closes vtk file
   if( myrank == 0 ) then
     write(IOVTK,*)

@@ -254,7 +254,7 @@ module specfem_par_elastic
 
 ! parameter module for elastic solver
 
-  use constants,only: CUSTOM_REAL,N_SLS,NUM_REGIONS_ATTENUATION
+  use constants,only: CUSTOM_REAL,N_SLS
   implicit none
 
   ! memory variables and standard linear solids for attenuation
