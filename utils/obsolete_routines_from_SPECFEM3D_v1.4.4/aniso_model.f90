@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -36,12 +37,12 @@
 
   include "constants.h"
 
-! see for example: 
+! see for example:
 !
-! M. Chen & J. Tromp, 2006. Theoretical & numerical investigations 
+! M. Chen & J. Tromp, 2006. Theoretical & numerical investigations
 ! of global and regional seismic wave propagation in weakly anisotropic earth models,
 ! GJI, 168, 1130-1152.
-  
+
 !------------------------------------------------------------------------------
 ! for anisotropy simulations in a halfspace model
 
@@ -49,7 +50,7 @@
 ! one-zeta term
   real(kind=CUSTOM_REAL), parameter :: FACTOR_CS1p_A = 0.2_CUSTOM_REAL
   real(kind=CUSTOM_REAL), parameter :: FACTOR_CS1sv_A = 0._CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: FACTOR_CS1sh_N = 0._CUSTOM_REAL  
+  real(kind=CUSTOM_REAL), parameter :: FACTOR_CS1sh_N = 0._CUSTOM_REAL
 ! three-zeta term
   real(kind=CUSTOM_REAL), parameter :: FACTOR_CS3_L = 0._CUSTOM_REAL
 
@@ -75,13 +76,13 @@
 
   !integer idoubling
   integer iflag_aniso
-  
+
   !real(kind=CUSTOM_REAL) zmesh
   real(kind=CUSTOM_REAL) rho,vp,vs
   real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36, &
                    c44,c45,c46,c55,c56,c66
-  
-! local parameters  
+
+! local parameters
   real(kind=CUSTOM_REAL) vpv,vph,vsv,vsh,eta_aniso
   real(kind=CUSTOM_REAL) aa,cc,nn,ll,ff
   real(kind=CUSTOM_REAL) A,C,F,AL,AN,Bc,Bs,Gc,Gs,Hc,Hs,Ec,Es,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3
@@ -106,7 +107,7 @@
   ll = rho*vsv*vsv
   ff = eta_aniso*(aa - 2.*ll)
 
-! Add anisotropic perturbation 
+! Add anisotropic perturbation
 
 ! notation: see Chen & Tromp, 2006, appendix A, page 1151
 !
@@ -132,7 +133,7 @@
 ! Bs = B_s
 ! Hc = H_c
 ! Hs =  H_s
-! 
+!
 ! three-zeta dependant terms:
 ! C3 = D_c
 ! S3 = D_s
@@ -148,8 +149,8 @@
     C = cc
     AN = nn
     AL = ll
-    F = ff  
-    
+    F = ff
+
     ! zeta-dependant terms
     C1p = 0._CUSTOM_REAL
     C1sv = 0._CUSTOM_REAL
@@ -157,22 +158,22 @@
     S1p = 0._CUSTOM_REAL
     S1sv = 0._CUSTOM_REAL
     S1sh = 0._CUSTOM_REAL
-    
+
     ! two-zeta dependant terms
     Gc = 0._CUSTOM_REAL
     Gs = 0._CUSTOM_REAL
 
     Bc = 0._CUSTOM_REAL
     Bs = 0._CUSTOM_REAL
-    
+
     Hc = 0._CUSTOM_REAL
     Hs = 0._CUSTOM_REAL
 
-    ! three-zeta dependant terms  
+    ! three-zeta dependant terms
     C3 = 0._CUSTOM_REAL
     S3 = 0._CUSTOM_REAL
 
-    ! four-zeta dependant terms  
+    ! four-zeta dependant terms
     Ec = 0._CUSTOM_REAL
     Es = 0._CUSTOM_REAL
   endif
@@ -202,12 +203,12 @@
     Bs = 0._CUSTOM_REAL
     Hs = 0._CUSTOM_REAL
 
-    ! three-zeta dependant terms  
+    ! three-zeta dependant terms
     C3 = FACTOR_CS3_L*ll
     S3 = 0._CUSTOM_REAL
 
-    ! four-zeta dependant terms  
-    Ec = FACTOR_E_N*nn    
+    ! four-zeta dependant terms
+    Ec = FACTOR_E_N*nn
     Es = 0._CUSTOM_REAL
   endif
 
@@ -236,15 +237,15 @@
     Bs = 0._CUSTOM_REAL
     Hs = 0._CUSTOM_REAL
 
-    ! three-zeta dependant terms  
+    ! three-zeta dependant terms
     C3 = FACTOR_CS3_L*ll
     S3 = 0._CUSTOM_REAL
 
-    ! four-zeta dependant terms  
-    Ec = FACTOR_E_N*nn    
+    ! four-zeta dependant terms
+    Ec = FACTOR_E_N*nn
     Es = 0._CUSTOM_REAL
   endif
-  
+
 
 ! The mapping from the elastic coefficients to the elastic tensor elements
 ! in the local Cartesian coordinate system (classical geographic) used in the

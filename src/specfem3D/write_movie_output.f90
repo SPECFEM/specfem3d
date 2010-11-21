@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,13 +29,13 @@
   subroutine write_movie_output()
 
   use specfem_par
-  use specfem_par_movie  
+  use specfem_par_movie
   implicit none
 
   ! shakemap creation
   if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
     call wmo_create_shakemap_em()
-  endif 
+  endif
 
   ! movie file creation
   if(EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
@@ -62,21 +63,21 @@
   endif
 
   end subroutine write_movie_output
-  
-  
-  
+
+
+
 !================================================================
-  
+
   subroutine wmo_create_shakemap_em()
 
 ! creation of shapemap file
-  
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_movie
   implicit none
-  
+
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: &
     displ_element,veloc_element,accel_element
   integer :: ipoin,ispec,iglob,ispec2D
@@ -103,7 +104,7 @@
           ! x,y,z coordinates
           store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
           store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = zstore(iglob)        
+          store_val_z_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = zstore(iglob)
         enddo
       endif
     enddo
@@ -111,8 +112,8 @@
 
 ! stores displacement, velocity and acceleration amplitudes
   do ispec2D = 1,nfaces_surface_ext_mesh
-    ispec = faces_surface_ext_mesh_ispec(ispec2D)    
-    
+    ispec = faces_surface_ext_mesh_ispec(ispec2D)
+
     if( ispec_is_acoustic(ispec) ) then
       ! displacement vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
@@ -131,30 +132,30 @@
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)                          
+                          ibool,rhostore)
     endif
 
-    
+
     ! high-resolution
     if (USE_HIGHRES_FOR_MOVIES) then
       do ipoin = 1, NGLLX*NGLLY
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! saves norm of displacement,velocity and acceleration vector
-        if( ispec_is_elastic(ispec) ) then            
+        if( ispec_is_elastic(ispec) ) then
           ! norm of displacement
           store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
                max(store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
                sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2))
-          ! norm of velocity     
+          ! norm of velocity
           store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
                max(store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
                sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
-          ! norm of acceleration     
+          ! norm of acceleration
           store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
                max(store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
                sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
         endif
-        
+
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! velocity vector
@@ -169,20 +170,20 @@
                         sqrt(displ_element(1,i,j,k)**2 &
                             + displ_element(2,i,j,k)**2 &
                             + displ_element(3,i,j,k)**2))
-                  ! norm of velocity     
+                  ! norm of velocity
                   store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
                     max(store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
                         sqrt(veloc_element(1,i,j,k)**2 &
                             + veloc_element(2,i,j,k)**2 &
                             + veloc_element(3,i,j,k)**2))
-                  ! norm of acceleration     
+                  ! norm of acceleration
                   store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
                     max(store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
                         sqrt(accel_element(1,i,j,k)**2 &
                             + accel_element(2,i,j,k)**2 &
                             + accel_element(3,i,j,k)**2))
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -190,19 +191,19 @@
             if( is_done ) exit
           enddo
         endif
-        
+
       enddo
     else
       ! low-resolution: only corner points outputted
       do ipoin = 1, 4
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! saves norm of displacement,velocity and acceleration vector
-        if( ispec_is_elastic(ispec) ) then                    
+        if( ispec_is_elastic(ispec) ) then
           ! norm of displacement
           store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
                 max(store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
                 sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2))
-          ! norm of velocity      
+          ! norm of velocity
           store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
                 max(store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
                 sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
@@ -211,7 +212,7 @@
                 max(store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
                 sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
         endif
-        
+
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! velocity vector
@@ -226,20 +227,20 @@
                         sqrt(displ_element(1,i,j,k)**2 &
                             + displ_element(2,i,j,k)**2 &
                             + displ_element(3,i,j,k)**2))
-                  ! norm of velocity     
+                  ! norm of velocity
                   store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
                     max(store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
                         sqrt(veloc_element(1,i,j,k)**2 &
                             + veloc_element(2,i,j,k)**2 &
                             + veloc_element(3,i,j,k)**2))
-                  ! norm of acceleration     
+                  ! norm of acceleration
                   store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
                     max(store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
                         sqrt(accel_element(1,i,j,k)**2 &
                             + accel_element(2,i,j,k)**2 &
                             + accel_element(3,i,j,k)**2))
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -251,7 +252,7 @@
     endif
   enddo
 
-! finalizes shakemap: master process collects all info   
+! finalizes shakemap: master process collects all info
   if (it == NSTEP) then
     if (USE_HIGHRES_FOR_MOVIES) then
       call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh*NGLLX*NGLLY,&
@@ -305,26 +306,26 @@
       close(IOUT)
     endif
   endif
-  
+
   end subroutine wmo_create_shakemap_em
-  
-  
+
+
 !================================================================
 
   subroutine wmo_create_movie_surface_em()
 
-! creation of moviedata files  
+! creation of moviedata files
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_movie  
+  use specfem_par_movie
   implicit none
-  
+
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: veloc_element
   integer :: ispec2D,ispec,ipoin,iglob,i,j,k
   logical :: is_done
-  
+
 ! initializes arrays for point coordinates
   if (it == NTSTEP_BETWEEN_FRAMES ) then
     do ispec2D = 1,nfaces_surface_ext_mesh
@@ -342,15 +343,15 @@
           ! x,y,z coordinates
           store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
           store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = zstore(iglob)                  
+          store_val_z_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = zstore(iglob)
         enddo
       endif
     enddo
   endif
-  
+
 ! saves surface velocities
   do ispec2D = 1,nfaces_surface_ext_mesh
-    ispec = faces_surface_ext_mesh_ispec(ispec2D)      
+    ispec = faces_surface_ext_mesh_ispec(ispec2D)
 
     if( ispec_is_acoustic(ispec) ) then
       ! velocity vector
@@ -360,18 +361,18 @@
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore)
     endif
-    
+
     if (USE_HIGHRES_FOR_MOVIES) then
       do ipoin = 1, NGLLX*NGLLY
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        ! saves velocity vector        
+        ! saves velocity vector
         if( ispec_is_elastic(ispec) ) then
           ! velocity x,y,z-components
           store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc(1,iglob)
           store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc(2,iglob)
           store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc(3,iglob)
         endif
-        
+
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
           ! velocity vector
@@ -384,7 +385,7 @@
                   store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc_element(2,i,j,k)
                   store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc_element(3,i,j,k)
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -396,14 +397,14 @@
     else
       do ipoin = 1, 4
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        ! saves velocity vector        
+        ! saves velocity vector
         if( ispec_is_elastic(ispec) ) then
           ! velocity x,y,z-components
           store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(1,iglob)
           store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(2,iglob)
-          store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(3,iglob)      
+          store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(3,iglob)
         endif
-        
+
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
           ! velocity vector
@@ -416,7 +417,7 @@
                   store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc_element(2,i,j,k)
                   store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc_element(3,i,j,k)
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -489,22 +490,22 @@
     write(IOUT) store_val_uz_all_external_mesh  ! velocity z-component
     close(IOUT)
   endif
-  
+
   end subroutine wmo_create_movie_surface_em
 
-    
+
 !=====================================================================
 
   subroutine wmo_movie_surface_output_o()
 
-! outputs moviedata files  
-  
+! outputs moviedata files
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_movie  
+  use specfem_par_movie
   implicit none
-  
+
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: val_element
   integer :: ispec,ipoin,iglob,i,j,k
   integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
@@ -516,12 +517,12 @@
     do iface=1,num_free_surface_faces
       ispec = free_surface_ispec(iface)
       ! high_resolution
-      if (USE_HIGHRES_FOR_MOVIES) then      
+      if (USE_HIGHRES_FOR_MOVIES) then
         do igll = 1, NGLLSQUARE
           ipoin = ipoin + 1
           i = free_surface_ijk(1,igll,iface)
           j = free_surface_ijk(2,igll,iface)
-          k = free_surface_ijk(3,igll,iface)      
+          k = free_surface_ijk(3,igll,iface)
           iglob = ibool(i,j,k,ispec)
           ! coordinates
           store_val_x_external_mesh(ipoin) = xstore(iglob)
@@ -534,8 +535,8 @@
         jmin = minval( free_surface_ijk(2,:,iface) )
         jmax = maxval( free_surface_ijk(2,:,iface) )
         kmin = minval( free_surface_ijk(3,:,iface) )
-        kmax = maxval( free_surface_ijk(3,:,iface) )      
-        do iloc = 1, NGNOD2D    
+        kmax = maxval( free_surface_ijk(3,:,iface) )
+        do iloc = 1, NGNOD2D
           ipoin = ipoin + 1
           ! corner points
           if( imin == imax ) then
@@ -554,12 +555,12 @@
     enddo
   endif
 
-  
+
   ! outputs values at free surface
   ipoin = 0
   do iface=1,num_free_surface_faces
     ispec = free_surface_ispec(iface)
-    
+
     if( ispec_is_acoustic(ispec) ) then
       if(SAVE_DISPLACEMENT) then
         ! displacement vector
@@ -567,7 +568,7 @@
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)      
+                          ibool,rhostore)
       else
         ! velocity vector
         call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
@@ -577,15 +578,15 @@
                           ibool,rhostore)
       endif
     endif
-    
-    
+
+
     ! high_resolution
-    if (USE_HIGHRES_FOR_MOVIES) then      
+    if (USE_HIGHRES_FOR_MOVIES) then
       do igll = 1, NGLLSQUARE
         ipoin = ipoin + 1
         i = free_surface_ijk(1,igll,iface)
         j = free_surface_ijk(2,igll,iface)
-        k = free_surface_ijk(3,igll,iface)      
+        k = free_surface_ijk(3,igll,iface)
         iglob = ibool(i,j,k,ispec)
         ! elastic displacement/velocity
         if( ispec_is_elastic(ispec) ) then
@@ -612,7 +613,7 @@
                   store_val_uy_external_mesh(ipoin) = val_element(2,i,j,k)
                   store_val_uz_external_mesh(ipoin) = val_element(3,i,j,k)
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -620,16 +621,16 @@
             if( is_done ) exit
           enddo
         endif
-        
+
       enddo
-    else    
+    else
       imin = minval( free_surface_ijk(1,:,iface) )
       imax = maxval( free_surface_ijk(1,:,iface) )
       jmin = minval( free_surface_ijk(2,:,iface) )
       jmax = maxval( free_surface_ijk(2,:,iface) )
       kmin = minval( free_surface_ijk(3,:,iface) )
-      kmax = maxval( free_surface_ijk(3,:,iface) )      
-      do iloc = 1, NGNOD2D    
+      kmax = maxval( free_surface_ijk(3,:,iface) )
+      do iloc = 1, NGNOD2D
         ipoin = ipoin + 1
         ! corner points
         if( imin == imax ) then
@@ -652,7 +653,7 @@
              store_val_uz_external_mesh(ipoin) = veloc(3,iglob)
           endif
         endif
-        
+
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
           ! velocity vector
@@ -665,15 +666,15 @@
                   store_val_uy_external_mesh(ipoin) = val_element(2,i,j,k)
                   store_val_uz_external_mesh(ipoin) = val_element(3,i,j,k)
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
             enddo
             if( is_done ) exit
           enddo
-        endif        
-        
+        endif
+
       enddo ! iloc
     endif
   enddo ! iface
@@ -737,32 +738,32 @@
   endif
 
   end subroutine wmo_movie_surface_output_o
-  
-  
+
+
 !=====================================================================
 
   subroutine wmo_create_shakemap_o()
 
-! outputs shakemap file 
-  
+! outputs shakemap file
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_movie
-  
+
   implicit none
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: &
     displ_element,veloc_element,accel_element
   integer :: ipoin,ispec,iglob
   integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
   integer :: i,j,k
-  logical :: is_done  
+  logical :: is_done
 
-  ! outputs values on free surface  
+  ! outputs values on free surface
   ipoin = 0
   do iface=1,num_free_surface_faces
     ispec = free_surface_ispec(iface)
-    
+
     if( ispec_is_acoustic(ispec) ) then
       ! displacement vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
@@ -781,10 +782,10 @@
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)                          
+                          ibool,rhostore)
     endif
-    
-    
+
+
     ! save all points for high resolution, or only four corners for low resolution
     if(USE_HIGHRES_FOR_MOVIES) then
       do igll = 1, NGLLSQUARE
@@ -808,7 +809,7 @@
           store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
                                                 abs(accel(1,iglob)),abs(accel(2,iglob)))
         endif
-        
+
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! velocity vector
@@ -816,7 +817,7 @@
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then        
+                if( iglob == ibool(i,j,k,ispec) ) then
                   ! horizontal displacement
                   store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                                 abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
@@ -828,7 +829,7 @@
                                                 abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
 
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -836,8 +837,8 @@
             if( is_done ) exit
           enddo
         endif
-        
-      enddo    
+
+      enddo
     else
       imin = minval( free_surface_ijk(1,:,iface) )
       imax = maxval( free_surface_ijk(1,:,iface) )
@@ -854,13 +855,13 @@
           iglob = ibool(iorderi(iloc),jmin,iorderj(iloc),ispec)
         else
           iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
-        endif        
+        endif
         ! coordinates
         store_val_x_external_mesh(ipoin) = xstore(iglob)
         store_val_y_external_mesh(ipoin) = ystore(iglob)
         store_val_z_external_mesh(ipoin) = zstore(iglob)
         ! todo: are we only interested in the absolute maximum of horizontal (E,N) components?
-        if( ispec_is_elastic( ispec) ) then        
+        if( ispec_is_elastic( ispec) ) then
           store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                                   abs(displ(1,iglob)),abs(displ(2,iglob)))
           store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
@@ -876,7 +877,7 @@
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then        
+                if( iglob == ibool(i,j,k,ispec) ) then
                   ! horizontal displacement
                   store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                                 abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
@@ -888,7 +889,7 @@
                                                 abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
 
                   is_done = .true.
-                  exit                  
+                  exit
                 endif
               enddo
               if( is_done ) exit
@@ -896,7 +897,7 @@
             if( is_done ) exit
           enddo
         endif
-        
+
       enddo
     endif ! USE_HIGHRES_FOR_MOVIES
   enddo
@@ -959,29 +960,29 @@
 
   end subroutine wmo_create_shakemap_o
 
-    
+
 !=====================================================================
 
   subroutine wmo_movie_volume_output()
 
-! outputs movie files for div, curl and velocity  
-  
+! outputs movie files for div, curl and velocity
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_movie
   implicit none
-  
+
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: veloc_element
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB):: div_glob,curl_glob ! divergence and curl only in the global nodes
   integer :: ispec,i,j,k,l,iglob
   integer,dimension(NGLOB_AB) :: valency
-  
+
   ! saves velocity here to avoid static offset on displacement for movies
   velocity_x(:,:,:,:) = 0._CUSTOM_REAL
   velocity_y(:,:,:,:) = 0._CUSTOM_REAL
   velocity_z(:,:,:,:) = 0._CUSTOM_REAL
-  
+
   if( ACOUSTIC_SIMULATION ) then
     ! uses div as temporary array to store velocity on all gll points
     do ispec=1,NSPEC_AB
@@ -995,7 +996,7 @@
                         ibool,rhostore)
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
-      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)      
+      velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
     enddo
   endif ! acoustic
 
@@ -1006,7 +1007,7 @@
 
     do ispec=1,NSPEC_AB
       if( .not. ispec_is_elastic(ispec) ) cycle
-      
+
       ! calculates divergence and curl of velocity field
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -1071,7 +1072,7 @@
           do i = 1,NGLLX
             ! divergence \nabla \cdot \bf{v}
             div(i,j,k,ispec) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
-            ! curl 
+            ! curl
             curl_x(i,j,k,ispec) = dvzdyl(i,j,k) - dvydzl(i,j,k)
             curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
             curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
@@ -1082,7 +1083,7 @@
             velocity_z(i,j,k,ispec) = veloc(3,iglob)
 
             valency(iglob)=valency(iglob)+1
-            
+
             div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)
             curl_glob(iglob)=curl_glob(iglob)+0.5_CUSTOM_REAL*(curl_x(i,j,k,ispec)+curl_x(i,j,k,ispec)+curl_x(i,j,k,ispec))
           enddo
@@ -1094,7 +1095,7 @@
       div_glob(i)=div_glob(i)/valency(i)
       curl_glob(i)=curl_glob(i)/valency(i)
     enddo
-    
+
     write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) div_glob
@@ -1120,36 +1121,36 @@
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_z
     close(27)
-    
+
     !write(outputname,"('veloc_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
     !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     !write(27) veloc
     !close(27)
-  
+
   endif ! elastic
- 
+
   if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
     write(outputname,"('/proc',i6.6,'_velocity_N_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) velocity_x
-    close(27)  
+    close(27)
 
     write(outputname,"('/proc',i6.6,'_velocity_E_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) velocity_y
-    close(27)  
+    close(27)
 
     write(outputname,"('/proc',i6.6,'_velocity_Z_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) velocity_z
-    close(27)  
+    close(27)
 
     !write(outputname,"('/proc',i6.6,'_veloc_it',i6.6,'.bin')") myrank,it
     !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     !write(27) velocity_movie
-    !close(27)  
+    !close(27)
 
-  endif 
-  
+  endif
+
   end subroutine wmo_movie_volume_output
-    
+

@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -35,7 +36,7 @@
 
   include "constants.h"
   include "surface_from_mesher.h"
-  
+
 !-------------------------------------------------------------------------------------------------
 ! user parameters
 ! threshold in percent of the maximum below which we cut the amplitude
@@ -93,7 +94,7 @@
   character(len=256) OUTPUT_FILES,LOCAL_PATH
   integer NPROC
   integer ier
-  
+
 
 !--------------------------------------------
 !!!! NL NL for external meshes
@@ -106,7 +107,7 @@
   real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
 !--------------------------------------------
 !!!! NL NL
-  
+
   ! order of points representing the 2D square element
   integer,dimension(NGNOD2D_AVS_DX),parameter :: iorder = (/1,3,2,4/)
 
@@ -131,7 +132,7 @@
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
-    
+
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
@@ -168,9 +169,9 @@
   print *,'movie frames have been saved every ',NTSTEP_BETWEEN_FRAMES,' time steps'
   print *
   print *,'enter first time step of movie (e.g. 1, enter -1 for shaking map)'
-  read(5,*) it1  
+  read(5,*) it1
   if(it1 == 0 ) it1 = 1
-  if(it1 == -1) plot_shaking_map = .true.  
+  if(it1 == -1) plot_shaking_map = .true.
   if(.not. plot_shaking_map) then
     print *,'enter last time step of movie (e.g. ',NSTEP,')'
     read(5,*) it2
@@ -219,7 +220,7 @@
     print *,'1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp'
     print *
     read(5,*) inorm
-    if(inorm < 1 .or. inorm > 4) stop 'incorrect value of inorm'    
+    if(inorm < 1 .or. inorm > 4) stop 'incorrect value of inorm'
   endif
 
 ! file format flags
@@ -242,7 +243,7 @@
      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH * (NGLLX-1) * (NGLLY-1)
   else
      nspectot_AVS_max = NSPEC_SURFACE_EXT_MESH
-  endif  
+  endif
 
   ! maximum theoretical number of points at the surface
   npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
@@ -256,7 +257,7 @@
   allocate(mask_point(npointot))
   allocate(ireorder(npointot))
 
-  ! allocates data arrays  
+  ! allocates data arrays
   allocate(store_val_x(ilocnum))
   allocate(store_val_y(ilocnum))
   allocate(store_val_z(ilocnum))
@@ -312,7 +313,7 @@
         print*,'error: ',trim(OUTPUT_FILES)//trim(outputname)
         stop 'error opening moviedata file'
       endif
-      
+
       read(IOUT) store_val_x
       read(IOUT) store_val_y
       read(IOUT) store_val_z
@@ -340,7 +341,7 @@
               ycoord = store_val_y(ipoin)
               zcoord = store_val_z(ipoin)
 
-              ! note: 
+              ! note:
               ! for shakemaps: ux = norm displacement, uy = norm velocity, uz = norm acceleration
               ! for movies: ux = velocity x-component, uy = velocity y-component, uz = velocity z-component
               vectorx = store_val_ux(ipoin)
@@ -374,7 +375,7 @@
                   endif
                 endif
               else
-                ! movie            
+                ! movie
                 if(inorm == 1) then
                   ! norm of velocity
                   display(i,j) = sqrt(vectorz**2+vectory**2+vectorx**2)
@@ -383,10 +384,10 @@
                   display(i,j) = vectorx
                 else if( inorm == 3 ) then
                   ! velocity y-component
-                  display(i,j) = vectory              
+                  display(i,j) = vectory
                 else if( inorm == 4 ) then
                   ! velocity z-component
-                  display(i,j) = vectorz              
+                  display(i,j) = vectorz
                 endif
               endif
 
@@ -442,14 +443,14 @@
                 endif
 
               enddo
-              
+
               !if( j==1 .and. ispec==1) then
               !print*,'p1',xp(ieoff+1),yp(ieoff+1),zp(ieoff+1)
               !print*,'p2',xp(ieoff+2),yp(ieoff+2),zp(ieoff+2)
               !print*,'p3',xp(ieoff+3),yp(ieoff+3),zp(ieoff+3)
               !print*,'p4',xp(ieoff+4),yp(ieoff+4),zp(ieoff+4)
               !endif
-              
+
             enddo
           enddo
 
@@ -463,7 +464,7 @@
 
             ! accounts for different ordering of square points
             ilocnum = iorder(i)
-            
+
             ipoin = ipoin + 1
 
             xcoord = store_val_x(ipoin)
@@ -509,11 +510,11 @@
                 field_display(ilocnum+ieoff) = vectorx
               else if( inorm == 3 ) then
                 ! velocity y-component
-                field_display(ilocnum+ieoff) = vectory              
+                field_display(ilocnum+ieoff) = vectory
               else
                 ! velocity z-component
-                field_display(ilocnum+ieoff) = vectorz              
-              endif          
+                field_display(ilocnum+ieoff) = vectorz
+              endif
               ! takes norm of velocity vector
               !field_display(ilocnum+ieoff) =sqrt(vectorz**2+vectory**2+vectorx**2)
             endif
@@ -575,7 +576,7 @@
         ! normalize field to [0:1]
         if( abs(max_field_current - min_field_current) > TINYVAL ) &
           field_display(:) = (field_display(:) - min_field_current) / (max_field_current - min_field_current)
-          
+
         ! rescale to [-1,1]
         field_display(:) = 2.*field_display(:) - 1.
 
@@ -637,7 +638,7 @@
           write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
        else if(USE_GMT) then
           write(outputname,"('/gmt_shaking_map.xyz')")
-          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')      
+          open(unit=11,file=trim(OUTPUT_FILES)//outputname,status='unknown')
         else
           stop 'wrong output format selected'
         endif
@@ -663,7 +664,7 @@
 
 
       if(USE_GMT) then
-       
+
 ! output list of points
          mask_point = .false.
          do ispec=1,nspectot_AVS_max
@@ -679,7 +680,7 @@
                mask_point(ibool_number) = .true.
             enddo
          enddo
-         
+
       else
 
         ! output list of points

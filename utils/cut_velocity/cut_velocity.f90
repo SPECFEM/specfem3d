@@ -1,6 +1,6 @@
 program cut_velocity
 
-! this program cuts certain portion of the seismograms and converts them into 
+! this program cuts certain portion of the seismograms and converts them into
 ! the adjoint sources for generating banana-dougnut kernels.
 ! Qinya Liu, Caltech, May 2007
 !
@@ -22,7 +22,7 @@ program cut_velocity
   lrot = .false.
 
   ! reads in file arguments
-  do while (1 == 1) 
+  do while (1 == 1)
     call getarg(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
       print*,'Usage: '
@@ -30,18 +30,18 @@ program cut_velocity
       print*,'with'
       print*,'  t1: window start time'
       print*,'  t2: window end time'
-      print*,'  ifile: 0 = adjoint source calculated for each seismogram component'     
-      print*,'  ifile: 1 = adjoint source given by East component only'     
-      print*,'  ifile: 2 = adjoint source given by North component'     
-      print*,'  ifile: 3 = adjoint source given by Z component'     
-      print*,'  ifile: 4 = adjoint source given by rotated transversal component (requires baz)'     
-      print*,'  ifile: 5 = adjoint source given by rotated radial component (requires baz)'     
+      print*,'  ifile: 0 = adjoint source calculated for each seismogram component'
+      print*,'  ifile: 1 = adjoint source given by East component only'
+      print*,'  ifile: 2 = adjoint source given by North component'
+      print*,'  ifile: 3 = adjoint source given by Z component'
+      print*,'  ifile: 4 = adjoint source given by rotated transversal component (requires baz)'
+      print*,'  ifile: 5 = adjoint source given by rotated radial component (requires baz)'
       print*,'  E/N/Z-ascii-files : displacement traces stored as ascii files'
       print*,'  [baz]: (optional) back-azimuth, requires ifile = 4 or ifile = 5'
       stop 'cut_velocity t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
     endif
     if (trim(arg(i)) == '') exit
-    if (i == 1) then 
+    if (i == 1) then
       read(arg(i),*,iostat=ios) ts
       if (ios /= 0) stop 'Error reading ts'
     else if (i == 2) then
@@ -74,7 +74,7 @@ program cut_velocity
     if (ifile > 3 .or. ifile < 0) stop 'Error ifile should be between 0 - 3 when baz is not present'
     if (i /= 6) stop 'cut_velocity t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
   endif
-  
+
   ! user output
   print *, 'ifile = ', ifile, '  lrot = ', lrot
   print *, ' '
@@ -94,12 +94,12 @@ program cut_velocity
                  stop 'Error different t0, dt, nstep'
     endif
   enddo
-  print *, ' '  
+  print *, ' '
   print *, 'start time:',t0
   print *, 'time step:',dt
-  print *, 'number of steps:',nstep   
+  print *, 'number of steps:',nstep
   print *, ' '
- 
+
   ! component rotation
   if (lrot) then
     data(4,:) = costh * data(1,:) - sinth * data(2,:)
@@ -110,8 +110,8 @@ program cut_velocity
   else
     i1 = 1; i2 = 3
   endif
-    
-  ! loops over seismogram components 
+
+  ! loops over seismogram components
   do i = i1, i2
     ! start and end index
     is = (ts - t0) / dt + 1
@@ -119,7 +119,7 @@ program cut_velocity
     if (is < 1 .or. ie <= is .or. ie > nstep) then
       print *, 'Error in ts, te'; stop
     endif
-    
+
     ! time window (parabola shaped)
     tw(1:nstep) = 0.
     if( i == i1 ) open(44,file='plot_time_window.txt',status='unknown')
@@ -128,14 +128,14 @@ program cut_velocity
       if( i == i1 ) write(44,*) j,tw(j)
     enddo
     if( i == i1 ) close(44)
-    
+
     ! calculates velocity (by finite-differences)
     do itime = 2, nstep-1
        out(itime) =  (data(i,itime+1) - data(i,itime-1)) / (2 * dt)
     enddo
     out(1) = (data(i,2) - data(i,1)) / dt
     out(nstep) = (data(i,nstep) - data(i,nstep-1)) /dt
-    
+
     ! normalization factor
     norm = dt * sum( tw(1:nstep) * out(1:nstep) * out(1:nstep))
     print *, 'i = ', i, 'norm = ', norm
@@ -149,10 +149,10 @@ program cut_velocity
       adj(:) = 0.
     endif
     data(i,:) = adj(:)
-    
+
   enddo
   print *, ' '
-  
+
   ! component rotation back to cartesian x-y-z
   if (lrot) then
     call dwrite_ascfile_c('t-cut.txt',t0,dt,nstep,data(4,:))
@@ -163,7 +163,7 @@ program cut_velocity
 
   ! file output for component BHE/BHN/BHZ
   do i = 1, 3
-    filename = trim(file(i))//'.adj'  
+    filename = trim(file(i))//'.adj'
     print *, 'write to asc file '//trim(filename)
     call dwrite_ascfile_c(trim(filename)//char(0),t0,dt,nstep,data(i,:))
   enddo

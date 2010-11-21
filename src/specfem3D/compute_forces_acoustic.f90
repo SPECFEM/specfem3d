@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,13 +31,13 @@
 ! as in Komatitsch and Tromp, Geophysical Journal International, vol. 150, p. 303-318 (2002).
 !
 ! This permits acoustic-elastic coupling based on a non-iterative time scheme.
-! Displacement is then: 
+! Displacement is then:
 !     u = grad(Chi) / rho
-! Velocity is then: 
-!     v = grad(Chi_dot) / rho 
+! Velocity is then:
+!     v = grad(Chi_dot) / rho
 ! (Chi_dot being the time derivative of Chi)
-! and pressure is: 
-!     p = - Chi_dot_dot  
+! and pressure is:
+!     p = - Chi_dot_dot
 ! (Chi_dot_dot being the time second derivative of Chi).
 !
 ! The source in an acoustic element is a pressure source.
@@ -62,8 +63,8 @@ subroutine compute_forces_acoustic()
   ! local parameters
   integer:: iphase
   logical:: phase_is_inner
-  
-  
+
+
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
@@ -76,7 +77,7 @@ subroutine compute_forces_acoustic()
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
-  
+
 
   if(PML) call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
@@ -86,11 +87,11 @@ subroutine compute_forces_acoustic()
                         chi1,chi2,chi2_t,chi3,chi4,&
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi2_t_dot_dot,&
-                        chi3_dot_dot,chi4_dot_dot)             
+                        chi3_dot_dot,chi4_dot_dot)
 
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
-  
+
     !first for points on MPI interfaces
     if( iphase == 1 ) then
       phase_is_inner = .false.
@@ -108,7 +109,7 @@ subroutine compute_forces_acoustic()
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic )
-                    
+
     ! adjoint simulations
     if( SIMULATION_TYPE == 3 ) &
       call compute_forces_acoustic_pot( iphase, NSPEC_ADJOINT,NGLOB_ADJOINT, &
@@ -121,10 +122,10 @@ subroutine compute_forces_acoustic()
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic )
 
-    
+
     if(PML) then
       call compute_forces_acoustic_PML(NSPEC_AB,NGLOB_AB, &
-                        ibool,ispec_is_inner,phase_is_inner, &                        
+                        ibool,ispec_is_inner,phase_is_inner, &
                         rhostore,ispec_is_acoustic,potential_acoustic, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
@@ -142,7 +143,7 @@ subroutine compute_forces_acoustic()
                         ibool,ispec_is_inner,ispec_is_acoustic,&
                         num_PML_ispec,PML_ispec,iglob_is_PML_interface,&
                         chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
-      
+
     endif ! PML
 
 ! absorbing boundaries
@@ -157,7 +158,7 @@ subroutine compute_forces_acoustic()
                         potential_dot_acoustic,potential_dot_dot_acoustic,&
                         num_PML_ispec,PML_ispec,ispec_is_PML_inum,&
                         chi1_dot,chi2_t,chi2_t_dot,chi3_dot,chi4_dot,&
-                        chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)      
+                        chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
       else
         call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
                         potential_dot_dot_acoustic,potential_dot_acoustic, &
@@ -166,10 +167,10 @@ subroutine compute_forces_acoustic()
                         num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
                         SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it,myrank,NGLOB_ADJOINT, &
                         b_potential_dot_dot_acoustic,b_reclen_potential, &
-                        b_absorb_potential,b_num_abs_boundary_faces)    
+                        b_absorb_potential,b_num_abs_boundary_faces)
       endif
     endif
-    
+
 ! elastic coupling
     if(ELASTIC_SIMULATION ) then
       call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
@@ -190,11 +191,11 @@ subroutine compute_forces_acoustic()
                         ispec_is_inner,phase_is_inner)
     endif
 
-! poroelastic coupling 
+! poroelastic coupling
 ! not implemented yet
     !if(POROELASTIC_SIMULATION ) &
     !  call compute_coupling_acoustic_poro()
-    
+
 ! sources
     call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                         ibool,ispec_is_inner,phase_is_inner, &
@@ -217,7 +218,7 @@ subroutine compute_forces_acoustic()
                         my_neighbours_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) &  
+      if( SIMULATION_TYPE == 3 ) &
         call assemble_MPI_scalar_ext_mesh_s(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
                         b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -232,7 +233,7 @@ subroutine compute_forces_acoustic()
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) &  
+      if( SIMULATION_TYPE == 3 ) &
       call assemble_MPI_scalar_ext_mesh_w(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
                         b_buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh,&
                         max_nibool_interfaces_ext_mesh, &
@@ -244,10 +245,10 @@ subroutine compute_forces_acoustic()
 
   enddo
 
-  ! divides pressure with mass matrix 
+  ! divides pressure with mass matrix
   potential_dot_dot_acoustic(:) = potential_dot_dot_acoustic(:) * rmass_acoustic(:)
 
-  ! adjoint simulations  
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) &
     b_potential_dot_dot_acoustic(:) = b_potential_dot_dot_acoustic(:) * rmass_acoustic(:)
 
@@ -263,7 +264,7 @@ subroutine compute_forces_acoustic()
     call PML_acoustic_time_corrector(NSPEC_AB,ispec_is_acoustic,deltatover2,&
                         num_PML_ispec,PML_ispec,PML_damping_d,&
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
-                        chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot)                        
+                        chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot)
   endif
 
 
@@ -275,17 +276,17 @@ subroutine compute_forces_acoustic()
 ! chi_dot(t+delta_t) = chi_dot(t) + 1/2 delta_t chi_dot_dot(t) + 1/2 DELTA_T CHI_DOT_DOT( T + DELTA_T )
 ! chi_dot_dot(t+delta_t) = 1/M_acoustic( -K_acoustic chi(t+delta) + B_acoustic u(t+delta_t) + f(t+delta_t) )
 !
-! where 
+! where
 !   chi, chi_dot, chi_dot_dot are acoustic (fluid) potentials ( dotted with respect to time)
 !   u, v, a are displacement,velocity & acceleration
-!   M is mass matrix, K stiffness matrix and B boundary term 
-!   f denotes a source term 
+!   M is mass matrix, K stiffness matrix and B boundary term
+!   f denotes a source term
 !
 ! corrector:
 !   updates the chi_dot term which requires chi_dot_dot(t+delta)
   potential_dot_acoustic(:) = potential_dot_acoustic(:) + deltatover2*potential_dot_dot_acoustic(:)
 
-  ! adjoint simulations  
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) &
     b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + b_deltatover2*b_potential_dot_dot_acoustic(:)
 
@@ -309,13 +310,13 @@ subroutine compute_forces_acoustic()
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
 
-  ! adjoint simulations  
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) &
     call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT, &
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
-                        
+
 
   if(PML) call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
@@ -326,7 +327,7 @@ subroutine compute_forces_acoustic()
                         chi1,chi2,chi2_t,chi3,chi4,&
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi2_t_dot_dot,&
-                        chi3_dot_dot,chi4_dot_dot)             
+                        chi3_dot_dot,chi4_dot_dot)
 
 
 end subroutine compute_forces_acoustic
@@ -341,7 +342,7 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
-  implicit none 
+  implicit none
   include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -362,13 +363,13 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
 ! local parameters
   integer :: iface,igll,i,j,k,ispec,iglob
 
-! enforce potentials to be zero at surface 
+! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces
 
     ispec = free_surface_ispec(iface)
 
-    if( ispec_is_acoustic(ispec) ) then 
-      
+    if( ispec_is_acoustic(ispec) ) then
+
       do igll = 1, NGLLSQUARE
         i = free_surface_ijk(1,igll,iface)
         j = free_surface_ijk(2,igll,iface)
@@ -381,8 +382,8 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
         potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
       enddo
     endif
-    
+
   enddo
-  
+
 end subroutine acoustic_enforce_free_surface
 

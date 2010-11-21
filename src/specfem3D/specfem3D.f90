@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@
   subroutine specfem3D()
 
   use specfem_par
-  
+
 
 !=============================================================================!
 !                                                                             !
@@ -280,14 +281,14 @@
   call setup_GLL_points()
 
 
-! detects surfaces  
+! detects surfaces
   call detect_mesh_surfaces()
 
 
 ! reads topography & bathymetry
   call read_topography_bathymetry()
 
-  
+
 ! prepares sources and receivers
   call setup_sources_receivers()
 

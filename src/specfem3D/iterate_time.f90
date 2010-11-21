@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -92,22 +93,22 @@
 ! *********************************************************
 
   do it = 1,NSTEP
-  
+
     ! simulation status output and stability check
     if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5) then
-      call it_check_stability()    
+      call it_check_stability()
     endif
-    
+
     ! update displacement using Newark time scheme
     call it_update_displacement_scheme()
 
-    ! acoustic solver 
+    ! acoustic solver
     ! (needs to be done first, before elastic one)
     if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
-      
+
     ! elastic solver
     if( ELASTIC_SIMULATION ) call compute_forces_elastic()
-    
+
     ! poroelastic solver
     if( POROELASTIC_SIMULATION ) stop 'poroelastic simulation not implemented yet'
 
@@ -116,16 +117,16 @@
     if( SIMULATION_TYPE == 3 .and. it == 1 ) then
      call it_read_foward_arrays()
     endif
-    
+
     ! write the seismograms with time shift
     if (nrec_local > 0) then
       call write_seismograms()
-    endif 
+    endif
 
     ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
     if (ATTENUATION ) then
       call it_store_attenuation_arrays()
-    endif 
+    endif
 
     ! adjoint simulations: kernels
     if( SIMULATION_TYPE == 3 ) then
@@ -157,7 +158,7 @@
 
   end subroutine iterate_time
 
-  
+
 !=====================================================================
 
   subroutine it_check_stability()
@@ -165,26 +166,26 @@
 ! computes the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
 ! and output timestamp file to check that simulation is running fine
-  
+
   use specfem_par
   use specfem_par_elastic
-  use specfem_par_acoustic  
+  use specfem_par_acoustic
   implicit none
-  
+
   double precision :: tCPU,t_remain,t_total
   integer :: ihours,iminutes,iseconds,int_tCPU, &
              ihours_remain,iminutes_remain,iseconds_remain,int_t_remain, &
              ihours_total,iminutes_total,iseconds_total,int_t_total
-  
+
 ! compute maximum of norm of displacement in each slice
   if( ELASTIC_SIMULATION ) then
     Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
-  else 
+  else
     if( ACOUSTIC_SIMULATION ) then
       Usolidnorm = maxval(abs(potential_dot_dot_acoustic(:)))
     endif
-  endif  
-  
+  endif
+
 ! compute the maximum of the maxima for all the slices using an MPI reduction
   call max_all_cr(Usolidnorm,Usolidnorm_all)
 
@@ -192,7 +193,7 @@
   if( SIMULATION_TYPE == 3 ) then
     if( ELASTIC_SIMULATION ) then
       b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
-    else 
+    else
       if( ACOUSTIC_SIMULATION ) then
         b_Usolidnorm = maxval(abs(b_potential_dot_dot_acoustic(:)))
       endif
@@ -217,9 +218,9 @@
     write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
     if( ELASTIC_SIMULATION ) then
       write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
-    else 
+    else
       if( ACOUSTIC_SIMULATION ) then
-        write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnorm_all    
+        write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnorm_all
       endif
     endif
     ! adjoint simulations
@@ -283,9 +284,9 @@
         call exit_MPI(myrank,'backward simulation became unstable and blew up')
 
   endif ! myrank
-  
+
   end subroutine it_check_stability
-  
+
 
 !=====================================================================
 
@@ -302,7 +303,7 @@
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
 ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
 !
-! where 
+! where
 !   chi, chi_dot, chi_dot_dot are acoustic (fluid) potentials ( dotted with respect to time)
 !   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
@@ -310,16 +311,16 @@
 !
 ! note that this stage calculates the predictor terms
 !
-!   for 
+!   for
 !   potential chi_dot(t+delta) requires + 1/2 delta_t chi_dot_dot(t+delta_t)
 !                                   at a later stage (corrector) once where chi_dot_dot(t+delta) is calculated
 !   and similar,
-!   velocity v(t+delta_t) requires  + 1/2 delta_t a(t+delta_t)  
+!   velocity v(t+delta_t) requires  + 1/2 delta_t a(t+delta_t)
 !                                   at a later stage once where a(t+delta) is calculated
 ! also:
 !   boundary term B_elastic requires chi_dot_dot(t+delta)
 !                                   thus chi_dot_dot has to be updated first before the elastic boundary term is considered
-  
+
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
@@ -335,8 +336,8 @@
                             + deltatsqover2 * potential_dot_dot_acoustic(:)
     potential_dot_acoustic(:) = potential_dot_acoustic(:) &
                                 + deltatover2 * potential_dot_dot_acoustic(:)
-    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL          
-    
+    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+
     ! time marching potentials
     if(PML) call PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
                         potential_acoustic,potential_dot_acoustic,&
@@ -349,14 +350,14 @@
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,&
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh,NPROC,&
-                        ispec_is_acoustic)        
+                        ispec_is_acoustic)
   endif
 
 ! updates elastic displacement and velocity
   if( ELASTIC_SIMULATION ) then
     displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-    accel(:,:) = 0._CUSTOM_REAL    
+    accel(:,:) = 0._CUSTOM_REAL
   endif
 
 ! adjoint simulations
@@ -368,7 +369,7 @@
                               + b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
       b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) &
                                   + b_deltatover2 * b_potential_dot_dot_acoustic(:)
-      b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL            
+      b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
     endif
     ! elastic backward fields
     if( ELASTIC_SIMULATION ) then
@@ -413,14 +414,14 @@
     call exit_mpi(myrank,'error open file save_forward_arrays.bin')
   endif
 
-  if( ACOUSTIC_SIMULATION ) then              
+  if( ACOUSTIC_SIMULATION ) then
     read(27) b_potential_acoustic
     read(27) b_potential_dot_acoustic
-    read(27) b_potential_dot_dot_acoustic 
+    read(27) b_potential_dot_dot_acoustic
   endif
 
   ! elastic wavefields
-  if( ELASTIC_SIMULATION ) then    
+  if( ELASTIC_SIMULATION ) then
     read(27) b_displ
     read(27) b_veloc
     read(27) b_accel
@@ -437,32 +438,32 @@
        read(27) b_epsilondev_xy
        read(27) b_epsilondev_xz
        read(27) b_epsilondev_yz
-    endif  
+    endif
 
-  endif    
+  endif
 
   close(27)
 
   end subroutine it_read_foward_arrays
-  
+
 !=====================================================================
-  
+
   subroutine it_store_attenuation_arrays()
 
 ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
-  
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  
+
   implicit none
 
   if( it > 1 .and. it < NSTEP) then
     ! adjoint simulations
 
-! note backward/reconstructed wavefields: 
+! note backward/reconstructed wavefields:
 !       storing wavefield displ() at time step it, corresponds to time (it-1)*DT - t0 (see routine write_seismograms_to_file )
-!       reconstucted wavefield b_displ() at it corresponds to time (NSTEP-it-1)*DT - t0   
+!       reconstucted wavefield b_displ() at it corresponds to time (NSTEP-it-1)*DT - t0
 !       we read in the reconstructed wavefield at the end of the time iteration loop, i.e. after the Newark scheme,
 !       thus, indexing is NSTEP-it (rather than something like NSTEP-(it-1) )
     if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
@@ -514,7 +515,7 @@
       if( ACOUSTIC_SIMULATION ) then
         write(27) potential_acoustic
         write(27) potential_dot_acoustic
-        write(27) potential_dot_dot_acoustic        
+        write(27) potential_dot_dot_acoustic
       endif
       close(27)
     endif ! SIMULATION_TYPE

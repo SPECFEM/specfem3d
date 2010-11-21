@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -23,11 +24,11 @@
 !
 !=====================================================================
 
-  
-  subroutine get_jacobian_boundary_face(myrank,nspec, & 
+
+  subroutine get_jacobian_boundary_face(myrank,nspec, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
                         ispec,iface,jacobian2Dw_face,normal_face,NGLLA,NGLLB)
 
 ! returns jacobian2Dw_face and normal_face (pointing outwards of element)
@@ -41,11 +42,11 @@
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
-    
-! face information 
+
+! face information
   integer :: iface,ispec,NGLLA,NGLLB
   real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
-  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)  
+  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
 
   double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
   double precision dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ)
@@ -83,7 +84,7 @@
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_x,wgllwgll_yz, &
                   jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
-                  
+
 ! on boundary: xmax
   case(2)
     xelm(1)=xstore_dummy( ibool(NGLLX,1,1,ispec) )
@@ -140,7 +141,7 @@
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_y, wgllwgll_xz, &
                   jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
-                  
+
 
 ! on boundary: bottom
   case(5)
@@ -156,7 +157,7 @@
     xelm(4)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
     yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
-    
+
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
                   dershape2D_bottom,wgllwgll_xy, &
                   jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -179,13 +180,13 @@
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
                   dershape2D_top, wgllwgll_xy, &
                   jacobian2Dw_face,normal_face,NGLLX,NGLLY)
-                  
+
   case default
     stop 'error 2D jacobian'
   end select
-   
+
   end subroutine get_jacobian_boundary_face
-  
+
 
 ! -------------------------------------------------------
 
@@ -205,7 +206,7 @@
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
   double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
   double precision wgllwgll(NGLLA,NGLLB)
-  
+
   real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
   real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
 
@@ -257,21 +258,21 @@
   enddo
 
   end subroutine compute_jacobian_2D_face
-  
-  
-! This subroutine recompute the 3D jacobian for one element 
-! based upon 125 GLL points 
+
+
+! This subroutine recompute the 3D jacobian for one element
+! based upon 125 GLL points
 ! Hejun Zhu OCT16,2009
 
 ! input: myrank,
 !        xstore,ystore,zstore ----- input position
 !        xigll,yigll,zigll ----- gll points position
-!        ispec,nspec       ----- element number       
+!        ispec,nspec       ----- element number
 !        ACTUALLY_STORE_ARRAYS   ------ save array or not
 
-! output: xixstore,xiystore,xizstore, 
+! output: xixstore,xiystore,xizstore,
 !         etaxstore,etaystore,etazstore,
-!         gammaxstore,gammaystore,gammazstore ------ parameters used for calculating jacobian 
+!         gammaxstore,gammaystore,gammazstore ------ parameters used for calculating jacobian
 
 
   subroutine recalc_jacobian_gll2D(myrank,xstore,ystore,zstore, &
@@ -285,7 +286,7 @@
   ! input parameter
   integer::myrank,ispec,nspec
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-  
+
   integer :: NGLLA,NGLLB
   double precision, dimension(NGLLA):: xigll
   double precision, dimension(NGLLB):: yigll
@@ -314,7 +315,7 @@
   k=1
   do j=1,NGLLB
     do i=1,NGLLA
-            
+
       xxi = 0.0
       xeta = 0.0
       yxi = 0.0
@@ -325,7 +326,7 @@
       xi = xigll(i)
       eta = yigll(j)
 
-      ! calculate lagrange polynomial and its derivative 
+      ! calculate lagrange polynomial and its derivative
       call lagrange_any(xi,NGLLA,xigll,hxir,hpxir)
       call lagrange_any(eta,NGLLB,yigll,hetar,hpetar)
 
@@ -344,7 +345,7 @@
          hlagrange_xi = hpxir(i1)*hetar(j1)
          hlagrange_eta = hxir(i1)*hpetar(j1)
 
-                       
+
          xxi = xxi + xstore(i1,j1,k1,ispec)*hlagrange_xi
          xeta = xeta + xstore(i1,j1,k1,ispec)*hlagrange_eta
 
@@ -354,30 +355,30 @@
          zxi = zxi + zstore(i1,j1,k1,ispec)*hlagrange_xi
          zeta = zeta + zstore(i1,j1,k1,ispec)*hlagrange_eta
 
-         ! test the lagrange polynomial and its derivate 
+         ! test the lagrange polynomial and its derivate
          xmesh = xmesh + xstore(i1,j1,k1,ispec)*hlagrange
          ymesh = ymesh + ystore(i1,j1,k1,ispec)*hlagrange
          zmesh = zmesh + zstore(i1,j1,k1,ispec)*hlagrange
          sumshape = sumshape + hlagrange
          sumdershapexi = sumdershapexi + hlagrange_xi
-         sumdershapeeta = sumdershapeeta + hlagrange_eta 
-         
-         end do 
-      end do 
+         sumdershapeeta = sumdershapeeta + hlagrange_eta
 
-      ! Check the lagrange polynomial and its derivative 
+         end do
+      end do
+
+      ! Check the lagrange polynomial and its derivative
       if (xmesh /=xstore(i,j,k,ispec).or.ymesh/=ystore(i,j,k,ispec).or.zmesh/=zstore(i,j,k,ispec)) then
         call exit_MPI(myrank,'new mesh positions are wrong in recalc_jacobian_gall3D.f90')
-      end if 
+      end if
       if(abs(sumshape-one) >  TINYVAL) then
         call exit_MPI(myrank,'error shape functions in recalc_jacobian_gll3D.f90')
-      end if 
-      if(abs(sumdershapexi) >  TINYVAL) then 
+      end if
+      if(abs(sumdershapexi) >  TINYVAL) then
         call exit_MPI(myrank,'error derivative xi shape functions in recalc_jacobian_gll3D.f90')
-      end if 
-      if(abs(sumdershapeeta) >  TINYVAL) then 
+      end if
+      if(abs(sumdershapeeta) >  TINYVAL) then
         call exit_MPI(myrank,'error derivative eta shape functions in recalc_jacobian_gll3D.f90')
-      end if 
+      end if
 
 !   calculate the unnormalized normal to the boundary
       unx=yxi*zeta-yeta*zxi
@@ -410,10 +411,10 @@
 !------------------------------------------------------------------------------------------------
 !
 !
-!  subroutine get_jacobian_boundaries(myrank,iboun,nspec, & 
+!  subroutine get_jacobian_boundaries(myrank,iboun,nspec, &
 !              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
 !              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-!              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&                                          
+!              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
 !              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
 !              xcoord_iboun,ycoord_iboun,zcoord_iboun, &
 !              nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
@@ -435,11 +436,11 @@
 !  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 !  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
 !
-!  
-!! absorbing boundaries 
+!
+!! absorbing boundaries
 !! (careful with array bounds, no need for NSPEC2DMAX_XMIN_XMAX & NSPEC2DMAX_YMIN_YMAX  anymore)
 !  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
-!  integer, dimension(nspec2D_xmin)  :: ibelm_xmin  
+!  integer, dimension(nspec2D_xmin)  :: ibelm_xmin
 !  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
 !  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
 !  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
@@ -448,7 +449,7 @@
 !
 !  logical iboun(6,nspec)
 !  real(kind=CUSTOM_REAL), dimension(NGNOD2D,6,nspec) :: xcoord_iboun,ycoord_iboun,zcoord_iboun
-!  
+!
 !!  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
 !!  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
 !!  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
@@ -463,7 +464,7 @@
 !  real(kind=CUSTOM_REAL) normal_xmin(NDIM,NGLLY,NGLLZ,NSPEC2D_xmin)
 !  real(kind=CUSTOM_REAL) normal_xmax(NDIM,NGLLY,NGLLZ,NSPEC2D_xmax)
 !  real(kind=CUSTOM_REAL) normal_ymin(NDIM,NGLLX,NGLLZ,NSPEC2D_ymin)
-!  real(kind=CUSTOM_REAL) normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2D_ymax)  
+!  real(kind=CUSTOM_REAL) normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2D_ymax)
 !  real(kind=CUSTOM_REAL) normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM)
 !  real(kind=CUSTOM_REAL) normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP)
 !
@@ -547,7 +548,7 @@
 !    call compute_jacobian_2D(myrank,ispecb1,xelm,yelm,zelm, &
 !                  dershape2D_x,wgllwgll_yz, &
 !                  jacobian2D_xmin,normal_xmin,NGLLY,NGLLZ,NSPEC2D_xmin)
-!                  
+!
 !    ! normal convention: points away from element
 !    ! switches normal direction if necessary
 !    do i=1,NGLLY
@@ -558,7 +559,7 @@
 !                                normal_xmin(:,i,j,ispecb1) )
 !      enddo
 !    enddo
-!                  
+!
 !  endif
 !
 !! on boundary: xmax
@@ -617,7 +618,7 @@
 !                                normal_xmax(:,i,j,ispecb2) )
 !      enddo
 !    enddo
-!                  
+!
 !  endif
 !
 !! on boundary: ymin
@@ -676,7 +677,7 @@
 !                                normal_ymin(:,i,j,ispecb3) )
 !      enddo
 !    enddo
-!                  
+!
 !
 !  endif
 !
@@ -721,11 +722,11 @@
 !!      yelm(i) = ycoord_iboun(i,4,ispec)
 !!      zelm(i) = zcoord_iboun(i,4,ispec)
 !!    enddo
-!!    
+!!
 !    call compute_jacobian_2D(myrank,ispecb4,xelm,yelm,zelm, &
 !                  dershape2D_y, wgllwgll_xz, &
 !                  jacobian2D_ymax,normal_ymax,NGLLX,NGLLZ,NSPEC2D_ymax)
-!                  
+!
 !    ! normal convention: points away from element
 !    ! switch normal direction if necessary
 !    do i=1,NGLLX
@@ -736,7 +737,7 @@
 !                                normal_ymax(:,i,j,ispecb4) )
 !      enddo
 !    enddo
-!                  
+!
 !  endif
 !
 !! on boundary: bottom
@@ -773,7 +774,7 @@
 !    xelm(4)=xstore_dummy( ibool(1,NGLLY,1,ispec) )
 !    yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
 !    zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
-!    
+!
 !
 !! takes coordinates from boundary faces
 !!    do i=1,NGNOD2D
@@ -808,17 +809,17 @@
 !
 !! careful...
 !! for top, this might be working as well ... when mesh is oriented along z direction...
-!!    xelm(1)=xstore(1,1,NGLLZ,ispec) 
-!!    yelm(1)=ystore(1,1,NGLLZ,ispec) 
-!!    zelm(1)=zstore(1,1,NGLLZ,ispec) 
-!!    xelm(2)=xstore(NGLLX,1,NGLLZ,ispec) 
-!!    yelm(2)=ystore(NGLLX,1,NGLLZ,ispec) 
-!!    zelm(2)=zstore(NGLLX,1,NGLLZ,ispec) 
-!!    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec) 
-!!    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec) 
-!!    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec) 
-!!    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec) 
-!!    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec) 
+!!    xelm(1)=xstore(1,1,NGLLZ,ispec)
+!!    yelm(1)=ystore(1,1,NGLLZ,ispec)
+!!    zelm(1)=zstore(1,1,NGLLZ,ispec)
+!!    xelm(2)=xstore(NGLLX,1,NGLLZ,ispec)
+!!    yelm(2)=ystore(NGLLX,1,NGLLZ,ispec)
+!!    zelm(2)=zstore(NGLLX,1,NGLLZ,ispec)
+!!    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
+!!    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec)
+!!    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec)
 !!    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
 !
 !
@@ -832,7 +833,7 @@
 !    call compute_jacobian_2D(myrank,ispecb6,xelm,yelm,zelm,&
 !                  dershape2D_top, wgllwgll_xy, &
 !                  jacobian2D_top,normal_top,NGLLX,NGLLY,NSPEC2D_TOP)
-!    
+!
 !    ! normal convention: points away from element
 !    ! switch normal direction if necessary
 !    do i=1,NGLLX
@@ -848,7 +849,7 @@
 !
 !  enddo
 !
-!! check theoretical value of elements 
+!! check theoretical value of elements
 !!  if(ispecb1 /= NSPEC2D_xmin) call exit_MPI(myrank,'ispecb1 should equal NSPEC2D_xmin')
 !!  if(ispecb2 /= NSPEC2D_xmax) call exit_MPI(myrank,'ispecb2 should equal NSPEC2D_xmax')
 !!  if(ispecb3 /= NSPEC2D_ymin) call exit_MPI(myrank,'ispecb3 should equal NSPEC2D_ymin')
@@ -876,7 +877,7 @@
 !  double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
 !  double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
 !  double precision wgllwgll
-!  
+!
 !  real(kind=CUSTOM_REAL) jacobian2D(NGLLA,NGLLB,NSPEC2DMAX_AB)
 !  real(kind=CUSTOM_REAL) normal(3,NGLLA,NGLLB,NSPEC2DMAX_AB)
 !
@@ -929,4 +930,4 @@
 !
 !  end subroutine compute_jacobian_2D
 !
-  
+

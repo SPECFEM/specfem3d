@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -45,7 +46,7 @@
   character(len=256) HEADER_FILE
 
   integer :: nfaces_surface_glob_ext_mesh
-  
+
 ! copy number of elements and points in an include file for the solver
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
        OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
@@ -130,7 +131,7 @@
     write(IOUT,*) '! integer, parameter :: NSPEC_ATTENUATION = ', 1
 !    write(IOUT,*) '! logical, parameter :: ATTENUATION_VAL = .false.'
   endif
-  
+
   write(IOUT,*)
 
 ! anisotropy
@@ -146,7 +147,7 @@
   endif
 
   write(IOUT,*)
-    
+
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
 !! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
@@ -216,11 +217,11 @@
     write(IOUT,*) '!'
     write(IOUT,*) '! number of elements containing surface faces '
     write(IOUT,*) '! ---------------'
-    write(IOUT,*)    
+    write(IOUT,*)
     write(IOUT,*) 'integer,parameter :: NSPEC_SURFACE_EXT_MESH = ',nfaces_surface_glob_ext_mesh
     write(IOUT,*)
     close(IOUT)
-    
+
   endif
 
   end subroutine save_header_file

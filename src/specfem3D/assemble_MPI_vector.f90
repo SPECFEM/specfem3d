@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -47,17 +48,17 @@
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
 
   ! local parameters
-  
+
   ! send/receive temporary buffers
   !real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
   !     buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh  
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh
 
-  ! requests      
+  ! requests
   !integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh
-  integer, dimension(:), allocatable :: request_recv_vector_ext_mesh  
+  integer, dimension(:), allocatable :: request_recv_vector_ext_mesh
 
   integer ipoin,iinterface
 
@@ -71,7 +72,7 @@
     allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
     allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh))
     allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh))
-    
+
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)

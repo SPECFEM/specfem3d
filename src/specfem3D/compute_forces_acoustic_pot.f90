@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -38,7 +39,7 @@
 ! computes forces for acoustic elements
 !
 ! note that pressure is defined as:
-!     p = - Chi_dot_dot  
+!     p = - Chi_dot_dot
 !
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL
   use PML_par,only:PML,ispec_is_PML_inum
@@ -61,7 +62,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
-  
+
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -69,7 +70,7 @@
 ! communication overlap
 !  logical, dimension(NSPEC_AB) :: ispec_is_inner
 !  logical :: phase_is_inner
-  
+
 !  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
   integer :: iphase
@@ -84,7 +85,7 @@
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) rho_invl
-  
+
   integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
 
   if( iphase == 1 ) then
@@ -106,7 +107,7 @@
          cycle
         endif
       endif
-      
+
 !      if( ispec_is_acoustic(ispec) ) then
 
         ! gets values for element
@@ -125,8 +126,8 @@
             do i=1,NGLLX
 
               ! density (reciproc)
-              rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec) 
-              
+              rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+
               ! derivative along x, y, z
               ! first double loop over GLL points to compute and store gradients
               ! we can merge the loops because NGLLX == NGLLY == NGLLZ
@@ -137,7 +138,7 @@
                 temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
                 temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
                 temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-              enddo 
+              enddo
 
               ! get derivatives of potential with respect to x, y and z
               xixl = xix(i,j,k,ispec)
@@ -175,7 +176,7 @@
 
               ! along x,y,z direction
               ! and assemble the contributions
-              !!! can merge these loops because NGLLX = NGLLY = NGLLZ   
+              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
               temp1l = 0._CUSTOM_REAL
               temp2l = 0._CUSTOM_REAL
               temp3l = 0._CUSTOM_REAL
@@ -185,18 +186,18 @@
                 temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
               enddo
 
-              ! sum contributions from each element to the global values              
+              ! sum contributions from each element to the global values
               iglob = ibool(i,j,k,ispec)
               potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
                                                   - ( temp1l + temp2l + temp3l )
 
             enddo
-          enddo 
+          enddo
         enddo
 
 !      endif ! end of test if acoustic element
 !    endif ! ispec_is_inner
-    
+
   enddo ! end of loop over all spectral elements
 
   end subroutine compute_forces_acoustic_pot

@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -37,11 +38,11 @@
   allocate(ispec_is_surface_external_mesh(NSPEC_AB))
   allocate(iglob_is_surface_external_mesh(NGLOB_AB))
 
-! determines model surface  
+! determines model surface
   if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. &
       EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
 
-    ! returns surface points/elements 
+    ! returns surface points/elements
     ! in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh and
     ! number of faces in nfaces_surface_ext_mesh
     call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
@@ -52,8 +53,8 @@
                       max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh, &
                       my_neighbours_ext_mesh, &
-                      ibool_interfaces_ext_mesh) 
-  endif 
+                      ibool_interfaces_ext_mesh)
+  endif
 
 ! takes cross-section surfaces instead
   if( (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) &
@@ -68,9 +69,9 @@
                             my_neighbours_ext_mesh, &
                             ibool_interfaces_ext_mesh,&
                             CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
-                            xstore,ystore,zstore,myrank)    
+                            xstore,ystore,zstore,myrank)
   endif
-  
+
 ! takes number of faces for top, free surface only
   if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
     nfaces_surface_ext_mesh = num_free_surface_faces
@@ -82,9 +83,9 @@
     iorderj(1) = 1
     iorderj(2) = 1
     iorderj(3) = NGLLY
-    iorderj(4) = NGLLY    
+    iorderj(4) = NGLLY
   endif
-  
+
 ! handles movies and shakemaps
   if( EXTERNAL_MESH_MOVIE_SURFACE .or. &
      EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
@@ -96,7 +97,7 @@
 ! stores wavefields for whole volume
   if (MOVIE_VOLUME) then
     ! acoustic
-    if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then  
+    if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
       allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
       allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
       allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -118,7 +119,7 @@
   if( PNM_GIF_IMAGE ) then
     call write_PNM_GIF_initialize()
   endif
-  
+
 
 !!!! NL NL REGOLITH : runs at cines for asteroid simulations. Elements in contact with surface are part of the regolith layer.
 !!$  allocate(ispec_is_regolith(NSPEC_AB))
@@ -197,8 +198,8 @@
 !!!!!!!!!! DK DK   endif
 
   end subroutine detect_mesh_surfaces
-  
-  
+
+
 !!!! NL NL REGOLITH
 !!$  double precision function materials_ext_mesh(i,j)
 !!$

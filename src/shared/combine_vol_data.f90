@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -43,17 +44,17 @@
   double precision,dimension(:,:,:,:),allocatable :: data
   ! real array for data
   real,dimension(:,:,:,:),allocatable :: dat
-  
+
   ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
   integer, dimension(:,:,:,:),allocatable :: ibool
 
-  integer :: NSPEC_AB, NGLOB_AB      
+  integer :: NSPEC_AB, NGLOB_AB
   integer :: numpoin
   integer :: i, ios, it
   integer :: iproc, proc1, proc2, num_node, node_list(300)
-  integer :: np, ne, npp, nee, nelement, njunk 
-    
+  integer :: np, ne, npp, nee, nelement, njunk
+
   character(len=256) :: sline, arg(6), filename, indir, outdir
   character(len=256) :: prname, prname_lp
   character(len=256) :: mesh_file,local_data_file
@@ -72,7 +73,7 @@
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD
-  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION  
+  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH
 
 ! checks given arguments
@@ -90,13 +91,13 @@
       print *
       print *, ' possible filenames are '
       print *, '   rho_vp, rho_vs, kappastore, mustore, alpha_kernel, etc'
-      print *      
+      print *
       print *, '   that are stored in the local directory as real(kind=CUSTOM_REAL) filename(NGLLX,NGLLY,NGLLZ,NSPEC_AB)  '
       print *, '   in filename.bin'
       print *
       print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
       print *, ' give 0 for low resolution and 1 for high resolution'
-      print *      
+      print *
       stop ' Reenter command line options'
     endif
   enddo
@@ -158,17 +159,17 @@
   ! open paraview output mesh file
   mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
   call open_file(trim(mesh_file)//char(0))
-    
+
   ! counts total number of points (all slices)
   npp = 0
   nee = 0
   call cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,&
-                                    npp,nee,HIGH_RESOLUTION_MESH)    
+                                    npp,nee,HIGH_RESOLUTION_MESH)
 
 
-  ! writes point and scalar information  
+  ! writes point and scalar information
   ! loops over slices (process partitions)
-  np = 0 
+  np = 0
   do it = 1, num_node
 
     iproc = node_list(it)
@@ -181,42 +182,42 @@
     open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
           status='old',action='read',form='unformatted',iostat=ios)
     read(27) NSPEC_AB
-    read(27) NGLOB_AB 
-    
+    read(27) NGLOB_AB
+
     ! ibool file
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))    
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) ibool
 
     ! global point arrays
-    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB)) 
+    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
     read(27) xstore
     read(27) ystore
     read(27) zstore
-    close(27)   
+    close(27)
 
-        
-    ! data file  
+
+    ! data file
     write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
     open(unit = 28,file = trim(local_data_file),status='old',&
-          action='read',form ='unformatted',iostat=ios)          
+          action='read',form ='unformatted',iostat=ios)
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
-    
+
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)
     if( ios /= 0 ) stop 'error allocating dat array'
-    
+
     ! uses conversion to real values
     if( CUSTOM_REAL == SIZE_DOUBLE ) then
-      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)    
+      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)
       if( ios /= 0 ) stop 'error allocating data array'
       read(28) data
       dat = sngl(data)
       deallocate(data)
     else
-      read(28) dat  
+      read(28) dat
     endif
     close(28)
     print *, trim(local_data_file)
@@ -226,20 +227,20 @@
       ! writes out element corners only
       call cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                             it,npp,numpoin)
-    else  
+    else
       ! high resolution, all GLL points
       call cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
                                it,npp,numpoin)
     endif
-    
+
     print*,'  points:',np,numpoin
-    
+
     ! stores total number of points written
     np = np + numpoin
 
     ! cleans up memory allocations
     deallocate(ibool,dat,xstore,ystore,zstore)
-    
+
   enddo  ! all slices for points
 
   if (np /=  npp) stop 'Error: Number of total points are not consistent'
@@ -261,8 +262,8 @@
     open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
           status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
-    read(27) NGLOB_AB 
-    
+    read(27) NGLOB_AB
+
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) ibool
@@ -272,24 +273,24 @@
     if (.not. HIGH_RESOLUTION_MESH) then
       ! spectral elements
       call cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                    np,nelement,it,nee,numpoin)  
-    else 
+                                    np,nelement,it,nee,numpoin)
+    else
       ! subdivided spectral elements
       call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
-                                np,nelement,it,nee,numpoin)  
+                                np,nelement,it,nee,numpoin)
     endif
-    
+
     print*,'  elements:',ne,nelement
     print*,'  points : ',np,numpoin
-    
+
     ne = ne + nelement
 
     deallocate(ibool)
 
   enddo ! num_node
-  
+
   ! checks with total number of elements
-  if (ne /= nee) then 
+  if (ne /= nee) then
     print*,'error: number of elements counted:',ne,'total:',nee
     stop 'Number of total elements are not consistent'
   endif
@@ -314,12 +315,12 @@
 
   implicit none
   include 'constants.h'
-  
+
   integer,intent(in) :: num_node,node_list(300)
   character(len=256),intent(in) :: LOCAL_PATH
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
-  
+
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
@@ -327,8 +328,8 @@
   integer :: it,iproc,npoint,nelement,ios,ispec
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   character(len=256) :: prname_lp
-  
-  
+
+
   ! loops over all slices (process partitions)
   npp = 0
   nee = 0
@@ -345,29 +346,29 @@
     endif
 
     read(27) NSPEC_AB
-    read(27) NGLOB_AB 
+    read(27) NGLOB_AB
     ! gets ibool
     if( .not. HIGH_RESOLUTION_MESH ) then
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
       read(27) ibool
     endif
-    close(27)   
-        
+    close(27)
+
     ! calculates totals
     if( HIGH_RESOLUTION_MESH ) then
       ! total number of global points
       npp = npp + NGLOB_AB
 
       ! total number of elements
-      ! each spectral elements gets subdivided by GLL points, 
+      ! each spectral elements gets subdivided by GLL points,
       ! which form (NGLLX-1)*(NGLLY-1)*(NGLLZ-1) sub-elements
-      nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) 
+      nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
       nee = nee + nelement
 
     else
 
       ! mark element corners (global AVS or DX points)
-      allocate(mask_ibool(NGLOB_AB))      
+      allocate(mask_ibool(NGLOB_AB))
       mask_ibool = .false.
       do ispec=1,NSPEC_AB
         iglob1=ibool(1,1,1,ispec)
@@ -386,25 +387,25 @@
         mask_ibool(iglob6) = .true.
         mask_ibool(iglob7) = .true.
         mask_ibool(iglob8) = .true.
-      enddo        
+      enddo
 
       ! count global number of AVS or DX points
       npoint = count(mask_ibool(:))
       npp = npp + npoint
-      
+
       ! total number of spectral elements
       nee = nee + NSPEC_AB
 
-    endif ! HIGH_RESOLUTION_MESH      
+    endif ! HIGH_RESOLUTION_MESH
 
     ! frees arrays
     if( allocated(mask_ibool) ) deallocate( mask_ibool)
     if( allocated(ibool) ) deallocate(ibool)
-    
+
   enddo
-    
+
   end subroutine cvd_count_totals_ext_mesh
-  
+
 !=============================================================
 
 
@@ -415,12 +416,12 @@
 
   implicit none
   include 'constants.h'
-  
+
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
   real,dimension(NGLLY,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: dat
-  integer:: it  
+  integer:: it
   integer :: npp,numpoin
 
   ! local parameters
@@ -434,7 +435,7 @@
     call write_integer(npp)
   endif
 
-  ! writes our corner point locations  
+  ! writes our corner point locations
   allocate(mask_ibool(NGLOB_AB))
   mask_ibool(:) = .false.
   numpoin = 0
@@ -537,7 +538,7 @@
       mask_ibool(iglob8) = .true.
     endif
   enddo ! ispec
-    
+
   end subroutine cvd_write_corners
 
 
@@ -551,7 +552,7 @@
 
   implicit none
   include 'constants.h'
-  
+
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
@@ -594,7 +595,7 @@
   enddo !ispec
 
   end subroutine cvd_write_GLL_points
-  
+
 !=============================================================
 
 ! writes out locations of spectral element corners only
@@ -604,17 +605,17 @@
 
   implicit none
   include 'constants.h'
-  
+
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
   integer:: it,nee,np,nelement,numpoin
 
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
-  integer,dimension(:),allocatable :: num_ibool  
-  integer :: ispec 
+  integer,dimension(:),allocatable :: num_ibool
+  integer :: ispec
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
-  integer :: n1, n2, n3, n4, n5, n6, n7, n8 
+  integer :: n1, n2, n3, n4, n5, n6, n7, n8
 
   ! outputs total number of elements for all slices
   if (it == 1) then
@@ -626,8 +627,8 @@
   allocate(num_ibool(NGLOB_AB))
   mask_ibool(:) = .false.
   num_ibool(:) = 0
-  numpoin = 0    
-  do ispec=1,NSPEC_AB  
+  numpoin = 0
+  do ispec=1,NSPEC_AB
     ! gets corner indices
     iglob1=ibool(1,1,1,ispec)
     iglob2=ibool(NGLLX,1,1,ispec)
@@ -642,54 +643,54 @@
     if(.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
       num_ibool(iglob1) = numpoin
-      mask_ibool(iglob1) = .true.          
+      mask_ibool(iglob1) = .true.
     endif
     if(.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
       num_ibool(iglob2) = numpoin
-      mask_ibool(iglob2) = .true.        
+      mask_ibool(iglob2) = .true.
     endif
     if(.not. mask_ibool(iglob3)) then
       numpoin = numpoin + 1
       num_ibool(iglob3) = numpoin
-      mask_ibool(iglob3) = .true.        
+      mask_ibool(iglob3) = .true.
     endif
     if(.not. mask_ibool(iglob4)) then
       numpoin = numpoin + 1
       num_ibool(iglob4) = numpoin
-      mask_ibool(iglob4) = .true.        
+      mask_ibool(iglob4) = .true.
     endif
     if(.not. mask_ibool(iglob5)) then
       numpoin = numpoin + 1
       num_ibool(iglob5) = numpoin
-      mask_ibool(iglob5) = .true.        
+      mask_ibool(iglob5) = .true.
     endif
     if(.not. mask_ibool(iglob6)) then
       numpoin = numpoin + 1
       num_ibool(iglob6) = numpoin
-      mask_ibool(iglob6) = .true.        
+      mask_ibool(iglob6) = .true.
     endif
     if(.not. mask_ibool(iglob7)) then
       numpoin = numpoin + 1
       num_ibool(iglob7) = numpoin
-      mask_ibool(iglob7) = .true.        
+      mask_ibool(iglob7) = .true.
     endif
     if(.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
       num_ibool(iglob8) = numpoin
-      mask_ibool(iglob8) = .true.        
+      mask_ibool(iglob8) = .true.
     endif
-  
+
     ! outputs corner indices (starting with 0 )
-    n1 = num_ibool(iglob1) -1 + np 
-    n2 = num_ibool(iglob2) -1 + np 
-    n3 = num_ibool(iglob3) -1 + np 
-    n4 = num_ibool(iglob4) -1 + np 
-    n5 = num_ibool(iglob5) -1 + np 
-    n6 = num_ibool(iglob6) -1 + np 
-    n7 = num_ibool(iglob7) -1 + np 
-    n8 = num_ibool(iglob8) -1 + np 
-    
+    n1 = num_ibool(iglob1) -1 + np
+    n2 = num_ibool(iglob2) -1 + np
+    n3 = num_ibool(iglob3) -1 + np
+    n4 = num_ibool(iglob4) -1 + np
+    n5 = num_ibool(iglob5) -1 + np
+    n6 = num_ibool(iglob6) -1 + np
+    n7 = num_ibool(iglob7) -1 + np
+    n8 = num_ibool(iglob8) -1 + np
+
     call write_integer(n1)
     call write_integer(n2)
     call write_integer(n3)
@@ -703,35 +704,35 @@
 
   ! elements written
   nelement = NSPEC_AB
-  
+
   ! updates points written
   np = np + numpoin
-    
+
   end subroutine cvd_write_corner_elements
-  
-  
+
+
 !=============================================================
 
 
   subroutine cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
                                     np,nelement,it,nee,numpoin)
 
-! writes out indices of elements given by GLL points 
+! writes out indices of elements given by GLL points
 
   implicit none
   include 'constants.h'
-  
+
   integer,intent(in):: NSPEC_AB,NGLOB_AB
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
   integer:: it,nee,np,numpoin,nelement
 
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
-  integer,dimension(:),allocatable :: num_ibool    
+  integer,dimension(:),allocatable :: num_ibool
   integer :: ispec,i,j,k
   integer :: iglob,iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   integer :: n1, n2, n3, n4, n5, n6, n7, n8
-  
+
   ! outputs total number of elements for all slices
   if (it == 1) then
     !nee = nelement * num_node
@@ -743,7 +744,7 @@
   allocate(num_ibool(NGLOB_AB))
   mask_ibool(:) = .false.
   num_ibool(:) = 0
-  numpoin = 0  
+  numpoin = 0
   do ispec=1,NSPEC_AB
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -793,10 +794,10 @@
     enddo
   enddo
   ! elements written
-  nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1) 
-  
+  nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
+
   ! updates points written
   np = np + numpoin
 
   end subroutine cvd_write_GLL_elements
-  
+

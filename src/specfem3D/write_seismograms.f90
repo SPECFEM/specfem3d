@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -274,7 +275,7 @@
 
 ! parameters for master collects seismograms
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: tr 
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: tr
   real(kind=CUSTOM_REAL) :: time_t
   integer :: nrec_local_received,NPROCTOT,total_seismos,receiver,sender
   integer :: iproc,ier,nt_s
@@ -383,9 +384,9 @@
             endif
 
             if(SEISMOGRAMS_BINARY) then
-               ! binary format case 
+               ! binary format case
                tr(isample)=seismograms(iorientation,irec_local,isample)
-               write(IOUT,rec=1) tr   
+               write(IOUT,rec=1) tr
             else
                ! ASCII format case
                write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)

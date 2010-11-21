@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -50,7 +51,7 @@ program combine_surf_data
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
   integer :: NSPEC_AB,NGLOB_AB
-  
+
   real x, y, z
   real, dimension(:,:,:,:), allocatable :: dat3D
   real, dimension(:,:,:), allocatable :: dat2D
@@ -60,7 +61,7 @@ program combine_surf_data
 
 !  integer :: num_ibool(NGLOB_AB)
   integer,dimension(:),allocatable :: num_ibool
-  
+
   logical :: HIGH_RESOLUTION_MESH,  FILE_ARRAY_IS_3D
   integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim
   integer,dimension(:), allocatable ::  ibelm_surf
@@ -160,15 +161,15 @@ program combine_surf_data
     open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
           status='old',action='read',form='unformatted',iostat=ios)
     read(27) NSPEC_AB
-    read(27) NGLOB_AB 
+    read(27) NGLOB_AB
     close(27)
     nspec = NSPEC_AB
-    nglob = NGLOB_AB    
-    
+    nglob = NGLOB_AB
+
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))    
-    allocate(mask_ibool(NGLOB_AB))    
-    allocate(num_ibool(NGLOB_AB))    
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(num_ibool(NGLOB_AB))
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
 
     ! surface file
@@ -313,15 +314,15 @@ program combine_surf_data
     open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
           status='old',action='read',form='unformatted',iostat=ios)
     read(27) NSPEC_AB
-    read(27) NGLOB_AB 
+    read(27) NGLOB_AB
     close(27)
     nspec = NSPEC_AB
-    nglob = NGLOB_AB    
-    
+    nglob = NGLOB_AB
+
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))    
-    allocate(mask_ibool(NGLOB_AB))    
-    allocate(num_ibool(NGLOB_AB))    
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(num_ibool(NGLOB_AB))
 
 
     np = npoint * (it-1)

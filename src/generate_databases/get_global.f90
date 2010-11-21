@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -248,19 +249,19 @@ end subroutine swap_all
 ! (put into this subroutine but compiler keeps on complaining that it can't vectorize loops...)
 
   implicit none
-  
+
   include "constants.h"
-  
+
   integer :: nspec,nglob
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  
+
 ! mask to sort ibool
   integer, dimension(:), allocatable :: mask_ibool
-  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori  
+  integer, dimension(:,:,:,:), allocatable :: copy_ibool_ori
   integer :: inumber
   integer:: i,j,k,ispec,ier
-  
-! copies original array  
+
+! copies original array
   allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
   allocate(mask_ibool(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
 

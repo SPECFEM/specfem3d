@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -166,7 +167,7 @@
   real(kind=CUSTOM_REAL), dimension(recvcounttot) :: recvbuf
 
   recvbuf(:) = sendbuf(:)
-  
+
   end subroutine gatherv_all_cr
 
 !
@@ -272,7 +273,7 @@
   recvbuf = sendbuf
 
   end subroutine max_all_all_cr
-  
+
 !
 !----
 !
@@ -284,9 +285,9 @@
   double precision :: sendbuf, recvbuf
 
   recvbuf = sendbuf
-  
+
   end subroutine max_all_all_dp
-  
+
 
 !
 !----
@@ -299,7 +300,7 @@
 !  double precision :: sendbuf, recvbuf
 !
 !  recvbuf = sendbuf
-!  
+!
 !  end subroutine min_all_all_dp
 !
 !----
@@ -356,7 +357,7 @@
   integer:: sendbuf, recvbuf
 
   recvbuf = sendbuf
-  
+
   end subroutine min_all_i
 
 !
@@ -470,7 +471,7 @@
 
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
-  
+
   stop 'issend_cr not implemented for serial code'
 
   end subroutine issend_cr
@@ -530,12 +531,12 @@
   subroutine recv_i(recvbuf, recvcount, dest, recvtag )
 
   implicit none
-  
+
   !integer recvbuf,recvcount,dest,recvtag
   integer dest,recvtag
   integer recvcount
   integer,dimension(recvcount):: recvbuf
-  
+
   stop 'recv_i not implemented for serial code'
 
   end subroutine recv_i
@@ -549,7 +550,7 @@
   implicit none
 
   include "constants.h"
-  
+
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
 
@@ -567,7 +568,7 @@
   implicit none
 
   integer sendbuf,sendcount,dest,sendtag
-  
+
   stop 'send_i not implemented for serial code'
 
   end subroutine send_i
@@ -580,9 +581,9 @@
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
   implicit none
-  
+
   include "constants.h"
-  
+
   integer sendcount,dest,sendtag
   real(kind=CUSTOM_REAL),dimension(sendcount) :: sendbuf
 
@@ -600,4 +601,4 @@
   integer :: req
 
   end subroutine wait_req
-  
+

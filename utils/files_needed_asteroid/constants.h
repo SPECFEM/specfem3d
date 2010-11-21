@@ -1,10 +1,10 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
 !         (c) California Institute of Technology July 2005
 !
 ! This program is free software; you can redistribute it and/or modify
@@ -126,7 +126,7 @@
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .true.
   logical, parameter :: FASTER_SOURCES_POINTS_ONLY = .true.
 
-! the receivers can be located inside the model 
+! the receivers can be located inside the model
   logical, parameter :: RECVS_CAN_BE_BURIED_EXT_MESH = .false.
   logical, parameter :: SOURCES_CAN_BE_BURIED_EXT_MESH = .false.
 

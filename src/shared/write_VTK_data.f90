@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -37,12 +38,12 @@
 
   integer :: nspec,nglob
 
-! global coordinates  
+! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
 ! element flag array
-  integer, dimension(nspec) :: elem_flag  
+  integer, dimension(nspec) :: elem_flag
   integer :: ispec,i
 
 ! file name
@@ -52,7 +53,7 @@
   !debug
   !write(IMAIN,*) '  vtk file: '
   !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
-  
+
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
   write(IOVTK,'(a)') 'material model VTK file'
@@ -71,12 +72,12 @@
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
-  
+
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
   write(IOVTK,*) ""
-  
+
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
@@ -88,8 +89,8 @@
 
 
   end subroutine write_VTK_data_elem_i
-  
-  
+
+
 !=============================================================
 
 ! external mesh routine for saving vtk files for custom_real values on all gll points
@@ -103,18 +104,18 @@
   include "constants.h"
 
   integer :: nspec,nglob
-  
-! global coordinates  
+
+! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array  
+! gll data values array
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
 
 ! masking arrays (takes first data value assigned on a global point, ignores any data values later on for the same global point)
   real, dimension(:),allocatable :: flag_val
   logical, dimension(:),allocatable :: mask_ibool
-  
+
 ! file name
   character(len=256) prname_file
 
@@ -124,7 +125,7 @@
   !debug
   !write(IMAIN,*) '  vtk file: '
   !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
-  
+
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
   write(IOVTK,'(a)') 'material model VTK file'
@@ -143,23 +144,23 @@
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
-  
+
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
   write(IOVTK,*) ""
-    
+
   ! iflag field on global nodeset
   allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
   if( ier /= 0 ) stop 'error allocating mask'
-  
+
   mask_ibool = .false.
   do ispec=1,nspec
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
           iglob = ibool(i,j,k,ispec)
-          if( .not. mask_ibool(iglob) ) then   
+          if( .not. mask_ibool(iglob) ) then
             flag_val(iglob) = gll_data(i,j,k,ispec)
             mask_ibool(iglob) = .true.
           endif
@@ -171,7 +172,7 @@
   write(IOVTK,'(a,i12)') "POINT_DATA ",nglob
   write(IOVTK,'(a)') "SCALARS gll_data float"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
-  do i = 1,nglob    
+  do i = 1,nglob
       write(IOVTK,*) flag_val(i)
   enddo
   write(IOVTK,*) ""
@@ -194,18 +195,18 @@
   include "constants.h"
 
   integer :: nspec,nglob
-  
-! global coordinates  
+
+! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array  
+! gll data values array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
 
 ! masking arrays (takes first data value assigned on a global point, ignores any data values later on for the same global point)
   real, dimension(:),allocatable :: flag_val
   logical, dimension(:),allocatable :: mask_ibool
-  
+
 ! file name
   character(len=256) prname_file
 
@@ -215,7 +216,7 @@
   !debug
   !write(IMAIN,*) '  vtk file: '
   !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
-  
+
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
   write(IOVTK,'(a)') 'material model VTK file'
@@ -234,23 +235,23 @@
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
-  
+
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
   write(IOVTK,*) ""
-    
+
   ! iflag field on global nodeset
   allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
   if( ier /= 0 ) stop 'error allocating mask'
-  
+
   mask_ibool = .false.
   do ispec=1,nspec
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
           iglob = ibool(i,j,k,ispec)
-          if( .not. mask_ibool(iglob) ) then   
+          if( .not. mask_ibool(iglob) ) then
             flag_val(iglob) = gll_data(i,j,k,ispec)
             mask_ibool(iglob) = .true.
           endif
@@ -262,7 +263,7 @@
   write(IOVTK,'(a,i12)') "POINT_DATA ",nglob
   write(IOVTK,'(a)') "SCALARS gll_data float"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
-  do i = 1,nglob    
+  do i = 1,nglob
       write(IOVTK,*) flag_val(i)
   enddo
   write(IOVTK,*) ""
@@ -286,14 +287,14 @@
   include "constants.h"
 
   integer :: nglob
-  
-! global coordinates  
+
+! global coordinates
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array  
+! gll data values array
   integer :: num_points_globalindices
   integer, dimension(num_points_globalindices) :: points_globalindices
-  
+
 ! file name
   character(len=256) prname_file
 
@@ -303,7 +304,7 @@
   !debug
   !write(IMAIN,*) '  vtk file: '
   !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
-  
+
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
   write(IOVTK,'(a)') 'material model VTK file'
@@ -318,7 +319,7 @@
       close(IOVTK)
       stop 'error vtk points file'
     endif
-    
+
     write(IOVTK,'(3e18.6)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
   enddo
   write(IOVTK,*) ""
@@ -327,8 +328,8 @@
 
 
   end subroutine write_VTK_data_points
-  
-  
+
+
 !=============================================================
 
 ! external mesh routine for saving vtk files for points locations
@@ -344,12 +345,12 @@
 
   integer :: nspec,nglob
 
-  ! global coordinates  
+  ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
   ! element flag array
-  real(kind=CUSTOM_REAL), dimension(3,nspec) :: elem_vector  
+  real(kind=CUSTOM_REAL), dimension(3,nspec) :: elem_vector
   integer :: ispec,i
 
   ! file name
@@ -359,7 +360,7 @@
   !debug
   !write(IMAIN,*) '  vtk file: '
   !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
-  
+
   open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
   write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
   write(IOVTK,'(a)') 'material model VTK file'
@@ -378,7 +379,7 @@
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
   write(IOVTK,*) ""
-  
+
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,*) (12,ispec=1,nspec)
@@ -390,10 +391,10 @@
   do i=1,nspec
     write(IOVTK,*) elem_vector(1,i),elem_vector(2,i),elem_vector(3,i)
   enddo
-  
-  write(IOVTK,*) ""  
+
+  write(IOVTK,*) ""
   close(IOVTK)
 
 
   end subroutine write_VTK_data_elem_vectors
-  
+

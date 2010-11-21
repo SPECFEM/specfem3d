@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -195,7 +196,7 @@
 !!!
 !!!  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
 !!!        hgammar(NGLLZ), hpgammar(NGLLZ)
-!!!        
+!!!
 !!!  real(kind=CUSTOM_REAL) :: adj_src(NSTEP,NDIM)
 !!!
 !!!  integer icomp, itime, i, j, k, ios
@@ -206,27 +207,27 @@
 !!!
 !!!  !adj_sourcearray(:,:,:,:,:) = 0.
 !!!  adj_src = 0._CUSTOM_REAL
-!!!  
+!!!
 !!!  ! loops over components
 !!!  do icomp = 1, NDIM
 !!!
 !!!    filename = 'SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
 !!!    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
-!!!    if (ios /= 0) cycle ! cycles to next file    
+!!!    if (ios /= 0) cycle ! cycles to next file
 !!!    !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
-!!!    
+!!!
 !!!    ! reads in adjoint source trace
 !!!    do itime = 1, NSTEP
 !!!
 !!!      ! things become a bit tricky because of the Newark time scheme at
 !!!      ! the very beginning of the time loop. however, when we read in the backward/reconstructed
 !!!      ! wavefields at the end of the first time loop, we can use the adjoint source index from 1 to NSTEP
-!!!      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).      
-!!!      read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)      
+!!!      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).
+!!!      read(IIN,*,iostat=ios) junk, adj_src(itime,icomp)
 !!!      if( ios /= 0 ) &
 !!!        call exit_MPI(myrank, &
-!!!          'file '//trim(filename)//' has wrong length, please check with your simulation duration')      
-!!!    enddo    
+!!!          'file '//trim(filename)//' has wrong length, please check with your simulation duration')
+!!!    enddo
 !!!    close(IIN)
 !!!
 !!!  enddo
@@ -275,7 +276,7 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
 
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
-        
+
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
 
   integer icomp, itime, i, j, k, ios, it_start, it_end
@@ -290,32 +291,32 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
 
   !adj_sourcearray(:,:,:,:,:) = 0.
   adj_src = 0._CUSTOM_REAL
-  
+
   ! loops over components
   do icomp = 1, NDIM
 
     filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
-    if (ios /= 0) cycle ! cycles to next file    
+    if (ios /= 0) cycle ! cycles to next file
     !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
-    
+
     ! reads in adjoint source trace
-    !! skip unused blocks 
+    !! skip unused blocks
     do itime = 1, it_start-1
-      read(IIN,*,iostat=ios) junk, junk 
+      read(IIN,*,iostat=ios) junk, junk
       if( ios /= 0 ) &
         call exit_MPI(myrank, &
-          'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')      
-    enddo    
-    !! read the block we need 
+          'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')
+    enddo
+    !! read the block we need
     do itime = it_start, it_end
       read(IIN,*,iostat=ios) junk, adj_src(itime-it_start+1,icomp)
       !!! used to check whether we read the correct block
       ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
       if( ios /= 0 ) &
         call exit_MPI(myrank, &
-          'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')      
-    enddo    
+          'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')
+    enddo
     close(IIN)
 
   enddo
@@ -546,8 +547,8 @@ end subroutine compute_adj_source_frechet
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
   integer :: i,j,k
-  
-! initializes  
+
+! initializes
   sourcearray(:,:,:,:) = 0._CUSTOM_REAL
   sourcearrayd(:,:,:,:) = 0.d0
 
@@ -561,7 +562,7 @@ end subroutine compute_adj_source_frechet
     do j=1,NGLLY
       do i=1,NGLLX
         ! identical source array components in x,y,z-direction
-        sourcearrayd(:,i,j,k) = hxis(i)*hetas(j)*hgammas(k)*dble(factor_source)        
+        sourcearrayd(:,i,j,k) = hxis(i)*hetas(j)*hgammas(k)*dble(factor_source)
       enddo
     enddo
   enddo

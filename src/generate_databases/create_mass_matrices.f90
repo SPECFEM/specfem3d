@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -26,14 +27,14 @@
   subroutine create_mass_matrices(nglob,nspec,ibool)
 
 ! returns precomputed mass matrix in rmass array
-  
-  use create_regions_mesh_ext_par 
+
+  use create_regions_mesh_ext_par
   implicit none
 
 ! number of spectral elements in each block
   integer :: nspec
   integer :: nglob
-  
+
 ! arrays with the mesh global indices
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
@@ -48,12 +49,12 @@
   allocate(rmass_solid_poroelastic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
   allocate(rmass_fluid_poroelastic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
 
-! creates mass matrix  
+! creates mass matrix
   rmass(:) = 0._CUSTOM_REAL
   rmass_acoustic(:) = 0._CUSTOM_REAL
   rmass_solid_poroelastic(:) = 0._CUSTOM_REAL
   rmass_fluid_poroelastic(:) = 0._CUSTOM_REAL
-  
+
   do ispec=1,nspec
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -85,41 +86,41 @@
                     jacobianl * weight * rhostore(i,j,k,ispec)
             endif
           endif
-          
+
 ! poroelastic mass matrices
           if( ispec_is_poroelastic(ispec) ) then
-            
+
             stop 'poroelastic mass matrices not implemented yet'
-            
+
             !rho_solid = density(1,kmato(ispec))
             !rho_fluid = density(2,kmato(ispec))
             !phi = porosity(kmato(ispec))
             !tort = tortuosity(kmato(ispec))
-            !rho_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f          
+            !rho_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f
             !
-            !if(CUSTOM_REAL == SIZE_REAL) then            
+            !if(CUSTOM_REAL == SIZE_REAL) then
             !  ! for the solid mass matrix
             !  rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
             !      sngl( dble(jacobianl) * weight * dble(rho_bar - phi*rho_fluid/tort) )
-            !  
+            !
             !  ! for the fluid mass matrix
             !  rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
             !      sngl( dble(jacobianl) * weight * dble(rho_bar*rho_fluid*tort - &
-            !                                  phi*rho_fluid*rho_fluid)/dble(rho_bar*phi) )            
+            !                                  phi*rho_fluid*rho_fluid)/dble(rho_bar*phi) )
             !else
             !  rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
             !      jacobianl * weight * (rho_bar - phi*rho_fluid/tort)
-            !  
+            !
             !  rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
             !      jacobianl * weight * (rho_bar*rho_fluid*tort - &
-            !                                  phi*rho_fluid*rho_fluid) / (rho_bar*phi) 
+            !                                  phi*rho_fluid*rho_fluid) / (rho_bar*phi)
             !endif
           endif
-          
+
         enddo
       enddo
     enddo
-  enddo ! nspec  
+  enddo ! nspec
 
   end subroutine create_mass_matrices
 
@@ -133,14 +134,14 @@
                         itopo_bathy)
 
 ! returns precomputed mass matrix in rmass array
-  
-  use create_regions_mesh_ext_par 
+
+  use create_regions_mesh_ext_par
   implicit none
 
 ! number of spectral elements in each block
   integer :: nspec
   integer :: nglob
-  
+
 ! arrays with the mesh global indices
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   logical :: OCEANS
@@ -152,7 +153,7 @@
   double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
 
-  
+
 ! local parameters
   double precision :: weight
   double precision :: xval,yval,long,lat,elevation
@@ -184,7 +185,7 @@
           ix_oceans = free_surface_ijk(1,igll,ispec2D)
           iy_oceans = free_surface_ijk(1,igll,ispec2D)
           iz_oceans = free_surface_ijk(1,igll,ispec2D)
-        
+
           iglobnum=ibool(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
 
           ! compute local height of oceans
