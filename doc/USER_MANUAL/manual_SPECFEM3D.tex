@@ -45,9 +45,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 %\renewcommand{\baselinestretch}{1.5}
 
-% figures
-\usepackage[dvips]{epsfig}
-
 \usepackage{wrapfig}
 
 
@@ -84,34 +81,35 @@
 \makeatother
 
 \begin{document}
-\thispagestyle{empty}\textbf{}%
-\begin{figure}[H]
-\noindent \includegraphics[width=0.75\paperwidth]{figures/specfem_3d-cover.pdf}
-\end{figure}
-
-
-
+\begin{center}
+\thispagestyle{empty}%
+\vspace*{-1.8truecm}
+\noindent\makebox[\textwidth]{%
+\noindent\includegraphics[width=0.83\paperwidth]{figures/specfem_3d-cover.pdf}
+}
+\end{center}
+%
 \title{\textbf{SPECFEM3D}\\
 \textbf{User Manual}}
 
 \author{$\copyright$ Princeton University (USA) and\\
 University of Pau / CNRS / INRIA (France)\\
 Version 2.0.0 \\
-"Sesame"
-}
+"Sesame"}
 
+\date{\noindent \today}
 
 \maketitle
 
 \section*{Authors}
-The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. \\
+The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University and Caltech, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at Institut de Physique du Globe (IPGP) in Paris, France from 1994 to 1997.\\
 
 Since then it has been developed and maintained by a development team: in alphabetical order,
 Piero Basini,
+C\'eline Blitz,
 Ebru Bozdag,
 Emanuele Casarotti,
 Min Chen,
-Hom Nath Gharti,
 Vala Hj\"orleifsd\'ottir,
 Emiljana Jorgji,
 Sue Kientz,
@@ -126,23 +124,17 @@ Federica Magnoni,
 Roland Martin,
 Dennis McRitchie,
 David Mich\'ea,
+Hom Nath Gharti,
 Tarje Nissen-Meyer,
 Daniel Peter,
 Brian Savage,
 Leif Strand,
 Carl Tape,
 Jeroen Tromp.\\
-
-
-\toall{add full list of developers here and update the AUTHORS file accordingly} \\
+% \toall{add full list of developers here and update the AUTHORS file accordingly}
 
 The cover graphic of the manual was created
-by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}.
-Sue Kientz assembled the manual.\\
-
-\toall{We should also update the Adobe Illustrator / PDF cover page as well at some point} \\
-
-
+by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}.\\
 
 \newpage{}
 
@@ -161,37 +153,15 @@ Note that in most geological models in the context of seismic wave propagation s
 a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient. For a detailed introduction to the SEM as applied to regional
 seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
 in particular \citet{KoLiTrSuStSh04}.
+A detailed theoretical analysis of the dispersion
+and stability properties of the SEM is available in \citet{Coh02}, \citet{DeSe07} and \citet{SeOl07}.
 
 Effects due to lateral variations in compressional-wave speed, shear-wave
 speed, density, a 3D crustal model, topography and bathymetry are
 included. The package can accommodate
 full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
 variations in attenuation \citep{SaKoTr10}. Adjoint capabilities and finite-frequency
-kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09}.
-
-%The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University, then Caltech and Princeton, USA, starting in 1998, based in part on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at IPG in Paris, France from 1994 to 1997. Since then it has been developed and maintained by a development team: in alphabetical order,
-%Emanuele Casarotti,
-%Min Chen,
-%Vala Hj\"orleifsd\'ottir,
-%Emiljana Jorgji,
-%Sue Kientz,
-%Dimitri Komatitsch,
-%Qinya Liu,
-%Yang Luo,
-%Nicolas Le Goff,
-%Pieyre Le Loher,
-%Alessia Maggi,
-%Roland Martin,
-%Dennis McRitchie,
-%David Mich\'ea,
-%Daniel Peter,
-%Brian Savage,
-%Leif Strand,
-%Carl Tape,
-%Jeroen Tromp
-%\toall{add full list of developers here and update the AUTHORS file accordingly}.
-
-%\toall{We should also update the Adobe Illustrator / PDF cover page as well at some point}
+kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09,ViOp09}.
 
 All SPECFEM3D software is written in Fortran90 with full portability
 in mind, and conforms strictly to the Fortran95 standard. It uses
@@ -213,10 +183,6 @@ The next release will use the PT-Scotch parallel library for mesh partitioning.
 
 If you use SPECFEM3D for your own research, please cite at least one
 of the following articles:
-
-%\cite{TrKoLi08,VaCaSaKoVi99,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,KoMiEr09,KoErGoMi10,KoGoErMi10,WiKoScTr04,KoLiTrSuStSh04,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
-
-%If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others: \cite{WiKoScTr04,JiTsKoTr05,KrJiKoTr06a,KrJiKoTr06b,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09,ChFaKo04,FaChKo04,RiRiKoTrHe02,GoAmTaCaSmSaMaKo09,TrKo00,SaKoTr10}.
 
 \begin{description}
 
@@ -267,8 +233,7 @@ Foundation under Grants No. EAR-0406751 and EAR-0711177, by the French
 CNRS, French INRIA Sud-Ouest MAGIQUE-3D, French ANR NUMASIS under
 Grant No. ANR-05-CIGC-002, and European FP6 Marie Curie International
 Reintegration Grant No. MIRG-CT-2005-017461.
-Any opinions, findings,
-and conclusions or recommendations expressed in this material are
+Any opinions, findings, and conclusions or recommendations expressed in this material are
 those of the authors and do not necessarily reflect the views of the
 USA National Science Foundation, CNRS, INRIA, ANR or the European
 Marie Curie program.
