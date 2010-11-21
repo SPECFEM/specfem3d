@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -27,18 +28,18 @@
 subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
-                        hxir,hetar,hgammar, &                        
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
 
 ! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
-                        
+
   implicit none
   include 'constants.h'
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 
-  integer :: ispec 
-  
+  integer :: ispec
+
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
@@ -49,7 +50,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
   double precision,dimension(NGLLY) :: hetar
   double precision,dimension(NGLLZ) :: hgammar
 
-! local parameters  
+! local parameters
   double precision :: hlagrange
   integer :: i,j,k,iglob
 
@@ -68,7 +69,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
   if(FASTER_RECEIVERS_POINTS_ONLY) then
 
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
-    
+
     ! displacement
     dxd = dble(displ(1,iglob))
     dyd = dble(displ(2,iglob))
@@ -87,7 +88,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
 ! interpolates seismograms at exact receiver locations
     do k = 1,NGLLZ
       do j = 1,NGLLY
-        do i = 1,NGLLX                
+        do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
 
           hlagrange = hxir(i)*hetar(j)*hgammar(k)
@@ -104,14 +105,14 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
           axd = axd + dble(accel(1,iglob))*hlagrange
           ayd = ayd + dble(accel(2,iglob))*hlagrange
           azd = azd + dble(accel(3,iglob))*hlagrange
-          
+
         enddo
       enddo
     enddo
-    
+
   endif
-                        
-end subroutine compute_interpolated_dva                        
+
+end subroutine compute_interpolated_dva
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -126,18 +127,18 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
 
 ! acoustic elements
 ! returns displacement/velocity/pressure (dxd,..,vxd,..,axd,.. ) at receiver location
-                        
+
   implicit none
   include 'constants.h'
 
   double precision,intent(out) :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd
 
-  integer :: ispec 
-  
+  integer :: ispec
+
   integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element  
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic
-  
+
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
 
   ! receiver information
@@ -146,7 +147,7 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
   double precision,dimension(NGLLY) :: hetar
   double precision,dimension(NGLLZ) :: hgammar
 
-! local parameters  
+! local parameters
   double precision :: hlagrange
   integer :: i,j,k,iglob
 
@@ -177,14 +178,14 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
     axd = - potential_dot_dot_acoustic(iglob)
     ayd = - potential_dot_dot_acoustic(iglob)
-    azd = - potential_dot_dot_acoustic(iglob)                                          
+    azd = - potential_dot_dot_acoustic(iglob)
 
   else
 
 ! interpolates seismograms at exact receiver locations
     do k = 1,NGLLZ
       do j = 1,NGLLY
-        do i = 1,NGLLX                
+        do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
 
           hlagrange = hxir(i)*hetar(j)*hgammar(k)
@@ -200,12 +201,12 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
           ! pressure
           axd = axd - hlagrange*potential_dot_dot_acoustic(iglob)
           ayd = ayd - hlagrange*potential_dot_dot_acoustic(iglob)
-          azd = azd - hlagrange*potential_dot_dot_acoustic(iglob)                  
-          
+          azd = azd - hlagrange*potential_dot_dot_acoustic(iglob)
+
         enddo
       enddo
     enddo
-    
+
   endif
-                        
+
 end subroutine compute_interpolated_dva_ac

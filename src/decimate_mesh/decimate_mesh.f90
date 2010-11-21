@@ -71,7 +71,7 @@
             stop 'ERRORERROR'
          endif
       enddo
-      
+
    enddo
 enddo
 
@@ -121,7 +121,7 @@ enddo
 
 ! we build the graph
     elmnts_ext_mesh(:,:) = elmnts_ext_mesh(:,:) - 1
-    
+
     allocate(xadj(1:nelmnts_ext_mesh+1))
     allocate(adjncy(1:MAX_NEIGHBOURS*nelmnts_ext_mesh))
     allocate(nnodes_elmnts(1:nnodes_ext_mesh))
@@ -137,9 +137,9 @@ enddo
 
     allocate(elmnts_ext_mesh_sub(ESIZE,nelmnts_ext_mesh*NSUB*NSUB*NSUB))
     allocate(nodes_coords_ext_mesh_sub(NDIM,ESIZE*nelmnts_ext_mesh*(NSUB+1)*(NSUB+1)*(NSUB+1)))
-    allocate(mat_ext_mesh_sub(nelmnts_ext_mesh*NSUB*NSUB*NSUB))    
+    allocate(mat_ext_mesh_sub(nelmnts_ext_mesh*NSUB*NSUB*NSUB))
 
-    nnodes_ext_mesh_sub = 0    
+    nnodes_ext_mesh_sub = 0
 
     do ispec = 1, nelmnts_ext_mesh
 
@@ -285,7 +285,7 @@ enddo
              + (temporary_nodes(idim,ix,iy,1) + ((temporary_nodes(idim,ix,iy,NSUB+1)-temporary_nodes(idim,ix,iy,1)) &
              / real(NSUB))  * (iz-1))) &
              * 1./2.
-        
+
       enddo
       enddo
       enddo
@@ -300,7 +300,7 @@ enddo
              + (temporary_nodes(idim,ix,iy,1) + ((temporary_nodes(idim,ix,iy,NSUB+1)-temporary_nodes(idim,ix,iy,1)) &
              / real(NSUB))  * (iz-1))) &
              * 1./2.
-        
+
       enddo
       enddo
       enddo
@@ -315,7 +315,7 @@ enddo
              + (temporary_nodes(idim,ix,iy,1) + ((temporary_nodes(idim,ix,iy,NSUB+1)-temporary_nodes(idim,ix,iy,1)) &
              / real(NSUB))  * (iz-1))) &
              * 1./2.
-        
+
       enddo
       enddo
       enddo
@@ -330,7 +330,7 @@ enddo
              + (temporary_nodes(idim,ix,iy,1) + ((temporary_nodes(idim,ix,iy,NSUB+1)-temporary_nodes(idim,ix,iy,1)) &
              / real(NSUB))  * (iz-1))) &
              * 1./2.
-        
+
       enddo
       enddo
       enddo
@@ -345,7 +345,7 @@ enddo
              + (temporary_nodes(idim,ix,1,iz) + ((temporary_nodes(idim,ix,NSUB+1,iz)-temporary_nodes(idim,ix,1,iz)) &
              / real(NSUB))  * (iy-1))) &
              * 1./2.
-        
+
       enddo
       enddo
       enddo
@@ -360,7 +360,7 @@ enddo
              + (temporary_nodes(idim,ix,1,iz) + ((temporary_nodes(idim,ix,NSUB+1,iz)-temporary_nodes(idim,ix,1,iz)) &
              / real(NSUB))  * (iy-1))) &
              * 1./2.
-        
+
       enddo
       enddo
       enddo
@@ -377,14 +377,14 @@ enddo
              + (temporary_nodes(idim,ix,iy,1) + ((temporary_nodes(idim,ix,iy,NSUB+1)-temporary_nodes(idim,ix,iy,1)) &
              / real(NSUB))  * (iz-1))) &
              * 1./3.
-        
+
       enddo
       enddo
-      enddo      
+      enddo
       enddo
 
       temporary_nodes_lookup(:,:,:) = 0
- 
+
       do ispec_neighbours = xadj(ispec), xadj(ispec+1)-1
         if ( adjncy(ispec_neighbours) < ispec ) then
           do ispec_neighbours_sub = (adjncy(ispec_neighbours)-1)*NSUB*NSUB*NSUB + 1, adjncy(ispec_neighbours)*NSUB*NSUB*NSUB
@@ -420,7 +420,7 @@ enddo
            nodes_coords_ext_mesh_sub(3,nnodes_ext_mesh_sub) = temporary_nodes(3,ix,iy,iz)
         end if
       enddo
-      enddo      
+      enddo
       enddo
 
      do ix = 1, NSUB
@@ -451,7 +451,7 @@ enddo
             stop 'ERRORERROR'
          endif
       enddo
-      
+
    enddo
 enddo
 
@@ -591,4 +591,4 @@ enddo
 
 
   end subroutine mesh2dual_ncommonnodes
-                                        
+

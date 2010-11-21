@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -205,7 +206,7 @@
 
   ! print*,'init'
   !call MPI_COMM_SIZE(MPI_COMM_WORLD,size,ier)
-  !print*,'size = ',size 
+  !print*,'size = ',size
 
   end subroutine init
 
@@ -417,7 +418,7 @@
 !
 
 subroutine send_i(sendbuf,sendcount,dest)
- 
+
   implicit none
 
 ! standard include of the MPI library
@@ -464,7 +465,7 @@ end subroutine recv_i
 !
 
 subroutine send_dp(sendbuf,sendcount,dest)
- 
+
   implicit none
 
 ! standard include of the MPI library
@@ -487,7 +488,7 @@ end subroutine send_dp
 !
 
 subroutine recv_dp(recvbuf,recvcount,source)
- 
+
   implicit none
 
 ! standard include of the MPI library

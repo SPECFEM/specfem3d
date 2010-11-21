@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -164,12 +165,12 @@
 
   integer :: myrank
 
-  ! 3D shape functions 
+  ! 3D shape functions
   double precision :: shape3D(NGNOD)
 
-  ! location 
+  ! location
   double precision :: xi,eta,gamma
-  
+
   ! local parameters
   double precision :: ra1,ra2,rb1,rb2,rc1,rc2
   double precision, parameter :: ONE_EIGHTH = 0.125d0
@@ -226,44 +227,44 @@
   integer :: NSPEC_AB,NGLOB_AB
 
   real(kind=CUSTOM_REAL),dimension(NGNOD),intent(out) :: xelm,yelm,zelm
-  
+
   ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore,ystore,zstore
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool 
+  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
 ! 8 node corners
   xelm(1)=xstore(ibool(1,1,1,ispec))
   yelm(1)=ystore(ibool(1,1,1,ispec))
   zelm(1)=zstore(ibool(1,1,1,ispec))
-  
+
   xelm(2)=xstore(ibool(NGLLX,1,1,ispec))
   yelm(2)=ystore(ibool(NGLLX,1,1,ispec))
   zelm(2)=zstore(ibool(NGLLX,1,1,ispec))
-  
+
   xelm(3)=xstore(ibool(NGLLX,NGLLY,1,ispec))
   yelm(3)=ystore(ibool(NGLLX,NGLLY,1,ispec))
   zelm(3)=zstore(ibool(NGLLX,NGLLY,1,ispec))
-  
+
   xelm(4)=xstore(ibool(1,NGLLY,1,ispec))
   yelm(4)=ystore(ibool(1,NGLLY,1,ispec))
   zelm(4)=zstore(ibool(1,NGLLY,1,ispec))
-  
+
   xelm(5)=xstore(ibool(1,1,NGLLZ,ispec))
   yelm(5)=ystore(ibool(1,1,NGLLZ,ispec))
   zelm(5)=zstore(ibool(1,1,NGLLZ,ispec))
-  
+
   xelm(6)=xstore(ibool(NGLLX,1,NGLLZ,ispec))
   yelm(6)=ystore(ibool(NGLLX,1,NGLLZ,ispec))
   zelm(6)=zstore(ibool(NGLLX,1,NGLLZ,ispec))
-  
+
   xelm(7)=xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
   yelm(7)=ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
   zelm(7)=zstore(ibool(NGLLX,NGLLY,NGLLZ,ispec))
-  
+
   xelm(8)=xstore(ibool(1,NGLLY,NGLLZ,ispec))
   yelm(8)=ystore(ibool(1,NGLLY,NGLLZ,ispec))
   zelm(8)=zstore(ibool(1,NGLLY,NGLLZ,ispec))
 
   end subroutine get_shape3D_element_corners
-  
-  
+
+

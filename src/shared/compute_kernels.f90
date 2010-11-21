@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -24,14 +25,14 @@
 !=====================================================================
 
   subroutine compute_kernels()
-  
+
 ! kernel calculations
 ! see e.g. Tromp et al. (2005)
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_movie,only: nfaces_surface_ext_mesh 
+  use specfem_par_movie,only: nfaces_surface_ext_mesh
 
   implicit none
   ! local parameters
@@ -45,12 +46,12 @@
 
     ! elastic domains
     if( ispec_is_elastic(ispec) ) then
-    
+
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-            
+
             ! isotropic kernels
             ! note: takes displacement from backward/reconstructed (forward) field b_displ
             !          and acceleration from adjoint field accel (containing adjoint sources)
@@ -59,11 +60,11 @@
             !
             ! compare with Tromp et al. (2005), eq. (14), which takes adjoint displacement
             ! and forward acceleration, that is the symmetric form of what is calculated here
-            ! however, this kernel expression is symmetric with regards 
-            ! to interchange adjoint - forward field 
+            ! however, this kernel expression is symmetric with regards
+            ! to interchange adjoint - forward field
             rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
                                 + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
-                                
+
             ! kernel for shear modulus, see e.g. Tromp et al. (2005), equation (17)
             ! note: multiplication with 2*mu(x) will be done after the time loop
             epsilondev_loc(1) = epsilondev_xx(i,j,k,ispec)
@@ -89,15 +90,15 @@
             kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
                               + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) &
                                           * b_epsilon_trace_over_3(i,j,k,ispec))
-                                
+
           enddo
         enddo
-      enddo    
+      enddo
     endif !ispec_is_elastic
 
-    ! acoustic domains  
+    ! acoustic domains
     if( ispec_is_acoustic(ispec) ) then
-    
+
       ! backward fields: displacement vector
       call compute_gradient(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       b_potential_acoustic, b_displ_elm,&
@@ -115,7 +116,7 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-          
+
             ! density kernel
             rhol = rhostore(i,j,k,ispec)
             rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
@@ -127,18 +128,18 @@
                                   - deltat / kappal  &
                                   * potential_dot_dot_acoustic(iglob) &
                                   * b_potential_dot_dot_acoustic(iglob)
-                                  
+
           enddo
         enddo
-      enddo                      
+      enddo
     endif ! ispec_is_acoustic
-      
+
   enddo
 
   ! moho kernel
   if( ELASTIC_SIMULATION  .and. SAVE_MOHO_MESH ) then
-      call compute_boundary_kernel()          
-  endif 
+      call compute_boundary_kernel()
+  endif
 
   !<YANGL
   ! for noise simulations --- source strength kernel

@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -119,7 +120,7 @@
 
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
   read(string_read,*) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
-             orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface 
+             orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface
   call read_value_string(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP')
   end subroutine read_interface_parameters
 
@@ -160,7 +161,7 @@
           iz_beg_region,iz_end_region,imaterial_number
 
   end subroutine read_region_parameters
-  
+
 !--------------------
 
   subroutine read_next_line(iunit,suppress_junk,string_read)

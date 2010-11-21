@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -148,19 +149,19 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-! This subroutine recomputes the 3D jacobian for one element 
-! based upon all GLL points 
+! This subroutine recomputes the 3D jacobian for one element
+! based upon all GLL points
 ! Hejun Zhu OCT16,2009
 
 ! input: myrank,
 !        xstore,ystore,zstore ----- input position
 !        xigll,yigll,zigll ----- gll points position
-!        ispec,nspec       ----- element number       
+!        ispec,nspec       ----- element number
 !        ACTUALLY_STORE_ARRAYS   ------ save array or not
 
-! output: xixstore,xiystore,xizstore, 
+! output: xixstore,xiystore,xizstore,
 !         etaxstore,etaystore,etazstore,
-!         gammaxstore,gammaystore,gammazstore ------ parameters used for calculating jacobian 
+!         gammaxstore,gammaystore,gammazstore ------ parameters used for calculating jacobian
 !
 !
 !  subroutine recalc_jacobian_gll3D(myrank,xixstore,xiystore,xizstore, &
@@ -213,7 +214,7 @@
 !  do k=1,NGLLZ
 !    do j=1,NGLLY
 !      do i=1,NGLLX
-!            
+!
 !            xxi = 0.0
 !            xeta = 0.0
 !            xgamma = 0.0
@@ -228,7 +229,7 @@
 !            eta = yigll(j)
 !            gamma = zigll(k)
 !
-!            ! calculate lagrange polynomial and its derivative 
+!            ! calculate lagrange polynomial and its derivative
 !            call lagrange_any(xi,NGLLX,xigll,hxir,hpxir)
 !            call lagrange_any(eta,NGLLY,yigll,hetar,hpetar)
 !            call lagrange_any(gamma,NGLLZ,zigll,hgammar,hpgammar)
@@ -241,7 +242,7 @@
 !            xmesh = 0.0
 !            ymesh = 0.0
 !            zmesh = 0.0
-!            
+!
 !
 !            do k1 = 1,NGLLZ
 !               do j1 = 1,NGLLY
@@ -251,7 +252,7 @@
 !                     hlagrange_eta = hxir(i1)*hpetar(j1)*hgammar(k1)
 !                     hlagrange_gamma = hxir(i1)*hetar(j1)*hpgammar(k1)
 !
-!                                   
+!
 !                     xxi = xxi + xstore(i1,j1,k1,ispec)*hlagrange_xi
 !                     xeta = xeta + xstore(i1,j1,k1,ispec)*hlagrange_eta
 !                     xgamma = xgamma + xstore(i1,j1,k1,ispec)*hlagrange_gamma
@@ -264,45 +265,45 @@
 !                     zeta = zeta + zstore(i1,j1,k1,ispec)*hlagrange_eta
 !                     zgamma = zgamma + zstore(i1,j1,k1,ispec)*hlagrange_gamma
 !
-!                     ! test the lagrange polynomial and its derivate 
+!                     ! test the lagrange polynomial and its derivate
 !                     xmesh = xmesh + xstore(i1,j1,k1,ispec)*hlagrange
 !                     ymesh = ymesh + ystore(i1,j1,k1,ispec)*hlagrange
 !                     zmesh = zmesh + zstore(i1,j1,k1,ispec)*hlagrange
 !                     sumshape = sumshape + hlagrange
 !                     sumdershapexi = sumdershapexi + hlagrange_xi
-!                     sumdershapeeta = sumdershapeeta + hlagrange_eta 
+!                     sumdershapeeta = sumdershapeeta + hlagrange_eta
 !                     sumdershapegamma = sumdershapegamma + hlagrange_gamma
-!                     
-!                  end do
-!               end do 
-!            end do 
 !
-!            ! Check the lagrange polynomial and its derivative 
+!                  end do
+!               end do
+!            end do
+!
+!            ! Check the lagrange polynomial and its derivative
 !            if (xmesh /=xstore(i,j,k,ispec).or.ymesh/=ystore(i,j,k,ispec).or.zmesh/=zstore(i,j,k,ispec)) then
 !                    call exit_MPI(myrank,'new mesh positions are wrong in recalc_jacobian_gall3D.f90')
-!            end if 
+!            end if
 !            if(abs(sumshape-one) >  TINYVAL) then
 !                    call exit_MPI(myrank,'error shape functions in recalc_jacobian_gll3D.f90')
-!            end if 
-!            if(abs(sumdershapexi) >  TINYVAL) then 
+!            end if
+!            if(abs(sumdershapexi) >  TINYVAL) then
 !                    call exit_MPI(myrank,'error derivative xi shape functions in recalc_jacobian_gll3D.f90')
-!            end if 
-!            if(abs(sumdershapeeta) >  TINYVAL) then 
+!            end if
+!            if(abs(sumdershapeeta) >  TINYVAL) then
 !                    call exit_MPI(myrank,'error derivative eta shape functions in recalc_jacobian_gll3D.f90')
-!            end if 
-!            if(abs(sumdershapegamma) >  TINYVAL) then 
+!            end if
+!            if(abs(sumdershapegamma) >  TINYVAL) then
 !                    call exit_MPI(myrank,'error derivative gamma shape functions in recalc_jacobian_gll3D.f90')
-!            end if 
-!  
+!            end if
+!
 !
 !            jacobian = xxi*(yeta*zgamma-ygamma*zeta) - &
 !                 xeta*(yxi*zgamma-ygamma*zxi) + &
 !                 xgamma*(yxi*zeta-yeta*zxi)
 !
-!            ! Check the jacobian      
-!            if(jacobian <= ZERO) then 
+!            ! Check the jacobian
+!            if(jacobian <= ZERO) then
 !                   call exit_MPI(myrank,'3D Jacobian undefined in recalc_jacobian_gll3D.f90')
-!            end if 
+!            end if
 !
 !            !     invert the relation (Fletcher p. 50 vol. 2)
 !            xix = (yeta*zgamma-ygamma*zeta) / jacobian
@@ -329,7 +330,7 @@
 !                        print*,'xix before',xixstore(i,j,k,ispec),'after',xix
 !                        print*,'etax before',etaxstore(i,j,k,ispec),'after',etax
 !                        print*,'gammax before',gammaxstore(i,j,k,ispec),'after',gammax
-!                end if 
+!                end if
 !
 !                if(CUSTOM_REAL == SIZE_REAL) then
 !                    xixstore(i,j,k,ispec) = sngl(xix)
@@ -354,7 +355,7 @@
 !                    gammazstore(i,j,k,ispec) = gammaz
 !                    jacobianstore(i,j,k,ispec) = jacobian
 !                endif
-!             end if 
+!             end if
 !        enddo
 !    enddo
 !  enddo

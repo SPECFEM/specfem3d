@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -105,8 +106,8 @@
 
 ! standard include of the MPI library
   include 'mpif.h'
-  
-  include "constants.h"  
+
+  include "constants.h"
   include "precision.h"
 
   integer count
@@ -797,14 +798,14 @@
 
 ! standard include of the MPI library
   include 'mpif.h'
-  
+
   integer dest,recvtag
   integer recvcount
   !integer recvbuf
   integer,dimension(recvcount):: recvbuf
   integer req(MPI_STATUS_SIZE)
   integer ier
-  
+
   call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag,MPI_COMM_WORLD,req,ier)
 
   end subroutine recv_i
@@ -819,15 +820,15 @@
 
 ! standard include of the MPI library
   include 'mpif.h'
-  
+
   include "constants.h"
   include "precision.h"
-  
+
   integer recvcount,dest,recvtag
   real(kind=CUSTOM_REAL),dimension(recvcount) :: recvbuf
   integer req(MPI_STATUS_SIZE)
   integer ier
-  
+
   call MPI_RECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag,MPI_COMM_WORLD,req,ier)
 
 
@@ -844,13 +845,13 @@
 
 ! standard include of the MPI library
   include 'mpif.h'
-  
+
   !integer sendbuf,sendcount,dest,sendtag
   integer dest,sendtag
   integer sendcount
   integer,dimension(sendcount):: sendbuf
   integer ier
-  
+
   call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag,MPI_COMM_WORLD,ier)
 
   end subroutine send_i
@@ -866,7 +867,7 @@
 
 ! standard include of the MPI library
   include 'mpif.h'
-  
+
   include "constants.h"
   include "precision.h"
 

@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -41,8 +42,8 @@
 
 !
 !-------------------------------------------------------------------------------------------------
-! 
- 
+!
+
   double precision function comp_source_time_function_gauss(t,hdur)
 
   implicit none
@@ -52,27 +53,27 @@
   double precision :: t,hdur
   double precision :: hdur_decay
   double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
-  
+
   ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
   hdur_decay = hdur
-  
+
   ! this here uses a stronger gaussian decay rate (empirical value) to avoid non-zero onset times;
   ! however, it should mimik a triangle source time function...
-  !hdur_decay = hdur  / SOURCE_DECAY_STRONG  
+  !hdur_decay = hdur  / SOURCE_DECAY_STRONG
 
-  ! note: a nonzero time to start the simulation with would lead to more high-frequency noise 
+  ! note: a nonzero time to start the simulation with would lead to more high-frequency noise
   !          due to the (spatial) discretization of the point source on the mesh
-  
-  ! gaussian  
+
+  ! gaussian
   comp_source_time_function_gauss = exp(-(t/hdur_decay)**2)/(sqrt(PI)*hdur_decay)
 
   end function comp_source_time_function_gauss
- 
+
 !
 !-------------------------------------------------------------------------------------------------
-! 
- 
+!
+
   double precision function comp_source_time_function_rickr(t,f0)
 
   implicit none
@@ -81,7 +82,7 @@
 
   double precision t,f0
 
-  ! ricker 
+  ! ricker
   comp_source_time_function_rickr = (1.d0 - 2.d0*PI*PI*f0*f0*t*t ) &
                                     * exp( -PI*PI*f0*f0*t*t )
 
@@ -91,6 +92,6 @@
   !!! in order to benchmark those simulations, the following formula is needed.
   ! comp_source_time_function_rickr = -2.d0*PI*PI*f0*f0*f0*t * exp(-PI*PI*f0*f0*t*t)
   !>YANGL
-                                                    
+
   end function comp_source_time_function_rickr
- 
+

@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -33,7 +34,7 @@
 
 ! sets up the MPI interface for communication between partitions
 
-  use create_regions_mesh_ext_par 
+  use create_regions_mesh_ext_par
   implicit none
 
   integer :: myrank,nglob,nspec,NPROC
@@ -41,24 +42,24 @@
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
-! external mesh, element indexing  
+! external mesh, element indexing
   integer :: nelmnts_ext_mesh
   integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
-  
+
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
-  
+
   integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
   integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
-  
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh  
+
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
 
 
   !integer :: nnodes_ext_mesh
-  !double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh  
-  
+  !double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
+
 !local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
   double precision, dimension(:), allocatable :: work_ext_mesh
@@ -71,14 +72,14 @@
   integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
   logical, dimension(:), allocatable :: ifseg
   integer :: iinterface,ilocnum
-  integer :: num_points1, num_points2 
+  integer :: num_points1, num_points2
 
   ! assembly test
   integer :: i,j,k,ispec,iglob,count,inum
   integer :: max_nibool_interfaces_ext_mesh
   integer,dimension(:),allocatable :: test_flag
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
-  integer, dimension(:,:), allocatable :: ibool_interfaces_dummy  
+  integer, dimension(:,:), allocatable :: ibool_interfaces_dummy
 
 ! gets global indices for points on MPI interfaces (defined by my_interfaces_ext_mesh) between different partitions
 ! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh (number of total points)
@@ -124,14 +125,14 @@
 
     ! checks that number of MPI points are still the same
     num_points1 = num_points1 + nibool_interfaces_ext_mesh(iinterface)
-    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true(iinterface)    
+    num_points2 = num_points2 + nibool_interfaces_ext_mesh_true(iinterface)
     if( num_points1 /= num_points2 ) then
       write(*,*) 'error sorting MPI interface points:',myrank
       write(*,*) '   interface:',iinterface,num_points1,num_points2
       call exit_mpi(myrank,'error sorting MPI interface')
     endif
     !write(*,*) myrank,'intfc',iinterface,num_points2,nibool_interfaces_ext_mesh_true(iinterface)
-    
+
     ! cleanup temporary arrays
     deallocate(xp)
     deallocate(yp)
@@ -151,29 +152,29 @@
   deallocate(nibool_interfaces_ext_mesh_true)
 
   ! outputs total number of MPI interface points
-  call sum_all_i(num_points2,ilocnum)  
+  call sum_all_i(num_points2,ilocnum)
   if( myrank == 0 ) then
-    write(IMAIN,*) '     total MPI interface points: ',ilocnum  
+    write(IMAIN,*) '     total MPI interface points: ',ilocnum
   endif
-  
+
 ! checks with assembly of test fields
   allocate(test_flag(nglob),test_flag_cr(nglob))
   test_flag(:) = 0
   test_flag_cr(:) = 0._CUSTOM_REAL
   count = 0
-  do ispec = 1, nspec    
+  do ispec = 1, nspec
     ! sets flags on global points
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
           ! global index
-          iglob = ibool(i,j,k,ispec)         
-          
+          iglob = ibool(i,j,k,ispec)
+
           ! counts number of unique global points to set
           if( test_flag(iglob) == 0 ) count = count+1
-          
+
           ! sets identifier
-          test_flag(iglob) = myrank + 1 
+          test_flag(iglob) = myrank + 1
           test_flag_cr(iglob) = myrank + 1.0
         enddo
       enddo
@@ -185,7 +186,7 @@
   ! sets up MPI communications
   max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
   allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
-  
+
   count = 0
   do iinterface = 1, num_interfaces_ext_mesh
      ibool_interfaces_dummy(:,iinterface) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,iinterface)
@@ -193,12 +194,12 @@
      !write(*,*) myrank,'interfaces ',iinterface,nibool_interfaces_ext_mesh(iinterface),max_nibool_interfaces_ext_mesh
   enddo
   call sync_all()
-  
+
   call sum_all_i(count,iglob)
   if( myrank == 0 ) then
     if( iglob /= ilocnum ) call exit_mpi(myrank,'error total global MPI interface points')
   endif
-  
+
   ! adds contributions from different partitions to flag arrays
   ! integer arrays
   call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
@@ -218,12 +219,12 @@
     ! only counts flags with MPI contributions
     if( test_flag(iglob) > myrank+1 ) i = i + 1
     if( test_flag_cr(iglob) > myrank+1.0) j = j + 1
-  enddo  
+  enddo
   call sum_all_i(i,inum)
   call sum_all_i(j,iglob)
   if( myrank == 0 ) then
     write(IMAIN,*) '     total assembled MPI interface points:',inum
     if( inum /= iglob .or. inum > ilocnum ) call exit_mpi(myrank,'error MPI assembly')
   endif
-  
+
   end subroutine get_MPI

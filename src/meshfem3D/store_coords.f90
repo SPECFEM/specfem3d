@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -145,7 +146,7 @@
   xstore(2,1,1,ispec) = xelm(2)
   ystore(2,1,1,ispec) = yelm(2)
   zstore(2,1,1,ispec) = zelm(2)
-  
+
   xstore(2,2,1,ispec) = xelm(3)
   ystore(2,2,1,ispec) = yelm(3)
   zstore(2,2,1,ispec) = zelm(3)
@@ -161,7 +162,7 @@
   xstore(2,1,2,ispec) = xelm(6)
   ystore(2,1,2,ispec) = yelm(6)
   zstore(2,1,2,ispec) = zelm(6)
-  
+
   xstore(2,2,2,ispec) = xelm(7)
   ystore(2,2,2,ispec) = yelm(7)
   zstore(2,2,2,ispec) = zelm(7)
@@ -169,6 +170,6 @@
   xstore(1,2,2,ispec) = xelm(8)
   ystore(1,2,2,ispec) = yelm(8)
   zstore(1,2,2,ispec) = zelm(8)
-       
+
   end subroutine store_coords
 

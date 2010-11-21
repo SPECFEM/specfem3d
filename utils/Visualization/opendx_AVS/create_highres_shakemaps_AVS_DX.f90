@@ -3,8 +3,8 @@
 !          S p e c f e m 3 D  G l o b e  V e r s i o n  3 . 3
 !          --------------------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
 !        (c) California Institute of Technology September 2002
 !
 ! This program is free software; you can redistribute it and/or modify

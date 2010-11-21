@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -106,7 +107,7 @@
   integer, parameter :: NGNOD = 8                        ! hexahedral elements
   logical, parameter :: IGNORE_OTHER_HEADERS = .false.
   double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
-  double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3 
+  double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3
 
 !------------------------------------------------------------------------------------------------
 
@@ -207,7 +208,7 @@
     endif
   enddo
   print*,'points: ',iread
-  
+
 ! skip the header
   read(10,*)
 

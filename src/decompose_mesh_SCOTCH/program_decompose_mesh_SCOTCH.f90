@@ -7,8 +7,8 @@ program pre_meshfem3D
                                   write_mesh_databases
   implicit none
   integer :: i
-  character(len=256) :: arg(3)  
-  
+  character(len=256) :: arg(3)
+
 !  include './constants_decompose_mesh_SCOTCH.h'
 
 ! check usage
@@ -17,7 +17,7 @@ program pre_meshfem3D
     if (i <= 3 .and. trim(arg(i)) == "") then
       print *, 'Usage: ./decompose_mesh_SCOTCH  nparts  input_directory output_directory'
       print *
-      print *, '  where'  
+      print *, '  where'
       print *, '      nparts = number of partitons'
       print *, '      input_directory = directory containing mesh files mesh_file,nodes_coords_file,..'
       print *, '      output_directory = directory for output files proc***_Databases'
@@ -31,16 +31,16 @@ program pre_meshfem3D
   outputpath_name = arg(3)
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
-  call read_mesh_files()  
-  
+  call read_mesh_files()
+
 ! checks valence of nodes
   call check_valence()
-  
-! partitions mesh 
+
+! partitions mesh
   call scotch_partitioning()
-  
-! writes out database files  
+
+! writes out database files
   call write_mesh_databases()
-   
+
 end program pre_meshfem3D
 

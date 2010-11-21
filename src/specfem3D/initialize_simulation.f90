@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,12 +31,12 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_poroelastic  
+  use specfem_par_poroelastic
   use specfem_par_movie
   implicit none
-  
+
   integer :: ier
-  
+
   ! read the parameter file
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
@@ -57,7 +58,7 @@
 
   ! checks flags
   call initialize_simulation_check()
-   
+
   ! open main output file, only written to by process 0
   if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
@@ -94,7 +95,7 @@
     write(IMAIN,*)
   endif
 
-  ! reads in numbers of spectral elements and points for this process' domain  
+  ! reads in numbers of spectral elements and points for this process' domain
   call create_name_database(prname,myrank,LOCAL_PATH)
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
         action='read',form='unformatted',iostat=ier)
@@ -102,7 +103,7 @@
     print*,'error: could not open database '
     print*,'path: ',prname(1:len_trim(prname))//'external_mesh.bin'
     call exit_mpi(myrank,'error opening database')
-  endif  
+  endif
   read(27) NSPEC_AB
   read(27) NGLOB_AB
   close(27)
@@ -120,9 +121,9 @@
     COMPUTE_AND_STORE_STRAIN = .true.
     NSPEC_STRAIN_ONLY = NSPEC_AB
   else
-    COMPUTE_AND_STORE_STRAIN = .false.  
+    COMPUTE_AND_STORE_STRAIN = .false.
     NSPEC_STRAIN_ONLY = 1
-  endif  
+  endif
 
   ! anisotropy arrays size
   if( ANISOTROPY ) then
@@ -144,21 +145,21 @@
   allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  ! mesh node locations  
+  ! mesh node locations
   allocate(xstore(NGLOB_AB))
   allocate(ystore(NGLOB_AB))
   allocate(zstore(NGLOB_AB))
-  ! material properties  
+  ! material properties
   allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   ! material flags
   allocate(ispec_is_acoustic(NSPEC_AB))
   allocate(ispec_is_elastic(NSPEC_AB))
   allocate(ispec_is_poroelastic(NSPEC_AB))
-      
+
   ! initializes adjoint simulations
   call initialize_simulation_adjoint()
-  
+
   end subroutine initialize_simulation
 
 !
@@ -170,13 +171,13 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_poroelastic  
+  use specfem_par_poroelastic
   use specfem_par_movie
   implicit none
 
   integer :: sizeprocs
   integer :: ier
-  
+
   ! sizeprocs returns number of processes started
   ! (should be equal to NPROC)
   call world_size(sizeprocs)
@@ -204,13 +205,13 @@
     ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
     ! just to be sure for now..
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
-      stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'  
+      stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
   endif
 
   ! exclusive movie flags
-  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then  
+  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
     if( EXTERNAL_MESH_MOVIE_SURFACE .and. EXTERNAL_MESH_CREATE_SHAKEMAP ) &
-      stop 'EXTERNAL_MESH_MOVIE_SURFACE and EXTERNAL_MESH_MOVIE_SURFACE cannot be both true'    
+      stop 'EXTERNAL_MESH_MOVIE_SURFACE and EXTERNAL_MESH_MOVIE_SURFACE cannot be both true'
     if( MOVIE_SURFACE ) &
       stop 'MOVIE_SURFACE cannot be used when EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP is true'
     if( CREATE_SHAKEMAP ) &
@@ -222,23 +223,23 @@
     ! tests if OUTPUT_FILES directory exists
     call get_value_string(dummystring, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
     ! note: inquire behaves differently when using intel ifort or gfortran compilers
-    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists ) 
+    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists )
     open(IOUT,file=trim(dummystring)//'/dummy.txt',status='unknown',iostat=ier)
     if( ier /= 0 ) then
       print*,"OUTPUT_FILES directory does not work: ",trim(dummystring)
       call exit_MPI(myrank,'error OUTPUT_FILES directory')
     endif
     close(IOUT,status='delete')
-    
+
     ! tests if LOCAL_PATH directory exists
     dummystring = adjustl(LOCAL_PATH)
-    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists ) 
+    !INQUIRE( FILE = dummystring(1:len_trim(dummystring))//'/.', EXIST = exists )
     open(IOUT,file=trim(dummystring)//'/dummy.txt',status='unknown',iostat=ier)
-    if( ier /= 0 ) then  
+    if( ier /= 0 ) then
       print*,"LOCAL_PATH directory does not work: ",trim(dummystring)
       call exit_MPI(myrank,'error LOCAL_PATH directory')
     endif
-    close(IOUT,status='delete')    
+    close(IOUT,status='delete')
   endif
 
   end subroutine initialize_simulation_check
@@ -253,13 +254,13 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_poroelastic  
+  use specfem_par_poroelastic
   implicit none
 
   ! check simulation parameters
   if (SIMULATION_TYPE /= 1 .and. NSOURCES > 1000) &
     call exit_mpi(myrank, 'for adjoint simulations, NSOURCES <= 1000')
-  
+
   ! snapshot file names: ADJOINT attenuation
   if (ATTENUATION .and. ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3)) &
     call create_name_database(prname_Q,myrank,LOCAL_PATH_Q)
@@ -282,10 +283,10 @@
   endif
 
   ! moho boundary
-  if( SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then    
+  if( SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
     NSPEC_BOUN = NSPEC_AB
   else
     NSPEC_BOUN = 1
   endif
-  
+
   end subroutine initialize_simulation_adjoint

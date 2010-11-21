@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -31,7 +32,7 @@
                                    ibool_interfaces_asteroid, &
                                    nibool_interfaces_asteroid )
 
-! returns: ibool_interfaces_asteroid with the global indices (as defined in ibool) 
+! returns: ibool_interfaces_asteroid with the global indices (as defined in ibool)
 !              nibool_interfaces_asteroid with the number of points in ibool_interfaces_asteroid
 !
 ! for all points on the interface defined by ninterface, my_nelmnts_neighbours and my_interfaces
@@ -40,17 +41,17 @@
 
   include 'constants.h'
 
-! spectral element indexing 
-! ( nelmnts = number of spectral elements  
-!   ngnode = number of element corners (8) 
+! spectral element indexing
+! ( nelmnts = number of spectral elements
+!   ngnode = number of element corners (8)
 !   knods = corner indices array )
   integer, intent(in)  :: nelmnts,ngnode
   integer, dimension(ngnode,nelmnts), intent(in)  :: knods
 
-! global number of points  
+! global number of points
   integer, intent(in) :: npoin
-  
-! global indexing  
+
+! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,nelmnts), intent(in)  :: ibool
 
 ! MPI interfaces
@@ -58,7 +59,7 @@
   integer  :: max_interface_size
   integer, dimension(ninterface)  :: my_nelmnts_neighbours
   integer, dimension(6,max_interface_size,ninterface)  :: my_interfaces
-  
+
   integer, dimension(NGLLX*NGLLX*max_interface_size,ninterface) :: ibool_interfaces_asteroid
   integer, dimension(ninterface)  :: nibool_interfaces_asteroid
 
@@ -92,7 +93,7 @@
     npoin_interface_asteroid = 0
     mask_ibool_asteroid(:) = .false.
 
-    ! loops over number of elements on interface 
+    ! loops over number of elements on interface
     do ispec_interface = 1, my_nelmnts_neighbours(num_interface)
       ! spectral element on interface
       ispec = my_interfaces(1,ispec_interface,num_interface)
@@ -112,7 +113,7 @@
       ! gets i,j,k ranges for interface type
       call get_edge(ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iymax, izmin, izmax)
 
-      ! counts number and stores indices of (global) points on MPI interface  
+      ! counts number and stores indices of (global) points on MPI interface
       do iz = min(izmin,izmax), max(izmin,izmax)
         do iy = min(iymin,iymax), max(iymin,iymax)
           do ix = min(ixmin,ixmax), max(ixmin,ixmax)
@@ -137,7 +138,7 @@
   end do
 
   deallocate( mask_ibool_asteroid )
-  
+
 end subroutine prepare_assemble_MPI
 
 !
@@ -147,7 +148,7 @@ end subroutine prepare_assemble_MPI
 subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iymax, izmin, izmax )
 
 ! returns range of local (GLL) point indices i,j,k depending on given type for corner point (1), edge (2) or face (4)
- 
+
   implicit none
 
   include "constants.h"
@@ -156,10 +157,10 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
   integer, intent(in)  :: ngnode
   integer, dimension(ngnode), intent(in)  :: n
 
-! interface type & nodes  
+! interface type & nodes
   integer, intent(in)  :: type, e1, e2, e3, e4
-  
-! local (GLL) i,j,k index ranges  
+
+! local (GLL) i,j,k index ranges
   integer, intent(out)  :: ixmin, ixmax, iymin, iymax, izmin, izmax
 
 ! local parameters
@@ -170,7 +171,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
   if ( type == 1 ) then
 
 ! corner point
-  
+
     if ( e1 == n(1) ) then
       ixmin = 1
       ixmax = 1
@@ -238,7 +239,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
 
   else if ( type == 2 ) then
 
-! edges  
+! edges
 
     if ( e1 ==  n(1) ) then
        ixmin = 1
@@ -403,7 +404,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
 
   else if (type == 4) then
 
-! face corners     
+! face corners
 
     en(1) = e1
     en(2) = e2
@@ -534,8 +535,8 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
       iymax = NGLLY
       izmax = NGLLZ
     endif
-      
-    ! zmax face  
+
+    ! zmax face
     valence = 0
     do i = 1, 4
       if ( en(i) == n(5)) then

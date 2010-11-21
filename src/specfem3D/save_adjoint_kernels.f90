@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -39,52 +40,52 @@
 
   ! finalizes calculation of rhop, beta, alpha kernels
   do ispec = 1, NSPEC_AB
-  
+
     ! elastic simulations
     if( ispec_is_elastic(ispec) ) then
-  
+
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-            
+
             ! isotropic adjoint kernels (see e.g. Tromp et al. 2005)
             rhol = rho_vs(i,j,k,ispec)**2 / mustore(i,j,k,ispec)
             mul = mustore(i,j,k,ispec)
             kappal = kappastore(i,j,k,ispec)
 
-            ! for a parameterization: (rho,mu,kappa) "primary" kernels            
+            ! for a parameterization: (rho,mu,kappa) "primary" kernels
             ! density kernel
             ! multiplies with rho
-            rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec) 
-            
+            rho_kl(i,j,k,ispec) = - rhol * rho_kl(i,j,k,ispec)
+
             ! shear modulus kernel
             !<YANGL
             ! mu_kl(i,j,k,ispec) = - mul * mu_kl(i,j,k,ispec)
             mu_kl(i,j,k,ispec) = - 2._CUSTOM_REAL * mul * mu_kl(i,j,k,ispec)
             !>YANGL
-            
+
             ! bulk modulus kernel
             kappa_kl(i,j,k,ispec) = - kappal * kappa_kl(i,j,k,ispec)
 
-            ! for a parameterization: (rho,alpha,beta)            
+            ! for a parameterization: (rho,alpha,beta)
             ! density prime kernel
             rhop_kl(i,j,k,ispec) = rho_kl(i,j,k,ispec) + kappa_kl(i,j,k,ispec) + mu_kl(i,j,k,ispec)
-            
+
             ! vs kernel
             beta_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (mu_kl(i,j,k,ispec) &
                   - 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) * kappa_kl(i,j,k,ispec))
-                  
+
             ! vp kernel
             alpha_kl(i,j,k,ispec) = 2._CUSTOM_REAL * (1._CUSTOM_REAL &
                   + 4._CUSTOM_REAL * mul / (3._CUSTOM_REAL * kappal) ) * kappa_kl(i,j,k,ispec)
 
-            ! for a parameterization: (rho,bulk, beta) 
+            ! for a parameterization: (rho,bulk, beta)
             ! where bulk wave speed is c = sqrt( kappa / rho)
             ! note: rhoprime is the same as for (rho,alpha,beta) parameterization
             !bulk_c_kl_crust_mantle(i,j,k,ispec) = 2._CUSTOM_REAL * kappa_kl(i,j,k,ispec)
             !bulk_beta_kl_crust_mantle(i,j,k,ispec ) = 2._CUSTOM_REAL * mu_kl(i,j,k,ispec)
-                  
+
           enddo
         enddo
       enddo
@@ -93,13 +94,13 @@
 
     ! acoustic simulations
     if( ispec_is_acoustic(ispec) ) then
-  
+
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
             ! rho prime kernel
             rhop_ac_kl(i,j,k,ispec) = rho_ac_kl(i,j,k,ispec) + kappa_ac_kl(i,j,k,ispec)
-            
+
             ! kappa kernel
             alpha_ac_kl(i,j,k,ispec) = TWO *  kappa_ac_kl(i,j,k,ispec)
           enddo
@@ -108,10 +109,10 @@
 
     endif ! acoustic
 
-    
+
   enddo
 
-  ! save kernels to binary files  
+  ! save kernels to binary files
   if( ELASTIC_SIMULATION ) then
     open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted')
     write(27) rho_kl
@@ -141,7 +142,7 @@
   endif
 
 
-  ! save kernels to binary files  
+  ! save kernels to binary files
   if( ACOUSTIC_SIMULATION ) then
     open(unit=27,file=prname(1:len_trim(prname))//'rho_acoustic_kernel.bin',status='unknown',form='unformatted')
     write(27) rho_ac_kl
@@ -162,7 +163,7 @@
   ! save weights for volume integration, in order to benchmark the kernels with analytical expressions
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   do ispec = 1, NSPEC_AB
-  
+
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX

@@ -46,23 +46,23 @@
 
 ! some extracts about UTM:
 !
-! There are 60 longitudinal projection zones numbered 1 to 60 starting at 180°W. 
-! Each of these zones is 6 degrees wide, apart from a few exceptions around Norway and Svalbard. 
-! There are 20 latitudinal zones spanning the latitudes 80°S to 84°N and denoted 
-! by the letters C to X, ommitting the letter O. 
+! There are 60 longitudinal projection zones numbered 1 to 60 starting at 180°W.
+! Each of these zones is 6 degrees wide, apart from a few exceptions around Norway and Svalbard.
+! There are 20 latitudinal zones spanning the latitudes 80°S to 84°N and denoted
+! by the letters C to X, ommitting the letter O.
 ! Each of these is 8 degrees south-north, apart from zone X which is 12 degrees south-north.
-!  
+!
 ! To change the UTM zone and the hemisphere in which the
 ! calculations are carried out, need to change the fortran code and recompile. The UTM zone is described
-! actually by the central meridian of that zone, i.e. the longitude at the midpoint of the zone, 3 degrees 
-! from either zone boundary. 
-! To change hemisphere need to change the "north" variable: 
-!  - north=0 for northern hemisphere and 
-!  - north=10000000 (10000km) for southern hemisphere. values must be in metres i.e. north=10000000.   
+! actually by the central meridian of that zone, i.e. the longitude at the midpoint of the zone, 3 degrees
+! from either zone boundary.
+! To change hemisphere need to change the "north" variable:
+!  - north=0 for northern hemisphere and
+!  - north=10000000 (10000km) for southern hemisphere. values must be in metres i.e. north=10000000.
 !
 ! Note that the UTM grids are actually Mercators which
 ! employ the standard UTM scale factor 0.9996 and set the
-! Easting Origin to 500,000; 
+! Easting Origin to 500,000;
 ! the Northing origin in the southern
 ! hemisphere is kept at 0 rather than set to 10,000,000
 ! and this gives a uniform scale across the equator if the

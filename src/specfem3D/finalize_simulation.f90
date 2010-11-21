@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -30,24 +31,24 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  
+
   implicit none
 
   integer :: irec_local
-  
+
 ! save last frame
 
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     open(unit=27,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
           status='unknown',form='unformatted')
 
-    if( ACOUSTIC_SIMULATION ) then              
+    if( ACOUSTIC_SIMULATION ) then
       write(27) potential_acoustic
       write(27) potential_dot_acoustic
-      write(27) potential_dot_dot_acoustic 
+      write(27) potential_dot_dot_acoustic
     endif
-          
-    if( ELASTIC_SIMULATION ) then              
+
+    if( ELASTIC_SIMULATION ) then
       write(27) displ
       write(27) veloc
       write(27) accel
@@ -65,7 +66,7 @@
         write(27) epsilondev_yz
       endif
     endif
-    
+
     close(27)
 
 ! adjoint simulations
@@ -73,24 +74,24 @@
 
     ! adjoint kernels
     call save_adjoint_kernels()
-    
+
   endif
 
 ! closing source time function file
   if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
     close(IOSTF)
   endif
-  
-! stacey absorbing fields will be reconstructed for adjoint simulations 
+
+! stacey absorbing fields will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
-  if( ABSORBING_CONDITIONS ) then  
+  if( ABSORBING_CONDITIONS ) then
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then
-          
+
       if( ELASTIC_SIMULATION) close(IOABS)
       if( ACOUSTIC_SIMULATION) close(IOABS_AC)
-      
+
     endif
   endif
 
@@ -100,8 +101,8 @@
       ! seismograms
       call write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global, &
             nrec_local,it,DT,NSTEP,t0,LOCAL_PATH)
-      
-      ! source gradients  (for sources in elastic domains)          
+
+      ! source gradients  (for sources in elastic domains)
       do irec_local = 1, nrec_local
         write(outputname,'(a,i5.5)') OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // &
             '/src_frechet.',number_receiver_global(irec_local)

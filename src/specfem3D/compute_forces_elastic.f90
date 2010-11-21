@@ -1,11 +1,12 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  1 . 4
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
 !               ---------------------------------------
 !
-!                 Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory - California Institute of Technology
-!         (c) California Institute of Technology September 2006
+!          Main authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            November 2010
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -31,15 +32,15 @@ subroutine compute_forces_elastic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  
+
   implicit none
 
   integer:: iphase
   logical:: phase_is_inner
-  
+
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
-  
+
     !first for points on MPI interfaces
     if( iphase == 1 ) then
       phase_is_inner = .false.
@@ -48,7 +49,7 @@ subroutine compute_forces_elastic()
     endif
 
 ! elastic term
-    if(USE_DEVILLE_PRODUCTS) then  
+    if(USE_DEVILLE_PRODUCTS) then
       call compute_forces_elastic_Dev(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
@@ -101,9 +102,9 @@ subroutine compute_forces_elastic()
                         phase_ispec_inner_elastic  )
     endif
 
-    ! adjoint simulations: backward/reconstructed wavefield                  
+    ! adjoint simulations: backward/reconstructed wavefield
     if( SIMULATION_TYPE == 3 ) then
-      if(USE_DEVILLE_PRODUCTS) then  
+      if(USE_DEVILLE_PRODUCTS) then
         call compute_forces_elastic_Dev(iphase, NSPEC_AB,NGLOB_AB, &
                         b_displ,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -156,7 +157,7 @@ subroutine compute_forces_elastic()
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
                         phase_ispec_inner_elastic  )
-      
+
       endif
     endif
 
@@ -194,8 +195,8 @@ subroutine compute_forces_elastic()
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner)
     endif
-    
-    
+
+
 ! poroelastic coupling
 ! not implemented yet
 !    if( POROELASTIC_SIMULATION ) &
@@ -211,19 +212,19 @@ subroutine compute_forces_elastic()
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY )
-    
+
 ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then 
-      ! sends accel values to corresponding MPI interface neighbors  
+    if( phase_is_inner .eqv. .false. ) then
+      ! sends accel values to corresponding MPI interface neighbors
       call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_AB,accel, &
                         buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh, &
                         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
-                        
+
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then  
+      if( SIMULATION_TYPE == 3 ) then
         call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_ADJOINT,b_accel, &
                         b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -231,7 +232,7 @@ subroutine compute_forces_elastic()
                         my_neighbours_ext_mesh, &
                         b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
-                        
+
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
@@ -241,14 +242,14 @@ subroutine compute_forces_elastic()
                         request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then  
+      if( SIMULATION_TYPE == 3 ) then
         call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_ADJOINT,b_accel, &
                         b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
                         max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)      
+                        b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
-      
+
     endif
 
     !! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
@@ -256,7 +257,7 @@ subroutine compute_forces_elastic()
     !! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
     !! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
     !! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
-  
+
   enddo
 
 ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
@@ -264,7 +265,7 @@ subroutine compute_forces_elastic()
   accel(2,:) = accel(2,:)*rmass(:)
   accel(3,:) = accel(3,:)*rmass(:)
 
-  ! adjoint simulations  
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
     b_accel(1,:) = b_accel(1,:)*rmass(:)
     b_accel(2,:) = b_accel(2,:)*rmass(:)
@@ -273,7 +274,7 @@ subroutine compute_forces_elastic()
 
 
 ! updates acceleration with ocean load term
-  if(OCEANS) then    
+  if(OCEANS) then
     call elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
                         ibool,rmass,rmass_ocean_load,accel, &
                         free_surface_normal,free_surface_ijk,free_surface_ispec, &
@@ -289,13 +290,13 @@ subroutine compute_forces_elastic()
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
 ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
 !
-! where 
+! where
 !   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
 !   f denotes a source term (acoustic/elastic)
 !   chi_dot_dot is acoustic (fluid) potential ( dotted twice with respect to time)
 !
-! corrector: 
+! corrector:
 !   updates the velocity term which requires a(t+delta)
   veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
 
@@ -316,31 +317,31 @@ subroutine elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
                         num_free_surface_faces,SIMULATION_TYPE, &
                         NGLOB_ADJOINT,b_accel)
 
-! updates acceleration with ocean load term: 
+! updates acceleration with ocean load term:
 ! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
 ! assuming incompressible fluid column above bathymetry ocean bottom
-  
+
   implicit none
 
   include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
-  
+
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(inout) :: accel
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: rmass,rmass_ocean_load
-  
+
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
   ! free surface
   integer :: num_free_surface_faces
-  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)  
+  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
   integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
   integer :: free_surface_ispec(num_free_surface_faces)
 
   ! adjoint simulations
   integer :: SIMULATION_TYPE,NGLOB_ADJOINT
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
-  
+
 ! local parameters
   real(kind=CUSTOM_REAL) :: nx,ny,nz
   real(kind=CUSTOM_REAL) :: additional_term,force_normal_comp
@@ -349,19 +350,19 @@ subroutine elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
   logical,dimension(NGLOB_AB) :: updated_dof_ocean_load
   ! adjoint locals
   real(kind=CUSTOM_REAL) :: b_additional_term,b_force_normal_comp
-  
+
   !   initialize the updates
   updated_dof_ocean_load(:) = .false.
 
   ! for surface elements exactly at the top of the model (ocean bottom)
   do iface = 1,num_free_surface_faces
-    
-    ispec = free_surface_ispec(iface)    
+
+    ispec = free_surface_ispec(iface)
     do igll = 1, NGLLSQUARE
       i = free_surface_ijk(1,igll,iface)
       j = free_surface_ijk(2,igll,iface)
       k = free_surface_ijk(3,igll,iface)
-      
+
       ! get global point number
       iglob = ibool(i,j,k,ispec)
 
@@ -392,7 +393,7 @@ subroutine elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
                                   b_accel(2,iglob)*ny + &
                                   b_accel(3,iglob)*nz) / rmass(iglob)
           b_additional_term = (rmass_ocean_load(iglob) - rmass(iglob)) * b_force_normal_comp
-          
+
           b_accel(1,iglob) = b_accel(1,iglob) + b_additional_term * nx
           b_accel(2,iglob) = b_accel(2,iglob) + b_additional_term * ny
           b_accel(3,iglob) = b_accel(3,iglob) + b_additional_term * nz
@@ -404,7 +405,7 @@ subroutine elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
       endif
 
     enddo ! igll
-  enddo ! iface  
+  enddo ! iface
 
 end subroutine elastic_ocean_load
 
