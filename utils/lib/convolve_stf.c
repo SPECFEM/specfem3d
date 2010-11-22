@@ -51,13 +51,13 @@ void convolve(float **pconv, sac_int_t *pnconv,
     sac_int_t nconv, ncorr, i;
     struct { float *xreal, *ximag; } cdata, cstf, ccorr;
     float *conv, *buffer;
-    
+
     nconv = ndata + nstf - 1;
     conv = (float *)malloc(nconv * sizeof(float));
-    
+
     for (ncorr = 2; ncorr < nconv; ncorr *= 2)
         ;
-    
+
     buffer = (float *)malloc(2 * 3 * ncorr * sizeof(float));
     cdata.xreal = buffer + 0 * ncorr;
     cdata.ximag = buffer + 1 * ncorr;
@@ -65,34 +65,34 @@ void convolve(float **pconv, sac_int_t *pnconv,
     cstf.ximag  = buffer + 3 * ncorr;
     ccorr.xreal = buffer + 4 * ncorr;
     ccorr.ximag = buffer + 5 * ncorr;
-    
+
     fcpy(cdata.xreal, data, ndata);
     fzero(cdata.xreal + ndata, ncorr - ndata);
     fzero(cdata.ximag, ncorr);
-    
+
     fcpy(cstf.xreal, stf, nstf);
     fzero(cstf.xreal + nstf, ncorr - nstf);
     fzero(cstf.ximag, ncorr);
-    
+
     fft(cdata.xreal, cdata.ximag, ncorr, 1);
     fft(cstf.xreal, cstf.ximag, ncorr, 1);
-    
+
     for (i = 0; i < ncorr; ++i) {
         /* ccorr[i] = cdata[i] * cstf[i] */
         ccorr.xreal[i] = cdata.xreal[i] * cstf.xreal[i] - cdata.ximag[i] * cstf.ximag[i];
         ccorr.ximag[i] = cdata.xreal[i] * cstf.ximag[i] + cdata.ximag[i] * cstf.xreal[i];
     }
-    
+
     fft(ccorr.xreal, ccorr.ximag, ncorr, -1);
     for (i = 0; i < nconv; ++i) {
         conv[i] = ccorr.xreal[i] * ncorr;
     }
-    
+
     free(buffer);
-    
+
     *pconv = conv;
     *pnconv = nconv;
-    
+
     return;
 }
 
@@ -184,7 +184,7 @@ main(int argc, char *argv[])
         getfhv("o", &origin, &nerr, strlen("o"));
         if(nerr) {
             /* Assuming origin time is 0, per convention of SPECFEM */
-	    fprintf(stderr, " Ignoring the error, assuming origin time is 0\n");
+      fprintf(stderr, " Ignoring the error, assuming origin time is 0\n");
             origin = 0.0;
             setfhv("o", &origin, &nerr, strlen("o"));
         }
