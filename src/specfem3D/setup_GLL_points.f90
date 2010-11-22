@@ -64,4 +64,5 @@
 ! create name of database
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-  end subroutin
+  end subroutine setup_GLL_points
+
