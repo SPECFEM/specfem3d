@@ -45,6 +45,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 %\renewcommand{\baselinestretch}{1.5}
 
+% figures
+\usepackage[dvips]{epsfig}
+
 \usepackage{wrapfig}
 
 
@@ -110,6 +113,7 @@ C\'eline Blitz,
 Ebru Bozdag,
 Emanuele Casarotti,
 Min Chen,
+Hom Nath Gharti,
 Vala Hj\"orleifsd\'ottir,
 Emiljana Jorgji,
 Sue Kientz,
@@ -124,17 +128,16 @@ Federica Magnoni,
 Roland Martin,
 Dennis McRitchie,
 David Mich\'ea,
-Hom Nath Gharti,
 Tarje Nissen-Meyer,
 Daniel Peter,
 Brian Savage,
 Leif Strand,
 Carl Tape,
 Jeroen Tromp.\\
-% \toall{add full list of developers here and update the AUTHORS file accordingly}
+%\toall{add full list of developers here and update the AUTHORS file accordingly}
 
 The cover graphic of the manual was created
-by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}.\\
+by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \url{http://www.cacr.caltech.edu}. \\
 
 \newpage{}
 
@@ -1270,12 +1273,13 @@ as the regular \texttt{in\_data\_files/STATIONS} file.
 \item Depending on what type of misfit function is used for the source inversion,
 adjoint sources need to be computed from the original recorded seismograms
 for the selected stations and saved in the \texttt{in\_out\_files/SEM/} directory
-with the format \texttt{STA.NT.BH?.adj}, where \texttt{STA}, \texttt{NT}
+with the format \texttt{STA.NT.BX?.adj}, where \texttt{STA}, \texttt{NT}
 are the station name and network code given in the \texttt{in\_data\_files/STATIONS\_ADJOINT}
-file, and \texttt{BH?} represents the component name of a particular
-adjoint seismogram.
+file, and \texttt{BX?} represents the component name of a particular
+adjoint seismogram. Please note that the band code can change depending on 
+your sampling rate (see Appendix~\ref{cha:channel-codes} for further details).
 \item The adjoint seismograms are in the same format as the original seismogram
-(\texttt{STA.NT.BH?.sem?}), with the same start time, time interval
+(\texttt{STA.NT.BX?.sem?}), with the same start time, time interval
 and record length.
 \end{itemize}
 \item Notice that even if you choose to time reverse only one component
@@ -1305,8 +1309,8 @@ earthquake sources given by the \texttt{in\_data\_files/CMTSOLUTION} file, and
 have names of the form \texttt{S?????.NT.S??.sem} for the six-component
 strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
 and ~\\
-\texttt{S?????.NT.BH?.sem} for the three-component displacements
-(\texttt{BHN,BHE,BHZ}) recorded at these locations.
+\texttt{S?????.NT.BX?.sem} for the three-component displacements
+(\texttt{BXN,BXE,BXZ}) recorded at these locations.
 \item \texttt{S?????} denotes the source number; for example, if the original
 \texttt{CMTSOLUTION} provides only a point source, then the seismograms
 collected will start with \texttt{S00001}.
@@ -2154,57 +2158,92 @@ In many cases, the SEM synthetics are calculated and compared to data
 seismograms recorded at seismic stations. Since the SEM synthetics
 are accurate for a certain frequency range, both the original data
 and the synthetics need to be processed before a comparison can be
-made. We generally use the following scripts provided in the ~\\
-\texttt{utils/seis\_process/} directory:
+made. 
+
+ For such comparisons, the following steps are recommended:
+
+\begin{enumerate}
+\item Make sure that both synthetic and observed seismograms have the correct station/event and timing information.
+\item Convolve synthetic seismograms with a source time function with the half duration specified in the \texttt{CMTSOLUTION} file, provided, as recommended, you used a zero half duration in the SEM simulations.
+\item Resample both observed and synthetic seismograms to a common sampling rate.
+\item Cut the records using the same window.
+\item Remove the trend and mean from the records and taper them.
+\item Remove the instrument response from the observed seismograms (recommended) or convolve the synthetic seismograms with the instrument response.
+\item Make sure that you apply the same filters to both observed and synthetic seismograms. Preferably, avoid filtering your records more than once.
+\item Now, you are ready to compare your synthetic and observed seismograms.
+\end{enumerate}
+
+\noindent
+We generally use the following scripts provided in the \texttt{utils/seis\_process/} directory:
 
 
-\subsection{Data processing script \texttt{process\_trinet\_data.pl}}
+\subsection{Data processing script \texttt{process\_data.pl}}
 
 This script cuts a given portion of the original data, filters it,
 transfers the data into a displacement record, and picks the first
-P and S arrivals. For more functionality, type `\texttt{process\_trinet\_data.pl}'
+P and S arrivals. For more functionality, type `\texttt{process\_data.pl}'
 without any argument. An example of the usage of the script:
 
 \begin{lyxcode}
-{\footnotesize process\_trinet\_data.pl~-m~CMTSOLUTION~-l~0/180~-t~2/40~-i~dir~-p~-x~bp~~9703873{*}.BH?.SAC}{\footnotesize \par}
+%{\footnotesize process\_trinet\_data.pl~-m~CMTSOLUTION~-l~0/180~-t~2/40~-i~dir~-p~-x~bp~~9703873{*}.BH?.SAC}
+{\footnotesize process\_data.pl~-m~CMTSOLUTION~-s~1.0~-l~0/4000~-i~-f~-t~40/500~-p~-x~bp~DATA/1999.330{*}.BH?.SAC}
+{\footnotesize \par}
 \end{lyxcode}
-which has cut all the sac files between 0 and 180 seconds, filtered
-them between 2 and 40 seconds, transfered them into displacement records
-using the polezero files in \texttt{dir} directory, picked the first
-P and S arrivals, and added suffix `\texttt{bp}' to the file names.
+%which has cut all the sac files between 0 and 180 seconds, filtered
+%them between 2 and 40 seconds, transfered them into displacement records
+%using the polezero files in \texttt{dir} directory, picked the first
+%P and S arrivals, and added suffix `\texttt{bp}' to the file names.
+
+\noindent which has resampled the SAC files to a sampling rate of 1 seconds, cut 
+them between 0 and 4000 seconds, transfered them into displacement
+records and filtered them between 40 and 500 seconds, 
+picked the first P and S arrivals, and added suffix `\texttt{bp}' to the file names.
+
 
 Note that all of the scripts in this section actually use the SAC
 and/or IASP91 to do the core operations; therefore make sure that
 the SAC and IASP91 packages are installed properly on your system,
 and that all the environment variables are set properly before running
-these scripts.
+these scripts. 
 
 
-\subsection{Synthetics processing script \texttt{process\_trinet\_syn.pl}}
+
+\subsection{Synthetics processing script \texttt{process\_syn.pl}}
 
 This script converts the synthetic output from the SEM code from ASCII
-to SAC format, and performs similar operations as `\texttt{process\_trinet\_data.pl}'.
+to SAC format, and performs similar operations as `\texttt{process\_data.pl}'.
 An example of the usage of the script:
 
 \begin{lyxcode}
-{\footnotesize process\_trinet\_syn.pl~-m~CMTSOLUTION~-a~STATIONS~-l~0/180~-t~2/40~-p~-x~bp~syn/{*}.BH?.semd}{\footnotesize \par}
+%{\footnotesize process\_trinet\_syn.pl~-m~CMTSOLUTION~-a~STATIONS~-l~0/180~-t~2/40~-p~-x~bp~syn/{*}.BH?.semd}
+{\footnotesize process\_syn.pl~-m~CMTSOLUTION~-h~-a~STATIONS~-s~1.0~-l~0/4000~-f~-t~40/500~-p~-x~bp~SEM/{*}.BX?.semd}
+{\footnotesize \par}
 \end{lyxcode}
-which will convert the synthetics into SAC format, add event and station
-information into the SAC headers, cut the SAC files between 0 and
-180 seconds, filter them between 2 and 40 seconds, pick the first
-P and S arrivals, and add the suffix `\texttt{bp}' to the file names.
+%which will convert the synthetics into SAC format, add event and station
+%information into the SAC headers, cut the SAC files between 0 and
+%180 seconds, filter them between 2 and 40 seconds, pick the first
+%P and S arrivals, and add the suffix `\texttt{bp}' to the file names.
+which will convolve the synthetics with a triangular source-time function
+from the \texttt{CMTSOLUTION} file, convert the synthetics into SAC
+format, add event and station information into the SAC headers, resample the SAC files with a sampling rate of 1 seconds, cut them between 0 and 4000 seconds, filter them between 40 and
+500 seconds with the same filter used for the observed data, pick the first P and S arrivals, and add the suffix `\texttt{bp}'
+to the file names.
 
 More options are available for this script, such as adding time shift
 to the origin time of the synthetics, convolving the synthetics with
 a triangular source time function with a given half duration, etc.
-Type \texttt{process\_trinet\_syn.pl} without any argument for a detailed
+Type \texttt{process\_syn.pl} without any argument for a detailed
 usage.
+
+In order to convert between SAC format and ASCII files, useful scripts
+are provided in the subdirectories ~\\ 
+\texttt{utils/sac2000\_alpha\_convert/} and \texttt{utils/seis\_process/asc2sac/}.
 
 
 \subsection{Script \texttt{rotate.pl}}
 
-The original data and synthetics have three components: vertical (BHZ),
-north (BHN) and east (BHE). However, for most seismology applications,
+The original data and synthetics have three components: vertical (BHZ resp. BXZ),
+north (BHN resp. BXN) and east (BHE resp. BXE). However, for most seismology applications,
 transverse and radial components are also desirable. Therefore, we
 need to rotate the horizontal components of both the data and the
 synthetics to the transverse and radial direction, and \texttt{\small rotate.pl}
@@ -2213,7 +2252,7 @@ can be used to accomplish this:
 \begin{lyxcode}
 rotate.pl~-l~0~-L~180~-d~DATA/{*}.BHE.SAC.bp~
 
-rotate.pl~-l~0~-L~180~SEM/{*}.BHE.semd.sac.bp~
+rotate.pl~-l~0~-L~180~SEM/{*}.BXE.semd.sac.bp~
 \end{lyxcode}
 where the first command performs rotation on the SAC data obtained
 through Seismogram Transfer Program (STP) \url{http://www.data.scec.org/STP/stp.html},
@@ -2224,19 +2263,23 @@ while the second command rotates the processed SEM synthetics.
 
 The forward and adjoint simulations generate synthetic seismograms
 in the \texttt{in\_out\_files/OUTPUT\_FILES/} directory by default. For the forward simulation, the files
-are named \texttt{STA.NT.BH?.semd} for two-column time series, or
-\texttt{STA.NT.BH?.semd.sac} for ASCII SAC format, where STA and NT
-are the station name and network code, and \texttt{BH?} stands for
-the component name. The adjont simulations generate synthetic seismograms
+are named like \texttt{STA.NT.BX?.semd} for two-column time series, or
+\texttt{STA.NT.BX?.semd.sac} for ASCII SAC format, where STA and NT
+are the station name and network code, and \texttt{BX?} stands for
+the component name. Please see the Appendix~\ref{cha:Coordinates} and \ref{cha:channel-codes}
+for further details.
+
+The adjont simulations generate synthetic seismograms
 with the name \texttt{S?????.NT.S??.sem} (refer to Section \ref{sec:Adjoint-simulation-sources}
 for details). The kernel simulations output the back-reconstructed
-synthetic seismogram in the name \texttt{STA.NT.BH?.semd}, mainly
+synthetic seismogram in the name \texttt{STA.NT.BX?.semd}, mainly
 for the purpose of checking the accuracy of the reconstruction. Refer
 to Section \ref{sec:Adjoint-simulation-finite} for further details.
 
-You do have two options to change this default output behavior, given in the main constants file
+You do have further options to change this default output behavior, given in the main constants file
 \texttt{constants.h} located in \texttt{src/shared/} directory:
 \begin{description}
+\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.} to have only the master process writing out seismograms. This can be useful on a cluster, where only the master process node has access to the output directory.
 \item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to have the seismograms output to \texttt{LOCAL\_PATH} directory specified in the main parameter file \texttt{in\_data\_files/Par\_file}.
 In this case, you could collect the synthetics onto the frontend using the \texttt{collect\_seismo\_lsf\_multi.pl} script
@@ -2286,21 +2329,22 @@ command in GMT, and plots them on a 2D topography map. Note that `\texttt{-2}'
 and `\texttt{-p}' are both optional.
 
 
-\subsection{\texttt{plot\_shakemap.pl}}
+\subsection{\texttt{plot\_shakemap.gmt.pl}}
 
 With the shakemap data saved in \texttt{in\_out\_files/OUTPUT\_FILES/} at the end
 of a shakemap simulation ~\\
 (\texttt{CREATE\_SHAKEMAP=.true.}), you can
 also run \texttt{`create\_movie\_shakemap\_AVS\_DX\_GMT}' code to convert the binary
-shakemap data into GMT xyz files. A sample script \texttt{plot\_shakemap.pl}
+shakemap data into GMT xyz files. A sample script \texttt{plot\_shakemap.gmt.pl}
 is provided to do this conversion, and then plot the shakemaps in
 GMT, for example:
 
 \begin{lyxcode}
-plot\_shakemap.pl~data\_dir~type(1,2,3)~CMTSOLUTION~
+plot\_shakemap.gmt.pl~data\_dir~type(1,2,3)~CMTSOLUTION~
 \end{lyxcode}
 where \texttt{type=1} for a displacement shakemap, \texttt{2} for
 velocity, and \texttt{3} for acceleration.
+
 
 
 \section{Map Local Database}
@@ -2405,27 +2449,83 @@ and the Harvard CMT convention is
 \item the $z$ axis points up
 \end{itemize}
 
+
+\subsection*{Source and receiver locations}
+
 The SPECFEM3D software code internally uses Cartesian coordinates.
-%This requires to convert the given locations for sources and receiver locations.
+The given locations for sources and receiver locations thus may get converted.
 Sources and receiver locations are read in from the
 \texttt{CMTSOLUTION} and \texttt{STATIONS} file.
 Note that e.g. the \texttt{CMTSOLUTION} file denotes the location by "longitude/latitude/depth". We read in
 longitude as $x$ coordinate, latitude as $y$ coordinate.
+
+
 In case the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.false.}
 in the main parameter file (see Chapter~\ref{cha:Creating-Distributed-Databases}),
 the $x$/$y$ coordinates have to be given in degrees and are converted to Cartesian coordinates
 using a UTM conversion with the specified UTM zone.
+
+
 The value for depth (given in $km$ in \texttt{CMTSOLUTION}) or burial depth (given in $m$ in \texttt{STATIONS})
 is evaluated with respect to the surface of the mesh at the specified $x$/$y$ location to find the corresponding $z$ coordinate.
 It is possible to use this depth value directly as $z$ coordinate by
 changing the flag \texttt{USE\_SOURCES\_RECVS\_Z} to \texttt{.true.} in the file \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
 
+\subsection*{Seismogram outputs}
 
 The seismogram output directions are given in Cartesian $x$/$y$/$z$ directions and not rotated any further.
-For the labeling of the seismograms, we name "$x$/$y$/$z$" to "BHE/BHN/BHZ" components.
 Changing flags in \texttt{constants.h} in the \texttt{src/shared/} subdirectory only rotates the seismogram outputs
 if receivers are forced to be located at the surface (\texttt{RECVS\_CAN\_BE\_BURIED\_EXT\_MESH} set to \texttt{.false.}) and the normal to the surface at the receiver location should be used (\texttt{EXT\_MESH\_RECV\_NORMAL} set to
-\texttt{.true.}) as vertical. In this case, the outputs are rotated to have the BHZ component normal to the surface of the mesh, BHE and BHN are somewhat arbitrary orthogonal directions along the surface.
+\texttt{.true.}) as vertical. In this case, the outputs are rotated to have the vertical component normal to the surface of the mesh, $x$ and $y$ directions are somewhat arbitrary orthogonal directions along the surface.
+
+For the labeling of the seismogram channels, see Appendix~\ref{cha:channel-codes}. Additionally, we add labels to the synthetics using the following convention:
+For a receiver station located in an
+\begin{description}
+\item[elastic domain:] ~\\
+\begin{itemize}
+\item \texttt{semd} for the displacement vector
+\item \texttt{semv} for the velocity vector
+\item \texttt{sema} for the acceleration vector
+\end{itemize}
+\item[acoustic domain:] ~\\
+(please note that receiver stations in acoustic domains must be buried. This is due to the free surface condition which enforces a zero pressure at the surface.)
+\begin{itemize}
+\item \texttt{semd} for the displacement vector
+\item \texttt{semv} for the velocity vector
+\item \texttt{sema} for pressure which will be stored in the vertical component \texttt{Z}. Note that pressure in the acoustic media is isotropic and thus the pressure record would be the same in the other two component directions. We therefore use the other two seismogram components to store the acoustic potential in component \texttt{X} (or \texttt{N}) and the first time derivative of the acoustic potential in component \texttt{Y} (or \texttt{E}).
+\end{itemize}
+\end{description}
+The seismograms are by default written out in ASCII-format to the \texttt{in\_out\_files/OUTPUT\_FILES/} subdirectory by each parallel process. You can change this behavior by changing the following flags in the \texttt{constants.h} file located in the \texttt{src/shared/} subdirectory: 
+\begin{description}
+\item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms written out in binary format.
+\item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.} to have only the master process writing out seismograms. This can be useful on a cluster, where only the master process node has access to the output directory.
+\item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to have the seismograms output to \texttt{LOCAL\_PATH} directory specified in the main parameter file \texttt{in\_data\_files/Par\_file}.
+\end{description}
+
+
+
+\chapter{\label{cha:channel-codes}Channel Codes of Seismograms}
+
+Seismic networks, such as the Global Seismographic Network (GSN), generally involve various types of instruments with different bandwidths, sampling properties and component configurations. There are standards to name channel codes depending on instrument properties. IRIS  \texttt{(www.iris.edu)} uses SEED format for channel codes, which are represented by three letters, such as \texttt{LHN}, \texttt{BHZ}, etc. In older versions of the SPECFEM3D package, a common format was used for the channel codes of all seismograms, which was \texttt{BHE/BHN/BHZ} for three components. To avoid confusion when comparison are made to observed data, we are now using the IRIS convention for SEM seismograms. In the following, we give a brief explanation of the IRIS convention and how it is adopted in SEM seismograms. Please visit \texttt{www.iris.edu/manuals/SEED\_appA.htm} for further information.\\
+
+\noindent \textbf{\texttt{Band code:}} The first letter in the channel code denotes the band code of seismograms, which depends on the response band and the sampling rate of instruments. The list of band codes used by IRIS is shown in Figure \ref{fig:IRIS_band_codes}. The sampling rate of SEM synthetics is controlled by the resolution of simulations rather than instrument properties. However, for consistency, we follow the IRIS convention for SEM seismograms governed by their sampling rate. For SEM synthetics, we consider band codes for which $dt \leq 1$ s. IRIS also considers the response band of instruments. For instance, short-period and broad-band seismograms with the same sampling rate correspond to different band codes, such as S and B, respectively. In such cases, we consider SEM seismograms as broad band, ignoring the corner period ($\geq 10$ s) of the response band of instruments (note that at these resolutions, the minimum period in the SEM synthetics will be less than $10$ s). Accordingly, when you run a simulation the band code will be chosen depending on the resolution of the synthetics, and channel codes of SEM seismograms will start with either \texttt{L}, \texttt{M}, \texttt{B}, \texttt{H}, \texttt{C} or \texttt{F}, shown by red color in the figure.\\
+
+\begin{figure}[ht]
+\noindent \begin{centering}
+\includegraphics[scale=0.6]{figures/IRIS_band_codes.eps}
+\par\end{centering}
+
+\caption{The IRIS band code convention is based on the sampling rate and the response band of instruments. Please visit \texttt{www.iris.edu/manuals/SEED\_appA.htm} for further information. Grey rows show the relative band-code range in SPECFEM3D, and the band codes used to name SEM seismograms are denoted in red.}
+
+\label{fig:IRIS_band_codes}
+\end{figure}
+
+\noindent \textbf{\texttt{Instrument code:}} The second letter in the channel code corresponds to instrument codes, which specify the family to which the sensor belongs. For instance, \texttt{H} and \texttt{L} are used for high-gain and low-gain seismometers, respectively. The instrument code of SEM seismograms will always be \texttt{X}, as assigned by IRIS for synthetic seismograms. \\
+
+\noindent \textbf{\texttt{Orientation code:}} The third letter in channel codes is an orientation code, which generally describes the physical configuration of the components of instrument packages. SPECFEM3D uses the traditional orientation code  \texttt{E/N/Z} (East-West, North-South, Vertical) for three components when a UTM projection is used. If the UTM conversion is suppressed, i.e.
+the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.true.}, then the three components are labelled \texttt{X/Y/Z} according to the Cartesian reference frame. \\
+
+\noindent \textbf{\texttt{EXAMPLE:}} The sampling rate is given by \texttt{DT} in the main parameter file \texttt{Par\_file} located in the \texttt{in\_data\_files/} subdirectory. Depending on the resolution of your simulations, if you choose a sampling rate greater than $0.01$ s and less than $1$ s, a seismogram recording displacements on the vertical component of a station \texttt{ASBS} (network \texttt{AZ}) will be named \texttt{ASBS.AZ.MXZ.semd.sac}, whereas it will be \texttt{ASBS.AZ.BXZ.semd.sac}, if the sampling rate is greater than 0.0125 and less equal to 0.1 s.
 
 
 

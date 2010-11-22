@@ -282,8 +282,13 @@ subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
   integer icomp, itime, i, j, k, ios, it_start, it_end
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
-  character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
+  character(len=3),dimension(NDIM) :: comp != (/ "BHE", "BHN", "BHZ" /)
   character(len=256) :: filename
+
+  ! gets channel names
+  do icomp=1,NDIM
+    call write_channel_name(icomp,comp(icomp))
+  enddo
 
   ! range of the block we need to read
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1

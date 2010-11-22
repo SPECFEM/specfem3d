@@ -84,7 +84,8 @@
 
         ! interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_dot_acoustic,&
+                        potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
@@ -157,7 +158,8 @@
 
         ! interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_dot_acoustic,&
+                        potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
@@ -198,7 +200,8 @@
 
         ! backward fields: interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        b_potential_dot_dot_acoustic,NGLOB_ADJOINT, &
+                        b_potential_dot_dot_acoustic,b_potential_dot_acoustic,&
+                        b_potential_acoustic,NGLOB_ADJOINT, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
                         hxir_store(irec_local,:),hetar_store(irec_local,:), &
@@ -269,7 +272,9 @@
   integer irec,irec_local,length_station_name,length_network_name
   integer iorientation,irecord,isample
 
-  character(len=4) chn
+!  character(len=4) chn
+  character(len=3) channel
+
   character(len=1) component
   character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
@@ -304,15 +309,20 @@
 
       do iorientation = 1,NDIM
 
-        if(iorientation == 1) then
-          chn = 'BHE'
-        else if(iorientation == 2) then
-          chn = 'BHN'
-        else if(iorientation == 3) then
-          chn = 'BHZ'
-        else
-          call exit_MPI(myrank,'incorrect channel value')
-        endif
+!daniel
+        ! gets channel name
+        call write_channel_name(iorientation,channel)
+
+
+!        if(iorientation == 1) then
+!          chn = 'BNE'
+!        else if(iorientation == 2) then
+!          chn = 'BHN'
+!        else if(iorientation == 3) then
+!          chn = 'BHZ'
+!        else
+!          call exit_MPI(myrank,'incorrect channel value')
+!        endif
 
         ! create the name of the seismogram file for each slice
         ! file name includes the name of the station, the network and the component
@@ -327,7 +337,7 @@
            call exit_MPI(myrank,'wrong length of network name')
 
         write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
-           network_name(irec)(1:length_network_name),chn,component
+           network_name(irec)(1:length_network_name),channel,component
 
         ! directory to store seismograms
         if( USE_OUTPUT_FILES_PATH ) then
@@ -449,15 +459,19 @@
 
             do iorientation = 1,NDIM
 
-              if(iorientation == 1) then
-                chn = 'BHE'
-              else if(iorientation == 2) then
-                chn = 'BHN'
-              else if(iorientation == 3) then
-                chn = 'BHZ'
-              else
-                call exit_MPI(myrank,'incorrect channel value')
-              endif
+!daniel
+              ! gets channel name
+              call write_channel_name(iorientation,channel)
+
+!              if(iorientation == 1) then
+!                chn = 'BHE'
+!              else if(iorientation == 2) then
+!                chn = 'BHN'
+!              else if(iorientation == 3) then
+!                chn = 'BHZ'
+!              else
+!                call exit_MPI(myrank,'incorrect channel value')
+!              endif
 
               ! create the name of the seismogram file for each slice
               ! file name includes the name of the station, the network and the component
@@ -472,7 +486,7 @@
                 call exit_MPI(myrank,'wrong length of network name')
 
               write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
-                network_name(irec)(1:length_network_name),chn,component
+                network_name(irec)(1:length_network_name),channel,component
 
               ! directory to store seismograms
               if( USE_OUTPUT_FILES_PATH ) then
@@ -586,7 +600,8 @@
   integer irec,irec_local
   integer iorientation,irecord,isample
 
-  character(len=4) chn
+!  character(len=4) chn
+  character(len=3) channel
   character(len=1) component
   character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
@@ -611,21 +626,25 @@
 
     do iorientation = 1,NDIM
 
-      if(iorientation == 1) then
-        chn = 'BHE'
-      else if(iorientation == 2) then
-        chn = 'BHN'
-      else if(iorientation == 3) then
-        chn = 'BHZ'
-      else
-        call exit_MPI(myrank,'incorrect channel value')
-      endif
+!daniel
+      ! gets channel name
+      call write_channel_name(iorientation,channel)
+
+!      if(iorientation == 1) then
+!        chn = 'BHE'
+!      else if(iorientation == 2) then
+!        chn = 'BHN'
+!      else if(iorientation == 3) then
+!        chn = 'BHZ'
+!      else
+!        call exit_MPI(myrank,'incorrect channel value')
+!      endif
 
       ! create the name of the seismogram file for each slice
       ! file name includes the name of the station, the network and the component
 
       write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
-           'NT',chn,component
+           'NT',channel,component
 
       ! directory to store seismograms
       if( USE_OUTPUT_FILES_PATH ) then
@@ -764,3 +783,88 @@
   enddo ! irec_local
 
 end subroutine write_adj_seismograms2_to_file
+
+!=====================================================================
+
+subroutine write_channel_name(iorientation,channel)
+
+  use specfem_par,only: DT,SUPPRESS_UTM_PROJECTION
+  implicit none
+
+  integer :: iorientation
+  character(len=3) :: channel
+
+  ! local parameters
+  character(len=2) :: bic
+  double precision:: sampling_rate
+
+  ! gets band and instrument code
+  sampling_rate = DT
+  call band_instrument_code(sampling_rate,bic)
+
+  ! sets channel name
+  if( SUPPRESS_UTM_PROJECTION ) then
+
+    ! no UTM, pure Cartesian reference
+    ! uses Cartesian X/Y/Z direction to denote channel
+    select case(iorientation)
+    case(1)
+      channel = bic(1:2)//'X'
+    case(2)
+      channel = bic(1:2)//'Y'
+    case(3)
+      channel = bic(1:2)//'Z'
+    case default
+      call exit_mpi(0,'error channel orientation value')
+    end select
+
+  else
+
+    ! UTM conversion
+    ! uses convention for N/E/Z to denote channel
+    select case(iorientation)
+    case(1)
+      channel = bic(1:2)//'E'
+    case(2)
+      channel = bic(1:2)//'N'
+    case(3)
+      channel = bic(1:2)//'Z'
+    case default
+      call exit_mpi(0,'error channel orientation value')
+    end select
+
+  endif
+
+end subroutine write_channel_name
+
+!=====================================================================
+
+subroutine band_instrument_code(DT,bic)
+  ! This subroutine is to choose the appropriate band and instrument codes for channel names of seismograms
+  ! based on the IRIS convention (first two letters of channel codes, respectively,
+  ! which were LH(Z/E/N) previously).
+  ! For consistency with observed data, we now use the IRIS convention for band codes (first letter in channel codes) of
+  ! SEM seismograms governed by their sampling rate.
+  ! Instrument code (second letter in channel codes) is fixed to "X" which is assigned by IRIS for synthetic seismograms.
+  ! See the manual for further explanations!
+  ! Ebru, November 2010
+  implicit none
+  double precision :: DT
+  character(len=2) :: bic
+  ! local parameter
+  logical,parameter :: SUPPRESS_IRIS_CONVENTION = .false.
+
+  ! see manual for ranges
+  if (DT .ge. 1.0d0)  bic = 'LX'
+  if (DT .lt. 1.0d0 .and. DT .gt. 0.1d0) bic = 'MX'
+  if (DT .le. 0.1d0 .and. DT .gt. 0.0125d0) bic = 'BX'
+  if (DT .le. 0.0125d0 .and. DT .gt. 0.004d0) bic = 'HX'
+  if (DT .le. 0.004d0 .and. DT .gt. 0.001d0) bic = 'CX'
+  if (DT .le. 0.001d0) bic = 'FX'
+
+  ! ignores IRIS convention, uses previous, constant band and instrument code
+  if( SUPPRESS_IRIS_CONVENTION ) then
+    bic = 'BH'
+  endif
+
+ end subroutine band_instrument_code

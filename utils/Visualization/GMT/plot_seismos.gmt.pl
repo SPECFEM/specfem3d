@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# usage: 
+# usage:
 #
 #  ./plot_seismos.gmt.pl OUTPUT_FILES/Y*.BHZ.semd
 #
@@ -12,15 +12,15 @@ use Getopt::Std;
 #---------------------------------------------------------------------------
 ## PARAMETERS
 
-# min/max range scaling 
+# min/max range scaling
 $SCALE = 10. ;
 
 #---------------------------------------------------------------------------
 
 sub Usage{
   print STDERR <<END;
-  
-Usage: e.g.  ./plot_seismos.gmt.pl OUTPUT_FILES/Y*.BHZ.semd
+
+Usage: e.g.  ./plot_seismos.gmt.pl OUTPUT_FILES/Y*.BXZ.semd
 
 END
 exit(1);
@@ -28,7 +28,7 @@ exit(1);
 
 @ARGV > 0 or Usage();
 
-# find start and end time and a reasonable step 
+# find start and end time and a reasonable step
 $narg = @ARGV;
 $mid = int($narg/2.0);
 $trace = $ARGV[$mid];
@@ -60,7 +60,7 @@ print GMT "psbasemap -R$region -J$proj -B::.:'Time (s)':/S -K -P -Y1 > $out \n";
 
 
 #################################
-# plot seismograms 
+# plot seismograms
 #################################
 
 $offset = 8./$narg;
@@ -75,7 +75,7 @@ $counter++;
 $xoff=0;
 $yoff=$offset;
 
-# plots  
+# plots
 print GMT "psxy $file -R$region -J$proj -W2/$color -X$xoff -Y$yoff -O -K >> $out \n";
 
 }

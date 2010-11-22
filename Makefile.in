@@ -149,3 +149,21 @@ xconvolve_source_timefunction: required
 
 clean: required
 	(rm -rf bin lib obj src/meshfem3D/*.mod src/generate_databases/*.mod src/specfem3D/*.mod)
+
+
+help:
+	@echo "usage: make [executable]"
+	@echo ""
+	@echo "supported executables:"
+	@echo "    xgenerate_databases"
+	@echo "    xspecfem3D"
+	@echo "    xmeshfem3D"
+	@echo "    xdecompose_mesh_SCOTCH"
+	@echo "    xcombine_AVS_DX"
+	@echo "    xconvolve_source_timefunction"
+	@echo "    xcreate_header_file"
+	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
+	@echo "    xcombine_vol_data"
+	@echo "    xcombine_surf_data"
+	@echo ""
+

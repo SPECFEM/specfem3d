@@ -334,8 +334,8 @@ $O/write_PNM_GIF_data.o: $(SHARED)constants.h write_PNM_GIF_data.f90
 $O/write_seismograms.o: $(SHARED)constants.h write_seismograms.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
 
-$O/noise_tomography.o: $(SHARED)constants.h ${SHARED}/noise_tomography.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/noise_tomography.o ${SHARED}/noise_tomography.f90
+$O/noise_tomography.o: $(SHARED)constants.h noise_tomography.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/noise_tomography.o noise_tomography.f90
 
 
 ###

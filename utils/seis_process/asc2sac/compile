@@ -1,0 +1,5 @@
+#!/bin/bash
+
+SACLIB='/opt/sac-101.0/lib/libsacio.a'
+
+gfortran -o asc2sac asc2sac.f90 ascfile.f90 $SACLIB

@@ -161,7 +161,7 @@ program cut_velocity
     data(2,:) = -sinth * data(4,:) + costh * data(5,:)
   endif
 
-  ! file output for component BHE/BHN/BHZ
+  ! file output for component, e.g. BHE/BHN/BHZ
   do i = 1, 3
     filename = trim(file(i))//'.adj'
     print *, 'write to asc file '//trim(filename)
