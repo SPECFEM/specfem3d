@@ -185,7 +185,7 @@ end program adj_traveltime
 
 
 !!!!!!! subroutine for bandpass filter, from some website !!!!!!!!!
-
+! http://www-lgit.obs.ujf-grenoble.fr/users/jrevilla/seiscomp/patch/pack/plugins/seisan/LIB/bndpas.for
 
 SUBROUTINE BNDPAS(F1,F2,DELT,D,G,N)
 ! RECURSIVE BUTTERWORTH BAND PASS FILTER (KANASEWICH, TIME SERIES
