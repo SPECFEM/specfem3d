@@ -119,7 +119,8 @@ end subroutine compute_interpolated_dva
 !
 
 subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
-                        potential_dot_dot_acoustic,NGLOB_AB, &
+                        potential_dot_dot_acoustic,potential_dot_acoustic,&
+                        potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
                         hxir,hetar,hgammar, &
@@ -138,6 +139,8 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_dot_acoustic
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: potential_acoustic
 
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
 
@@ -174,10 +177,14 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
     vyd = veloc_element(2,nint(xi_r),nint(eta_r),nint(gamma_r))
     vzd = veloc_element(3,nint(xi_r),nint(eta_r),nint(gamma_r))
 
-    ! pressure
+    ! global index
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
-    axd = - potential_dot_dot_acoustic(iglob)
-    ayd = - potential_dot_dot_acoustic(iglob)
+
+    ! x component -> acoustic potential
+    axd = potential_acoustic(iglob)
+    ! y component -> first time derivative of potential
+    ayd = potential_dot_acoustic(iglob)
+    ! z component -> pressure
     azd = - potential_dot_dot_acoustic(iglob)
 
   else
@@ -198,9 +205,12 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
           vxd = vxd + hlagrange*veloc_element(1,i,j,k)
           vyd = vxd + hlagrange*veloc_element(2,i,j,k)
           vzd = vxd + hlagrange*veloc_element(3,i,j,k)
-          ! pressure
-          axd = axd - hlagrange*potential_dot_dot_acoustic(iglob)
-          ayd = ayd - hlagrange*potential_dot_dot_acoustic(iglob)
+
+          ! x component -> acoustic potential
+          axd = axd + hlagrange*potential_acoustic(iglob)
+          ! y component -> first time derivative of potential
+          ayd = ayd + hlagrange*potential_dot_acoustic(iglob)
+          ! z component -> pressure
           azd = azd - hlagrange*potential_dot_dot_acoustic(iglob)
 
         enddo

@@ -181,9 +181,7 @@
   !<YANGL
   ! for noise simulations --- noise strength kernel
     if (NOISE_TOMOGRAPHY == 3) then
-       call save_kernels_strength_noise(myrank,LOCAL_PATH, &
-                                        sigma_kl,1.0,1.0, &
-                                        nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+       call save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB)
     endif
   !>YANGL
   end subroutine save_adjoint_kernels

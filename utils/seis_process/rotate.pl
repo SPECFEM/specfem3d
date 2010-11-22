@@ -1,8 +1,5 @@
 #!/usr/bin/perl
 
-# this script rotates the N/E component seismograms to T/R component
-# Qinya Liu, May 2007, Caltech
-
 use Getopt::Std;
 use POSIX;
 
@@ -19,6 +16,10 @@ sub Usage {
            rotate.pl PAS.*.LHE.sac for synthetics
     For iris data (with -d), the timing part of the name will be ignored
     and only the component part of the name will be changed correspondingly
+
+    Make sure you have sac, saclst in the PATH before execution
+
+    Qinya Liu, Caltech, May 2007
 
 EOF
 exit(1)

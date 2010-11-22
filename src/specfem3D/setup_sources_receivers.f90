@@ -454,11 +454,10 @@ subroutine setup_sources_precompute_arrays()
   integer :: isource,ispec
   integer :: irec !,irec_local
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
-  character(len=3),dimension(NDIM) :: comp = (/ "BHE", "BHN", "BHZ" /)
+  character(len=3),dimension(NDIM) :: comp ! = (/ "BHE", "BHN", "BHZ" /)
   character(len=256) :: filename
 
-
-! forward simulations
+  ! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
     allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
@@ -508,11 +507,17 @@ subroutine setup_sources_precompute_arrays()
     enddo
   endif
 
-! ADJOINT simulations
+  ! ADJOINT simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+
+    ! gets channel names
+    do icomp=1,NDIM
+      call write_channel_name(icomp,comp(icomp))
+    enddo
 
     ! counts local receivers which become adjoint sources
     nadj_rec_local = 0
+
     ! temporary counter to check if any files are found at all
     nadj_files_found = 0
     do irec = 1,nrec
