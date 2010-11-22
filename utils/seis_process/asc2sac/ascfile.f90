@@ -52,15 +52,15 @@ subroutine wasc(ascfile,dat,npts,b,dt,nerr)
   open(IOUNIT,file=trim(ascfile),status='unknown',iostat=ios)
   if (ios /= 0) then
      print 'Error opening '//trim(ascfile)//' for writing'
-     nerr = 1; return 
+     nerr = 1; return
   endif
   do i = 1, npts
      write(IOUNIT,'(2g15.7)') b+(i-1)*dt, dat(i)
   enddo
   close(IOUNIT)
-  
+
   nerr=0
-  
+
 end subroutine wasc
 
 

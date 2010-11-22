@@ -34,7 +34,7 @@ void asc2sac(char *ascfn) {
     char *sacfn;
     float *time, *data, a, b;
     FILE *f;
-    
+
     sacfn = (char *)malloc(strlen(ascfn) + strlen(".sac") + 1);
     if (!sacfn) {
         fprintf(stderr, "Out of memory\n");
@@ -46,10 +46,10 @@ void asc2sac(char *ascfn) {
     /* reading ascii file */
     f = fopen(ascfn, "r");
     if(f == NULL) {
-	fprintf(stderr, "Cannot open file '%s' to read\n", ascfn);
-	exit(1);
+  fprintf(stderr, "Cannot open file '%s' to read\n", ascfn);
+  exit(1);
     }
-    
+
     time = data = 0;
     max_npts = 0;
     for (npts = 0; (nconv = fscanf(f, "%f %f\n", &a, &b)) == 2; ++npts) {
@@ -71,7 +71,7 @@ void asc2sac(char *ascfn) {
     }
     if (nconv != EOF || ferror(f)) {
         fprintf(stderr, "error while reading file '%s' (on or near line %ld)\n", ascfn, (long)npts);
-	exit(1);
+  exit(1);
     }
     fclose(f);
     /* finished reading ascii file */
@@ -90,7 +90,7 @@ void asc2sac(char *ascfn) {
     setihv("idep", "idisp", &nerr, strlen("idep"), strlen("idisp"));
 
     if(nerr) {
-	fprintf(stderr, "error when setting header for '%s'\n", sacfn);
+  fprintf(stderr, "error when setting header for '%s'\n", sacfn);
         exit(1);
     }
 
@@ -100,7 +100,7 @@ void asc2sac(char *ascfn) {
         fprintf(stderr, "error when writing '%s'\n", sacfn);
         exit(1);
     }
-    
+
     free(time);
     free(data);
     free(sacfn);
@@ -111,7 +111,7 @@ void asc2sac(char *ascfn) {
 
 int main(int argc, char *argv[]) {
     int i;
-     
+
     if (argc < 2) {
         fprintf(stderr,
                 "usage: %s FILE...\n"
@@ -122,10 +122,10 @@ int main(int argc, char *argv[]) {
                 argv[0]);
         exit(1);
     }
-    
+
     for (i = 1; i < argc; ++i) {
         asc2sac(argv[i]);
     }
-    
+
     return 0;
 }

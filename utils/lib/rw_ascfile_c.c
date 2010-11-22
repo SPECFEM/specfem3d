@@ -5,8 +5,8 @@
 
 
 void dread_ascfile_c_(const char *ascfile,
-		   double *t0, double *dt, int *n,
-		   double *data) 
+       double *t0, double *dt, int *n,
+       double *data)
 
 {
   FILE *fd;
@@ -33,16 +33,16 @@ void dread_ascfile_c_(const char *ascfile,
 }
 
 void dwrite_ascfile_c_(const char *ascfile,
-		    double *t0, double *dt, int *n,
-		    const double *data) 
+        double *t0, double *dt, int *n,
+        const double *data)
 
 {
   FILE *fd;
   int i;
   double tmp,tmp0;
-  
+
   //printf("t0: %f ,dt: %f ,n: %i \n",*t0,*dt,*n);
-  
+
   if ((fd = fopen(ascfile,"w")) == NULL) {
     printf(" file %s cannot be opened to write\n",ascfile);
     exit(1);
@@ -50,7 +50,7 @@ void dwrite_ascfile_c_(const char *ascfile,
   i = 0;
   tmp = *dt;
   tmp0 = *t0;
-  for (i=0; i< *n; i++) {  
+  for (i=0; i< *n; i++) {
     fprintf(fd,"%14.7g %18.7g\n", tmp0+i*tmp, data[i]);
   }
   if (fclose(fd) != 0) {
