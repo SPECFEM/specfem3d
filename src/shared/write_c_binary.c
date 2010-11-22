@@ -6,7 +6,6 @@
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
 !                        Princeton University, USA
-!             and University of Pau / CNRS / INRIA, France
 ! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
 !                            November 2010
 !
