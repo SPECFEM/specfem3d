@@ -26,23 +26,19 @@ case $FC in
         # Intel ifort Fortran90
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -assume byterecl -check nobounds -traceback -ftrapuv" 
+            FLAGS_CHECK="-O3 -assume byterecl -traceback -ftrapuv -ftz"
             
-            # for debugging:
-            # ifort v 10.1 with these flags shows best performance
-            #FLAGS_CHECK="-O2 -ftz -xT -fpe0 -ftz -traceback -ftrapuv -vec-report0 -std95 -implicitnone -check nobounds  -assume byterecl  -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
-            #FLAGS_CHECK="-O2 -xT -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback"
+            # ifort version 11 or 10.1 with these flags shows good performance
+            #FLAGS_CHECK="-O3 -ftz -xS -fpe0 -traceback -ftrapuv -vec-report0 -std95 -implicitnone -check nobounds -assume byterecl -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
+            #FLAGS_CHECK="-O3 -xS -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback"
+            # for debugging: change -check nobounds to -check all
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
         # standard options (leave option -ftz, which is *critical* for performance)
         # add -Winline to get information about routines that are inlined
         # add -vec-report3 to get information about loops that are vectorized or not
-            FLAGS_NO_CHECK="-O3 -assume byterecl "
+            FLAGS_NO_CHECK="-O3 -assume byterecl -check nobounds -ftz"
 
-            # for debugging:
-            # ifort v 10.1 with these flags shows best performance
-            #FLAGS_NO_CHECK="-O2 -ftz -xT -fpe3 -ftz -vec-report0 -std95 -implicitnone -check nobounds  -assume byterecl  -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
-            #FLAGS_NO_CHECK="-O2 -xT -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback"
         fi
         ;;
     gfortran|*/gfortran|f95|*/f95)
