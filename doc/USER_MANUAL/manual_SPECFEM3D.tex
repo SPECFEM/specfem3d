@@ -268,6 +268,7 @@ Note that we use CUBIT to create meshes of hexahedra, but other packages can be 
 The SCOTCH library \citep{PeRo96}
 provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
 Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
+A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
 The path to the SCOTCH installation needs to be set with the option \texttt{-{}-with-scotch-path}. Just as an example:
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-path=/opt/scotch
@@ -549,6 +550,7 @@ It amounts to balance the number of elements in each slice while minimizing the 
 resulting from the placement of adjacent elements on different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the SCOTCH library \citep{PeRo96},
 which provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
 Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
+A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
 \\
 
 Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path
