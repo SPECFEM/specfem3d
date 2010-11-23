@@ -35,7 +35,6 @@
   include "constants.h"
 
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
-           !  NPOIN2DMAX_XY,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,
 
   logical ATTENUATION,ANISOTROPY
 
@@ -51,108 +50,69 @@
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
        OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
 
-
   open(unit=IOUT,file=HEADER_FILE,status='unknown')
   write(IOUT,*)
-
   write(IOUT,*) '!'
-  write(IOUT,*) '! this is the parameter file for static compilation of the solver'
+  write(IOUT,*) '! purely informative use'
   write(IOUT,*) '!'
   write(IOUT,*) '! mesh statistics:'
   write(IOUT,*) '! ---------------'
   write(IOUT,*) '!'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK these statistics are now INCORRECT'
-  write(IOUT,*) '! DK DK because the CUBIT + SCOTCH mesh has'
-  write(IOUT,*) '! DK DK a different number of mesh elements and points in each slice'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
-  write(IOUT,*) '! DK DK'
+  write(IOUT,*) '! note: '
+  write(IOUT,*) '!    the values are only approximate and differ for different processes'
+  write(IOUT,*) '!    because the CUBIT + SCOTCH mesh has'
+  write(IOUT,*) '!    a different number of mesh elements and points in each slice'
   write(IOUT,*) '!'
   write(IOUT,*) '! number of processors = ',NPROC
   write(IOUT,*) '!'
   write(IOUT,*) '! number of ES nodes = ',real(NPROC)/8.
   write(IOUT,*) '! percentage of total 640 ES nodes = ',100.*(real(NPROC)/8.)/640.,' %'
   write(IOUT,*) '! total memory available on these ES nodes (Gb) = ',16.*real(NPROC)/8.
-
-! write(IOUT,*) 'integer, parameter ::  NPROC_VAL = ',NPROC
-! write(IOUT,*) 'integer, parameter :: NPROC_XI_VAL = ', NPROC_XI
-! write(IOUT,*) 'integer, parameter :: NPROC_ETA_VAL = ', NPROC_ETA
-
   write(IOUT,*) '!'
-!  write(IOUT,*) '! max points per processor = max vector length = ',NGLOB_AB
   write(IOUT,*) '! min vector length = ',NGLLSQUARE
   write(IOUT,*) '! min critical vector length = ',NGLLSQUARE_NDIM
   write(IOUT,*) '!'
-!  write(IOUT,*) '! on ES and SX-5, make sure "loopcnt=" parameter'
-!  write(IOUT,*) '! in Makefile is greater than ',NGLOB_AB
-!  write(IOUT,*) '!'
-
-!  write(IOUT,*) '! total elements per AB slice = ',NSPEC_AB
-!  write(IOUT,*) '! total points per AB slice = ',NGLOB_AB
-  write(IOUT,*) '! not valid for external mesh files: total points per AB slice = ',NGLOB_AB
+  write(IOUT,*) '! master process: total points per AB slice = ',NGLOB_AB
   write(IOUT,*) '! total elements per AB slice = (will be read in external file)'
   write(IOUT,*) '! total points per AB slice = (will be read in external file)'
   write(IOUT,*) '!'
-
   write(IOUT,*) '! total for full mesh:'
   write(IOUT,*) '! -------------------'
   write(IOUT,*) '!'
-!  write(IOUT,*) '! exact total number of spectral elements in entire mesh = '
-!  write(IOUT,*) '! ',NPROC*NSPEC_AB
-!  write(IOUT,*) '! approximate total number of points in entire mesh = '
-!  write(IOUT,*) '! ',dble(NPROC)*dble(NGLOB_AB)
-! there are 3 DOFs in solid regions
-!  write(IOUT,*) '! approximate total number of degrees of freedom in entire mesh = '
-!  write(IOUT,*) '! ',3.d0*dble(NPROC)*dble(NGLOB_AB)
-!  write(IOUT,*) '!'
-
   write(IOUT,*) '!'
   write(IOUT,*) '! number of time steps = ',NSTEP
   write(IOUT,*) '!'
   write(IOUT,*) '! time step = ',DT
   write(IOUT,*) '!'
-
-! if attenuation is off, set dummy size of arrays to one
-! both parameters are obsolete for specfem3D
-! they are only used in ampuero_implicit_ABC_specfem3D.f90
-  write(IOUT,*) '! only needed for ampuero_implicit_ABC_specfem3D.f90 compilation: '
-  write(IOUT,*) '! (uncomment next line) '
+  write(IOUT,*) '! attenuation uses:'
   if(ATTENUATION) then
-    write(IOUT,*) '! integer, parameter :: NSPEC_ATTENUATION = ', NSPEC_AB
-!    write(IOUT,*) '! logical, parameter :: ATTENUATION_VAL = .true.'
+    write(IOUT,*) '!  NSPEC_ATTENUATION = ', NSPEC_AB
   else
-    write(IOUT,*) '! integer, parameter :: NSPEC_ATTENUATION = ', 1
-!    write(IOUT,*) '! logical, parameter :: ATTENUATION_VAL = .false.'
+    write(IOUT,*) '!  NSPEC_ATTENUATION = ', 1
   endif
-
-  write(IOUT,*)
-
-! anisotropy
+  write(IOUT,*) '! '
+  write(IOUT,*) '! anisotropy uses:'
   if(ANISOTROPY) then
-    !stop 'ANISOTROPY not supported yet in the CUBIT + SCOTCH version because of arrays of constant size defined'
-    !write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ',NSPEC_AB
-    !write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .true.'
-    write(IOUT,*) '! with anisotropy'
+    write(IOUT,*) '!  NSPEC_ANISO = ',NSPEC_AB
   else
-    !write(IOUT,*) 'integer, parameter :: NSPEC_ANISO = ', 1
-    !write(IOUT,*) 'logical, parameter :: ANISOTROPY_VAL = .false.'
-    write(IOUT,*) '! no anisotropy'
+    write(IOUT,*) '!  NSPEC_ANISO = ', 1
   endif
-
-  write(IOUT,*)
-
-!! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
-!! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
-!! DK DK May 2009: removed all the things that are not supported in the CUBIT + SCOTCH version yet
-
-  write(IOUT,*) '! approximate static memory needed by the solver:'
+  write(IOUT,*) '! '
+  write(IOUT,*) '! adjoint uses:'
+  if (SIMULATION_TYPE == 3) then
+    write(IOUT,*) '!  NSPEC_ADJOINT = ', NSPEC_AB
+    write(IOUT,*) '!  NGLOB_ADJOINT = ', NGLOB_AB
+  else
+    write(IOUT,*) '!  NSPEC_ADJOINT = ', 1
+    write(IOUT,*) '!  NGLOB_ADJOINT = ', 1
+  endif
+  if (ATTENUATION .and. SIMULATION_TYPE == 3) then
+    write(IOUT,*) '!  NSPEC_ATT_AND_KERNEL = ', NSPEC_AB
+  else
+    write(IOUT,*) '!  NSPEC_ATT_AND_KERNEL = ', 1
+  endif
+  write(IOUT,*) '! '
+  write(IOUT,*) '! approximate least memory needed by the solver:'
   write(IOUT,*) '! ----------------------------------------------'
   write(IOUT,*) '!'
   write(IOUT,*) '! size of static arrays for the biggest slice = ',static_memory_size/1048576.d0,' MB'
@@ -164,46 +124,8 @@
   write(IOUT,*) '!   (if significantly more, the job will not run by lack of memory)'
   write(IOUT,*) '!   (if significantly less, you waste a significant amount of memory)'
   write(IOUT,*) '!'
-
-! strain/attenuation
-  if (ATTENUATION .and. SIMULATION_TYPE == 3) then
-!   write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', NSPEC_AB
-  else
-!   write(IOUT,*) 'integer, parameter :: NSPEC_ATT_AND_KERNEL = ', 1
-  endif
-
-  ! adjoint
-  if (SIMULATION_TYPE == 3) then
-!   write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', NSPEC_AB
-!   write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', NGLOB_AB
-  else
-!   write(IOUT,*) 'integer, parameter :: NSPEC_ADJOINT = ', 1
-!   write(IOUT,*) 'integer, parameter :: NGLOB_ADJOINT = ', 1
-  endif
-
   write(IOUT,*)
-
-! write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_XMIN_XMAX_VAL = ', NSPEC2DMAX_XMIN_XMAX
-! write(IOUT,*) 'integer, parameter :: NSPEC2DMAX_YMIN_YMAX_VAL = ', NSPEC2DMAX_YMIN_YMAX
-! write(IOUT,*) 'integer, parameter :: NSPEC2D_BOTTOM_VAL = ', NSPEC2D_BOTTOM
-! write(IOUT,*) 'integer, parameter :: NSPEC2D_TOP_VAL = ', NSPEC2D_TOP
-! write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_XMIN_XMAX_VAL = ', NPOIN2DMAX_XMIN_XMAX
-! write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_YMIN_YMAX_VAL = ', NPOIN2DMAX_YMIN_YMAX
-! write(IOUT,*) 'integer, parameter :: NPOIN2DMAX_XY_VAL = ', NPOIN2DMAX_XY
-
-  write(IOUT,*)
-
-! Moho boundary
-!  if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
-!   write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', NSPEC2D_BOTTOM
-!   write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', NSPEC_AB
-!  else
-!   write(IOUT,*) 'integer, parameter :: NSPEC2D_MOHO_BOUN = ', 1
-!   write(IOUT,*) 'integer, parameter :: NSPEC_BOUN = ', 1
-!  endif
-
   close(IOUT)
-
 
 ! copy number of surface elements in an include file for the movies
   if( nfaces_surface_glob_ext_mesh > 0 ) then

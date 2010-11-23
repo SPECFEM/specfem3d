@@ -1,14 +1,14 @@
 #!/usr/bin/perl -w
-
-# this version uses xcreate_movie_shakemap_AVS_DX_GMT
 #
-# copy this script into your bin/ folder and run:
+# (version uses xcreate_movie_shakemap_AVS_DX_GMT)
+#
+# copy this script into your bin/ folder and run for example:
 #
 #  ./plot_shakemap.gmt.pl ../in_data_files/ 2 ../in_data_files/CMTSOLUTION
 #
 # will create shakemap file ../in_out_files/OUTPUT_FILES/gmt_shaking_map.ps for peak ground velocity
 
-# change this to point to SPECFEM3D/utils/lib/
+# USERS: change this to point to SPECFEM3D/utils/lib/
 use lib '../utils/lib';
 use GMT_PLOT;
 use GMT_PLOT_SC;
@@ -29,7 +29,7 @@ $xyz_file = "${file}.xyz";
 $grd_file = "${file}.grd";
 $cpt_file = "${file}.cpt";
 
-# take your own input grid file:
+# USERS: take your own input grid file:
 $int_file = "/opt/seismo-util/data/datalib_SC/topo_cal.int";
 
 $colorbar = "rainbow";
@@ -43,7 +43,7 @@ if (not -f "DATA/Par_file") {
 ($elat,$elon) = get_cmt_location($cmt_file);
 
 print "Extract the shaking data ...\n";
-system("$bindir/xcreate_movie_shakemap_AVS_DX_GMT <<EOF\n 3\n -1\n $type\n 1\n EOF\n > shake.out");
+system("$bindir/xcreate_movie_shakemap_AVS_DX_GMT <<EOF > shake.out\n 3\n -1\n $type\n 1\n EOF\n");
 if ($? != 0) {die("Error executing conversion to GMT files\n");}
 
 # determines maximum value

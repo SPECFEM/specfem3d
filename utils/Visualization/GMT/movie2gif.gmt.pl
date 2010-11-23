@@ -1,9 +1,17 @@
 #!/usr/bin/perl -w
-
-# Qinya Liu, Caltech, May 2007
+#
+# (version uses xcreate_movie_shakemap_AVS_DX_GMT)
+#
+# copy this script into your bin/ folder and run for example:
+#
+#  /movie2gif.gmt.pl -R -118.9/-117.9/33.1/34.1 -g -f 1/10 -n  -x
+#
+# will create gif files ../in_out_files/OUTPUT_FILES/gmt_movie_000***.gif
 
 use Getopt::Std;
-use lib '../../lib';
+
+# USERS: point this to your SPECFEM3D/utils/lib directory
+use lib '../../../utils/lib';
 use CMT_TOOLS;
 use GMT_PLOT;
 use vars qw($opt_t $opt_p $opt_n $opt_g $opt_x $opt_2 $opt_s $opt_d $opt_R);
@@ -20,7 +28,7 @@ sub Usage {
       -p add topography to the plot
       -2 2d plot, otherwise 3d plot
       -s station name file to plot
-      -n -- run nearneighbor command to interpolate xyz file into grd file, 
+      -n -- run nearneighbor command to interpolate xyz file into grd file,
             since this is the step that takes most of the time, you can choose
             to skip this step if you have already run it.
       -d -- distance to average for nearneighbor command option -S (default 5 km)
@@ -29,7 +37,7 @@ sub Usage {
 
 EOF
 exit(1);
-}	
+}
 
 if (@ARGV == 0) {Usage();}
 if (not getopts('m:f:pg2xns:R:d:')) {die("Check options\n");}
@@ -62,6 +70,7 @@ $B3 = "-B2/2/1000WSen";
 $I = "-I0.5m";
 if ($opt_d) {$S = "-S${opt_d}k";} else {$S = "-S5k";}
 
+# USERS: adapt to your system
 $datalib = "/opt/seismo-util/data/datalib_SC";
 $fault_file = "$datalib/jennings.xy";
 $fault_file_3d = "$datalib/jennings.xyz";
@@ -70,6 +79,7 @@ $topo_cpt = "$datalib/topo_cal_color.cpt";
 $csh_file = "movie2gif.csh";
 $big_grd_file = "$datalib/big_sc.grd";
 $bin = ".";
+$outdir = "../in_out_files/OUTPUT_FILES";
 
 $factor = 10000;
 $power = 1; #no distortion
@@ -78,19 +88,39 @@ $fac_max = 4;
 # *******************
 #   convert from movie data to gmt xyz files
 if ($tran_to_gmt) {
+
+  if (not -f "../in_data_files/Par_file") {die(" Check if ../in_data_files/Par_file exist or not\n");}
+  (@junk) = split(" ", `grep '^DT' ../in_data_files/Par_file`);
+  $dt = $junk[2];
+
+  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' ../in_data_files/Par_file`);
+  $nframe = $junk[2];
+
+  # start and end time
+  $startt = $start * $nframe;
+  $endtt = $end * $nframe;
+
   print "Transfer the movie data files to gmt xyz files \n";
-  system("$bin/xcreate_movie_GMT_basin . $start $end . > movie.log");
+  system("$bin/xcreate_movie_shakemap_AVS_DX_GMT <<EOF > movie.log\n 3\n $startt\n $endtt\n 1\n 1\n EOF\n");
   if ($? != 0) {die("Error create movie xyz files\n"); }
-  (@junk) = split(" ", `grep '^ DT' movie.log`); $dt = $junk[2];
-  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' DATA/Par_file`); $nframe = $junk[2];
+
+
 } else {
-  if (not -f "movie.log") {die(" Check if movie log file exist or not\n");}
-  (@junk) = split(" ", `grep '^ DT' movie.log`); $dt = $junk[2];
-  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' DATA/Par_file`); $nframe = $junk[2];
+
+  if (not -f "../in_data_files/Par_file") {die(" Check if ../in_data_files/Par_file exist or not\n");}
+  (@junk) = split(" ", `grep '^DT' ../in_data_files/Par_file`);
+  $dt = $junk[2];
+
+  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' ../in_data_files/Par_file`);
+  $nframe = $junk[2];
+
 }
+print "\ndt: $dt\nnframe: $nframe\n";
+
+
 # figure out the maximum value
-(@junk) = split(" ", `grep 'maximum absolute value' movie.log`);
-$max = $junk[-1] / $fac_max;
+$max = `grep 'maximum amplitude' movie.log | awk 'BEGIN{max=0.0}{if(\$7 > max) max = \$7;}END{print max;}'`;
+$max = $max / $fac_max;
 print " The maximum value of all frames is : $max \n";
 
 # ********************* write c-shell file
@@ -117,7 +147,7 @@ if ($no_topo) {
 foreach $frame ($start .. $end) {
   if ($frame < 10) {$frame = sprintf("0%02d",$frame);}
   if ($frame < 100) {$frame = sprintf("%03d",$frame);}
-  $file = "gmt_movie_000$frame";
+  $file = "$outdir/gmt_movie_000$frame";
   $time = $frame * $nframe * $dt;
   $xyz_file = "$file.xyz"; if (not -f $xyz_file) {die("check $xyz_file\n");}
   $ps_file = "$file.ps";
@@ -126,52 +156,105 @@ foreach $frame ($start .. $end) {
   $grd_file = "$file.grd";
 
   print CSH "\n# frame $frame\n";
+
   if ($near) {
-    print CSH "nearneighbor -F $R $I $S -G$grd_file $xyz_file -E0 \n";}
+    # uses a nearest neighbor interpolation
+    print CSH "nearneighbor -F $R $I $S -G$grd_file $xyz_file -E0 \n";
+  }else{
+    # surface gridding
+    print CSH "surface $xyz_file $R $I -G$grd_file -T0.25 -C0.1 \n";
+  }
+
 #  else {
 ##    print CSH "awk '{print \$1,\$2,\$3/$max}' $xyz_file | pscontour $R $JM $B -A- -C$cpt_file -I -P> $ps_file\n";}  next;
+
+  # divides grid by maximum value
   print CSH "grdmath $grd_file $max DIV = field1.grd\n";
+
+
   if ($no_topo) {
+
+    # no topography
+
     print CSH "grdgradient field1.grd -V -A225 -Nt -Gfield.int\n";
-    if ($two_d) { # grdimage for no topo
+
+    # creates image
+    if ($two_d) {
+      # grdimage for no topo
+      # 2-d image
       print CSH "grdimage $JM $R field1.grd -Ifield.int  -C$cpt_file -K -P -V> $ps_file\n";
-    } else { # grdview for no topo
+    } else {
+      # grdview for no topo
+      # 3-d image
       print CSH "psbasemap -P $E $R3 $B2 $JM3  -K > $ps_file\n";
-      print CSH "grdview field1.grd -Qs -P $E $R2 $JM3 -C$cpt_file -Ifield.int -K -O >> $ps_file\n"; }
+      print CSH "grdview field1.grd -Qs -P $E $R2 $JM3 -C$cpt_file -Ifield.int -K -O >> $ps_file\n";
+    }
+
   } else {
+
+    # uses topography
+
     print CSH "grdmath field1.grd $factor MUL topo.grd ADD = field2.grd \n";
     print CSH "grdgradient field2.grd -V -A190/60 -Nt -Gfield.int\n";
-    if ($two_d) { # for grdimage topo
+
+    # creates image
+    if ($two_d) {
+      # for grdimage topo
+      # 2-d image
       print CSH "grdimage field2.grd $JM $R -C$topo_cpt $B -Ifield.int -K -P  > $ps_file\n";}
-    else { # grdview for topo
+    else {
+      # grdview for topo
+      # 3-d image
       print CSH "psbasemap -P $E $R3 $B3 $JM3 -K > $ps_file\n";
       print CSH "grdview field2.grd -Qs -P -Gtopo.grd $E $R3 $JM3 -C$topo_cpt -Ifield.int -K -O >> $ps_file \n";}
   }
-#  if ($no_topo) {
-    if ($two_d) {
-      print CSH "pscoast $JM $R -W4 -Na -Dh -K -O -P -V -S205/255/255 >> $ps_file \n";
-      print CSH "psxy $JM $R -M -W2 -K -O -P -V $fault_file >> $ps_file\n";
-      if ($opt_m) {print CSH "psxy $JM $R -Sa0.15 -W1 -G255/0/0 -K -O -P -V <<EOF >> $ps_file\n$elon $elat\nEOF\n";}
-      if ($opt_s) {
-	print CSH "awk '{print \$4, \$3}' sta.tmp | psxy $JM $R -St0.12 -W0.8 -G0/255/0 -K -O -P -V >> $ps_file\n";
-	print CSH "awk '{print \$4, \$3+0.1, 12, 0, 4, \"CM\", \$1}' sta.tmp | pstext $JM $R -G0/0/255 -N -P -K -O -V >> $ps_file \n";
-      }
+
+
+  # coast lines, faults...
+  if ($two_d) {
+
+    # 2-d image add-ons
+
+    print CSH "pscoast $JM $R -W4 -Na -Dh -K -O -P -V -S205/255/255 >> $ps_file \n";
+    print CSH "psxy $JM $R -M -W2 -K -O -P -V $fault_file >> $ps_file\n";
+    if ($opt_m) {print CSH "psxy $JM $R -Sa0.15 -W1 -G255/0/0 -K -O -P -V <<EOF >> $ps_file\n$elon $elat\nEOF\n";}
+    if ($opt_s) {
+      print CSH "awk '{print \$4, \$3}' sta.tmp | psxy $JM $R -St0.12 -W0.8 -G0/255/0 -K -O -P -V >> $ps_file\n";
+      print CSH "awk '{print \$4, \$3+0.1, 12, 0, 4, \"CM\", \$1}' sta.tmp | pstext $JM $R -G0/0/255 -N -P -K -O -V >> $ps_file \n";
+    }
     print CSH "pstext $JM $R -N -W255/255/255 -O  -P -V <<EOF >>$ps_file \n -114.8 36.5 12 0 0 RT time = $time s \nEOF\n";
   } else {
+
+    # 3-d image add-ons
+
+    # coast lines
     print CSH "pscoast -JM -JZ -R -W5 -Na -Dh -K -O -P -V $E -S205/255/255 >>  $ps_file \n";
     print CSH "psclip -JM -JZ -R -K -O -P -Z0 >> $ps_file <<EOF\n-120.0 32.2\n-120.0 36.4 \n-114.7 36.4\n-114.7 32.2\n-120.0 32.2\nEOF\n";
-    print CSH "psxyz -JM -JZ -R -M -W2 -K -O -P -V $E $fault_file_3d >> $ps_file\n";
+
+    # faults
+    #print CSH "psxyz -JM -JZ -R -M -W2 -K -O -P -V $E $fault_file_3d >> $ps_file\n";
     print CSH "psclip -C -K -O >> $ps_file\n";
-    if ($opt_m) {print CSH "psxyz -JM -JZ -R -Sa0.15 -W1 -G255/0/0 -K -O -P -V $E <<EOF >> $ps_file\n$elon $elat 0 \nEOF\n";}
+
+    # cmt solution
+    if ($opt_m) {
+      print CSH "psxyz -JM -JZ -R -Sa0.15 -W1 -G255/0/0 -K -O -P -V $E <<EOF >> $ps_file\n$elon $elat 0 \nEOF\n";
+    }
+
+    # stations names
     if ($opt_s) {
       print CSH "awk '{print \$4, \$3, 0}' sta.tmp | psxyz $E -JM -JZ -R -St0.12 -W0.8 -G0/255/0 -K -O -P -V >> $ps_file\n";
       print CSH "awk '{print \$4, \$3+0.15, 15, 0, 4, \"CM\", \$1}' sta.tmp | pstext -JM -JZ -G0/0/255 $E -R -N -P -K -O -V -Z0>> $ps_file \n";
     }
+
+    # text for time
     print CSH "pstext -JM -JZ -R -N -W255/255/255 -O -P -V -Z0<<EOF >>$ps_file \n -114.8 36.5 12 0 0 RT time = $time s \nEOF\n";
-   }
-#}
-    print CSH "convert $ps_file $gif_file\n";
+  }
+
+  # converts ps to gif
+  print CSH "convert $ps_file $gif_file\n";
+
 #  if ($no_topo and  $transparent) {print CSH "giftrans -t\\\#fefefe $gif_file > $tran_gif_file\n";}
+
 }
 
 close(CSH);

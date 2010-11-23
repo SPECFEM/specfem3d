@@ -5,6 +5,7 @@
 # the scp command is:
 # /scratch/$ENV{USER}/DATABASES_MPI[.$jobid]/proc%04d_$files[$j].$exts[$j]
 #  Qinya Liu, May 2007, Caltech
+#  (version without collecting AVS_DX files)
 
 use POSIX;
 
@@ -45,7 +46,7 @@ for($i=0;$i<@slices;$i++) {
   print "$slice[$i], $node[$i]\n";
 }
 
-@files = ("AVS_DXelements","AVS_DXpoints","$filename","ibool","x","y","z");
+@files = ("$filename","ibool","x","y","z");
 @exts = ("txt","txt","bin","bin","bin","bin","bin");
 
 

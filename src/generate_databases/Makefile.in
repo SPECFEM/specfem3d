@@ -69,7 +69,6 @@ libgendatabases_a_OBJECTS = \
 	$O/check_mesh_resolution.o \
 	$O/compute_arrays_source.o \
 	$O/compute_parameters.o \
-	$O/create_header_file.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
 	$O/create_mass_matrices.o \
@@ -107,9 +106,6 @@ libgendatabases_a_OBJECTS = \
 	$O/save_header_file.o \
 	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
-	$O/write_AVS_DX_global_data.o \
-	$O/write_AVS_DX_global_faces_data.o \
-	$O/write_AVS_DX_surface_data.o \
 	$O/write_VTK_data.o \
 	$O/memory_eval.o \
 	$(EMPTY_MACRO)
@@ -133,7 +129,6 @@ LIBGENDATABASES = $L/libgendatabases.a
 @COND_PYRE_FALSE@DEFAULT = \
 @COND_PYRE_FALSE@	generate_databases \
 @COND_PYRE_FALSE@	specfem3D \
-@COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	combine_vol_data \
 @COND_PYRE_FALSE@	combine_surf_data \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
@@ -165,8 +160,8 @@ generate_databases: xgenerate_databases
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
-        xgenerate_databases xcombine_AVS_DX \
-        xconvolve_source_timefunction xcreate_header_file \
+        xgenerate_databases \
+        xconvolve_source_timefunction \
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
 
 ###
@@ -229,15 +224,6 @@ $O/exit_mpi.o:  ${SHARED}/constants.h ${SHARED}/exit_mpi.f90
 $O/convolve_source_timefunction.o: ${SHARED}/convolve_source_timefunction.f90
 	${FCCOMPILE_CHECK} -c -o $O/convolve_source_timefunction.o ${SHARED}/convolve_source_timefunction.f90
 
-$O/program_create_header_file.o: ${SHARED}/program_create_header_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/program_create_header_file.o ${SHARED}/program_create_header_file.f90
-
-$O/create_header_file.o: ${SHARED}/create_header_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_header_file.o ${SHARED}/create_header_file.f90
-
-$O/combine_AVS_DX.o:  ${SHARED}/constants.h ${SHARED}/combine_AVS_DX.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_AVS_DX.o ${SHARED}/combine_AVS_DX.f90
-
 $O/save_header_file.o:  ${SHARED}/constants.h ${SHARED}/save_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_header_file.o ${SHARED}/save_header_file.f90
 
@@ -285,15 +271,6 @@ $O/get_element_face.o:  ${SHARED}/constants.h ${SHARED}/get_element_face.f90
 
 $O/get_global.o:  ${SHARED}/constants.h get_global.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
-
-$O/write_AVS_DX_global_faces_data.o:  ${SHARED}/constants.h ${SHARED}/write_AVS_DX_global_faces_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_faces_data.o ${SHARED}/write_AVS_DX_global_faces_data.f90
-
-$O/write_AVS_DX_surface_data.o:  ${SHARED}/constants.h ${SHARED}/write_AVS_DX_surface_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_surface_data.o ${SHARED}/write_AVS_DX_surface_data.f90
-
-$O/write_AVS_DX_global_data.o:  ${SHARED}/constants.h ${SHARED}/write_AVS_DX_global_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_data.o ${SHARED}/write_AVS_DX_global_data.f90
 
 $O/write_VTK_data.o:  ${SHARED}/constants.h ${SHARED}/write_VTK_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o ${SHARED}/write_VTK_data.f90
@@ -375,13 +352,6 @@ $O/prepare_assemble_MPI.o:  ${SHARED}/constants.h ${SHARED}/prepare_assemble_MPI
 	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o ${SHARED}/prepare_assemble_MPI.f90
 
 
-
-###
-### rule for the header file
-###
-
-@COND_PYRE_FALSE@$(OUTPUT)/values_from_mesher.h: xcreate_header_file
-@COND_PYRE_FALSE@	./xcreate_header_file
 
 ###
 ### C files below
