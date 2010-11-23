@@ -69,7 +69,6 @@ libspecfem_a_OBJECTS = \
 	$O/comp_source_time_function.o \
 	$O/compute_arrays_source.o \
 	$O/compute_parameters.o \
-	$O/create_header_file.o \
 	$O/create_name_database.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
@@ -97,14 +96,10 @@ libspecfem_a_OBJECTS = \
 	$O/save_header_file.o \
 	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
-	$O/write_AVS_DX_global_data.o \
-	$O/write_AVS_DX_global_faces_data.o \
-	$O/write_AVS_DX_surface_data.o \
 	$O/write_VTK_data.o \
 	$(EMPTY_MACRO)
 
-# solver objects with statically allocated arrays; not dependent upon
-# values_from_mesher.h anymore
+# solver objects - no statically allocated arrays anymore
 SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
 	$O/PML_init.o \
@@ -162,7 +157,6 @@ LIBSPECFEM = $L/libspecfem.a
 @COND_PYRE_FALSE@DEFAULT = \
 @COND_PYRE_FALSE@	generate_databases \
 @COND_PYRE_FALSE@	specfem3D \
-@COND_PYRE_FALSE@	combine_AVS_DX \
 @COND_PYRE_FALSE@	combine_vol_data \
 @COND_PYRE_FALSE@	combine_surf_data \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
@@ -188,9 +182,7 @@ specfem3D: xspecfem3D
 @COND_PYRE_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 
-combine_AVS_DX: xcombine_AVS_DX
 convolve_source_timefunction: xconvolve_source_timefunction
-create_header_file: xcreate_header_file
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
@@ -198,15 +190,8 @@ combine_surf_data: xcombine_surf_data
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.o
 
-xcreate_header_file: $O/program_create_header_file.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o  ${E}/xcreate_header_file $O/program_create_header_file.o $(LIBSPECFEM)
-
 @COND_PYRE_FALSE@xcreate_movie_shakemap_AVS_DX_GMT: $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) $(OUTPUT)/surface_from_mesher.h
 @COND_PYRE_FALSE@	${FCCOMPILE_CHECK} -o  ${E}/xcreate_movie_shakemap_AVS_DX_GMT $O/create_movie_shakemap_AVS_DX_GMT.o $(LIBSPECFEM) -I$(OUTPUT)
-
-
-xcombine_AVS_DX: $O/combine_AVS_DX.o $(LIBSPECFEM)
-	${FCCOMPILE_CHECK} -o  ${E}/xcombine_AVS_DX $O/combine_AVS_DX.o $(LIBSPECFEM)
 
 xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
 	${FCCOMPILE_CHECK} -o  ${E}/xcombine_vol_data  $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o
@@ -217,8 +202,8 @@ xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
-        xgenerate_databases xspecfem3D xcombine_AVS_DX \
-        xconvolve_source_timefunction xcreate_header_file \
+        xgenerate_databases xspecfem3D \
+        xconvolve_source_timefunction \
         xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
 
 ###
@@ -367,15 +352,6 @@ $O/exit_mpi.o: $(SHARED)constants.h ${SHARED}/exit_mpi.f90
 $O/convolve_source_timefunction.o: ${SHARED}/convolve_source_timefunction.f90
 	${FCCOMPILE_CHECK} -c -o $O/convolve_source_timefunction.o ${SHARED}/convolve_source_timefunction.f90
 
-$O/program_create_header_file.o: ${SHARED}/program_create_header_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/program_create_header_file.o ${SHARED}/program_create_header_file.f90
-
-$O/create_header_file.o: ${SHARED}/create_header_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_header_file.o ${SHARED}/create_header_file.f90
-
-$O/combine_AVS_DX.o: $(SHARED)constants.h ${SHARED}/combine_AVS_DX.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_AVS_DX.o ${SHARED}/combine_AVS_DX.f90
-
 $O/save_header_file.o: $(SHARED)constants.h ${SHARED}/save_header_file.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_header_file.o ${SHARED}/save_header_file.f90
 
@@ -417,15 +393,6 @@ $O/create_movie_shakemap_AVS_DX_GMT.o: $(SHARED)constants.h ${SHARED}/create_mov
 
 $O/get_element_face.o: $(SHARED)constants.h ${SHARED}/get_element_face.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_element_face.o  ${SHARED}/get_element_face.f90
-
-$O/write_AVS_DX_global_faces_data.o: $(SHARED)constants.h ${SHARED}/write_AVS_DX_global_faces_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_faces_data.o ${SHARED}/write_AVS_DX_global_faces_data.f90
-
-$O/write_AVS_DX_surface_data.o: $(SHARED)constants.h ${SHARED}/write_AVS_DX_surface_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_surface_data.o ${SHARED}/write_AVS_DX_surface_data.f90
-
-$O/write_AVS_DX_global_data.o: $(SHARED)constants.h ${SHARED}/write_AVS_DX_global_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_AVS_DX_global_data.o ${SHARED}/write_AVS_DX_global_data.f90
 
 $O/write_VTK_data.o: $(SHARED)constants.h ${SHARED}/write_VTK_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o ${SHARED}/write_VTK_data.f90
@@ -490,12 +457,6 @@ $O/prepare_assemble_MPI.o: $(SHARED)constants.h ${SHARED}/prepare_assemble_MPI.f
 $O/PML_init.o: $(SHARED)constants.h PML_init.f90
 	${FCCOMPILE_CHECK} -c -o $O/PML_init.o PML_init.f90
 
-###
-### rule for the header file
-###
-
-@COND_PYRE_FALSE@$(OUTPUT)/values_from_mesher.h: xcreate_header_file
-@COND_PYRE_FALSE@	./xcreate_header_file
 
 ###
 ### C files below

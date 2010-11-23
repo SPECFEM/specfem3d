@@ -2316,17 +2316,17 @@ where  \texttt{machines} is a file containing the node names.
 \section{Plot Movie Snapshots and Synthetic Shakemaps}
 
 
-\subsection{\texttt{movie2gif.pl}}
+\subsection{Script \texttt{movie2gif.gmt.pl}}
 
 With the movie data saved in \texttt{in\_out\_files/OUTPUT\_FILES/} at the end of
 a movie simulation (\texttt{\small MOVIE\_SURFACE=.true.}), you can
-run the \texttt{`create\_movie\_GMT}' code to convert these binary
+run the \texttt{`create\_movie\_shakemap\_AVS\_DX\_GMT}' code to convert these binary
 movie data into GMT xyz files for futher processing. A sample script
-\texttt{movie2gif.pl} is provided to do this conversion, and then
+\texttt{movie2gif.gmt.pl} is provided to do this conversion, and then
 plot the movie snapshots in GMT, for example:
 
 \begin{lyxcode}
-movie2gif.pl~-m~CMTSOLUTION~-g~-f~1/40~-n~-2~-p~
+movie2gif.gmt.pl~-m~CMTSOLUTION~-g~-f~1/40~-n~-2~-p~
 \end{lyxcode}
 which for the first through the 40th movie frame, converts the \texttt{moviedata}
 files into GMT xyz files, interpolates them using the 'nearneighbor'
@@ -2334,7 +2334,7 @@ command in GMT, and plots them on a 2D topography map. Note that `\texttt{-2}'
 and `\texttt{-p}' are both optional.
 
 
-\subsection{\texttt{plot\_shakemap.gmt.pl}}
+\subsection{Script \texttt{plot\_shakemap.gmt.pl}}
 
 With the shakemap data saved in \texttt{in\_out\_files/OUTPUT\_FILES/} at the end
 of a shakemap simulation ~\\

@@ -35,7 +35,6 @@ program combine_surf_data
   implicit none
 
   include 'constants.h'
-!  include 'OUTPUT_FILES/values_from_mesher.h'
 
   integer i,j,k,ispec, ios, it
   integer iproc, proc1, proc2, num_node, node_list(300), nspec, nglob
@@ -43,9 +42,6 @@ program combine_surf_data
   integer numpoin, iglob1, iglob2, iglob3, iglob4, iglob
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: data_3D
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: data_2D
-!  integer ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB)
-!  logical mask_ibool(NGLOB_AB)
-!  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore, ystore, zstore
   ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
   integer, dimension(:,:,:,:),allocatable :: ibool

@@ -406,21 +406,6 @@ subroutine create_regions_mesh_ext(ibool, &
 !    !  deallocate(itest_flag)
 !  endif
 
-! AVS/DX file output
-! create AVS or DX mesh data for the slice, edges and faces
-!  if(SAVE_MESH_FILES) then
-! check: no idoubling
-!    call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-!    call write_AVS_DX_mesh_quality_data(prname,nspec,xstore,ystore,zstore, &
-!                   kappastore,mustore,rhostore)
-! check: no iMPIcut_xi,iMPIcut_eta,idoubling
-!    call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
-!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-! check: no idoubling
-!    call write_AVS_DX_surface_data(myrank,prname,nspec,iboun,ibool, &
-!              idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
-!  endif
-
 ! cleanup
   if( .not. SAVE_MOHO_MESH ) deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
   deallocate(xixstore,xiystore,xizstore,&
