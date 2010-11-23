@@ -1,6 +1,6 @@
 function [] = NOISE_TOMOGRAPHY(NSTEP,dt,Tmin,Tmax,NOISE_MODEL)
-% This is a short Matlab program used to sample the spectrum of the 
-%     Peterson's noise model, and convert it to time-domain --- the 
+% This is a short Matlab program used to sample the spectrum of the
+%     Peterson's noise model, and convert it to time-domain --- the
 %     source time function we will use in NOISE TOMOGRAPHY simulations.
 %
 %***********************************************************************
@@ -16,7 +16,7 @@ function [] = NOISE_TOMOGRAPHY(NSTEP,dt,Tmin,Tmax,NOISE_MODEL)
 % NSTEP       --- number of time steps (always odd for NOISE TOMOGRAPHY)
 % dt          --- time interval of specfem3D solver
 % Tmin, Tmax  --- the period range you are working with (in seconds)
-% NOISE_MODEL --- the Peterson's noise model, 
+% NOISE_MODEL --- the Peterson's noise model,
 %                 either 'NLNM' or 'NHNM' (with the quote!)
 %                 'NLNM': New Low  Noise Model (in 1993, the model was New)
 %                 'NHNM': New High Noise Model
@@ -25,18 +25,15 @@ function [] = NOISE_TOMOGRAPHY(NSTEP,dt,Tmin,Tmax,NOISE_MODEL)
 % ATTENTION:
 % ***NEVER*** try to calculate "NSTEP" and "dt" by yourself!
 % They can be found when you compile the SPECFEM3D package,
-% with the correct DATA/Par_file
-% If DATA/Par_file is not specified for noise tomography simulations,
+% with the correct in_data_files/Par_file
+% If in_data_files/Par_file is not specified for noise tomography simulations,
 % you won't get correct values either!
-% You can, however, compile the package use any DATA/Par_file,
-% but then you need to run ./xcreate_header_file (costs just a few seconds)
-% after you have the proper DATA/Par_file
-% It is highly recommended that you compile the package with the correct 
-% DATA/Par_file you will be using
+% It is highly recommended that you compile the package with the correct
+% in_data_files/Par_file you will be using
 %
-% 
+%
 % Output from the example above:
-% a figure + following message 
+% a figure + following message
 % (the path /data2/yangl/3D_NOSIE/ must be different)
 % *************************************************************
 % the source time function has been saved in:
@@ -52,8 +49,8 @@ T=(NSTEP-1)*dt;    % total simulation time
 if T<Tmax
     fprintf(['The simulation length T(' num2str(T) ...
         ') is smaller than the required maximum period Tmax(' ...
-        num2str(Tmax) ')\n']); 
-    return; 
+        num2str(Tmax) ')\n']);
+    return;
 end;
 N_mid=(NSTEP+1)/2; % (NSTEP+1)/2 is the middle of the (NSTEP-1) points
 fmax=1/2/dt;       % Nyquist frequency, due to sampling theory
