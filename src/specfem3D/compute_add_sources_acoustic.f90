@@ -77,13 +77,10 @@
   integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   integer:: nadj_rec_local
   real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
-  !<YANGL
   logical :: ibool_read_adj_arrays
   integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
-  !  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
-  !>YANGL
 
 ! local parameters
   double precision :: f0
@@ -218,7 +215,6 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
-    !<YANGL
     ! read in adjoint sources block by block (for memory consideration)
     ! e.g., in exploration experiments, both the number of receivers (nrec) and the number of time steps (NSTEP) are huge,
     ! which may cause problems since we have a large array: adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
@@ -253,7 +249,6 @@
       enddo
 
     endif ! if(ibool_read_adj_arrays)
-    !>YANGL
 
     if( it < NSTEP ) then
       ! receivers act as sources
@@ -262,28 +257,31 @@
         ! add the source (only if this proc carries the source)
         if (myrank == islice_selected_rec(irec)) then
           irec_local = irec_local + 1
+
           ! adds source array
           ispec = ispec_selected_rec(irec)
-          do k = 1,NGLLZ
-            do j = 1,NGLLY
-              do i = 1,NGLLX
-                iglob = ibool(i,j,k,ispec)
 
-                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                ! note: it takes the first component of the adj_sourcearrays
-                !          the idea is to have e.g. a pressure source, where all 3 components would be the same
-                !<YANGL
-                ! potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                !                   - adj_sourcearrays(irec_local,NSTEP-it+1,1,i,j,k) / kappastore(i,j,k,ispec)
-                if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) &
-                   potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                              - adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC &
-                              -mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),1,i,j,k) &
-                              / kappastore(i,j,k,ispec)
-                !>YANGL
+          ! checks if element is in phase_is_inner run
+          if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
+
+            do k = 1,NGLLZ
+              do j = 1,NGLLY
+                do i = 1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
+
+                  ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+                  ! note: it takes the first component of the adj_sourcearrays
+                  !          the idea is to have e.g. a pressure source, where all 3 components would be the same
+                  potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                        - adj_sourcearrays(irec_local, &
+                          NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                          1,i,j,k) / kappastore(i,j,k,ispec)
+                enddo
               enddo
             enddo
-          enddo
+
+          endif ! phase_is_inner
+
         endif
       enddo ! nrec
     endif ! it

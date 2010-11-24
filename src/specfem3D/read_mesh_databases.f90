@@ -435,10 +435,9 @@
     allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
     ! vs kernel
     allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
-    !<YANGL
+
     ! noise source strength kernel
     if (NOISE_TOMOGRAPHY == 3) allocate(sigma_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
-    !>YANGL
 
     ! MPI handling
     allocate(b_request_send_vector_ext_mesh(num_interfaces_ext_mesh))

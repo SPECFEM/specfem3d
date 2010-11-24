@@ -378,6 +378,7 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   real(kind=CUSTOM_REAL) :: face_n(3),tmp,v_tmp(3)
   integer :: iglob
 
+
 ! determines initial orientation given by three corners on the face
   ! cross-product of vectors from corner 1 to corner 2 and from corner 1 to corner 3
   face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
@@ -393,6 +394,7 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
 
 ! checks that this normal direction is outwards of element:
   ! takes additional corner out of face plane and determines scalarproduct to normal
+  iglob = 0
   select case( iface )
   case(1) ! opposite to xmin face
     iglob = ibool(NGLLX,1,1,ispec)
@@ -479,10 +481,7 @@ subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
   real(kind=CUSTOM_REAL) :: face_n(3),tmp,v_tmp(3)
   integer :: iglob
 
-! initializes
-  idirect = 0
-
-! determines initial orientation given by three corners on the face
+  ! determines initial orientation given by three corners on the face
   ! cross-product of vectors from corner 1 to corner 2 and from corner 1 to corner 3
   face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
   face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))
@@ -495,8 +494,9 @@ subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
   endif
   face_n(:) = face_n(:)/tmp
 
-! checks that this normal direction is outwards of element:
+  ! checks that this normal direction is outwards of element:
   ! takes additional corner out of face plane and determines scalarproduct to normal
+  iglob = 0
   select case( iface )
   case(1) ! opposite to xmin face
     iglob = ibool(NGLLX,1,1,ispec)
@@ -526,9 +526,10 @@ subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
     face_n(:) = - face_n(:)
   endif
 
-! in case given normal has zero length, exit
+  ! in case given normal has zero length, exit
   if( ( normal(1)**2 + normal(2)**2 + normal(3)**2 ) < TINYVAL ) then
     print*,'problem: given normal is zero'
+    idirect = 0
     return
   endif
 

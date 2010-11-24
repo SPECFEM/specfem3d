@@ -68,7 +68,6 @@ libgendatabases_a_OBJECTS = \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
 	$O/compute_arrays_source.o \
-	$O/compute_parameters.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
 	$O/create_mass_matrices.o \
@@ -238,9 +237,6 @@ $O/get_value_parameters.o:  ${SHARED}/constants.h ${SHARED}/get_value_parameters
 
 $O/utm_geo.o:  ${SHARED}/constants.h ${SHARED}/utm_geo.f90
 	${FCCOMPILE_CHECK} -c -o $O/utm_geo.o ${SHARED}/utm_geo.f90
-
-$O/compute_parameters.o:  ${SHARED}/constants.h ${SHARED}/compute_parameters.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_parameters.o ${SHARED}/compute_parameters.f90
 
 $O/calc_jacobian.o:  ${SHARED}/constants.h calc_jacobian.f90
 	${FCCOMPILE_CHECK} -c -o $O/calc_jacobian.o calc_jacobian.f90

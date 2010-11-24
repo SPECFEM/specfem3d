@@ -560,38 +560,15 @@ subroutine setup_sources_precompute_arrays()
         call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
     endif
 
-    ! reads in adjoint source traces
-    !<YANGL
-    ! moved to compute_add_sources_elastic.f90 & compute_add_sources_acoustic.f90,
-    ! because we may need to read in adjoint sources block by block
-    !!! allocate(adj_sourcearray(NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
-    !!! allocate(adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ))
-    !!! adj_sourcearrays = 0._CUSTOM_REAL
-    !!! adj_sourcearray = 0._CUSTOM_REAL
+! note:
+! computes adjoint sources in chunks/blocks during time iterations.
+! we moved it to compute_add_sources_elastic.f90 & compute_add_sources_acoustic.f90,
+! because we may need to read in adjoint sources block by block
 
-    !!! ! pre-computes adjoint source arrays
-    !!! irec_local = 0
-    !!! do irec = 1, nrec
-    !!!   ! computes only adjoint source arrays in the local slice
-    !!!   if( myrank == islice_selected_rec(irec) ) then
-    !!!     irec_local = irec_local + 1
-
-    !!!     ! reads in **sta**.**net**.**BH**.adj files
-    !!!     adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-    !!!
-    !!!     call compute_arrays_adjoint_source(myrank, adj_source_file, &
-    !!!                       xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
-    !!!                       adj_sourcearray, xigll,yigll,zigll,1,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
-
-    !!!     adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
-
-    !!!   endif
-    !!! enddo
-    !!! ! frees temporary array
-    !!! deallocate(adj_sourcearray)
+    ! initializes adjoint sources
     allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ))
     adj_sourcearrays = 0._CUSTOM_REAL
-    !>YANGL
+
   endif
 
 end subroutine setup_sources_precompute_arrays

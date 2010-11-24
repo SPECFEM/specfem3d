@@ -141,13 +141,12 @@
       call compute_boundary_kernel()
   endif
 
-  !<YANGL
   ! for noise simulations --- source strength kernel
   if (NOISE_TOMOGRAPHY == 3)  &
-     call compute_kernels_strength_noise(myrank,ibool, &
+    call compute_kernels_strength_noise(myrank,ibool, &
                         sigma_kl,displ,deltat,it, &
                         NGLLX*NGLLY*nfaces_surface_ext_mesh,normal_x_noise,normal_y_noise,normal_z_noise, &
                         nfaces_surface_ext_mesh,free_surface_ispec,LOCAL_PATH, &
                         nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
-  !>YANGL
+
   end subroutine compute_kernels

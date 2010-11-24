@@ -13,7 +13,7 @@ sub Usage {
     -l -L specifies the start and end point of the traces to rotate
     -c check SAC output on screen
        ex. rotate.pl -d *.LHE.SAC for iris data
-           rotate.pl PAS.*.LHE.sac for synthetics
+           rotate.pl PAS.*.MXE.sac for synthetics
     For iris data (with -d), the timing part of the name will be ignored
     and only the component part of the name will be changed correspondingly
 
@@ -101,5 +101,5 @@ foreach $file (@ARGV) {
   print SAC "w $radial $tang\nquit\n";
   close(SAC);
 }
-	
+
 print "   Done !\n";

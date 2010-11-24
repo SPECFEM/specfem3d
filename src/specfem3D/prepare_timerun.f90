@@ -196,6 +196,9 @@
   ! prepares ADJOINT simulations
   call prepare_timerun_adjoint()
 
+  ! prepares noise simulations
+  call prepare_timerun_noise()
+
   end subroutine prepare_timerun
 
 !
@@ -569,3 +572,57 @@
   endif
 
   end subroutine prepare_timerun_adjoint
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_noise()
+
+! prepares noise simulations
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  use specfem_par_movie
+  implicit none
+
+  integer :: ier
+
+  ! for noise simulations
+  if ( NOISE_TOMOGRAPHY /= 0 ) then
+
+    ! allocates arrays
+    allocate(noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP),stat=ier)
+    if( ier /= 0 ) call exit_mpi(myrank,'error allocating noise source array')
+
+    allocate(normal_x_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
+    allocate(normal_y_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
+    allocate(normal_z_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
+    allocate(mask_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
+
+    ! initializes
+    noise_sourcearray(:,:,:,:,:) = 0._CUSTOM_REAL
+    normal_x_noise(:)            = 0._CUSTOM_REAL
+    normal_y_noise(:)            = 0._CUSTOM_REAL
+    normal_z_noise(:)            = 0._CUSTOM_REAL
+    mask_noise(:)                = 0._CUSTOM_REAL
+
+    ! sets up noise source for master receiver station
+    call read_parameters_noise(myrank,nrec,NSTEP,NGLLX*NGLLY*nfaces_surface_ext_mesh, &
+                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
+                               noise_sourcearray,xigll,yigll,zigll,nfaces_surface_ext_mesh, &
+                               1,ibool,free_surface_ispec, &
+                               xstore,ystore,zstore, &
+                               irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
+                               nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+
+    ! checks flags for noise simulation
+    if (myrank == 0) &
+      call check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
+                               .false., USE_HIGHRES_FOR_MOVIES)
+  endif
+
+  end subroutine prepare_timerun_noise
+

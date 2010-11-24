@@ -224,6 +224,9 @@
       imax = NGLLX - 1
       jmin = 2
       jmax = NGLLY - 1
+      iselected = 0
+      jselected = 0
+      iface_selected = 0
       do iface=1,num_free_surface_faces
         do j=jmin,jmax
           do i=imin,imax
@@ -576,7 +579,9 @@
 
       ! define coordinates of the control points of the element
       do ia=1,NGNOD
-
+        iax = 0
+        iay = 0
+        iaz = 0
         if(iaddx(ia) == 0) then
           iax = 1
         else if(iaddx(ia) == 1) then

@@ -31,12 +31,11 @@ contains
 
 
   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-       xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
+       xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
        NGLOB_AB,npointot, &
        NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-       NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+       NPROC_XI,NPROC_ETA, &
        nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
        myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
        CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
@@ -55,10 +54,8 @@ contains
 
     integer NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP
 
-    integer NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI
-    integer NSPEC2D_A_ETA,NSPEC2D_B_ETA
+    integer NPROC_XI,NPROC_ETA
 
-    integer npx,npy
     integer npointot
 
     logical USE_REGULAR_MESH
@@ -161,15 +158,6 @@ contains
     logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
-
-    ! to avoid compiler warnings
-    integer idummy
-    idummy = NSPEC2D_A_ETA
-    idummy = NSPEC2D_B_ETA
-    idummy = NSPEC2D_A_XI
-    idummy = NSPEC2D_B_XI
-    idummy = npx
-    idummy = npy
 
     ! **************
 

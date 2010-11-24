@@ -223,9 +223,7 @@
   integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
 
 ! parameters read from parameter file
-  integer NER_SEDIM,NER_BASEMENT_SEDIM,NER_16_BASEMENT, &
-             NER_MOHO_16,NER_BOTTOM_MOHO,NEX_XI,NEX_ETA, &
-             NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
+  integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
   double precision Z_DEPTH_BLOCK !,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
@@ -391,7 +389,6 @@
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
       NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-      NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM,NER_SEDIM, &
       NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
       NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
@@ -399,7 +396,10 @@
       USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
 ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+  if(sizeprocs /= NPROC) then
+    print*,'error requested nproc',NPROC,'not equal to size proc',sizeprocs
+    call exit_MPI(myrank,'wrong number of MPI processes')
+  endif
 
 ! dynamic allocation of mesh arrays
   allocate(rns(0:2*NER))
@@ -721,12 +721,11 @@
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-           xstore,ystore,zstore,npx,npy,iproc_xi,iproc_eta,addressing,nspec, &
+           xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
            NGLOB_AB,npointot, &
            NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-           NPROC_XI,NPROC_ETA,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-           NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+           NPROC_XI,NPROC_ETA, &
            NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
            myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
            CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
