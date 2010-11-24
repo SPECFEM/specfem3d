@@ -9,25 +9,9 @@ step-by-step tutorial:
 
 0. check that all software is available (or that modules are loaded):
      intel/openmpi, cubit, scotch, python, gnuplot
+   and run ./configure in the SPECFEM3D package root directory
 
-
-1. configure package:
-
-   - From the SPECFEM3D root directory SPECFEM3D/
-     configure the package, e.g. using intel's ifort compiler:
-     > cd SPECFEM3D
-     > ./configure F90=ifort
-
-     If successful, this will generate the files:
-     Makefile, constants.h, and precision.h, among others
-
-   - copy two run scripts from SPECFEM3D/utils/Cluster/
-     into SPECFEM3D/, e.g.,
-     pbs/go_generate_databases_pbs.bash
-     pbs/go_solver_pbs.bash
-
-
-2.a create mesh:
+1. create mesh:
 
    - change to the examples directory SPECFEM3D/examples/tomographic_model:
      > cd examples/tomographic_model
@@ -52,7 +36,7 @@ step-by-step tutorial:
 
      the cubit graphics window should show a mesh similar to the file homogeneous.png
 
-2.b create tomography_model file:
+2. create tomography_model file:
 
     in examples/tomographic_model, run bash script:
 
@@ -111,7 +95,7 @@ step-by-step tutorial:
 
      NOTE 1: this script will need to be tailored to your cluster, e.g.,
              > bsub < go_solver_lsf.bash
-     NOTE 2: the simulation runs on 4 cores and should take about 15 minutes,
+     NOTE 2: the simulation runs on 4 cores and should take about 10 minutes,
              and you can track the progress with the timestamp files
 
    - when the job is complete, you should have 3 sets (semd,semv,sema)

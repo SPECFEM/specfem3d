@@ -89,14 +89,14 @@ step-by-step tutorial:
 
 Optional:
   Compare the solution traces:
-    'OUTPUT_FILES/X31.BHZ.semd'
+    'OUTPUT_FILES/X31.HXZ.semd'
   and
-    'OUTPUT_FILES/X55.BHZ.semd'
+    'OUTPUT_FILES/X55.HXZ.semd'
 
   with the solutions of Komatitsch et al. (1999, Figure 9, bottom and top) provided in:
-    'examples/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Ux_file_Ycste_0031.txt'
+    'VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Uz_file_Ycste_0031.txt'
   and
-    'examples/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Ux_file_Ycste_0055.txt'
+    'VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Uz_file_Ycste_0055.txt'
 
 
 

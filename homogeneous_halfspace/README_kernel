@@ -35,9 +35,9 @@ step-by-step kernel tutorial:
 
    you should have now the necessary seismograms in directory in_out_files/OUTPUT_FILES/:
      ...
-     in_out_files/OUTPUT_FILES/X20.BHE.semd
-     in_out_files/OUTPUT_FILES/X20.BHN.semd
-     in_out_files/OUTPUT_FILES/X20.BHZ.semd
+     in_out_files/OUTPUT_FILES/X20.BXE.semd
+     in_out_files/OUTPUT_FILES/X20.BXN.semd
+     in_out_files/OUTPUT_FILES/X20.BXZ.semd
      ...
 
 
@@ -51,7 +51,7 @@ step-by-step kernel tutorial:
      e.g. using the seismograms from station 20, and create the
      corresponding adjoint source files:
      > cd /SPECFEM3D
-     > ./UTILS/cut_velocity/xcut_velocity 10. 25. 0 in_out_files/OUTPUT_FILES/X20.DB.BH*.semd
+     > ./UTILS/cut_velocity/xcut_velocity 10. 25. 0 in_out_files/OUTPUT_FILES/X20.DB.BX*.semd
 
    - make designated directory for adjoint sources:
      > mkdir in_out_files/SEM/
@@ -60,9 +60,9 @@ step-by-step kernel tutorial:
      > rename .semd.adj .adj *.adj
 
      this should create the files:
-          in_out_files/SEM/X20.DB.BHE.adj
-          in_out_files/SEM/X20.DB.BHN.adj
-          in_out_files/SEM/X20.DB.BHZ.adj
+          in_out_files/SEM/X20.DB.BXE.adj
+          in_out_files/SEM/X20.DB.BXN.adj
+          in_out_files/SEM/X20.DB.BXZ.adj
 
    - setup adjoint stations file STATIONS_ADJOINT containing the receiver stations locations
      which will have adjoint source files in in_out_files/SEM/:

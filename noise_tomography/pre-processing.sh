@@ -27,7 +27,7 @@ kernel="beta_kernel"
 
 # create directories for noise simulations and adjoint simulations
 # they are also default in SPECFEM3D
-mkdir -p $in_out_files/SEM 
+mkdir -p $in_out_files/SEM
 mkdir -p $in_out_files/NOISE_TOMOGRAPHY
 
 # create directories for storing kernels (first contribution and second contribution)
@@ -78,7 +78,7 @@ mpirun -np 4 ./xspecfem3D
 # step 2 of noise simulation
 cp $in_data_files/Par_file_step2                         $in_data_files/Par_file
 mpirun -np 4 ./xspecfem3D
-mv $in_out_files/OUTPUT_FILES/X2.DB.BHZ.semd             $in_out_files/SEM/
+mv $in_out_files/OUTPUT_FILES/X2.DB.BXZ.semd             $in_out_files/SEM/
 
 # calculating adjoint source
 # note that "a.out" is compiled from "ifort adj_traveltime_filter.f90"
@@ -88,7 +88,7 @@ mv $in_out_files/OUTPUT_FILES/X2.DB.BHZ.semd             $in_out_files/SEM/
 # pay attention to "adj_sources_contribution1" & "X2.DB.BHZ.adj"
 # we will be using "adj_sources_contribution2" & "X1.DB.BHZ.adj" for the 2nd contribution in next part
 rm $in_out_files/SEM/*.adj
-cp $in_out_files/SEM/adj_sources_contribution1           $in_out_files/SEM/X2.DB.BHZ.adj
+cp $in_out_files/SEM/adj_sources_contribution1           $in_out_files/SEM/X2.DB.BXZ.adj
 
 # step 3 of noise simulation
 cp $in_data_files/Par_file_step3                         $in_data_files/Par_file
@@ -128,7 +128,7 @@ mpirun -np 4 ./xspecfem3D
 # pay attention to "adj_sources_contribution2" & "X1.DB.BHZ.adj"
 # we have been using "adj_sources_contribution1" & "X2.DB.BHZ.adj" for the 1st contribution in previous part
 rm $in_out_files/SEM/*.adj
-cp $in_out_files/SEM/adj_sources_contribution2           $in_out_files/SEM/X1.DB.BHZ.adj
+cp $in_out_files/SEM/adj_sources_contribution2           $in_out_files/SEM/X1.DB.BXZ.adj
 
 # step 3 of noise simulation
 cp $in_data_files/Par_file_step3                         $in_data_files/Par_file

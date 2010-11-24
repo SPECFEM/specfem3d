@@ -9,11 +9,11 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 6
+NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 6000
-DT                              = 0.0065d0
+DT                              = 0.0065
 
 # parameters describing the model
 OCEANS                          = .false.

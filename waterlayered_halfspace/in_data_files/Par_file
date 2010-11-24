@@ -14,7 +14,7 @@ NPROC                           = 4
 
 # time step parameters
 NSTEP                           = 4500
-DT                              = 0.005d0
+DT                              = 0.005
 
 # parameters describing the model
 OCEANS                          = .false.
@@ -24,7 +24,7 @@ USE_OLSEN_ATTENUATION           = .false.
 ANISOTROPY                      = .false.
 
 # absorbing boundary conditions for a regional simulation
-ABSORBING_CONDITIONS            = .false.
+ABSORBING_CONDITIONS            = .true.
 
 # save AVS or OpenDX movies
 MOVIE_SURFACE                   = .false.

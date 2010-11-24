@@ -49,12 +49,12 @@ def define_absorbing_surf():
     absorbing_surf_ymax=[]
     absorbing_surf_bottom=[]
     top_surf=[]
-    
-    
+
+
     list_vol=cubit.parse_cubit_list("volume","all")
     init_n_vol=len(list_vol)
     zmax_box=cubit.get_total_bounding_box("volume",list_vol)[7]
-    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...    
+    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...
     xmin_box=cubit.get_total_bounding_box("volume",list_vol)[0]
     xmax_box=cubit.get_total_bounding_box("volume",list_vol)[1]
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
@@ -90,17 +90,17 @@ def define_absorbing_surf():
     x_len = abs( xmax_box - xmin_box)
     y_len = abs( ymax_box - ymin_box)
     z_len = abs( zmax_box - zmin_box)
-    
+
     print '##boundary box: '
     print '##  x length: ' + str(x_len)
     print '##  y length: ' + str(y_len)
     print '##  z length: ' + str(z_len)
-    
-    # tolerance parameters 
+
+    # tolerance parameters
     absorbing_surface_distance_tolerance=0.005
     topographic_surface_distance_tolerance=0.001
     topographic_surface_normal_tolerance=0.2
-        
+
     for k in list_surf:
         center_point = cubit.get_center_point("surface", k)
         if abs((center_point[0] - xmin_box)/x_len) <= absorbing_surface_distance_tolerance:
@@ -165,7 +165,7 @@ def define_absorbing_surf_nopar():
     list_vol=cubit.parse_cubit_list("volume","all")
     init_n_vol=len(list_vol)
     zmax_box=cubit.get_total_bounding_box("volume",list_vol)[7]
-    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...    
+    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...
     xmin_box=cubit.get_total_bounding_box("volume",list_vol)[0]
     xmax_box=cubit.get_total_bounding_box("volume",list_vol)[1]
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
@@ -196,7 +196,7 @@ def define_absorbing_surf_nopar():
         if len(c) == 1:
             p=cubit.get_center_point("curve",list(c)[0])
             lp.append(p)
-    for k in list_surf: 
+    for k in list_surf:
         center_point = cubit.get_center_point("surface", k)
         for p in lp:
             if abs((center_point[0] - p[0])/p[0]) <= 0.005 and abs((center_point[1] - p[1])/p[1]) <= 0.005:
@@ -262,7 +262,7 @@ def build_block(vol_list,name):
        #command= 'block '+str(id_block)+' hex in node in vol '+str(v)+' except hex in vol '+str(list(v_other))
        command= 'block '+str(id_block)+' hex in vol '+str(v)
        command = command.replace("["," ").replace("]"," ")
-       cubit.cmd(command) 
+       cubit.cmd(command)
        command = "block "+str(id_block)+" name '"+n+"'"
        cubit.cmd(command)
 
@@ -280,7 +280,7 @@ def build_block_side(surf_list,name,obj='surface'):
     id_nodeset=cubit.get_next_nodeset_id()
     id_block=cubit.get_next_block_id()
 
-    
+
     if obj == 'hex':
         txt='hex in node in surface'
         txt1='block '+str(id_block)+ ' '+ txt +' '+str(list(surf_list))
@@ -302,7 +302,7 @@ def build_block_side(surf_list,name,obj='surface'):
         print "##block "+str(id_block)+" name '"+name+"_notsupported (only hex,face,edge,node)'"
         txt2=''
 
-    
+
     cubit.cmd(txt1)
     cubit.cmd(txt2)
 
@@ -312,46 +312,69 @@ def define_bc(*args,**keys):
     if not closed:
         print "##open region"
 
+        # model with parallel sides (e.g. a block)
         if parallel:
             surf,xmin,xmax,ymin,ymax,bottom,topo=define_absorbing_surf()
         else:
+            # arbitrary geometry
             surf,topo=define_absorbing_surf_nopar()
+
         v_list,name_list=define_block()
         build_block(v_list,name_list)
         entities=args[0]
         print entities
         for entity in entities:
             print "##entity: "+str(entity)
-            
+
+            # block for free surface (w/ topography)
             build_block_side(topo,entity+'_topo',obj=entity)
-            build_block_side(surf,entity+'_abs',obj=entity)
-            if parallel: 
+
+            # model has parallel sides (e.g. a block model )
+            if parallel:
+                # blocks for each side
                 build_block_side(xmin,entity+'_abs_xmin',obj=entity)
                 build_block_side(xmax,entity+'_abs_xmax',obj=entity)
                 build_block_side(ymin,entity+'_abs_ymin',obj=entity)
                 build_block_side(ymax,entity+'_abs_ymax',obj=entity)
                 build_block_side(bottom,entity+'_abs_bottom',obj=entity)
+
+                # block for all sides together
+                # NOTE:
+                #    this might fail in some CUBIT versions, when elements are already
+                #    assigned to other blocks
+                build_block_side(surf,entity+'_abs',obj=entity)
+
+            else:
+                # arbitrary geometry
+                # puts all elements in single block
+                build_block_side(surf,entity+'_abs',obj=entity)
+
     else:
         print "##closed region"
-        
+
+        # model without absorbing boundaries, only one surface, e.g. a sphere
         surf=define_absorbing_surf_sphere()
+
         v_list,name_list=define_block()
         build_block(v_list,name_list)
+
         entities=args[0]
         for entity in entities:
+            # puts all elements in single block
             build_block_side(surf,entity+'_closedvol',obj=entity)
 
 
 
-#entities=['surface','face','edge','node','hex']
+
+
+## calling example:
+
+#entities=['face']
 #define_bc(entities,parallel=True)
 #define_bc(entities,parallel=False)
 #define_bc(entities,parallel=False,closed=True)
 
-
-# call
-#entities=['surface','face']
-#define_bc(entities,parallel=True)
+## block material assigning example:
 
 #block 1  attribute count 5
 #block 2  attribute count 0

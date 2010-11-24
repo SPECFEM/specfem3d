@@ -114,13 +114,13 @@ step-by-step tutorial:
      > cd SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS
      > gnuplot
 
-         gnuplot> load "X1-50.BHZ.gnuplot"
+         gnuplot> load "X1-50.BXZ.gnuplot"
 
      You should see a figure in a render window.
      Writing the figure to a file may depend on your gnuplot settings.
      One example to generate a postscript is shown below:
 
-         gnuplot> load "X1-50.BHZ.gnuplot"
+         gnuplot> load "X1-50.BXZ.gnuplot"
          gnuplot> set term postscript color solid
          Terminal type set to 'postscript'
          Options are 'landscape noenhanced color colortext \
@@ -134,11 +134,9 @@ step-by-step tutorial:
 
 7. plot your output seismograms in SPECFEM3D/in_out_files/OUTPUT_FILES/
 
-   - copy gnuplot script X1-50.BHZ.gnuplot to in_out_files/OUTPUT_FILES/
+   - copy gnuplot script X1-50.BXZ.gnuplot to in_out_files/OUTPUT_FILES/
    - execute same commands as above
-   - you should see the same image as generated from the reference seismograms,
-      but the record length is a bit shorter (39.95000 vs 41.24350),
-      and the seismograms are a bit less jagged
+   - you should see the same image as generated from the reference seismograms
 
 ===========================================================
 
