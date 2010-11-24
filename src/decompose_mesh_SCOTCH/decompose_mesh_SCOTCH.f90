@@ -6,7 +6,7 @@ module decompose_mesh_SCOTCH
 
   implicit none
 
-  include './scotchf.h'
+  include 'scotchf.h'
 
 ! number of partitions
   integer :: nparts ! e.g. 4 for partitioning for 4 CPUs or 4 processes

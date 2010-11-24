@@ -87,38 +87,99 @@ AC_PROG_CC
 
 #checks for Scotch
 
-export SCOTCH_PATH
+export SCOTCH_DIR
+export SCOTCH_LIBDIR
+export SCOTCH_INCLUDEDIR
+export USE_BUNDLED_SCOTCH
 
-AC_ARG_WITH([scotch-path],
-AC_HELP_STRING([--with-scotch-path],[define the root path to Scotch (eg. /opt/scotch/)]),
+AC_ARG_WITH([scotch-dir],
+AC_HELP_STRING([--with-scotch-dir],[define the root path to Scotch (e.g. /opt/scotch/)]),
 [
  ac_scotch_dir="$withval";
 ])
 
-scotch_dir=""
-ac_save_ldflags=${LDFLAGS}
-if test -n "${ac_scotch_dir}"; then
- LDFLAGS="${LDFLAGS} -L${ac_scotch_dir}/lib";
+AC_ARG_WITH([scotch-includedir],
+AC_HELP_STRING([--with-scotch-includedir],[define the path to the Scotch headers (e.g. /opt/scotch/include)]),
+[
+ ac_scotch_include_dir="$withval";
+])
+
+AC_ARG_WITH([scotch-libdir],
+AC_HELP_STRING([--with-scotch-libdir],[define the path to the Scotch libraries (e.g. /opt/scotch/lib)]),
+[
+ ac_scotch_lib_dir="$withval";
+])
+
+if test "${USE_BUNDLED_SCOTCH}" != "1"; then
+
+   if test -z "${ac_scotch_lib_dir}"; then
+      if test -n "${ac_scotch_dir}"; then
+         ac_scotch_lib_dir="${ac_scotch_dir}/lib";
+      else
+        ac_scotch_lib_dir="/usr/lib";
+      fi
+   fi
+
+  if test -z "${ac_scotch_include_dir}"; then
+    if test -n "${ac_scotch_dir}"; then
+      ac_scotch_include_dir="${ac_scotch_dir}/include";
+    else
+      ac_scotch_include_dir="/usr/include/scotch";
+    fi
+  fi
+
+  scotch_lib=""
+  ac_save_ldflags=${LDFLAGS}
+  if test -n "${ac_scotch_lib_dir}"; then
+    LDFLAGS="${LDFLAGS} -L${ac_scotch_lib_dir}/lib";
+  fi
+  AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_lib="yes";],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
+
+  scotch_include=""
+  ac_save_cppflags=${CPPFLAGS}
+  if test -n "${ac_scotch_include_dir}"; then
+    CPPFLAGS="${CPPFLAGS} -I${ac_scotch_include_dir}";
+  fi
+
+dnl This does not work because we are in Fortran mode, which does not
+dnl handle headers.
+dnl
+dnl AC_CHECK_HEADER(scotchf.h,[scotch_include="yes";],[scotch_include="no";CPPFLAGS=${ac_save_cppflags}])
+
+  scotch_usable="${scotch_lib}"
+
 fi
-#AC_CHECK_LIB(scotcherr,SCOTCH_errorPrint ,[scotch_lib="yes"],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}])
-AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_dir="yes";],[scotch_dir="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
 
 AC_MSG_CHECKING([whether Scotch is usable])
-if test "x${scotch_dir}" = "xyes"; then
+if test "x${scotch_usable}" = "xyes"; then
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
- SCOTCH_PATH="${ac_scotch_dir}"
+ USE_BUNDLED_SCOTCH=0
+ SCOTCH_LIBDIR="${ac_scotch_lib_dir}"
+ SCOTCH_INCLUDEDIR="${ac_scotch_include_dir}"
  AC_MSG_RESULT([yes])
 else
- AC_MSG_RESULT([no])
+ AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
+ AC_MSG_RESULT([no, using bundled scotch instead])
+ AC_PROG_LEX
+ if test -z "$LEX" || test "X$LEX" = "Xno"; then
+   AC_MSG_ERROR([No suitable lex found])
+ fi
+ AC_PROG_YACC
+ if test -z "$YACC" || test "X$YACC" = "Xno"; then
+   AC_MSG_ERROR([No suitable yacc or bison found])
+ fi
+ USE_BUNDLED_SCOTCH=1
+ SCOTCH_LIBDIR="scotch_5.1.10b/lib"
+ SCOTCH_INCLUDEDIR="scotch_5.1.10b/include"
 fi
 LDFLAGS=${ac_save_ldflags}
 
-#AC_CHECK_LIB([scotch], [scotchfgraphmapinit])
-#AC_CHECK_LIB([scotcherr], [SCOTCH_errorPrint])
-
 # influential environment variables
 
-AC_ARG_VAR(SCOTCH_PATH, [root path to Scotch])
+AC_ARG_VAR(USE_BUNDLED_SCOTCH, [Set to 1 to always use the bundled Scotch library])
+AC_ARG_VAR(SCOTCH_DIR, [Directory where Scotch is installed])
+AC_ARG_VAR(SCOTCH_INCLUDEDIR, [Directory where Scotch headers are installed])
+AC_ARG_VAR(SCOTCH_LIBDIR, [Directory where Scotch libraries are installed])
 AC_ARG_VAR(MPIFC, [MPI Fortran compiler command])
 AC_ARG_VAR(MPILIBS, [extra libraries for linking MPI programs])
 AC_ARG_VAR(MPICC, [MPI C compiler command])
@@ -204,7 +265,7 @@ fi
 # Checks for library functions.
 
 
-AC_CONFIG_FILES([Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h  src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h])
+AC_CONFIG_FILES([Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h  src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.10b/src/Makefile.inc])
 AC_OUTPUT
 
 
