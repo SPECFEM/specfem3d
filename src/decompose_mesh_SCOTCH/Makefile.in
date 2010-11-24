@@ -50,9 +50,8 @@ CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 @COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
 @COND_MPI_FALSE@COND_MPI_CPPFLAGS =
 
-SCOTCH_PATH = @SCOTCH_PATH@
-SCOTCH_LIBS = -L$(SCOTCH_PATH)/lib -lscotch -lscotcherr
-SCOTCH_INC = -I$(SCOTCH_PATH)/include
+SCOTCH_LIBS = -L"@SCOTCH_LIBDIR@" -lscotch -lscotcherr
+SCOTCH_INC = -I"@SCOTCH_INCLUDEDIR@"
 
 AR = ar
 ARFLAGS = cru
@@ -73,7 +72,7 @@ O = ../../obj/dec
 ####
 
 # default targets for the Pyrized version
-DEFAULT = xdecompose_mesh_SCOTCH
+DEFAULT = scotch xdecompose_mesh_SCOTCH
 
 
 default: $(DEFAULT)
@@ -96,6 +95,13 @@ DEC_OBJECTS = $O/part_decompose_mesh_SCOTCH.o \
 @COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_INC)  $(SCOTCH_LIBS) 
 @COND_PYRE_FALSE@
 
+
+scotch:
+ifeq (@USE_BUNDLED_SCOTCH@,1)
+	(cd scotch_5.1.10b/src; make)
+else
+	(echo "Not using bundled Scotch")
+endif
 
 
 clean:
