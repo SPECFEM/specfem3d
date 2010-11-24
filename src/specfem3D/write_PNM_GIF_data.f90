@@ -132,7 +132,7 @@
 
   ! checks image type
   if(IMAGE_TYPE > 4 .or. IMAGE_TYPE < 1) then
-    call exit_MPI('GIF image type not implemented yet')
+    call exit_mpi(myrank,'That type is not implemented for GIF images yet')
   endif
 
   ! user output
@@ -151,7 +151,7 @@
 
   ! finds global points on image surface
   allocate(ispec_is_image_surface(NSPEC_AB),iglob_is_image_surface(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error allocating image ispec & iglob ')
+  if( ier /= 0 ) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
   call detect_surface_PNM_GIF_image(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_image_surface, &

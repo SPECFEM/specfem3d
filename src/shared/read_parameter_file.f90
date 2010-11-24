@@ -140,7 +140,7 @@
   ! total times steps must be dividable by adjoint source chunks/blocks
   if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
     print*,'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
-    print*,'      change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
+    print*,'      change your Par_file (when NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1)'
     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
   endif
 
