@@ -179,11 +179,9 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
-  integer i_SLS
-  integer ispec,iglob,ispec_p,num_elements,imodulo_N_SLS
+  integer i_SLS,imodulo_N_SLS
+  integer ispec,iglob,ispec_p,num_elements
   integer i,j,k
-
-!  real(kind=CUSTOM_REAL):: dsxx,dsxy,dsxz,dsyy,dsyz,dszz
 
   imodulo_N_SLS = mod(N_SLS,3)
  
