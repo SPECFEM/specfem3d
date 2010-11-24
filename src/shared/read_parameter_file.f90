@@ -125,19 +125,25 @@
   if(err_occurred() /= 0) return
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
   if(err_occurred() /= 0) return
-  !<YANGL
-  ! double the number of time steps, if running noise simulations (+/- branches)
-  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
-  ! read in adjoint sources block by block
   call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC')
   if(err_occurred() /= 0) return
+  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
+  if(err_occurred() /= 0) return
+
+  ! noise simulations:
+  ! double the number of time steps, if running noise simulations (+/- branches)
+  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
+
   ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
   if ( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+
+  ! total times steps must be dividable by adjoint source chunks/blocks
   if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
     print*,'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
     print*,'      change your Par_file (when NOISE_TOMOGRAPHY\=0, ACTUAL_NSTEP=2*NSTEP-1)'
     stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
   endif
+
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if ( NOISE_TOMOGRAPHY /= 0 ) then
@@ -152,10 +158,6 @@
         stop 'incompatible NOISE_TOMOGRAPHY, EXTERNAL_MESH_MOVIE_SURFACE, EXTERNAL_MESH_CREATE_SHAKEMAP'
     endif
   endif
-  !>YANGL
-  call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
-  if(err_occurred() /= 0) return
-
 
   ! compute the total number of sources in the CMTSOLUTION file
   ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file

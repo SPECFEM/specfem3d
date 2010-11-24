@@ -329,14 +329,12 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         v_tmp,filename)
 
-    !<YANGL
-    !!! output density model for check
+    ! outputs density model for check
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
     open(unit=27,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted')
     write(27) v_tmp
     close(27)
-    !>YANGL
 
     ! VTK file output
     ! saves attenuation flag assigned on each gll point into a vtk file

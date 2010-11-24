@@ -96,6 +96,11 @@
   vsv = vs
   eta_aniso = 1.0_CUSTOM_REAL
 
+  ! checks flag
+  if( iflag_aniso > IANISOTROPY_MODEL2 ) then
+    print*,'error: aniso flag',iflag_aniso,' not supported'
+    call exit_mpi(0,'error anisotropy model flag')
+  endif
 
 ! for definition, see for example:
 !
@@ -141,6 +146,13 @@
 ! four-zeta dependant terms:
 ! Ec = E_c
 ! Es = E_s
+
+! initializes
+  A = 0._CUSTOM_REAL
+  C = 0._CUSTOM_REAL
+  AN = 0._CUSTOM_REAL
+  AL = 0._CUSTOM_REAL
+  F = 0._CUSTOM_REAL
 
 ! no anisotropic perturbation
   if( iflag_aniso <= 0 ) then

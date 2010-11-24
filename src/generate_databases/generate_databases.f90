@@ -390,10 +390,6 @@
   endif
 
 ! info about external mesh simulation
-! nlegoff -- should be put in compute_parameters and read_parameter_file for clarity
-! chris -- once the steps in decompose_mesh_SCOTCH are integrated into generate_database.f90,
-! NPROC will be known
-
   if(myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
     write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
@@ -426,10 +422,9 @@
     MOVIE_SURFACE = .false.
     CREATE_SHAKEMAP = .false.
   endif
-  !<YANGL
+
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-  !
   if ( NOISE_TOMOGRAPHY /= 0 ) then
     MOVIE_SURFACE = .true.
     CREATE_SHAKEMAP = .false.
@@ -440,7 +435,6 @@
         call exit_MPI(myrank,'incompatible NOISE_TOMOGRAPHY, EXTERNAL_MESH_MOVIE_SURFACE, EXTERNAL_MESH_CREATE_SHAKEMAP')
     endif
   endif
-  !>YANGL
 
 
   if(myrank == 0) then

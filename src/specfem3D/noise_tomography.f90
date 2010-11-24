@@ -102,7 +102,7 @@
                                    NIT, ibool, ibelm_top, &
                                    xstore,ystore,zstore, &
                                    irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                                   NSPEC2D_TOP_VAL,NSPEC_AB_VAL,NGLOB_AB_VAL,NPROC_VAL)
+                                   NSPEC2D_TOP_VAL,NSPEC_AB_VAL,NGLOB_AB_VAL)
 
 ! read parameters
 
@@ -110,7 +110,7 @@
   include "constants.h"
   ! input parameters
   integer :: myrank, nrec, NSTEP, nmovie_points, nspec_top, NIT
-  integer :: NSPEC2D_TOP_VAL,NSPEC_AB_VAL,NGLOB_AB_VAL,NPROC_VAL
+  integer :: NSPEC2D_TOP_VAL,NSPEC_AB_VAL,NGLOB_AB_VAL
   integer, dimension(nrec) :: islice_selected_rec
   integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: ibool
@@ -129,13 +129,6 @@
   integer :: ipoin, ispec2D, ispec, i, j, k, iglob, ios !, ier
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
   character(len=256) :: filename
-  !real(kind=CUSTOM_REAL), dimension(nmovie_points) :: &
-  !    store_val_x,store_val_y,store_val_z,  store_val_ux,store_val_uy,store_val_uz
-  !real(kind=CUSTOM_REAL), dimension(nmovie_points,0:NPROC_VAL-1) :: &
-  !    store_val_x_all,store_val_y_all,store_val_z_all, store_val_ux_all,store_val_uy_all,store_val_uz_all
-
-  ! to avoid compiler warning
-  i = NPROC_VAL
 
   ! read master receiver ID -- the ID in "STATIONS"
   filename = trim(OUTPUT_FILES_PATH)//'/../NOISE_TOMOGRAPHY/irec_master_noise'
@@ -236,20 +229,16 @@
 !
 
   subroutine check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
-                                    NUMBER_OF_RUNS, NUMBER_OF_THIS_RUN,ROTATE_SEISMOGRAMS_RT, &
-                                    SAVE_ALL_SEISMOS_IN_ONE_FILE, USE_BINARY_FOR_LARGE_FILE, &
-                                    USE_HIGHRES_FOR_MOVIES)
+                                    ROTATE_SEISMOGRAMS_RT,USE_HIGHRES_FOR_MOVIES)
 
 ! check for consistency of the parameters
 
   implicit none
   include "constants.h"
   ! input parameters
-  integer :: myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,NUMBER_OF_RUNS,NUMBER_OF_THIS_RUN
-  logical :: SAVE_FORWARD,ROTATE_SEISMOGRAMS_RT,SAVE_ALL_SEISMOS_IN_ONE_FILE, USE_BINARY_FOR_LARGE_FILE
+  integer :: myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE
+  logical :: SAVE_FORWARD,ROTATE_SEISMOGRAMS_RT
   logical :: USE_HIGHRES_FOR_MOVIES
-  ! output parameters
-  ! local parameters
 
 
   if (myrank == 0) then
@@ -273,29 +262,29 @@
      close(IOUT_NOISE)
   endif
 
-  if (NUMBER_OF_RUNS/=1 .OR. NUMBER_OF_THIS_RUN/=1) &
-    call exit_mpi(myrank,'NUMBER_OF_RUNS and NUMBER_OF_THIS_RUN must be 1 for NOISE TOMOGRAPHY! check Par_file')
   if (ROTATE_SEISMOGRAMS_RT) &
     call exit_mpi(myrank,'Do NOT rotate seismograms in the code, change ROTATE_SEISMOGRAMS_RT in Par_file')
-  if (SAVE_ALL_SEISMOS_IN_ONE_FILE .OR. USE_BINARY_FOR_LARGE_FILE) &
-    call exit_mpi(myrank,'Please set SAVE_ALL_SEISMOS_IN_ONE_FILE and USE_BINARY_FOR_LARGE_FILE to be .false.')
+
   if (.not. USE_HIGHRES_FOR_MOVIES) &
     call exit_mpi(myrank,'Please set USE_HIGHRES_FOR_MOVIES in Par_file to be .true.')
 
   if (NOISE_TOMOGRAPHY==1) then
     if (SIMULATION_TYPE/=1) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=1 requires SIMULATION_TYPE=1! check Par_file')
+
   else if (NOISE_TOMOGRAPHY==2) then
     if (SIMULATION_TYPE/=1) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=2 requires SIMULATION_TYPE=1! check Par_file')
     if (.not. SAVE_FORWARD) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=2 requires SAVE_FORWARD=.true.! check Par_file')
+
   else if (NOISE_TOMOGRAPHY==3) then
     if (SIMULATION_TYPE/=3) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=3 requires SIMULATION_TYPE=3! check Par_file')
     if (SAVE_FORWARD) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=3 requires SAVE_FORWARD=.false.! check Par_file')
   endif
+
   end subroutine check_parameters_noise
 
 !

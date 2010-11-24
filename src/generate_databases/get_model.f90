@@ -59,13 +59,17 @@
   ! gll point location
   double precision :: xloc,yloc,zloc
   integer :: iglob
-
-  !<YANGL
-  !!! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
-  !!! can be used for importing updated model in iterative inversions
   character(len=256) LOCAL_PATH,prname_lp
-  !real, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: vp_read,vs_read,rho_read
-  !>YANGL
+  real, dimension(:,:,:,:),allocatable :: vp_read,vs_read,rho_read
+
+  ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
+  ! can be used for importing updated model in iterative inversions
+  logical,parameter :: USE_EXTERNAL_FILES = .false.
+
+  ! use acoustic domains for simulation
+  logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
+
+
 
   ! initializes element domain flags
   ispec_is_acoustic(:) = .false.
@@ -234,12 +238,12 @@
              c66store(i,j,k,ispec) = c66
            endif
 
-           !<YANGL
-           !!! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
-           !!! can be used to compare elastic & acoustic reflections in exploration seismology
-           !!! do NOT use it unless you are confident
-           ! idomain_id = IDOMAIN_ACOUSTIC
-           !>YANGL
+           ! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
+           ! can be used to compare elastic & acoustic reflections in exploration seismology
+           ! do NOT use it unless you are confident
+           if( USE_PURE_ACOUSTIC_MOD ) then
+             idomain_id = IDOMAIN_ACOUSTIC
+           endif
 
            ! material domain
            !print*,'velocity model:',ispec,idomain_id
@@ -282,42 +286,44 @@
     endif
   enddo
 
-
 ! !! DK DK store the position of the six stations to be able to
 ! !! DK DK exclude circles around each station to make sure they are on the bedrock
 ! !! DK DK and not in the ice
 ! in case, see file model_interface_bedrock.f90: routine model_bedrock_store()
 
 
-!<YANGL
-!!! import the model from files in SPECFEM format
-!!! note that those those files should be saved in LOCAL_PATH
+! import the model from files in SPECFEM format
+! note that those those files should be saved in LOCAL_PATH
+
+  if( USE_EXTERNAL_FILES ) then
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! if only vp structure is available (as is often the case in exploration seismology),
 !!! use lines for vp only
 
-  ! to avoid compiler warning
-  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+    ! processors name
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
 
+    allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec) )
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+    open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&
+            status='unknown',action='read',form='unformatted')
+    read(28) rho_read
+    close(28)
 
-!  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
-!  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&
-!            status='unknown',action='read',form='unformatted')
-!  read(28) rho_read
-!  close(28)
-!
-!  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
-!  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vp.bin',&
-!            status='unknown',action='read',form='unformatted')
-!  read(28) vp_read
-!  close(28)
-!
-!  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
-!  open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vs.bin',&
-!            status='unknown',action='read',form='unformatted')
-!  read(28) vs_read
-!  close(28)
+    allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec) )
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+    open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vp.bin',&
+            status='unknown',action='read',form='unformatted')
+    read(28) vp_read
+    close(28)
+
+    allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec) )
+    write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
+    open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vs.bin',&
+            status='unknown',action='read',form='unformatted')
+    read(28) vs_read
+    close(28)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! in cases where density structure is not given
@@ -342,12 +348,16 @@
 !!! update arrays that will be saved and used in the solver xspecfem3D
 !!! the following part is neccessary if you uncommented something above
 
-!  rhostore    = rho_read
-!  kappastore  = rhostore * ( vp_read * vp_read - FOUR_THIRDS * vs_read * vs_read )
-!  mustore     = rhostore * vs_read * vs_read
-!  rho_vp = rhostore * vp_read
-!  rho_vs = rhostore * vs_read
-!>YANGL
+    rhostore    = rho_read
+    kappastore  = rhostore * ( vp_read * vp_read - FOUR_THIRDS * vs_read * vs_read )
+    mustore     = rhostore * vs_read * vs_read
+    rho_vp = rhostore * vp_read
+    rho_vs = rhostore * vs_read
+
+    ! free memory
+    deallocate( rho_read,vp_read,vs_read)
+
+  endif ! USE_EXTERNAL_FILES
 
   end subroutine get_model
 

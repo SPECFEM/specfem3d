@@ -66,6 +66,11 @@
   rx_save = rx
   ry_save = ry
 
+  xx = 0.d0
+  yy = 0.d0
+  dlat = 0.d0
+  dlon = 0.d0
+
 ! define parameters of reference ellipsoid
   e2=1.0-(semimin/semimaj)**2.0
   e4=e2*e2

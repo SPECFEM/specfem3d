@@ -225,6 +225,10 @@
 
       jmin = 2
       jmax = NGLLY - 1
+
+      iselected = 0
+      jselected = 0
+      iface_selected = 0
       do iface=1,num_free_surface_faces
         do j=jmin,jmax
           do i=imin,imax
@@ -322,7 +326,9 @@
     distmin = HUGEVAL
 
     ispec_selected_source(isource) = 0
-
+    ix_initial_guess_source = 0
+    iy_initial_guess_source = 0
+    iz_initial_guess_source = 0
     do ispec=1,NSPEC_AB
 
       ! define the interval in which we look for points
@@ -566,7 +572,9 @@
 
       ! define coordinates of the control points of the element
       do ia=1,NGNOD
-
+        iax = 0
+        iay = 0
+        iaz = 0
         if(iaddx(ia) == 0) then
           iax = 1
         else if(iaddx(ia) == 1) then

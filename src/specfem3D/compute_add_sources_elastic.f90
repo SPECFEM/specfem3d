@@ -39,14 +39,12 @@
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
-!<YANGL NOISE_TOMOGRAPHY
                         LOCAL_PATH,wgllwgll_xy,free_surface_ispec,free_surface_jacobian2Dw, &
                         noise_sourcearray,irec_master_noise, &
                         normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
 
   use specfem_par_movie,only: nfaces_surface_ext_mesh, &
                         store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh
-!>YANGL
 
   implicit none
 
@@ -83,13 +81,10 @@
   integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   integer:: nadj_rec_local
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
-  !<YANGL
-  ! real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   logical :: ibool_read_adj_arrays
   integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
   real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
-  !>YANGL
 
 ! local parameters
   double precision :: f0
@@ -204,7 +199,6 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
-    !<YANGL
     ! read in adjoint sources block by block (for memory consideration)
     ! e.g., in exploration experiments, both the number of receivers (nrec) and the number of time steps (NSTEP) are huge,
     ! which may cause problems since we have a large array: adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
@@ -239,30 +233,35 @@
       enddo
 
     endif ! if(ibool_read_adj_arrays)
-    !>YANGL
 
     if( it < NSTEP ) then
 
       ! receivers act as sources
       irec_local = 0
       do irec = 1,nrec
+
         ! add the source (only if this proc carries the source)
         if (myrank == islice_selected_rec(irec)) then
           irec_local = irec_local + 1
-          ! adds source array
-          do k = 1,NGLLZ
-            do j = 1,NGLLY
-              do i = 1,NGLLX
-                iglob = ibool(i,j,k,ispec_selected_rec(irec))
-                !<YANGL
-                ! accel(:,iglob) = accel(:,iglob) + adj_sourcearrays(irec_local,NSTEP-it+1,:,i,j,k)
-                if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) &
-                   accel(:,iglob) = accel(:,iglob) + &
-                     adj_sourcearrays(irec_local,NTSTEP_BETWEEN_READ_ADJSRC-mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:,i,j,k)
-                !>YANGL
+
+          ! checks if element is in phase_is_inner run
+          if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
+
+            ! adds source array
+            do k = 1,NGLLZ
+              do j = 1,NGLLY
+                do i = 1,NGLLX
+                  iglob = ibool(i,j,k,ispec_selected_rec(irec))
+
+                  accel(:,iglob) = accel(:,iglob)  &
+                       + adj_sourcearrays(irec_local, &
+                          NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                          :,i,j,k)
+                enddo
               enddo
             enddo
-          enddo
+
+          endif ! phase_is_inner
         endif
       enddo ! nrec
 
@@ -354,9 +353,8 @@
     if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
-  !<YANGL
   ! for noise simulations
-  ! we have two loops indicated by phase_is_inner ("inner points" or "boudanry points")
+  ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
   ! here, we only add those noise sources once, when we are calculating for boudanry points (phase_is_inner==.false.),
   ! because boundary points are claculated first!
   if( .not. phase_is_inner ) then
@@ -397,7 +395,6 @@
                               nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
     endif
   endif
-  !>YANGL
 
 
   end subroutine compute_add_sources_elastic
