@@ -339,7 +339,7 @@
 
   ! sets up central frequency
   ! logarithmic mean of frequency interval of absorption band
-  call get_attenuation_source_frequency(f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+  call get_attenuation_source_freq(f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! debug
   !f_c_source = 0.141421d0
@@ -607,7 +607,7 @@
 !
 
 
-  subroutine get_attenuation_source_frequency(f_c_source,min_period,max_period)
+  subroutine get_attenuation_source_freq(f_c_source,min_period,max_period)
 
 ! Determines the Source Frequency
 
@@ -627,7 +627,7 @@
   ! central frequency
   f_c_source = T_c_source / 1000.0d0
 
-  end subroutine get_attenuation_source_frequency
+  end subroutine get_attenuation_source_freq
 
 !--------------------------------------------------------------------------------------------------
 !

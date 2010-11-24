@@ -679,21 +679,21 @@ module decompose_mesh_SCOTCH
 
 
   ! local number of each element for each partition
-    call Construct_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
+    call build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
 
   ! local number of each node for each partition
-    call Construct_glob2loc_nodes(nspec, nnodes,nsize, nnodes_elmnts, nodes_elmnts, part, &
+    call build_glob2loc_nodes(nspec, nnodes,nsize, nnodes_elmnts, nodes_elmnts, part, &
          glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, nparts)
 
   ! mpi interfaces
-    ! acoustic/elastic boundaries WILL BE SEPARATED into different MPI partitions
-    call Construct_interfaces(nspec, sup_neighbour, part, elmnts, &
+    ! acoustic/elastic boundaries will be split into different MPI partitions
+    call build_interfaces(nspec, sup_neighbour, part, elmnts, &
                              xadj, adjncy, tab_interfaces, &
                              tab_size_interfaces, ninterfaces, &
                              nparts)
 
     !or: uncomment if you want acoustic/elastic boundaries NOT to be separated into different MPI partitions
-    !call Construct_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
+    !call build_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
     !                          xadj, adjncy, tab_interfaces, &
     !                          tab_size_interfaces, ninterfaces, &
     !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts)
@@ -740,7 +740,7 @@ module decompose_mesh_SCOTCH
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
 
-       call write_material_properties_database(15,count_def_mat,count_undef_mat, &
+       call write_material_props_database(15,count_def_mat,count_undef_mat, &
                                   mat_prop, undef_mat_prop)
 
        ! writes out spectral element indices

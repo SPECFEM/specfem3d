@@ -132,9 +132,7 @@ contains
   !--------------------------------------------------
   ! construct local numbering for the elements in each partition
   !--------------------------------------------------
-  subroutine Construct_glob2loc_elmnts(nelmnts, part, glob2loc_elmnts,nparts)
-
-!    include './constants_decompose_mesh_SCOTCH.h'
+  subroutine build_glob2loc_elmnts(nelmnts, part, glob2loc_elmnts,nparts)
 
     integer(long), intent(in)  :: nelmnts
     integer, dimension(0:nelmnts-1), intent(in)  :: part
@@ -161,14 +159,14 @@ contains
     end do
 
 
-  end subroutine Construct_glob2loc_elmnts
+  end subroutine build_glob2loc_elmnts
 
 
 
   !--------------------------------------------------
   ! construct local numbering for the nodes in each partition
   !--------------------------------------------------
-  subroutine Construct_glob2loc_nodes(nelmnts, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
+  subroutine build_glob2loc_nodes(nelmnts, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
        glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes,nparts)
 
 !    include './constants_decompose_mesh_SCOTCH.h'
@@ -242,12 +240,12 @@ contains
     end do
 
 
-  end subroutine Construct_glob2loc_nodes
+  end subroutine build_glob2loc_nodes
 
 
 
   !--------------------------------------------------
-  ! Construct interfaces between each partitions.
+  ! build interfaces between partitions.
   ! Two adjacent elements in distinct partitions make an entry in array tab_interfaces :
   ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
   ! 5/ second node, if relevant.
@@ -256,7 +254,7 @@ contains
 
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
-   subroutine Construct_interfaces(nelmnts, sup_neighbour, part, elmnts, xadj, adjncy, &
+   subroutine build_interfaces(nelmnts, sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nparts)
 
@@ -356,11 +354,11 @@ contains
        end do
     end do
 
-  end subroutine Construct_interfaces
+  end subroutine build_interfaces
 
 
   !--------------------------------------------------
-  ! Construct interfaces between each partitions.
+  ! build interfaces between partitions.
   ! Two adjacent elements in distinct partitions make an entry in array tab_interfaces :
   ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
   ! 5/ second node, if relevant.
@@ -369,7 +367,7 @@ contains
 
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
-   subroutine Construct_interfaces_no_ac_el_sep(nelmnts, &
+   subroutine build_interfaces_no_ac_el_sep(nelmnts, &
                               sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nb_materials, cs_material, num_material,nparts)
@@ -509,7 +507,7 @@ contains
        end do
     end do
 
-  end subroutine Construct_interfaces_no_ac_el_sep
+  end subroutine build_interfaces_no_ac_el_sep
 
 
 
@@ -560,7 +558,7 @@ contains
   !--------------------------------------------------
   ! Write material properties in the Database
   !--------------------------------------------------
-  subroutine write_material_properties_database(IIN_database,count_def_mat,count_undef_mat, mat_prop, undef_mat_prop)
+  subroutine write_material_props_database(IIN_database,count_def_mat,count_undef_mat, mat_prop, undef_mat_prop)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: count_def_mat,count_undef_mat
@@ -585,7 +583,7 @@ contains
                             trim(undef_mat_prop(5,i)),' ',trim(undef_mat_prop(6,i))
     end do
 
-  end subroutine  write_material_properties_database
+  end subroutine  write_material_props_database
 
 
   !--------------------------------------------------

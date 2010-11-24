@@ -180,11 +180,13 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   integer i_SLS
-  integer ispec,iglob,ispec_p,num_elements
+  integer ispec,iglob,ispec_p,num_elements,imodulo_N_SLS
   integer i,j,k
 
 !  real(kind=CUSTOM_REAL):: dsxx,dsxy,dsxz,dsyy,dsyz,dszz
 
+  imodulo_N_SLS = mod(N_SLS,3)
+ 
   ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic
@@ -439,8 +441,9 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
 ! way 2
 ! note: this should help compilers to pipeline the code and make better use of the cache;
 !          depending on compilers, it can further decrease the computation time by ~ 30%.
-!          by default, N_SLS = 3, therefor we take steps of 3
-                do i_sls = 1,mod(N_SLS,3)
+!          by default, N_SLS = 3, therefore we take steps of 3
+              if(imodulo_N_SLS >= 1) then
+                do i_sls = 1,imodulo_N_SLS
                   R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                   R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
                   sigma_xx = sigma_xx - R_xx_val1
@@ -450,8 +453,10 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
                 enddo
+              endif
 
-                do i_sls = mod(N_SLS,3)+1,N_SLS,3
+              if(N_SLS >= imodulo_N_SLS+1) then
+                do i_sls = imodulo_N_SLS+1,N_SLS,3
                   R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                   R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
                   sigma_xx = sigma_xx - R_xx_val1
@@ -479,6 +484,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+2)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
                 enddo
+              endif
 
 
               endif
