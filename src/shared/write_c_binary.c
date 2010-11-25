@@ -56,11 +56,11 @@ FC_FUNC_(close_file,CLOSE_FILE)() {
 
 void
 FC_FUNC_(write_integer,WRITE_INTEGER)(int *z) {
-  write(fd, z, sizeof(int));
+  int dummy_unused_variable = write(fd, z, sizeof(int));
 }
 
 void
 FC_FUNC_(write_real,WRITE_REAL)(float *z) {
-  write(fd, z, sizeof(float));
+  int dummy_unused_variable = write(fd, z, sizeof(float));
 }
 
