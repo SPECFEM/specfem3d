@@ -274,9 +274,9 @@ The SCOTCH library \citep{PeRo96}
 provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
 Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
 A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
-The path to the SCOTCH installation needs to be set with the option \texttt{-{}-with-scotch-path}. Just as an example:
+The path to an existing SCOTCH installation can to be set with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{lyxcode}
-./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-path=/opt/scotch
+./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-dir=/opt/scotch
 \end{lyxcode}
 
 To compile a serial version of the code for small meshes that fit
@@ -351,7 +351,7 @@ select single precision for your future runs.\\
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, we suggest running the \texttt{configure} script
 with the following options:\\
 
-\noindent\texttt{./configure FC=xlf90\_r MPIFC=mpif90 CC=xlc\_r CFLAGS="-O3 -q64" FCFLAGS="-O3 -q64" -with-scotch-path=...}.\\
+\noindent\texttt{./configure FC=xlf90\_r MPIFC=mpif90 CC=xlc\_r CFLAGS="-O3 -q64" FCFLAGS="-O3 -q64" -with-scotch-dir=...}.\\
 
 On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
@@ -556,7 +556,7 @@ A recent version of its source code is provided in directory \texttt{src/decompo
 \\
 
 Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path
-of the SCOTCH library with the option \texttt{-{}-with-scotch-path} of the \texttt{configure} script.
+of the SCOTCH library with the option \texttt{-{}-with-scotch-dir} of the \texttt{configure} script.
 For convenience we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
 in directory ~\\
 \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}. Please refer to file INSTALL.txt in that directory to see how to compile it.
@@ -1467,7 +1467,7 @@ As usual, we first configure the software package using:
 
 Use the following if SCOTCH is needed:
 
-\texttt{./configure FC=ifort MPIFC=mpif90 --with-scotch-path=/opt/scotch}\\
+\texttt{./configure FC=ifort MPIFC=mpif90 --with-scotch-dir=/opt/scotch}\\
 
 
 \item
