@@ -147,13 +147,16 @@ case $FC in
         # for the C compiler when using -q64 for the Fortran compiler
         #
         if test x"$FLAGS_NO_CHECK" = x; then
-            #FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003pure -qxlf2003=nooldnaninf -qflttrap=overflow:zerodivide:invalid:enable -qsigtrap -qinitauto=7FBFFFFF -Q -Q+rank,swap_all"
-            FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=95pure -qflttrap=overflow:zerodivide:invalid:enable -qsigtrap -qinitauto=7FBFFFFF -Q -Q+rank,swap_all"
+            #FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003pure -qxlf2003=nooldnaninf -qflttrap=overflow:zerodivide:invalid:enable -qsigtrap=xl__trcedump -qxflag=dvz -qfloat=nans -qinitauto=7FBFFFFF -Q -Q+rank,swap_all"
+            FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=95pure -qflttrap=overflow:zerodivide:invalid:enable -qsigtrap=xl__trcedump -qxflag=dvz -qfloat=nans -qinitauto=7FBFFFFF -Q -Q+rank,swap_all"
+        #
+        # to debug with IBM xlf, add this: -g -O0 -C -qddim -qfullpath
+        #
         # on MareNostrum at the Barcelona SuperComputing Center (Spain) one can use
         # -qtune=ppc970 -qarch=ppc64v instead of -qtune=auto -qarch=auto
         fi
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="\$(FLAGS_NO_CHECK) -C -qddim -qfloat=nans -qfullpath"
+            FLAGS_CHECK="\$(FLAGS_NO_CHECK) -g -C -qddim -qfullpath"
         fi
         ;;
 esac
