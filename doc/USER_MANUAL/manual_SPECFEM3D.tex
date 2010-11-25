@@ -109,7 +109,7 @@ The SPECFEM3D package was first developed by Dimitri Komatitsch and Jeroen Tromp
 Since then it has been developed and maintained by a development team: in alphabetical order,
 Piero Basini,
 C\'eline Blitz,
-Ebru Bozdag,
+Ebru Bozda\u{g},
 Emanuele Casarotti,
 Min Chen,
 Hom Nath Gharti,
@@ -126,13 +126,17 @@ Alessia Maggi,
 Federica Magnoni,
 Roland Martin,
 Dennis McRitchie,
+Matthias Meschede,
 David Mich\'ea,
 Tarje Nissen-Meyer,
 Daniel Peter,
 Brian Savage,
+Bernhard Schuberth,
+Anne Sieminski,
 Leif Strand,
 Carl Tape,
-Jeroen Tromp.\\
+Jeroen Tromp,
+Hejun Zhu.\\
 %\toall{add full list of developers here and update the AUTHORS file accordingly}
 
 The cover graphic of the manual was created
@@ -1241,7 +1245,7 @@ for the selected stations and saved in the \texttt{in\_out\_files/SEM/} director
 with the format \texttt{STA.NT.BX?.adj}, where \texttt{STA}, \texttt{NT}
 are the station name and network code given in the \texttt{in\_data\_files/STATIONS\_ADJOINT}
 file, and \texttt{BX?} represents the component name of a particular
-adjoint seismogram. Please note that the band code can change depending on 
+adjoint seismogram. Please note that the band code can change depending on
 your sampling rate (see Appendix~\ref{cha:channel-codes} for further details).
 \item The adjoint seismograms are in the same format as the original seismogram
 (\texttt{STA.NT.BX?.sem?}), with the same start time, time interval
@@ -2095,7 +2099,7 @@ In many cases, the SEM synthetics are calculated and compared to data
 seismograms recorded at seismic stations. Since the SEM synthetics
 are accurate for a certain frequency range, both the original data
 and the synthetics need to be processed before a comparison can be
-made. 
+made.
 
  For such comparisons, the following steps are recommended:
 
@@ -2126,9 +2130,9 @@ without any argument. An example of the usage of the script:
 {\footnotesize \par}
 \end{lyxcode}
 
-\noindent which has resampled the SAC files to a sampling rate of 1 seconds, cut 
+\noindent which has resampled the SAC files to a sampling rate of 1 seconds, cut
 them between 0 and 4000 seconds, transfered them into displacement
-records and filtered them between 40 and 500 seconds, 
+records and filtered them between 40 and 500 seconds,
 picked the first P and S arrivals, and added suffix `\texttt{bp}' to the file names.
 
 
@@ -2136,7 +2140,7 @@ Note that all of the scripts in this section actually use the SAC
 and/or IASP91 to do the core operations; therefore make sure that
 the SAC and IASP91 packages are installed properly on your system,
 and that all the environment variables are set properly before running
-these scripts. 
+these scripts.
 
 
 
@@ -2163,7 +2167,7 @@ Type \texttt{process\_syn.pl} without any argument for a detailed
 usage.
 
 In order to convert between SAC format and ASCII files, useful scripts
-are provided in the subdirectories ~\\ 
+are provided in the subdirectories ~\\
 \texttt{utils/sac2000\_alpha\_convert/} and \texttt{utils/seis\_process/asc2sac/}.
 
 
@@ -2410,7 +2414,7 @@ For a receiver station located in an
 \item \texttt{sema} for pressure which will be stored in the vertical component \texttt{Z}. Note that pressure in the acoustic media is isotropic and thus the pressure record would be the same in the other two component directions. We therefore use the other two seismogram components to store the acoustic potential in component \texttt{X} (or \texttt{N}) and the first time derivative of the acoustic potential in component \texttt{Y} (or \texttt{E}).
 \end{itemize}
 \end{description}
-The seismograms are by default written out in ASCII-format to the \texttt{in\_out\_files/OUTPUT\_FILES/} subdirectory by each parallel process. You can change this behavior by changing the following flags in the \texttt{constants.h} file located in the \texttt{src/shared/} subdirectory: 
+The seismograms are by default written out in ASCII-format to the \texttt{in\_out\_files/OUTPUT\_FILES/} subdirectory by each parallel process. You can change this behavior by changing the following flags in the \texttt{constants.h} file located in the \texttt{src/shared/} subdirectory:
 \begin{description}
 \item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.} to have only the master process writing out seismograms. This can be useful on a cluster, where only the master process node has access to the output directory.
