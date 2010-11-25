@@ -10,7 +10,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem 3D], [1.4.0], [jtromp AT caltech.edu], [Specfem3D])
+AC_INIT([Specfem 3D], [2.0.0], [jtromp AT caltech.edu], [Specfem3D])
 AC_CONFIG_SRCDIR([README])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -131,7 +131,7 @@ if test "${USE_BUNDLED_SCOTCH}" != "1"; then
   scotch_lib=""
   ac_save_ldflags=${LDFLAGS}
   if test -n "${ac_scotch_lib_dir}"; then
-    LDFLAGS="${LDFLAGS} -L${ac_scotch_lib_dir}/lib";
+    LDFLAGS="${LDFLAGS} -L${ac_scotch_lib_dir}";
   fi
   AC_CHECK_LIB(scotch,scotchfarchinit ,[scotch_lib="yes";],[scotch_lib="no";LDFLAGS=${ac_save_ldflags}], -lscotcherr)
 
