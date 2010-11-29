@@ -8,13 +8,13 @@
 ## use, modify and/or redistribute the software under the terms of the
 ## CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ## URL: "http://www.cecill.info".
-## 
+##
 ## As a counterpart to the access to the source code and rights to copy,
 ## modify and redistribute granted by the license, users are provided
 ## only with a limited warranty and the software's author, the holder of
 ## the economic rights, and the successive licensors have only limited
 ## liability.
-## 
+##
 ## In this respect, the user's attention is drawn to the risks associated
 ## with loading, using, modifying and/or developing or reproducing the
 ## software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ## their requirements in conditions enabling the security of their
 ## systems and/or data to be ensured and, more generally, to use and
 ## operate it in the same conditions as regards security.
-## 
+##
 ## The fact that you are presently reading this means that you have had
 ## knowledge of the CeCILL-C license and that you accept its terms.
 ##
@@ -49,7 +49,7 @@ include ../Makefile.inc
 
 .PHONY				:	ptscotch	scotch	ptinstall	install	clean	realclean
 
-scotch				:	
+scotch				:
 					$(MAKE) CC="$(CCS)" SCOTCHLIB=scotch	\
 					acpl$(EXE)				\
 					amk_ccc$(EXE)				\
@@ -80,7 +80,7 @@ scotch				:
 					mord$(EXE)				\
 					mtst$(EXE)
 
-ptscotch			:	
+ptscotch			:
 					$(MAKE) CC="$(CCP)" SCOTCHLIB=ptscotch	\
 					dggath$(EXE)				\
 					dgmap$(EXE)				\
@@ -147,15 +147,6 @@ $(bindir)/mord$(EXE): mord$(EXE)
 $(bindir)/mtst$(EXE): mtst$(EXE)
 	-$(CP) mtst$(EXE) $(bindir)/mtst$(EXE)
 
-
-ptscotch			:	
-					$(MAKE) CC="$(CCP)" SCOTCHLIB=ptscotch	\
-					dggath$(EXE)				\
-					dgmap$(EXE)				\
-					dgord$(EXE)				\
-					dgpart$(EXE)				\
-					dgscat$(EXE)				\
-					dgtst$(EXE)
 
 
 install				: $(bindir)/acpl$(EXE) $(bindir)/amk_ccc$(EXE) $(bindir)/amk_fft2$(EXE) $(bindir)/amk_grf$(EXE) $(bindir)/amk_hy$(EXE) $(bindir)/amk_m2$(EXE) $(bindir)/amk_p2$(EXE) $(bindir)/atst$(EXE) $(bindir)/gbase$(EXE) $(bindir)/gcv$(EXE) $(bindir)/gmap$(EXE) $(bindir)/gmk_hy$(EXE) $(bindir)/gmk_m2$(EXE) $(bindir)/gmk_m3$(EXE) $(bindir)/gmk_msh$(EXE) $(bindir)/gmk_ub2$(EXE) $(bindir)/gmtst$(EXE) $(bindir)/gord$(EXE) $(bindir)/gotst$(EXE) $(bindir)/gout$(EXE) $(bindir)/gpart$(EXE) $(bindir)/gscat$(EXE) $(bindir)/gtst$(EXE) $(bindir)/mcv$(EXE) $(bindir)/mmk_m2$(EXE) $(bindir)/mmk_m3$(EXE) $(bindir)/mord$(EXE) $(bindir)/mtst$(EXE)

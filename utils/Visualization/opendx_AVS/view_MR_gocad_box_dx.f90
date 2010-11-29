@@ -7,8 +7,8 @@
 
   implicit none
 
-  include "../../../constants.h"
-  include "../../../constants_gocad.h"
+  include "../../../src/shared/constants.h"
+  include "constants_gocad.h"
 
   double precision, dimension(4) :: x,y
 

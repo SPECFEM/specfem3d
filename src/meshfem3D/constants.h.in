@@ -111,7 +111,7 @@
   integer, parameter :: NGNOD = 8, NGNOD2D = 4
 
 ! a few useful constants
-  double precision, parameter :: ZERO = 0.d0,ONE = 1.d0,TWO = 2.d0,HALF = 0.5d0
+  double precision, parameter :: ZERO = 0.d0,ONE = 1.d0,TWO = 2.d0 !,HALF = 0.5d0
 
   real(kind=CUSTOM_REAL), parameter :: &
     ONE_THIRD   = 1._CUSTOM_REAL/3._CUSTOM_REAL, &
@@ -120,35 +120,9 @@
 ! very large and very small values
   double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
 
-! very large real value declared independently of the machine
-  real(kind=CUSTOM_REAL), parameter :: HUGEVAL_SNGL = 1.e+30_CUSTOM_REAL
-
-! very large integer value
-  integer, parameter :: HUGEINT = 100000000
-
 ! define flag for elements
   integer, parameter :: IFLAG_ONE_LAYER_TOPOGRAPHY = 1
   integer, parameter :: IFLAG_BASEMENT_TOPO = 2
-  integer, parameter :: IFLAG_16km_BASEMENT = 3
-  integer, parameter :: IFLAG_MOHO_16km = 4
-  integer, parameter :: IFLAG_HALFSPACE_MOHO = 5
-
-! define flag for regions for attenuation
-!  integer, parameter :: NUM_REGIONS_ATTENUATION = 13
-!
-!  integer, parameter :: IATTENUATION_SEDIMENTS_40 = 1
-!  integer, parameter :: IATTENUATION_SEDIMENTS_50 = 2
-!  integer, parameter :: IATTENUATION_SEDIMENTS_60 = 3
-!  integer, parameter :: IATTENUATION_SEDIMENTS_70 = 4
-!  integer, parameter :: IATTENUATION_SEDIMENTS_80 = 5
-!  integer, parameter :: IATTENUATION_SEDIMENTS_90 = 6
-!  integer, parameter :: IATTENUATION_SEDIMENTS_100 = 7
-!  integer, parameter :: IATTENUATION_SEDIMENTS_110 = 8
-!  integer, parameter :: IATTENUATION_SEDIMENTS_120 = 9
-!  integer, parameter :: IATTENUATION_SEDIMENTS_130 = 10
-!  integer, parameter :: IATTENUATION_SEDIMENTS_140 = 11
-!  integer, parameter :: IATTENUATION_SEDIMENTS_150 = 12
-!  integer, parameter :: IATTENUATION_BEDROCK = 13
 
 ! Olsen's constant for Q_mu = constant * v_s attenuation rule
   real, parameter :: OLSEN_ATTENUATION_RATIO = 0.05
@@ -317,7 +291,7 @@
 ! magic ratio for heuristic rule
 ! this gives 120 degree angles in doubling
 ! standard value 0.5 gives 135-135-90, which is not optimal
-  double precision, parameter :: MAGIC_RATIO = 0.6056d0
+!  double precision, parameter :: MAGIC_RATIO = 0.6056d0
 
 ! type of elements for heuristic rule
   integer, parameter :: ITYPE_UNUSUAL_1  = 1
