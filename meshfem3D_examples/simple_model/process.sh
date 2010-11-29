@@ -14,6 +14,10 @@ NPROC=4
 echo "running example: `date`"
 currentdir=`pwd`
 
+echo
+echo "(will take about 15 minutes)"
+echo
+
 # sets up directory structure in current example directoy
 echo
 echo "   setting up example..."
