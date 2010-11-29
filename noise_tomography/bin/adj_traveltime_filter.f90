@@ -21,7 +21,7 @@ double precision :: data_temp(nstep),syn_temp(nstep),data_direct(nstep),syn_dire
 double precision :: trace_data_max(nrec), trace_syn_max(nrec), t(nstep),data_max,syn_max
 integer :: flag(nrec), irec, itime, length_window, i_start_window, i_end_window
 character(len=256) :: station_name,file_data,file_syn,file_data_direct,file_syn_direct
-character(len=256) :: file_adj,file_adj_density, file_misfit, file_adj_BHX,file_adj_BHZ, file_adj_zeros
+character(len=256) :: file_adj,file_adj_density, file_misfit, file_adj_BXX,file_adj_BXZ, file_adj_zeros
 double precision :: c(nstep), data_trace(nstep), syn_trace(nstep)
 integer :: I(nstep)
 double precision :: Norm_data_crit,Norm_syn_crit,AMP,Norm_data,Norm_syn,Norm,Norm_adj_temp
@@ -53,7 +53,7 @@ adj=0.0d0
 misfit_traveltime = 0.0d0
 !!!! loading data and synthetics !!!!
 do irec = 1,nrec
-   file_data         = '../in_out_files/SEM/X2.DB.BHZ.semd'
+   file_data         = '../in_out_files/SEM/X2.DB.BXZ.semd'
    open(unit=1001,file=trim(file_data),status='old',action='read')
    do itime = 1,nstep
            read(1001,*) t(itime),data_origin(nstep-itime+1,irec)  ! the reversed seismogram involves $C^\alpha\beta(t)=C^\beta\alpha(-t)$
@@ -150,8 +150,8 @@ do irec = 1,nrec
    end do  !do ifreq=1,nfreq
 
    !!!! output !!!!
-   file_adj_BHZ      = '../in_out_files/SEM/adj_sources_contribution1'
-   open(unit=1002,file=trim(file_adj_BHZ),status='unknown')
+   file_adj_BXZ      = '../in_out_files/SEM/adj_sources_contribution1'
+   open(unit=1002,file=trim(file_adj_BXZ),status='unknown')
    do itime = 1,nstep
       write(1002,*) t(itime), adj(nstep-itime+1,irec)
    end do
