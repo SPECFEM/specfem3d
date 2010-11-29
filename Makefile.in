@@ -78,7 +78,7 @@ all: default
 required: bin lib obj
 
 backup:
-	cp *f90 *h README_SPECFEM3D in_data_files/Par_file* Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
+	cp -rp src in_data_files Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
 
 bak: backup
 
