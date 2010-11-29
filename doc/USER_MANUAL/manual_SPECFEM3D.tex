@@ -198,7 +198,7 @@ of the following articles:
 \item [Numerical simulations in general] ~\\
 Forward simulations are described in detail in \cite{TrKoLi08,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,KoGoErMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}. Additional aspects dealing with adjoint simulations are described in
 \cite{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoHjLiZhPeBoMcFrTrHu10}.
-Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores in shown for instance in
+Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores is shown for instance in
 \cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11}.
 
 \end{description}
@@ -255,7 +255,7 @@ directory in which you want to install the package, type
 \begin{lyxcode}
 {\small tar~-zxvf~SPECFEM3D\_V2.0.0.tar.gz}{\small \par}
 \end{lyxcode}
-The directory \texttt{\small SPECFEM3D\_V2.0.0} will then contain
+The directory \texttt{\small SPECFEM3D} will then contain
 the source code. To configure the software for your system, run the
 \texttt{configure} shell script. This script will attempt to guess
 the appropriate configuration values for your system. However, at
@@ -274,7 +274,8 @@ The SCOTCH library \citep{PeRo96}
 provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
 Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
 A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
-The path to an existing SCOTCH installation can to be set with the option \texttt{-{}-with-scotch-dir}. Just as an example:
+In case no SCOTCH libraries can be found on the system, the configuration will bundle this version for compilation.
+The path to an existing SCOTCH installation can to be set explicitly with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-dir=/opt/scotch
 \end{lyxcode}
@@ -555,11 +556,17 @@ Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downlo
 A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
 \\
 
-Prior to compiling \texttt{decompose\_mesh\_SCOTCH}, make sure you have correctly specified the path
-of the SCOTCH library with the option \texttt{-{}-with-scotch-dir} of the \texttt{configure} script.
-For convenience we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
-in directory ~\\
-\texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}. Please refer to file INSTALL.txt in that directory to see how to compile it.
+In most cases, the configuration with \texttt{./configure~FC=ifort} should be sufficient.
+During the configuration process, the script tries to find existing SCOTCH installations. 
+In case your system has no pre-existing SCOTCH installation,
+we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
+in directory 
+\texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
+This version gets bundled with the compilation of the SPECFEM3D package if no libraries could have been found.
+If this automatic compilation of the SCOTCH libraries fails,
+please refer to file INSTALL.txt in that directory to see further details how to compile it on your system.
+In case you want to use a pre-existing installation, make sure you have correctly specified the path
+of the SCOTCH library when using the option \texttt{-{}-with-scotch-dir} with the \texttt{./configure} script.
 In the future you should be able to find more recent versions at  \url{http://www.labri.fr/perso/pelegrin/scotch/scotch\_en.html} .
 \\
 
