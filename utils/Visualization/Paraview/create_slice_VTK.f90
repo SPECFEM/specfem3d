@@ -57,7 +57,7 @@
   character(len=256) :: mesh_file,local_data_file
 
   integer, dimension(300) :: node_list
-  integer :: iproc, num_node, i,j,k,ispec, ios, it, di, dj, dk
+  integer :: iproc, num_node, i,ios, it
   integer :: njunk
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
@@ -68,12 +68,8 @@
 
   integer :: NSPEC_AB, NGLOB_AB
 
-  real x, y, z, dat
-  integer numpoin, iglob, n1, n2, n3, n4, n5, n6, n7, n8
-  integer iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
 
-
-  ! starts here--------------------------------------------------------------------------------------------------
+  ! starts here---------------------------------------------------------------------------------------
   do i = 1, 4
     call getarg(i,arg(i))
     if (i < 4 .and. trim(arg(i)) == '') then
@@ -174,6 +170,8 @@
             xstore,ystore,zstore,ibool, &
             data,mesh_file)
 
+    deallocate(ibool,xstore,ystore,zstore,data)
+
   enddo  ! all slices for points
 
   print *, 'Done writing slice files'
@@ -208,7 +206,7 @@
 ! file name
   character(len=256) prname_file
 
-  integer :: ispec,i,ier
+  integer :: ispec,i
 
 ! write source and receiver VTK files for Paraview
   write(IMAIN,*) '  vtk file: '
