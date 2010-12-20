@@ -749,13 +749,14 @@
   close(27)
 
   ! open image file and create system command to convert image to more convenient format
+  ! use the "convert" command from ImageMagick http://www.imagemagick.org
   write(system_command,"('cd ',a,' ; convert image',i7.7,'.pnm image',i7.7,'.gif')") &
        OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it,it
 
   ! call the system to convert image to GIF
   call system(system_command)
 
-  ! removes pnm file
+  ! removes PNM file
   if( REMOVE_PNM_FILE ) then
     write(system_command,"('cd ',a,' ; rm -f image',i7.7,'.pnm')") &
          OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)), it
