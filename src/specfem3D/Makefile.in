@@ -122,7 +122,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/read_mesh_databases.o \
 	$O/setup_GLL_points.o \
 	$O/write_movie_output.o \
-	$O/write_PNM_GIF_data.o \
+	$O/create_color_image.o \
 	$O/write_seismograms.o \
 	$O/detect_mesh_surfaces.o \
 	$O/setup_movie_meshes.o \
@@ -312,8 +312,8 @@ $O/save_adjoint_kernels.o: $(SHARED)constants.h save_adjoint_kernels.f90
 $O/write_movie_output.o: $(SHARED)constants.h write_movie_output.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/write_movie_output.o write_movie_output.f90
 
-$O/write_PNM_GIF_data.o: $(SHARED)constants.h write_PNM_GIF_data.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/write_PNM_GIF_data.o write_PNM_GIF_data.f90
+$O/create_color_image.o: $(SHARED)constants.h create_color_image.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/create_color_image.o create_color_image.f90
 
 $O/write_seismograms.o: $(SHARED)constants.h write_seismograms.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
