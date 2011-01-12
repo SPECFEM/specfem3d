@@ -175,6 +175,7 @@
     ! add contribution of the oceans for surface elements exactly at ocean bottom
     do ispec2D = 1,num_free_surface_faces
 
+      ! gets corresponding ispec
       ispec_oceans = free_surface_ispec(ispec2D)
 
       ! only adds contribution if top boundary is elastic, no need to add this approximate calculation
@@ -250,7 +251,7 @@
       endif ! ispec_is_elastic
     enddo ! num_free_surface_faces
 
-    ! add regular mass matrix to ocean load contribution
+    ! adds regular mass matrix to ocean load contribution
     rmass_ocean_load(:) = rmass_ocean_load(:) + rmass(:)
 
   else
@@ -262,5 +263,3 @@
   endif
 
   end subroutine create_mass_matrices_ocean_load
-
-

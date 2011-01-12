@@ -191,7 +191,7 @@
 
 ! plots GIF cross-section image
 ! (EXPERIMENTAL feature)
-! (cross-section plane parameters can be specified in write_PNM_GIF_data.f90)
+! (cross-section plane parameters can be specified in create_color_image.f90)
   logical, parameter :: PNM_GIF_IMAGE = .false.
 
 ! number of nodes per element as provided by the external mesh

@@ -951,7 +951,7 @@ subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
                         chi1_dot_dot,chi2_t_dot_dot,&
                         chi3_dot_dot,chi4_dot_dot)
 
-  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,CUSTOM_REAL
+  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,CUSTOM_REAL,ABSORB_FREE_SURFACE
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -981,6 +981,10 @@ subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
 
 ! local parameters
   integer :: iface,igll,i,j,k,ispec,iglob,ispecPML
+
+!daniel
+  ! checks if free surface became an absorbing boundary
+  if( ABSORB_FREE_SURFACE ) return
 
   ! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces
