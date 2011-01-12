@@ -363,6 +363,10 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
 ! local parameters
   integer :: iface,igll,i,j,k,ispec,iglob
 
+!daniel
+  ! checks if free surface became an absorbing boundary
+  if( ABSORB_FREE_SURFACE ) return
+
 ! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces
 

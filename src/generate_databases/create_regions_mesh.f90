@@ -528,12 +528,13 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
 ! free surface
   ! free surface faces
-  if( ABSORB_FREE_SURFACE ) then
-    ! no free surface - uses a dummy size
-    num_free_surface_faces = 1
-  else
+!daniel
+!  if( ABSORB_FREE_SURFACE ) then
+!    ! no free surface - uses a dummy size
+!    num_free_surface_faces = 1
+!  else
     num_free_surface_faces = nspec2D_top
-  endif
+!  endif
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( free_surface_ispec(num_free_surface_faces), &
