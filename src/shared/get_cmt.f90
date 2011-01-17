@@ -24,26 +24,49 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,NSOURCES)
+  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
 
   implicit none
 
   include "constants.h"
 
-  integer yr,jda,ho,mi,NSOURCES
-  double precision sec
-  double precision, dimension(NSOURCES) :: t_cmt,hdur,lat,long,depth
-  double precision moment_tensor(6,NSOURCES)
+!--- input or output arguments of the subroutine below
+
+  integer, intent(in) :: NSOURCES
+  double precision, intent(in) :: DT
+
+  integer, intent(out) :: yr,jda,ho,mi
+  double precision, intent(out) :: sec
+  double precision, dimension(NSOURCES), intent(out) :: t_cmt,hdur,lat,long,depth
+  double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
+
+!--- local variables below
 
   integer mo,da,julian_day,isource
+  double precision t_shift(NSOURCES)
   character(len=5) datasource
   character(len=256) string, CMTSOLUTION
+
+  ! initializes
+  lat(:) = 0.d0
+  long(:) = 0.d0
+  depth(:) = 0.d0
+  t_shift(:) = 0.d0
+  t_cmt(:) = 0.d0
+  hdur(:) = 0.d0
+  moment_tensor(:,:) = 0.d0
+  yr = 0
+  jda = 0
+  ho = 0
+  mi = 0
+  sec = 0.d0
 
 !
 !---- read hypocenter info
 !
   call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', &
        IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
+
   open(unit=1,file=CMTSOLUTION,status='old',action='read')
 
 ! read source number isource
@@ -64,7 +87,8 @@
 
     ! read time shift
     read(1,"(a)") string
-    read(string(12:len_trim(string)),*) t_cmt(isource)
+    !read(string(12:len_trim(string)),*) t_cmt(isource)
+    read(string(12:len_trim(string)),*) t_shift(isource)
 
     ! read half duration
     read(1,"(a)") string
@@ -106,9 +130,29 @@
     read(1,"(a)") string
     read(string(5:len_trim(string)),*) moment_tensor(6,isource)
 
+    ! checks half-duration
+    if( USE_FORCE_POINT_SOURCE ) then
+      ! half-duration is the dominant frequency of the source
+      ! point forces use a Ricker source time function
+      ! null half-duration indicates a very low-frequency source
+      ! (see constants.h: TINYVAL = 1.d-9 )
+      if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
+    else
+      ! null half-duration indicates a Heaviside
+      ! replace with very short error function
+      if( hdur(isource) < 5. * DT ) hdur(isource) = 5. * DT
+    endif
+
   enddo
 
   close(1)
+
+  ! Sets t_cmt to zero to initiate the simulation!
+  if(NSOURCES == 1)then
+      t_cmt = 0.d0
+  else
+      t_cmt(1:NSOURCES) = t_shift(1:NSOURCES)-minval(t_shift)
+  endif
 
   !
   ! scale the moment tensor

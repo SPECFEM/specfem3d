@@ -109,7 +109,7 @@ subroutine setup_sources()
           ispec_is_acoustic,ispec_is_elastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
-  if(minval(t_cmt) /= 0.) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
+  if(abs(minval(t_cmt)) > TINYVAL) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
 
 ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
@@ -127,7 +127,7 @@ subroutine setup_sources()
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
   !          non-zero offset at the beginning of the source time function
-  t0 = - 2.0d0 * minval(t_cmt-hdur)   ! - 1.5d0 * minval(t_cmt-hdur)
+  t0 = - 2.0d0 * minval(t_cmt(:) - hdur(:))   ! - 1.5d0 * minval(t_cmt-hdur)
 
   ! uses an earlier start time if source is acoustic with a gaussian source time function
   t0_ac = 0.0d0
@@ -135,16 +135,29 @@ subroutine setup_sources()
     if( myrank == islice_selected_source(isource) ) then
       ispec = ispec_selected_source(isource)
       if( ispec_is_acoustic(ispec) ) then
+        ! uses an earlier start time
         t0_ac = - 3.0d0 * ( t_cmt(isource) - hdur(isource) )
         if(  t0_ac > t0 ) t0 = t0_ac
       endif
     endif
   enddo
-
   ! passes maximum value to all processes
   ! note: t0 is defined positive and will be subtracted from simulation time (it-1)*DT
   t0_ac = t0
   call max_all_all_dp(t0_ac,t0)
+
+  ! point force sources will start depending on the frequency given by hdur
+  if( USE_FORCE_POINT_SOURCE ) then
+    ! note: point force sources will give the dominant frequency in hdur,
+    !          thus the main period is 1/hdur.
+    !          also, these sources use a Ricker source time function instead of a gaussian.
+    !          for a Ricker source time function, a start time ~1.2 * main_period is a good choice
+    t0 = - 1.2d0 * minval(t_cmt(:) - 1.0d0/hdur(:))
+  endif
+
+  ! checks if user wants an earlier start time
+  ! note: t0 is positive, simulation will start at t = - t0
+  if( USER_T0 > t0 ) t0 = USER_T0
 
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
