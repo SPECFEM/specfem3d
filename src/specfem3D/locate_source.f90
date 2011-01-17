@@ -159,15 +159,8 @@
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
-  ! read all the sources
-  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,NSOURCES)
-
-  ! checks half-durations
-  do isource = 1, NSOURCES
-    ! null half-duration indicates a Heaviside
-    ! replace with very short error function
-    if(hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
-  enddo
+  ! read all the sources (note: each process reads the source file)
+  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
 
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
@@ -804,28 +797,23 @@
           write(IMAIN,*) '  using a source of dominant frequency ',f0
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-          write(IMAIN,*) '  t0 = ',t0_ricker,'t_cmt = ',t_cmt(isource)
+          write(IMAIN,*) '  t0_ricker = ',t0_ricker,'t_cmt = ',t_cmt(isource)
+          write(IMAIN,*)
+          write(IMAIN,*) '  half duration -> frequency: ',hdur(isource),' seconds**(-1)'
         else
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
           write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
-        endif
-
-        ! add message if source is a Heaviside
-        if(hdur(isource) <= 5.*DT) then
           write(IMAIN,*)
-          write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
-          write(IMAIN,*)
+          ! add message if source is a Heaviside
+          if(hdur(isource) <= 5.*DT) then
+            write(IMAIN,*)
+            write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
+            write(IMAIN,*)
+          endif
+          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
         endif
-
-        write(IMAIN,*)
-        if(USE_FORCE_POINT_SOURCE) then
-          write(IMAIN,*) ' half duration -> frequency: ',hdur(isource),' seconds**(-1)'
-        else
-          write(IMAIN,*) ' half duration: ',hdur(isource),' seconds'
-        endif
-        write(IMAIN,*) '    time shift: ',t_cmt(isource),' seconds'
-
+        write(IMAIN,*) '  time shift: ',t_cmt(isource),' seconds'
         write(IMAIN,*)
         write(IMAIN,*) 'original (requested) position of the source:'
         write(IMAIN,*)
@@ -908,6 +896,14 @@
 
     ! end of loop on all the sources
     enddo
+
+    if( .not. SHOW_DETAILS_LOCATE_SOURCE .and. NSOURCES > 1 ) then
+        write(IMAIN,*)
+        write(IMAIN,*) '*************************************'
+        write(IMAIN,*) ' using sources ',NSOURCES
+        write(IMAIN,*) '*************************************'
+        write(IMAIN,*)
+    endif
 
     ! display maximum error in location estimate
     write(IMAIN,*)

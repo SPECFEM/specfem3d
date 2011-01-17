@@ -119,7 +119,6 @@
                              ispec)
 
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-              t0 = 1.2d0/f0
 
               !if (it == 1 .and. myrank == 0) then
               !  write(IMAIN,*) 'using a source of dominant frequency ',f0
@@ -314,7 +313,6 @@
                              ispec)
 
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-              t0 = 1.2d0/f0
 
               !if (it == 1 .and. myrank == 0) then
               !  write(IMAIN,*) 'using a source of dominant frequency ',f0

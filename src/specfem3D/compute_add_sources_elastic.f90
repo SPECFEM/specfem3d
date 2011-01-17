@@ -122,8 +122,6 @@
                              ispec_selected_source(isource))
 
               f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-              ! note: for a Ricker source time function, a start time ~1.2 * main_period is a good choice
-              t0 = 1.2d0/f0
 
               !if (it == 1 .and. myrank == 0) then
               !  write(IMAIN,*) 'using a source of dominant frequency ',f0
@@ -297,7 +295,6 @@
                              ispec_selected_source(isource))
 
                f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-               t0 = 1.2d0/f0
 
                !if (it == 1 .and. myrank == 0) then
                !   write(IMAIN,*) 'using a source of dominant frequency ',f0

@@ -159,6 +159,7 @@ LIBSPECFEM = $L/libspecfem.a
 @COND_PYRE_FALSE@	combine_vol_data \
 @COND_PYRE_FALSE@	combine_surf_data \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
+@COND_PYRE_FALSE@	smooth_vol_data \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 default: $(DEFAULT)
@@ -185,6 +186,7 @@ convolve_source_timefunction: xconvolve_source_timefunction
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
+smooth_vol_data: xsmooth_vol_data
 
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.o
@@ -198,12 +200,15 @@ xcombine_vol_data: $O/combine_vol_data.o $O/write_c_binary.o $O/read_parameter_f
 xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
 	${FCCOMPILE_CHECK} -o  ${E}/xcombine_surf_data  $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
 
+xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o $O/gll_library.o $O/exit_mpi.o $O/parallel.o
+	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o $O/gll_library.o $O/exit_mpi.o $O/parallel.o $(MPILIBS)
+
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
         xgenerate_databases xspecfem3D \
         xconvolve_source_timefunction \
-        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data
+        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data xsmooth_vol_data
 
 ###
 ### rule for the archive library
@@ -452,6 +457,9 @@ $O/prepare_assemble_MPI.o: $(SHARED)constants.h ${SHARED}/prepare_assemble_MPI.f
 
 $O/PML_init.o: $(SHARED)constants.h PML_init.f90
 	${FCCOMPILE_CHECK} -c -o $O/PML_init.o PML_init.f90
+
+$O/smooth_vol_data.o: $(SHARED)constants.h ${SHARED}/smooth_vol_data.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/smooth_vol_data.o ${SHARED}/smooth_vol_data.f90
 
 
 ###

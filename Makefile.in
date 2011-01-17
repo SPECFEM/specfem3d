@@ -70,6 +70,7 @@ RANLIB = ranlib
 # @COND_PYRE_FALSE@	combine_vol_data \
 # @COND_PYRE_FALSE@	combine_surf_data \
 # @COND_PYRE_FALSE@	convolve_source_timefunction \
+# @COND_PYRE_FALSE@	smooth_vol_data \
 
 default: $(DEFAULT)
 
@@ -95,6 +96,7 @@ convolve_source_timefunction: xconvolve_source_timefunction
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
+smooth_vol_data: xsmooth_vol_data
 
 bin:
 	mkdir -p bin
@@ -141,6 +143,9 @@ xcombine_surf_data: required
 xconvolve_source_timefunction: required
 	(cd src/specfem3D ; make xconvolve_source_timefunction)
 
+xsmooth_vol_data: required
+	(cd src/specfem3D ; make xsmooth_vol_data)
+
 clean: required
 	(rm -rf bin lib obj src/meshfem3D/*.mod src/generate_databases/*.mod src/specfem3D/*.mod)
 
@@ -157,5 +162,6 @@ help:
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo "    xcombine_vol_data"
 	@echo "    xcombine_surf_data"
+	@echo "    xsmooth_vol_data"
 	@echo ""
 
