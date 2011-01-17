@@ -81,6 +81,10 @@ cubit.cmd('mesh volume 1')
 cubit.cmd('volume 5 size 4500.')
 cubit.cmd('mesh volume 5')
 
+# draw/update mesh lines for visualization
+# this will draw also the tripling layer mesh lines
+cubit.cmd('draw volume all')
+
 #### End of meshing
 
 ###### This is boundary_definition.py of GEOCUBIT
