@@ -903,8 +903,10 @@
   do irec = 1,nrec
     read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
     if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
-      write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
-              sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
+      !write(IOUT,*) station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)),' ', &
+      !        sngl(stlat),' ',sngl(stlon), ' ', sngl(stele), ' ', sngl(stbur)
+      write(IOUT,"(3a,4f16.6)") station_name(1:len_trim(station_name)),' ',network_name(1:len_trim(network_name)), &
+                                stlat, stlon, stele, stbur
   enddo
 
   close(IIN)
