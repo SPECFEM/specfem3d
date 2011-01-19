@@ -136,7 +136,7 @@
               !  x/y/z or E/N/Z-direction would correspond to 1/2/3 = COMPONENT_FORCE_SOURCE
               ! e.g. nu_source(:,3) here would be a source normal to the surface (z-direction).
               accel(:,iglob) = accel(:,iglob)  &
-                               + sngl( nu_source(:,COMPONENT_FORCE_SOURCE,isource) ) * stf_used
+                               + sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
 
             else
 
@@ -308,7 +308,7 @@
                ! e.g. we use nu_source(:,3) here if we want a source normal to the surface.
                ! note: time step is now at NSTEP-it
                b_accel(:,iglob) = b_accel(:,iglob)  &
-                                  + sngl( nu_source(:,COMPONENT_FORCE_SOURCE,isource) ) * stf_used
+                                  + sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
 
             else
 

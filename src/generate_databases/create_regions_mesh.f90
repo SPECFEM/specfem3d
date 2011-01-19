@@ -526,15 +526,8 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! free surface
   ! free surface faces
-!daniel
-!  if( ABSORB_FREE_SURFACE ) then
-!    ! no free surface - uses a dummy size
-!    num_free_surface_faces = 1
-!  else
-    num_free_surface_faces = nspec2D_top
-!  endif
+  num_free_surface_faces = nspec2D_top
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( free_surface_ispec(num_free_surface_faces), &

@@ -30,7 +30,7 @@
 
   subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
                  xigll,yigll,zigll,NPROC, &
-                 t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+                 t_cmt,tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
@@ -63,7 +63,7 @@
   integer yr,jda,ho,mi
 
   double precision t_cmt(NSOURCES)
-  double precision sec
+  double precision sec,tshift_cmt_original
 
   integer iprocloop
 
@@ -160,7 +160,8 @@
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
   ! read all the sources (note: each process reads the source file)
-  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor, &
+              DT,NSOURCES,tshift_cmt_original)
 
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
@@ -868,11 +869,6 @@
 
       endif  ! end of detailed output to locate source
 
-      if(PRINT_SOURCE_TIME_FUNCTION) then
-        write(IMAIN,*)
-        write(IMAIN,*) 'printing the source-time function'
-      endif
-
       ! checks CMTSOLUTION format for acoustic case
       if( idomain(isource) == IDOMAIN_ACOUSTIC ) then
         if( Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
@@ -903,6 +899,11 @@
         write(IMAIN,*) ' using sources ',NSOURCES
         write(IMAIN,*) '*************************************'
         write(IMAIN,*)
+    endif
+
+    if(PRINT_SOURCE_TIME_FUNCTION) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'printing the source-time function'
     endif
 
     ! display maximum error in location estimate
