@@ -96,7 +96,7 @@
 
 \author{$\copyright$ Princeton University (USA) and\\
 University of Pau / CNRS / INRIA (France)\\
-Version 2.0.0 \\
+Version 2.0 \\
 "Sesame"}
 
 \date{\noindent \today}
@@ -152,8 +152,12 @@ by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR
 The software package SPECFEM3D simulates seismic
 wave propagation at the local or regional scale
 based upon the spectral-element method (SEM).
-The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,Arn82,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,AiMoMu06,BeLaPi06,DuKa06,DeSeWh08,PuAmKa09,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions \citep{WiStBuGh10,AcKo11}.
-In particular, it can accurately handle very distorted mesh elements \citep{OlSe11}.
+The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,Ch00,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11}; it is then a particular case of the discontinuous Galerkin technique \citep{ReHi73,Arn82,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,AiMoMu06,BeLaPi06,DuKa06,DeSeWh08,PuAmKa09,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions \citep{WiStBuGh10,AcKo11}.
+In particular, it can accurately handle very distorted mesh elements \citep{OlSe11}.\\
+
+It has very good convergence and accuracy properties \citep{MaPa89,SePr94,DeFiMu02,Coh02,DeSe07,SeOl08}.
+It is also very well suited to parallel implementation on very large supercomputers \citep{KoTr02a,KoTsChTr03,TsKoChTr03,KoLaMi08a,CaKoLaTiMiLeSnTr08,KoViCh10} as well as on clusters of GPU accelerating graphics cards \citep{KoMiEr09,KoErGoMi10,Kom11}. Tensor products inside each element can be optimized to reach very high efficiency \citep{DeFiMu02}, and mesh point and element numbering can be optimized to reduce processor cache misses and improve cache reuse \citep{KoLaMi08a}. The SEM can also handle triangular (in 2D) or tetrahedral (in 3D) elements \citep{WinBoyd96,TaWi00,KoMaTrTaWi01,Coh02,MeViSa06} as well as mixed meshes, although with increased cost and reduced accuracy in these elements, as in the discontinuous Galerkin method.\\
+
 Note that in most geological models in the context of seismic wave propagation studies
 (except for fault dynamic rupture studies, in which very high frequencies need to be modeled near the fault, see e.g. \cite{PuAmKa09})
 a discontinous mesh is not needed because material property contrasts are not drastic and thus a continuous formulation is sufficient;
@@ -557,10 +561,10 @@ A recent version of its source code is provided in directory \texttt{src/decompo
 \\
 
 In most cases, the configuration with \texttt{./configure~FC=ifort} should be sufficient.
-During the configuration process, the script tries to find existing SCOTCH installations. 
+During the configuration process, the script tries to find existing SCOTCH installations.
 In case your system has no pre-existing SCOTCH installation,
 we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
-in directory 
+in directory
 \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
 This version gets bundled with the compilation of the SPECFEM3D package if no libraries could have been found.
 If this automatic compilation of the SCOTCH libraries fails,
