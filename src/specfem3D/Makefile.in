@@ -124,6 +124,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/write_movie_output.o \
 	$O/create_color_image.o \
 	$O/write_seismograms.o \
+	$O/write_output_ASCII.o \
 	$O/detect_mesh_surfaces.o \
 	$O/setup_movie_meshes.o \
 	$O/read_topography_bathymetry.o \
@@ -322,6 +323,9 @@ $O/create_color_image.o: $(SHARED)constants.h create_color_image.f90
 
 $O/write_seismograms.o: $(SHARED)constants.h write_seismograms.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/write_seismograms.o write_seismograms.f90
+
+$O/write_output_ASCII.o: $(SHARED)constants.h write_output_ASCII.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_output_ASCII.o write_output_ASCII.f90
 
 $O/noise_tomography.o: $(SHARED)constants.h noise_tomography.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/noise_tomography.o noise_tomography.f90

@@ -259,33 +259,32 @@
 
   include "constants.h"
 
-  integer :: nrec,nrec_local,NSTEP,it,myrank,istore
+  integer :: NSTEP,it
+  integer :: nrec,nrec_local
+  integer :: myrank,istore
   integer :: SIMULATION_TYPE
+
   integer, dimension(nrec_local) :: number_receiver_global
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
-  double precision t0,DT
-  character(len=256) LOCAL_PATH
 
+  double precision t0,DT
+
+  character(len=256) LOCAL_PATH
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
 
-  integer irec,irec_local,length_station_name,length_network_name
-  integer iorientation,irecord,isample
-
-!  character(len=4) chn
-  character(len=3) channel
+  ! local parameters
+  integer irec,irec_local
+  integer irecord
 
   character(len=1) component
-  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
-! parameters for master collects seismograms
+  ! parameters for master collects seismograms
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: tr
-  real(kind=CUSTOM_REAL) :: time_t
   integer :: nrec_local_received,NPROCTOT,total_seismos,receiver,sender
-  integer :: iproc,ier,nt_s
+  integer :: iproc,ier
 
-! save displacement, velocity or acceleration
+  ! saves displacement, velocity or acceleration
   if(istore == 1) then
     component = 'd'
   else if(istore == 2) then
@@ -296,9 +295,13 @@
     call exit_MPI(myrank,'wrong component to save for seismograms')
   endif
 
-! all the processes write their local seismograms themselves
+  allocate(one_seismogram(NDIM,NSTEP),stat=ier)
+  if(ier /= 0) stop 'error while allocating one temporary seismogram'
+
+  ! all processes write their local seismograms themselves
   if( .not. WRITE_SEISMOGRAMS_BY_MASTER ) then
 
+    ! loop on all the local receivers
     do irec_local = 1,nrec_local
 
       ! get global number of that receiver
@@ -307,119 +310,19 @@
       ! save three components of displacement vector
       irecord = 1
 
-      do iorientation = 1,NDIM
+      ! writes out this seismogram
+      one_seismogram = seismograms(:,irec_local,:)
 
-!daniel
-        ! gets channel name
-        call write_channel_name(iorientation,channel)
-
-
-!        if(iorientation == 1) then
-!          chn = 'BNE'
-!        else if(iorientation == 2) then
-!          chn = 'BHN'
-!        else if(iorientation == 3) then
-!          chn = 'BHZ'
-!        else
-!          call exit_MPI(myrank,'incorrect channel value')
-!        endif
-
-        ! create the name of the seismogram file for each slice
-        ! file name includes the name of the station, the network and the component
-        length_station_name = len_trim(station_name(irec))
-        length_network_name = len_trim(network_name(irec))
-
-        ! check that length conforms to standard
-        if(length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) &
-           call exit_MPI(myrank,'wrong length of station name')
-
-        if(length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
-           call exit_MPI(myrank,'wrong length of network name')
-
-        write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
-           network_name(irec)(1:length_network_name),channel,component
-
-        ! directory to store seismograms
-        if( USE_OUTPUT_FILES_PATH ) then
-          final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
-        else
-          ! suppress white spaces if any
-          clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-          ! create full final local path
-          final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
-        endif
-
-
-! save seismograms in text format with no subsampling.
-! Because we do not subsample the output, this can result in large files
-! if the simulation uses many time steps. However, subsampling the output
-! here would result in a loss of accuracy when one later convolves
-! the results with the source time function
-
-        if(SEISMOGRAMS_BINARY)then
-           ! binary format case
-           open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
-                sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
-           tr(:)=0
-        else
-           ! ASCII format case
-           open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
-                sisname(1:len_trim(sisname)),status='unknown')
-        end if
-
-        ! make sure we never write more than the maximum number of time steps
-        ! subtract half duration of the source to make sure travel time is correct
-        do isample = 1,min(it,NSTEP)
-          if(irecord == 1) then
-
-            ! forward simulation
-            if( SIMULATION_TYPE == 1 ) then
-              ! distinguish between single and double precision for reals
-              if(CUSTOM_REAL == SIZE_REAL) then
-                time_t = sngl( dble(isample-1)*DT - t0 )
-              else
-                time_t = dble(isample-1)*DT - t0
-              endif
-            endif
-
-            ! adjoint simulation: backward/reconstructed wavefields
-            if( SIMULATION_TYPE == 3 ) then
-              ! distinguish between single and double precision for reals
-              ! note: compare time_t with time used for source term
-              if(CUSTOM_REAL == SIZE_REAL) then
-                time_t = sngl( dble(NSTEP-isample)*DT - t0 )
-              else
-                time_t = dble(NSTEP-isample)*DT - t0
-              endif
-            endif
-
-            if(SEISMOGRAMS_BINARY) then
-               ! binary format case
-               tr(isample)=seismograms(iorientation,irec_local,isample)
-               write(IOUT,rec=1) tr
-            else
-               ! ASCII format case
-               write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
-            end if
-
-          else
-            call exit_MPI(myrank,'incorrect record label')
-          endif
-        enddo
-
-        close(IOUT)
-
-      enddo ! NDIM
+      call write_one_seismogram(one_seismogram,irec, &
+              station_name,network_name,nrec, &
+              DT,t0,it,NSTEP,SIMULATION_TYPE, &
+              myrank,irecord,component,LOCAL_PATH)
 
     enddo ! nrec_local
 
 ! now only the master process does the writing of seismograms and
 ! collects the data from all other processes
   else ! WRITE_SEISMOGRAMS_BY_MASTER
-
-    allocate(one_seismogram(NDIM,NSTEP),stat=ier)
-    if(ier /= 0) stop 'error while allocating one temporary seismogram'
-
 
     if(myrank == 0) then ! on the master, gather all the seismograms
 
@@ -457,96 +360,12 @@
             ! save three components of displacement vector
             irecord = 1
 
-            do iorientation = 1,NDIM
+            ! writes out this seismogram
+            call write_one_seismogram(one_seismogram,irec, &
+                              station_name,network_name,nrec, &
+                              DT,t0,it,NSTEP,SIMULATION_TYPE, &
+                              myrank,irecord,component,LOCAL_PATH)
 
-!daniel
-              ! gets channel name
-              call write_channel_name(iorientation,channel)
-
-!              if(iorientation == 1) then
-!                chn = 'BHE'
-!              else if(iorientation == 2) then
-!                chn = 'BHN'
-!              else if(iorientation == 3) then
-!                chn = 'BHZ'
-!              else
-!                call exit_MPI(myrank,'incorrect channel value')
-!              endif
-
-              ! create the name of the seismogram file for each slice
-              ! file name includes the name of the station, the network and the component
-              length_station_name = len_trim(station_name(irec))
-              length_network_name = len_trim(network_name(irec))
-
-              ! check that length conforms to standard
-              if(length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) &
-                call exit_MPI(myrank,'wrong length of station name')
-
-              if(length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
-                call exit_MPI(myrank,'wrong length of network name')
-
-              write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
-                network_name(irec)(1:length_network_name),channel,component
-
-              ! directory to store seismograms
-              if( USE_OUTPUT_FILES_PATH ) then
-                final_LOCAL_PATH = 'OUTPUT_FILES'//'/'
-              else
-                ! suppress white spaces if any
-                clean_LOCAL_PATH = adjustl(LOCAL_PATH)
-                ! create full final local path
-                final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
-              endif
-
-! save seismograms in text format with no subsampling.
-! Because we do not subsample the output, this can result in large files
-! if the simulation uses many time steps. However, subsampling the output
-! here would result in a loss of accuracy when one later convolves
-! the results with the source time function
-              open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)),status='unknown')
-
-              ! make sure we never write more than the maximum number of time steps
-              ! subtract half duration of the source to make sure travel time is correct
-              do isample = 1,min(it,NSTEP)
-                if(irecord == 1) then
-                  ! distinguish between single and double precision for reals
-                  !if(CUSTOM_REAL == SIZE_REAL) then
-                  !  write(IOUT,*) sngl(dble(isample-1)*DT - t0),' ',one_seismogram(iorientation,isample)
-                  !else
-                  !  write(IOUT,*) dble(isample-1)*DT - t0,' ',one_seismogram(iorientation,isample)
-                  !endif
-
-                  ! forward simulation
-                  if( SIMULATION_TYPE == 1 ) then
-                    ! distinguish between single and double precision for reals
-                    if(CUSTOM_REAL == SIZE_REAL) then
-                      time_t = sngl( dble(isample-1)*DT - t0 )
-                    else
-                      time_t = dble(isample-1)*DT - t0
-                    endif
-                  endif
-
-                  ! adjoint simulation: backward/reconstructed wavefields
-                  if( SIMULATION_TYPE == 3 ) then
-                    ! distinguish between single and double precision for reals
-                    ! note: compare time_t with time used for source term
-                    if(CUSTOM_REAL == SIZE_REAL) then
-                      time_t = sngl( dble(NSTEP-isample)*DT - t0 )
-                    else
-                      time_t = dble(NSTEP-isample)*DT - t0
-                    endif
-                  endif
-
-                  write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
-
-                else
-                  call exit_MPI(myrank,'incorrect record label')
-                endif
-              enddo
-
-              close(IOUT)
-
-            enddo ! NDIM
           enddo ! nrec_local_received
         endif ! if(nrec_local_received > 0 )
       enddo ! NPROCTOT-1
@@ -573,11 +392,80 @@
        endif
     endif ! myrank
 
-    deallocate(one_seismogram)
-
   endif ! WRITE_SEISMOGRAMS_BY_MASTER
 
+  deallocate(one_seismogram)
+
   end subroutine write_seismograms_to_file
+
+!=====================================================================
+
+  subroutine write_one_seismogram(one_seismogram,irec, &
+              station_name,network_name,nrec, &
+              DT,t0,it,NSTEP,SIMULATION_TYPE, &
+              myrank,irecord,component,LOCAL_PATH)
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: NSTEP,it,SIMULATION_TYPE
+  real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
+
+  integer myrank,irecord
+  double precision t0,DT
+
+  integer :: nrec,irec
+  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
+  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
+  character(len=1) component
+  character(len=256) LOCAL_PATH
+
+  ! local parameters
+  integer iorientation
+  integer length_station_name,length_network_name
+  character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
+  character(len=3) channel
+
+  ! loops over each seismogram component
+  do iorientation = 1,NDIM
+
+    ! gets channel name
+    call write_channel_name(iorientation,channel)
+
+    ! create the name of the seismogram file for each slice
+    ! file name includes the name of the station, the network and the component
+    length_station_name = len_trim(station_name(irec))
+    length_network_name = len_trim(network_name(irec))
+
+    ! check that length conforms to standard
+    if(length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) &
+       call exit_MPI(myrank,'wrong length of station name')
+
+    if(length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
+       call exit_MPI(myrank,'wrong length of network name')
+
+    write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") station_name(irec)(1:length_station_name),&
+       network_name(irec)(1:length_network_name),channel,component
+
+    ! directory to store seismograms
+    if( USE_OUTPUT_FILES_PATH ) then
+      final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
+    else
+      ! suppress white spaces if any
+      clean_LOCAL_PATH = adjustl(LOCAL_PATH)
+      ! create full final local path
+      final_LOCAL_PATH = clean_LOCAL_PATH(1:len_trim(clean_LOCAL_PATH)) // '/'
+    endif
+
+    ! ASCII output format
+    call write_output_ASCII(one_seismogram, &
+              NSTEP,it,SIMULATION_TYPE,DT,t0,myrank, &
+              iorientation,irecord,sisname,final_LOCAL_PATH)
+
+  enddo ! do iorientation
+
+  end subroutine write_one_seismogram
 
 !=====================================================================
 
@@ -600,7 +488,6 @@
   integer irec,irec_local
   integer iorientation,irecord,isample
 
-!  character(len=4) chn
   character(len=3) channel
   character(len=1) component
   character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
@@ -626,23 +513,11 @@
 
     do iorientation = 1,NDIM
 
-!daniel
       ! gets channel name
       call write_channel_name(iorientation,channel)
 
-!      if(iorientation == 1) then
-!        chn = 'BHE'
-!      else if(iorientation == 2) then
-!        chn = 'BHN'
-!      else if(iorientation == 3) then
-!        chn = 'BHZ'
-!      else
-!        call exit_MPI(myrank,'incorrect channel value')
-!      endif
-
       ! create the name of the seismogram file for each slice
       ! file name includes the name of the station, the network and the component
-
       write(sisname,"(a,i5.5,'.',a,'.',a3,'.sem',a1)") 'S',irec_local,&
            'NT',channel,component
 

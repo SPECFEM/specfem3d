@@ -70,7 +70,7 @@ subroutine setup_sources()
   use specfem_par_movie
   implicit none
 
-  double precision :: t0_ac
+  double precision :: t0_ac,tshift_cmt_original
   integer :: yr,jda,ho,mi
   integer :: isource,ispec
 
@@ -99,7 +99,7 @@ subroutine setup_sources()
 !                xi_source, eta_source & gamma_source
   call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          t_cmt,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          t_cmt,tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
@@ -122,7 +122,7 @@ subroutine setup_sources()
   endif
 
   ! convert the half duration for triangle STF to the one for gaussian STF
-  hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
@@ -155,9 +155,55 @@ subroutine setup_sources()
     t0 = - 1.2d0 * minval(t_cmt(:) - 1.0d0/hdur(:))
   endif
 
-  ! checks if user wants an earlier start time
-  ! note: t0 is positive, simulation will start at t = - t0
-  if( USER_T0 > t0 ) t0 = USER_T0
+  ! checks if user set USER_T0 to fix simulation start time
+  ! note: USER_T0 has to be positive
+  if( USER_T0 > 0.d0 ) then
+    ! user cares about origin time and time shifts of the CMTSOLUTION
+    ! and wants to fix simulation start time to a constant start time
+    ! time 0 on time axis will correspond to given origin time
+
+    ! notifies user
+    if( myrank == 0 ) then
+      write(IMAIN,*) 'USER_T0: ',USER_T0
+      write(IMAIN,*) 't0: ',t0,'tshift_cmt_original: ',tshift_cmt_original
+      write(IMAIN,*)
+    endif
+
+    ! checks if automatically set t0 is too small
+    ! note: tshift_cmt_original can be a positive or negative time shift (minimum from all tshift)
+    if( t0 <= USER_T0 + tshift_cmt_original ) then
+      ! by default, t_cmt(:) holds relative time shifts with a minimum time shift set to zero
+      ! re-adds (minimum) original time shift such that sources will kick in
+      ! according to their absolute time shift
+      t_cmt(:) = t_cmt(:) + tshift_cmt_original
+
+      ! sets new simulation start time such that
+      ! simulation starts at t = - t0 = - USER_T0
+      t0 = USER_T0
+
+      ! notifies user
+      if( myrank == 0 ) then
+        write(IMAIN,*) '  set new simulation start time: ', - t0
+        write(IMAIN,*)
+      endif
+    else
+      ! start time needs to be at least t0 for numerical stability
+      ! notifies user
+      if( myrank == 0 ) then
+        write(IMAIN,*) 'error: USER_T0 is too small'
+        write(IMAIN,*) '       must make one of three adjustements:'
+        write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-tshift_cmt_original
+        write(IMAIN,*) '       - decrease time shift in CMTSOLUTION file'
+        write(IMAIN,*) '       - decrease hdur in CMTSOLUTION file'
+      endif
+      call exit_mpi(myrank,'error USER_T0 is set but too small')
+    endif
+  else if( USER_T0 < 0.d0 ) then
+    if( myrank == 0 ) then
+      write(IMAIN,*) 'error: USER_T0 is negative, must be set zero or positive!'
+    endif
+    call exit_mpi(myrank,'error negative USER_T0 parameter in constants.h')
+  endif
 
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()

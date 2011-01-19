@@ -982,7 +982,6 @@ subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
 ! local parameters
   integer :: iface,igll,i,j,k,ispec,iglob,ispecPML
 
-!daniel
   ! checks if free surface became an absorbing boundary
   if( ABSORB_FREE_SURFACE ) return
 

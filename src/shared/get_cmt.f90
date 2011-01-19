@@ -24,7 +24,8 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,DT,NSOURCES)
+  subroutine get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor,&
+                    DT,NSOURCES,tshift_cmt_original)
 
   implicit none
 
@@ -36,7 +37,7 @@
   double precision, intent(in) :: DT
 
   integer, intent(out) :: yr,jda,ho,mi
-  double precision, intent(out) :: sec
+  double precision, intent(out) :: sec,tshift_cmt_original
   double precision, dimension(NSOURCES), intent(out) :: t_cmt,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
 
@@ -150,9 +151,12 @@
   ! Sets t_cmt to zero to initiate the simulation!
   if(NSOURCES == 1)then
       t_cmt = 0.d0
+      tshift_cmt_original = t_shift(1)
   else
       t_cmt(1:NSOURCES) = t_shift(1:NSOURCES)-minval(t_shift)
+      tshift_cmt_original = minval(t_shift)
   endif
+
 
   !
   ! scale the moment tensor
