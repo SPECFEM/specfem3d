@@ -539,7 +539,9 @@ in AVS UCD format) or OpenDX output file (\texttt{\small DX\_meshquality.}~\\
 e.g, skewness of elements and a Gnuplot histogram (\texttt{\small mesh\_quality\_}~\\
 \texttt{\small histogram.txt}) that can be plotted with gnuplot (type
 `\texttt{\small gnuplot plot\_mesh\_quality\_histogram.gnu}'). The
-histogram is also printed to the screen. If you want to start designing
+histogram is also printed to the screen.
+Analyze that skewness histogram of mesh elements to make sure no element has a skewness above approximately 0.75, otherwise the mesh is of poor quality (and if even a single element has a skewness value above 0.80, then you must definitely improve the mesh).
+If you want to start designing
 your own meshes, this tool is useful for viewing your creations. You
 are striving for meshes with elements with `cube-like' dimensions,
 e.g., the mesh should contain no very elongated or skewed elements.
@@ -782,6 +784,7 @@ to the screen instead by uncommenting a line in \texttt{constants.h}:
 !~integer,~parameter~::~IMAIN~=~ISTANDARD\_OUTPUT
 \end{lyxcode}
 
+To control the quality of the mesh, check the standard output (either on the screen or in the \texttt{in\_out\_files/OUTPUT\_FILES} directory in \texttt{output\_mesher.txt}) and analyze the skewness histogram of mesh elements to make sure no element has a skewness above approximately 0.75, otherwise the mesh is of poor quality (and if even a single element has a skewness value above 0.80, then you must definitely improve the mesh). To draw the skewness histogram on the screen, type \texttt{gnuplot plot\_mesh\_quality\_histogram.gnu}.
 
 \chapter{\label{cha:Creating-Distributed-Databases}Creating the Distributed Databases}
 
