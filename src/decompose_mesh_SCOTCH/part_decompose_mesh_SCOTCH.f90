@@ -15,7 +15,7 @@ module part_decompose_mesh_SCOTCH
   double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
 
 ! acoustic-elastic load balancing:
-! assumes that elastic at least ~6 times more expensive than acoustic
+! assumes that elastic at least ~4 times more expensive than acoustic
   integer, parameter :: ACOUSTIC_LOAD = 1
   integer, parameter :: ELASTIC_LOAD = 4
 
