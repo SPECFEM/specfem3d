@@ -977,6 +977,16 @@
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB):: div_glob,curl_glob ! divergence and curl only in the global nodes
   integer :: ispec,i,j,k,l,iglob
   integer,dimension(NGLOB_AB) :: valency
+  character(len=3) :: channel
+  character(len=1) :: compx,compy,compz
+
+  ! gets component characters: X/Y/Z or E/N/Z
+  call write_channel_name(1,channel)
+  compx(1:1) = channel(3:3) ! either X or E
+  call write_channel_name(2,channel)
+  compy(1:1) = channel(3:3) ! either Y or N
+  call write_channel_name(3,channel)
+  compz(1:1) = channel(3:3) ! Z
 
   ! saves velocity here to avoid static offset on displacement for movies
   velocity_x(:,:,:,:) = 0._CUSTOM_REAL
@@ -1105,19 +1115,22 @@
     write(27) curl_glob
     close(27)
 
+
     write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) div
     close(27)
-    write(outputname,"('/proc',i6.6,'_curl_x_it',i6.6,'.bin')") myrank,it
+
+    ! writes out curl
+    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compx,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_x
     close(27)
-    write(outputname,"('/proc',i6.6,'_curl_y_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_y
     close(27)
-    write(outputname,"('/proc',i6.6,'_curl_z_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) curl_z
     close(27)
@@ -1130,17 +1143,17 @@
   endif ! elastic
 
   if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
-    write(outputname,"('/proc',i6.6,'_velocity_N_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) velocity_x
     close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_E_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compy,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) velocity_y
     close(27)
 
-    write(outputname,"('/proc',i6.6,'_velocity_Z_it',i6.6,'.bin')") myrank,it
+    write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compz,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
     write(27) velocity_z
     close(27)
