@@ -184,12 +184,12 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
   write(IMAIN,*)
   write(IMAIN,*) '------------'
-  write(IMAIN,*) 'mesh quality parameter definitions'
+  write(IMAIN,*) 'mesh quality parameter definitions:'
   write(IMAIN,*)
-  write(IMAIN,*) 'equiangle skewness: 0. perfect  1. bad'
-  write(IMAIN,*) 'skewness max deviation angle: 0. perfect  90. bad'
-  write(IMAIN,*) 'edge aspect ratio: 1. perfect  above 1. gives stretching factor'
-  write(IMAIN,*) 'diagonal aspect ratio: 1. perfect  above 1. gives stretching factor'
+  write(IMAIN,*) 'equiangle skewness: 0. perfect,  1. bad'
+  write(IMAIN,*) 'skewness max deviation angle: 0. perfect,  90. bad'
+  write(IMAIN,*) 'edge aspect ratio: 1. perfect,  above 1. gives stretching factor'
+  write(IMAIN,*) 'diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor'
   write(IMAIN,*) '------------'
 
   write(IMAIN,*)

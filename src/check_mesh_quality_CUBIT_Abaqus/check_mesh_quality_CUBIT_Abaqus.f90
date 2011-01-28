@@ -32,6 +32,11 @@
 !! DK DK
 !! DK DK this routine could be improved by computing the mean in addition to min and max of ratios
 !! DK DK
+!! DK DK also, the particular treatment for sub-blocks in Gocad files, e.g.,
+!! DK DK if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
+!! DK DK                  .and. i == 28429)
+!! DK DK is not general at all and should be rewritten
+!! DK DK
 
   program check_mesh_quality_CUBIT_Abaqus
 
@@ -322,12 +327,12 @@
 
   print *
   print *,'------------'
-  print *,'mesh quality parameter definitions'
+  print *,'mesh quality parameter definitions:'
   print *
-  print *,'equiangle skewness: 0. perfect  1. bad'
-  print *,'skewness max deviation angle: 0. perfect  90. bad'
-  print *,'edge aspect ratio: 1. perfect  above 1. gives stretching factor'
-  print *,'diagonal aspect ratio: 1. perfect  above 1. gives stretching factor'
+  print *,'equiangle skewness: 0. perfect,  1. bad'
+  print *,'skewness max deviation angle: 0. perfect,  90. bad'
+  print *,'edge aspect ratio: 1. perfect,  above 1. gives stretching factor'
+  print *,'diagonal aspect ratio: 1. perfect,  above 1. gives stretching factor'
   print *,'------------'
 
   print *
