@@ -7,9 +7,7 @@ as material property to run a forward simulation.
 
 step-by-step tutorial:
 
-0. check that all software is available (or that modules are loaded):
-     intel/openmpi, cubit, scotch, python, gnuplot
-   and run ./configure in the SPECFEM3D package root directory
+0. run the example in the directory homogeneous_halfspace
 
 1. create mesh:
 
@@ -22,19 +20,8 @@ step-by-step tutorial:
      then run meshing script:
      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "tomoblock_mesh.py"
 
-     if everything goes fine, this creates all the mesh files in a subdirectory MESH/:
-        MESH/absorbing_surface_file_bottom
-        MESH/absorbing_surface_file_xmax
-        MESH/absorbing_surface_file_xmin
-        MESH/absorbing_surface_file_ymax
-        MESH/absorbing_surface_file_ymin
-        MESH/free_surface_file
-        MESH/materials_file
-        MESH/mesh_file
-        MESH/nodes_coords_file
-        MESH/nummaterial_velocity_file
+     this creates all the mesh files in subdirectory MESH/
 
-     the cubit graphics window should show a mesh similar to the file homogeneous.png
 
 2. create tomography_model file:
 
@@ -50,20 +37,14 @@ step-by-step tutorial:
 
 3. decompose mesh files:
 
-   - compile decomposer in directory:
-     > cd SPECFEM3D/
-     > make
+    - run decomposer in directory decompose_mesh_SCOTCH/:
+      (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
+      > cd SPECFEM3D
+      > make
+      > ./bin/xdecompose_mesh_SCOTCH 4 examples/tomographic_model/MESH/ in_out_files/DATABASES_MPI/
 
-     NOTE 1: check that the two scotch libraries are properly specified in Makefile
-     NOTE 2: compile with the same compiler (ifort or gfortran) used
-              for the SCOTCH libraries
-
-   - run decomposer in directory
-     (example assumes 4 partitions with mesh files in ../examples/homogeneous_halfspace/MESH/)
-     > ./bin/xdecompose_mesh_SCOTCH 4 ../examples/tomographic_model/MESH/ ../in_out_files/DATABASES_MPI/
-
-     this creates mesh partitions "proc000***_Database" in directory DATABASES_MPI/.
-     (you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
+      which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
+      you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
 
 
 4. generate databases:
@@ -74,12 +55,6 @@ step-by-step tutorial:
 
    - submit job script
      > qsub go_generate_databases_pbs.bash
-
-     NOTE: this script will need to be tailored to your cluster, e.g.,
-     > bsub < go_generate_databases_lsf.bash
-
-     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-     in directory DATABASES_MPI/.
 
 
 5. run simulation:
@@ -93,15 +68,9 @@ step-by-step tutorial:
    - submit job script:
      > qsub go_solver_pbs.bash
 
-     NOTE 1: this script will need to be tailored to your cluster, e.g.,
-             > bsub < go_solver_lsf.bash
-     NOTE 2: the simulation runs on 4 cores and should take about 10 minutes,
-             and you can track the progress with the timestamp files
-
    - when the job is complete, you should have 3 sets (semd,semv,sema)
      of 672 (ls -1 *semd | wc) in the directory in_out_files/OUTPUT_FILES,
      as well as 3 timestamp****** files
-
 
 ===========================================================
 

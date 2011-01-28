@@ -17,7 +17,7 @@ step-by-step tutorial:
    - From the SPECFEM3D root directory SPECFEM3D/
      configure the package, e.g. using intel's ifort compiler:
      > cd SPECFEM3D
-     > ./configure F90=ifort --with-scotch-path=/my_path_to_scotch
+     > ./configure F90=ifort --with-scotch-dir=/my_path_to_scotch
 
      If successful, this will generate the files in src/shared/:
      Makefile, constants.h, and precision.h, among others
@@ -103,7 +103,7 @@ step-by-step tutorial:
              generated in in_out_files/OUTPUT_FILES/
 
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 672 (ls -1 *semd | wc) in the directory in_out_files/OUTPUT_FILES,
+     of 672 (ls -1 *semd | wc) file in the directory in_out_files/OUTPUT_FILES,
      as well as 3 timestamp****** files
 
 

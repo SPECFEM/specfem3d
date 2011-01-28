@@ -9,6 +9,8 @@ It then runs a forward simulation which couples acoustic & elastic waves.
 
 step-by-step tutorial:
 
+0. run the example in the directory homogeneous_halfspace
+
 1. create mesh:
 
    - run cubit GUI:
@@ -28,16 +30,18 @@ step-by-step tutorial:
       (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
       > cd SPECFEM3D
       > make
-      > ./bin/xdecompose_mesh_SCOTCH 4 ../examples/waterlayered_halfspace/MESH/ ../in_out_files/DATABASES_MPI/
+      > ./bin/xdecompose_mesh_SCOTCH 4 examples/waterlayered_halfspace/MESH/ in_out_files/DATABASES_MPI/
 
       which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
-      you can then specify "DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
+      you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
 
 
 3. generate databases:
 
-    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to in_data_files/ directory in
-      the SPECFEM3D root directory
+    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
+      > cd examples/waterlayered_halfspace/in_data_files
+      > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+      > cd SPECFEM3D
 
     - compile generate_databases:
       > make xgenerate_databases
@@ -57,7 +61,6 @@ step-by-step tutorial:
     - submit job script:
       > qsub go_solver_pbs.bash
 
-
-
-
-
+    note: simulation will take about 45 minutes and generate
+    3 sets (semd,semv,sema) of 672 files in in_out_files/OUTPUT_FILES,
+    as well as 13 timestamp****** files

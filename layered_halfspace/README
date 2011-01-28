@@ -4,10 +4,12 @@ README
 
 This example creates a layered model, with three volumes and two different material
 descriptions, using CUBIT.
-It is used for validation with a layer-cake solution from Komatitsch et al. (1999),
+It is used for validation with a layer-cake solution from Komatitsch and Tromp (1999),
 using a 2-layer model as shown in their Figure 8, left.
 
 step-by-step tutorial:
+
+0. run the example in the directory homogeneous_halfspace
 
 1. create mesh:
 
@@ -49,9 +51,9 @@ step-by-step tutorial:
 
     - run decomposer in directory bin/:
       (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
-      > cd SPECFEM3D/
+      > cd SPECFEM3D
       > make
-      > ./bin/xdecompose_mesh_SCOTCH 4 ../examples/layered_halfspace/MESH/ ../in_out_files/DATABASES_MPI/
+      > ./bin/xdecompose_mesh_SCOTCH 4 examples/layered_halfspace/MESH/ in_out_files/DATABASES_MPI/
 
       which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
       you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
@@ -59,8 +61,10 @@ step-by-step tutorial:
 
 3. generate databases:
 
-    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to in_data_files/ directory in
-      the SPECFEM3D root directory
+    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
+      > cd examples/layered_halfspace/in_data_files
+      > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+      > cd SPECFEM3D
 
     - compile generate_databases:
       > make xgenerate_databases
@@ -74,7 +78,7 @@ step-by-step tutorial:
 
 4. run simulation:
 
-    - modify constants.h:
+    - modify src/shared/constants.h:
         to use a vertical force source, with a Ricker wavelet source time function,
         turn flag on for parameter USE_FORCE_POINT_SOURCE:
           ...
@@ -87,16 +91,21 @@ step-by-step tutorial:
     - submit job script:
       > qsub go_solver_pbs.bash
 
+    note: simulation will take about 45 minutes and generate
+    3 sets (semd,semv,sema) of 672 files in in_out_files/OUTPUT_FILES,
+    as well as 13 timestamp****** files
+
 Optional:
-  Compare the solution traces:
-    'OUTPUT_FILES/X31.HXZ.semd'
-  and
-    'OUTPUT_FILES/X55.HXZ.semd'
+  Compare the solution traces in the directory
+    in_out_files/OUTPUT_FILES/:
+    X55.DB.HXZ.semd
+    X31.DB.HXZ.semd
 
-  with the solutions of Komatitsch et al. (1999, Figure 9, bottom and top) provided in:
-    'VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Uz_file_Ycste_0031.txt'
-  and
-    'VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE/REF_SEIS/Uz_file_Ycste_0055.txt'
+  with the reference solutions provided in the directory
+    examples/layered_halfspace/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE_DEPTH/REF_SEIS/:
+    Uz_file_Ycste_0055.txt  -- Komatitsch and Tromp (1999, Figure 9, top left)
+    Uz_file_Ycste_0031.txt  -- Komatitsch and Tromp (1999, Figure 9, bottom left)
 
+  Note: a time shift is needed to align these given to differences in origin time convention
 
 
