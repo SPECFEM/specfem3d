@@ -1,0 +1,37 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+This folder contains several examples with increasing complexities.
+
+
+To familiarize yourself with the package and CUBIT support, 
+we suggest to start with:
+
+- homogeneous_halfspace/: a model with a single constant material description.
+
+  please follow the homogeneous_halfspace/README for detailed instructions
+  how to run a simulation.
+
+More complex examples are provided in:
+
+- layered_halfspace/: a model with different material layers used for benchmarking
+
+- waterlayered_halfspace/: a model with fluid-solid coupling
+
+- tomographic_model/: a model used together with of a tomographic file for the material description
+
+- noise_tomography/: uses the homogeneous_halfspace model for noise kernel simulations
+
+
+
+To familiarize yourself with the new in-house mesher xmeshfem3D (no CUBIT needed),
+you can follow the examples in:
+
+- meshfem3d_examples/ 
+
+
+please consider submitting your own example to this package! 
+email us: cig-seismo AT geodynamics.org
+
+ 
