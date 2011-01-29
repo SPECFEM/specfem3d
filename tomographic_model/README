@@ -21,24 +21,30 @@ step-by-step tutorial:
      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "tomoblock_mesh.py"
 
      this creates all the mesh files in subdirectory MESH/
+     note: this is a simple uniform block mesh
 
 
 2. create tomography_model file:
 
-    in examples/tomographic_model, run bash script:
-
-    > sh create_tomography_model_file.sh
+   - in examples/tomographic_model, run bash script:
+     > sh create_tomography_model_file.sh
 
     which creates an example model: tomography_model.xyz
     ( elastic model with a constant velocity gradient with depth)
 
-    copy this file into directory SPECFEM3D/in_data_files/
+   - copy this file into directory SPECFEM3D/in_data_files/
+     > cp tomography_model.xyz ../../in_data_files/
+
+   - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
+     > cd in_data_files/
+     > cp * ../../../in_data_files/
+     note: these are needed prior to running xgenerate_databases
 
 
 3. decompose mesh files:
 
-    - run decomposer in directory decompose_mesh_SCOTCH/:
-      (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
+    - run decomposer
+      (example assumes 4 partitions with mesh files in examples/tomographic_model/MESH/)
       > cd SPECFEM3D
       > make
       > ./bin/xdecompose_mesh_SCOTCH 4 examples/tomographic_model/MESH/ in_out_files/DATABASES_MPI/
@@ -50,7 +56,6 @@ step-by-step tutorial:
 4. generate databases:
 
    - compile generate_databases from SPECFEM3D/ :
-     > cd SPECFEM3D
      > make xgenerate_databases
 
    - submit job script
@@ -59,18 +64,16 @@ step-by-step tutorial:
 
 5. run simulation:
 
-   - copy three files -- Par_file CMTSOLUTION STATIONS -- from
-      SPECFEM3D/examples/tomographic_model/ to SPECFEM3D/in_data_files/
-
    - compile specfem3D:
      > make xspecfem3D
 
    - submit job script:
      > qsub go_solver_pbs.bash
 
-   - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 672 (ls -1 *semd | wc) in the directory in_out_files/OUTPUT_FILES,
-     as well as 3 timestamp****** files
+     the simulation will take about 10 minutes
+     when the job is complete, you should have 3 sets (semd,semv,sema)
+     of 18 (ls -1 *semd | wc) in directory in_out_files/OUTPUT_FILES,
+     as well as 9 timestamp****** files
 
 ===========================================================
 

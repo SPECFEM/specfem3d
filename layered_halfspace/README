@@ -50,7 +50,7 @@ step-by-step tutorial:
 2. decompose mesh files:
 
     - run decomposer in directory bin/:
-      (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
+      (example assumes 4 partitions with mesh files in examples/layered_halfspace/MESH/)
       > cd SPECFEM3D
       > make
       > ./bin/xdecompose_mesh_SCOTCH 4 examples/layered_halfspace/MESH/ in_out_files/DATABASES_MPI/

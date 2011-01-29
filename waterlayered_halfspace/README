@@ -26,8 +26,8 @@ step-by-step tutorial:
 
 2. decompose mesh files:
 
-    - run decomposer in directory decompose_mesh_SCOTCH/:
-      (example assumes 4 partitions with mesh files in OUTPUT_FILES/)
+    - run decomposer
+      (example assumes 4 partitions with mesh files in examples/waterlayered_halfspace/MESH/)
       > cd SPECFEM3D
       > make
       > ./bin/xdecompose_mesh_SCOTCH 4 examples/waterlayered_halfspace/MESH/ in_out_files/DATABASES_MPI/
