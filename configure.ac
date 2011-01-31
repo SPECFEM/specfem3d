@@ -265,7 +265,7 @@ fi
 # Checks for library functions.
 
 
-AC_CONFIG_FILES([Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h  src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.10b/src/Makefile.inc])
+AC_CONFIG_FILES([Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h  src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.10b/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile])
 AC_OUTPUT
 
 
