@@ -254,11 +254,10 @@ Marie Curie program.
 
 The SPECFEM3D software package comes in a gzipped tar ball. In the
 directory in which you want to install the package, type
-
 \begin{lyxcode}
 {\small tar~-zxvf~SPECFEM3D\_V2.0.0.tar.gz}{\small \par}
 \end{lyxcode}
-The directory \texttt{\small SPECFEM3D} will then contain
+The directory \texttt{\small SPECFEM3D/} will then contain
 the source code. To configure the software for your system, run the
 \texttt{configure} shell script. This script will attempt to guess
 the appropriate configuration values for your system. However, at
@@ -515,22 +514,23 @@ to load-balance the mesh. Please see the next section for further details.
 
 \subsubsection*{Checking the mesh quality}
 The quality of the mesh may be inspected more precisely based upon the serial code
-in the file  ~\\
-\texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}.
+in the file  \texttt{check\_mesh\_quality\_}~\\
+\texttt{CUBIT\_Abaqus.f90} located in the directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus/}.
 Running this code is optional because no information needed by the
 solver is generated.
 
 
 Prior to running and compiling this code, you have to export your mesh in CUBIT to an ABAQUS (.inp) format.
+For example, export mesh block IDs belonging to volumes in order to check the quality of the hexahedral elements.
 You also have to determine a number of parameters of your mesh, such as the number of nodes and number of elements
 and modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90} source file. Then,
-in the directory \texttt{src/check\_mesh\_quality\_CUBIT\_Abaqus}, type
+in the main directory, type
 \begin{lyxcode}
-{\small ./compile\_all.csh}{\small \par}
+{\small make xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
 and use
 \begin{lyxcode}
-{\small xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
+{\small ./bin/xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
 to generate an AVS output file (\texttt{\small AVS\_meshquality.inp}
 in AVS UCD format) or OpenDX output file (\texttt{\small DX\_meshquality.}~\\
@@ -590,7 +590,10 @@ Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent 
 \end{figure}
 
 When you are ready to compile,
-in the main directory type '\texttt{make decompose\_mesh\_SCOTCH}'.
+in the main directory type
+\begin{lyxcode}
+{\small make xdecompose\_mesh\_SCOTCH}{\small \par}
+\end{lyxcode}
 If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh\_SCOTCH} should be produced.
 
 The partitioning is done in serial for now (in the next release we will provide a parallel version of that code),
@@ -624,7 +627,11 @@ of elements. In this example we use $5^{2}=25$ processors. }
 
 \end{figure}
 
-In the main directory type `\texttt{make meshfem3D}'. If all paths and flags
+In the main directory, type 
+\begin{lyxcode}
+{\small make xmeshfem3D}{\small \par}
+\end{lyxcode}
+If all paths and flags
 have been set correctly, the mesher should now compile and produce
 the executable \texttt{bin/xmeshfem3D}. Please note that
 \texttt{xmeshfem3D} must be called directly from the \texttt{bin/} directory,
@@ -787,7 +794,9 @@ To control the quality of the mesh, check the standard output (either on the scr
 
 \chapter{\label{cha:Creating-Distributed-Databases}Creating the Distributed Databases}
 
-After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile \texttt{xgenerate\_databases}. This program is going to create all the missing information needed by the SEM solver.
+After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile 
+\texttt{xgenerate\_}~\\
+\texttt{databases}. This program is going to create all the missing information needed by the SEM solver.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
@@ -800,7 +809,11 @@ After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next s
 \end{figure}
 
 
-In the main directory type '\texttt{make generate\_databases}'. Input for the program is provided through
+In the main directory, type 
+\begin{lyxcode}
+{\small make xgenerate\_databases}{\small \par}
+\end{lyxcode}
+Input for the program is provided through
 the main parameter file \texttt{Par\_file}, which resides in the subdirectory \texttt{in\_data\_files/}. Please note that
 \texttt{xgenerate\_databases} must be called directly from the \texttt{bin/} directory, as most of the binaries of the package.
 
@@ -947,7 +960,10 @@ Note that the implemented Newmark time scheme uses this time step globally, thus
 \chapter{\label{cha:Running-the-Solver}Running the Solver \texttt{xspecfem3D}}
 
 Now that you have successfully generated the databases, you are ready to compile
-the solver. In the main directory type `\texttt{make specfem3D}'.
+the solver. In the main directory, type
+\begin{lyxcode}
+{\small make xspecfem3D}{\small \par}
+\end{lyxcode}
 Please note that \texttt{xspecfem3D} must be called directly from
 the \texttt{bin/} directory, as most of the binaries of the package.
 
@@ -1025,9 +1041,8 @@ the serial code \texttt{convolve\_source\_timefunction.f90} and the
 script \texttt{convolve\_source\_timefunction.csh} for this purpose,
 or alternatively use signal-processing software packages such as SAC \urlwithparentheses{www.llnl.gov/sac}.
 Type
-
 \begin{lyxcode}
-make~convolve\_source\_timefunction
+{\small make xconvolve\_source\_timefunction}{\small \par}
 \end{lyxcode}
 to compile the code and then set the parameter \texttt{hdur} in \texttt{convolve\_source\_timefunction.csh}
 to the desired half-duration.
@@ -1486,9 +1501,9 @@ Use the following if SCOTCH is needed:
 \item
 Next, we need to compile the source code using:
 
-\texttt{make generate\_databases}
+\texttt{make xgenerate\_databases}
 
-\texttt{make specfem3D} \\
+\texttt{make xspecfem3D} \\
 
 
 \item
@@ -1731,7 +1746,10 @@ From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90}, it
 outputs data in ASCII, OpenDX, or AVS format (also readable in ParaView).
 Before compiling the code, make sure you have the file \texttt{surface\_from\_mesher.h}
 in the  \texttt{in\_out\_files/OUTPUT\_FILES/} directory. This file will be created by the solver run.
-Then type `\texttt{make} \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT}'
+Then type 
+\begin{lyxcode}
+{\footnotesize make xcreate\_movie\_shakemap\_AVS\_DX\_GMT}{\footnotesize \par}
+\end{lyxcode}
 and run the executable \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
 in the \texttt{bin/} subdirectory. It will create visualization files in your format of choice. The code
 will prompt the user for input parameters.
@@ -1799,11 +1817,11 @@ snapshots of vertical velocity components at different times.}
 To visualize these files, we use an auxilliary program \texttt{combine\_vol\_data.f90}
 to combine the data from all slices into one mesh file. To compile it in the root directory, type:
 \begin{lyxcode}
-{\footnotesize make~combine\_vol\_data~}{\footnotesize \par}
+{\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
 which will create the executable \texttt{xcombine\_vol\_data} in the directory \texttt{bin/}. To output the
-usage of this executable, type `./xcombine\_vol\_data` without arguments.
-As an example, you would use
+usage of this executable, type `./bin/xcombine\_vol\_data` without arguments.
+As an example, to run the executable you would use
 \begin{lyxcode}
 {\footnotesize cd~bin/~}{\footnotesize \par}
 {\footnotesize ./xcombine\_vol\_data~0~3~velocity\_Z\_it000400~../in\_out\_files/DATABASES\_MPI~../in\_out\_files/OUTPUT\_FILES~0~}{\footnotesize \par}
@@ -1894,7 +1912,7 @@ to combine the kernel files from all slices into one mesh file.
 \item Compile it in the root directory:
 
 \begin{lyxcode}
-{\footnotesize make~combine\_vol\_data~}{\footnotesize \par}
+{\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
 
 {\footnotesize ./bin/xcombine\_vol\_data~slice\_list~filename~input\_dir~output\_dir~high/low-resolution~}{\footnotesize \par}
 \end{lyxcode}
@@ -1915,7 +1933,7 @@ grid file) format which can be viewed in ParaView. For this task, you can use an
 located in directory \texttt{utils/Visualization/Paraview/}, for example:
 
 \begin{lyxcode}
-mesh2vtu.pl~-i~file.mesh~-o~file.vtu
+{\footnotesize mesh2vtu.pl~-i~file.mesh~-o~file.vtu~}{\footnotesize \par}
 \end{lyxcode}
 \item Notice that this Perl script uses a program \texttt{mesh2vtu} in the
 \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further uses the VTK \urlwithparentheses{http://www.vtk.org/}
@@ -2048,11 +2066,11 @@ d=`date'~echo~\char`\"{}Starting~compilation~\$d\char`\"{}~
 
 make~clean~
 
-make~meshfem3D~
+make~xmeshfem3D~
 
-make~generate\_databases~
+make~xgenerate\_databases~
 
-make~specfem3D~
+make~xspecfem3D~
 
 d=`date'~
 
@@ -2242,7 +2260,6 @@ these scripts.
 This script converts the synthetic output from the SEM code from ASCII
 to SAC format, and performs similar operations as `\texttt{process\_data.pl}'.
 An example of the usage of the script:
-
 \begin{lyxcode}
 {\footnotesize process\_syn.pl~-m~CMTSOLUTION~-h~-a~STATIONS~-s~1.0~-l~0/4000~-f~-t~40/500~-p~-x~bp~SEM/{*}.BX?.semd}
 {\footnotesize \par}
@@ -2377,7 +2394,6 @@ A sample program \texttt{remap\_database} is provided to map the local
 database from a set of machines to another set of machines. This is
 especially useful when you want to run mesher and solver, or different
 types of solvers separately through a scheduler (refer to Chapter~\ref{cha:Scheduler}).
-
 \begin{lyxcode}
 run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~remap\_database~old\_machines~150
 \end{lyxcode}

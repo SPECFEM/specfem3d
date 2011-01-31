@@ -106,9 +106,11 @@
 
 ! example: layered_halfspace
 !                 Cubit -> File -> Export... Abacus (*.inp)
+!                                         ( block ids: 1 2 3 ) volumes only
+!                                         (optional: uncheck 'Export Using Cubit IDs' to have element IDs in increasing order)
   character(len=100), parameter :: cubit_mesh_file = 'layered_halfspace_mesh.inp'
-  integer, parameter :: NPOIN = 44436                   ! number of nodes
-  integer, parameter :: NSPEC = 40500                   ! number of elements (only volumes, i.e. block ids 1,2,3 )
+  integer, parameter :: NPOIN = 76819                    ! number of nodes
+  integer, parameter :: NSPEC = 70200                    ! number of elements (only volumes, i.e. block ids 1,2,3 )
   integer, parameter :: NGNOD = 8                        ! hexahedral elements
   logical, parameter :: IGNORE_OTHER_HEADERS = .false.
   double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
@@ -122,6 +124,9 @@
 
   integer :: i,ispec,iread,iformat,ispec_min_edge_length,ispec_max_edge_length, &
              ispec_begin,ispec_end,ispec_to_output,ier
+
+  double precision :: xtmp,ytmp,ztmp
+  integer :: n1,n2,n3,n4,n5,n6,n7,n8
 
 ! for quality of mesh
   double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
@@ -138,7 +143,6 @@
   integer classes_skewness(0:NCLASS-1)
   integer :: iclass
   double precision :: current_percent,total_percent
-
 ! to export elements that have a certain skewness range to OpenDX
   integer :: ntotspecAVS_DX
   logical :: USE_OPENDX
@@ -165,109 +169,230 @@
 
   if(USE_OPENDX) then
 
-  if(iformat == 1) then
+    if(iformat == 1) then
 
-! read range of skewness used for elements
-  print *,'enter minimum skewness for OpenDX (between 0. and 0.99):'
-  read(5,*) skewness_AVS_DX_min
-  if(skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
-  if(skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
+      ! read range of skewness used for elements
+      print *,'enter minimum skewness for OpenDX (between 0. and 0.99):'
+      read(5,*) skewness_AVS_DX_min
+      if(skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
+      if(skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
 
-!!!!!!!!  print *,'enter maximum skewness for OpenDX (between 0. and 1.):'
-!!!!!!!!!!!!!  read(5,*) skewness_AVS_DX_max
-  skewness_AVS_DX_max = 0.99999d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  if(skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
-  if(skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
+      !!!!!!!!  print *,'enter maximum skewness for OpenDX (between 0. and 1.):'
+      !!!!!!!!!!!!!  read(5,*) skewness_AVS_DX_max
+      skewness_AVS_DX_max = 0.99999d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      if(skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
+      if(skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
 
-  if(skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
+      if(skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
 
-  else
-    print *,'enter the element number to output in OpenDX format between 1 and ',NSPEC
-    read(5,*) ispec_to_output
-    if(ispec_to_output < 1 .or. ispec_to_output > NSPEC) stop 'incorrect element number to output'
-  endif
+    else
+      print *,'enter the element number to output in OpenDX format between 1 and ',NSPEC
+      read(5,*) ispec_to_output
+      if(ispec_to_output < 1 .or. ispec_to_output > NSPEC) stop 'incorrect element number to output'
+    endif
 
   endif
 
 ! read the mesh
   print *
   print *,'start reading the CUBIT file: ',cubit_mesh_file(1:len_trim(cubit_mesh_file))
+  print *,'  number of points: ',NPOIN
+  print *,'  number of elements: ',NSPEC
+  print *
+
   open(unit=10,file=cubit_mesh_file,status='unknown',action='read')
 
-! skip the header
+! skip the header:
+!     *HEADING
+!     cubit(M3D/examples/layered_halfspace/layered_halfspace_mesh.inp): 01/31/2011: 10
+!     version: 12.2
   read(10,*)
   read(10,*)
   read(10,*)
 
-! read the points
+! read the points / nodes section:
+!   **
+!   ********************************** P A R T S **********************************
+!   *PART, NAME=Part-Default
+!   **
+!   ********************************** N O D E S **********************************
+!   *NODE, NSET=ALLNODES
   iread = 0
+  x(:) = 0.d0
+  y(:) = 0.d0
+  z(:) = 0.d0
   do i = 1,NPOIN
-    read(10,*,iostat=ier) iread,x(i),y(i),z(i)
+
+    ! reads in text line
+    read(10,'(a256)',iostat=ier) line
     if(ier /= 0 ) then
-      print *,'error read:',iread
+      print *,'error read line:',i
       stop 'error read points'
     endif
-    if(iread /= i) then
-      print *,'error at i,iread = ',i,iread
-      stop 'wrong input for a point'
+
+    ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
+    do while ( line(1:1) == "*" )
+      ! skips comment line and goes to next line
+      print*,'  comment:',trim(line)
+      read(10,'(a256)',iostat=ier) line
+      if(ier /= 0 ) then
+        print *,'error read non-comment line:',i
+        stop 'error read points'
+      endif
+    enddo
+
+    ! gets node ID and position
+    read(line,*,iostat=ier) iread,xtmp,ytmp,ztmp
+
+    ! checks
+    if(ier /= 0 ) then
+      print *,'error point read:',iread,i
+      print*, 'line: ',trim(line)
+      stop 'error read points from current line'
     endif
+    ! checks if out-of-range
+    if(iread < 1 .or. iread > NPOIN ) then
+      print *,'error at i,iread = ',i,iread
+      stop 'wrong ID input for a point'
+    endif
+
+    ! stores locations
+    x(iread) = xtmp
+    y(iread) = ytmp
+    z(iread) = ztmp
+
   enddo
-  print*,'points: ',iread
+  print*
+  print*,'points read: ',iread
+  print*
 
 ! skip the header
-  read(10,*)
+  !read(10,*)
+  read(10,'(a256)',iostat=ier) line
+  if( line(1:1) /= "*" ) then
+    print*,'  new line: ',trim(line)
+    print*,'  not a header line, check the number of points NPOIN specified'
+    stop 'error reading elements'
+  endif
 
-! read the elements
+! read the elements:
+!   **
+!   ********************************** E L E M E N T S ****************************
+!   *ELEMENT, TYPE=C3D8R, ELSET=elastic_1
   iread = 0
+  ibool(:,:) = 0
   do i = 1,NSPEC
 
+    ! reads in element connectivity
     if(NGNOD == 4) then
 
-!! DK DK ignore other headers for 2D mesh of Eros with fractures, which has multiple material sets
+      ! quadrangles
+
+      !! DK DK ignore other headers for 2D mesh of Eros with fractures, which has multiple material sets
       if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp' &
                  .and. i == 5709) read(10,*)
 
       if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
                  .and. i == 28429) read(10,*)
 
-      read(10,*,iostat=ier) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i)
+      ! reads in line
+      read(10,'(a256)',iostat=ier) line
+      if(ier /= 0 ) then
+        print *,'error read:',iread
+        stop 'error read elements line'
+      endif
+
+      ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
+      do while ( line(1:1) == "*" )
+        ! skips comment line and goes to next line
+        print*,'  comment: ',trim(line)
+        read(10,'(a256)',iostat=ier) line
+        if(ier /= 0 ) then
+          print *,'error read:',i
+          stop 'error read non-comment elements line'
+        endif
+      enddo
+
+      ! gets element connection nodes
+      read(line,*,iostat=ier) iread,n1,n2,n3,n4
+
+      ! checks
       if(ier /= 0 ) then
         print *,'error read:',iread
         stop 'error read elements'
       endif
+      ! requires that elements are in increasing order
+      if(iread /= i) then
+        print *,'error at i,iread = ',i,iread
+        stop 'wrong input ID for an element'
+      endif
+
+      ! stores element nodes
+      ibool(1,iread) = n1
+      ibool(2,iread) = n2
+      ibool(3,iread) = n3
+      ibool(4,iread) = n4
 
     else if(NGNOD == 8) then
+
+      ! hexahedra
 
       if(IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'rego3d_70_disp.inp' &
                  .and. i == 252929) read(10,*)
 
-      ! checks line
+      ! reads in line
       read(10,'(a256)',iostat=ier) line
-      if( line(1:1) == "*" ) then
-        ! skips comment line and goes to next line
-        read(10,'(a256)',iostat=ier) line
-      endif
-      read(line,*,iostat=ier) iread,ibool(1,i),ibool(2,i),ibool(3,i),ibool(4,i),ibool(5,i),ibool(6,i),ibool(7,i),ibool(8,i)
       if(ier /= 0 ) then
         print *,'error read:',iread
-        stop 'error read elements'
+        stop 'error read elements line'
       endif
 
-! if we analyze only the second layer of the mesh and ignore the first, shift iread
-! so that it conforms with i
+      ! checks if line is a comment line (starts with *), and reads until it finds a non-comment line
+      do while ( line(1:1) == "*" )
+        ! skips comment line and goes to next line
+        print*,'  comment: ',trim(line)
+        read(10,'(a256)',iostat=ier) line
+        if(ier /= 0 ) then
+          print *,'error read:',i
+          stop 'error read non-comment elements line'
+        endif
+      enddo
+
+      ! gets element connection nodes
+      read(line,*,iostat=ier) iread,n1,n2,n3,n4,n5,n6,n7,n8
+
+      ! checks
+      if(ier /= 0 ) then
+        print *,'error element read:',i
+        print *,'line: ',trim(line)
+        stop 'error read elements connectivity'
+      endif
+      if( iread < 1 .or. iread > NSPEC ) then
+        print *,'error at i,iread = ',i,iread
+        stop 'wrong input ID for an element'
+      endif
+
+      ! if we analyze only the second layer of the mesh and ignore the first, shift iread
+      ! so that it conforms with i
       if(cubit_mesh_file == 'rego3d_70_disp_bedrock_only.inp') iread = iread - 252928
 
-    endif
+      ! stores element nodes
+      ibool(1,iread) = n1
+      ibool(2,iread) = n2
+      ibool(3,iread) = n3
+      ibool(4,iread) = n4
+      ibool(5,iread) = n5
+      ibool(6,iread) = n6
+      ibool(7,iread) = n7
+      ibool(8,iread) = n8
 
-    if(iread /= i) then
-      print *,'error at i,iread = ',i,iread
-      stop 'wrong input for an element'
     endif
 
   enddo
   close(10)
-  print*,'elements:',iread
-
+  print*
+  print*,'elements read:',iread
+  print*
 
   print *,'done reading the CUBIT file'
   print *
