@@ -18,7 +18,7 @@ echo "running example: `date`"
 currentdir=`pwd`
 
 echo
-echo "(will take about 1h 10 minutes)"
+echo "(will take about 27 minutes)"
 echo
 
 
@@ -40,7 +40,9 @@ cd ../../
 # compiles with flag for a point force (with a ricker source time function)
 cd src/shared/
 cp constants.h constants.h.org
-sed -e "s:USE_FORCE_POINT_SOURCE .*:USE_FORCE_POINT_SOURCE = .true. :" constants.h.org > constants.h
+sed -e "s:USE_FORCE_POINT_SOURCE.*:USE_FORCE_POINT_SOURCE = .true. :" constants.h.org > constants.h.tmp
+sed -e "s:FACTOR_FORCE_SOURCE.*:FACTOR_FORCE_SOURCE = -1.d15 :" constants.h.tmp > constants.h
+rm -f constants.h.tmp
 cd ../../
 make > tmp.log
 

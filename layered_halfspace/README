@@ -25,8 +25,8 @@ open read_cubit_
 
 
   - optional: check mesh quality using check_mesh_quality_CUBIT_Abaqus.f90
-      
-      using the CUBIT GUI: 
+
+      using the CUBIT GUI:
         claro -> Menu "File" -> "Export...", select Abaqus (*.inp)
 
         e.g. export as "layered_halfspace_mesh.inp"
@@ -35,7 +35,7 @@ open read_cubit_
         note 2: do NOT select "Export Using Cubit IDs"
 
       alternatively, using the CUBIT command line:
-        > export Abaqus "layered_halfspace_mesh.inp" Block 1,2,3 overwrite cubitids 
+        > export Abaqus "layered_halfspace_mesh.inp" Block 1,2,3 overwrite cubitids
 
       change directory
         > cd ../..//src/check_mesh_quality_CUBIT_Abaqus/
@@ -109,6 +109,7 @@ open read_cubit_
         turn flag on for parameter USE_FORCE_POINT_SOURCE:
           ...
             logical, parameter :: USE_FORCE_POINT_SOURCE = .true.
+            double precision, parameter :: FACTOR_FORCE_SOURCE = -1.d15
           ...
 
     - compile specfem3D:
@@ -117,9 +118,9 @@ open read_cubit_
     - submit job script:
       > qsub go_solver_pbs.bash
 
-    note: simulation will take about 45 minutes and generate
+    note: simulation will take about 25 minutes and generate
     3 sets (semd,semv,sema) of 672 files in in_out_files/OUTPUT_FILES,
-    as well as 13 timestamp****** files
+    as well as 7 timestamp****** files
 
 Optional:
   Compare the solution traces in the directory
@@ -132,6 +133,6 @@ Optional:
     Uz_file_Ycste_0055.txt  -- Komatitsch and Tromp (1999, Figure 9, top left)
     Uz_file_Ycste_0031.txt  -- Komatitsch and Tromp (1999, Figure 9, bottom left)
 
-  Note: a time shift (~0.33s) is needed to align these given to differences in origin time convention
+  Note: a time shift (~2.53s) is needed to align these given to differences in origin time convention
 
 

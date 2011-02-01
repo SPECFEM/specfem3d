@@ -12,8 +12,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 6000
-DT                              = 0.0065
+NSTEP                           = 3000
+DT                              = 0.0075
 
 # parameters describing the model
 OCEANS                          = .false.
