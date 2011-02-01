@@ -34,6 +34,9 @@ step-by-step tutorial:
 
    - copy this file into directory SPECFEM3D/in_data_files/
      > cp tomography_model.xyz ../../in_data_files/
+     note: this file is read in by subroutine read_model_tomography in
+        SPECFEM3D/src/generate_databases/model_tomography.f90,
+        which is called by get_model.f90
 
    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
      > cd in_data_files/

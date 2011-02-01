@@ -20,32 +20,54 @@ step-by-step tutorial:
      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "2lay_mesh_boundary_fig8.py"
 
      (or select: "2lay_mesh_boundary_fig8-nodoubling.py" for regular mesh without doubling layer)
-
+open read_cubit_
      this creates all the mesh files in subdirectory MESH/
 
 
-  - optional:
-        if you want to check mesh quality (element skewdness, stability criteria)
-        using check_mesh_quality_CUBIT_Abaqus/check_mesh_quality_CUBIT_Abaqus.f90,
-        then Export to Abacus (*.inp) file:
-        claro -> Menu "File" -> "Export..." and select Abaqus (*.inp)
+  - optional: check mesh quality using check_mesh_quality_CUBIT_Abaqus.f90
+      
+      using the CUBIT GUI: 
+        claro -> Menu "File" -> "Export...", select Abaqus (*.inp)
 
         e.g. export as "layered_halfspace_mesh.inp"
 
-        note: only output blocks for volumes, i.e. block ids 1,2,3 for this example here,
-              not for faces
+        note 1: only output blocks for volumes, i.e. block ids 1,2,3 for this example here
+        note 2: do NOT select "Export Using Cubit IDs"
 
-        save number of nodes and number of elements and edit in header of
-        check_mesh_quality_CUBIT_Abaqus.f90:
+      alternatively, using the CUBIT command line:
+        > export Abaqus "layered_halfspace_mesh.inp" Block 1,2,3 overwrite cubitids 
+
+      change directory
+        > cd ../..//src/check_mesh_quality_CUBIT_Abaqus/
+
+      save number of nodes and number of elements and edit in header of
+      check_mesh_quality_CUBIT_Abaqus.f90:
 
             character(len=100), parameter :: cubit_mesh_file = 'layered_halfspace_mesh.inp'
-            integer, parameter :: NPOIN = 44436                   ! number of nodes
-            integer, parameter :: NSPEC = 40500                   ! number of elements (only volumes, i.e. block ids 1,2,3 )
-            integer, parameter :: NGNOD = 8                        ! hexahedral elements
+            integer, parameter :: NPOIN = 76819    ! number of nodes
+            integer, parameter :: NSPEC = 70200    ! number of elements (only volumes, i.e. block ids 1,2,3 )
+            integer, parameter :: NGNOD = 8        ! hexahedral elements
             logical, parameter :: IGNORE_OTHER_HEADERS = .false.
             double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
             double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3
 
+      link Abaqus file
+        > ln -s ../../examples/layered_halfspace/layered_halfspace_mesh.inp .
+
+      compile programs
+        > make
+
+      run program
+        > ../../bin/xcheck_mesh_quality_CUBIT_Abaqus
+      at prompts, enter, for example, 1, then 0.6 to list elements with high skewness
+
+      plot skewness histogram as ps file
+        > gnuplot
+        > load "plot_mesh_quality_histogram.gnu"
+        > set term postscript color solid
+        > set output 'hist_skewness.ps'
+        > replot
+        > quit
 
 2. decompose mesh files:
 
@@ -61,7 +83,7 @@ step-by-step tutorial:
 
 3. generate databases:
 
-    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
+    - copy example files Par_file, CMTSOLUTION & STATIONS to SPECFEM3D/in_data_files/
       > cd examples/layered_halfspace/in_data_files
       > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
       > cd SPECFEM3D
@@ -72,9 +94,13 @@ step-by-step tutorial:
     - submit job script:
       > qsub go_generate_databases_pbs.bash
 
-    (note: if execution fails due to memory shortage - most likely fails when calling routine to
+      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+      in directory in_out_files/DATABASES_MPI/.
+      (note: if execution fails due to memory shortage - most likely fails when calling routine to
            create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
 
+      optional: load a set of .vtk files into paraview to view model, mesh, and partitioning
+      (note: must have Par_file option SAVE_MESH_FILES = .true.)
 
 4. run simulation:
 
