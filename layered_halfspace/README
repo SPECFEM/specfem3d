@@ -119,7 +119,7 @@ open read_cubit_
       > qsub go_solver_pbs.bash
 
     note: simulation will take about 25 minutes and generate
-    3 sets (semd,semv,sema) of 672 files in in_out_files/OUTPUT_FILES,
+    3 sets (semd,semv,sema) of 6 seismogram files in in_out_files/OUTPUT_FILES,
     as well as 7 timestamp****** files
 
 Optional:

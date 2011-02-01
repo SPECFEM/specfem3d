@@ -75,7 +75,7 @@ step-by-step tutorial:
 
      the simulation will take about 10 minutes
      when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 18 (ls -1 *semd | wc) in directory in_out_files/OUTPUT_FILES,
+     of 18 (ls -1 *semd | wc) seismogram files in directory in_out_files/OUTPUT_FILES,
      as well as 9 timestamp****** files
 
 ===========================================================

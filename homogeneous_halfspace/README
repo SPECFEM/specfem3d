@@ -107,7 +107,7 @@ step-by-step tutorial:
              generated in in_out_files/OUTPUT_FILES/
 
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 672 (ls -1 *semd | wc) file in the directory in_out_files/OUTPUT_FILES,
+     of 18 (ls -1 *semd | wc) seismogram files in the directory in_out_files/OUTPUT_FILES,
      as well as 3 timestamp****** files
 
 
