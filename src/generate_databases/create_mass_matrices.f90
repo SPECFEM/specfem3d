@@ -128,7 +128,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine create_mass_matrices_ocean_load(nglob,nspec,ibool,OCEANS,&
+  subroutine create_mass_matrices_ocean_load(nglob,nspec,ibool,OCEANS,TOPOGRAPHY, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)
@@ -138,23 +138,22 @@
   use create_regions_mesh_ext_par
   implicit none
 
-! number of spectral elements in each block
+  ! number of spectral elements in each block
   integer :: nspec
   integer :: nglob
 
-! arrays with the mesh global indices
+  ! arrays with the mesh global indices
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  logical :: OCEANS
+  logical :: OCEANS,TOPOGRAPHY
 
-! use integer array to store topography values
+  ! use integer array to store topography values
   integer :: UTM_PROJECTION_ZONE
   logical :: SUPPRESS_UTM_PROJECTION
   integer :: NX_TOPO,NY_TOPO
   double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
 
-
-! local parameters
+  ! local parameters
   double precision :: weight
   double precision :: xval,yval,long,lat,elevation
   double precision :: height_oceans
@@ -162,7 +161,7 @@
   integer :: ix_oceans,iy_oceans,iz_oceans,ispec_oceans,ispec2D,igll,iglobnum
   integer :: icornerlong,icornerlat
 
-! creates ocean load mass matrix
+  ! creates ocean load mass matrix
   if(OCEANS) then
 
     ! adding ocean load mass matrix at ocean bottom
@@ -190,44 +189,52 @@
           iglobnum=ibool(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
 
           ! compute local height of oceans
+          if( TOPOGRAPHY ) then
+            ! takes elevation from topography file
+            ! get coordinates of current point
+            xval = xstore_dummy(iglobnum)
+            yval = ystore_dummy(iglobnum)
 
-          ! get coordinates of current point
-          xval = xstore_dummy(iglobnum)
-          yval = ystore_dummy(iglobnum)
+            ! project x and y in UTM back to long/lat since topo file is in long/lat
+            call utm_geo(long,lat,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
 
-          ! project x and y in UTM back to long/lat since topo file is in long/lat
-          call utm_geo(long,lat,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+            ! get coordinate of corner in bathy/topo model
+            icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+            icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 
-          ! get coordinate of corner in bathy/topo model
-          icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
-          icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
+            ! avoid edge effects and extend with identical point if outside model
+            if(icornerlong < 1) icornerlong = 1
+            if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+            if(icornerlat < 1) icornerlat = 1
+            if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
 
-          ! avoid edge effects and extend with identical point if outside model
-          if(icornerlong < 1) icornerlong = 1
-          if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-          if(icornerlat < 1) icornerlat = 1
-          if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+            ! compute coordinates of corner
+            long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
+            lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
 
-          ! compute coordinates of corner
-          long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
-          lat_corner = ORIG_LAT_TOPO + (icornerlat-1)*DEGREES_PER_CELL_TOPO
+            ! compute ratio for interpolation
+            ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
+            ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
 
-          ! compute ratio for interpolation
-          ratio_xi = (long - long_corner) / DEGREES_PER_CELL_TOPO
-          ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
+            ! avoid edge effects
+            if(ratio_xi < 0.) ratio_xi = 0.
+            if(ratio_xi > 1.) ratio_xi = 1.
+            if(ratio_eta < 0.) ratio_eta = 0.
+            if(ratio_eta > 1.) ratio_eta = 1.
 
-          ! avoid edge effects
-          if(ratio_xi < 0.) ratio_xi = 0.
-          if(ratio_xi > 1.) ratio_xi = 1.
-          if(ratio_eta < 0.) ratio_eta = 0.
-          if(ratio_eta > 1.) ratio_eta = 1.
+            ! interpolate elevation at current point
+            elevation = &
+                  itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+                  itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+                  itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+                  itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
-          ! interpolate elevation at current point
-          elevation = &
-                itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-                itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-                itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-                itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+          else
+
+            ! takes elevation from z-coordinate of mesh point
+            elevation = zstore_dummy(iglobnum)
+
+          endif
 
           ! suppress positive elevation, which means no oceans
           if(elevation >= - MINIMUM_THICKNESS_3D_OCEANS) then

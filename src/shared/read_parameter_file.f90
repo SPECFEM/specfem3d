@@ -27,7 +27,7 @@
   subroutine read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
@@ -44,7 +44,7 @@
 
   double precision DT,HDUR_MOVIE
 
-  logical ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,ABSORBING_CONDITIONS,SAVE_FORWARD
+  logical ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
@@ -94,6 +94,8 @@
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
   call read_value_logical(OCEANS, 'model.OCEANS')
+  if(err_occurred() /= 0) return
+  call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY')
   if(err_occurred() /= 0) return
   call read_value_logical(ATTENUATION, 'model.ATTENUATION')
   if(err_occurred() /= 0) return

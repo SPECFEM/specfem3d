@@ -205,8 +205,8 @@ $O/model_tomography.o:  ${SHARED}/constants.h model_tomography.f90
 $O/model_aniso.o:  ${SHARED}/constants.h model_aniso.f90
 	${FCCOMPILE_CHECK} -c -o $O/model_aniso.o model_aniso.f90
 
-$O/serial.o:  ${SHARED}/constants.h exit_mpi.f90
-	${FCCOMPILE_CHECK} -c -o $O/serial.o serial.f90
+$O/serial.o:  ${SHARED}/constants.h ${SHARED}/serial.f90
+	${FCCOMPILE_CHECK} -c -o $O/serial.o ${SHARED}/serial.f90
 
 $O/program_generate_databases.o: program_generate_databases.f90
 	${FCCOMPILE_CHECK} -c -o $O/program_generate_databases.o program_generate_databases.f90

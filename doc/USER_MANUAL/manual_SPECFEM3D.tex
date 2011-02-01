@@ -857,6 +857,11 @@ requirements and CPU time. This approximation is accurate at periods
 of roughly 20~s and longer. At shorter periods the effect of water
 phases/reverberations is not taken into account, even when the flag
 is on.
+\item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{OCEANS} is set to \texttt{.true.}.
+Set to \texttt{.true.} if topography and
+bathymetry should be read in based upon the topography file specified in the main
+constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/} to evaluate
+elevations. If not set, elevations will be read from the numerical mesh.
 \item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
 be incorporated. Turning this feature on increases the memory requirements
 significantly (roughly by a factor of~1.5), and is numerically fairly

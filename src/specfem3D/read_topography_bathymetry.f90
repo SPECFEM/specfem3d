@@ -33,8 +33,7 @@
 
 ! read topography and bathymetry file
 
-!  if(TOPOGRAPHY .or. OCEANS) then
-  if(OCEANS) then
+  if( OCEANS .and. TOPOGRAPHY ) then
 
     NX_TOPO = NX_TOPO_SOCAL
     NY_TOPO = NY_TOPO_SOCAL

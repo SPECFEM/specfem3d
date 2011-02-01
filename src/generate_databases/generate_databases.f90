@@ -222,7 +222,7 @@
   double precision :: DT,HDUR_MOVIE
 
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
-          OCEANS, SAVE_FORWARD
+          OCEANS, TOPOGRAPHY, SAVE_FORWARD
   logical :: ANISOTROPY,ABSORBING_CONDITIONS,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
@@ -366,7 +366,7 @@
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        OCEANS,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
@@ -470,6 +470,7 @@
     write(IMAIN,*)
     if(OCEANS) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
+      if( TOPOGRAPHY ) write(IMAIN,*) ' with elevation from topography file'
     else
       write(IMAIN,*) 'no oceans'
     endif
@@ -491,17 +492,18 @@
   use generate_databases_par
   implicit none
 
-  allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
-  if(OCEANS) then
+  if( OCEANS .and. TOPOGRAPHY ) then
 
-! for Southern California
+    ! for Southern California
     NX_TOPO = NX_TOPO_SOCAL
     NY_TOPO = NY_TOPO_SOCAL
     ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
     ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
     DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
     topo_file = TOPO_FILE_SOCAL
+
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
 
     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
 
@@ -510,6 +512,11 @@
       write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
       write(IMAIN,*)
     endif
+  else
+    NX_TOPO = 1
+    NY_TOPO = 1
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+
   endif
 
 !! read basement map
@@ -822,7 +829,8 @@
                         nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
                         nodes_ibelm_bottom,nodes_ibelm_top, &
                         SAVE_MESH_FILES,nglob, &
-                        ANISOTROPY,NPROC,OCEANS,ATTENUATION,USE_OLSEN_ATTENUATION, &
+                        ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)

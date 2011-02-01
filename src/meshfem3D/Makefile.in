@@ -44,10 +44,10 @@ FLAGS_CHECK = @FLAGS_CHECK@
 FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
 
-FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) 
-FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) 
-MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) 
-MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK) 
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK)
+FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK)
+MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK)
 @COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_NO_CHECK)
 @COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
 
@@ -148,7 +148,7 @@ meshfem3D: xmeshfem3D
 
 
 clean:
-	rm -f $O/* *.o xmeshfem3D 
+	rm -f $O/* *.o xmeshfem3D
 
 ###
 ### rule for the archive library
@@ -168,88 +168,88 @@ $L/libmeshfem.a: $(libmeshfem_a_OBJECTS)
 ### MPI compilation without optimization
 ###
 
-$O/parallel.o: ${SHARED}constants.h parallel.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o parallel.f90 
+$O/parallel.o: ${SHARED}constants.h ${SHARED}/parallel.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o ${SHARED}/parallel.f90
 
 ###
 ### serial compilation without optimization
 ###
 
-$O/serial.o: ${SHARED}constants.h ${SHARED}/exit_mpi.f90
-	${FCCOMPILE_CHECK} -c -o $O/serial.o serial.f90 
+$O/serial.o: ${SHARED}constants.h ${SHARED}/serial.f90
+	${FCCOMPILE_CHECK} -c -o $O/serial.o ${SHARED}/serial.f90
 
 $O/program_meshfem3D.o: program_meshfem3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/program_meshfem3D.o program_meshfem3D.f90 
+	${FCCOMPILE_CHECK} -c -o $O/program_meshfem3D.o program_meshfem3D.f90
 
 $O/meshfem3D.o: ${SHARED}constants.h meshfem3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/meshfem3D.o meshfem3D.f90 
+	${FCCOMPILE_CHECK} -c -o $O/meshfem3D.o meshfem3D.f90
 
 $O/exit_mpi.o: ${SHARED}constants.h ${SHARED}/exit_mpi.f90
-	${FCCOMPILE_CHECK} -c -o $O/exit_mpi.o ${SHARED}/exit_mpi.f90 
+	${FCCOMPILE_CHECK} -c -o $O/exit_mpi.o ${SHARED}/exit_mpi.f90
 
 $O/read_parameter_file.o: ${SHARED}constants.h read_parameter_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_parameter_file.o read_parameter_file.f90 
+	${FCCOMPILE_CHECK} -c -o $O/read_parameter_file.o read_parameter_file.f90
 
 $O/read_value_parameters.o: ${SHARED}constants.h read_value_parameters.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_value_parameters.o read_value_parameters.f90 
+	${FCCOMPILE_CHECK} -c -o $O/read_value_parameters.o read_value_parameters.f90
 
 $O/get_value_parameters.o: ${SHARED}constants.h get_value_parameters.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_value_parameters.o get_value_parameters.f90 
+	${FCCOMPILE_CHECK} -c -o $O/get_value_parameters.o get_value_parameters.f90
 
-$O/utm_geo.o: ${SHARED}constants.h utm_geo.f90
-	${FCCOMPILE_CHECK} -c -o $O/utm_geo.o utm_geo.f90 
+$O/utm_geo.o: ${SHARED}constants.h ${SHARED}/utm_geo.f90
+	${FCCOMPILE_CHECK} -c -o $O/utm_geo.o ${SHARED}/utm_geo.f90
 
 $O/compute_parameters.o: ${SHARED}constants.h compute_parameters.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_parameters.o compute_parameters.f90 
+	${FCCOMPILE_CHECK} -c -o $O/compute_parameters.o compute_parameters.f90
 
 $O/store_coords.o: ${SHARED}constants.h store_coords.f90
-	${FCCOMPILE_CHECK} -c -o $O/store_coords.o store_coords.f90 
+	${FCCOMPILE_CHECK} -c -o $O/store_coords.o store_coords.f90
 
 $O/store_boundaries.o: ${SHARED}constants.h store_boundaries.f90
-	${FCCOMPILE_CHECK} -c -o $O/store_boundaries.o store_boundaries.f90 
+	${FCCOMPILE_CHECK} -c -o $O/store_boundaries.o store_boundaries.f90
 
 $O/get_flags_boundaries.o: ${SHARED}constants.h get_flags_boundaries.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_flags_boundaries.o get_flags_boundaries.f90 
+	${FCCOMPILE_CHECK} -c -o $O/get_flags_boundaries.o get_flags_boundaries.f90
 
 $O/get_MPI_cutplanes_xi.o: ${SHARED}constants.h get_MPI_cutplanes_xi.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_MPI_cutplanes_xi.o get_MPI_cutplanes_xi.f90 
+	${FCCOMPILE_CHECK} -c -o $O/get_MPI_cutplanes_xi.o get_MPI_cutplanes_xi.f90
 
 $O/get_MPI_cutplanes_eta.o: ${SHARED}constants.h get_MPI_cutplanes_eta.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_MPI_cutplanes_eta.o get_MPI_cutplanes_eta.f90 
+	${FCCOMPILE_CHECK} -c -o $O/get_MPI_cutplanes_eta.o get_MPI_cutplanes_eta.f90
 
 $O/get_cmt.o: ${SHARED}constants.h get_cmt.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90 
+	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90
 
 $O/get_global.o: ${SHARED}constants.h get_global.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90 
+	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
 
-$O/hex_nodes.o: ${SHARED}constants.h hex_nodes.f90
-	${FCCOMPILE_CHECK} -c -o $O/hex_nodes.o hex_nodes.f90 
+$O/hex_nodes.o: ${SHARED}constants.h ${SHARED}/hex_nodes.f90
+	${FCCOMPILE_CHECK} -c -o $O/hex_nodes.o ${SHARED}/hex_nodes.f90
 
 $O/save_databases.o: ${SHARED}constants.h save_databases.f90
-	${FCCOMPILE_CHECK} -c -o $O/save_databases.o save_databases.f90 
+	${FCCOMPILE_CHECK} -c -o $O/save_databases.o save_databases.f90
 
-$O/read_topo_bathy_file.o: ${SHARED}constants.h read_topo_bathy_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o read_topo_bathy_file.f90 
+$O/read_topo_bathy_file.o: ${SHARED}constants.h ${SHARED}/read_topo_bathy_file.f90
+	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o ${SHARED}/read_topo_bathy_file.f90
 
 $O/create_regions_mesh.o: ${SHARED}constants.h create_regions_mesh.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90 
+	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
 
 $O/create_name_database.o: ${SHARED}constants.h create_name_database.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o create_name_database.f90 
+	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o create_name_database.f90
 
 $O/define_subregions.o: ${SHARED}constants.h define_subregions.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90 
+	${FCCOMPILE_CHECK} -c -o $O/define_subregions.o define_subregions.f90
 
 $O/define_subregions_heuristic.o: ${SHARED}constants.h define_subregions_heuristic.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90 
+	${FCCOMPILE_CHECK} -c -o $O/define_subregions_heuristic.o define_subregions_heuristic.f90
 
 $O/define_superbrick.o: ${SHARED}constants.h define_superbrick.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_superbrick.o define_superbrick.f90 
- 
+	${FCCOMPILE_CHECK} -c -o $O/define_superbrick.o define_superbrick.f90
+
 $O/check_mesh_quality.o: ${SHARED}constants.h check_mesh_quality.f90
-	${FCCOMPILE_CHECK} -c -o $O/check_mesh_quality.o check_mesh_quality.f90 
+	${FCCOMPILE_CHECK} -c -o $O/check_mesh_quality.o check_mesh_quality.f90
 
 $O/create_visual_files.o: ${SHARED}constants.h create_visual_files.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_visual_files.o create_visual_files.f90 
+	${FCCOMPILE_CHECK} -c -o $O/create_visual_files.o create_visual_files.f90
 

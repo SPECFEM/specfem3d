@@ -553,6 +553,26 @@
 !----
 !
 
+  subroutine maxloc_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  double precision, dimension(2) :: sendbuf,recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,MPI_2DOUBLE_PRECISION, &
+                  MPI_MAXLOC,MPI_COMM_WORLD,ier)
+
+  end subroutine maxloc_all_dp
+
+
+!
+!----
+!
+
 
   subroutine sum_all_dp(sendbuf, recvbuf)
 
@@ -860,6 +880,102 @@
 !
 !----
 !
+
+  subroutine send_i_t(sendbuf,sendcount,dest)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  integer :: dest,sendcount,ier
+  integer :: tag = 100
+  integer, dimension(sendcount) :: sendbuf
+
+  ! MPI status of messages to be received
+  integer msg_status(MPI_STATUS_SIZE)
+
+  call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,tag, &
+       MPI_COMM_WORLD,msg_status,ier)
+
+  end subroutine send_i_t
+
+!
+!----
+!
+
+
+  subroutine recv_i_t(recvbuf,recvcount,source)
+
+  implicit none
+
+  ! standard include of the MPI library
+  include 'mpif.h'
+
+  integer :: source,recvcount,ier
+  integer :: tag = 100
+  integer, dimension(recvcount) :: recvbuf
+
+  ! MPI status of messages to be received
+  integer msg_status(MPI_STATUS_SIZE)
+
+  call MPI_RECV(recvbuf,recvcount,MPI_INTEGER,source,tag, &
+       MPI_COMM_WORLD,msg_status,ier)
+
+  end subroutine recv_i_t
+
+
+!
+!----
+!
+!
+!  subroutine send_dp_t(sendbuf,sendcount,dest)
+!
+!  implicit none
+!
+!  ! standard include of the MPI library
+!  include 'mpif.h'
+!
+!  integer :: dest,sendcount,ier
+!  integer :: tag = 100
+!  double precision, dimension(sendcount) :: sendbuf
+!
+!  ! MPI status of messages to be received
+!  integer msg_status(MPI_STATUS_SIZE)
+!
+!  call MPI_SEND(sendbuf,sendcount,MPI_DOUBLE_PRECISION,dest,tag, &
+!       MPI_COMM_WORLD,msg_status,ier)
+!
+!  end subroutine send_dp_t
+!
+!
+!----
+!
+!
+!  subroutine recv_dp_t(recvbuf,recvcount,source)
+!
+!  implicit none
+!
+!  ! standard include of the MPI library
+!  include 'mpif.h'
+!
+!  integer :: recvcount,source,ier
+!  integer :: tag = 100
+!  double precision, dimension(recvcount) :: recvbuf
+!
+!  ! MPI status of messages to be received
+!  integer msg_status(MPI_STATUS_SIZE)
+!
+!  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,source,tag, &
+!       MPI_COMM_WORLD,msg_status,ier)
+!
+!  end subroutine recv_dp_t
+!
+!
+!
+!----
+!
+
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
