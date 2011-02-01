@@ -127,7 +127,8 @@ subroutine create_regions_mesh_ext(ibool, &
                         nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
                         nodes_ibelm_bottom,nodes_ibelm_top, &
                         SAVE_MESH_FILES,nglob, &
-                        ANISOTROPY,NPROC,OCEANS,ATTENUATION,USE_OLSEN_ATTENUATION, &
+                        ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)
@@ -198,7 +199,7 @@ subroutine create_regions_mesh_ext(ibool, &
 
   logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
-  logical :: OCEANS
+  logical :: OCEANS,TOPOGRAPHY
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION
 
 ! use integer array to store topography values
@@ -329,7 +330,7 @@ subroutine create_regions_mesh_ext(ibool, &
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating ocean load mass matrix '
   endif
-  call create_mass_matrices_ocean_load(nglob,nspec,ibool,OCEANS,&
+  call create_mass_matrices_ocean_load(nglob,nspec,ibool,OCEANS,TOPOGRAPHY, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)

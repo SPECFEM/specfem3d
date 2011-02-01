@@ -167,7 +167,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
 
   if((myrank == skewness_max_rank) .and. (myrank /= 0)) then
-     call send_i(ispec_max_skewness,1,0)
+     call send_i_t(ispec_max_skewness,1,0)
   end if
 
 
@@ -175,7 +175,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
 
      if(skewness_max_rank /= myrank) then
-        call recv_i(ispec_max_skewness_MPI,1,skewness_max_rank)
+        call recv_i_t(ispec_max_skewness_MPI,1,skewness_max_rank)
      else
         ispec_max_skewness_MPI = ispec_max_skewness
      end if

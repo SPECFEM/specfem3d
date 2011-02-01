@@ -258,50 +258,7 @@
 
   end subroutine max_all_cr
 
-!
-!----
-!
 
-  subroutine max_all_all_cr(sendbuf, recvbuf)
-
-  implicit none
-
-  include "constants.h"
-
-  real(kind=CUSTOM_REAL) sendbuf, recvbuf
-
-  recvbuf = sendbuf
-
-  end subroutine max_all_all_cr
-
-!
-!----
-!
-
-  subroutine max_all_all_dp(sendbuf, recvbuf)
-
-  implicit none
-
-  double precision :: sendbuf, recvbuf
-
-  recvbuf = sendbuf
-
-  end subroutine max_all_all_dp
-
-
-!
-!----
-!
-!
-!  subroutine min_all_all_dp(sendbuf, recvbuf)
-!
-!  implicit none
-!
-!  double precision :: sendbuf, recvbuf
-!
-!  recvbuf = sendbuf
-!
-!  end subroutine min_all_all_dp
 !
 !----
 !
@@ -337,6 +294,20 @@
 !
 !----
 !
+!
+!  subroutine min_all_all_dp(sendbuf, recvbuf)
+!
+!  implicit none
+!
+!  double precision :: sendbuf, recvbuf
+!
+!  recvbuf = sendbuf
+!
+!  end subroutine min_all_all_dp
+!
+!----
+!
+
 
   subroutine max_all_i(sendbuf, recvbuf)
 
@@ -351,6 +322,37 @@
 !----
 !
 
+  subroutine max_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+  include "constants.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine max_all_all_cr
+
+!
+!----
+!
+
+  subroutine max_all_all_dp(sendbuf, recvbuf)
+
+  implicit none
+
+  double precision :: sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine max_all_all_dp
+
+
+!
+!----
+!
+
   subroutine min_all_i(sendbuf, recvbuf)
 
   implicit none
@@ -359,6 +361,20 @@
   recvbuf = sendbuf
 
   end subroutine min_all_i
+
+!
+!----
+!
+
+  subroutine maxloc_all_dp(sendbuf, recvbuf)
+
+  implicit none
+  double precision, dimension(2) :: sendbuf,recvbuf
+
+  recvbuf(1) = sendbuf(1)  ! maximum value
+  recvbuf(2) = sendbuf(2)  ! index of myrank 0
+
+  end subroutine maxloc_all_dp
 
 !
 !----
@@ -456,7 +472,9 @@
 !
 
   integer function proc_null()
+
   proc_null = 0
+
   end function proc_null
 
 !
@@ -574,6 +592,70 @@
   end subroutine send_i
 
 
+!
+!----
+!
+
+  subroutine send_i_t(sendbuf,sendcount,dest)
+
+  implicit none
+
+  integer :: dest,sendcount
+  integer, dimension(sendcount) :: sendbuf
+
+  stop 'send_i_t not implemented for serial code'
+
+  end subroutine send_i_t
+
+!
+!----
+!
+
+
+  subroutine recv_i_t(recvbuf,recvcount,source)
+
+  implicit none
+
+  integer :: source,recvcount
+  integer, dimension(recvcount) :: recvbuf
+
+  stop 'recv_i_t not implemented for serial code'
+
+  end subroutine recv_i_t
+
+
+!
+!----
+!
+!
+!
+!  subroutine send_dp_t(sendbuf,sendcount,dest)
+!
+!  implicit none
+!
+!  integer :: dest,sendcount
+!  double precision, dimension(sendcount) :: sendbuf
+!
+!  stop 'send_dp_t not implemented for serial code'
+!
+!  end subroutine send_dp_t
+!
+!
+!----
+!
+
+!  subroutine recv_dp_t(recvbuf,recvcount,source)
+!
+!  implicit none
+!
+!  integer :: recvcount,source
+!  double precision, dimension(recvcount) :: recvbuf
+!
+!  stop 'recv_dp_t not implemented for serial code'
+!
+!  end subroutine recv_dp_t
+!
+!
 !
 !----
 !
