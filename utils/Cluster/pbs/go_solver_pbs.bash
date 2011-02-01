@@ -4,7 +4,7 @@
 ## job name and output file
 #PBS -N go_solver
 #PBS -j oe
-#PBS -o in_out_files/OUTPUT_FILES/job.o
+#PBS -o in_out_files/OUTPUT_FILES/$PBS_JOBID.o
 
 ###########################################################
 # USER PARAMETERS
@@ -32,7 +32,7 @@ cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
 cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
 
 rm -rf in_out_files/OUTPUT_FILES/src
-cp -rp ./src OUTPUT_FILES/
+cp -rp ./src in_out_files/OUTPUT_FILES/
 
 # obtain lsf job information
 cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
