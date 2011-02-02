@@ -11,20 +11,28 @@ step-by-step tutorial:
 
 0. run the example in the directory homogeneous_halfspace
 
-1. create mesh:
+1. copy three input files from examples directory into SPECFEM3D/in_data_files/:
 
-   - run cubit GUI:
+     > cd examples/layered_halfspace/in_data_files/
+     > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+
+
+2. create mesh:
+
+   - from the directory SPECFEM3D/examples/layered_halfspace,
+     open cubit GUI:
+
      > claro
 
      then run meshing script:
      claro -> Menu "Tools" -> "Play Journal File" ... and select file: "2lay_mesh_boundary_fig8.py"
 
      (or select: "2lay_mesh_boundary_fig8-nodoubling.py" for regular mesh without doubling layer)
-open read_cubit_
+
      this creates all the mesh files in subdirectory MESH/
 
 
-  - optional: check mesh quality using check_mesh_quality_CUBIT_Abaqus.f90
+   - optional: check mesh quality using check_mesh_quality_CUBIT_Abaqus.f90
 
       using the CUBIT GUI:
         claro -> Menu "File" -> "Export...", select Abaqus (*.inp)
@@ -37,28 +45,26 @@ open read_cubit_
       alternatively, using the CUBIT command line:
         > export Abaqus "layered_halfspace_mesh.inp" Block 1,2,3 overwrite cubitids
 
-      change directory
-        > cd ../..//src/check_mesh_quality_CUBIT_Abaqus/
+      change directory:
+        > cd ../../src/check_mesh_quality_CUBIT_Abaqus/
 
       save number of nodes and number of elements and edit in header of
       check_mesh_quality_CUBIT_Abaqus.f90:
 
-            character(len=100), parameter :: cubit_mesh_file = 'layered_halfspace_mesh.inp'
-            integer, parameter :: NPOIN = 76819    ! number of nodes
-            integer, parameter :: NSPEC = 70200    ! number of elements (only volumes, i.e. block ids 1,2,3 )
-            integer, parameter :: NGNOD = 8        ! hexahedral elements
-            logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-            double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
-            double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3
+        character(len=100), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
+        integer, parameter :: NPOIN = 76819    ! number of nodes
+        integer, parameter :: NSPEC = 70200    ! number of elements (only volumes, i.e. block ids 1,2,3 )
+        integer, parameter :: NGNOD = 8        ! hexahedral elements
+        logical, parameter :: IGNORE_OTHER_HEADERS = .false.
+        double precision, parameter :: delta_t = 0.005         ! arbitrary, initial guess
+        double precision, parameter :: VP_MAX = 7500.d0        ! maximum vp in volume block id 3
 
-      link Abaqus file
-        > ln -s ../../examples/layered_halfspace/layered_halfspace_mesh.inp .
+      compile programs in SPECFEM3D:
+        > cd ../../
+        > make xcheck_mesh_quality_CUBIT_Abaqus
 
-      compile programs
-        > make
-
-      run program
-        > ../../bin/xcheck_mesh_quality_CUBIT_Abaqus
+      run program:
+        > ./bin/xcheck_mesh_quality_CUBIT_Abaqus
       at prompts, enter, for example, 1, then 0.6 to list elements with high skewness
 
       plot skewness histogram as ps file
@@ -69,24 +75,20 @@ open read_cubit_
         > replot
         > quit
 
-2. decompose mesh files:
 
-    - run decomposer in directory bin/:
-      (example assumes 4 partitions with mesh files in examples/layered_halfspace/MESH/)
-      > cd SPECFEM3D
-      > make
-      > ./bin/xdecompose_mesh_SCOTCH 4 examples/layered_halfspace/MESH/ in_out_files/DATABASES_MPI/
+3. decompose mesh files:
+
+    - set mesh directory in go_decomposer_pbs.bash to:
+      MESHDIR=examples/layered_halfspace/MESH/
+
+    - run decomposer:
+      > qsub go_decomposer_pbs.bash
 
       which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
       you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
 
 
-3. generate databases:
-
-    - copy example files Par_file, CMTSOLUTION & STATIONS to SPECFEM3D/in_data_files/
-      > cd examples/layered_halfspace/in_data_files
-      > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
-      > cd SPECFEM3D
+4. generate databases:
 
     - compile generate_databases:
       > make xgenerate_databases
@@ -102,7 +104,8 @@ open read_cubit_
       optional: load a set of .vtk files into paraview to view model, mesh, and partitioning
       (note: must have Par_file option SAVE_MESH_FILES = .true.)
 
-4. run simulation:
+
+5. run simulation:
 
     - modify src/shared/constants.h:
         to use a vertical force source, with a Ricker wavelet source time function,

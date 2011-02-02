@@ -11,7 +11,13 @@ step-by-step tutorial:
 
 0. run the example in the directory homogeneous_halfspace
 
-1. create mesh:
+1. copy three input files from examples directory into SPECFEM3D/in_data_files/
+
+     > cd examples/waterlayered_halfspace/in_data_files/
+     > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+
+
+2. create mesh:
 
    - run cubit GUI:
      > claro
@@ -24,24 +30,19 @@ step-by-step tutorial:
      this creates all the mesh files in subdirectory MESH/
 
 
-2. decompose mesh files:
+3. decompose mesh files:
 
-    - run decomposer
-      (example assumes 4 partitions with mesh files in examples/waterlayered_halfspace/MESH/)
-      > cd SPECFEM3D
-      > make
-      > ./bin/xdecompose_mesh_SCOTCH 4 examples/waterlayered_halfspace/MESH/ in_out_files/DATABASES_MPI/
+    - set mesh directory in go_decomposer_pbs.bash to:
+      MESHDIR=examples/waterlayered_halfspace/MESH/
+
+    - run decomposer:
+      > qsub go_decomposer_pbs.bash
 
       which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
       you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
 
 
-3. generate databases:
-
-    - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
-      > cd examples/waterlayered_halfspace/in_data_files
-      > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
-      > cd SPECFEM3D
+4. generate databases:
 
     - compile generate_databases:
       > make xgenerate_databases
@@ -49,11 +50,13 @@ step-by-step tutorial:
     - submit job script:
       > qsub go_generate_databases_pbs.bash
 
-    (note: if execution fails due to memory shortage - most likely fails when calling routine to
+      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+      in directory in_out_files/DATABASES_MPI/.
+      (note: if execution fails due to memory shortage - most likely fails when calling routine to
            create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
 
 
-4. run simulation:
+5. run simulation:
 
     - compile specfem3D:
       > make xspecfem3D

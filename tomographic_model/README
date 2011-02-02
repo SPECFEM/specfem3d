@@ -9,12 +9,15 @@ step-by-step tutorial:
 
 0. run the example in the directory homogeneous_halfspace
 
-1. create mesh:
+1. copy three input files from examples directory into SPECFEM3D/in_data_files/:
+     > cd examples/tomographic_model/in_data_files/
+     > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
 
-   - change to the examples directory SPECFEM3D/examples/tomographic_model:
-     > cd examples/tomographic_model
 
-   - open the cubit GUI:
+2. create mesh:
+
+   - from the directory SPECFEM3D/examples/tomographic_model,
+     open the cubit GUI:
      > claro (or cubit)
 
      then run meshing script:
@@ -24,7 +27,7 @@ step-by-step tutorial:
      note: this is a simple uniform block mesh
 
 
-2. create tomography_model file:
+3. create tomography_model file:
 
    - in examples/tomographic_model, run bash script:
      > sh create_tomography_model_file.sh
@@ -32,31 +35,27 @@ step-by-step tutorial:
     which creates an example model: tomography_model.xyz
     ( elastic model with a constant velocity gradient with depth)
 
-   - copy this file into directory SPECFEM3D/in_data_files/
+   - copy (or link) this file into directory SPECFEM3D/in_data_files/
      > cp tomography_model.xyz ../../in_data_files/
+
      note: this file is read in by subroutine read_model_tomography in
         SPECFEM3D/src/generate_databases/model_tomography.f90,
         which is called by get_model.f90
 
-   - copy Par_file, CMTSOLUTION & STATIONS files provided in this examples directory to SPECFEM3D/in_data_files/
-     > cd in_data_files/
-     > cp * ../../../in_data_files/
-     note: these are needed prior to running xgenerate_databases
 
+4. decompose mesh files:
 
-3. decompose mesh files:
+    - set mesh directory in go_decomposer_pbs.bash to:
+      MESHDIR=examples/tomographic_model/MESH/
 
-    - run decomposer
-      (example assumes 4 partitions with mesh files in examples/tomographic_model/MESH/)
-      > cd SPECFEM3D
-      > make
-      > ./bin/xdecompose_mesh_SCOTCH 4 examples/tomographic_model/MESH/ in_out_files/DATABASES_MPI/
+    - run decomposer:
+      > qsub go_decomposer_pbs.bash
 
       which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
       you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
 
 
-4. generate databases:
+5. generate databases:
 
    - compile generate_databases from SPECFEM3D/ :
      > make xgenerate_databases
@@ -65,7 +64,7 @@ step-by-step tutorial:
      > qsub go_generate_databases_pbs.bash
 
 
-5. run simulation:
+6. run simulation:
 
    - compile specfem3D:
      > make xspecfem3D
