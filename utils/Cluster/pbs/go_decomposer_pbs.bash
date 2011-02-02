@@ -11,6 +11,7 @@
 
 ## 1 CPU, walltime 1 hour
 #PBS -l nodes=1:ppn=1,walltime=1:00:00
+##PBS -q debug
 
 ###########################################################
 
@@ -28,6 +29,8 @@ echo starting decomposer for $numnodes partitions
 echo " "
 
 # USER CHANGE MESH DIRECTORY
-./bin/xdecompose_mesh_SCOTCH $numnodes examples/homogeneous_halfspace/MESH/ in_out_files/DATABASES_MPI/
+MESHDIR=examples/homogeneous_halfspace/MESH/
+
+./bin/xdecompose_mesh_SCOTCH $numnodes $MESHDIR in_out_files/DATABASES_MPI/
 
 echo "done "

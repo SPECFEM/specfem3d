@@ -108,7 +108,7 @@
 !                 Cubit -> File -> Export... Abacus (*.inp)
 !                                         ( block ids: 1 2 3 ) volumes only
 !                                         (optional: uncheck 'Export Using Cubit IDs' to have element IDs in increasing order)
-  character(len=100), parameter :: cubit_mesh_file = 'layered_halfspace_mesh.inp'
+  character(len=100), parameter :: cubit_mesh_file = 'examples/layered_halfspace/layered_halfspace_mesh.inp'
   integer, parameter :: NPOIN = 76819                    ! number of nodes
   integer, parameter :: NSPEC = 70200                    ! number of elements (only volumes, i.e. block ids 1,2,3 )
   integer, parameter :: NGNOD = 8                        ! hexahedral elements
