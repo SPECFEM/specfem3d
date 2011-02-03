@@ -356,15 +356,14 @@
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
-
-     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
+    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
           npx_interface_bottom,npy_interface_bottom,&
           orig_x_interface_bottom,orig_y_interface_bottom,spacing_x_interface_bottom,spacing_y_interface_bottom)
 
-     max_npx_interface = max(npx_interface_bottom,max_npx_interface)
-     max_npy_interface = max(npy_interface_bottom,max_npy_interface)
+    max_npx_interface = max(npx_interface_bottom,max_npx_interface)
+    max_npy_interface = max(npy_interface_bottom,max_npy_interface)
 
-     if((max_npx_interface < 2) .or.(max_npy_interface < 2)) stop 'not enough interface points (minimum is 2x2)'
+    if((max_npx_interface < 2) .or.(max_npy_interface < 2)) stop 'not enough interface points (minimum is 2x2)'
 
   enddo
 
@@ -376,8 +375,8 @@
   do ilayer = 1,number_of_layers
 
 ! read number of spectral elements in vertical direction in this layer
-     call read_value_integer(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
-     if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
+    call read_value_integer(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
+    if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
 
   enddo
 
@@ -406,16 +405,17 @@
 
   allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
   allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
-  allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
+  allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
+  if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1))
   allocate(iproc_xi_slice(0:NPROC-1))
   allocate(iproc_eta_slice(0:NPROC-1))
 
 ! clear arrays
-  xgrid(:,:,:) = 0.
-  ygrid(:,:,:) = 0.
-  zgrid(:,:,:) = 0.
+  xgrid(:,:,:) = 0.d0
+  ygrid(:,:,:) = 0.d0
+  zgrid(:,:,:) = 0.d0
 
   iproc_xi_slice(:) = 0
   iproc_eta_slice(:) = 0
@@ -424,15 +424,15 @@
   if(myrank == 0) then
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
- endif
-    do iproc_eta=0,NPROC_ETA-1
-      do iproc_xi=0,NPROC_XI-1
-        iprocnum = iproc_eta * NPROC_XI + iproc_xi
-        iproc_xi_slice(iprocnum) = iproc_xi
-        iproc_eta_slice(iprocnum) = iproc_eta
-        addressing(iproc_xi,iproc_eta) = iprocnum
-      enddo
+  endif
+  do iproc_eta=0,NPROC_ETA-1
+    do iproc_xi=0,NPROC_XI-1
+      iprocnum = iproc_eta * NPROC_XI + iproc_xi
+      iproc_xi_slice(iprocnum) = iproc_xi
+      iproc_eta_slice(iprocnum) = iproc_eta
+      addressing(iproc_xi,iproc_eta) = iprocnum
     enddo
+  enddo
 
   if (myrank == 0) then
     write(IMAIN,*) 'Spatial distribution of slice numbers:'
@@ -466,59 +466,65 @@
     write(IMAIN,*)
   endif
 
-! check that reals are either 4 or 8 bytes
+  ! check that reals are either 4 or 8 bytes
   if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
+  ! checks number of nodes for hexahedra and quadrilaterals
   if(NGNOD /= 8) call exit_MPI(myrank,'number of control nodes must be 8')
   if(NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 points should have NGNOD2D = 4')
 
-! for the number of standard linear solids for attenuation
+  ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
 
-! check that number of slices is at least 1 in each direction
+  ! check that number of slices is at least 1 in each direction
   if(NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
   if(NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
 
-! check that mesh can be cut into the right number of slices
-! also check that mesh can be coarsened in depth twice (block size multiple of 8)
+  ! check that mesh can be cut into the right number of slices
+  ! also check that mesh can be coarsened in depth twice (block size multiple of 8)
   if(USE_REGULAR_MESH) then
     if(mod(NEX_XI,NPROC_XI) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of NPROC_XI for a regular mesh')
     if(mod(NEX_ETA,NPROC_ETA) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of NPROC_ETA for a regular mesh')
   endif
 
+  ! checks that nex is dividable by 8
+  if(mod(NEX_XI,8) /= 0) call exit_MPI(myrank,'NEX_XI must be a multiple of 8')
+  if(mod(NEX_ETA,8) /= 0) call exit_MPI(myrank,'NEX_ETA must be a multiple of 8')
+
+  ! checks that nex_per_proc is dividable by 8
+  if(mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
+  if(mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
+
+
   if(myrank == 0) then
-
-  write(IMAIN,*) 'region selected:'
-  write(IMAIN,*)
-  write(IMAIN,*) 'latitude min = ',LATITUDE_MIN
-  write(IMAIN,*) 'latitude max = ',LATITUDE_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'longitude min = ',LONGITUDE_MIN
-  write(IMAIN,*) 'longitude max = ',LONGITUDE_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'this is mapped to UTM in region ',UTM_PROJECTION_ZONE
-  write(IMAIN,*)
-  write(IMAIN,*) 'UTM X min = ',UTM_X_MIN
-  write(IMAIN,*) 'UTM X max = ',UTM_X_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'UTM Y min = ',UTM_Y_MIN
-  write(IMAIN,*) 'UTM Y max = ',UTM_Y_MAX
-  write(IMAIN,*)
-  write(IMAIN,*) 'UTM size of model along X is ',(UTM_X_MAX-UTM_X_MIN)/1000.,' km'
-  write(IMAIN,*) 'UTM size of model along Y is ',(UTM_Y_MAX-UTM_Y_MIN)/1000.,' km'
-  write(IMAIN,*)
-  write(IMAIN,*) 'Bottom of the mesh is at a depth of ',dabs(Z_DEPTH_BLOCK)/1000.,' km'
-  write(IMAIN,*)
-
-  write(IMAIN,*)
-  if(SUPPRESS_UTM_PROJECTION) then
-    write(IMAIN,*) 'suppressing UTM projection'
-  else
-    write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
-  endif
-
-  write(IMAIN,*)
-
+    write(IMAIN,*) 'region selected:'
+    write(IMAIN,*)
+    write(IMAIN,*) 'latitude min = ',LATITUDE_MIN
+    write(IMAIN,*) 'latitude max = ',LATITUDE_MAX
+    write(IMAIN,*)
+    write(IMAIN,*) 'longitude min = ',LONGITUDE_MIN
+    write(IMAIN,*) 'longitude max = ',LONGITUDE_MAX
+    write(IMAIN,*)
+    write(IMAIN,*) 'this is mapped to UTM in region ',UTM_PROJECTION_ZONE
+    write(IMAIN,*)
+    write(IMAIN,*) 'UTM X min = ',UTM_X_MIN
+    write(IMAIN,*) 'UTM X max = ',UTM_X_MAX
+    write(IMAIN,*)
+    write(IMAIN,*) 'UTM Y min = ',UTM_Y_MIN
+    write(IMAIN,*) 'UTM Y max = ',UTM_Y_MAX
+    write(IMAIN,*)
+    write(IMAIN,*) 'UTM size of model along X is ',(UTM_X_MAX-UTM_X_MIN)/1000.,' km'
+    write(IMAIN,*) 'UTM size of model along Y is ',(UTM_Y_MAX-UTM_Y_MIN)/1000.,' km'
+    write(IMAIN,*)
+    write(IMAIN,*) 'Bottom of the mesh is at a depth of ',dabs(Z_DEPTH_BLOCK)/1000.,' km'
+    write(IMAIN,*)
+    write(IMAIN,*)
+    if(SUPPRESS_UTM_PROJECTION) then
+      write(IMAIN,*) 'suppressing UTM projection'
+    else
+      write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
+    endif
+    write(IMAIN,*)
   endif
 
 ! get addressing for this process
@@ -533,166 +539,166 @@
   max_elevation = -HUGEVAL
 
   if(myrank == 0) then
-     write(IMAIN,*)
-     write(IMAIN,*) 'Reading interface data from file ', &
+    write(IMAIN,*)
+    write(IMAIN,*) 'Reading interface data from file ', &
           MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
           //INTERFACES_FILE(1:len_trim(INTERFACES_FILE))
-     write(IMAIN,*)
+    write(IMAIN,*)
   end if
 
-     open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
+  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
           //INTERFACES_FILE,status='old')
 
-     allocate(interface_bottom(max_npx_interface,max_npy_interface))
-     allocate(interface_top(max_npx_interface,max_npy_interface))
+  allocate(interface_bottom(max_npx_interface,max_npy_interface))
+  allocate(interface_top(max_npx_interface,max_npy_interface))
 
-     ! read number of interfaces
-     call read_value_integer(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  ! read number of interfaces
+  call read_value_integer(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
 
-     SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
-     npx_interface_bottom = 2
-     npy_interface_bottom = 2
-     orig_x_interface_bottom = UTM_X_MIN
-     orig_y_interface_bottom = UTM_Y_MIN
-     spacing_x_interface_bottom = UTM_X_MAX - UTM_X_MIN
-     spacing_y_interface_bottom = UTM_Y_MAX - UTM_Y_MIN
-     interface_bottom(:,:) = - dabs(Z_DEPTH_BLOCK)
+  SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
+  npx_interface_bottom = 2
+  npy_interface_bottom = 2
+  orig_x_interface_bottom = UTM_X_MIN
+  orig_y_interface_bottom = UTM_Y_MIN
+  spacing_x_interface_bottom = UTM_X_MAX - UTM_X_MIN
+  spacing_y_interface_bottom = UTM_Y_MAX - UTM_Y_MIN
+  interface_bottom(:,:) = - dabs(Z_DEPTH_BLOCK)
 
-     ! loop on all the layers
+  ! loop on all the layers
 
-     do ilayer = 1,number_of_layers
+  do ilayer = 1,number_of_layers
 
-        ! read top interface
-        call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
-             npx_interface_top,npy_interface_top,&
-             orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top)
+    ! read top interface
+    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
+         npx_interface_top,npy_interface_top,&
+         orig_x_interface_top,orig_y_interface_top,spacing_x_interface_top,spacing_y_interface_top)
 
-        !npoints_interface_top = npx_interface_top * npy_interface
-        ! loop on all the points describing this interface
-        open(unit=45,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-             //interface_top_file,status='old')
-        do iy=1,npy_interface_top
-           do ix=1,npx_interface_top
-              call read_value_double_precision(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
-           enddo
-        enddo
-        close(45)
+    !npoints_interface_top = npx_interface_top * npy_interface
+    ! loop on all the points describing this interface
+    open(unit=45,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
+         //interface_top_file,status='old')
+    do iy=1,npy_interface_top
+      do ix=1,npx_interface_top
+        call read_value_double_precision(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
+      enddo
+    enddo
+    close(45)
 
-        ! compute the offset of this layer in terms of number of spectral elements below along Z
-        if(ilayer > 1) then
-           ioffset = sum(ner_layer(1:ilayer-1))
-        else
-           ioffset = 0
-        endif
+    ! compute the offset of this layer in terms of number of spectral elements below along Z
+    if(ilayer > 1) then
+       ioffset = sum(ner_layer(1:ilayer-1))
+    else
+       ioffset = 0
+    endif
 
-        !--- definition of the mesh
+    !--- definition of the mesh
 
-        do iy=0,npy
-           do ix=0,npx
+    do iy=0,npy
+      do ix=0,npx
 
 !   define the mesh points on the top and the bottom
-              xin=dble(ix)/dble(npx)
-              x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
+        xin=dble(ix)/dble(npx)
+        x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
 
-              etan=dble(iy)/dble(npy)
-              y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
+        etan=dble(iy)/dble(npy)
+        y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
 
 ! get bottom interface value
 ! project x and y in UTM back to long/lat since topo file is in long/lat
-              call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_BOTTOM)
+        call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_BOTTOM)
 
 ! get coordinate of corner in bathy/topo model
-              icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
-              icornerlat = int((lat - orig_y_interface_bottom) / spacing_x_interface_bottom) + 1
+        icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
+        icornerlat = int((lat - orig_y_interface_bottom) / spacing_x_interface_bottom) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-              if(icornerlong < 1) icornerlong = 1
-              if(icornerlong > npx_interface_bottom-1) icornerlong = npx_interface_bottom-1
-              if(icornerlat < 1) icornerlat = 1
-              if(icornerlat > npy_interface_bottom-1) icornerlat = npy_interface_bottom-1
+        if(icornerlong < 1) icornerlong = 1
+        if(icornerlong > npx_interface_bottom-1) icornerlong = npx_interface_bottom-1
+        if(icornerlat < 1) icornerlat = 1
+        if(icornerlat > npy_interface_bottom-1) icornerlat = npy_interface_bottom-1
 
 ! compute coordinates of corner
-              long_corner = orig_x_interface_bottom + (icornerlong-1)*spacing_x_interface_bottom
-              lat_corner = orig_y_interface_bottom + (icornerlat-1)*spacing_y_interface_bottom
+        long_corner = orig_x_interface_bottom + (icornerlong-1)*spacing_x_interface_bottom
+        lat_corner = orig_y_interface_bottom + (icornerlat-1)*spacing_y_interface_bottom
 
 ! compute ratio for interpolation
-              ratio_xi = (long - long_corner) / spacing_x_interface_bottom
-              ratio_eta = (lat - lat_corner) / spacing_y_interface_bottom
+        ratio_xi = (long - long_corner) / spacing_x_interface_bottom
+        ratio_eta = (lat - lat_corner) / spacing_y_interface_bottom
 
 ! avoid edge effects
-              if(ratio_xi < 0.) ratio_xi = 0.
-              if(ratio_xi > 1.) ratio_xi = 1.
-              if(ratio_eta < 0.) ratio_eta = 0.
-              if(ratio_eta > 1.) ratio_eta = 1.
+        if(ratio_xi < 0.) ratio_xi = 0.
+        if(ratio_xi > 1.) ratio_xi = 1.
+        if(ratio_eta < 0.) ratio_eta = 0.
+        if(ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
-              z_interface_bottom = &
-                   interface_bottom(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-                   interface_bottom(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-                   interface_bottom(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-                   interface_bottom(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+        z_interface_bottom = &
+              interface_bottom(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+              interface_bottom(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+              interface_bottom(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+              interface_bottom(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
 ! get top interface value
 ! project x and y in UTM back to long/lat since topo file is in long/lat
-              call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_TOP)
+        call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_TOP)
 
 ! get coordinate of corner in bathy/topo model
-              icornerlong = int((long - orig_x_interface_top) / spacing_x_interface_top) + 1
-              icornerlat = int((lat - orig_y_interface_top) / spacing_x_interface_top) + 1
+        icornerlong = int((long - orig_x_interface_top) / spacing_x_interface_top) + 1
+        icornerlat = int((lat - orig_y_interface_top) / spacing_x_interface_top) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-              if(icornerlong < 1) icornerlong = 1
-              if(icornerlong > npx_interface_top-1) icornerlong = npx_interface_top-1
-              if(icornerlat < 1) icornerlat = 1
-              if(icornerlat > npy_interface_top-1) icornerlat = npy_interface_top-1
+        if(icornerlong < 1) icornerlong = 1
+        if(icornerlong > npx_interface_top-1) icornerlong = npx_interface_top-1
+        if(icornerlat < 1) icornerlat = 1
+        if(icornerlat > npy_interface_top-1) icornerlat = npy_interface_top-1
 
 ! compute coordinates of corner
-              long_corner = orig_x_interface_top + (icornerlong-1)*spacing_x_interface_top
-              lat_corner = orig_y_interface_top + (icornerlat-1)*spacing_y_interface_top
+        long_corner = orig_x_interface_top + (icornerlong-1)*spacing_x_interface_top
+        lat_corner = orig_y_interface_top + (icornerlat-1)*spacing_y_interface_top
 
 ! compute ratio for interpolation
-              ratio_xi = (long - long_corner) / spacing_x_interface_top
-              ratio_eta = (lat - lat_corner) / spacing_y_interface_top
+        ratio_xi = (long - long_corner) / spacing_x_interface_top
+        ratio_eta = (lat - lat_corner) / spacing_y_interface_top
 
 ! avoid edge effects
-              if(ratio_xi < 0.) ratio_xi = 0.
-              if(ratio_xi > 1.) ratio_xi = 1.
-              if(ratio_eta < 0.) ratio_eta = 0.
-              if(ratio_eta > 1.) ratio_eta = 1.
+        if(ratio_xi < 0.) ratio_xi = 0.
+        if(ratio_xi > 1.) ratio_xi = 1.
+        if(ratio_eta < 0.) ratio_eta = 0.
+        if(ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
-              z_interface_top = &
-                   interface_top(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-                   interface_top(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-                   interface_top(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-                   interface_top(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+        z_interface_top = &
+             interface_top(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
+             interface_top(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
+             interface_top(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
+             interface_top(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
-              do ir = 0,ner_layer(ilayer)
-              ! linear interpolation between bottom and top
-                 gamma = dble(ir) / dble(ner_layer(ilayer))
+        do ir = 0,ner_layer(ilayer)
+          ! linear interpolation between bottom and top
+          gamma = dble(ir) / dble(ner_layer(ilayer))
 
-              ! coordinates of the grid points
-                 xgrid(ir + ioffset,ix,iy) = x_current
-                 ygrid(ir + ioffset,ix,iy) = y_current
-                 zgrid(ir + ioffset,ix,iy) = gamma*z_interface_top + (1.d0 - gamma)*z_interface_bottom
-              enddo
+          ! coordinates of the grid points
+          xgrid(ir + ioffset,ix,iy) = x_current
+          ygrid(ir + ioffset,ix,iy) = y_current
+          zgrid(ir + ioffset,ix,iy) = gamma*z_interface_top + (1.d0 - gamma)*z_interface_bottom
+        enddo
 
-           end do
-        end do
+      end do
+    end do
 
-        ! the top interface becomes the bottom interface before switching to the next layer
-        SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION_TOP
-        npx_interface_bottom = npx_interface_top
-        npy_interface_bottom = npy_interface_top
-        orig_x_interface_bottom = orig_x_interface_top
-        orig_y_interface_bottom = orig_y_interface_top
-        spacing_x_interface_bottom = spacing_x_interface_top
-        spacing_y_interface_bottom = spacing_y_interface_top
-        interface_bottom(:,:) = interface_top(:,:)
+    ! the top interface becomes the bottom interface before switching to the next layer
+    SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION_TOP
+    npx_interface_bottom = npx_interface_top
+    npy_interface_bottom = npy_interface_top
+    orig_x_interface_bottom = orig_x_interface_top
+    orig_y_interface_bottom = orig_y_interface_top
+    spacing_x_interface_bottom = spacing_x_interface_top
+    spacing_y_interface_bottom = spacing_y_interface_top
+    interface_bottom(:,:) = interface_top(:,:)
 
-     enddo
+  enddo
 
-     close(IIN_INTERFACES)
+  close(IIN_INTERFACES)
 
   if(myrank == 0) then
     write(IMAIN,*)
@@ -720,7 +726,7 @@
 ! exit if there is not enough memory to allocate all the arrays
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
+  call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
            xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
            NGLOB_AB,npointot, &
            NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
@@ -732,10 +738,8 @@ call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
            USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if(myrank == 0) then
-
 ! compare to exact theoretical value (bottom is always flat)
-      write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
-
+    write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
   endif
 
 ! make sure everybody is synchronized
@@ -744,31 +748,27 @@ call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
 !--- print number of points and elements in the mesh
 
   if(myrank == 0) then
-
-  write(IMAIN,*)
-  write(IMAIN,*) 'Repartition of elements:'
-  write(IMAIN,*) '-----------------------'
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
-
-  write(IMAIN,*)
-  write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
-  write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
-  write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
-  write(IMAIN,*)
-
-! write information about precision used for floating-point operations
-  if(CUSTOM_REAL == SIZE_REAL) then
-    write(IMAIN,*) 'using single precision for the calculations'
-  else
-    write(IMAIN,*) 'using double precision for the calculations'
-  endif
-  write(IMAIN,*)
-  write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
-  write(IMAIN,*)
-
+    write(IMAIN,*)
+    write(IMAIN,*) 'Repartition of elements:'
+    write(IMAIN,*) '-----------------------'
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of elements in each slice: ',NSPEC_AB
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of points in each slice: ',NGLOB_AB
+    write(IMAIN,*)
+    write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
+    write(IMAIN,*) 'total number of points in entire mesh: ',NGLOB_AB*NPROC
+    write(IMAIN,*) 'total number of DOFs in entire mesh: ',NGLOB_AB*NPROC*NDIM
+    write(IMAIN,*)
+    ! write information about precision used for floating-point operations
+    if(CUSTOM_REAL == SIZE_REAL) then
+      write(IMAIN,*) 'using single precision for the calculations'
+    else
+      write(IMAIN,*) 'using double precision for the calculations'
+    endif
+    write(IMAIN,*)
+    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
+    write(IMAIN,*)
   endif   ! end of section executed by main process only
 
 ! elapsed time since beginning of mesh generation

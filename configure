@@ -5051,9 +5051,160 @@ test -n "$YACC" || YACC="yacc"
  if test -z "$YACC" || test "X$YACC" = "Xno"; then
    as_fn_error $? "No suitable yacc or bison found" "$LINENO" 5
  fi
+
+ #daniel: scotch bundle
+ # uses bundled scotch: current version 5.1.11
  USE_BUNDLED_SCOTCH=1
- SCOTCH_LIBDIR="scotch_5.1.10b/lib"
- SCOTCH_INCLUDEDIR="scotch_5.1.10b/include"
+
+ SCOTCH_DIR="scotch_5.1.11"
+ SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
+ SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
+
+ # the following modifies the default scotch Makefile such that the package
+ # will only be compiled once (no recompilation) when calling make
+ #
+ builddir=`pwd`
+ cd src/decompose_mesh_SCOTCH/
+
+ if test ! -f "${SCOTCH_DIR}/src/scotch/Makefile.org"; then
+
+  # no Makefile backup files yet
+  # modifies Makefiles once
+
+  # creates backup copies of original Makefiles
+  # src/scotch/
+  cp ${SCOTCH_DIR}/src/scotch/Makefile ${SCOTCH_DIR}/src/scotch/Makefile.org
+  # src/libscotch/
+  cp ${SCOTCH_DIR}/src/libscotch/Makefile ${SCOTCH_DIR}/src/libscotch/Makefile.org
+  # src/libscotchmetis/
+  cp ${SCOTCH_DIR}/src/libscotchmetis/Makefile ${SCOTCH_DIR}/src/libscotchmetis/Makefile.org
+
+ fi
+
+  # replacement text in the default scotch Makefiles
+  cat > conftmp.scotch.cmd <<_ACEOF
+# scotch replacement text for install line
+\$(bindir)/acpl\$(EXE): acpl\$(EXE)
+	-\$(CP) acpl\$(EXE) \$(bindir)/acpl\$(EXE)
+\$(bindir)/amk_ccc\$(EXE): amk_ccc\$(EXE)
+	-\$(CP) amk_ccc\$(EXE) \$(bindir)/amk_ccc\$(EXE)
+\$(bindir)/amk_fft2\$(EXE): amk_fft2\$(EXE)
+	-\$(CP) amk_fft2\$(EXE) \$(bindir)/amk_fft2\$(EXE)
+\$(bindir)/amk_grf\$(EXE): amk_grf\$(EXE)
+	-\$(CP) amk_grf\$(EXE) \$(bindir)/amk_grf\$(EXE)
+\$(bindir)/amk_hy\$(EXE): amk_hy\$(EXE)
+	-\$(CP) amk_hy\$(EXE) \$(bindir)/amk_hy\$(EXE)
+\$(bindir)/amk_m2\$(EXE): amk_m2\$(EXE)
+	-\$(CP) amk_m2\$(EXE) \$(bindir)/amk_m2\$(EXE)
+\$(bindir)/amk_p2\$(EXE): amk_p2\$(EXE)
+	-\$(CP) amk_p2\$(EXE) \$(bindir)/amk_p2\$(EXE)
+\$(bindir)/atst\$(EXE): atst\$(EXE)
+	-\$(CP) atst\$(EXE) \$(bindir)/atst\$(EXE)
+\$(bindir)/gbase\$(EXE): gbase\$(EXE)
+	-\$(CP) gbase\$(EXE) \$(bindir)/gbase\$(EXE)
+\$(bindir)/gcv\$(EXE): gcv\$(EXE)
+	-\$(CP) gcv\$(EXE) \$(bindir)/gcv\$(EXE)
+\$(bindir)/gmap\$(EXE): gmap\$(EXE)
+	-\$(CP) gmap\$(EXE) \$(bindir)/gmap\$(EXE)
+\$(bindir)/gmk_hy\$(EXE): gmk_hy\$(EXE)
+	-\$(CP) gmk_hy\$(EXE) \$(bindir)/gmk_hy\$(EXE)
+\$(bindir)/gmk_m2\$(EXE): gmk_m2\$(EXE)
+	-\$(CP) gmk_m2\$(EXE) \$(bindir)/gmk_m2\$(EXE)
+\$(bindir)/gmk_m3\$(EXE): gmk_m3\$(EXE)
+	-\$(CP) gmk_m3\$(EXE) \$(bindir)/gmk_m3\$(EXE)
+\$(bindir)/gmk_msh\$(EXE): gmk_msh\$(EXE)
+	-\$(CP) gmk_msh\$(EXE) \$(bindir)/gmk_msh\$(EXE)
+\$(bindir)/gmk_ub2\$(EXE): gmk_ub2\$(EXE)
+	-\$(CP) gmk_ub2\$(EXE) \$(bindir)/gmk_ub2\$(EXE)
+\$(bindir)/gmtst\$(EXE): gmtst\$(EXE)
+	-\$(CP) gmtst\$(EXE) \$(bindir)/gmtst\$(EXE)
+\$(bindir)/gord\$(EXE): gord\$(EXE)
+	-\$(CP) gord\$(EXE) \$(bindir)/gord\$(EXE)
+\$(bindir)/gotst\$(EXE): gotst\$(EXE)
+	-\$(CP) gotst\$(EXE) \$(bindir)/gotst\$(EXE)
+\$(bindir)/gout\$(EXE): gout\$(EXE)
+	-\$(CP) gout\$(EXE) \$(bindir)/gout\$(EXE)
+\$(bindir)/gpart\$(EXE): \$(bindir)/gmap\$(EXE)
+	-\$(RM) \$(bindir)/gpart\$(EXE)
+	-\$(LN) \$(bindir)/gmap\$(EXE) \$(bindir)/gpart\$(EXE)
+\$(bindir)/gscat\$(EXE): gscat\$(EXE)
+	-\$(CP) gscat\$(EXE) \$(bindir)/gscat\$(EXE)
+\$(bindir)/gtst\$(EXE): gtst\$(EXE)
+	-\$(CP) gtst\$(EXE) \$(bindir)/gtst\$(EXE)
+\$(bindir)/mcv\$(EXE): mcv\$(EXE)
+	-\$(CP) mcv\$(EXE) \$(bindir)/mcv\$(EXE)
+\$(bindir)/mmk_m2\$(EXE): mmk_m2\$(EXE)
+	-\$(CP) mmk_m2\$(EXE) \$(bindir)/mmk_m2\$(EXE)
+\$(bindir)/mmk_m3\$(EXE): mmk_m3\$(EXE)
+	-\$(CP) mmk_m3\$(EXE) \$(bindir)/mmk_m3\$(EXE)
+\$(bindir)/mord\$(EXE): mord\$(EXE)
+	-\$(CP) mord\$(EXE) \$(bindir)/mord\$(EXE)
+\$(bindir)/mtst\$(EXE): mtst\$(EXE)
+	-\$(CP) mtst\$(EXE) \$(bindir)/mtst\$(EXE)
+
+
+install				: \$(bindir)/acpl\$(EXE) \$(bindir)/amk_ccc\$(EXE) \\
+	\$(bindir)/amk_fft2\$(EXE) \$(bindir)/amk_grf\$(EXE) \\
+	\$(bindir)/amk_hy\$(EXE) \$(bindir)/amk_m2\$(EXE) \\
+	\$(bindir)/amk_p2\$(EXE) \$(bindir)/atst\$(EXE) \\
+	\$(bindir)/gbase\$(EXE) \$(bindir)/gcv\$(EXE) \\
+	\$(bindir)/gmap\$(EXE) \$(bindir)/gmk_hy\$(EXE) \\
+	\$(bindir)/gmk_m2\$(EXE) \$(bindir)/gmk_m3\$(EXE) \\
+	\$(bindir)/gmk_msh\$(EXE) \$(bindir)/gmk_ub2\$(EXE) \\
+	\$(bindir)/gmtst\$(EXE) \$(bindir)/gord\$(EXE) \\
+	\$(bindir)/gotst\$(EXE) \$(bindir)/gout\$(EXE) \\
+	\$(bindir)/gpart\$(EXE) \$(bindir)/gscat\$(EXE) \\
+	\$(bindir)/gtst\$(EXE) \$(bindir)/mcv\$(EXE) \\
+	\$(bindir)/mmk_m2\$(EXE) \$(bindir)/mmk_m3\$(EXE) \\
+	\$(bindir)/mord\$(EXE) \$(bindir)/mtst\$(EXE)
+
+_ACEOF
+
+  # avoids lines between 98 to 101, containig install lines, and replaces them
+  awk '{if(NR<98)print $0}' ${SCOTCH_DIR}/src/scotch/Makefile.org > ${SCOTCH_DIR}/src/scotch/Makefile
+  cat conftmp.scotch.cmd >> ${SCOTCH_DIR}/src/scotch/Makefile
+  awk '{if(NR>101)print $0}' ${SCOTCH_DIR}/src/scotch/Makefile.org >> ${SCOTCH_DIR}/src/scotch/Makefile
+  rm -f conftmp.scotch.cmd
+
+  # replacement text in the default libscotch Makefile
+  cat > conftmp.libscotch.cmd <<_ACEOF
+# libscotch replacement text for install line
+\$(libdir)/libscotch\$(LIB): libscotch\$(LIB)
+	-\$(CP) libscotch\$(LIB) \$(libdir)
+\$(libdir)/libscotcherr\$(LIB): libscotcherr\$(LIB)
+	-\$(CP) libscotcherr\$(LIB) \$(libdir)
+\$(libdir)/libscotcherrexit\$(LIB): libscotcherrexit\$(LIB)
+	-\$(CP) libscotcherrexit\$(LIB) \$(libdir)
+\$(includedir)/scotch.h: scotch.h
+	-\$(CP) scotch.h \$(includedir)
+\$(includedir)/scotchf.h: scotchf.h
+	-\$(CP) scotchf.h \$(includedir)
+
+install				: \$(libdir)/libscotch\$(LIB) \$(libdir)/libscotcherr\$(LIB) \\
+	\$(libdir)/libscotcherrexit\$(LIB)	\\
+	\$(includedir)/scotch.h \$(includedir)/scotchf.h
+
+_ACEOF
+
+  # avoids lines between 71 to 73, containig install lines, and replaces them
+  awk '{if(NR<71)print $0}' ${SCOTCH_DIR}/src/libscotch/Makefile.org > ${SCOTCH_DIR}/src/libscotch/Makefile
+  cat conftmp.libscotch.cmd >> ${SCOTCH_DIR}/src/libscotch/Makefile
+  awk '{if(NR>73)print $0}' ${SCOTCH_DIR}/src/libscotch/Makefile.org >> ${SCOTCH_DIR}/src/libscotch/Makefile
+  rm -f conftmp.libscotch.cmd
+
+  # replaces single scotch line in Makefiles
+  # src/scotch/
+  sed -i "s/^scotch.*clean/scotch     : /" ${SCOTCH_DIR}/src/scotch/Makefile
+  # src/libscotch/
+  sed -i "s/^scotch.*clean/scotch     : /" ${SCOTCH_DIR}/src/libscotch/Makefile
+  # src/libscotchmetis/
+  sed -i "s/^scotch.*clean/scotch     : /" ${SCOTCH_DIR}/src/libscotchmetis/Makefile
+
+ cd $builddir
+
+ # done scotch Makefile modification
+
+
 fi
 LDFLAGS=${ac_save_ldflags}
 
@@ -5390,7 +5541,7 @@ fi
 # Checks for library functions.
 
 
-ac_config_files="$ac_config_files Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.10b/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
+ac_config_files="$ac_config_files Makefile in_data_files/Par_file in_data_files/CMTSOLUTION in_data_files/STATIONS src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6103,7 +6254,7 @@ do
     "src/generate_databases/Makefile") CONFIG_FILES="$CONFIG_FILES src/generate_databases/Makefile" ;;
     "src/shared/constants.h") CONFIG_FILES="$CONFIG_FILES src/shared/constants.h" ;;
     "src/shared/precision.h") CONFIG_FILES="$CONFIG_FILES src/shared/precision.h" ;;
-    "src/decompose_mesh_SCOTCH/scotch_5.1.10b/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES src/decompose_mesh_SCOTCH/scotch_5.1.10b/src/Makefile.inc" ;;
+    "src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5 ;;
   esac

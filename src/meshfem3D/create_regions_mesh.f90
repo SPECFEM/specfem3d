@@ -67,29 +67,30 @@ contains
     double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK
     !double precision horiz_size,vert_size
 
-    character(len=256) LOCAL_PATH
-
     integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
     ! arrays with the mesh
-    double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-    !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
-    double precision, dimension(:,:), allocatable :: nodes_coords
-
     double precision xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
     double precision ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
     double precision zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
+    double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
+
     integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
+    character(len=256) LOCAL_PATH
+
     ! auxiliary variables to generate the mesh
+    !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
+    double precision, dimension(:,:), allocatable :: nodes_coords
     integer ix,iy,ir,ir1,ir2,dir
     integer ix1,ix2,dix,iy1,iy2,diy
     integer iax,iay,iar
     integer isubregion,nsubregions,doubling_index,nmeshregions
     integer imaterial_number
     integer true_material_num(nspec)
-    integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
+    integer, dimension(:,:,:), allocatable :: material_num
+    !integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
     !  definition of the different regions of the model in the mesh (nx,ny,nz)
     !  #1 #2 : nx_begining,nx_end
@@ -137,7 +138,7 @@ contains
     ! number of elements on the boundaries
     integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
 
-    integer i,j,k,ia,ispec,ispec_superbrick ! itype_element ,ipoin
+    integer i,j,k,ia,ispec,ispec_superbrick,ier ! itype_element ,ipoin
     integer iproc_xi,iproc_eta
 
     ! flag indicating whether point is in the sediments
@@ -154,7 +155,7 @@ contains
 
     ! doublings zone
     integer :: nspec_sb
-    integer :: offset_x,offset_y,offset_z
+    integer :: ioffset_x,ioffset_y,ioffset_z
     logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
@@ -166,7 +167,8 @@ contains
 
     ! flag indicating whether point is in the sediments
     allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,nspec))
-    allocate(not_fully_in_bedrock(nspec))
+    allocate(not_fully_in_bedrock(nspec),stat=ier)
+    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! boundary locator
     allocate(iboun(6,nspec))
@@ -177,11 +179,13 @@ contains
     allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX))
     allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX))
     allocate(ibelm_bottom(NSPEC2D_BOTTOM))
-    allocate(ibelm_top(NSPEC2D_TOP))
+    allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
+    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! MPI cut-planes parameters along xi and along eta
     allocate(iMPIcut_xi(2,nspec))
-    allocate(iMPIcut_eta(2,nspec))
+    allocate(iMPIcut_eta(2,nspec),stat=ier)
+    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate memory for arrays
     allocate(iglob(npointot))
@@ -189,14 +193,18 @@ contains
     allocate(ifseg(npointot))
     allocate(xp(npointot))
     allocate(yp(npointot))
-    allocate(zp(npointot))
+    allocate(zp(npointot),stat=ier)
+    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+    ! allocate material ids array
+    allocate(material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
+    if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! generate the elements in all the regions of the mesh
     ispec = 0
 
-
     ! to check that we assign a material to each element
-    material_num(:,:,:) = -1000
+    material_num(:,:,:) = -1000 ! dummy value
 
     do isubregion = 1,nsubregions
        call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
@@ -236,93 +244,106 @@ contains
     endif
 
     do isubregion = 1,nmeshregions
-       ! define shape of elements
-       call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
+      ! define shape of elements
+      call define_mesh_regions(USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
             nblayers,ner_layer,NDOUBLINGS,ner_doublings,&
             iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
-       ! loop on all the mesh points in current subregion
-       do ir = ir1,ir2,dir
-          do iy = iy1,iy2,diy
-             do ix = ix1,ix2,dix
+      ! loop on all the mesh points in current subregion
+      do ir = ir1,ir2,dir
+        do iy = iy1,iy2,diy
+          do ix = ix1,ix2,dix
 
-                if(modulo(isubregion,2) == 1) then    ! Regular subregion case
+            if(modulo(isubregion,2) == 1) then
 
-                   ! loop over the NGNOD nodes
-                   do ia=1,NGNOD
-                      xelm(ia) = xgrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
-                      yelm(ia) = ygrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
-                      zelm(ia) = zgrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
-                   enddo
+              ! Regular subregion case
 
-                   ! add one spectral element to the list and store its material number
-                   ispec = ispec + 1
-                   if(ispec > nspec) then
-                      call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
-                   end if
+              ! loop over the NGNOD nodes
+              do ia=1,NGNOD
+                ! define topological coordinates of this mesh point
+                ioffset_x = ix+iax*iaddx(ia)
+                ioffset_y = iy+iay*iaddy(ia)
+                ioffset_z = ir+iar*iaddz(ia)
 
-                   ! check if element is on topography
-                   if((ir == ir2) .and. (isubregion == nmeshregions)) then
-                      doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
-                   else
-                      doubling_index = IFLAG_BASEMENT_TOPO
-                   endif
+                !xelm(ia) = xgrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
+                !yelm(ia) = ygrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
+                !zelm(ia) = zgrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
+                xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
+                yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)
+                zelm(ia) = zgrid(ioffset_z,ioffset_x,ioffset_y)
 
-                   true_material_num(ispec) = material_num(ir,ix,iy)
+              enddo
 
-                   ! store coordinates
-                   call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
+              ! add one spectral element to the list and store its material number
+              ispec = ispec + 1
+              if(ispec > nspec) then
+                call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
+              end if
 
-                   ! detect mesh boundaries
-                   call get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,doubling_index, &
-                        xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
-                        iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
-                        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
+              ! check if element is on topography
+              if((ir == ir2) .and. (isubregion == nmeshregions)) then
+                doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
+              else
+                doubling_index = IFLAG_BASEMENT_TOPO
+              endif
 
-                else             ! Irregular subregion case
+              true_material_num(ispec) = material_num(ir,ix,iy)
 
-                   ! loop on all the elements in the mesh doubling superbrick
-                   do ispec_superbrick = 1,nspec_sb
-                      ! loop on all the corner nodes of this element
-                      do ia = 1,NGNOD_EIGHT_CORNERS
-                         ! define topological coordinates of this mesh point
-                         offset_x = ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                         offset_y = iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick))
-                         offset_z = ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick))
+              ! store coordinates
+              call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
 
-                         xelm(ia) = xgrid(offset_z,offset_x,offset_y)
-                         yelm(ia) = ygrid(offset_z,offset_x,offset_y)
-                         zelm(ia) = zgrid(offset_z,offset_x,offset_y)
-                      enddo
+              ! detect mesh boundaries
+              call get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,doubling_index, &
+                  xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
+                  iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
+                  UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
 
-                      ! add one spectral element to the list and store its material number
-                      ispec = ispec + 1
-                      if(ispec > nspec) then
-                         call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
-                      end if
+            else
 
+              ! Irregular subregion case
 
-                      doubling_index = IFLAG_BASEMENT_TOPO
-                      true_material_num(ispec) = material_num(ir,ix,iy)
+              ! loop on all the elements in the mesh doubling superbrick
+              do ispec_superbrick = 1,nspec_sb
+                ! loop on all the corner nodes of this element
+                do ia = 1,NGNOD_EIGHT_CORNERS
+                  ! define topological coordinates of this mesh point
+                  ioffset_x = ix + iax*x_superbrick(ibool_superbrick(ia,ispec_superbrick))
+                  ioffset_y = iy + iay*y_superbrick(ibool_superbrick(ia,ispec_superbrick))
+                  ioffset_z = ir + iar*z_superbrick(ibool_superbrick(ia,ispec_superbrick))
 
-                      ! store coordinates
-                      call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
+                  xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
+                  yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)
+                  zelm(ia) = zgrid(ioffset_z,ioffset_x,ioffset_y)
 
-                      ! detect mesh boundaries
-                      call get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,doubling_index, &
-                           xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
-                           iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
-                           UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
+                enddo
 
-                   end do
+                ! add one spectral element to the list and store its material number
+                ispec = ispec + 1
+                if(ispec > nspec) then
+                  call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
                 end if
 
-                ! end of loop on all the mesh points in current subregion
-             enddo
-          enddo
-       enddo
+                doubling_index = IFLAG_BASEMENT_TOPO
+                true_material_num(ispec) = material_num(ir,ix,iy)
 
-       ! end of loop on all the subregions of the current region the mesh
+                ! store coordinates
+                call store_coords(xstore,ystore,zstore,xelm,yelm,zelm,ispec,nspec)
+
+                ! detect mesh boundaries
+                call get_flags_boundaries(nspec,iproc_xi,iproc_eta,ispec,doubling_index, &
+                     xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
+                     iboun,iMPIcut_xi,iMPIcut_eta,NPROC_XI,NPROC_ETA, &
+                     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
+
+              enddo
+            end if
+
+          ! end of loop on all the mesh points in current subregion
+          enddo
+        enddo
+      enddo
+
+    ! end of loop on all the subregions of the current region the mesh
     enddo
 
     ! check total number of spectral elements created
