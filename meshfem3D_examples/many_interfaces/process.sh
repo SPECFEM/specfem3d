@@ -7,7 +7,7 @@
 ###################################################
 
 # number of processes
-NPROC=4
+NPROC=81
 
 ##################################################
 
@@ -15,7 +15,7 @@ echo "running example: `date`"
 currentdir=`pwd`
 
 echo
-echo "(will take about 15 minutes)"
+echo "(will take about 1 h 15 minutes)"
 echo
 
 # sets up directory structure in current example directoy
@@ -34,7 +34,7 @@ mkdir -p in_data_files
 mkdir -p in_data_files/meshfem3D_files/
 
 cp Mesh_Par_file in_data_files/meshfem3D_files/
-cp interface*.dat in_data_files/meshfem3D_files/
+cp example_*.dat in_data_files/meshfem3D_files/
 
 cp Par_file in_data_files/
 cp CMTSOLUTION in_data_files/
