@@ -147,7 +147,6 @@ foreach $file (@ARGV) {
          $sta_text .="$sta ";}}
     print SAC "ch stla $sta_lat stlo $sta_lon stel $sta_ele stdp $sta_bur\nwh\n";}
 
-  if ($opt_s) {print SAC "interp delta $dt\n";}
    print SAC "w over\nquit\n";
    close(SAC);
    if ($opt_c) { open(SAC,"|sac");}else {open(SAC,"|sac > /dev/null");}
@@ -180,6 +179,8 @@ foreach $file (@ARGV) {
     if (! -f $pz) {die("Not a pz file $pz\n");}
     print SAC "transfer from none to polezero s ${pz}\n";
     print SAC "w over\n";}
+
+  if ($opt_s) {print SAC "interp delta $dt\n";}
 
   if ($opt_p) { # pick arrival
     print "Picking arrivals...\n";

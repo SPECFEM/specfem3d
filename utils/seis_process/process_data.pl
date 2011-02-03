@@ -35,7 +35,7 @@ sub Usage{
  Notice:
   1. We require that polezero files in the same directory as the sac 
      data files which is generally satisfied. We require that resp dir
-     be specified even if it is current(.). All the needed info is
+     be specified even if it is current(.). All needed info is
      taken from sac headers
   2. Origin time is set to PDE + time_shift (given by the CMTSOLUTION)
   3. The displacement outputs after -i option are in the unit of meters
@@ -43,10 +43,10 @@ sub Usage{
      1 sample/second will be performed
 
  NOTE: Please make sure that SAC, saclst and IASP91 packages are installed properly on 
-       your system, and that all the environment variables are set properly before
+       your system, and that all related env variables are set properly before
        running the script.
  
-  Qinya Liu, Originally written in Oct 2002; updated in Feb 2010
+  Qinya Liu, originally written in Oct 2002; updated in Jan 2011
 END
   exit(1);
 }
@@ -132,9 +132,6 @@ foreach $file (@ARGV) {
      print SAC "echo on\n";
      print SAC "r $outfile\n";}
 
-  if ($opt_s)  {print SAC "interp delta $dt\n";
-                print SAC "w over\n";}
-
   if ($opt_l){  # cut record 
     print "    Cut the record from o+$lmin to o+$lmax\n";
     (undef,$tmp_o)=split(" ",`$saclst o f $outfile`);
@@ -182,6 +179,9 @@ foreach $file (@ARGV) {
 	printf SAC "mul 1e-9\n"; }}
     printf SAC " rtrend\n rmean\n taper width $opt_T\n";
   }
+
+  if ($opt_s)  {print SAC "interp delta $dt\n";
+                print SAC "w over\n";}
 
   if ($opt_p) { # add p and s arrival info
     print "    Add first P and S arrival information\n";
