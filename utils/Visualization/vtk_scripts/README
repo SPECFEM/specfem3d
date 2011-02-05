@@ -1,0 +1,14 @@
+--------------------------------
+SPECFEM3D/utils/Visualization/vtk_scripts/README
+--------------------------------
+
+VTK, The Visualization Toolkit
+http://www.vtk.org/
+
+- various files provided to create your visualizations
+
+ADD DESCRIPTION BELOW
+
+split_sr_vtk.pl -- split sr.vtk file into source.vtk, epicenter.vtk, receivers.vtk
+
+--------------------------------
