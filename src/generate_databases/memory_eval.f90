@@ -151,16 +151,20 @@
 
 ! compute the approximate amount of static memory needed to run the mesher
 
- subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
-              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top,&
+ subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh, &
+              nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
+              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
+              nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
               static_memory_size_request)
 
   implicit none
 
   include "constants.h"
 
-  integer :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
-           max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top
+  integer :: myrank,nspec,npointot,nnodes_ext_mesh,nelmnts_ext_mesh, &
+           nmat_ext_mesh,num_interfaces_ext_mesh, &
+           max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
+           nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top
 
   integer :: static_memory_size_request
 
@@ -169,9 +173,11 @@
 ! memory usage, in generate_database() routine so far
   static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
         + NDIM*nnodes_ext_mesh*8 + ESIZE*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
-        + 5*nmat_ext_mesh*8 + 3*num_interfaces_ext_mesh + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
+        + 5*nmat_ext_mesh*8 + 3*num_interfaces_ext_mesh &
+        + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
         + NGLLX*NGLLX*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
-        + nspec2D_xmin*20 + nspec2D_xmax*20 + nspec2D_ymin*20 + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20
+        + nspec2D_xmin*20 + nspec2D_xmax*20 + nspec2D_ymin*20 &
+        + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20
 
 ! memory usage, in create_regions_mesh_ext() routine requested approximately
   static_memory_size_request =   &
@@ -186,9 +192,11 @@
 
   if(myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  minimum memory used so far     : ',static_memory_size / 1024. / 1024.,&
+    write(IMAIN,*) '  minimum memory used so far     : ', &
+                  static_memory_size / 1024. / 1024., &
                    'MB per process'
-    write(IMAIN,*) '  minimum total memory requested : ',(static_memory_size+static_memory_size_request)/1024./1024.,&
+    write(IMAIN,*) '  minimum total memory requested : ', &
+                  (static_memory_size+static_memory_size_request)/1024./1024., &
                    'MB per process'
     write(IMAIN,*)
   endif
