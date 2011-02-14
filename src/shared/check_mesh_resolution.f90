@@ -186,21 +186,26 @@
 
 ! determines global min/max values from all cpu partitions
   if( DT_PRESENT ) then
+    ! courant number
     cmax = cmax_glob
     call max_all_cr(cmax,cmax_glob)
   endif
 
+  ! minimum period 
   pmax = pmax_glob
-  call min_all_cr(pmax,pmax_glob)
+  call max_all_cr(pmax,pmax_glob)
 
+  ! time step
   dt_suggested = dt_suggested_glob
   call min_all_cr(dt_suggested,dt_suggested_glob)
 
+  ! Vp velocity
   vpmin = vpmin_glob
   vpmax = vpmax_glob
   call min_all_cr(vpmin,vpmin_glob)
   call max_all_cr(vpmax,vpmax_glob)
 
+  ! Vs velocity
   vsmin = vsmin_glob
   if( has_vs_zero ) vsmin = 0.0
 
@@ -208,6 +213,7 @@
   call min_all_cr(vsmin,vsmin_glob)
   call max_all_cr(vsmax,vsmax_glob)
 
+  ! GLL point distance
   distance_min = distance_min_glob
   distance_max = distance_max_glob
   call min_all_cr(distance_min,distance_min_glob)
