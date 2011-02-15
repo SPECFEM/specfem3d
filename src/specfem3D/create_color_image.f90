@@ -754,6 +754,8 @@
        OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it,it
 
   ! call the system to convert image to GIF
+  ! this line can be safely commented out if your compiler does not implement "system()" for system calls;
+  ! in such a case you will simply get images in PNM format in directory OUTPUT_FILES instead of GIF format
   call system(system_command)
 
   ! removes PNM file
