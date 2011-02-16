@@ -266,6 +266,9 @@
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 !
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
+!
+! Dimitri Komatitsch, IPG Paris, December 1996: first 3-D solver for the CM-5 Connection Machine
+!
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -303,7 +306,6 @@
 
 ! saves last time frame and finishes kernel calculations
   call finalize_simulation()
-
 
   end subroutine specfem3D
 

@@ -180,6 +180,9 @@
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 !
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
+!
+! Dimitri Komatitsch, IPG Paris, December 1996: first 3-D solver for the CM-5 Connection Machine
+!
 
 ! number of spectral elements in each block
   integer nspec,npointot
