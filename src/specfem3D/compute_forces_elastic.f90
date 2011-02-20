@@ -207,7 +207,7 @@ subroutine compute_forces_elastic()
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         xi_source,eta_source,gamma_source,nu_source, &
-                        hdur,hdur_gaussian,t_cmt,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_cmt,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &

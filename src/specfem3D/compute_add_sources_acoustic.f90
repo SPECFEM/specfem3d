@@ -30,7 +30,7 @@
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   xi_source,eta_source,gamma_source, &
-                                  hdur,hdur_gaussian,t_cmt,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_cmt,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
@@ -62,7 +62,7 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,t_cmt
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -127,11 +127,11 @@
               !endif
 
               ! gaussian source time function
-              !stf_used = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              !stf_used = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
               ! we use nu_source(:,3) here because we want a source normal to the surface.
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-t_cmt(isource),f0)
+              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -147,10 +147,10 @@
             else
 
               ! gaussian source time
-              stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
               ! quasi-heaviside
-              !stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
               ! distinguishes between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then
@@ -321,11 +321,11 @@
               !endif
 
               ! gaussian source time function
-              !stf_used = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              !stf_used = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
               ! we use nu_source(:,3) here because we want a source normal to the surface.
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-t_cmt(isource),f0)
+              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -341,7 +341,7 @@
             else
 
               ! gaussian source time
-              stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
               ! distinguishes between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then

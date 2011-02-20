@@ -30,7 +30,7 @@
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         xi_source,eta_source,gamma_source,nu_source, &
-                        hdur,hdur_gaussian,t_cmt,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_cmt,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &
@@ -67,7 +67,7 @@
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(3,3,NSOURCES) :: nu_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,t_cmt
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -130,7 +130,7 @@
               !endif
 
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-t_cmt(isource),f0)
+              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
               ! we use a force in a single direction along one of the components:
               !  x/y/z or E/N/Z-direction would correspond to 1/2/3 = COMPONENT_FORCE_SOURCE
@@ -140,7 +140,7 @@
 
             else
 
-               stf = comp_source_time_function(dble(it-1)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+               stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
                !     distinguish between single and double precision for reals
                if(CUSTOM_REAL == SIZE_REAL) then
@@ -303,7 +303,7 @@
                !endif
 
                ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-t_cmt(isource),f0)
+               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
                ! e.g. we use nu_source(:,3) here if we want a source normal to the surface.
                ! note: time step is now at NSTEP-it
@@ -314,7 +314,7 @@
 
               ! see note above: time step corresponds now to NSTEP-it
               ! (also compare to it-1 for forward simulation)
-              stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(isource),hdur_gaussian(isource))
+              stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
 
               ! distinguish between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then

@@ -92,7 +92,7 @@ module specfem_par
   double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
-  double precision, dimension(:), allocatable :: t_cmt,hdur,hdur_gaussian
+  double precision, dimension(:), allocatable :: tshift_cmt,hdur,hdur_gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
   double precision :: t0
