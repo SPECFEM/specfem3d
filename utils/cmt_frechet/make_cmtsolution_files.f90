@@ -32,7 +32,7 @@
   include "cmt.h"
 
   integer yr,jda,ho,mi
-  double precision sec,t_cmt,hdur,lat,long,depth
+  double precision sec,tshift_cmt,hdur,lat,long,depth
   double precision moment_tensor(6)
   character(len=256) cmt_file
 
@@ -80,7 +80,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
       else if(string(1:10) == 'time shift') then
-        read(string(12:lstr),*) t_cmt
+        read(string(12:lstr),*) tshift_cmt
         do iu=2,10
           write(iu,"(a)") string(1:lstr)
         enddo

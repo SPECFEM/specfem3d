@@ -70,7 +70,7 @@ subroutine setup_sources()
   use specfem_par_movie
   implicit none
 
-  double precision :: t0_ac,tshift_cmt_original
+  double precision :: t0_acoustic,min_tshift_cmt_original
   integer :: yr,jda,ho,mi
   integer :: isource,ispec
 
@@ -86,7 +86,7 @@ subroutine setup_sources()
   allocate(xi_source(NSOURCES))
   allocate(eta_source(NSOURCES))
   allocate(gamma_source(NSOURCES))
-  allocate(t_cmt(NSOURCES))
+  allocate(tshift_cmt(NSOURCES))
   allocate(hdur(NSOURCES))
   allocate(hdur_gaussian(NSOURCES))
   allocate(utm_x_source(NSOURCES))
@@ -99,7 +99,7 @@ subroutine setup_sources()
 !                xi_source, eta_source & gamma_source
   call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          t_cmt,tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          tshift_cmt,min_tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
@@ -109,7 +109,7 @@ subroutine setup_sources()
           ispec_is_acoustic,ispec_is_elastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
-  if(abs(minval(t_cmt)) > TINYVAL) call exit_MPI(myrank,'one t_cmt must be zero, others must be positive')
+  if(abs(minval(tshift_cmt)) > TINYVAL) call exit_MPI(myrank,'one tshift_cmt must be zero, others must be positive')
 
 ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
@@ -127,24 +127,24 @@ subroutine setup_sources()
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
   !          non-zero offset at the beginning of the source time function
-  t0 = - 2.0d0 * minval(t_cmt(:) - hdur(:))   ! - 1.5d0 * minval(t_cmt-hdur)
+  t0 = - 2.0d0 * minval(tshift_cmt(:) - hdur(:))   ! - 1.5d0 * minval(tshift_cmt-hdur)
 
   ! uses an earlier start time if source is acoustic with a gaussian source time function
-  t0_ac = 0.0d0
+  t0_acoustic = 0.0d0
   do isource = 1,NSOURCES
     if( myrank == islice_selected_source(isource) ) then
       ispec = ispec_selected_source(isource)
       if( ispec_is_acoustic(ispec) ) then
         ! uses an earlier start time
-        t0_ac = - 3.0d0 * ( t_cmt(isource) - hdur(isource) )
-        if(  t0_ac > t0 ) t0 = t0_ac
+        t0_acoustic = - 3.0d0 * ( tshift_cmt(isource) - hdur(isource) )
+        if(  t0_acoustic > t0 ) t0 = t0_acoustic
       endif
     endif
   enddo
   ! passes maximum value to all processes
   ! note: t0 is defined positive and will be subtracted from simulation time (it-1)*DT
-  t0_ac = t0
-  call max_all_all_dp(t0_ac,t0)
+  t0_acoustic = t0
+  call max_all_all_dp(t0_acoustic,t0)
 
   ! point force sources will start depending on the frequency given by hdur
   if( USE_FORCE_POINT_SOURCE ) then
@@ -152,7 +152,7 @@ subroutine setup_sources()
     !          thus the main period is 1/hdur.
     !          also, these sources use a Ricker source time function instead of a gaussian.
     !          for a Ricker source time function, a start time ~1.2 * main_period is a good choice
-    t0 = - 1.2d0 * minval(t_cmt(:) - 1.0d0/hdur(:))
+    t0 = - 1.2d0 * minval(tshift_cmt(:) - 1.0d0/hdur(:))
   endif
 
   ! checks if user set USER_T0 to fix simulation start time
@@ -165,17 +165,17 @@ subroutine setup_sources()
     ! notifies user
     if( myrank == 0 ) then
       write(IMAIN,*) 'USER_T0: ',USER_T0
-      write(IMAIN,*) 't0: ',t0,'tshift_cmt_original: ',tshift_cmt_original
+      write(IMAIN,*) 't0: ',t0,'min_tshift_cmt_original: ',min_tshift_cmt_original
       write(IMAIN,*)
     endif
 
     ! checks if automatically set t0 is too small
-    ! note: tshift_cmt_original can be a positive or negative time shift (minimum from all tshift)
-    if( t0 <= USER_T0 + tshift_cmt_original ) then
-      ! by default, t_cmt(:) holds relative time shifts with a minimum time shift set to zero
+    ! note: min_tshift_cmt_original can be a positive or negative time shift (minimum from all tshift)
+    if( t0 <= USER_T0 + min_tshift_cmt_original ) then
+      ! by default, tshift_cmt(:) holds relative time shifts with a minimum time shift set to zero
       ! re-adds (minimum) original time shift such that sources will kick in
       ! according to their absolute time shift
-      t_cmt(:) = t_cmt(:) + tshift_cmt_original
+      tshift_cmt(:) = tshift_cmt(:) + min_tshift_cmt_original
 
       ! sets new simulation start time such that
       ! simulation starts at t = - t0 = - USER_T0
@@ -192,7 +192,7 @@ subroutine setup_sources()
       if( myrank == 0 ) then
         write(IMAIN,*) 'error: USER_T0 is too small'
         write(IMAIN,*) '       must make one of three adjustements:'
-        write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-tshift_cmt_original
+        write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-min_tshift_cmt_original
         write(IMAIN,*) '       - decrease time shift in CMTSOLUTION file'
         write(IMAIN,*) '       - decrease hdur in CMTSOLUTION file'
       endif

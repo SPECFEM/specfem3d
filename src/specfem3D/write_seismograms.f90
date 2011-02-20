@@ -129,7 +129,7 @@
                       etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
                       gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
 
-        stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-t_cmt(irec),hdur_gaussian(irec))
+        stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_cmt(irec),hdur_gaussian(irec))
         stf_deltat = stf * deltat
         Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
         Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat

@@ -30,7 +30,7 @@
 
   subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
                  xigll,yigll,zigll,NPROC, &
-                 t_cmt,tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+                 tshift_cmt,min_tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
@@ -62,8 +62,8 @@
 
   integer yr,jda,ho,mi
 
-  double precision t_cmt(NSOURCES)
-  double precision sec,tshift_cmt_original
+  double precision tshift_cmt(NSOURCES)
+  double precision sec,min_tshift_cmt_original
 
   integer iprocloop
 
@@ -160,8 +160,8 @@
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
   ! read all the sources (note: each process reads the source file)
-  call get_cmt(yr,jda,ho,mi,sec,t_cmt,hdur,lat,long,depth,moment_tensor, &
-              DT,NSOURCES,tshift_cmt_original)
+  call get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
+              DT,NSOURCES,min_tshift_cmt_original)
 
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
@@ -798,7 +798,7 @@
           write(IMAIN,*) '  using a source of dominant frequency ',f0
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-          write(IMAIN,*) '  t0_ricker = ',t0_ricker,'t_cmt = ',t_cmt(isource)
+          write(IMAIN,*) '  t0_ricker = ',t0_ricker,'tshift_cmt = ',tshift_cmt(isource)
           write(IMAIN,*)
           write(IMAIN,*) '  half duration -> frequency: ',hdur(isource),' seconds**(-1)'
         else
@@ -814,7 +814,7 @@
           endif
           write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
         endif
-        write(IMAIN,*) '  time shift: ',t_cmt(isource),' seconds'
+        write(IMAIN,*) '  time shift: ',tshift_cmt(isource),' seconds'
         write(IMAIN,*)
         write(IMAIN,*) 'original (requested) position of the source:'
         write(IMAIN,*)
