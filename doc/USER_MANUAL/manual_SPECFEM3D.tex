@@ -79,6 +79,10 @@
 \newcommand{\nproceta}{\mbox{\texttt{NPROC\_ETA\/}}}
 \newcommand{\nchunks}{\mbox{\texttt{NCHUNKS\/}}}
 
+% colors for the text
+\usepackage[dvipsnames,usenames]{color}
+\newcommand{\red}[1]{\textcolor{Red}{#1}}
+
 \usepackage{babel}
 \makeatother
 
@@ -210,6 +214,10 @@ Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent 
 \cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11}.
 
 \end{description}
+
+\noindent
+\red{If you use this new version 2.0, which has non blocking MPI for much better performance for medium or large runs, please cite at least one of these six articles,
+in which results of non blocking MPI runs are presented: \cite{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.}\\
 
 \noindent
 If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others:
