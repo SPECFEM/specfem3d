@@ -8,7 +8,7 @@ constant elastic material property, using CUBIT and runs a forward simulation.
 step-by-step tutorial:
 
 0. check that all software is available (or that modules are loaded):
-     intel/openmpi, cubit, scotch, python, gnuplot
+     intel/openmpi, cubit, scotch, python, gnuplot (or xmgrace)
 
 1. configure package:
 
@@ -22,7 +22,7 @@ step-by-step tutorial:
      If successful, this will generate the files in src/shared/:
      Makefile, constants.h, and precision.h, among others
 
-     note: the same compiler used for SCOTCH must be used for SPECFEM3D (ifort or gfortran)
+     note: the same compiler used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
 
    - copy three run scripts from utils/Cluster/ into SPECFEM3D/, e.g.,
      pbs/go_decomposer_pbs.bash
@@ -122,7 +122,13 @@ step-by-step tutorial:
 7. check with 6 reference seismograms in
       SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
 
-   - execute gnuplot script
+   - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
+     
+     > xmgrace examples/homogeneous_halfspace/REF_SEIS/*Z.semd &
+     > xmgrace in_out_files/OUTPUT_FILES/*Z.semd &
+
+   - option 2: generate ps files using gnuplot:
+
      > cd SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS
      > gnuplot
 
@@ -143,12 +149,9 @@ step-by-step tutorial:
          gnuplot> replot
          gnuplot> quit
 
-
-8. plot your output seismograms in SPECFEM3D/in_out_files/OUTPUT_FILES/
-
-   - copy gnuplot script X1-50.BXZ.gnuplot to in_out_files/OUTPUT_FILES/
-   - execute same commands as above
-   - you should see the same image as generated from the reference seismograms
+     - copy gnuplot script X1-50.BXZ.gnuplot to in_out_files/OUTPUT_FILES/
+     - execute same commands as above
+     - you should see the same image as generated from the reference seismograms
 
 ===========================================================
 
