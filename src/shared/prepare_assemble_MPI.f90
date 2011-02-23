@@ -69,18 +69,11 @@
 
   logical, dimension(:),allocatable  :: mask_ibool_asteroid
 
-  integer  :: ixmin, ixmax
-  integer  :: iymin, iymax
-  integer  :: izmin, izmax
+  integer  :: ixmin, ixmax, iymin, iymax, izmin, izmax
   integer, dimension(ngnode)  :: n
   integer  :: e1, e2, e3, e4
-  integer  :: type
-  integer  :: ispec
-
-  integer  :: k
+  integer  :: ispec,k,ix,iy,iz,ier,itype,iglob
   integer  :: npoin_interface_asteroid
-
-  integer  :: ix,iy,iz,ier
 
 ! initializes
   allocate( mask_ibool_asteroid(npoin), stat=ier); if( ier /= 0) stop 'error allocating array'
@@ -98,7 +91,7 @@
       ! spectral element on interface
       ispec = my_interfaces(1,ispec_interface,num_interface)
       ! type of interface: (1) corner point, (2) edge, (4) face
-      type = my_interfaces(2,ispec_interface,num_interface)
+      itype = my_interfaces(2,ispec_interface,num_interface)
       ! gets spectral element corner indices  (defines all nodes of face/edge)
       do k = 1, ngnode
          n(k) = knods(k,ispec)
@@ -111,20 +104,23 @@
       e4 = my_interfaces(6,ispec_interface,num_interface)
 
       ! gets i,j,k ranges for interface type
-      call get_edge(ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iymax, izmin, izmax)
+      call get_edge(ngnode, n, itype, e1, e2, e3, e4, &
+                   ixmin, ixmax, iymin, iymax, izmin, izmax)
 
       ! counts number and stores indices of (global) points on MPI interface
       do iz = min(izmin,izmax), max(izmin,izmax)
         do iy = min(iymin,iymax), max(iymin,iymax)
           do ix = min(ixmin,ixmax), max(ixmin,ixmax)
+            ! global index
+            iglob = ibool(ix,iy,iz,ispec)
+            
             ! stores global index of point on interface
-            if(.not. mask_ibool_asteroid(ibool(ix,iy,iz,ispec))) then
+            if(.not. mask_ibool_asteroid(iglob)) then
               ! masks point as being accounted for
-              mask_ibool_asteroid(ibool(ix,iy,iz,ispec)) = .true.
+              mask_ibool_asteroid(iglob) = .true.
               ! adds point to interface
               npoin_interface_asteroid = npoin_interface_asteroid + 1
-              ibool_interfaces_asteroid(npoin_interface_asteroid,num_interface) = &
-                       ibool(ix,iy,iz,ispec)
+              ibool_interfaces_asteroid(npoin_interface_asteroid,num_interface) = iglob
             end if
           end do
         end do
@@ -145,9 +141,11 @@ end subroutine prepare_assemble_MPI
 !----
 !
 
-subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iymax, izmin, izmax )
+subroutine get_edge ( ngnode, n, itype, e1, e2, e3, e4, &
+                    ixmin, ixmax, iymin, iymax, izmin, izmax )
 
-! returns range of local (GLL) point indices i,j,k depending on given type for corner point (1), edge (2) or face (4)
+! returns range of local (GLL) point indices i,j,k depending on given type 
+! for corner point (1), edge (2) or face (4)
 
   implicit none
 
@@ -158,7 +156,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
   integer, dimension(ngnode), intent(in)  :: n
 
 ! interface type & nodes
-  integer, intent(in)  :: type, e1, e2, e3, e4
+  integer, intent(in)  :: itype, e1, e2, e3, e4
 
 ! local (GLL) i,j,k index ranges
   integer, intent(out)  :: ixmin, ixmax, iymin, iymax, izmin, izmax
@@ -168,7 +166,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
   integer :: valence, i
 
 ! determines local indexes for corners/edges/faces
-  if ( type == 1 ) then
+  if ( itype == 1 ) then
 
 ! corner point
 
@@ -237,7 +235,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
       izmax = NGLLZ
     end if
 
-  else if ( type == 2 ) then
+  else if ( itype == 2 ) then
 
 ! edges
 
@@ -402,7 +400,7 @@ subroutine get_edge ( ngnode, n, type, e1, e2, e3, e4, ixmin, ixmax, iymin, iyma
        end if
     end if
 
-  else if (type == 4) then
+  else if (itype == 4) then
 
 ! face corners
 

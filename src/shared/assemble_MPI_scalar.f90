@@ -85,12 +85,14 @@
 
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
+      ! non-blocking synchronous send request
       call issend_cr(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
            itag, &
            request_send_scalar_ext_mesh(iinterface) &
            )
+      ! receive request     
       call irecv_cr(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
@@ -99,7 +101,7 @@
            )
     enddo
 
-    ! wait for communications completion
+    ! wait for communications completion (recv)
     do iinterface = 1, num_interfaces_ext_mesh
       call wait_req(request_recv_scalar_ext_mesh(iinterface))
     enddo
@@ -169,18 +171,21 @@
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        buffer_send_scalar_ext_mesh(ipoin,iinterface) = array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
+        buffer_send_scalar_ext_mesh(ipoin,iinterface) = &
+          array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
       enddo
     enddo
 
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
+      ! non-blocking synchronous send request
       call issend_i(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
            itag, &
            request_send_scalar_ext_mesh(iinterface) &
            )
+      ! receive request     
       call irecv_i(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
@@ -198,7 +203,8 @@
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
         array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-             array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
+             array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) &
+             + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
       enddo
     enddo
 
@@ -256,18 +262,21 @@
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        buffer_send_scalar_ext_mesh(ipoin,iinterface) = array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
+        buffer_send_scalar_ext_mesh(ipoin,iinterface) = &
+          array_val(ibool_interfaces_ext_mesh(ipoin,iinterface))
       enddo
     enddo
 
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
+      ! non-blocking synchronous send request    
       call issend_cr(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
            itag, &
            request_send_scalar_ext_mesh(iinterface) &
            )
+      ! receive request
       call irecv_cr(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
@@ -316,7 +325,7 @@
 ! assemble only if more than one partition
   if(NPROC > 1) then
 
-    ! wait for communications completion
+    ! wait for communications completion (recv)
     do iinterface = 1, num_interfaces_ext_mesh
       call wait_req(request_recv_scalar_ext_mesh(iinterface))
     enddo
@@ -325,7 +334,8 @@
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
         array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-             array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
+             array_val(ibool_interfaces_ext_mesh(ipoin,iinterface)) &
+             + buffer_recv_scalar_ext_mesh(ipoin,iinterface)
       enddo
     enddo
 

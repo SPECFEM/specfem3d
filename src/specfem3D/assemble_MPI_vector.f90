@@ -76,7 +76,8 @@
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-        buffer_send_vector_ext_mesh(:,ipoin,iinterface) = array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+        buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
+          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
       enddo
     enddo
 
@@ -105,7 +106,8 @@
     do iinterface = 1, num_interfaces_ext_mesh
       do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
         array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-             array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
+             array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) &
+             + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
       enddo
     enddo
 
@@ -165,7 +167,8 @@
 ! partition border copy into the buffer
   do iinterface = 1, num_interfaces_ext_mesh
     do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
-      buffer_send_vector_ext_mesh(:,ipoin,iinterface) = array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+      buffer_send_vector_ext_mesh(:,ipoin,iinterface) = &
+        array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
     enddo
   enddo
 
@@ -235,7 +238,8 @@
   do iinterface = 1, num_interfaces_ext_mesh
     do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
       array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
-           array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
+           array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) &
+           + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
     enddo
   enddo
 
