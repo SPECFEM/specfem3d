@@ -90,20 +90,23 @@ contains
                    if ( .not.is_neighbour ) then
                       if ( adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+m) == nodes_elmnts(l+j*nsize) ) then
                          is_neighbour = .true.
-
                       end if
                    end if
                 end do
                 if ( .not.is_neighbour ) then
-                   adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
+                   adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour &
+                          + xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
 
-                   xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
-                   if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) stop 'ERROR : too much neighbours per element, modify the mesh.'
+                   xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1                   
+                   if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) &
+                    stop 'ERROR : too much neighbours per element, modify the mesh.'
 
-                   adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour+xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
+                   adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour &
+                          + xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
 
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
-                   if (xadj(nodes_elmnts(l+j*nsize))>sup_neighbour) stop 'ERROR : too much neighbours per element, modify the mesh.'
+                   if (xadj(nodes_elmnts(l+j*nsize))>sup_neighbour) &
+                    stop 'ERROR : too much neighbours per element, modify the mesh.'
                 end if
              end if
           end do
@@ -144,7 +147,7 @@ contains
     ! allocates local numbering array
     allocate(glob2loc_elmnts(0:nelmnts-1))
 
-    ! initializes number of local points per partition
+    ! initializes number of local elements per partition
     do num_part = 0, nparts-1
        num_loc(num_part) = 0
     end do
@@ -196,14 +199,12 @@ contains
        glob2loc_nodes_nparts(num_node) = size_glob2loc_nodes
        do el = 0, nnodes_elmnts(num_node)-1
           parts_node(part(nodes_elmnts(el+nsize*num_node))) = 1
-
        end do
 
        do num_part = 0, nparts-1
           if ( parts_node(num_part) == 1 ) then
              size_glob2loc_nodes = size_glob2loc_nodes + 1
              parts_node(num_part) = 0
-
           end if
        end do
 
@@ -224,7 +225,6 @@ contains
     do num_node = 0, nnodes-1
        do el = 0, nnodes_elmnts(num_node)-1
           parts_node(part(nodes_elmnts(el+nsize*num_node))) = 1
-
        end do
        do num_part = 0, nparts-1
 
@@ -332,7 +332,8 @@ contains
                       do num_node = 0, esize-1
                          do num_node_bis = 0, esize-1
                             if ( elmnts(el*esize+num_node) == elmnts(adjncy(el_adj)*esize+num_node_bis) ) then
-                               tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+3+ncommon_nodes) &
+                               tab_interfaces(tab_size_interfaces(num_interface)*7 &
+                                              +num_edge*7+3+ncommon_nodes) &
                                     = elmnts(el*esize+num_node)
                                ncommon_nodes = ncommon_nodes + 1
                             end if
@@ -432,8 +433,10 @@ contains
                    else
                       is_acoustic_el_adj = .false.
                    end if
-                   ! adds element if neighbor element has same material acoustic/not-acoustic and lies in next partition
-                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
+                   ! adds element if neighbor element has same material acoustic/not-acoustic 
+                   ! and lies in next partition
+                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
+                       (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
                       num_edge = num_edge + 1
                    end if
                 end do
@@ -478,14 +481,16 @@ contains
                    else
                       is_acoustic_el_adj = .false.
                    end if
-                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
+                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
+                       (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
                       ncommon_nodes = 0
                       do num_node = 0, esize-1
                          do num_node_bis = 0, esize-1
                             if ( elmnts(el*esize+num_node) == elmnts(adjncy(el_adj)*esize+num_node_bis) ) then
-                               tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+3+ncommon_nodes) &
+                               tab_interfaces(tab_size_interfaces(num_interface)*7 &
+                                             +num_edge*7+3+ncommon_nodes) &
                                     = elmnts(el*esize+num_node)
                                ncommon_nodes = ncommon_nodes + 1
                             end if
@@ -546,7 +551,8 @@ contains
        do i = 0, nnodes-1
           do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
              if ( glob2loc_nodes_parts(j) == iproc ) then
-                write(IIN_database,*) glob2loc_nodes(j)+1, nodes_coords(1,i+1), nodes_coords(2,i+1), nodes_coords(3,i+1)
+                write(IIN_database,*) glob2loc_nodes(j)+1, nodes_coords(1,i+1), &
+                                      nodes_coords(2,i+1), nodes_coords(3,i+1)
              end if
           end do
        end do
@@ -558,7 +564,8 @@ contains
   !--------------------------------------------------
   ! Write material properties in the Database
   !--------------------------------------------------
-  subroutine write_material_props_database(IIN_database,count_def_mat,count_undef_mat, mat_prop, undef_mat_prop)
+  subroutine write_material_props_database(IIN_database,count_def_mat, &
+                                count_undef_mat, mat_prop, undef_mat_prop)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: count_def_mat,count_undef_mat
@@ -587,7 +594,8 @@ contains
 
 
   !--------------------------------------------------
-  ! Write elements on boundaries (and their four nodes on boundaries) pertaining to iproc partition in the corresponding Database
+  ! Write elements on boundaries (and their four nodes on boundaries) 
+  ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_boundaries_database(IIN_database, iproc, nelmnts, nspec2D_xmin, nspec2D_xmax, &
                         nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
@@ -601,7 +609,8 @@ contains
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer(long), intent(in)  :: nelmnts
-    integer, intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
+    integer, intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
+      nspec2D_ymax, nspec2D_bottom, nspec2D_top
     integer, dimension(nspec2D_xmin), intent(in) :: ibelm_xmin
     integer, dimension(nspec2D_xmax), intent(in) :: ibelm_xmax
     integer, dimension(nspec2D_ymin), intent(in) :: ibelm_ymin
@@ -678,126 +687,150 @@ contains
     !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1 )
     do i=1,nspec2D_xmin
        if(part(ibelm_xmin(i)) == iproc) then
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmin(1,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(1,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmin(1,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node1 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(2,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmin(2,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(2,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmin(2,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node2 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(3,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmin(3,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(3,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmin(3,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node3 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(4,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmin(4,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmin(4,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmin(4,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_xmin(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
+          write(IIN_database,*) glob2loc_elmnts(ibelm_xmin(i)-1)+1, &
+                                loc_node1, loc_node2, loc_node3, loc_node4
        end if
     end do
 
     do i=1,nspec2D_xmax
        if(part(ibelm_xmax(i)) == iproc) then
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmax(1,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(1,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmax(1,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node1 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(2,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmax(2,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(2,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmax(2,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node2 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(3,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmax(3,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(3,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmax(3,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node3 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(4,i)-1), glob2loc_nodes_nparts(nodes_ibelm_xmax(4,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_xmax(4,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_xmax(4,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_xmax(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
+          write(IIN_database,*) glob2loc_elmnts(ibelm_xmax(i)-1)+1, &
+                                loc_node1, loc_node2, loc_node3, loc_node4
        end if
     end do
 
     do i=1,nspec2D_ymin
        if(part(ibelm_ymin(i)) == iproc) then
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymin(1,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(1,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymin(1,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node1 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(2,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymin(2,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(2,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymin(2,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node2 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(3,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymin(3,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(3,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymin(3,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node3 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(4,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymin(4,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymin(4,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymin(4,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_ymin(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
+          write(IIN_database,*) glob2loc_elmnts(ibelm_ymin(i)-1)+1, &
+                                loc_node1, loc_node2, loc_node3, loc_node4
        end if
     end do
 
     do i=1,nspec2D_ymax
        if(part(ibelm_ymax(i)) == iproc) then
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymax(1,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(1,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymax(1,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node1 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(2,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymax(2,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(2,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymax(2,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node2 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(3,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymax(3,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(3,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymax(3,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node3 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(4,i)-1), glob2loc_nodes_nparts(nodes_ibelm_ymax(4,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_ymax(4,i)-1), &
+                  glob2loc_nodes_nparts(nodes_ibelm_ymax(4,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_ymax(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
+          write(IIN_database,*) glob2loc_elmnts(ibelm_ymax(i)-1)+1, &
+                               loc_node1, loc_node2, loc_node3, loc_node4
        end if
     end do
 
     do i=1,nspec2D_bottom
        if(part(ibelm_bottom(i)) == iproc) then
-          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(1,i)-1), glob2loc_nodes_nparts(nodes_ibelm_bottom(1,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(1,i)-1), &
+                 glob2loc_nodes_nparts(nodes_ibelm_bottom(1,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node1 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(2,i)-1), glob2loc_nodes_nparts(nodes_ibelm_bottom(2,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(2,i)-1), &
+                 glob2loc_nodes_nparts(nodes_ibelm_bottom(2,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node2 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(3,i)-1), glob2loc_nodes_nparts(nodes_ibelm_bottom(3,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(3,i)-1), &
+                 glob2loc_nodes_nparts(nodes_ibelm_bottom(3,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node3 = glob2loc_nodes(j)+1
              end if
           end do
-          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(4,i)-1), glob2loc_nodes_nparts(nodes_ibelm_bottom(4,i))-1
+          do j = glob2loc_nodes_nparts(nodes_ibelm_bottom(4,i)-1), &
+                 glob2loc_nodes_nparts(nodes_ibelm_bottom(4,i))-1
              if (glob2loc_nodes_parts(j) == iproc ) then
                 loc_node4 = glob2loc_nodes(j)+1
              end if
@@ -888,7 +921,8 @@ contains
 
              ! format:
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
-             write(IIN_database,*) glob2loc_elmnts(i)+1, num_modele(1,i+1), num_modele(2,i+1),(loc_nodes(k)+1, k=0,ngnod-1)
+             write(IIN_database,*) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
+                                  num_modele(2,i+1),(loc_nodes(k)+1, k=0,ngnod-1)
           end if
        end do
     end if
@@ -901,9 +935,11 @@ contains
   !--------------------------------------------------
   ! Write interfaces (element and common nodes) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, iproc, ninterfaces, &
-       my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
-       glob2loc_nodes, num_phase, nparts)
+  subroutine write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, &
+                              iproc, ninterfaces, &
+                              my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
+                              glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                              glob2loc_nodes, num_phase, nparts)
 
 !    include './constants_decompose_mesh_SCOTCH.h'
 
@@ -945,7 +981,8 @@ contains
                 ! sets flag
                 my_interfaces(num_interface) = 1
                 ! sets number of elements on interface
-                my_nb_interfaces(num_interface) = tab_size_interfaces(num_interface+1) - tab_size_interfaces(num_interface)
+                my_nb_interfaces(num_interface) = tab_size_interfaces(num_interface+1) &
+                                            - tab_size_interfaces(num_interface)
              end if
              num_interface = num_interface + 1
           end do
@@ -1008,7 +1045,8 @@ contains
                            local_nodes(1) = glob2loc_nodes(l)+1
                         end if
                      end do
-                     write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), local_nodes(1), -1, -1, -1
+                     write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), &
+                                        local_nodes(1), -1, -1, -1
                   case (2)
                      ! edge element
                      do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
@@ -1023,7 +1061,8 @@ contains
                            local_nodes(2) = glob2loc_nodes(l)+1
                         end if
                      end do
-                     write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), local_nodes(1), local_nodes(2), -1, -1
+                     write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), &
+                                        local_nodes(1), local_nodes(2), -1, -1
                   case (4)
                      ! face element
                      count_faces = count_faces + 1
@@ -1142,7 +1181,8 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          write(IIN_database,*) glob2loc_elmnts(ibelm_moho(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
+          write(IIN_database,*) glob2loc_elmnts(ibelm_moho(i)-1)+1, &
+                              loc_node1, loc_node2, loc_node3, loc_node4
        end if
 
     end do

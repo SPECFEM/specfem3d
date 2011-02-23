@@ -564,12 +564,12 @@ module decompose_mesh_SCOTCH
 
     nb_edges = xadj(nspec+1)
 
-  ! allocates & initializes partioning of elements
+    ! allocates & initializes partioning of elements
     allocate(part(1:nspec))
     part(:) = -1
 
-  ! initializes
-  ! elements load array
+    ! initializes
+    ! elements load array
     allocate(elmnts_load(1:nspec))
 
     ! uniform load
@@ -579,7 +579,7 @@ module decompose_mesh_SCOTCH
     call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                               mat(1,:),mat_prop,undef_mat_prop)
 
-  ! SCOTCH partitioning
+    ! SCOTCH partitioning
 
     ! we use default strategy for partitioning, thus omit specifing explicit strategy .
 

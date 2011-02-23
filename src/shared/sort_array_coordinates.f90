@@ -27,7 +27,8 @@
 
 ! subroutines to sort MPI buffers to assemble between chunks
 
-  subroutine sort_array_coordinates(npointot,x,y,z,ibool,iglob,loc,ifseg,nglob,ind,ninseg,iwork,work)
+  subroutine sort_array_coordinates(npointot,x,y,z,ibool,iglob,loc,ifseg, &
+                                    nglob,ind,ninseg,iwork,work)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
@@ -46,7 +47,7 @@
   double precision x(npointot),y(npointot),z(npointot)
   integer iwork(npointot)
   double precision work(npointot)
-
+  ! local parameters
   integer ipoin,i,j
   integer nseg,ioff,iseg,ig
   double precision xtol

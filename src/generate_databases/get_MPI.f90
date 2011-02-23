@@ -25,12 +25,12 @@
 !=====================================================================
 
   subroutine get_MPI(myrank,nglob,nspec,ibool, &
-                                    nelmnts_ext_mesh,elmnts_ext_mesh, &
-                                    my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-                                    ibool_interfaces_ext_mesh, &
-                                    nibool_interfaces_ext_mesh, &
-                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                                    my_neighbours_ext_mesh,NPROC)
+                    nelmnts_ext_mesh,elmnts_ext_mesh, &
+                    my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+                    ibool_interfaces_ext_mesh, &
+                    nibool_interfaces_ext_mesh, &
+                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                    my_neighbours_ext_mesh,NPROC)
 
 ! sets up the MPI interface for communication between partitions
 
@@ -49,18 +49,17 @@
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
-  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
+  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
+    my_interfaces_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
+    ibool_interfaces_ext_mesh
 
 
-  !integer :: nnodes_ext_mesh
-  !double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
-
-!local parameters
+  !local parameters
   double precision, dimension(:), allocatable :: xp,yp,zp
   double precision, dimension(:), allocatable :: work_ext_mesh
 
@@ -68,8 +67,8 @@
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh_true
 
   ! for MPI buffers
-  integer, dimension(:), allocatable :: reorder_interface_ext_mesh,ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
-  integer, dimension(:), allocatable :: ibool_interface_ext_mesh_dummy
+  integer, dimension(:), allocatable :: reorder_interface_ext_mesh, &
+    ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh
   logical, dimension(:), allocatable :: ifseg
   integer :: iinterface,ilocnum
   integer :: num_points1, num_points2
@@ -81,8 +80,10 @@
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
   integer, dimension(:,:), allocatable :: ibool_interfaces_dummy
 
-! gets global indices for points on MPI interfaces (defined by my_interfaces_ext_mesh) between different partitions
-! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh (number of total points)
+  ! gets global indices for points on MPI interfaces 
+  ! (defined by my_interfaces_ext_mesh) between different partitions
+  ! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh 
+  ! (number of total points)
   call prepare_assemble_MPI( nelmnts_ext_mesh,elmnts_ext_mesh, &
                             ibool,nglob,ESIZE, &
                             num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
@@ -92,7 +93,7 @@
 
   allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh))
 
-! sorts ibool comm buffers lexicographically for all MPI interfaces
+  ! sorts ibool comm buffers lexicographically for all MPI interfaces
   num_points1 = 0
   num_points2 = 0
   do iinterface = 1, num_interfaces_ext_mesh
@@ -103,7 +104,6 @@
     allocate(locval(nibool_interfaces_ext_mesh(iinterface)))
     allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)))
     allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ibool_interface_ext_mesh_dummy(nibool_interfaces_ext_mesh(iinterface)))
     allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
     allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
     allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
@@ -120,7 +120,8 @@
     ! of total number of points nibool_interfaces_ext_mesh_true(iinterface)
     call sort_array_coordinates(nibool_interfaces_ext_mesh(iinterface),xp,yp,zp, &
          ibool_interfaces_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
-         reorder_interface_ext_mesh,locval,ifseg,nibool_interfaces_ext_mesh_true(iinterface), &
+         reorder_interface_ext_mesh,locval,ifseg, &
+         nibool_interfaces_ext_mesh_true(iinterface), &
          ind_ext_mesh,ninseg_ext_mesh,iwork_ext_mesh,work_ext_mesh)
 
     ! checks that number of MPI points are still the same
@@ -140,7 +141,6 @@
     deallocate(locval)
     deallocate(ifseg)
     deallocate(reorder_interface_ext_mesh)
-    deallocate(ibool_interface_ext_mesh_dummy)
     deallocate(ind_ext_mesh)
     deallocate(ninseg_ext_mesh)
     deallocate(iwork_ext_mesh)
@@ -157,7 +157,7 @@
     write(IMAIN,*) '     total MPI interface points: ',ilocnum
   endif
 
-! checks with assembly of test fields
+  ! checks with assembly of test fields
   allocate(test_flag(nglob),test_flag_cr(nglob))
   test_flag(:) = 0
   test_flag_cr(:) = 0._CUSTOM_REAL
@@ -189,9 +189,11 @@
 
   count = 0
   do iinterface = 1, num_interfaces_ext_mesh
-     ibool_interfaces_dummy(:,iinterface) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,iinterface)
+     ibool_interfaces_dummy(:,iinterface) = &
+      ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,iinterface)
      count = count + nibool_interfaces_ext_mesh(iinterface)
-     !write(*,*) myrank,'interfaces ',iinterface,nibool_interfaces_ext_mesh(iinterface),max_nibool_interfaces_ext_mesh
+     !write(*,*) myrank,'interfaces ',iinterface, &
+     !            nibool_interfaces_ext_mesh(iinterface),max_nibool_interfaces_ext_mesh
   enddo
   call sync_all()
 

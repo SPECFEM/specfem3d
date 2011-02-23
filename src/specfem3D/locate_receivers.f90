@@ -951,8 +951,16 @@
 
         if( stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
            stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
-          write(IOUT,*) trim(station_name),' ',trim(network_name),' ',sngl(stlat), &
-                       ' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
+          
+          ! w/out formating
+          ! write(IOUT,*) trim(station_name),' ',trim(network_name),' ',sngl(stlat), &
+          !              ' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
+
+          ! w/ specific format
+          write(IOUT,'(a10,1x,a10,4e18.6)') &
+                            trim(station_name),trim(network_name), &
+                            sngl(stlat),sngl(stlon),sngl(stele),sngl(stbur)
+                       
        endif
       end if
     enddo
