@@ -10,7 +10,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 
 
 AC_PREREQ(2.61)
-AC_INIT([Specfem 3D], [2.0.0], [jtromp AT caltech.edu], [Specfem3D])
+AC_INIT([Specfem 3D], [2.0.0], [jtromp AT princeton.edu], [Specfem3D])
 AC_CONFIG_SRCDIR([README])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -154,6 +154,7 @@ AC_MSG_CHECKING([whether Scotch is usable])
 if test "x${scotch_usable}" = "xyes"; then
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
  USE_BUNDLED_SCOTCH=0
+ SCOTCH_DIR="${ac_scotch_dir}"
  SCOTCH_LIBDIR="${ac_scotch_lib_dir}"
  SCOTCH_INCLUDEDIR="${ac_scotch_include_dir}"
  AC_MSG_RESULT([yes])
