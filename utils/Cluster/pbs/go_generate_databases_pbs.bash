@@ -30,8 +30,9 @@ mkdir -p in_out_files/OUTPUT_FILES
 # backup files used for this simulation
 cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
 
-rm -rf in_out_files/OUTPUT_FILES/src
-cp -rp ./src in_out_files/OUTPUT_FILES/
+# save a complete copy of source files
+#rm -rf in_out_files/OUTPUT_FILES/src
+#cp -rp ./src in_out_files/OUTPUT_FILES/
 
 # obtain lsf job information
 cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
