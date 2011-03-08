@@ -1,8 +1,69 @@
 ----------------------------------------------------------------------
 README
+(/SPECFEM3D/examples/meshfem3D_examples/many_interfaces/README)
 ----------------------------------------------------------------------
 
-To try this example, copy all the files within this folder to 'in_data_files/meshfem3D_files/'
-in the SPECFEM3D root directory.
+This is a more complicated example to explain the use of the internal mesher meshfem3D.
 
-Then you can compile and run xmeshfem3D.
+Option 1: run process.sh from local directory (must have access to mpi)
+Option 2: follow instructions below for submitting separate jobs with qsub (or bsub)
+
+----------------------------------------------------------------------
+
+0. Run the simple example under examples/meshfem3D_examples/simple_model
+
+1. Set up input files.
+
+   > cd SPECFEM3D
+   > rsync -av examples/meshfem3D_examples/many_interfaces/ in_data_files/meshfem3D_files/
+
+   > cd in_data_files/meshfem3D_files/
+   > cp Par_file CMTSOLUTION STATIONS ..
+   > cd SPECFEM3D
+
+   - adapt the submission scripts for the appropriate queues and number of cores:
+     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+
+   - note: go_decomposer_pbs.bash is not used with the internal mesher
+
+2. compile and run internal mesher 
+
+   > make xmeshfem3D
+
+   > qsub go_mesher_pbs.bash
+
+   - this should generate "proc000***_Database" files in in_out_files/DATABASES_MPI/.
+
+   - save output file
+   > cp in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
+
+3. generate databases:
+
+   - compile generate_databases in directory SPECFEM3D/:
+     > make xgenerate_databases
+
+   - submit job script:
+     > qsub go_generate_databases_pbs.bash
+
+     this job will take about XX minutes and will create binary mesh files, 
+     e.g. "proc000***_external_mesh.bin", in directory in_out_files/DATABASES_MPI/.
+
+     Optional: If you have paraview, load the .vtk files (see simple_model.png).
+
+4. run simulation:
+
+   - compile specfem3D:
+     > make xspecfem3D
+
+   - submit job script:
+     > qsub go_solver_pbs.bash
+
+   - the job should take about 70 minutes
+   - when the job is complete, you should have 3 sets (semd,semv,sema)
+     of XX (ls -1 *semd | wc) seismogram files in the directory in_out_files/OUTPUT_FILES,
+     as well as XX timestamp****** files
+
+   - view seismograms, for example, using xmgrace:
+   - xmgrace XXX &
+
+----------------------------------------------------------------------
