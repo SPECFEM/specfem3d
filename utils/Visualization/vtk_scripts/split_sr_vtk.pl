@@ -8,7 +8,9 @@
 #   epicenter.vtk
 #   receiver.vtk
 #
-# NOTE: assumes there is a SINGLE SOURCE. (This can be modified later.)
+# Future modifications:
+#   1: allow for multiple sources (currently assumes ONE only)
+#   2: compute epicenter for spherical model (assumes FLAT model only)
 #
 # EXAMPLE:
 #   split_sr_vtk.pl sr.vtk .
@@ -33,7 +35,7 @@ close(XY);
 
 ($xsrc,$ysrc,undef) = split(" ",$lines[5]);
 $nlines = @lines;
-$nrec = $nlines - 6;
+$nrec = $nlines - 7;
 
 # write source file (hypocenter)
 open(FILE1,">$odir/source.vtk");
