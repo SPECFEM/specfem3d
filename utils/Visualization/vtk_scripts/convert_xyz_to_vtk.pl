@@ -1,33 +1,35 @@
 #!/usr/bin/perl -w
 
-# this program converts the xy file (format as in psxy, can be segmented
-# by >) to the vtk polydata format to be viewed in Paraview.
+# convert_xyz_to_vtk.pl
+# This program converts an xy file or xyz file to a vtk file.
+# It will also work with segmented files with ">" as the delimiter.
 # Qinya Liu, May 2007, Caltech
 
-if (@ARGV == 0) { die("Usage: convert_xy_to_vtk.pl xyfile\n");}
+if (@ARGV == 0) { die("Usage: convert_xyz_to_vtk.pl xyzfile\n");}
 
-$xyfile=$ARGV[0];
-$vtkfile="${xyfile}.vtk";
+$xyzfile=$ARGV[0];
+$vtkfile="${xyzfile}.vtk";
 
 open(FILE,">$vtkfile");
 
 print FILE "# vtk DataFile Version 2.0\n";
-print FILE "Really cool data\n";
+print FILE "XYZ data\n";
 print FILE "ASCII\n";
 print FILE "DATASET POLYDATA\n";
 
 # figure out the total number of points
-open(XY,"$xyfile") || die("Check $xyfile\n");
-@xy = <XY>;
-close(XY);
+open(XYZ,"$xyzfile") || die("Check $xyzfile\n");
+@xyz = <XYZ>;
+close(XYZ);
 # record the points
 $total_points = 0; $points="";
 # record the lines
 $nlines = 0;  $npoints = 0; $nnum = 0; $lines=""; $lines2="";
 
-for ($i=0;$i<@xy;$i++) {
-  @tmp = split(" ",$xy[$i]);
+for ($i=0;$i<@xyz;$i++) {
+  @tmp = split(" ",$xyz[$i]);
   if ($tmp[0] ne ">") {
+    # if input has 2 columns, set 3rd column to zero (flat earth scenario, z up, e.g. UTM)
     if (@tmp == 2) {
       $points.="$tmp[0] $tmp[1] 0.0\n";}
     elsif (@tmp == 3) {
@@ -36,7 +38,7 @@ for ($i=0;$i<@xy;$i++) {
     $lines.="$total_points ";
     $total_points++; $npoints++;
   }
-  if ($tmp[0] eq ">" or $i == @xy-1) {
+  if ($tmp[0] eq ">" or $i == @xyz-1) {
     # change to a new line
     $nlines ++ ;
     $lines2.="$npoints $lines\n";
