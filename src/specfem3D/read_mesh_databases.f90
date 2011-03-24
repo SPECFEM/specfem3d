@@ -467,6 +467,7 @@
 
 ! allocates adjoint arrays for acoustic simulations
   if( ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
+
     ! backward potentials
     allocate(b_potential_acoustic(NGLOB_ADJOINT))
     allocate(b_potential_dot_acoustic(NGLOB_ADJOINT))
@@ -483,6 +484,25 @@
     allocate(b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh))
     allocate(b_buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
     allocate(b_buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+
+  else
+
+    ! backward potentials
+    allocate(b_potential_acoustic(1))
+    allocate(b_potential_dot_acoustic(1))
+    allocate(b_potential_dot_dot_acoustic(1))
+
+    ! kernels
+    allocate(rho_ac_kl(1,1,1,1))
+    allocate(rhop_ac_kl(1,1,1,1))
+    allocate(kappa_ac_kl(1,1,1,1))
+    allocate(alpha_ac_kl(1,1,1,1))
+
+    ! MPI handling
+    allocate(b_request_send_scalar_ext_mesh(1))
+    allocate(b_request_recv_scalar_ext_mesh(1))
+    allocate(b_buffer_send_scalar_ext_mesh(1,1))
+    allocate(b_buffer_recv_scalar_ext_mesh(1,1))
 
   endif
 
