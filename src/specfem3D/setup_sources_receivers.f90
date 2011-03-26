@@ -628,6 +628,11 @@ subroutine setup_sources_precompute_arrays()
     allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ))
     adj_sourcearrays = 0._CUSTOM_REAL
 
+  else
+
+! allocate dummy array in order to be able to use it as a subroutine argument, even if unused
+    allocate(adj_sourcearrays(1,1,1,1,1,1))
+
   endif
 
 end subroutine setup_sources_precompute_arrays
