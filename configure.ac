@@ -169,6 +169,7 @@ else
  if test -z "$YACC" || test "X$YACC" = "Xno"; then
    AC_MSG_ERROR([No suitable yacc or bison found])
  fi
+ ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
 
  #daniel: scotch bundle
  # uses bundled scotch: current version 5.1.11
