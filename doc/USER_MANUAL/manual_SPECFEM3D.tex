@@ -295,7 +295,12 @@ The path to an existing SCOTCH installation can to be set explicitly with the op
 ./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-dir=/opt/scotch
 \end{lyxcode}
 
-To compile a serial version of the code for small meshes that fit
+If you use the Intel ifort compiler to compile the code, we recommand that you use the Intel icc C compiler to compile Scotch, i.e., use:
+\begin{lyxcode}
+./configure~CC=icc~FC=ifort~MPIFC=mpif90
+\end{lyxcode}
+
+To compile a serial version of the code for small meshes that fits
 on one compute node and can therefore be run serially, run \texttt{configure}
 with the \texttt{-{}-without-mpi} option to suppress all calls to
 MPI.
