@@ -31,7 +31,7 @@ case $FC in
             # ifort version 11 or 10.1 with these flags shows good performance
             #FLAGS_CHECK="-O3 -ftz -xS -fpe0 -traceback -ftrapuv -vec-report0 -std95 -implicitnone -check nobounds -assume byterecl -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
             #FLAGS_CHECK="-O3 -xS -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -fpe0 -ftz -traceback"
-            # for debugging: change -check nobounds to -check all
+            # for debugging: change -check nobounds to -check all and add -debug -g -O0 -fp-stack-check -traceback -ftrapuv
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
         # standard options (leave option -ftz, which is *critical* for performance)
