@@ -134,28 +134,32 @@
   endif
 
   ! allocate arrays for storing the databases
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for databases'
   ! mesh node locations
-  allocate(xstore(NGLOB_AB))
-  allocate(ystore(NGLOB_AB))
-  allocate(zstore(NGLOB_AB))
+  allocate(xstore(NGLOB_AB), &
+          ystore(NGLOB_AB), &
+          zstore(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for mesh nodes'
   ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for material properties'
   ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB))
-  allocate(ispec_is_elastic(NSPEC_AB))
-  allocate(ispec_is_poroelastic(NSPEC_AB))
+  allocate(ispec_is_acoustic(NSPEC_AB), &
+          ispec_is_elastic(NSPEC_AB), &
+          ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for material flags'
 
   ! initializes adjoint simulations
   call initialize_simulation_adjoint()

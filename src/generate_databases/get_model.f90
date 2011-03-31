@@ -52,7 +52,7 @@
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
                         c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-  integer :: ispec,i,j,k,iundef
+  integer :: ispec,i,j,k,iundef,ier
   integer :: iflag,flag_below,flag_above
   integer :: iflag_aniso,idomain_id,imaterial_id
 
@@ -304,21 +304,24 @@
     ! processors name
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
 
-    allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec) )
+    allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rho_read'
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
     open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'rho.bin',&
             status='unknown',action='read',form='unformatted')
     read(28) rho_read
     close(28)
 
-    allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec) )
+    allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array vp_read'
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
     open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vp.bin',&
             status='unknown',action='read',form='unformatted')
     read(28) vp_read
     close(28)
 
-    allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec) )
+    allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array vs_read'
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'
     open(unit=28,file=prname_lp(1:len_trim(prname_lp))//'vs.bin',&
             status='unknown',action='read',form='unformatted')

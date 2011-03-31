@@ -30,7 +30,8 @@
 
   use specfem_par
   implicit none
-
+  integer :: ier
+  
 ! read topography and bathymetry file
 
   if( OCEANS .and. TOPOGRAPHY ) then
@@ -42,7 +43,8 @@
     DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
     topo_file = TOPO_FILE_SOCAL
 
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array itopo_bathy'
 
     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
 
@@ -56,7 +58,8 @@
   else
     NX_TOPO = 1
     NY_TOPO = 1
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array itopo_bathy'
 
   endif
 

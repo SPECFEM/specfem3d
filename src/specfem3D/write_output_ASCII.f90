@@ -50,7 +50,7 @@
   character(len=256) sisname,final_LOCAL_PATH
 
   ! local parameter
-  integer isample,nt_s
+  integer isample,nt_s,ier
   real, dimension(:), allocatable :: tr
   real(kind=CUSTOM_REAL) :: time_t
 
@@ -58,7 +58,8 @@
   if(SEISMOGRAMS_BINARY)then
      ! allocate trace
      nt_s = min(it,NSTEP)
-     allocate(tr(nt_s))
+     allocate(tr(nt_s),stat=ier)
+     if( ier /= 0 ) stop 'error allocating array tr'
 
      ! binary format case
      open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&

@@ -267,22 +267,26 @@
 
     ! mesh arrays used for example in combine_vol_data.f90
     !--- x coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file x.bin'
     write(27) xstore_dummy
     close(27)
 
     !--- y coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file y.bin'
     write(27) ystore_dummy
     close(27)
 
     !--- z coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file z.bin'
     write(27) zstore_dummy
     close(27)
 
     ! ibool
-    open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file ibool.bin'
     write(27) ibool
     close(27)
 
@@ -297,7 +301,8 @@
     !endif
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-    open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file vp.bin'
     write(27) v_tmp
     close(27)
 
@@ -318,7 +323,8 @@
     !endif
     v_tmp = 0.0
     where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
-    open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file vs.bin'
     write(27) v_tmp
     close(27)
 
@@ -332,7 +338,8 @@
     ! outputs density model for check
     v_tmp = 0.0
     where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
-    open(unit=27,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rho.bin'
     write(27) v_tmp
     close(27)
 
@@ -347,7 +354,8 @@
     ! acoustic-elastic domains
     if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
       ! saves points on acoustic-elastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces))
+      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
       do i=1,num_coupling_ac_el_faces
@@ -366,7 +374,8 @@
                         filename)
 
       ! saves acoustic/elastic flag
-      allocate(v_tmp_i(nspec))
+      allocate(v_tmp_i(nspec),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
       do i=1,nspec
         if( ispec_is_acoustic(i) ) then
           v_tmp_i(i) = 1

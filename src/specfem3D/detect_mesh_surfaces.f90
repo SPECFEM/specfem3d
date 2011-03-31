@@ -33,10 +33,12 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   implicit none
-
+  integer :: ier
+  
   ! for mesh surface
-  allocate(ispec_is_surface_external_mesh(NSPEC_AB))
-  allocate(iglob_is_surface_external_mesh(NGLOB_AB))
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
+          iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array for mesh surface'
 
 ! determines model surface
   if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. &
@@ -98,16 +100,18 @@
   if (MOVIE_VOLUME) then
     ! acoustic
     if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
-      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+              velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+              velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array movie velocity_x etc.'
     endif
     ! elastic only
     if( ELASTIC_SIMULATION ) then
-      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+              curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+              curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+              curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array movie div and curl'
       div(:,:,:,:) = 0._CUSTOM_REAL
       curl_x(:,:,:,:) = 0._CUSTOM_REAL
       curl_y(:,:,:,:) = 0._CUSTOM_REAL

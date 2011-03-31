@@ -51,7 +51,7 @@
 
   integer :: NSPEC_AB, NGLOB_AB
   integer :: numpoin
-  integer :: i, ios, it
+  integer :: i, ios, it, ier
   integer :: iproc, proc1, proc2, num_node, node_list(300)
   integer :: np, ne, npp, nee, nelement, njunk
 
@@ -185,11 +185,13 @@
     read(27) NGLOB_AB
 
     ! ibool file
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool'
     read(27) ibool
 
     ! global point arrays
-    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
+    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27) xstore
     read(27) ystore
     read(27) zstore
@@ -206,13 +208,13 @@
       stop
     endif
 
-    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)
-    if( ios /= 0 ) stop 'error allocating dat array'
+    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dat array'
 
     ! uses conversion to real values
     if( CUSTOM_REAL == SIZE_DOUBLE ) then
-      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ios)
-      if( ios /= 0 ) stop 'error allocating data array'
+      allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating data array'
       read(28) data
       dat = sngl(data)
       deallocate(data)
@@ -265,7 +267,8 @@
     read(27) NGLOB_AB
 
     ! ibool file
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool'
     read(27) ibool
     close(27)
 
@@ -325,7 +328,7 @@
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
   integer :: NSPEC_AB, NGLOB_AB
-  integer :: it,iproc,npoint,nelement,ios,ispec
+  integer :: it,iproc,npoint,nelement,ios,ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   character(len=256) :: prname_lp
 
@@ -349,7 +352,8 @@
     read(27) NGLOB_AB
     ! gets ibool
     if( .not. HIGH_RESOLUTION_MESH ) then
-      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array ibool'
       read(27) ibool
     endif
     close(27)
@@ -368,7 +372,8 @@
     else
 
       ! mark element corners (global AVS or DX points)
-      allocate(mask_ibool(NGLOB_AB))
+      allocate(mask_ibool(NGLOB_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array mask_ibool'
       mask_ibool = .false.
       do ispec=1,NSPEC_AB
         iglob1=ibool(1,1,1,ispec)
@@ -427,7 +432,7 @@
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
   real :: x, y, z
-  integer :: ispec
+  integer :: ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
 
   ! writes out total number of points
@@ -436,7 +441,8 @@
   endif
 
   ! writes our corner point locations
-  allocate(mask_ibool(NGLOB_AB))
+  allocate(mask_ibool(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
   numpoin = 0
   do ispec=1,NSPEC_AB
@@ -562,7 +568,7 @@
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
   real :: x, y, z
-  integer :: ispec,i,j,k,iglob
+  integer :: ispec,i,j,k,iglob,ier
 
   ! writes out total number of points
   if (it == 1) then
@@ -570,7 +576,9 @@
   endif
 
   ! writes out point locations and values
-  allocate(mask_ibool(NGLOB_AB))
+  allocate(mask_ibool(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  
   mask_ibool(:) = .false.
   numpoin = 0
   do ispec=1,NSPEC_AB
@@ -613,7 +621,7 @@
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
   integer,dimension(:),allocatable :: num_ibool
-  integer :: ispec
+  integer :: ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   integer :: n1, n2, n3, n4, n5, n6, n7, n8
 
@@ -623,8 +631,10 @@
   end if
 
   ! writes out element indices
-  allocate(mask_ibool(NGLOB_AB))
-  allocate(num_ibool(NGLOB_AB))
+  allocate(mask_ibool(NGLOB_AB), &
+          num_ibool(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  
   mask_ibool(:) = .false.
   num_ibool(:) = 0
   numpoin = 0
@@ -729,7 +739,7 @@
   ! local parameters
   logical,dimension(:),allocatable :: mask_ibool
   integer,dimension(:),allocatable :: num_ibool
-  integer :: ispec,i,j,k
+  integer :: ispec,i,j,k,ier
   integer :: iglob,iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   integer :: n1, n2, n3, n4, n5, n6, n7, n8
 
@@ -740,8 +750,10 @@
   endif
 
   ! sets numbering num_ibool respecting mask
-  allocate(mask_ibool(NGLOB_AB))
-  allocate(num_ibool(NGLOB_AB))
+  allocate(mask_ibool(NGLOB_AB), &
+          num_ibool(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  
   mask_ibool(:) = .false.
   num_ibool(:) = 0
   numpoin = 0

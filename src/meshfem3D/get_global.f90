@@ -44,7 +44,7 @@
   double precision xp(npointot),yp(npointot),zp(npointot)
   double precision UTM_X_MIN,UTM_X_MAX
 
-  integer ispec,i,j
+  integer ispec,i,j,ier
   integer ieoff,ilocnum,nseg,ioff,iseg,ig
 
   integer, dimension(:), allocatable :: ind,ninseg,iwork
@@ -58,10 +58,14 @@
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
 
 ! dynamically allocate arrays
-  allocate(ind(npointot))
-  allocate(ninseg(npointot))
-  allocate(iwork(npointot))
-  allocate(work(npointot))
+  allocate(ind(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ind'
+  allocate(ninseg(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ninseg'
+  allocate(iwork(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iwork'
+  allocate(work(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array work'
 
 ! establish initial pointers
   do ispec=1,nspec

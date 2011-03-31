@@ -491,8 +491,7 @@
 
   use generate_databases_par
   implicit none
-
-
+  
   if( OCEANS .and. TOPOGRAPHY ) then
 
     ! for Southern California
@@ -503,7 +502,8 @@
     DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
     topo_file = TOPO_FILE_SOCAL
 
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array itopo_bathy'
 
     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
 
@@ -515,13 +515,15 @@
   else
     NX_TOPO = 1
     NY_TOPO = 1
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO))
+    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array itopo_bathy'
 
   endif
 
 !! read basement map
 !  if(BASEMENT_MAP) then
-!    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE','../in_data_files/la_basement/reggridbase2_filtered_ascii.dat')
+!    call get_value_string(BASEMENT_MAP_FILE,'model.BASEMENT_MAP_FILE', &
+!                                   '../in_data_files/la_basement/reggridbase2_filtered_ascii.dat')
 !    open(unit=55,file=BASEMENT_MAP_FILE,status='old',action='read')
 !    do ix=1,NX_BASEMENT
 !      do iy=1,NY_BASEMENT
@@ -560,7 +562,8 @@
     call exit_mpi(myrank,'error opening database file')
   endif
   read(IIN,*) nnodes_ext_mesh
-  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh))
+  allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array nodes_coords_ext_mesh'
   do inode = 1, nnodes_ext_mesh
      read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), &
                 nodes_coords_ext_mesh(3,inode)
@@ -574,7 +577,8 @@
 
 ! read materials' physical properties
   read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
-  allocate(materials_ext_mesh(6,nmat_ext_mesh))
+  allocate(materials_ext_mesh(6,nmat_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array materials_ext_mesh'
   do imat = 1, nmat_ext_mesh
      ! format:        #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag  #(6) material_domain_id
      read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
@@ -590,7 +594,8 @@
   endif
   call sync_all()
 
-  allocate(undef_mat_prop(6,nundefMat_ext_mesh))
+  allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
   do imat = 1, nundefMat_ext_mesh
      ! format example tomography:
      ! -1 tomography elastic tomography_model.xyz 1 2
@@ -611,8 +616,10 @@
 
 ! element indexing
   read(IIN,*) nelmnts_ext_mesh
-  allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh))
-  allocate(mat_ext_mesh(2,nelmnts_ext_mesh))
+  allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array elmnts_ext_mesh'
+  allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array mat_ext_mesh'
 
   ! reads in material association for each spectral element and corner node indices
   do ispec = 1, nelmnts_ext_mesh
@@ -652,32 +659,38 @@
   NSPEC2D_BOTTOM = nspec2D_bottom_ext
   NSPEC2D_TOP = nspec2D_top_ext
 
-  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(4,nspec2D_xmin))
+  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(4,nspec2D_xmin),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibelm_xmin etc.'
   do ispec2D = 1,nspec2D_xmin
      read(IIN,*) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
   end do
 
-  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(4,nspec2D_xmax))
+  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(4,nspec2D_xmax),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibelm_xmax etc.'
   do ispec2D = 1,nspec2D_xmax
      read(IIN,*) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,4)
   end do
 
-  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(4,nspec2D_ymin))
+  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(4,nspec2D_ymin),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
   do ispec2D = 1,nspec2D_ymin
      read(IIN,*) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,4)
   end do
 
-  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(4,nspec2D_ymax))
+  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(4,nspec2D_ymax),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibelm_ymax etc.'
   do ispec2D = 1,nspec2D_ymax
      read(IIN,*) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,4)
   end do
 
-  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(4,nspec2D_bottom_ext))
+  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(4,nspec2D_bottom_ext),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibelm_bottom etc.'
   do ispec2D = 1,nspec2D_bottom_ext
      read(IIN,*) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,4)
   end do
 
-  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(4,nspec2D_top_ext))
+  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(4,nspec2D_top_ext),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibelm_top etc.'
   do ispec2D = 1,nspec2D_top_ext
      read(IIN,*) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,4)
   end do
@@ -702,11 +715,16 @@
   read(IIN,*) num_interfaces_ext_mesh, max_interface_size_ext_mesh
 
   ! allocates interfaces
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh))
-  allocate(my_nelmnts_neighbours_ext_mesh(num_interfaces_ext_mesh))
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh))
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh))
-  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh))
+  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh'
+  allocate(my_nelmnts_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array my_nelmnts_neighbours_ext_mesh'
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array my_interfaces_ext_mesh'
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh'
+  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array nibool_interfaces_ext_mesh'
 
   ! loops over MPI interfaces with other partitions
   do num_interface = 1, num_interfaces_ext_mesh
@@ -756,7 +774,8 @@
     if( num_moho == 0 ) call exit_mpi(myrank,'error no moho mesh in database')
 
     ! reads in element informations
-    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext))
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_moho etc.'
     do ispec2D = 1,nspec2D_moho_ext
       ! format: #element_id #node_id1 #node_id2 #node_id3 #node_id4
       read(IIN,*) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
@@ -792,9 +811,12 @@
 
 ! use dynamic allocation to allocate memory for arrays
 !  allocate(idoubling(nspec))
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibool'
+  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array xstore'
+  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ystore'
   allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 

@@ -60,7 +60,7 @@
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: request_recv_vector_ext_mesh
 
-  integer ipoin,iinterface
+  integer ipoin,iinterface,ier
 
 
 ! here we have to assemble all the contributions between partitions using MPI
@@ -68,10 +68,14 @@
 ! assemble only if more than one partition
   if(NPROC > 1) then
 
-    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
-    allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
-    allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh))
-    allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh))
+    allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh'
+    allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array buffer_recv_vector_ext_mesh'
+    allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array request_send_vector_ext_mesh'
+    allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array request_recv_vector_ext_mesh'
 
     ! partition border copy into the buffer
     do iinterface = 1, num_interfaces_ext_mesh

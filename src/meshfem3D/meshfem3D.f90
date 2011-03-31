@@ -372,7 +372,8 @@
 
   ! define number of layers
   number_of_layers = number_of_interfaces! - 1
-  allocate(ner_layer(number_of_layers))
+  allocate(ner_layer(number_of_layers),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ner_layer'
 
 ! loop on all the layers
   do ilayer = 1,number_of_layers
@@ -404,16 +405,22 @@
   endif
 
 ! dynamic allocation of mesh arrays
-  allocate(rns(0:2*NER))
+  allocate(rns(0:2*NER),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array rns'
 
-  allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
-  allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA))
+  allocate(xgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array xgrid'
+  allocate(ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ygrid'
   allocate(zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
   if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-  allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1))
-  allocate(iproc_xi_slice(0:NPROC-1))
-  allocate(iproc_eta_slice(0:NPROC-1))
+  allocate(addressing(0:NPROC_XI-1,0:NPROC_ETA-1),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array addressing'
+  allocate(iproc_xi_slice(0:NPROC-1),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iproc_xi_slice'
+  allocate(iproc_eta_slice(0:NPROC-1),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iproc_eta_slice'
 
 ! clear arrays
   xgrid(:,:,:) = 0.d0
@@ -552,8 +559,10 @@
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
           //INTERFACES_FILE,status='old')
 
-  allocate(interface_bottom(max_npx_interface,max_npy_interface))
-  allocate(interface_top(max_npx_interface,max_npy_interface))
+  allocate(interface_bottom(max_npx_interface,max_npy_interface),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array interface_bottom'
+  allocate(interface_top(max_npx_interface,max_npy_interface),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array interface_top'
 
   ! read number of interfaces
   call read_value_integer(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
@@ -721,12 +730,14 @@
   call sync_all()
 
 ! use dynamic allocation to allocate memory for arrays
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec))
-  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibool'
+  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array xstore'
+  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ystore'
   allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-
-! exit if there is not enough memory to allocate all the arrays
+  ! exit if there is not enough memory to allocate all the arrays
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &

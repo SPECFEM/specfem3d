@@ -215,8 +215,10 @@
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
     ! read in adjoint sources block by block (for memory consideration)
-    ! e.g., in exploration experiments, both the number of receivers (nrec) and the number of time steps (NSTEP) are huge,
-    ! which may cause problems since we have a large array: adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
+    ! e.g., in exploration experiments, both the number of receivers (nrec) and 
+    ! the number of time steps (NSTEP) are huge,
+    ! which may cause problems since we have a large array: 
+    !     adj_sourcearrays(nadj_rec_local,NSTEP,NDIM,NGLLX,NGLLY,NGLLZ)
 
     ! figure out if we need to read in a chunk of the adjoint source at this timestep
     it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )   !chunk_number
@@ -224,7 +226,8 @@
 
     ! needs to read in a new chunk/block of the adjoint source
     ! note that for each partition, we divide it into two parts --- boundaries and interior --- indicated by 'phase_is_inner'
-    ! we first do calculations for the boudaries, and then start communication with other partitions while we calculate for the inner part
+    ! we first do calculations for the boudaries, and then start communication 
+    ! with other partitions while we calculate for the inner part
     ! this must be done carefully, otherwise the adjoint sources may be added twice
     if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
 

@@ -68,7 +68,7 @@ module decompose_mesh_SCOTCH
   double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
   character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
-  integer  :: ierr,idummy
+  integer  :: ier,idummy
 
   !pll
   double precision , dimension(:,:), allocatable :: mat_prop
@@ -96,13 +96,14 @@ module decompose_mesh_SCOTCH
 
   ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
-          status='old', form='formatted', iostat = ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted', iostat = ier)
+    if( ier /= 0 ) then
       print*,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
       stop 'error file open'
     endif
     read(98,*) nnodes
-    allocate(nodes_coords(3,nnodes))
+    allocate(nodes_coords(3,nnodes),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_coords'
     do inode = 1, nnodes
     ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
       read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
@@ -116,17 +117,19 @@ module decompose_mesh_SCOTCH
   !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
   ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) stop 'error opening mesh_file'
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening mesh_file'
     read(98,*) nspec
-    allocate(elmnts(esize,nspec))
+    allocate(elmnts(esize,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array elmnts'
     do ispec = 1, nspec
       ! format: # element_id  #id_node1 ... #id_node8
 
       ! note: be aware that here we can have different node ordering for a cube element;
       !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
       !
-      !          guess here it assumes that spectral elements ordering is like first at the bottom of the element, anticlock-wise, i.e.
+      !          guess here it assumes that spectral elements ordering is like first 
+      !          at the bottom of the element, anticlock-wise, i.e.
       !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
       !          then top (positive z-direction) of element
       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
@@ -158,9 +161,10 @@ module decompose_mesh_SCOTCH
 
   ! reads material associations
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) stop 'error opening materials_file'
-    allocate(mat(2,nspec))
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening materials_file'
+    allocate(mat(2,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array mat'
     mat(:,:) = 0
     do ispec = 1, nspec
       ! format: # id_element #flag
@@ -191,14 +195,14 @@ module decompose_mesh_SCOTCH
     count_def_mat = 0
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) stop 'error opening nummaterial_velocity_file'
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening nummaterial_velocity_file'
 
     ! note: format #material_domain_id #material_id #...
-    read(98,*,iostat=ierr) idummy,num_mat
+    read(98,*,iostat=ier) idummy,num_mat
     print *,'materials:'
     ! counts materials (defined/undefined)
-    do while (ierr == 0)
+    do while (ier == 0)
        print*, '  num_mat = ',num_mat
        if(num_mat > 0 ) then
           ! positive materials_id: velocity values will be defined
@@ -207,7 +211,7 @@ module decompose_mesh_SCOTCH
           ! negative materials_id: undefined material properties yet
           count_undef_mat = count_undef_mat + 1
        end if
-       read(98,*,iostat=ierr) idummy,num_mat
+       read(98,*,iostat=ier) idummy,num_mat
     end do
     close(98)
     print*, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
@@ -218,15 +222,17 @@ module decompose_mesh_SCOTCH
       print*,'  bigger than defined materials in nummaterial_velocity_file:',count_def_mat
       stop 'error materials'
     endif
-    allocate(mat_prop(6,count_def_mat))
-    allocate(undef_mat_prop(6,count_undef_mat))
+    allocate(mat_prop(6,count_def_mat),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array mat_prop'
+    allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
     mat_prop(:,:) = 0.d0
     undef_mat_prop(:,:) = ''
 
     ! reads in defined material properties
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
-          status='old', form='formatted', iostat=ierr)
-    if( ierr /= 0 ) stop 'error opening nummaterial_velocity_file'
+          status='old', form='formatted', iostat=ier)
+    if( ier /= 0 ) stop 'error opening nummaterial_velocity_file'
 
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
     !          defined materials (material_id > 0) and undefined materials (material_id < 0 )
@@ -239,11 +245,11 @@ module decompose_mesh_SCOTCH
        !read(98,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
        ! reads lines unti it reaches a defined material
        num_mat = -1
-       do while( num_mat < 0 .and. ierr == 0)
-         read(98,'(A256)',iostat=ierr) line
+       do while( num_mat < 0 .and. ier == 0)
+         read(98,'(A256)',iostat=ier) line
          read(line,*) idomain_id,num_mat
        enddo
-       if( ierr /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
+       if( ier /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
 
        ! reads in defined material properties
        read(line,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
@@ -263,23 +269,24 @@ module decompose_mesh_SCOTCH
     end do
 
     ! reads in undefined material properties
-    rewind(98,iostat=ierr) ! back to the beginning of the file
+    rewind(98,iostat=ier) ! back to the beginning of the file
     do imat=1,count_undef_mat
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #material_domain_id #material_id(<0) #type_name (="interface") #material_id_for_material_below #material_id_for_material_above
+       !    #material_domain_id #material_id(<0) #type_name (="interface") 
+       !     #material_id_for_material_below #material_id_for_material_above
        !        example:     2  -1 interface 1 2
        !   - for tomography models
        !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name
        !        example:     2  -1 tomography elastic tomography_model.xyz 1
        ! reads lines unti it reaches a defined material
        num_mat = 1
-       do while( num_mat >= 0 .and. ierr == 0 )
-         read(98,'(A256)',iostat=ierr) line
+       do while( num_mat >= 0 .and. ier == 0 )
+         read(98,'(A256)',iostat=ier) line
          read(line,*) idomain_id,num_mat
        enddo
-       if( ierr /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
+       if( ier /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
 
        ! checks if interface or tomography definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
@@ -370,14 +377,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_xmin = 0
     else
       read(98,*) nspec2D_xmin
     endif
-    allocate(ibelm_xmin(nspec2D_xmin))
-    allocate(nodes_ibelm_xmin(4,nspec2D_xmin))
+    allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
+    allocate(nodes_ibelm_xmin(4,nspec2D_xmin),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_xmin'
     do ispec2D = 1,nspec2D_xmin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       ! note: ordering for CUBIT seems such that the normal of the face points outward of the element the face belongs to;
@@ -405,14 +414,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_xmax = 0
     else
       read(98,*) nspec2D_xmax
     endif
-    allocate(ibelm_xmax(nspec2D_xmax))
-    allocate(nodes_ibelm_xmax(4,nspec2D_xmax))
+    allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_xmax'
+    allocate(nodes_ibelm_xmax(4,nspec2D_xmax),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_xmax'
     do ispec2D = 1,nspec2D_xmax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_xmax(ispec2D), nodes_ibelm_xmax(1,ispec2D), nodes_ibelm_xmax(2,ispec2D), &
@@ -423,14 +434,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymin', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_ymin = 0
     else
       read(98,*) nspec2D_ymin
     endif
-    allocate(ibelm_ymin(nspec2D_ymin))
-    allocate(nodes_ibelm_ymin(4,nspec2D_ymin))
+    allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
+    allocate(nodes_ibelm_ymin(4,nspec2D_ymin),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_ymin'
     do ispec2D = 1,nspec2D_ymin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_ymin(ispec2D), nodes_ibelm_ymin(1,ispec2D), nodes_ibelm_ymin(2,ispec2D),  &
@@ -441,14 +454,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_ymax = 0
     else
       read(98,*) nspec2D_ymax
     endif
-    allocate(ibelm_ymax(nspec2D_ymax))
-    allocate(nodes_ibelm_ymax(4,nspec2D_ymax))
+    allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_ymax'
+    allocate(nodes_ibelm_ymax(4,nspec2D_ymax),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_ymax'
     do ispec2D = 1,nspec2D_ymax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_ymax(ispec2D), nodes_ibelm_ymax(1,ispec2D), nodes_ibelm_ymax(2,ispec2D),  &
@@ -459,14 +474,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_bottom = 0
     else
       read(98,*) nspec2D_bottom
     endif
-    allocate(ibelm_bottom(nspec2D_bottom))
-    allocate(nodes_ibelm_bottom(4,nspec2D_bottom))
+    allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_bottom'
+    allocate(nodes_ibelm_bottom(4,nspec2D_bottom),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_bottom'
     do ispec2D = 1,nspec2D_bottom
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_bottom(ispec2D), nodes_ibelm_bottom(1,ispec2D), nodes_ibelm_bottom(2,ispec2D), &
@@ -477,14 +494,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in free_surface boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_top = 0
     else
       read(98,*) nspec2D_top
     endif
-    allocate(ibelm_top(nspec2D_top))
-    allocate(nodes_ibelm_top(4,nspec2D_top))
+    allocate(ibelm_top(nspec2D_top),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_top'
+    allocate(nodes_ibelm_top(4,nspec2D_top),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_top'
     do ispec2D = 1,nspec2D_top
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_top(ispec2D), nodes_ibelm_top(1,ispec2D), nodes_ibelm_top(2,ispec2D), &
@@ -495,14 +514,16 @@ module decompose_mesh_SCOTCH
 
   ! reads in moho_surface boundary files (optional)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
-          status='old', form='formatted',iostat=ierr)
-    if( ierr /= 0 ) then
+          status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
       nspec2D_moho = 0
     else
       read(98,*) nspec2D_moho
     endif
-    allocate(ibelm_moho(nspec2D_moho))
-    allocate(nodes_ibelm_moho(4,nspec2D_moho))
+    allocate(ibelm_moho(nspec2D_moho),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_moho'
+    allocate(nodes_ibelm_moho(4,nspec2D_moho),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_ibelm_moho'
     do ispec2D = 1,nspec2D_moho
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
       read(98,*) ibelm_moho(ispec2D), nodes_ibelm_moho(1,ispec2D), nodes_ibelm_moho(2,ispec2D), &
@@ -519,8 +540,10 @@ module decompose_mesh_SCOTCH
 
   subroutine check_valence
 
-    allocate(mask_nodes_elmnts(nnodes))
-    allocate(used_nodes_elmnts(nnodes))
+    allocate(mask_nodes_elmnts(nnodes),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array mask_nodes_elmnts'
+    allocate(used_nodes_elmnts(nnodes),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array used_nodes_elmnts'
     mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
     do ispec = 1, nspec
@@ -549,14 +572,21 @@ module decompose_mesh_SCOTCH
   subroutine scotch_partitioning
 
     implicit none
-
+    ! local parameters
+    integer, dimension(:),allocatable  :: num_material
+    integer :: ier
+    
     elmnts(:,:) = elmnts(:,:) - 1
 
     ! determines maximum neighbors based on 1 common node
-    allocate(xadj(1:nspec+1))
-    allocate(adjncy(1:sup_neighbour*nspec))
-    allocate(nnodes_elmnts(1:nnodes))
-    allocate(nodes_elmnts(1:nsize*nnodes))
+    allocate(xadj(1:nspec+1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xadj'
+    allocate(adjncy(1:sup_neighbour*nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array adjncy'
+    allocate(nnodes_elmnts(1:nnodes),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
+    allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, 1)
     print*, 'mesh2dual: '
@@ -565,19 +595,28 @@ module decompose_mesh_SCOTCH
     nb_edges = xadj(nspec+1)
 
     ! allocates & initializes partioning of elements
-    allocate(part(1:nspec))
+    allocate(part(1:nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array part'
     part(:) = -1
 
     ! initializes
     ! elements load array
-    allocate(elmnts_load(1:nspec))
+    allocate(elmnts_load(1:nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array elmnts_load'
 
     ! uniform load
     elmnts_load(:) = 1
 
+    ! gets materials id associations
+    allocate(num_material(1:nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array num_material'    
+    num_material(:) = mat(1,:)
+
     ! in case of acoustic/elastic simulation, weights elements accordingly
     call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                              mat(1,:),mat_prop,undef_mat_prop)
+                              num_material,mat_prop,undef_mat_prop)
+
+    deallocate(num_material)
 
     ! SCOTCH partitioning
 
@@ -604,18 +643,18 @@ module decompose_mesh_SCOTCH
     !!as your hand-made strategy did not make use of the
     !!multi-level framework.
 
-    call scotchfstratinit (scotchstrat(1), ierr)
-     if (ierr /= 0) then
+    call scotchfstratinit (scotchstrat(1), ier)
+     if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot initialize strat'
     endif
 
-    !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ierr)
-    ! if (ierr /= 0) then
+    !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ier)
+    ! if (ier /= 0) then
     !   stop 'ERROR : MAIN : Cannot build strat'
     !endif
 
-    call scotchfgraphinit (scotchgraph (1), ierr)
-    if (ierr /= 0) then
+    call scotchfgraphinit (scotchgraph (1), ier)
+    if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot initialize graph'
     endif
 
@@ -629,37 +668,37 @@ module decompose_mesh_SCOTCH
                           xadj (1), xadj (1), &
                           elmnts_load (1), xadj (1), &
                           nb_edges, adjncy (1), &
-                          adjncy (1), ierr)
+                          adjncy (1), ier)
 
     ! w/out element load, but adjacency array
     !call scotchfgraphbuild (scotchgraph (1), 0, nspec, &
     !                      xadj (1), xadj (1), &
     !                      xadj (1), xadj (1), &
     !                      nb_edges, adjncy (1), &
-    !                      adjncy (1), ierr)
+    !                      adjncy (1), ier)
 
 
-    if (ierr /= 0) then
+    if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot build graph'
     endif
 
-    call scotchfgraphcheck (scotchgraph (1), ierr)
-    if (ierr /= 0) then
+    call scotchfgraphcheck (scotchgraph (1), ier)
+    if (ier /= 0) then
        stop 'ERROR : MAIN : Invalid check'
     endif
 
-    call scotchfgraphpart (scotchgraph (1), nparts, scotchstrat(1),part(1),ierr)
-    if (ierr /= 0) then
+    call scotchfgraphpart (scotchgraph (1), nparts, scotchstrat(1),part(1),ier)
+    if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot part graph'
     endif
 
-    call scotchfgraphexit (scotchgraph (1), ierr)
-    if (ierr /= 0) then
+    call scotchfgraphexit (scotchgraph (1), ier)
+    if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot destroy graph'
     endif
 
-    call scotchfstratexit (scotchstrat(1), ierr)
-    if (ierr /= 0) then
+    call scotchfstratexit (scotchstrat(1), ier)
+    if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot destroy strat'
     endif
 
@@ -706,8 +745,13 @@ module decompose_mesh_SCOTCH
 
   subroutine write_mesh_databases
 
-    allocate(my_interfaces(0:ninterfaces-1))
-    allocate(my_nb_interfaces(0:ninterfaces-1))
+    implicit none
+    !local parameters
+    
+    allocate(my_interfaces(0:ninterfaces-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array my_interfaces'
+    allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array my_nb_interfaces'
 
     ! writes out Database file for each partition
     do ipart = 0, nparts-1
@@ -715,8 +759,8 @@ module decompose_mesh_SCOTCH
        ! opens output file
        write(prname, "(i6.6,'_Database')") ipart
        open(unit=15,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
-            status='unknown', action='write', form='formatted', iostat = ierr)
-       if( ierr /= 0 ) then
+            status='unknown', action='write', form='formatted', iostat = ier)
+       if( ier /= 0 ) then
         print*,'error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
         print*
         print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))

@@ -361,7 +361,8 @@
 
   ! creating and filling array num_pixel_loc with the positions of each colored
   ! pixel owned by the local process (useful for parallel jobs)
-  allocate(num_pixel_loc(nb_pixel_loc))
+  allocate(num_pixel_loc(nb_pixel_loc),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array num_pixel_loc'
   nb_pixel_loc = 0
   do i = 1, NX_IMAGE_color
     do j = 1, NZ_IMAGE_color
@@ -373,12 +374,14 @@
   enddo
 
   ! filling array iglob_image_color, containing info on which process owns which pixels.
-  allocate(nb_pixel_per_proc(0:NPROC-1))
+  allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array nb_pixel_per_proc'
   call gather_all_i(nb_pixel_loc,1,nb_pixel_per_proc,1,NPROC)
 
   ! allocates receiving array
   if ( myrank == 0 ) then
-    allocate( num_pixel_recv(maxval(nb_pixel_per_proc(:)),0:NPROC-1) )
+    allocate( num_pixel_recv(maxval(nb_pixel_per_proc(:)),0:NPROC-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array num_pixel_recv'
   endif
   ! fills iglob_image_color index array
   if( NPROC > 1 ) then
@@ -407,7 +410,8 @@
   image_color_vp_display(:,:) = 0._CUSTOM_REAL
 
   if ( myrank == 0 ) then
-    allocate( data_pixel_recv(maxval(nb_pixel_per_proc(:))) )
+    allocate( data_pixel_recv(maxval(nb_pixel_per_proc(:))),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array data_pixel_recv'
     data_pixel_recv(:) = 0._CUSTOM_REAL
   endif
   allocate(data_pixel_send(nb_pixel_loc),stat=ier)

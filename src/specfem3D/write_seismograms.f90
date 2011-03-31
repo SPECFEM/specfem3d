@@ -47,8 +47,14 @@
 
   do irec_local = 1,nrec_local
 
-    ! get global number of that receiver
+    ! gets global number of that receiver
     irec = number_receiver_global(irec_local)
+
+    ! gets local receiver interpolators
+    ! (1-D Lagrange interpolators)
+    hxir(:) = hxir_store(irec_local,:)
+    hetar(:) = hetar_store(irec_local,:)
+    hgammar(:) = hgammar_store(irec_local,:)
 
     ! forward simulations
     if (SIMULATION_TYPE == 1)  then
@@ -62,8 +68,7 @@
         call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir_store(irec_local,:),hetar_store(irec_local,:), &
-                        hgammar_store(irec_local,:), &
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif !elastic
 
@@ -82,14 +87,13 @@
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore)
 
-        ! interpolates displ/veloc/pressure at receiver locations
+        ! interpolates displ/veloc/pressure at receiver locations        
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
                         potential_dot_dot_acoustic,potential_dot_acoustic,&
                         potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir_store(irec_local,:),hetar_store(irec_local,:), &
-                        hgammar_store(irec_local,:), &
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! acoustic
 
@@ -105,8 +109,7 @@
         call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir_store(irec_local,:),hetar_store(irec_local,:), &
-                        hgammar_store(irec_local,:), &
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
 
         ! stores elements displacement field
@@ -119,11 +122,15 @@
           enddo
         enddo
 
+        ! gets derivatives of local receiver interpolators
+        hpxir(:) = hpxir_store(irec_local,:)
+        hpetar(:) = hpetar_store(irec_local,:)
+        hpgammar(:) = hpgammar_store(irec_local,:)
+
         ! computes the integrated derivatives of source parameters (M_jk and X_s)
         call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec),&
                       Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
-                      hxir_store(irec_local,:),hetar_store(irec_local,:),hgammar_store(irec_local,:), &
-                      hpxir_store(irec_local,:),hpetar_store(irec_local,:),hpgammar_store(irec_local,:), &
+                      hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix(:,:,:,ispec),xiy(:,:,:,ispec),xiz(:,:,:,ispec), &
                       etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
@@ -162,8 +169,7 @@
                         potential_acoustic,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir_store(irec_local,:),hetar_store(irec_local,:), &
-                        hgammar_store(irec_local,:), &
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! acoustic
 
@@ -178,8 +184,7 @@
         call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir_store(irec_local,:),hetar_store(irec_local,:), &
-                        hgammar_store(irec_local,:), &
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! elastic
 
@@ -204,8 +209,7 @@
                         b_potential_acoustic,NGLOB_ADJOINT, &
                         ispec,NSPEC_AB,ibool, &
                         xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                        hxir_store(irec_local,:),hetar_store(irec_local,:), &
-                        hgammar_store(irec_local,:), &
+                        hxir,hetar,hgammar, &
                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
       endif ! acoustic
 

@@ -426,8 +426,8 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
-                                dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
+!                                dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
 
 ! shakemovies
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
@@ -457,8 +457,8 @@ module specfem_par_movie
   integer,dimension(:),allocatable :: faces_surface_offset_ext_mesh
   integer,dimension(:,:),allocatable :: faces_surface_ext_mesh
   integer,dimension(:),allocatable :: faces_surface_ext_mesh_ispec
-  integer :: nfaces_surface_ext_mesh
-  integer :: nfaces_surface_glob_ext_mesh
+  integer :: nfaces_surface_ext_mesh,nfaces_surface_ext_mesh_points
+  integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_em_points
   ! face corner indices
   integer :: iorderi(NGNOD2D),iorderj(NGNOD2D)
 

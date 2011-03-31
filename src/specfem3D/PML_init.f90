@@ -142,7 +142,7 @@ subroutine PML_initialize()
   ! local parameters
   real(kind=CUSTOM_REAL):: d,dprime,d_glob,dprime_glob
   real(kind=CUSTOM_REAL) :: dominant_wavelength,hdur_max
-  integer :: count,ilayer,sign
+  integer :: count,ilayer,sign,ier
 
   ! sets flag
   PML = .true.
@@ -155,19 +155,23 @@ subroutine PML_initialize()
   endif
 
   ! PML element type array: 1 = face, 2 = edge, 3 = corner
-  allocate(ispec_is_PML_inum(NSPEC_AB))
+  allocate(ispec_is_PML_inum(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ispec_is_PML_inum'
   num_PML_ispec = 0
 
   ! PML interface points between PML and "regular" region
-  allocate(iglob_is_PML_interface(NGLOB_AB))
+  allocate(iglob_is_PML_interface(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iglob_is_PML_interface'
   iglob_is_PML_interface(:) = 0
 
   ! PML global points
-  allocate(iglob_is_PML(NGLOB_AB))
+  allocate(iglob_is_PML(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iglob_is_PML'
   iglob_is_PML(:) = 0
 
   ! PML ibool mask
-  allocate(PML_mask_ibool(NGLOB_AB))
+  allocate(PML_mask_ibool(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array PML_mask_ibool'
   PML_mask_ibool(:) = .false.
 
   ! determines dominant wavelength based on maximum model speed
@@ -229,15 +233,18 @@ subroutine PML_initialize()
           chi2(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
           chi2_t(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
           chi3(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
-          chi4(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+          chi4(NGLLX,NGLLY,NGLLZ,num_PML_ispec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array chi1 etc.'
   allocate(chi1_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
           chi2_t_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
           chi3_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
-          chi4_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+          chi4_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array chi1_dot etc.'
   allocate(chi1_dot_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
           chi2_t_dot_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
           chi3_dot_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),&
-          chi4_dot_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+          chi4_dot_dot(NGLLX,NGLLY,NGLLZ,num_PML_ispec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array chi1_dot_dot etc.'
 
   ! potentials
   chi1 = 0._CUSTOM_REAL
@@ -310,14 +317,15 @@ subroutine PML_set_firstlayer()
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: temp_ispec_pml_normal
   integer,dimension(:),allocatable:: temp_is_pml_elem
-  integer:: iface,count,new_elemts,ispec,icorner,igll,iglobf
+  integer:: iface,count,new_elemts,ispec,icorner,igll,iglobf,ier
   integer:: i,j,k,iglobcount,iglobcorners(NGNOD)
   integer,dimension(3,NGNOD),parameter :: ielem_corner_ijk = &
        reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ, &
               NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),(/3,NGNOD/))
   ! temporary arrays
-  allocate(temp_is_pml_elem(NSPEC_AB))
-  allocate(temp_ispec_pml_normal(NDIM,NSPEC_AB))
+  allocate(temp_is_pml_elem(NSPEC_AB), &
+          temp_ispec_pml_normal(NDIM,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array temp_is_pml_elem'
 
   temp_is_pml_elem(:) = 0
   temp_ispec_pml_normal(:,:) = 0._CUSTOM_REAL
@@ -417,7 +425,7 @@ subroutine PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: length
-  integer :: ispec,ispecPML
+  integer :: ispec,ispecPML,ier
 
   ! sets new element type flags
   ispec_is_PML_inum(:) = temp_is_pml_elem(:)
@@ -428,8 +436,9 @@ subroutine PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
   ! re-allocates arrays
   if( allocated(PML_normal) ) deallocate(PML_normal)
   if( allocated(PML_ispec) ) deallocate(PML_ispec)
-  allocate(PML_ispec(num_PML_ispec))
-  allocate(PML_normal(NDIM,num_PML_ispec))
+  allocate(PML_ispec(num_PML_ispec), &
+          PML_normal(NDIM,num_PML_ispec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array PML_ispec'
 
   ! stores PML elements flags and normals
   ispecPML = 0
@@ -481,13 +490,14 @@ subroutine PML_determine_interfacePoints()
 
   ! local parameters
   integer,dimension(:),allocatable:: temp_regulardomain
-  integer:: i,j,k,ispec,iglob
+  integer:: i,j,k,ispec,iglob,ier
 
   ! PML interface points array
   iglob_is_PML_interface(:) = 0
 
   ! temporary arrays
-  allocate(temp_regulardomain(NGLOB_AB))
+  allocate(temp_regulardomain(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array temp_regulardomain'
   temp_regulardomain(:) = 0
 
   ! global PML points
@@ -646,11 +656,12 @@ subroutine PML_set_local_dampingcoeff()
   real(kind=CUSTOM_REAL) :: d
   real(kind=CUSTOM_REAL) :: width
 
-  integer:: i,j,k,ispec,iglob,ispecPML,iglobf
+  integer:: i,j,k,ispec,iglob,ispecPML,iglobf,ier
   integer:: ispecB,igll,iface
 
   ! stores damping coefficient
-  allocate( PML_damping_d(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+  allocate( PML_damping_d(NGLLX,NGLLY,NGLLZ,num_PML_ispec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array PML_damping_d'
   PML_damping_d(:,:,:,:) = 0._CUSTOM_REAL
 
   ! loops over all PML elements
@@ -765,10 +776,11 @@ subroutine PML_determine_dprime()
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   real(kind=CUSTOM_REAL) :: nx,ny,nz
   real(kind=CUSTOM_REAL) :: d_dx,d_dy,d_dz,tempd_dx,tempd_dy,tempd_dz
-  integer :: ispec,i,j,k,l,ispecPML
+  integer :: ispec,i,j,k,l,ispecPML,ier
 
   ! dprime derivatives
-  allocate( PML_damping_dprime(NGLLX,NGLLY,NGLLZ,num_PML_ispec))
+  allocate( PML_damping_dprime(NGLLX,NGLLY,NGLLZ,num_PML_ispec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array PML_damping_dprime'
   PML_damping_dprime(:,:,:,:) = 0._CUSTOM_REAL
 
   ! loops over all PML elements
@@ -847,7 +859,7 @@ subroutine PML_add_layer()
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: iglob_pml_normal
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: ispec_pml_normal
   integer,dimension(:),allocatable:: is_pml_elem
-  integer:: i,j,k,iglob,count,ispecPML,ispec,new_elemts
+  integer:: i,j,k,iglob,count,ispecPML,ispec,new_elemts,ier
   integer :: iface,icorner,ipmlcorners
 
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
@@ -872,9 +884,10 @@ subroutine PML_add_layer()
   logical :: is_done
 
   ! temporary arrays
-  allocate(is_pml_elem(NSPEC_AB))
-  allocate(iglob_pml_normal(NDIM,NGLOB_AB))
-  allocate(ispec_pml_normal(NDIM,NSPEC_AB))
+  allocate(is_pml_elem(NSPEC_AB), &
+          iglob_pml_normal(NDIM,NGLOB_AB), &
+          ispec_pml_normal(NDIM,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array is_pml_elem etc.'
 
   iglob_pml_normal(:,:) = 0._CUSTOM_REAL
   ispec_pml_normal(:,:) = 0._CUSTOM_REAL
@@ -1022,7 +1035,7 @@ subroutine PML_update_normals(ilayer)
        reshape((/ iface1_corner_ijk,iface2_corner_ijk, &
                   iface3_corner_ijk,iface4_corner_ijk, &
                   iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/)) ! all faces
-  integer:: ispecngb,iadj,ipmlinterface
+  integer:: ispecngb,iadj,ipmlinterface,ier
   integer :: ispecPMLngb_corner,ispecPMLngb_edge,ispecPMLngb_sngl
   integer,dimension(:),allocatable :: iglob_nadj,ispec_is_PML_inum_org
   integer,dimension(:,:,:),allocatable :: iglob_adj
@@ -1031,7 +1044,8 @@ subroutine PML_update_normals(ilayer)
   ! checks normals for elements adjacent to edge/corner elements
   ! assigns element information to each global point
   ! (note: mpi partitioning/interface between elements not considered yet)
-  allocate(iglob_nadj(NGLOB_AB),iglob_adj(2,32,NGLOB_AB))
+  allocate(iglob_nadj(NGLOB_AB),iglob_adj(2,32,NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array iglob_nadj'
   iglob_nadj(:) = 0
   iglob_adj(:,:,:) = 0
   do ispecPML=1,num_PML_ispec
@@ -1059,7 +1073,8 @@ subroutine PML_update_normals(ilayer)
 
   ! finds neighbors based on common nodes  and changes type and normal accordingly
   ! for edges and corners
-  allocate(ispec_is_PML_inum_org(NSPEC_AB))
+  allocate(ispec_is_PML_inum_org(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ispec_is_PML_inum_org'
   ispec_is_PML_inum_org(:) = ispec_is_PML_inum(:)
   do ispecPML=1,num_PML_ispec
     ispec = PML_ispec(ispecPML)
@@ -1169,7 +1184,7 @@ subroutine PML_output_VTKs()
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: ispec_normal
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: temp_gllvalues
   integer,dimension(:),allocatable :: temp_iglob
-  integer :: count,iglob,ispecPML,ispec
+  integer :: count,iglob,ispecPML,ispec,ier
   character(len=256) :: vtkfilename
 
   ! element type flags
@@ -1188,7 +1203,8 @@ subroutine PML_output_VTKs()
         count = count+1
       endif
     enddo
-    allocate(temp_iglob(count))
+    allocate(temp_iglob(count),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array temp_iglob'
     count = 0
     do iglob=1,NGLOB_AB
       if( iglob_is_PML_interface(iglob) > 0 ) then
@@ -1204,7 +1220,8 @@ subroutine PML_output_VTKs()
 
   ! pml normals
   if( .false. ) then
-    allocate(ispec_normal(3,NSPEC_AB) )
+    allocate(ispec_normal(3,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ispec_normal'
     ispec_normal(:,:) = 0._CUSTOM_REAL
     do ispecPML=1,num_PML_ispec
       ispec = PML_ispec(ispecPML)
@@ -1218,7 +1235,8 @@ subroutine PML_output_VTKs()
 
   ! pml damping coefficients
   if( .false. ) then
-    allocate(temp_gllvalues(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(temp_gllvalues(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array temp_gllvalues'
     temp_gllvalues = 0._CUSTOM_REAL
     do ispecPML=1,num_PML_ispec
       ispec = PML_ispec(ispecPML)
