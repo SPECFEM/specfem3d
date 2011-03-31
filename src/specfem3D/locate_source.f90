@@ -152,7 +152,7 @@
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
-
+  integer ier
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
@@ -672,7 +672,8 @@
     ispec_selected_source_all(:,:) = -1
 
     ! avoids warnings about temporary creations of arrays for function call by compiler
-    allocate(tmp_i_local(ng),tmp_i_all_local(ng,0:NPROC-1))
+    allocate(tmp_i_local(ng),tmp_i_all_local(ng,0:NPROC-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tmp_i_local'
     tmp_i_local(:) = ispec_selected_source(ns:ne)
     call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
     ispec_selected_source_all(1:ng,:) = tmp_i_all_local(:,:)
@@ -685,7 +686,8 @@
     deallocate(tmp_i_local,tmp_i_all_local)
 
     ! avoids warnings about temporary creations of arrays for function call by compiler
-    allocate(tmp_local(ng),tmp_all_local(ng,0:NPROC-1))
+    allocate(tmp_local(ng),tmp_all_local(ng,0:NPROC-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tmp_local'
     tmp_local(:) = xi_source(ns:ne)
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     xi_source_all(1:ng,:) = tmp_all_local(:,:)

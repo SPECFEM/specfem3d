@@ -81,7 +81,10 @@
   !if(myrank == 0) call read_external_model()
   ! broadcast the information read on the master to the nodes, e.g.
   !call MPI_BCAST(nrecord,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-  !if( myrank /= 0 ) allocate( vp_tomography(1:nrecord) )
+  !if( myrank /= 0 ) then
+  ! allocate( vp_tomography(1:nrecord) ,stat=ier)
+  ! if( ier /= 0 ) stop 'error allocating array vp_tomography'
+  !endif
   !call MPI_BCAST(vp_tomography,size(vp_tomography),CUSTOM_MPI_TYPE,0,MPI_COMM_WORLD,ier)
 
   end subroutine model_tomography_broadcast

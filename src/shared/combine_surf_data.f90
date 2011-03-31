@@ -59,7 +59,7 @@ program combine_surf_data
   integer,dimension(:),allocatable :: num_ibool
 
   logical :: HIGH_RESOLUTION_MESH,  FILE_ARRAY_IS_3D
-  integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim
+  integer :: ires, nspec_surf, npoint1, npoint2, ispec_surf, inx, iny, idim, ier
   integer,dimension(:), allocatable ::  ibelm_surf
 
 
@@ -163,10 +163,11 @@ program combine_surf_data
     nglob = NGLOB_AB
 
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(mask_ibool(NGLOB_AB))
-    allocate(num_ibool(NGLOB_AB))
-    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+            mask_ibool(NGLOB_AB), &
+            num_ibool(NGLOB_AB), &
+            xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool etc.'
 
     ! surface file
     local_ibool_surf_file = trim(prname) // 'ibelm_' //trim(surfname)// '.bin'
@@ -179,16 +180,21 @@ program combine_surf_data
     read(28) npoint1
     read(28) npoint2
 
-    if (it == 1) allocate(ibelm_surf(nspec_surf))
+    if (it == 1) then
+      allocate(ibelm_surf(nspec_surf),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array ibelm_surf'
+    endif
     read(28) ibelm_surf
     close(28)
     print *, trim(local_ibool_surf_file)
 
     if (it == 1) then
       if (FILE_ARRAY_IS_3D) then
-        allocate(data_3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),dat3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+        allocate(data_3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),dat3D(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array data_3D'
       else
-        allocate(data_2D(NGLLX,NGLLY,nspec_surf),dat2D(NGLLX,NGLLY,nspec_surf))
+        allocate(data_2D(NGLLX,NGLLY,nspec_surf),dat2D(NGLLX,NGLLY,nspec_surf),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array data_2D'
       endif
     endif
 
@@ -316,9 +322,10 @@ program combine_surf_data
     nglob = NGLOB_AB
 
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(mask_ibool(NGLOB_AB))
-    allocate(num_ibool(NGLOB_AB))
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+            mask_ibool(NGLOB_AB), &
+            num_ibool(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool etc.'
 
 
     np = npoint * (it-1)

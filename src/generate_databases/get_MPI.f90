@@ -74,7 +74,7 @@
   integer :: num_points1, num_points2
 
   ! assembly test
-  integer :: i,j,k,ispec,iglob,count,inum
+  integer :: i,j,k,ispec,iglob,count,inum,ier
   integer :: max_nibool_interfaces_ext_mesh
   integer,dimension(:),allocatable :: test_flag
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
@@ -91,23 +91,34 @@
                             ibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh )
 
-  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh))
+  allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array nibool_interfaces_ext_mesh_true'
 
   ! sorts ibool comm buffers lexicographically for all MPI interfaces
   num_points1 = 0
   num_points2 = 0
   do iinterface = 1, num_interfaces_ext_mesh
 
-    allocate(xp(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(yp(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(zp(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(locval(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
-    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)))
+    allocate(xp(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xp'
+    allocate(yp(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array yp'
+    allocate(zp(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array zp'
+    allocate(locval(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array locval'
+    allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ifseg'
+    allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array reorder_interface_ext_mesh'
+    allocate(ind_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ind_ext_mesh'
+    allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ninseg_ext_mesh'
+    allocate(iwork_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array iwork_ext_mesh'
+    allocate(work_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array work_ext_mesh'
 
     ! gets x,y,z coordinates of global points on MPI interface
     do ilocnum = 1, nibool_interfaces_ext_mesh(iinterface)
@@ -158,7 +169,8 @@
   endif
 
   ! checks with assembly of test fields
-  allocate(test_flag(nglob),test_flag_cr(nglob))
+  allocate(test_flag(nglob),test_flag_cr(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array test_flag etc.'
   test_flag(:) = 0
   test_flag_cr(:) = 0._CUSTOM_REAL
   count = 0
@@ -185,7 +197,8 @@
   ! collects contributions from different MPI partitions
   ! sets up MPI communications
   max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
-  allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh))
+  allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibool_interfaces_dummy'
 
   count = 0
   do iinterface = 1, num_interfaces_ext_mesh

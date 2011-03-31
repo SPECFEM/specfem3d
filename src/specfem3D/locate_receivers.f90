@@ -132,7 +132,7 @@
   double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
   double precision, allocatable, dimension(:,:,:,:) :: nu_all
 
-
+  integer :: ier
   character(len=256) OUTPUT_FILES
 
 ! **************
@@ -164,35 +164,34 @@
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
   ! allocate memory for arrays using number of stations
-  allocate(stlat(nrec))
-  allocate(stlon(nrec))
-  allocate(stele(nrec))
-  allocate(stbur(nrec))
-  allocate(stutm_x(nrec))
-  allocate(stutm_y(nrec))
-  allocate(horiz_dist(nrec))
-  allocate(elevation(nrec))
-
-  allocate(ix_initial_guess(nrec))
-  allocate(iy_initial_guess(nrec))
-  allocate(iz_initial_guess(nrec))
-  allocate(x_target(nrec))
-  allocate(y_target(nrec))
-  allocate(z_target(nrec))
-  allocate(x_found(nrec))
-  allocate(y_found(nrec))
-  allocate(z_found(nrec))
-  allocate(final_distance(nrec))
-
-  allocate(ispec_selected_rec_all(nrec,0:NPROC-1))
-  allocate(xi_receiver_all(nrec,0:NPROC-1))
-  allocate(eta_receiver_all(nrec,0:NPROC-1))
-  allocate(gamma_receiver_all(nrec,0:NPROC-1))
-  allocate(x_found_all(nrec,0:NPROC-1))
-  allocate(y_found_all(nrec,0:NPROC-1))
-  allocate(z_found_all(nrec,0:NPROC-1))
-  allocate(final_distance_all(nrec,0:NPROC-1))
-  allocate(nu_all(3,3,nrec,0:NPROC-1))
+  allocate(stlat(nrec), &
+          stlon(nrec), &
+          stele(nrec), &
+          stbur(nrec), &
+          stutm_x(nrec), &
+          stutm_y(nrec), &
+          horiz_dist(nrec), &
+          elevation(nrec), &
+          ix_initial_guess(nrec), &
+          iy_initial_guess(nrec), &
+          iz_initial_guess(nrec), &
+          x_target(nrec), &
+          y_target(nrec), &
+          z_target(nrec), &
+          x_found(nrec), &
+          y_found(nrec), &
+          z_found(nrec), &
+          final_distance(nrec), &
+          ispec_selected_rec_all(nrec,0:NPROC-1), &
+          xi_receiver_all(nrec,0:NPROC-1), &
+          eta_receiver_all(nrec,0:NPROC-1), &
+          gamma_receiver_all(nrec,0:NPROC-1), &
+          x_found_all(nrec,0:NPROC-1), &
+          y_found_all(nrec,0:NPROC-1), &
+          z_found_all(nrec,0:NPROC-1), &
+          final_distance_all(nrec,0:NPROC-1), &
+          nu_all(3,3,nrec,0:NPROC-1),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for locating receivers'
 
   ! loop on all the stations
   do irec=1,nrec

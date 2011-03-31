@@ -166,33 +166,46 @@ contains
     call create_name_database(prname,myrank,LOCAL_PATH)
 
     ! flag indicating whether point is in the sediments
-    allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,nspec))
+    allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array flag_sediments'
     allocate(not_fully_in_bedrock(nspec),stat=ier)
     if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! boundary locator
-    allocate(iboun(6,nspec))
+    allocate(iboun(6,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array iboun'
 
     ! boundary parameters locator
-    allocate(ibelm_xmin(NSPEC2DMAX_XMIN_XMAX))
-    allocate(ibelm_xmax(NSPEC2DMAX_XMIN_XMAX))
-    allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX))
-    allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX))
-    allocate(ibelm_bottom(NSPEC2D_BOTTOM))
+    allocate(ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
+    allocate(ibelm_xmax(NSPEC2DMAX_XMIN_XMAX),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_xmax'
+    allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
+    allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_ymax'
+    allocate(ibelm_bottom(NSPEC2D_BOTTOM),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibelm_bottom'
     allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
     if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! MPI cut-planes parameters along xi and along eta
-    allocate(iMPIcut_xi(2,nspec))
+    allocate(iMPIcut_xi(2,nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array iMPIcut_xi'
     allocate(iMPIcut_eta(2,nspec),stat=ier)
     if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate memory for arrays
-    allocate(iglob(npointot))
-    allocate(locval(npointot))
-    allocate(ifseg(npointot))
-    allocate(xp(npointot))
-    allocate(yp(npointot))
+    allocate(iglob(npointot),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array iglob'
+    allocate(locval(npointot),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array locval'
+    allocate(ifseg(npointot),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ifseg'
+    allocate(xp(npointot),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xp'
+    allocate(yp(npointot),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array yp'
     allocate(zp(npointot),stat=ier)
     if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
@@ -370,7 +383,8 @@ contains
     call get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
 
     ! put in classical format
-    allocate(nodes_coords(nglob,3))
+    allocate(nodes_coords(nglob,3),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_coords'
 
     do ispec=1,nspec
        ieoff = NGLLCUBE*(ispec-1)

@@ -71,7 +71,7 @@
 ! first dimension  : material_id
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(NMATERIALS,6) ::  material_properties
-
+  double precision , dimension(6) :: matpropl
   integer i,ispec,iglob
 
 ! name of the database files
@@ -94,7 +94,9 @@
 ! Materials properties
    write(15,*) NMATERIALS, 0
    do idoubl = 1,NMATERIALS
-      write(15,*) material_properties(idoubl,:)
+      !write(15,*) material_properties(idoubl,:)
+      matpropl(:) = material_properties(idoubl,:)
+      write(15,*) matpropl
    end do
 
 

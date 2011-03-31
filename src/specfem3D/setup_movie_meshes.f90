@@ -34,50 +34,56 @@
   use specfem_par_movie
   implicit none
 
-  integer :: i,j,k,ispec,iglob
+  integer :: i,j,k,ispec,iglob,ier
   integer :: ipoin,nfaces_org
   character(len=256):: filename
 
 ! initializes mesh arrays for movies and shakemaps
-  allocate(nfaces_perproc_surface_ext_mesh(NPROC))
-  allocate(faces_surface_offset_ext_mesh(NPROC))
+  allocate(nfaces_perproc_surface_ext_mesh(NPROC), &
+          faces_surface_offset_ext_mesh(NPROC),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array for movie faces'
+  
   nfaces_org = nfaces_surface_ext_mesh
   if (nfaces_surface_ext_mesh == 0) then
     ! dummy arrays
     if (USE_HIGHRES_FOR_MOVIES) then
-      allocate(faces_surface_ext_mesh(NGLLX*NGLLY,1))
-      allocate(store_val_x_external_mesh(NGLLX*NGLLY*1))
-      allocate(store_val_y_external_mesh(NGLLX*NGLLY*1))
-      allocate(store_val_z_external_mesh(NGLLX*NGLLY*1))
-      allocate(store_val_ux_external_mesh(NGLLX*NGLLY*1))
-      allocate(store_val_uy_external_mesh(NGLLX*NGLLY*1))
-      allocate(store_val_uz_external_mesh(NGLLX*NGLLY*1))
+      allocate(faces_surface_ext_mesh(NGLLX*NGLLY,1), &
+        store_val_x_external_mesh(NGLLX*NGLLY*1), &
+        store_val_y_external_mesh(NGLLX*NGLLY*1), &
+        store_val_z_external_mesh(NGLLX*NGLLY*1), &
+        store_val_ux_external_mesh(NGLLX*NGLLY*1), &
+        store_val_uy_external_mesh(NGLLX*NGLLY*1), &
+        store_val_uz_external_mesh(NGLLX*NGLLY*1),stat=ier)
+      if( ier /= 0 ) stop 'error allocating dummy arrays for highres movie'
     else
-      allocate(faces_surface_ext_mesh(NGNOD2D,1))
-      allocate(store_val_x_external_mesh(NGNOD2D*1))
-      allocate(store_val_y_external_mesh(NGNOD2D*1))
-      allocate(store_val_z_external_mesh(NGNOD2D*1))
-      allocate(store_val_ux_external_mesh(NGNOD2D*1))
-      allocate(store_val_uy_external_mesh(NGNOD2D*1))
-      allocate(store_val_uz_external_mesh(NGNOD2D*1))
+      allocate(faces_surface_ext_mesh(NGNOD2D,1), &
+        store_val_x_external_mesh(NGNOD2D*1), &
+        store_val_y_external_mesh(NGNOD2D*1), &
+        store_val_z_external_mesh(NGNOD2D*1), &
+        store_val_ux_external_mesh(NGNOD2D*1), &
+        store_val_uy_external_mesh(NGNOD2D*1), &
+        store_val_uz_external_mesh(NGNOD2D*1),stat=ier)
+      if( ier /= 0 ) stop 'error allocating dummy arrays for lowres movie'
     endif
   else
     if (USE_HIGHRES_FOR_MOVIES) then
-      allocate(faces_surface_ext_mesh(NGLLX*NGLLY,nfaces_surface_ext_mesh))
-      allocate(store_val_x_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-      allocate(store_val_y_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-      allocate(store_val_z_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-      allocate(store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-      allocate(store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-      allocate(store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh))
+      allocate(faces_surface_ext_mesh(NGLLX*NGLLY,nfaces_surface_ext_mesh), &
+        store_val_x_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
+        store_val_y_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
+        store_val_z_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
+        store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
+        store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
+        store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+      if( ier /= 0 ) stop 'error allocating arrays for highres movie'
     else
-      allocate(faces_surface_ext_mesh(NGNOD2D,nfaces_surface_ext_mesh))
-      allocate(store_val_x_external_mesh(NGNOD2D*nfaces_surface_ext_mesh))
-      allocate(store_val_y_external_mesh(NGNOD2D*nfaces_surface_ext_mesh))
-      allocate(store_val_z_external_mesh(NGNOD2D*nfaces_surface_ext_mesh))
-      allocate(store_val_ux_external_mesh(NGNOD2D*nfaces_surface_ext_mesh))
-      allocate(store_val_uy_external_mesh(NGNOD2D*nfaces_surface_ext_mesh))
-      allocate(store_val_uz_external_mesh(NGNOD2D*nfaces_surface_ext_mesh))
+      allocate(faces_surface_ext_mesh(NGNOD2D,nfaces_surface_ext_mesh), &
+        store_val_x_external_mesh(NGNOD2D*nfaces_surface_ext_mesh), &
+        store_val_y_external_mesh(NGNOD2D*nfaces_surface_ext_mesh), &
+        store_val_z_external_mesh(NGNOD2D*nfaces_surface_ext_mesh), &
+        store_val_ux_external_mesh(NGNOD2D*nfaces_surface_ext_mesh), &
+        store_val_uy_external_mesh(NGNOD2D*nfaces_surface_ext_mesh), &
+        store_val_uz_external_mesh(NGNOD2D*nfaces_surface_ext_mesh),stat=ier)
+      if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
     endif
   endif
   store_val_ux_external_mesh(:) = 0._CUSTOM_REAL
@@ -90,19 +96,21 @@
   ! arrays used for collected/gathered fields
   if (myrank == 0) then
     if (USE_HIGHRES_FOR_MOVIES) then
-      allocate(store_val_x_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_y_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_z_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_ux_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_uy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_uz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh))
+      allocate(store_val_x_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+        store_val_y_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+        store_val_z_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+        store_val_ux_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+        store_val_uy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
+        store_val_uz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh),stat=ier)
+      if( ier /= 0 ) stop 'error allocating arrays for highres movie'
     else
-      allocate(store_val_x_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_y_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_z_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_ux_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_uy_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_uz_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh))
+      allocate(store_val_x_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh), &
+        store_val_y_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh), &
+        store_val_z_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh), &
+        store_val_ux_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh), &
+        store_val_uy_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh), &
+        store_val_uz_all_external_mesh(NGNOD2D*nfaces_surface_glob_ext_mesh),stat=ier)
+      if( ier /= 0 ) stop 'error allocating arrays for lowres movie'
     endif
   endif
   call gather_all_i(nfaces_surface_ext_mesh,1,nfaces_perproc_surface_ext_mesh,1,NPROC)
@@ -121,7 +129,8 @@
 ! stores global indices of GLL points on the surface to array faces_surface_ext_mesh
   if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
 
-    allocate( faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh))
+    allocate( faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array faces_surface_ext_mesh_ispec'
 
     ! stores global indices
     nfaces_surface_ext_mesh = 0
@@ -287,6 +296,18 @@
 
   endif
 
+  ! for gathering movie data
+  if (USE_HIGHRES_FOR_MOVIES) then
+    ! hi-res movies output all gll points on surface
+    nfaces_perproc_surface_ext_mesh(:) = nfaces_perproc_surface_ext_mesh(:)*NGLLX*NGLLY
+    nfaces_surface_ext_mesh_points = nfaces_surface_ext_mesh*NGLLX*NGLLY
+    nfaces_surface_glob_em_points = nfaces_surface_glob_ext_mesh*NGLLX*NGLLY
+  else
+    ! low-res movies only output at element corners
+    nfaces_perproc_surface_ext_mesh(:) = nfaces_perproc_surface_ext_mesh(:)*NGNOD2D    
+    nfaces_surface_ext_mesh_points = nfaces_surface_ext_mesh*NGNOD2D
+    nfaces_surface_glob_em_points = nfaces_surface_glob_ext_mesh*NGNOD2D
+  endif
 
   end subroutine setup_movie_meshes
 

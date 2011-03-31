@@ -39,7 +39,7 @@
 
   integer iprocloop,nproc_max_loop
   integer, dimension(:), allocatable :: num_active_proc
-
+  integer ier
   nproc_max_loop = NPROC-1
 
 ! create the name for the database of the current slide and region
@@ -49,7 +49,8 @@
   if(.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
 
 ! allocate array for active processors
-    allocate(num_active_proc(0:nproc_max_loop))
+    allocate(num_active_proc(0:nproc_max_loop),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array num_active_proc'
 
 ! read filtered file with name of active machines
     open(unit=48,file=trim(OUTPUT_FILES)//'/filtered_machines.txt',status='old',action='read')

@@ -249,27 +249,30 @@
   npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
 
   ! allocate arrays for sorting routine
-  allocate(iglob(npointot),loc(npointot))
-  allocate(ifseg(npointot))
-  allocate(xp(npointot),yp(npointot),zp(npointot))
-  allocate(xp_save(npointot),yp_save(npointot),zp_save(npointot))
-  allocate(field_display(npointot))
-  allocate(mask_point(npointot))
-  allocate(ireorder(npointot))
+  allocate(iglob(npointot),loc(npointot), &
+          ifseg(npointot), &
+          xp(npointot),yp(npointot),zp(npointot), &
+          xp_save(npointot),yp_save(npointot),zp_save(npointot), &
+          field_display(npointot), &
+          mask_point(npointot), &
+          ireorder(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for sorting routine'
 
   ! allocates data arrays
-  allocate(store_val_x(ilocnum))
-  allocate(store_val_y(ilocnum))
-  allocate(store_val_z(ilocnum))
-  allocate(store_val_ux(ilocnum))
-  allocate(store_val_uy(ilocnum))
-  allocate(store_val_uz(ilocnum))
+  allocate(store_val_x(ilocnum), &
+          store_val_y(ilocnum), &
+          store_val_z(ilocnum), &
+          store_val_ux(ilocnum), &
+          store_val_uy(ilocnum), &
+          store_val_uz(ilocnum),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for data arrays'
 
   if(USE_HIGHRES_FOR_MOVIES) then
-    allocate(x(NGLLX,NGLLY))
-    allocate(y(NGLLX,NGLLY))
-    allocate(z(NGLLX,NGLLY))
-    allocate(display(NGLLX,NGLLY))
+    allocate(x(NGLLX,NGLLY), &
+            y(NGLLX,NGLLY), &
+            z(NGLLX,NGLLY), &
+            display(NGLLX,NGLLY),stat=ier)
+    if( ier /= 0 ) stop 'error allocating arrays for highres'
   endif
 
   ! user output
@@ -840,7 +843,7 @@ enddo ! it
   double precision xp(npointot),yp(npointot),zp(npointot)
   integer nspec,nglob
 
-  integer ispec,i,j
+  integer ispec,i,j,ier
   integer ieoff,ilocnum,nseg,ioff,iseg,ig
 
   integer, dimension(:), allocatable :: ind,ninseg,iwork
@@ -855,10 +858,11 @@ enddo ! it
     print *, 'SMALLVALTOL', SMALLVALTOL
 
 ! dynamically allocate arrays
-  allocate(ind(npointot))
-  allocate(ninseg(npointot))
-  allocate(iwork(npointot))
-  allocate(work(npointot))
+  allocate(ind(npointot), &
+          ninseg(npointot), &
+          iwork(npointot), &
+          work(npointot),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays ind etc.'
 
 ! establish initial pointers
   do ispec=1,nspec

@@ -44,8 +44,8 @@
   integer :: ispec,i,j,k,iglob,ier
 
 ! allocates memory
-  allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(rmass_acoustic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate rmass'
+  allocate(rmass_acoustic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate rmass_acoustic'
   allocate(rmass_solid_poroelastic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
   allocate(rmass_fluid_poroelastic(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
 
@@ -160,13 +160,14 @@
   double precision :: long_corner,lat_corner,ratio_xi,ratio_eta
   integer :: ix_oceans,iy_oceans,iz_oceans,ispec_oceans,ispec2D,igll,iglobnum
   integer :: icornerlong,icornerlat
-
+  integer :: ier
   ! creates ocean load mass matrix
   if(OCEANS) then
 
     ! adding ocean load mass matrix at ocean bottom
     NGLOB_OCEAN = nglob
-    allocate(rmass_ocean_load(NGLOB_OCEAN))
+    allocate(rmass_ocean_load(NGLOB_OCEAN),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rmass_ocean_load'
 
     ! create ocean load mass matrix for degrees of freedom at ocean bottom
     rmass_ocean_load(:) = 0._CUSTOM_REAL
@@ -265,7 +266,8 @@
 
     ! allocate dummy array if no oceans
     NGLOB_OCEAN = 1
-    allocate(rmass_ocean_load(NGLOB_OCEAN))
+    allocate(rmass_ocean_load(NGLOB_OCEAN),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array rmass_ocean_load'
 
   endif
 

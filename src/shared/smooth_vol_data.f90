@@ -256,18 +256,21 @@ program smooth_vol_data
   read(27) NGLOB_AB
 
   ! ibool file
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ibool'
   read(27) ibool
 
   ! global point arrays
-  allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
+  allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array xstore etc.'
   read(27) xstore
   read(27) ystore
   read(27) zstore
 
   ! reads in jacobian
   allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-          jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array dummy and jacobian'
   read(27) dummy ! xix
   read(27) dummy ! xiy
   read(27) dummy ! xiz
@@ -283,7 +286,8 @@ program smooth_vol_data
   read(27) dummy ! kappastore
   read(27) dummy ! mustore
 
-  allocate(ldummy(NSPEC_AB))
+  allocate(ldummy(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ldummy'
   read(27) ldummy ! ispec_is_acoustic
   call any_all_l( ANY(ldummy), ACOUSTIC_SIMULATION )
 
@@ -295,7 +299,8 @@ program smooth_vol_data
 
   deallocate(ldummy)
 
-  allocate(dummy_1(NGLOB_AB))
+  allocate(dummy_1(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array dummy_1'
   if( ACOUSTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass_acoustic
     read(27) dummy ! rhostore
@@ -312,10 +317,11 @@ program smooth_vol_data
   deallocate(dummy)
 
   read(27) idummy_a ! num_abs_boundary_faces
-  allocate(idummy(idummy_a))
-  allocate(idummy_3(3,NGLLSQUARE,idummy_a))
-  allocate(dummy_2(NGLLSQUARE,idummy_a))
-  allocate(dummy_3(NDIM,NGLLSQUARE,idummy_a))
+  allocate(idummy(idummy_a), &
+          idummy_3(3,NGLLSQUARE,idummy_a), &
+          dummy_2(NGLLSQUARE,idummy_a), &
+          dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array idummy etc.'
   read(27) idummy ! abs_boundary_ispec
   read(27) idummy_3 ! abs_boundary_ijk
   read(27) dummy_2 ! abs_boundary_jacobian2Dw
@@ -323,10 +329,11 @@ program smooth_vol_data
   deallocate( idummy,idummy_3,dummy_2,dummy_3)
 
   read(27) idummy_a ! num_free_surface_faces
-  allocate(idummy(idummy_a))
-  allocate(idummy_3(3,NGLLSQUARE,idummy_a))
-  allocate(dummy_2(NGLLSQUARE,idummy_a))
-  allocate(dummy_3(NDIM,NGLLSQUARE,idummy_a))
+  allocate(idummy(idummy_a), &
+          idummy_3(3,NGLLSQUARE,idummy_a), &
+          dummy_2(NGLLSQUARE,idummy_a), &
+          dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array idummy etc.'
   read(27) idummy ! free_surface_ispec
   read(27) idummy_3 ! free_surface_ijk
   read(27) dummy_2 ! free_surface_jacobian2Dw
@@ -334,10 +341,11 @@ program smooth_vol_data
   deallocate( idummy,idummy_3,dummy_2,dummy_3)
 
   read(27) idummy_a ! num_coupling_ac_el_faces
-  allocate(idummy(idummy_a))
-  allocate(idummy_3(3,NGLLSQUARE,idummy_a))
-  allocate(dummy_2(NGLLSQUARE,idummy_a))
-  allocate(dummy_3(NDIM,NGLLSQUARE,idummy_a))
+  allocate(idummy(idummy_a), &
+          idummy_3(3,NGLLSQUARE,idummy_a), &
+          dummy_2(NGLLSQUARE,idummy_a), &
+          dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array idummy etc.'
   read(27) idummy ! coupling_ac_el_ispec
   read(27) idummy_3 ! coupling_ac_el_ijk
   read(27) dummy_2 ! coupling_ac_el_jacobian2Dw
@@ -346,18 +354,21 @@ program smooth_vol_data
 
   read(27) num_interfaces_ext_mesh ! num_interfaces_ext_mesh
   read(27) idummy_a ! max_nibool_interfaces_ext_mesh
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh))
+  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh'
   read(27) my_neighbours_ext_mesh
 
   close(27)
 
   ! get the location of the center of the elements and local points
-  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(cx0(NSPEC_AB))
-  allocate(cy0(NSPEC_AB))
-  allocate(cz0(NSPEC_AB))
+  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          cx0(NSPEC_AB), &
+          cy0(NSPEC_AB), &
+          cz0(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array xl etc.'
+  
   do ispec = 1, nspec_AB
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -408,8 +419,10 @@ program smooth_vol_data
 ! loops over slices
 ! each process reads in his own neighbor slices and gaussian filters the values
 
-  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  allocate(bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+          bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array tk and bk'
+  
   tk = 0.0_CUSTOM_REAL
   bk = 0.0_CUSTOM_REAL
   do it=1,num_interfaces_ext_mesh+1
@@ -430,18 +443,21 @@ program smooth_vol_data
     read(27) NGLOB_N
 
     ! ibool file
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N))
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool'
     read(27) ibool
 
     ! global point arrays
-    allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N))
+    allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27) xstore
     read(27) ystore
     read(27) zstore
 
     ! reads in jacobian
     allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-            jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N))
+            jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array dummy and jacobian'
     read(27) dummy ! xix
     read(27) dummy ! xiy
     read(27) dummy ! xiz
@@ -456,12 +472,14 @@ program smooth_vol_data
     deallocate(dummy)
 
     ! get the location of the center of the elements and local points
-    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N))
-    allocate(yy(NGLLX,NGLLY,NGLLZ,NSPEC_N))
-    allocate(zz(NGLLX,NGLLY,NGLLZ,NSPEC_N))
-    allocate(cx(NSPEC_N))
-    allocate(cy(NSPEC_N))
-    allocate(cz(NSPEC_N))
+    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+            yy(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+            zz(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+            cx(NSPEC_N), &
+            cy(NSPEC_N), &
+            cz(NSPEC_N),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xx etc.'
+    
     do ispec = 1, nspec_N
       do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -492,8 +510,8 @@ program smooth_vol_data
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
-    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ios)
-    if( ios /= 0 ) stop 'error allocating dat array'
+    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dat array'
     read(28) dat
     close(28)
 
@@ -559,7 +577,9 @@ program smooth_vol_data
 
   ! normalizes
   !if(myrank==0) print*, 'normalizes values ...'
-  allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array dat_smooth'
+  
   dat_smooth = 0.0_CUSTOM_REAL
   do ispec = 1, nspec_AB
     do k = 1, NGLLZ

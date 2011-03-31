@@ -36,7 +36,8 @@
 
   implicit none
   character(len=256) :: plot_file
-
+  integer :: ier
+  
   ! flag for any movie simulation
   if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
      MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_GIF_IMAGE ) then
@@ -145,9 +146,12 @@
   ! seismograms
   if (nrec_local > 0) then
     ! allocate seismogram array
-    allocate(seismograms_d(NDIM,nrec_local,NSTEP))
-    allocate(seismograms_v(NDIM,nrec_local,NSTEP))
-    allocate(seismograms_a(NDIM,nrec_local,NSTEP))
+    allocate(seismograms_d(NDIM,nrec_local,NSTEP),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array seismograms_d'
+    allocate(seismograms_v(NDIM,nrec_local,NSTEP),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array seismograms_v'
+    allocate(seismograms_a(NDIM,nrec_local,NSTEP),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array seismograms_a'
 
     ! initialize seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
@@ -410,7 +414,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   implicit none
-
+  ! local parameters
   integer :: ier
 
 ! seismograms
@@ -419,7 +423,8 @@
     allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
             Mzz_der(nrec_local),Mxy_der(nrec_local), &
             Mxz_der(nrec_local),Myz_der(nrec_local), &
-            sloc_der(NDIM,nrec_local))
+            sloc_der(NDIM,nrec_local),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array Mxx_der and following arrays'
     Mxx_der = 0._CUSTOM_REAL
     Myy_der = 0._CUSTOM_REAL
     Mzz_der = 0._CUSTOM_REAL
@@ -428,7 +433,8 @@
     Myz_der = 0._CUSTOM_REAL
     sloc_der = 0._CUSTOM_REAL
 
-    allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP))
+    allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array seismograms_eps'
     seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
   endif
 
@@ -518,7 +524,8 @@
       ! elastic domains
       if( ELASTIC_SIMULATION) then
         ! allocates wavefield
-        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces))
+        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array b_absorb_field'
 
         b_reclen_field = CUSTOM_REAL * (NDIM * NGLLSQUARE * num_abs_boundary_faces)
 
@@ -540,7 +547,8 @@
       ! acoustic domains
       if( ACOUSTIC_SIMULATION) then
         ! allocates wavefield
-        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces))
+        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
 
         b_reclen_potential = CUSTOM_REAL * (NGLLSQUARE * num_abs_boundary_faces)
 
@@ -562,12 +570,16 @@
     else
       ! dummy array
       b_num_abs_boundary_faces = 1
-      if( ELASTIC_SIMULATION ) &
-        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces))
-
-      if( ACOUSTIC_SIMULATION ) &
-        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces))
-
+      if( ELASTIC_SIMULATION ) then
+        allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array b_absorb_field'
+      endif
+      
+      if( ACOUSTIC_SIMULATION ) then
+        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
+      endif
+      
     endif
   endif
 
@@ -587,7 +599,7 @@
   use specfem_par_poroelastic
   use specfem_par_movie
   implicit none
-
+  ! local parameters
   integer :: ier
 
   ! for noise simulations
@@ -597,10 +609,14 @@
     allocate(noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP),stat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error allocating noise source array')
 
-    allocate(normal_x_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-    allocate(normal_y_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-    allocate(normal_z_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
-    allocate(mask_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh))
+    allocate(normal_x_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array normal_x_noise'
+    allocate(normal_y_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array normal_y_noise'
+    allocate(normal_z_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array normal_z_noise'
+    allocate(mask_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array mask_noise'
 
     ! initializes
     noise_sourcearray(:,:,:,:,:) = 0._CUSTOM_REAL

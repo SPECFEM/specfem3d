@@ -34,7 +34,7 @@
   use specfem_par_movie,only: nfaces_surface_ext_mesh
 
   implicit none
-  integer:: ispec,i,j,k,iglob
+  integer:: ispec,i,j,k,iglob,ier
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: weights_kernel
   ! flag to save GLL weights
@@ -113,27 +113,34 @@
 
   ! save kernels to binary files
   if( ELASTIC_SIMULATION ) then
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rho_kernel.bin'
     write(27) rho_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'mu_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'mu_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file mu_kernel.bin'
     write(27) mu_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'kappa_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file kappa_kernel.bin'
     write(27) kappa_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rhop_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhop_kernel.bin'
     write(27) rhop_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'beta_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'beta_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file beta_kernel.bin'
     write(27) beta_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'alpha_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file alpha_kernel.bin'
     write(27) alpha_kl
     close(27)
 
     if (SAVE_MOHO_MESH) then
-      open(unit=27,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted')
+      open(unit=27,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+      if( ier /= 0 ) stop 'error opening file moho_kernel.bin'
       write(27) moho_kl
       close(27)
     endif
@@ -143,16 +150,20 @@
 
   ! save kernels to binary files
   if( ACOUSTIC_SIMULATION ) then
-    open(unit=27,file=prname(1:len_trim(prname))//'rho_acoustic_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rho_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rho_acoustic_kernel.bin'
     write(27) rho_ac_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'kappa_acoustic_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'kappa_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file kappa_acoustic_kernel.bin'
     write(27) kappa_ac_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'rhop_acoustic_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'rhop_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhop_acoustic_kernel.bin'
     write(27) rhop_ac_kl
     close(27)
-    open(unit=27,file=prname(1:len_trim(prname))//'alpha_acoustic_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'alpha_acoustic_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file alpha_acoustic_kernel.bin'
     write(27) alpha_ac_kl
     close(27)
 
@@ -160,7 +171,8 @@
 
   ! save weights for volume integration, in order to benchmark the kernels with analytical expressions
   if( SAVE_WEIGHTS ) then
-    allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array weights_kernel'
     do ispec = 1, NSPEC_AB
         do k = 1, NGLLZ
           do j = 1, NGLLY
@@ -170,7 +182,8 @@
           enddo ! j
         enddo ! k
     enddo ! ispec
-    open(unit=27,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted')
+    open(unit=27,file=prname(1:len_trim(prname))//'weights_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file weights_kernel.bin'
     write(27) weights_kernel
     close(27)
   endif

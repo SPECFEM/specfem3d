@@ -72,26 +72,27 @@ subroutine setup_sources()
 
   double precision :: t0_acoustic,min_tshift_cmt_original
   integer :: yr,jda,ho,mi
-  integer :: isource,ispec
+  integer :: isource,ispec,ier
 
 ! allocate arrays for source
-  allocate(islice_selected_source(NSOURCES))
-  allocate(ispec_selected_source(NSOURCES))
-  allocate(Mxx(NSOURCES))
-  allocate(Myy(NSOURCES))
-  allocate(Mzz(NSOURCES))
-  allocate(Mxy(NSOURCES))
-  allocate(Mxz(NSOURCES))
-  allocate(Myz(NSOURCES))
-  allocate(xi_source(NSOURCES))
-  allocate(eta_source(NSOURCES))
-  allocate(gamma_source(NSOURCES))
-  allocate(tshift_cmt(NSOURCES))
-  allocate(hdur(NSOURCES))
-  allocate(hdur_gaussian(NSOURCES))
-  allocate(utm_x_source(NSOURCES))
-  allocate(utm_y_source(NSOURCES))
-  allocate(nu_source(3,3,NSOURCES))
+  allocate(islice_selected_source(NSOURCES), &
+          ispec_selected_source(NSOURCES), &
+          Mxx(NSOURCES), &
+          Myy(NSOURCES), &
+          Mzz(NSOURCES), &
+          Mxy(NSOURCES), &
+          Mxz(NSOURCES), &
+          Myz(NSOURCES), &
+          xi_source(NSOURCES), &
+          eta_source(NSOURCES), &
+          gamma_source(NSOURCES), &
+          tshift_cmt(NSOURCES), &
+          hdur(NSOURCES), &
+          hdur_gaussian(NSOURCES), &
+          utm_x_source(NSOURCES), &
+          utm_y_source(NSOURCES), &
+          nu_source(3,3,NSOURCES),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for sources'
 
 ! locate sources in the mesh
 !
@@ -327,7 +328,7 @@ subroutine setup_receivers()
   use specfem_par_acoustic
   implicit none
 
-  integer :: irec,isource !,ios
+  integer :: irec,isource,ier !,ios
 
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
@@ -373,14 +374,15 @@ subroutine setup_receivers()
   if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
 ! allocate memory for receiver arrays
-  allocate(islice_selected_rec(nrec))
-  allocate(ispec_selected_rec(nrec))
-  allocate(xi_receiver(nrec))
-  allocate(eta_receiver(nrec))
-  allocate(gamma_receiver(nrec))
-  allocate(station_name(nrec))
-  allocate(network_name(nrec))
-  allocate(nu(NDIM,NDIM,nrec))
+  allocate(islice_selected_rec(nrec), &
+          ispec_selected_rec(nrec), &
+          xi_receiver(nrec), &
+          eta_receiver(nrec), &
+          gamma_receiver(nrec), &
+          station_name(nrec), &
+          network_name(nrec), &
+          nu(NDIM,NDIM,nrec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating arrays for receivers'
 
 ! locate receivers in the mesh
   call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
@@ -518,8 +520,9 @@ subroutine setup_sources_precompute_arrays()
 
   ! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
-    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
-    allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
+            sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array sourcearray'
 
     ! compute source arrays
     do isource = 1,NSOURCES
@@ -625,13 +628,15 @@ subroutine setup_sources_precompute_arrays()
 ! because we may need to read in adjoint sources block by block
 
     ! initializes adjoint sources
-    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array adj_sourcearrays'
     adj_sourcearrays = 0._CUSTOM_REAL
 
   else
 
 ! allocate dummy array in order to be able to use it as a subroutine argument, even if unused
-    allocate(adj_sourcearrays(1,1,1,1,1,1))
+    allocate(adj_sourcearrays(1,1,1,1,1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array adj_sourcearrays'
 
   endif
 
@@ -647,17 +652,19 @@ subroutine setup_receivers_precompute_intp()
   use specfem_par
   implicit none
 
-  integer :: irec,irec_local,isource
+  integer :: irec,irec_local,isource,ier
 
 ! stores local receivers interpolation factors
   if (nrec_local > 0) then
   ! allocate Lagrange interpolators for receivers
-    allocate(hxir_store(nrec_local,NGLLX))
-    allocate(hetar_store(nrec_local,NGLLY))
-    allocate(hgammar_store(nrec_local,NGLLZ))
+    allocate(hxir_store(nrec_local,NGLLX), &
+            hetar_store(nrec_local,NGLLY), &
+            hgammar_store(nrec_local,NGLLZ),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array hxir_store etc.'
 
   ! define local to global receiver numbering mapping
-    allocate(number_receiver_global(nrec_local))
+    allocate(number_receiver_global(nrec_local),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array number_reciever_global'
     irec_local = 0
     if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
       do irec = 1,nrec
@@ -687,9 +694,10 @@ subroutine setup_receivers_precompute_intp()
         hgammar_store(irec_local,:) = hgammar(:)
       enddo
     else
-      allocate(hpxir_store(nrec_local,NGLLX))
-      allocate(hpetar_store(nrec_local,NGLLY))
-      allocate(hpgammar_store(nrec_local,NGLLZ))
+      allocate(hpxir_store(nrec_local,NGLLX), &
+              hpetar_store(nrec_local,NGLLY), &
+              hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array hpxir_store'
       do irec_local = 1,nrec_local
         irec = number_receiver_global(irec_local)
         call lagrange_any(xi_source(irec),NGLLX,xigll,hxir,hpxir)

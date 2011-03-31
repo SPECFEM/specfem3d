@@ -97,10 +97,14 @@
   !character(len=256):: prname_file
 
 ! allocates temporary arrays
-  allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6))
-  allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6))
-  allocate(tmp_ijk(3,NGLLSQUARE,nspec*6))
-  allocate(tmp_ispec(nspec*6))
+  allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array tmp_normal'
+  allocate(tmp_jacobian2Dw(NGLLSQUARE,nspec*6),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array tmp_jacobian2Dw'
+  allocate(tmp_ijk(3,NGLLSQUARE,nspec*6),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array tmp_ijk'
+  allocate(tmp_ispec(nspec*6),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array tmp_ispec'
   tmp_ispec(:) = 0
   tmp_ijk(:,:,:) = 0
   tmp_normal(:,:,:) = 0.0
@@ -108,10 +112,13 @@
 
   ! sets flags for acoustic / elastic on global points
   allocate(elastic_flag(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array elastic_flag'
   allocate(acoustic_flag(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array acoustic_flag'
   allocate(test_flag(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array test_flag'
   allocate(mask_ibool(nglob),stat=ier)
-  if( ier /= 0 ) stop 'error allocate flag array'
+  if( ier /= 0 ) stop 'error allocating array mask_ibool'
   elastic_flag(:) = 0
   acoustic_flag(:) = 0
   test_flag(:) = 0
@@ -151,7 +158,7 @@
   ! sets up MPI communications
   max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array'
+  if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh_dummy'
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
@@ -288,10 +295,14 @@
 ! note: no need to store material parameters on these coupling points
 !          for acoustic-elastic interface
   num_coupling_ac_el_faces = inum
-  allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces))
-  allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces))
-  allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces))
-  allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces))
+  allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal'
+  allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_jacobian2Dw'
+  allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_ijk'
+  allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_ispec'
   do inum = 1,num_coupling_ac_el_faces
     coupling_ac_el_normal(:,:,inum) = tmp_normal(:,:,inum)
     coupling_ac_el_jacobian2Dw(:,inum) = tmp_jacobian2Dw(:,inum)

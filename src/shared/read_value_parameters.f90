@@ -36,7 +36,7 @@
   integer ierr
   common /param_err_common/ ierr
 
-  call param_read(string_read, len(string_read), name, len(name), ierr);
+  call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr .ne. 0) return
   read(string_read,*) value_to_read
 
@@ -54,7 +54,7 @@
   integer ierr
   common /param_err_common/ ierr
 
-  call param_read(string_read, len(string_read), name, len(name), ierr);
+  call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr .ne. 0) return
   read(string_read,*) value_to_read
 
@@ -72,7 +72,7 @@
   integer ierr
   common /param_err_common/ ierr
 
-  call param_read(string_read, len(string_read), name, len(name), ierr);
+  call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr .ne. 0) return
   read(string_read,*) value_to_read
 
@@ -90,7 +90,7 @@
   integer ierr
   common /param_err_common/ ierr
 
-  call param_read(string_read, len(string_read), name, len(name), ierr);
+  call param_read(string_read, len(string_read), name, len(name), ierr)
   if (ierr .ne. 0) return
   value_to_read = string_read
 

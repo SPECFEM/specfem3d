@@ -672,11 +672,13 @@ subroutine PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
   !local parameters
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: contributions,contributions_dot
   real(kind=CUSTOM_REAL):: d
-  integer :: ispec,ispecPML,i,j,k,iglob
+  integer :: ispec,ispecPML,i,j,k,iglob,ier
 
   ! updates local points in PML
-  allocate(contributions_dot(NGLOB_AB))
-  allocate(contributions(NGLOB_AB))
+  allocate(contributions_dot(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array contributions_dot'
+  allocate(contributions(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array contributions'
   contributions_dot(:) = 0._CUSTOM_REAL
   contributions(:) = 0._CUSTOM_REAL
 
@@ -1089,9 +1091,10 @@ subroutine PML_acoustic_update_potentials(NGLOB_AB,NSPEC_AB, &
   !local parameters
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: contributions_dot_dot,contributions_dot
   real(kind=CUSTOM_REAL):: d
-  integer :: ispec,ispecPML,i,j,k,iglob
+  integer :: ispec,ispecPML,i,j,k,iglob,ier
 
-  allocate(contributions_dot_dot(NGLOB_AB),contributions_dot(NGLOB_AB))
+  allocate(contributions_dot_dot(NGLOB_AB),contributions_dot(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array contributions_dot_dot and contributions_dot'
   contributions_dot_dot = 0._CUSTOM_REAL
   contributions_dot = 0._CUSTOM_REAL
 

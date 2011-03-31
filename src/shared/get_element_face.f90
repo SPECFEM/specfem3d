@@ -122,8 +122,8 @@ subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
           (   (xcoord(1)-xcoord(2))**2 &
             + (ycoord(1)-ycoord(2))**2 &
             + (zcoord(1)-zcoord(2))**2 ) ) then
-    print*,'error element face midpoint distance:',midpoint_distances(iloc(1)),&
-          ( (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2 )
+    print*,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
+          (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2
     ! corner locations
     do icorner=1,NGNOD2D
       i = iface_all_corner_ijk(1,icorner,iloc(1))

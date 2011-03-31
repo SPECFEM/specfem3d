@@ -57,7 +57,7 @@
   character(len=256) :: mesh_file,local_data_file
 
   integer, dimension(300) :: node_list
-  integer :: iproc, num_node, i,ios, it
+  integer :: iproc, num_node, i,ios, it, ier
   integer :: njunk
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
@@ -131,11 +131,13 @@
     read(27) NGLOB_AB
 
     ! ibool file
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool'
     read(27) ibool
 
     ! global point arrays
-    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB))
+    allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27) xstore
     read(27) ystore
     read(27) zstore
@@ -152,7 +154,8 @@
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
-    allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array data'
     read(28) data
     close(28)
 

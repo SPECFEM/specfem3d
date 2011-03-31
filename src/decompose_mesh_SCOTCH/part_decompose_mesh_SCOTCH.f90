@@ -143,9 +143,11 @@ contains
 
     integer  :: num_glob, num_part, nparts
     integer, dimension(0:nparts-1)  :: num_loc
-
+    integer :: ier
+    
     ! allocates local numbering array
-    allocate(glob2loc_elmnts(0:nelmnts-1))
+    allocate(glob2loc_elmnts(0:nelmnts-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array glob2loc_elmnts'
 
     ! initializes number of local elements per partition
     do num_part = 0, nparts-1
@@ -189,8 +191,10 @@ contains
     integer  ::  size_glob2loc_nodes,nparts
     integer, dimension(0:nparts-1)  :: parts_node
     integer, dimension(0:nparts-1)  :: num_parts
-
-    allocate(glob2loc_nodes_nparts(0:nnodes))
+    integer :: ier
+    
+    allocate(glob2loc_nodes_nparts(0:nnodes),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array glob2loc_nodes_nparts'
 
     size_glob2loc_nodes = 0
     parts_node(:) = 0
@@ -212,8 +216,10 @@ contains
 
     glob2loc_nodes_nparts(nnodes) = size_glob2loc_nodes
 
-    allocate(glob2loc_nodes_parts(0:glob2loc_nodes_nparts(nnodes)-1))
-    allocate(glob2loc_nodes(0:glob2loc_nodes_nparts(nnodes)-1))
+    allocate(glob2loc_nodes_parts(0:glob2loc_nodes_nparts(nnodes)-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array glob2loc_nodes_parts'
+    allocate(glob2loc_nodes(0:glob2loc_nodes_nparts(nnodes)-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array glob2loc_nodes'
 
     glob2loc_nodes(0) = 0
 
@@ -269,9 +275,10 @@ contains
     integer, intent(in)  :: nparts
 
     ! local parameters
-    integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
+    integer :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
          num_node, num_node_bis
-    integer  :: i, j
+    integer :: i, j
+    integer :: ier
 
     ! counts number of interfaces between partitions
     ninterfaces = 0
@@ -281,7 +288,8 @@ contains
        end do
     end do
 
-    allocate(tab_size_interfaces(0:ninterfaces))
+    allocate(tab_size_interfaces(0:ninterfaces),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tab_size_interfaces'
     tab_size_interfaces(:) = 0
 
     num_interface = 0
@@ -316,7 +324,8 @@ contains
     num_interface = 0
     num_edge = 0
 
-    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)))
+    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tab_interfaces'
     tab_interfaces(:) = 0
 
     do num_part = 0, nparts-1
@@ -390,6 +399,7 @@ contains
          num_node, num_node_bis
     integer  :: i, j
     logical  :: is_acoustic_el, is_acoustic_el_adj
+    integer :: ier
 
     ! counts number of interfaces between partitions
     ninterfaces = 0
@@ -399,7 +409,8 @@ contains
        end do
     end do
 
-    allocate(tab_size_interfaces(0:ninterfaces))
+    allocate(tab_size_interfaces(0:ninterfaces),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tab_size_interfaces'
     tab_size_interfaces(:) = 0
 
     num_interface = 0
@@ -455,7 +466,8 @@ contains
     num_interface = 0
     num_edge = 0
 
-    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)))
+    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tab_interfaces'
     tab_interfaces(:) = 0
 
     do num_part = 0, nparts-1
@@ -1301,10 +1313,10 @@ contains
     integer, dimension(:), allocatable  :: nodes_elmnts
     integer  :: max_neighbour
 
-    integer  :: i, iface
+    integer  :: i, iface, ier
     integer  :: el, el_adj
     logical  :: is_repartitioned
-
+  
     ! sets acoustic/elastic flags for materials
     is_acoustic(:) = .false.
     is_elastic(:) = .false.
@@ -1318,10 +1330,14 @@ contains
     enddo
 
     ! gets neighbors by 4 common nodes (face)
-    allocate(xadj(0:nelmnts))
-    allocate(adjncy(0:sup_neighbour*nelmnts-1))
-    allocate(nnodes_elmnts(0:nnodes-1))
-    allocate(nodes_elmnts(0:nsize*nnodes-1))
+    allocate(xadj(0:nelmnts),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xadj'
+    allocate(adjncy(0:sup_neighbour*nelmnts-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array adjncy'
+    allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
+    allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
     !call mesh2dual_ncommonnodes(nelmnts, nnodes, elmnts, xadj, adjncy, nnodes_elmnts, nodes_elmnts,4)
     call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
@@ -1340,7 +1356,8 @@ contains
     enddo
 
     ! coupled elements
-    allocate(faces_coupled(2,nfaces_coupled))
+    allocate(faces_coupled(2,nfaces_coupled),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array faces_coupled'
 
     ! stores elements indices
     nfaces_coupled = 0
@@ -1423,10 +1440,16 @@ contains
     integer  :: i, j, iface, inode, ispec2D, counter
     integer  :: el, el_adj
     logical  :: is_repartitioned
+    integer :: ier
 
     ! temporary flag arrays
-    allocate( is_moho(0:nelmnts-1)) ! element ids start from 0
-    allocate( node_is_moho(0:nnodes-1) ) ! node ids start from 0
+    ! element ids start from 0
+    allocate( is_moho(0:nelmnts-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array is_moho' 
+    ! node ids start from 0
+    allocate( node_is_moho(0:nnodes-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array node_is_moho'
+    
     is_moho(:) = .false.
     node_is_moho(:) = .false.
 
@@ -1468,10 +1491,16 @@ contains
     print*,'  moho elements = ',counter
 
     ! gets neighbors by 4 common nodes (face)
-    allocate(xadj(0:nelmnts)) ! contains number of adjacent elements (neighbours)
-    allocate(adjncy(0:sup_neighbour*nelmnts-1)) ! contains all element id indices of adjacent elements
-    allocate(nnodes_elmnts(0:nnodes-1))
-    allocate(nodes_elmnts(0:nsize*nnodes-1))
+    ! contains number of adjacent elements (neighbours)
+    allocate(xadj(0:nelmnts),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array xadj' 
+    ! contains all element id indices of adjacent elements
+    allocate(adjncy(0:sup_neighbour*nelmnts-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array adjncy'
+    allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
+    allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
 
     call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, &
                         elmnts, xadj, adjncy, nnodes_elmnts, &
@@ -1489,7 +1518,8 @@ contains
     enddo
 
     ! coupled elements
-    allocate(faces_coupled(2,nfaces_coupled))
+    allocate(faces_coupled(2,nfaces_coupled),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array faces_coupled'
 
     ! stores elements indices
     nfaces_coupled = 0
