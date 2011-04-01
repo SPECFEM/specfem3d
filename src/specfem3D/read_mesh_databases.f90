@@ -33,11 +33,8 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   implicit none
-
-  integer :: i,j,k,ispec,iglob
-  integer :: iinterface,ier
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  logical, dimension(:), allocatable :: iglob_is_inner
+  integer :: ier
 
 ! start reading the databasesa
 
@@ -291,103 +288,7 @@
   if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
 ! locate inner and outer elements
-  allocate(ispec_is_inner(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
-  allocate(iglob_is_inner(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array iglob_is_inner'
-  ispec_is_inner(:) = .true.
-  iglob_is_inner(:) = .true.
-  do iinterface = 1, num_interfaces_ext_mesh
-    do i = 1, nibool_interfaces_ext_mesh(iinterface)
-      iglob = ibool_interfaces_ext_mesh(i,iinterface)
-      iglob_is_inner(iglob) = .false.
-    enddo
-  enddo
-  do ispec = 1, NSPEC_AB
-    do k = 1, NGLLZ
-      do j = 1, NGLLY
-        do i = 1, NGLLX
-          iglob = ibool(i,j,k,ispec)
-          ispec_is_inner(ispec) = iglob_is_inner(iglob) .and. ispec_is_inner(ispec)
-        enddo
-      enddo
-    enddo
-  enddo
-  deallocate( iglob_is_inner )
-
-! sets up elements for loops in acoustic simulations
-  if( ACOUSTIC_SIMULATION ) then
-    ! counts inner and outer elements
-    nspec_inner_acoustic = 0
-    nspec_outer_acoustic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_acoustic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_acoustic = nspec_inner_acoustic + 1
-        else
-          nspec_outer_acoustic = nspec_outer_acoustic + 1
-        endif
-      endif
-    enddo
-
-    ! stores indices of inner and outer elements for faster(?) computation
-    num_phase_ispec_acoustic = max(nspec_inner_acoustic,nspec_outer_acoustic)
-    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
-    nspec_inner_acoustic = 0
-    nspec_outer_acoustic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_acoustic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_acoustic = nspec_inner_acoustic + 1
-          phase_ispec_inner_acoustic(nspec_inner_acoustic,2) = ispec
-        else
-          nspec_outer_acoustic = nspec_outer_acoustic + 1
-          phase_ispec_inner_acoustic(nspec_outer_acoustic,1) = ispec
-        endif
-      endif
-    enddo
-    !print *,'rank ',myrank,' acoustic inner spec: ',nspec_inner_acoustic
-    !print *,'rank ',myrank,' acoustic outer spec: ',nspec_outer_acoustic
-  endif
-
-! sets up elements for loops in acoustic simulations
-  if( ELASTIC_SIMULATION ) then
-    ! counts inner and outer elements
-    nspec_inner_elastic = 0
-    nspec_outer_elastic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_elastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_elastic = nspec_inner_elastic + 1
-        else
-          nspec_outer_elastic = nspec_outer_elastic + 1
-        endif
-      endif
-    enddo
-
-    ! stores indices of inner and outer elements for faster(?) computation
-    num_phase_ispec_elastic = max(nspec_inner_elastic,nspec_outer_elastic)
-    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
-    nspec_inner_elastic = 0
-    nspec_outer_elastic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_elastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_elastic = nspec_inner_elastic + 1
-          phase_ispec_inner_elastic(nspec_inner_elastic,2) = ispec
-        else
-          nspec_outer_elastic = nspec_outer_elastic + 1
-          phase_ispec_inner_elastic(nspec_outer_elastic,1) = ispec
-        endif
-      endif
-    enddo
-    !print *,'rank ',myrank,' elastic inner spec: ',nspec_inner_elastic
-    !print *,'rank ',myrank,' elastic outer spec: ',nspec_outer_elastic
-  endif
-
-
+  call rmd_setup_inner_outer_elemnts()
 
 ! gets model dimensions
   minl = minval( xstore )
@@ -424,6 +325,134 @@
   call read_mesh_databases_adjoint()
 
   end subroutine read_mesh_databases
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+  subroutine rmd_setup_inner_outer_elemnts()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  implicit none 
+  ! local parameters
+  integer :: i,j,k,ispec,iglob
+  integer :: iinterface,ier
+  character(len=256) :: filename
+  logical,dimension(:),allocatable :: iglob_is_inner
+  
+  ! allocates arrays
+  allocate(ispec_is_inner(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
+  allocate(iglob_is_inner(NGLOB_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating temporary array  iglob_is_inner'
+
+  ! initialize flags
+  ispec_is_inner(:) = .true.
+  iglob_is_inner(:) = .true.
+  do iinterface = 1, num_interfaces_ext_mesh
+    do i = 1, nibool_interfaces_ext_mesh(iinterface)
+      iglob = ibool_interfaces_ext_mesh(i,iinterface)
+      iglob_is_inner(iglob) = .false.
+    enddo
+  enddo
+  
+  ! determines flags for inner elements (purely inside the partition)
+  do ispec = 1, NSPEC_AB
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob = ibool(i,j,k,ispec)
+          ispec_is_inner(ispec) = iglob_is_inner(iglob) .and. ispec_is_inner(ispec)
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! frees temporary array
+  deallocate( iglob_is_inner )
+
+  if( SAVE_MESH_FILES ) then
+    filename = prname(1:len_trim(prname))//'ispec_is_inner'
+    call write_VTK_data_elem_l(NSPEC_AB,NGLOB_AB, &
+                        xstore,ystore,zstore,ibool, &
+                        ispec_is_inner,filename)
+  endif
+  
+  ! sets up elements for loops in acoustic simulations
+  if( ACOUSTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    nspec_inner_acoustic = 0
+    nspec_outer_acoustic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_acoustic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_acoustic = nspec_inner_acoustic + 1
+        else
+          nspec_outer_acoustic = nspec_outer_acoustic + 1
+        endif
+      endif
+    enddo
+
+    ! stores indices of inner and outer elements for faster(?) computation
+    num_phase_ispec_acoustic = max(nspec_inner_acoustic,nspec_outer_acoustic)
+    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
+    nspec_inner_acoustic = 0
+    nspec_outer_acoustic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_acoustic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_acoustic = nspec_inner_acoustic + 1
+          phase_ispec_inner_acoustic(nspec_inner_acoustic,2) = ispec
+        else
+          nspec_outer_acoustic = nspec_outer_acoustic + 1
+          phase_ispec_inner_acoustic(nspec_outer_acoustic,1) = ispec
+        endif
+      endif
+    enddo
+    !print *,'rank ',myrank,' acoustic inner spec: ',nspec_inner_acoustic
+    !print *,'rank ',myrank,' acoustic outer spec: ',nspec_outer_acoustic
+  endif
+
+  ! sets up elements for loops in acoustic simulations
+  if( ELASTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    nspec_inner_elastic = 0
+    nspec_outer_elastic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_elastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_elastic = nspec_inner_elastic + 1
+        else
+          nspec_outer_elastic = nspec_outer_elastic + 1
+        endif
+      endif
+    enddo
+
+    ! stores indices of inner and outer elements for faster(?) computation
+    num_phase_ispec_elastic = max(nspec_inner_elastic,nspec_outer_elastic)
+    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
+    nspec_inner_elastic = 0
+    nspec_outer_elastic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_elastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_elastic = nspec_inner_elastic + 1
+          phase_ispec_inner_elastic(nspec_inner_elastic,2) = ispec
+        else
+          nspec_outer_elastic = nspec_outer_elastic + 1
+          phase_ispec_inner_elastic(nspec_outer_elastic,1) = ispec
+        endif
+      endif
+    enddo
+    !print *,'rank ',myrank,' elastic inner spec: ',nspec_inner_elastic
+    !print *,'rank ',myrank,' elastic outer spec: ',nspec_outer_elastic
+  endif
+  
+  end subroutine rmd_setup_inner_outer_elemnts
+
 
 !
 !-------------------------------------------------------------------------------------------------
