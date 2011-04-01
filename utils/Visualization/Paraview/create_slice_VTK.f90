@@ -35,22 +35,19 @@
 ! creates for each slice and each region a new vtk-file, doesn't combine different slices into one file
 ! (only outputs values on corner points of each element)
 !
-! for compilation, this file 'create_slice_VTK.f90' has to be in the package root directory SPECFEM3D/
+! for compilation, this file 'create_slice_VTK.f90' needs the constants.h file located in SPECFEM3D/src/shared
 !
-! cd to your SPECFEM3D root directory:
-!   > cd SPECFEM3D/
-! create symbolic link:
-!   > ln -s UTILS/Visualization/Paraview/create_slice_VTK.f90
+! in this current directory SPECFEM3D/utils/Visualization/Paraview:
 ! compile with:
 !   > f90 -o xcreate_slice_VTK create_slice_VTK.f90
-! run :
+! to run :
 !   > ./xcreate_slice_VTK my_slices.txt vp ~/DATABASES_MPI/ ~/DATABASES_MPI ~/OUTPUT_FILES/
 !
 ! (or see usage below)
 !
   implicit none
 
-  include "constants.h"
+  include "../../../src/shared/constants.h"
 
   character(len=256) :: sline, arg(5), filename, indir, outdir
   character(len=256) :: prname, prname_lp
@@ -77,7 +74,7 @@
       print *, ' Usage: xcreate_slice_VTK slice_list filename input_dir output_dir'
       print *, ' '
       print *, '   - slice_list:    file containing slice/proc ids '
-      print *, '   - filename:    looks for filename.bin must be array of (NGLLX,NGLLY,NGLLZ,nspec) '
+      print *, '   - filename:    looks for filename.bin must be array of (NGLLX,NGLLY,NGLLZ,nspec)'
       print *, '   - input_dir:    includes proc***_external_mesh.bin and proc****filename.bin '
       print *, '   - output_dir:    output mesh files go to here '
       print *
@@ -195,7 +192,7 @@
 
   implicit none
 
-  include "constants.h"
+  include "../../../src/shared/constants.h"
 
   integer :: nspec,nglob
 
