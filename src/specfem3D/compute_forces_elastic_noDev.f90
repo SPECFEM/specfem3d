@@ -32,8 +32,10 @@ subroutine compute_forces_elastic_noDev( iphase, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool,&
                         ATTENUATION,&
-                        one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
-                        NSPEC_ATTENUATION_AB,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        one_minus_sum_beta,factor_common, &
+                        alphaval,betaval,gammaval,&
+                        NSPEC_ATTENUATION_AB, &
+                        R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &

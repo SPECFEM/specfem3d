@@ -518,14 +518,12 @@
     if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_mesh etc.'
 
     ! allocates attenuation solids
-    if( ATTENUATION ) then
-      allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS), &
-            b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATT_AND_KERNEL,N_SLS),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array b_R_xx etc.'
-    endif
+    allocate(b_R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+            b_R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+            b_R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+            b_R_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+            b_R_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_R_xx etc.'
 
     ! note: these arrays are needed for attenuation and/or kernel computations
     allocate(b_epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &

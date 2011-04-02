@@ -67,6 +67,7 @@ libspecfem_a_OBJECTS = \
 	$O/assemble_MPI_scalar.o \
 	$O/check_mesh_resolution.o \
 	$O/comp_source_time_function.o \
+	$O/compute_adj_source_frechet.o \
 	$O/compute_arrays_source.o \
 	$O/create_name_database.o \
 	$O/create_serial_name_database.o \
@@ -96,6 +97,7 @@ libspecfem_a_OBJECTS = \
 	$O/sort_array_coordinates.o \
 	$O/utm_geo.o \
 	$O/write_VTK_data.o \
+	$O/write_c_binary.o \
 	$(EMPTY_MACRO)
 
 # solver objects - no statically allocated arrays anymore
@@ -437,6 +439,9 @@ $O/create_serial_name_database.o: $(SHARED)constants.h ${SHARED}/create_serial_n
 
 $O/define_derivation_matrices.o: $(SHARED)constants.h ${SHARED}/define_derivation_matrices.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_derivation_matrices.o ${SHARED}/define_derivation_matrices.f90
+
+$O/compute_adj_source_frechet.o: $(SHARED)constants.h compute_adj_source_frechet.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_adj_source_frechet.o compute_adj_source_frechet.f90
 
 $O/compute_arrays_source.o: $(SHARED)constants.h ${SHARED}/compute_arrays_source.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_arrays_source.o ${SHARED}/compute_arrays_source.f90

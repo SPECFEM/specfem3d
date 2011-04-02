@@ -313,8 +313,6 @@ module specfem_par_elastic
     b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
 
-  integer:: NSPEC_ATT_AND_KERNEL
-
   ! adjoint kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl

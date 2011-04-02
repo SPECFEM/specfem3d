@@ -106,11 +106,6 @@
     write(IOUT,*) '!  NSPEC_ADJOINT = ', 1
     write(IOUT,*) '!  NGLOB_ADJOINT = ', 1
   endif
-  if (ATTENUATION .and. SIMULATION_TYPE == 3) then
-    write(IOUT,*) '!  NSPEC_ATT_AND_KERNEL = ', NSPEC_AB
-  else
-    write(IOUT,*) '!  NSPEC_ATT_AND_KERNEL = ', 1
-  endif
   write(IOUT,*) '! '
   write(IOUT,*) '! approximate least memory needed by the solver:'
   write(IOUT,*) '! ----------------------------------------------'
@@ -118,7 +113,7 @@
   write(IOUT,*) '! size of static arrays for the biggest slice = ',static_memory_size/1048576.d0,' MB'
   write(IOUT,*) '!                                             = ',static_memory_size/1073741824.d0,' GB'
   write(IOUT,*) '!'
-  write(IOUT,*) '!   (should be below and typically equal to 80% of 1.5 GB = 1.2 GB on pangu'
+  write(IOUT,*) '!   (should be below to 80% of 1.5 GB = 1.2 GB on pangu'
   write(IOUT,*) '!    at Caltech, and below and typically equal to 85% of 2 GB = 1.7 GB'
   write(IOUT,*) '!    on Marenostrum in Barcelona)'
   write(IOUT,*) '!   (if significantly more, the job will not run by lack of memory)'

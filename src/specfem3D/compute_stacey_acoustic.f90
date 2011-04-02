@@ -31,7 +31,7 @@
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
                             num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic,&
-                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it,myrank,NGLOB_ADJOINT, &
+                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it,NGLOB_ADJOINT, &
                             b_potential_dot_dot_acoustic,b_reclen_potential, &
                             b_absorb_potential,b_num_abs_boundary_faces)
 
@@ -61,7 +61,7 @@
 
 ! adjoint simulations
   integer:: SIMULATION_TYPE
-  integer:: NSTEP,it,myrank,NGLOB_ADJOINT
+  integer:: NSTEP,it,NGLOB_ADJOINT
   integer:: b_num_abs_boundary_faces,b_reclen_potential
   real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT) :: b_potential_dot_dot_acoustic
   real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_potential
@@ -70,15 +70,20 @@
 ! local parameters
   real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
-  !adjoint locals
-  integer:: reclen1,reclen2
+  !integer:: reclen1,reclen2
 
 ! adjoint simulations:
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+    ! reads in absorbing boundary
     ! the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
-    read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
-    if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
-      call exit_mpi(myrank,'Error reading absorbing contribution b_absorb_potential')
+
+    ! uses fortran routine
+    !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
+    !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
+    !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
+    ! uses c routine for faster reading
+    call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+
   endif !adjoint
 
 ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
@@ -128,7 +133,12 @@
   enddo ! num_abs_boundary_faces
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
-    write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+    ! writes out absorbing boundary value
+    ! uses fortran routine
+    !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
+    ! uses c routine
+    call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+  endif
 
   end subroutine compute_stacey_acoustic

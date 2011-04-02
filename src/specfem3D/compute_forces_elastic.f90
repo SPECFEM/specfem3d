@@ -171,7 +171,7 @@ subroutine compute_forces_elastic()
                         abs_boundary_ijk,abs_boundary_ispec, &
                         num_abs_boundary_faces, &
                         veloc,rho_vp,rho_vs, &
-                        ispec_is_elastic,SIMULATION_TYPE,myrank,SAVE_FORWARD, &
+                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field )
 
