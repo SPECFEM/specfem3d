@@ -356,6 +356,6 @@ $O/prepare_assemble_MPI.o:  ${SHARED}/constants.h ${SHARED}/prepare_assemble_MPI
 $O/param_reader.o: ${SHARED}/param_reader.c
 	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c -I../../
 
-$O/write_c_binary.o: ${SHARED}/write_c_binary.c
-	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c -I../../
+#$O/write_c_binary.o: ${SHARED}/write_c_binary.c
+#	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c -I../../
 

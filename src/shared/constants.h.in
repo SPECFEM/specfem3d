@@ -84,8 +84,8 @@
 ! I/O unit for source and receiver vtk file
   integer, parameter :: IOVTK = 98
 ! I/O unit for absorbing boundary snapshots
-  integer, parameter :: IOABS = 31
-  integer, parameter :: IOABS_AC = 32
+!  integer, parameter :: IOABS = 31
+!  integer, parameter :: IOABS_AC = 32
 ! I/O unit for plotting source time function
   integer, Parameter :: IOSTF = 71
 ! I/O unit for interface file

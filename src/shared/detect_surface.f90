@@ -61,7 +61,7 @@
 
 !local parameters
   integer, dimension(:), allocatable :: valence_external_mesh
-  integer :: ispec,i,j,k,ii,jj,kk,iglob,ier
+  integer :: ispec,i,j,k,iglob,ier
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence_external_mesh(nglob),stat=ier)
@@ -107,30 +107,10 @@
            ) then
             iglob = ibool(i,j,k,ispec)
             if (valence_external_mesh(iglob) == 1) then
-              ispec_is_surface_external_mesh(ispec) = .true.
-
-              ! sets flags for all gll points on this face
-              if (k == 1 .or. k == NGLLZ) then
-                do jj = 1, NGLLY
-                  do ii = 1, NGLLX
-                    iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
-                  enddo
-                enddo
-              endif
-              if (j == 1 .or. j == NGLLY) then
-                do kk = 1, NGLLZ
-                  do ii = 1, NGLLX
-                    iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
-                  enddo
-                enddo
-              endif
-              if (i == 1 .or. i == NGLLX) then
-                do kk = 1, NGLLZ
-                  do jj = 1, NGLLY
-                    iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
-                  enddo
-                enddo
-              endif
+              ! sets surface flags for element and global points
+              call ds_set_surface_flags(nspec,ispec_is_surface_external_mesh, &
+                                  nglob,iglob_is_surface_external_mesh, &
+                                  i,j,k,ispec,ibool)              
             endif
 
           endif
@@ -170,6 +150,60 @@
   enddo
 
   end subroutine detect_surface
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine ds_set_surface_flags(nspec,ispec_is_surface_external_mesh, &
+                                  nglob,iglob_is_surface_external_mesh, &
+                                  i,j,k,ispec,ibool)
+
+  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops                
+
+  implicit none
+
+  include "constants.h"
+
+  ! global indexing
+  integer :: nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
+  integer :: i,j,k,ispec
+  
+  !   surface flags
+  logical, dimension(nspec) :: ispec_is_surface_external_mesh
+  logical, dimension(nglob) :: iglob_is_surface_external_mesh
+  
+  ! local parameters
+  integer :: kk,jj,ii
+
+  ! sets surface flag for element
+  ispec_is_surface_external_mesh(ispec) = .true.
+
+  ! sets flags for all gll points on this face
+  if (k == 1 .or. k == NGLLZ) then
+    do jj = 1, NGLLY
+      do ii = 1, NGLLX
+        iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
+      enddo
+    enddo
+  endif
+  if (j == 1 .or. j == NGLLY) then
+    do kk = 1, NGLLZ
+      do ii = 1, NGLLX
+        iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
+      enddo
+    enddo
+  endif
+  if (i == 1 .or. i == NGLLX) then
+    do kk = 1, NGLLZ
+      do jj = 1, NGLLY
+        iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
+      enddo
+    enddo
+  endif
+  
+  end subroutine ds_set_surface_flags
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -229,11 +263,11 @@
   real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord_face,ycoord_face,zcoord_face
   real(kind=CUSTOM_REAL) :: mindist,normal(NDIM)
   integer, dimension(:), allocatable :: valence_external_mesh
-  integer,dimension(3,NGLLX,NGLLX) :: face_ijk
-  integer :: ispec,i,j,k,ii,jj,kk,iglob,ier,count
+
+  integer :: ispec,i,j,k,iglob,ier,count
   integer :: iface,icorner
   logical, dimension(:),allocatable :: ispec_has_points
-  logical :: has_face
+
   ! corners indices of reference cube faces
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
        reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/)) ! xmin
@@ -332,56 +366,15 @@
 
             ! considers only points in same process or, if point is shared between two processes,
             ! only with higher process ranks than itself
-            if (valence_external_mesh(iglob) == myrank+1 .or. valence_external_mesh(iglob) > 2*(myrank+1) ) then
-
-              has_face = .false.
-
-
-              ! sets flags for all gll points on a face and makes sure it's not inside the element
-              ! zmin & zmax face
-              if ((k == 1 .or. k == NGLLZ) .and. valence_external_mesh(ibool(3,3,k,ispec)) >= 1 ) then
-                has_face = .true.
-                do jj = 1, NGLLY
-                  do ii = 1, NGLLX
-                    iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
-                    ! resets valence to count face only once
-                    valence_external_mesh(ibool(ii,jj,k,ispec)) = -1
-                  enddo
-                enddo
-              endif
-
-              ! ymin & ymax
-              if ((j == 1 .or. j == NGLLY) .and. valence_external_mesh(ibool(3,j,3,ispec)) >= 1) then
-                has_face = .true.
-                do kk = 1, NGLLZ
-                  do ii = 1, NGLLX
-                    iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
-                    ! resets valence to count face only once
-                    valence_external_mesh(ibool(ii,j,kk,ispec)) = -1
-                  enddo
-                enddo
-              endif
-
-              ! xmin & xmax
-              if ((i == 1 .or. i == NGLLX) .and. valence_external_mesh(ibool(i,3,3,ispec)) >= 1) then
-                has_face = .true.
-                do kk = 1, NGLLZ
-                  do jj = 1, NGLLY
-                    iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
-                    ! resets valence to count face only once
-                    valence_external_mesh(ibool(i,jj,kk,ispec)) = -1
-                  enddo
-                enddo
-              endif
-
-
-              ! sets flag for element
-              if( has_face ) then
-                ispec_is_surface_external_mesh(ispec) = .true.
-                count = count+1
-              endif
-
+            if (valence_external_mesh(iglob) == myrank+1 &
+              .or. valence_external_mesh(iglob) > 2*(myrank+1) ) then
+              ! sets surface flags for cross section
+              call ds_set_cross_section_flags(nspec,ispec_is_surface_external_mesh, &
+                                            nglob,iglob_is_surface_external_mesh, &
+                                            i,j,k,ispec,ibool, &
+                                            valence_external_mesh,count)
             endif
+            
           endif
         enddo
       enddo
@@ -453,20 +446,11 @@
            valence_external_mesh(ibool(i,j,k,ispec)) /= -1 ) then
           ! checks face normal points in similar direction as cross-section normal
           if( abs(normal(1)) > 0.6 ) then
-            call get_element_face_gll_indices(iface,face_ijk,NGLLX,NGLLX)
-            do jj = 1, NGLLY
-              do ii = 1, NGLLX
-                i = face_ijk(1,ii,jj)
-                j = face_ijk(2,ii,jj)
-                k = face_ijk(3,ii,jj)
-                ! sets iglob flag on face points
-                iglob_is_surface_external_mesh(ibool(i,j,k,ispec)) = .true.
-                ! sets ispec flag
-                ispec_is_surface_external_mesh(ispec) = .true.
-                ! resets valence
-                valence_external_mesh(ibool(i,j,k,ispec)) = -1
-              enddo
-            enddo
+            ! sets surfaces flags
+            call ds_set_plane_flags(iface,ispec, &
+                                  nspec,ispec_is_surface_external_mesh, &
+                                  nglob,iglob_is_surface_external_mesh, &
+                                  ibool,valence_external_mesh)                                  
           endif
         endif
 
@@ -480,20 +464,11 @@
            valence_external_mesh(ibool(i,j,k,ispec)) /= -1) then
           ! checks face normal points in similar direction as cross-section normal
           if( abs(normal(2)) > 0.6 ) then
-            call get_element_face_gll_indices(iface,face_ijk,NGLLX,NGLLX)
-            do jj = 1, NGLLY
-              do ii = 1, NGLLX
-                i = face_ijk(1,ii,jj)
-                j = face_ijk(2,ii,jj)
-                k = face_ijk(3,ii,jj)
-                ! sets iglob flag on face points
-                iglob_is_surface_external_mesh(ibool(i,j,k,ispec)) = .true.
-                ! sets ispec flag
-                ispec_is_surface_external_mesh(ispec) = .true.
-                ! resets valence
-                valence_external_mesh(ibool(i,j,k,ispec)) = -1
-              enddo
-            enddo
+            ! sets surfaces flags
+            call ds_set_plane_flags(iface,ispec, &
+                                  nspec,ispec_is_surface_external_mesh, &
+                                  nglob,iglob_is_surface_external_mesh, &
+                                  ibool,valence_external_mesh)                                  
           endif
         endif
 
@@ -507,20 +482,11 @@
            valence_external_mesh(ibool(i,j,k,ispec)) /= -1) then
           ! checks face normal points in similar direction as cross-section normal
           if( abs(normal(3)) > 0.6 ) then
-            call get_element_face_gll_indices(iface,face_ijk,NGLLX,NGLLX)
-            do jj = 1, NGLLY
-              do ii = 1, NGLLX
-                i = face_ijk(1,ii,jj)
-                j = face_ijk(2,ii,jj)
-                k = face_ijk(3,ii,jj)
-                ! sets iglob flag on face points
-                iglob_is_surface_external_mesh(ibool(i,j,k,ispec)) = .true.
-                ! sets ispec flag
-                ispec_is_surface_external_mesh(ispec) = .true.
-                ! resets valence
-                valence_external_mesh(ibool(i,j,k,ispec)) = -1
-              enddo
-            enddo
+            ! sets surfaces flags
+            call ds_set_plane_flags(iface,ispec, &
+                                  nspec,ispec_is_surface_external_mesh, &
+                                  nglob,iglob_is_surface_external_mesh, &
+                                  ibool,valence_external_mesh)                                  
           endif
         endif
 
@@ -562,6 +528,134 @@
 
   end subroutine detect_surface_cross_section
 
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine ds_set_cross_section_flags(nspec,ispec_is_surface_external_mesh, &
+                                        nglob,iglob_is_surface_external_mesh, &
+                                        i,j,k,ispec,ibool, &
+                                        valence_external_mesh,count)
+
+  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops                
+
+  implicit none
+
+  include "constants.h"
+
+  ! global indexing
+  integer :: nglob,nspec
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
+  integer :: i,j,k,ispec,count
+
+  integer, dimension(nglob) :: valence_external_mesh
+  
+  !   surface flags
+  logical, dimension(nspec) :: ispec_is_surface_external_mesh
+  logical, dimension(nglob) :: iglob_is_surface_external_mesh
+  
+  ! local parameters
+  integer :: kk,jj,ii
+  logical :: has_face
+
+  ! initialize element flag
+  has_face = .false.
+
+  ! sets flags for all gll points on a face and makes sure it's not inside the element
+  ! zmin & zmax face
+  if ((k == 1 .or. k == NGLLZ) .and. valence_external_mesh(ibool(3,3,k,ispec)) >= 1 ) then
+    has_face = .true.
+    do jj = 1, NGLLY
+      do ii = 1, NGLLX
+        iglob_is_surface_external_mesh(ibool(ii,jj,k,ispec)) = .true.
+        ! resets valence to count face only once
+        valence_external_mesh(ibool(ii,jj,k,ispec)) = -1
+      enddo
+    enddo
+  endif
+
+  ! ymin & ymax
+  if ((j == 1 .or. j == NGLLY) .and. valence_external_mesh(ibool(3,j,3,ispec)) >= 1) then
+    has_face = .true.
+    do kk = 1, NGLLZ
+      do ii = 1, NGLLX
+        iglob_is_surface_external_mesh(ibool(ii,j,kk,ispec)) = .true.
+        ! resets valence to count face only once
+        valence_external_mesh(ibool(ii,j,kk,ispec)) = -1
+      enddo
+    enddo
+  endif
+
+  ! xmin & xmax
+  if ((i == 1 .or. i == NGLLX) .and. valence_external_mesh(ibool(i,3,3,ispec)) >= 1) then
+    has_face = .true.
+    do kk = 1, NGLLZ
+      do jj = 1, NGLLY
+        iglob_is_surface_external_mesh(ibool(i,jj,kk,ispec)) = .true.
+        ! resets valence to count face only once
+        valence_external_mesh(ibool(i,jj,kk,ispec)) = -1
+      enddo
+    enddo
+  endif
+
+  ! sets flag for element to indicate that it has a face on surface 
+  if( has_face ) then
+    ispec_is_surface_external_mesh(ispec) = .true.
+    count = count+1
+  endif
+
+  end subroutine ds_set_cross_section_flags
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine ds_set_plane_flags(iface,ispec, &
+                                nspec,ispec_is_surface_external_mesh, &
+                                nglob,iglob_is_surface_external_mesh, &
+                                ibool,valence_external_mesh)
+                                  
+  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops                
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: iface,ispec
+
+  ! global indexing
+  integer :: nglob,nspec
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
+  integer, dimension(nglob) :: valence_external_mesh
+  
+  !   surface flags
+  logical, dimension(nspec) :: ispec_is_surface_external_mesh
+  logical, dimension(nglob) :: iglob_is_surface_external_mesh
+
+  
+  ! local parameters
+  integer :: jj,ii,i,j,k
+  integer,dimension(3,NGLLX,NGLLX) :: face_ijk
+                                  
+  call get_element_face_gll_indices(iface,face_ijk,NGLLX,NGLLX)
+  
+  do jj = 1, NGLLY
+    do ii = 1, NGLLX
+      i = face_ijk(1,ii,jj)
+      j = face_ijk(2,ii,jj)
+      k = face_ijk(3,ii,jj)
+      ! sets iglob flag on face points
+      iglob_is_surface_external_mesh(ibool(i,j,k,ispec)) = .true.
+      ! sets ispec flag
+      ispec_is_surface_external_mesh(ispec) = .true.
+      ! resets valence
+      valence_external_mesh(ibool(i,j,k,ispec)) = -1
+    enddo
+  enddo
+
+  end subroutine ds_set_plane_flags
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -676,7 +770,3 @@
   num_iglob_image_surface = count
 
   end subroutine detect_surface_PNM_GIF_image
-
-
-
-

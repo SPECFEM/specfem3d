@@ -81,9 +81,7 @@
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: &
     displ_element,veloc_element,accel_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ipoin,ispec,iglob,ispec2D
-  integer :: i,j,k,ier
-  logical :: is_done
+  integer :: ipoin,ispec,iglob,ispec2D,ier
 
   ! allocate array for single elements
   allocate( displ_element(NDIM,NGLLX,NGLLY,NGLLZ), &
@@ -166,38 +164,10 @@
 
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  ! norm of displacement
-                  store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
-                    max(store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
-                        sqrt(displ_element(1,i,j,k)**2 &
-                            + displ_element(2,i,j,k)**2 &
-                            + displ_element(3,i,j,k)**2))
-                  ! norm of velocity
-                  store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
-                    max(store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
-                        sqrt(veloc_element(1,i,j,k)**2 &
-                            + veloc_element(2,i,j,k)**2 &
-                            + veloc_element(3,i,j,k)**2))
-                  ! norm of acceleration
-                  store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
-                    max(store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
-                        sqrt(accel_element(1,i,j,k)**2 &
-                            + accel_element(2,i,j,k)**2 &
-                            + accel_element(3,i,j,k)**2))
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! sets velocity vector with maximum norm of wavefield values
+          call wmo_get_max_vector(ispec,ispec2D,ipoin, &
+                                  displ_element,veloc_element,accel_element, &
+                                  NGLLX*NGLLY)
         endif
 
       enddo
@@ -223,38 +193,10 @@
 
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  ! norm of displacement
-                  store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
-                    max(store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
-                        sqrt(displ_element(1,i,j,k)**2 &
-                            + displ_element(2,i,j,k)**2 &
-                            + displ_element(3,i,j,k)**2))
-                  ! norm of velocity
-                  store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
-                    max(store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
-                        sqrt(veloc_element(1,i,j,k)**2 &
-                            + veloc_element(2,i,j,k)**2 &
-                            + veloc_element(3,i,j,k)**2))
-                  ! norm of acceleration
-                  store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
-                    max(store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
-                        sqrt(accel_element(1,i,j,k)**2 &
-                            + accel_element(2,i,j,k)**2 &
-                            + accel_element(3,i,j,k)**2))
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! sets velocity vector with maximum norm of wavefield values
+          call wmo_get_max_vector(ispec,ispec2D,ipoin, &
+                                  displ_element,veloc_element,accel_element, &
+                                  NGNOD2D)        
         endif
       enddo
     endif
@@ -322,6 +264,58 @@
 
   end subroutine wmo_create_shakemap_em
 
+!================================================================
+
+  subroutine wmo_get_max_vector(ispec,ispec2D,ipoin, &
+                                displ_element,veloc_element,accel_element, &
+                                narraydim)
+
+  ! put into this separate routine to make compilation faster
+  
+  use specfem_par,only: NDIM,ibool                                        
+  use specfem_par_movie
+  implicit none
+  
+  integer :: ispec,ispec2D,ipoin,narraydim
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
+    displ_element,veloc_element,accel_element
+    
+  ! local parameters  
+  integer :: i,j,k,iglob
+  logical :: is_done
+                                      
+  is_done = .false.
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if( iglob == ibool(i,j,k,ispec) ) then
+          ! norm of displacement
+          store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
+            max(store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin), &
+                sqrt(displ_element(1,i,j,k)**2 &
+                    + displ_element(2,i,j,k)**2 &
+                    + displ_element(3,i,j,k)**2))
+          ! norm of velocity
+          store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
+            max(store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin), &
+                sqrt(veloc_element(1,i,j,k)**2 &
+                    + veloc_element(2,i,j,k)**2 &
+                    + veloc_element(3,i,j,k)**2))
+          ! norm of acceleration
+          store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
+            max(store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin), &
+                sqrt(accel_element(1,i,j,k)**2 &
+                    + accel_element(2,i,j,k)**2 &
+                    + accel_element(3,i,j,k)**2))
+          ! not really needed, but could be used to check...
+          is_done = .true.
+          return
+        endif
+      enddo
+    enddo
+  enddo
+  
+  end subroutine wmo_get_max_vector
 
 !================================================================
 
@@ -337,8 +331,7 @@
 
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: veloc_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ispec2D,ispec,ipoin,iglob,i,j,k,ier
-  logical :: is_done
+  integer :: ispec2D,ispec,ipoin,iglob,ier
 
   ! allocate array for single elements
   allocate( veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -393,23 +386,10 @@
 
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc_element(1,i,j,k)
-                  store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc_element(2,i,j,k)
-                  store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc_element(3,i,j,k)
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! puts velocity values into storage array
+          call wmo_get_vel_vector(ispec,ispec2D,ipoin, &
+                                veloc_element, &
+                                NGLLX*NGLLY)        
         endif
       enddo
     else
@@ -425,23 +405,10 @@
 
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc_element(1,i,j,k)
-                  store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc_element(2,i,j,k)
-                  store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc_element(3,i,j,k)
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! puts velocity values into storage array
+          call wmo_get_vel_vector(ispec,ispec2D,ipoin, &
+                                veloc_element, &
+                                NGNOD2D)                
         endif
       enddo
     endif
@@ -517,6 +484,44 @@
 
   end subroutine wmo_create_movie_surface_em
 
+!================================================================
+
+  subroutine wmo_get_vel_vector(ispec,ispec2D,ipoin, &
+                                veloc_element, &
+                                narraydim)
+
+  ! put into this separate routine to make compilation faster
+  
+  use specfem_par,only: NDIM,ibool                                        
+  use specfem_par_movie
+  implicit none
+  
+  integer :: ispec,ispec2D,ipoin,narraydim
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
+    veloc_element
+    
+  ! local parameters  
+  integer :: i,j,k,iglob
+  logical :: is_done
+                                      
+  ! velocity vector
+  is_done = .false.
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if( iglob == ibool(i,j,k,ispec) ) then
+          store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc_element(1,i,j,k)
+          store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc_element(2,i,j,k)
+          store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc_element(3,i,j,k)
+          is_done = .true.
+          return
+        endif
+      enddo
+    enddo
+  enddo
+  
+  end subroutine wmo_get_vel_vector
+
 
 !=====================================================================
 
@@ -534,7 +539,6 @@
   real(kind=CUSTOM_REAL),dimension(1) :: dummy
   integer :: ispec,ipoin,iglob,i,j,k,ier
   integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
-  logical :: is_done
 
   ! allocate array for single elements
   allocate( val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -632,23 +636,8 @@
 
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  store_val_ux_external_mesh(ipoin) = val_element(1,i,j,k)
-                  store_val_uy_external_mesh(ipoin) = val_element(2,i,j,k)
-                  store_val_uz_external_mesh(ipoin) = val_element(3,i,j,k)
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! stores values from element
+          call wmo_get_val_elem(ispec,ipoin,val_element)          
         endif
 
       enddo
@@ -685,23 +674,8 @@
 
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  store_val_ux_external_mesh(ipoin) = val_element(1,i,j,k)
-                  store_val_uy_external_mesh(ipoin) = val_element(2,i,j,k)
-                  store_val_uz_external_mesh(ipoin) = val_element(3,i,j,k)
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! stores values from element
+          call wmo_get_val_elem(ispec,ipoin,val_element)                  
         endif
 
       enddo ! iloc
@@ -775,6 +749,41 @@
 
   end subroutine wmo_movie_surface_output_o
 
+!================================================================
+
+  subroutine wmo_get_val_elem(ispec,ipoin,val_element)
+
+  ! put into this separate routine to make compilation faster
+  
+  use specfem_par,only: NDIM,ibool                                        
+  use specfem_par_movie
+  implicit none
+  
+  integer :: ispec,ipoin
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
+    val_element
+    
+  ! local parameters  
+  integer :: i,j,k,iglob
+  logical :: is_done
+                                      
+  ! velocity vector
+  is_done = .false.
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if( iglob == ibool(i,j,k,ispec) ) then
+          store_val_ux_external_mesh(ipoin) = val_element(1,i,j,k)
+          store_val_uy_external_mesh(ipoin) = val_element(2,i,j,k)
+          store_val_uz_external_mesh(ipoin) = val_element(3,i,j,k)
+          is_done = .true.
+          return
+        endif
+      enddo
+    enddo
+  enddo
+  
+  end subroutine wmo_get_val_elem
 
 !=====================================================================
 
@@ -794,7 +803,6 @@
   integer :: ipoin,ispec,iglob
   integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
   integer :: i,j,k,ier
-  logical :: is_done
 
   ! allocate array for single elements
   allocate( displ_element(NDIM,NGLLX,NGLLY,NGLLZ), &
@@ -828,7 +836,6 @@
                           ibool,rhostore)
     endif
 
-
     ! save all points for high resolution, or only four corners for low resolution
     if(USE_HIGHRES_FOR_MOVIES) then
       do igll = 1, NGLLSQUARE
@@ -855,30 +862,8 @@
 
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  ! horizontal displacement
-                  store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
-                                                abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
-                  ! horizontal velocity
-                  store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
-                                                abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
-                  ! horizontal acceleration
-                  store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
-                                                abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
-
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! stores maximum values
+          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)          
         endif
 
       enddo
@@ -915,30 +900,8 @@
 
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
-          ! velocity vector
-          is_done = .false.
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( iglob == ibool(i,j,k,ispec) ) then
-                  ! horizontal displacement
-                  store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
-                                                abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
-                  ! horizontal velocity
-                  store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
-                                                abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
-                  ! horizontal acceleration
-                  store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
-                                                abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
-
-                  is_done = .true.
-                  exit
-                endif
-              enddo
-              if( is_done ) exit
-            enddo
-            if( is_done ) exit
-          enddo
+          ! stores maximum values
+          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)        
         endif
 
       enddo
@@ -1007,6 +970,49 @@
 
   end subroutine wmo_create_shakemap_o
 
+
+!================================================================
+
+  subroutine wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
+
+  ! put into this separate routine to make compilation faster
+  
+  use specfem_par,only: NDIM,ibool                                        
+  use specfem_par_movie
+  implicit none
+  
+  integer :: ispec,ipoin
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
+    displ_element,veloc_element,accel_element
+    
+  ! local parameters  
+  integer :: i,j,k,iglob
+  logical :: is_done
+                                      
+  ! velocity vector
+  is_done = .false.
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if( iglob == ibool(i,j,k,ispec) ) then
+          ! horizontal displacement
+          store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
+                                        abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
+          ! horizontal velocity
+          store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
+                                        abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
+          ! horizontal acceleration
+          store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
+                                        abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
+
+          is_done = .true.
+          return
+        endif
+      enddo
+    enddo
+  enddo
+  
+  end subroutine wmo_get_max_vector_o
 
 !=====================================================================
 

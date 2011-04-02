@@ -735,14 +735,15 @@ subroutine setup_sources_receivers_VTKfile()
   double precision :: shape3D(NGNOD)
   double precision :: xil,etal,gammal
   double precision :: xmesh,ymesh,zmesh
-
   real(kind=CUSTOM_REAL),dimension(NGNOD) :: xelm,yelm,zelm
-
-  integer :: ia,ispec,isource,irec
+  integer :: ia,ispec,isource,irec,ier
+  character(len=256) :: filename,filename_new,system_command
 
   if (myrank == 0) then
     ! vtk file
-    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown')
+    open(IOVTK,file=trim(OUTPUT_FILES)//'/sr.vtk',status='unknown',iostat=ier)
+    if( ier /= 0 ) stop 'error opening sr.vtk file'
+    ! vtk header
     write(IOVTK,'(a)') '# vtk DataFile Version 2.0'
     write(IOVTK,'(a)') 'Source and Receiver VTK file'
     write(IOVTK,'(a)') 'ASCII'
@@ -859,6 +860,26 @@ subroutine setup_sources_receivers_VTKfile()
   if( myrank == 0 ) then
     write(IOVTK,*)
     close(IOVTK)
+
+    ! creates additional receiver and source files
+    ! extracts receiver locations 
+    filename = trim(OUTPUT_FILES)//'/sr.vtk'    
+    filename_new = trim(OUTPUT_FILES)//'/receiver.vtk'
+    write(system_command, &
+  "('awk ',a1,'{if(NR<5) print $0;if(NR==6)print ',a1,'POINTS',i6,' float',a1,';if(NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
+      "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
+    call system(system_command)
+    
+    ! extracts source locations
+    filename_new = trim(OUTPUT_FILES)//'/source.vtk'
+    write(system_command, &
+  "('awk ',a1,'{if(NR< 6 + ',i6,') print $0}END{print}',a1,' < ',a,' > ',a)")&
+      "'",NSOURCES,"'",trim(filename),trim(filename_new)
+    call system(system_command)
+
+
   endif
+
+
 
 end subroutine setup_sources_receivers_VTKfile

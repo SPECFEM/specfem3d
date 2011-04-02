@@ -279,13 +279,6 @@
     NGLOB_ADJOINT =  1
   endif
 
-  ! strain/attenuation
-  if( ATTENUATION .and. SIMULATION_TYPE == 3 ) then
-    NSPEC_ATT_AND_KERNEL = NSPEC_AB
-  else
-    NSPEC_ATT_AND_KERNEL = 1
-  endif
-
   ! moho boundary
   if( SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3 ) then
     NSPEC_BOUN = NSPEC_AB

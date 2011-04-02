@@ -34,7 +34,7 @@
                         abs_boundary_ijk,abs_boundary_ispec, &
                         num_abs_boundary_faces, &
                         veloc,rho_vp,rho_vs, &
-                        ispec_is_elastic,SIMULATION_TYPE,myrank,SAVE_FORWARD, &
+                        ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
@@ -67,7 +67,7 @@
 
 ! adjoint simulations
   integer:: SIMULATION_TYPE
-  integer:: NSTEP,it,myrank,NGLOB_ADJOINT
+  integer:: NSTEP,it,NGLOB_ADJOINT
   integer:: b_num_abs_boundary_faces,b_reclen_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
@@ -77,17 +77,21 @@
 ! local parameters
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
-
-  !adjoint locals
-  integer:: reclen1,reclen2
+  !integer:: reclen1,reclen2
 
 
 ! adjoint simulations:
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+    ! reads in absorbing boundary
     ! the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
-    read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-    if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-      call exit_mpi(myrank,'Error reading absorbing contribution b_absorb_field')
+
+    ! uses fortran routine
+    !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
+    !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
+    !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
+    ! uses c routine for faster reading
+    call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+
   endif !adjoint
 
 
@@ -150,8 +154,13 @@
   enddo
 
   ! adjoint simulations: stores absorbed wavefield part
-  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
-    write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+    ! writes out absorbing boundary value
+    ! uses fortran routine
+    !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field    
+    ! uses c routine
+    call write_abs(0,b_absorb_field,b_reclen_field,it)    
+  endif
+  
   end subroutine compute_stacey_elastic
 
