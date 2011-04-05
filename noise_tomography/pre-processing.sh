@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 #################### pre-simulation ###########################################################################
 # in this part, we make preparations for the simulations
