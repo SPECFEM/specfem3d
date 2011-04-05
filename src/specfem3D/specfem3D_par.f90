@@ -239,7 +239,7 @@ module specfem_par
 
   ! parameter module for noise simulations
   integer :: irec_master_noise, NOISE_TOMOGRAPHY
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl, noise_surface_movie
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise

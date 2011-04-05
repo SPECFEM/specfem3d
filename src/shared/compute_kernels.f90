@@ -143,10 +143,11 @@
 
   ! for noise simulations --- source strength kernel
   if (NOISE_TOMOGRAPHY == 3)  &
-    call compute_kernels_strength_noise(myrank,ibool, &
+    call compute_kernels_strength_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh,ibool, &
                         sigma_kl,displ,deltat,it, &
-                        NGLLX*NGLLY*nfaces_surface_ext_mesh,normal_x_noise,normal_y_noise,normal_z_noise, &
-                        nfaces_surface_ext_mesh,free_surface_ispec,LOCAL_PATH, &
+                        normal_x_noise,normal_y_noise,normal_z_noise, &
+                        nfaces_surface_ext_mesh,noise_surface_movie, &
+                        free_surface_ispec, &
                         nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
 
   end subroutine compute_kernels
