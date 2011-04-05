@@ -43,15 +43,15 @@ step-by-step kernel tutorial:
 
 2. create adjoint source files:
 
-   - compile the utility xcut_velocity:
-     > cd /SPECFEM3D/UTILS/cut_velocity
+   - compile the utility xcreate_adjsrc_traveltime:
+     > cd /SPECFEM3D/utils/adjoint_sources/traveltime
      > make
 
    - specify which receiver station becomes an adjoint source,
      e.g. using the seismograms from station 20, and create the
      corresponding adjoint source files:
      > cd /SPECFEM3D
-     > ./UTILS/cut_velocity/xcut_velocity 10. 25. 0 in_out_files/OUTPUT_FILES/X20.DB.BX*.semd
+     > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 10. 25. 0 in_out_files/OUTPUT_FILES/X20.DB.BX*.semd
 
    - make designated directory for adjoint sources:
      > mkdir in_out_files/SEM/
