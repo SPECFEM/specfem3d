@@ -1,0 +1,21 @@
+------------------------------------------------------------
+README
+------------------------------------------------------------
+
+This folder contains routines to create adjoint sources for:
+
+- traveltime/ subdirectory: cross-correlation traveltime adjoint sources 
+
+  this program cuts certain portion of the seismograms and converts them into 
+  the adjoint sources for generating banana-dougnut kernels.
+  (see Tromp et al. (2005), eq. 45)
+
+- amplitude/ subdirectory: amplitude adjoint sources
+
+  this program cuts a certain portion of displacement seismograms and
+  converts them into adjoint sources for generating classical amplitude
+  kernels following Tromp et al. (2005) eq. 67.  
+
+
+
+

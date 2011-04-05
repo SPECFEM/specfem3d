@@ -1,0 +1,12 @@
+# use make
+echo "xcreate_adjsrc_amplitude:"
+echo 
+echo "please,in this directory UTILS/adjoint_sources/amplitude"
+echo "add your compiler specifics to: Makefile"
+echo
+echo "and run in this directory UTILS/adjoint_sources/amplitude:"
+echo
+echo "> make"
+echo
+echo
+

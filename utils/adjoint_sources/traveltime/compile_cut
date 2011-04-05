@@ -1,0 +1,12 @@
+# use make
+echo "xcreate_adjsrc_traveltime:"
+echo 
+echo "please,in this directory UTILS/adjoint_sources/traveltime"
+echo "add your compiler specifics to: Makefile"
+echo
+echo "and run in this directory UTILS/adjoint_sources/traveltime:"
+echo
+echo "> make"
+echo
+echo
+

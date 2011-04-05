@@ -1,4 +1,3 @@
-! Qinya Liu, Caltech, May 2007
 
 
 ! these functions can be used directly in fortran
@@ -23,8 +22,6 @@ subroutine dwrite_ascfile_f(name,t0,dt,n,data)
   character(len=*) :: name
   real*8 :: t0, dt, data(*)
   integer :: n
-
-  print *,'asc_f:',t0,dt,n
 
   call dwrite_ascfile_c(trim(name)//char(0), t0, dt, n, data)
 

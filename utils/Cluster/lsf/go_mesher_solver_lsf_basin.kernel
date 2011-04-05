@@ -36,7 +36,8 @@ mpirun.lsf --gm-no-shmem --gm-copy-env ./xspecfem3D
 mkdir -p $current_pwd/in_out_files/SEM
 cd $current_pwd/in_out_files/SEM
 collect_seismo_lsf_multi.pl $current_pwd/in_out_files/OUTPUT_FILES/lsf_machines $current_pwd/in_data_files/Par_file
-xcut_velocity 29.0 32.5 3 GSC*.semd
+#xcut_velocity 29.0 32.5 3 GSC*.semd
+xcreate_adjsrc_traveltime 29.0 32.5 3 GSC*.semd
 rename .semd.adj .adj *.semd.ad
 cd $current_pwd
 ##########################################################################
