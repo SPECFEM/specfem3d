@@ -110,15 +110,10 @@
     endif
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
-    ! modified from the subroutine 'write_movie_surface'
     if ( NOISE_TOMOGRAPHY == 1 ) then
-      call noise_save_surface_movie(myrank,NGLLX*NGLLY*nfaces_surface_ext_mesh,displ, &
-                              xstore,ystore,zstore, &
-                              store_val_x_external_mesh,store_val_y_external_mesh,store_val_z_external_mesh, &
-                              store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh, &
-                              free_surface_ispec,ibool, &
-                              nfaces_surface_ext_mesh, &
-                              1,it,LOCAL_PATH, &
+      call noise_save_surface_movie(displ, &
+                              free_surface_ispec,ibool,nfaces_surface_ext_mesh, &
+                              noise_surface_movie,it, &
                               nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
     endif
 

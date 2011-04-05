@@ -41,7 +41,7 @@
                         station_name,network_name,adj_source_file, &
                         LOCAL_PATH,wgllwgll_xy,free_surface_ispec,free_surface_jacobian2Dw, &
                         noise_sourcearray,irec_master_noise, &
-                        normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
+                        normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie
 
   use specfem_par_movie,only: nfaces_surface_ext_mesh, &
                         store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh
@@ -371,11 +371,10 @@
     elseif ( NOISE_TOMOGRAPHY == 2 ) then
        ! second step of noise tomography, i.e., read the surface movie saved at every timestep
        ! use the movie to drive the ensemble forward wavefield
-       call noise_read_add_surface_movie(myrank,NGLLX*NGLLY*nfaces_surface_ext_mesh,accel, &
+       call noise_read_add_surface_movie(NGLLX*NGLLY*nfaces_surface_ext_mesh,accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh, &
-                              free_surface_ispec,ibool,nfaces_surface_ext_mesh, &
-                              1,NSTEP-it+1,LOCAL_PATH,free_surface_jacobian2Dw,wgllwgll_xy, &
+                              free_surface_ispec,ibool,nfaces_surface_ext_mesh,noise_surface_movie, &
+                              NSTEP-it+1,free_surface_jacobian2Dw,wgllwgll_xy, &
                               nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
         ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
         ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
@@ -387,11 +386,10 @@
         ! use the movie to reconstruct the ensemble forward wavefield
         ! the ensemble adjoint wavefield is done as usual
         ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
-        call noise_read_add_surface_movie(myrank,NGLLX*NGLLY*nfaces_surface_ext_mesh,b_accel, &
+        call noise_read_add_surface_movie(NGLLX*NGLLY*nfaces_surface_ext_mesh,b_accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh, &
-                              free_surface_ispec,ibool,nfaces_surface_ext_mesh, &
-                              1,it,LOCAL_PATH,free_surface_jacobian2Dw,wgllwgll_xy, &
+                              free_surface_ispec,ibool,nfaces_surface_ext_mesh,noise_surface_movie, &
+                              it,free_surface_jacobian2Dw,wgllwgll_xy, &
                               nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
     endif
   endif
