@@ -24,10 +24,12 @@ step-by-step tutorial:
 
      note: the same compiler used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
 
-   - copy three run scripts from utils/Cluster/ into SPECFEM3D/, e.g.,
+   - copy run scripts from utils/Cluster/ into SPECFEM3D/, e.g.,
      pbs/go_decomposer_pbs.bash
      pbs/go_generate_databases_pbs.bash
      pbs/go_solver_pbs.bash
+
+     > cp utils/Cluster/pbs/*.bash .
 
      note: you may need to adjust the commands (e.g., -q or -l)
 

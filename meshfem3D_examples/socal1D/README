@@ -3,8 +3,16 @@ README
 (/SPECFEM3D/examples/meshfem3D_examples/socal1D/README)
 ----------------------------------------------------------------------
 
-This is a very simple example to explain the use of the internal mesher meshfem3D.
-The example uses the standard 1D model used in southern California (SoCal-1D).
+This is an example of using the internal mesher meshfem3D for a 1D layered model.
+The 1D model is the standard model used in southern California:
+   Kanamori and Hadley (1975), Dreger and Helmberger (1990), Wald-Hutton,Given (1995)
+
+Figures for comparison:
+  socal1D_koma2004.png  -- 1D model meshed in SPECFEM3D_BASIN (Komatitsch et al. 2004)
+  socal1D_sesame.png    -- 1D model meshed here
+
+The resolution is similar to the the "2 s" accuracy mesh of Komatitsch et al. 2004 (DT = 0.011 s).
+It is the same size region as one slice (out of 168) of model m16 of Tape et al. (2009).
 
 Option 1: run process.sh from local directory (must have access to mpi)
 Option 2: follow instructions below for submitting separate jobs with qsub (or bsub)
@@ -22,7 +30,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
    > cp Par_file CMTSOLUTION STATIONS ..
    > cd SPECFEM3D
 
-   - adapt the submission scripts for the appropriate queues and number of cores:
+   - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
      go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
 
    - note: go_decomposer_pbs.bash is not used with the internal mesher
@@ -53,7 +61,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory in_out_files/DATABASES_MPI/.
 
-     Optional: If you have paraview, load the .vtk files (see socal1D_sesame.png).
+     optional: If you have paraview, load the .vtk files (see socal1D_sesame.png).
 
 4. run simulation:
 
@@ -63,12 +71,34 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
    - submit job script:
      > qsub go_solver_pbs.bash
 
-   - the job should take about 5 minutes
+   - the job should take about 2 minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
      of 84 (ls -1 *semd | wc) seismogram files in the directory in_out_files/OUTPUT_FILES,
      as well as 9 timestamp****** files
 
    - view seismograms, for example, using xmgrace:
    - xmgrace WTT*.semd &
+
+----------------------------------------------------------------------
+To use the same 1D model but covering a larger region using 168 cores, follow these steps.
+
+1. modify Mesh_Par_file:
+
+  > cd in_data_files/meshfem3D_files
+  > cp Mesh_Par_file_168 Mesh_Par_file
+  
+2. modify Par_file:
+
+  - open Par_file and modify NPROC: NPROC = 1 --> NPROC = 168
+
+   > cp Par_file CMTSOLUTION STATIONS ..
+   > cd ../../
+
+   - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
+     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+
+3. Follow steps 2-4 above.
+
+   note: slice 62 (out of 0-167) should contain the source and correspond to the 1-slice example above.
 
 ----------------------------------------------------------------------
