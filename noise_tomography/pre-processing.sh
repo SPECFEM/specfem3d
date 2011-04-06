@@ -106,7 +106,7 @@ mv $in_out_files/OUTPUT_FILES/X2.DB.BXZ.semd             $in_out_files/SEM/
 # since it's 1st contribution, we inject adjoint source 1 at receiver 2
 # pay attention to "adj_sources_contribution1" & "X2.DB.BXZ.adj"
 # we will be using "adj_sources_contribution2" & "X1.DB.BXZ.adj" for the 2nd contribution in next part
-rm $in_out_files/SEM/*.adj
+rm -f $in_out_files/SEM/*.adj
 cp $in_out_files/SEM/adj_sources_contribution1           $in_out_files/SEM/X2.DB.BXZ.adj
 
 # step 3 of noise simulation
@@ -152,7 +152,7 @@ mpirun -np 4 ./xspecfem3D
 # since it's 2nd contribution, we inject adjoint source 2 at receiver 1
 # pay attention to "adj_sources_contribution2" & "X1.DB.BXZ.adj"
 # we have been using "adj_sources_contribution1" & "X2.DB.BXZ.adj" for the 1st contribution in previous part
-rm $in_out_files/SEM/*.adj
+rm -f $in_out_files/SEM/*.adj
 cp $in_out_files/SEM/adj_sources_contribution2           $in_out_files/SEM/X1.DB.BXZ.adj
 
 # step 3 of noise simulation
