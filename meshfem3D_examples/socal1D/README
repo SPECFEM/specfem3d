@@ -21,7 +21,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
 0. Run the default homogeneous halfspace example (external mesh).
 
-1. Set up input files.
+1. set up input files:
 
    > cd SPECFEM3D
    > rsync -av examples/meshfem3D_examples/socal1D/ in_data_files/meshfem3D_files/
@@ -35,27 +35,25 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
    - note: go_decomposer_pbs.bash is not used with the internal mesher
 
-2. compile and run internal mesher 
+2. generate internal mesh:
 
-   > make xmeshfem3D
+   - compile and run meshfem3D:
+    > make xmeshfem3D
+    > qsub go_mesher_pbs.bash
 
-   > qsub go_mesher_pbs.bash
+    this should generate these files in in_out_files/DATABASES_MPI/:
 
-   This should generate these files in in_out_files/DATABASES_MPI/:
+    proc000000_Database
+    proc000000_.dx
+    proc000000_.INP
 
-   proc000000_Database
-   proc000000_.dx
-   proc000000_.INP
-
-   - save output file
-   > cp in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
+   - save output file:
+    > cp in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
 
 3. generate databases:
 
-   - compile generate_databases in directory SPECFEM3D/:
+   - compile and run generate_databases:
      > make xgenerate_databases
-
-   - submit job script:
      > qsub go_generate_databases_pbs.bash
 
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
@@ -65,10 +63,8 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
 4. run simulation:
 
-   - compile specfem3D:
+   - compile and run specfem3D:
      > make xspecfem3D
-
-   - submit job script:
      > qsub go_solver_pbs.bash
 
    - the job should take about 2 minutes
@@ -77,7 +73,10 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
      as well as 9 timestamp****** files
 
    - view seismograms, for example, using xmgrace:
-   - xmgrace WTT*.semd &
+     > xmgrace WTT*.semd &
+
+   - compare with reference seismograms, e.g.:
+     > xmgrace WTT.CI.HXZ.semd ../../examples/meshfem3D_examples/socal1D/REF_SEIS/WTT.CI.HXZ.semd &
 
 ----------------------------------------------------------------------
 To use the same 1D model but covering a larger region using 168 cores, follow these steps.
@@ -91,7 +90,7 @@ To use the same 1D model but covering a larger region using 168 cores, follow th
 
   - open Par_file and modify NPROC: NPROC = 1 --> NPROC = 168
 
-   > cp Par_file CMTSOLUTION STATIONS ..
+   > cp Par_file ..
    > cd ../../
 
    - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
@@ -99,6 +98,32 @@ To use the same 1D model but covering a larger region using 168 cores, follow th
 
 3. Follow steps 2-4 above.
 
-   note: slice 62 (out of 0-167) should contain the source and correspond to the 1-slice example above.
+   - slice 62 (out of 0-167) corresponds to the 1-slice example above and should contain the source.
+   - simulation should take about 1 minute.
+   - seismograms will not exactly match those in REF_SEIS, since the simulation volume is different.
+
+----------------------------------------------------------------------
+To run the same simulation but using 42 cores, follow these steps.
+
+1. modify Mesh_Par_file:
+
+  > cd in_data_files/meshfem3D_files
+  > cp Mesh_Par_file_042 Mesh_Par_file
+  
+2. modify Par_file:
+
+  - open Par_file and modify NPROC: NPROC = 168 --> NPROC = 42
+
+   > cp Par_file ..
+   > cd ../../
+
+   - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
+     go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
+
+3. Follow steps 2-4 above.
+
+   - slice 17 (out of 0-41) should contain the source.
+   - simulation should take about 5 minutes.
+   - seismograms will not exactly match those in REF_SEIS, since the simulation volume is different.
 
 ----------------------------------------------------------------------
