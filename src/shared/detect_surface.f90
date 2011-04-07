@@ -110,7 +110,7 @@
               ! sets surface flags for element and global points
               call ds_set_surface_flags(nspec,ispec_is_surface_external_mesh, &
                                   nglob,iglob_is_surface_external_mesh, &
-                                  i,j,k,ispec,ibool)              
+                                  i,j,k,ispec,ibool)
             endif
 
           endif
@@ -159,7 +159,7 @@
                                   nglob,iglob_is_surface_external_mesh, &
                                   i,j,k,ispec,ibool)
 
-  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops                
+  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
   implicit none
 
@@ -169,11 +169,11 @@
   integer :: nglob,nspec
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
   integer :: i,j,k,ispec
-  
+
   !   surface flags
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
-  
+
   ! local parameters
   integer :: kk,jj,ii
 
@@ -202,7 +202,7 @@
       enddo
     enddo
   endif
-  
+
   end subroutine ds_set_surface_flags
 
 !
@@ -374,7 +374,7 @@
                                             i,j,k,ispec,ibool, &
                                             valence_external_mesh,count)
             endif
-            
+
           endif
         enddo
       enddo
@@ -450,7 +450,7 @@
             call ds_set_plane_flags(iface,ispec, &
                                   nspec,ispec_is_surface_external_mesh, &
                                   nglob,iglob_is_surface_external_mesh, &
-                                  ibool,valence_external_mesh)                                  
+                                  ibool,valence_external_mesh)
           endif
         endif
 
@@ -468,7 +468,7 @@
             call ds_set_plane_flags(iface,ispec, &
                                   nspec,ispec_is_surface_external_mesh, &
                                   nglob,iglob_is_surface_external_mesh, &
-                                  ibool,valence_external_mesh)                                  
+                                  ibool,valence_external_mesh)
           endif
         endif
 
@@ -486,7 +486,7 @@
             call ds_set_plane_flags(iface,ispec, &
                                   nspec,ispec_is_surface_external_mesh, &
                                   nglob,iglob_is_surface_external_mesh, &
-                                  ibool,valence_external_mesh)                                  
+                                  ibool,valence_external_mesh)
           endif
         endif
 
@@ -538,7 +538,7 @@
                                         i,j,k,ispec,ibool, &
                                         valence_external_mesh,count)
 
-  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops                
+  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
   implicit none
 
@@ -550,11 +550,11 @@
   integer :: i,j,k,ispec,count
 
   integer, dimension(nglob) :: valence_external_mesh
-  
+
   !   surface flags
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
-  
+
   ! local parameters
   integer :: kk,jj,ii
   logical :: has_face
@@ -599,7 +599,7 @@
     enddo
   endif
 
-  ! sets flag for element to indicate that it has a face on surface 
+  ! sets flag for element to indicate that it has a face on surface
   if( has_face ) then
     ispec_is_surface_external_mesh(ispec) = .true.
     count = count+1
@@ -615,8 +615,8 @@
                                 nspec,ispec_is_surface_external_mesh, &
                                 nglob,iglob_is_surface_external_mesh, &
                                 ibool,valence_external_mesh)
-                                  
-  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops                
+
+  ! put this into separate subroutine to compile faster, otherwise compilers will try to unroll all do loops
 
   implicit none
 
@@ -629,18 +629,18 @@
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec):: ibool
   integer, dimension(nglob) :: valence_external_mesh
-  
+
   !   surface flags
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
 
-  
+
   ! local parameters
   integer :: jj,ii,i,j,k
   integer,dimension(3,NGLLX,NGLLX) :: face_ijk
-                                  
+
   call get_element_face_gll_indices(iface,face_ijk,NGLLX,NGLLX)
-  
+
   do jj = 1, NGLLY
     do ii = 1, NGLLX
       i = face_ijk(1,ii,jj)

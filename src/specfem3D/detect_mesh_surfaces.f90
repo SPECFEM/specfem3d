@@ -34,7 +34,7 @@
   use specfem_par_elastic
   implicit none
   integer :: ier
-  
+
   ! for mesh surface
   allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)

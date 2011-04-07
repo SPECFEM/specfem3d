@@ -31,7 +31,7 @@
   use specfem_par
   implicit none
   integer :: ier
-  
+
 ! read topography and bathymetry file
 
   if( OCEANS .and. TOPOGRAPHY ) then

@@ -157,10 +157,10 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
     ! writes out absorbing boundary value
     ! uses fortran routine
-    !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field    
+    !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
     ! uses c routine
-    call write_abs(0,b_absorb_field,b_reclen_field,it)    
+    call write_abs(0,b_absorb_field,b_reclen_field,it)
   endif
-  
+
   end subroutine compute_stacey_elastic
 

@@ -87,7 +87,7 @@
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore)
 
-        ! interpolates displ/veloc/pressure at receiver locations        
+        ! interpolates displ/veloc/pressure at receiver locations
         call compute_interpolated_dva_ac(displ_element,veloc_element,&
                         potential_dot_dot_acoustic,potential_dot_acoustic,&
                         potential_acoustic,NGLOB_AB, &

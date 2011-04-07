@@ -62,7 +62,7 @@
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
   ! courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.3  
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.3
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
 
@@ -115,7 +115,7 @@
     ! computes minimum and maximum distance of neighbor GLL points in this grid cell
     call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-    
+
     distance_min_glob = min( distance_min_glob, distance_min)
     distance_max_glob = max( distance_max_glob, distance_max)
 
@@ -143,16 +143,16 @@
     !
     ! rule of thumb (Komatitsch et al. 2005):
     ! "average number of points per minimum wavelength in an element should be around 5."
-    
+
     ! average distance between GLL points within this element
     avg_distance = elemsize_max / NGLLX  ! since NGLLX = NGLLY = NGLLZ
-    
+
     ! biggest possible minimum period such that number of points per minimum wavelength
     ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
     !
     ! note: obviously, this estimation depends on the choice of points per wavelength
     !          which is empirical at the moment.
-    !          also, keep in mind that the minimum period is just an estimation and 
+    !          also, keep in mind that the minimum period is just an estimation and
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
     pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
@@ -160,7 +160,7 @@
 
 
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
-    !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH    
+    !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
 
   enddo
@@ -172,7 +172,7 @@
     call max_all_cr(cmax,cmax_glob)
   endif
 
-  ! minimum period 
+  ! minimum period
   pmax = pmax_glob
   call max_all_cr(pmax,pmax_glob)
 
@@ -232,7 +232,7 @@
   endif
   if( elemsize_max_glob >= HUGEVAL ) then
     call exit_mpi(myrank,"error: element maximum size")
-  endif  
+  endif
 
 !! DK DK May 2009: added this to print the minimum and maximum number of elements
 !! DK DK May 2009: and points in the CUBIT + SCOTCH mesh
@@ -307,7 +307,7 @@
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 
   subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
@@ -323,7 +323,7 @@
 
   integer :: ispec
   logical :: has_vs_zero
-  
+
   integer :: NSPEC_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
     kappastore,mustore,rho_vp,rho_vs
@@ -337,7 +337,7 @@
   vpmax = -HUGEVAL
   vsmin = HUGEVAL
   vsmax = -HUGEVAL
-  
+
   ! vp
   where( rho_vp(:,:,:,ispec) > TINYVAL )
     vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) &
@@ -351,7 +351,7 @@
 
   vpmin = min(vpmin,val_min(1))
   vpmax = max(vpmax,val_max(1))
-  
+
   ! vs
   where( rho_vs(:,:,:,ispec) > TINYVAL )
     vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
@@ -371,10 +371,10 @@
   vsmax = max(vsmax,val_max(1))
 
   end subroutine get_vpvs_minmax
-  
+
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 
   subroutine get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
@@ -434,13 +434,13 @@
       enddo
     enddo
   enddo
-  
+
   end subroutine get_GLL_minmaxdistance
 
 
 !
 !-------------------------------------------------------------------------------------------------
-!  
+!
 
 
   subroutine get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
@@ -463,7 +463,7 @@
   ! local parameters
   real(kind=CUSTOM_REAL) :: dx,x0,y0,z0
   integer :: i,j,k,icorner,jcorner,iglob_a,iglob_b
-  
+
   ! corners indices of reference cube faces
   ! shapes of arrays below
   integer,dimension(2),parameter :: corner_shape = (/3,NGNOD/)
@@ -494,7 +494,7 @@
 
       ! coordinates
       iglob_b = ibool(i,j,k,ispec)
-      
+
       ! distances between points
       if( iglob_a /= iglob_b) then
         dx = sqrt( ( x0 - xstore(iglob_b) )**2 &
@@ -503,7 +503,7 @@
         if( dx < elemsize_min) elemsize_min = dx
         if( dx > elemsize_max) elemsize_max = dx
       endif
-      
+
     enddo
   enddo
 
