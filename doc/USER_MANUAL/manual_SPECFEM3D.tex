@@ -216,8 +216,8 @@ Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent 
 \end{description}
 
 \noindent
-\red{If you use this new version 2.0, which has non blocking MPI for much better performance for medium or large runs, please cite at least one of these six articles,
-in which results of non blocking MPI runs are presented: \cite{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.}\\
+If you use this new version 2.0, which has non blocking MPI for much better performance for medium or large runs, please cite at least one of these six articles,
+in which results of non blocking MPI runs are presented: \cite{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
 
 \noindent
 If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others:
@@ -1390,12 +1390,11 @@ in the Section \ref{enu:Prepare-the-adjoint}.
 \item In the case of travel-time finite-frequency kernel for one source-receiver
 pair, i.e., point source from the \texttt{CMTSOLUTION}, and one station
 in the \texttt{STATIONS\_ADJOINT} list, we supply a sample program
-in \texttt{utils/cut\_velocity/xcut\_velocity} to cut a certain portion of the original
+in \texttt{utils/adjoint\_sources/traveltime/xcreate\_adjsrc\_traveltime} to cut a certain portion of the original
 displacement seismograms and convert it into the proper adjoint source
 to compute the finite-frequency kernel.
-
 \begin{lyxcode}
-xcut\_velocity~t1~t2~ifile{[}0-5]~E/N/Z-ascii-files~{[}baz]
+xcreate\_adjsrc\_traveltime~t1~t2~ifile{[}0-5]~E/N/Z-ascii-files~{[}baz]
 \end{lyxcode}
 where \texttt{t1} and \texttt{t2} are the start and end time of the
 portion you are interested in, \texttt{ifile} denotes the component
@@ -1406,7 +1405,15 @@ displacement seismograms in the right order, and \texttt{baz} is the
 back-azimuth of the station. Note that \texttt{baz} is only supplied
 when \texttt{ifile} = 4 or 5.
 
+\item Similarly, a sample program to compute adjoint sources for amplitude finite-frequency kernels 
+may be found in \texttt{utils/adjoint\_sources/amplitude} and used in the same way as described for 
+traveltime measurements
+\begin{lyxcode}
+xcreate\_adjsrc\_amplitude~t1~t2~ifile{[}0-5]~E/N/Z-ascii-files~{[}baz].
+\end{lyxcode}
+
 \end{itemize}
+
 \item \textbf{Run the kernel simulation}
 
 
@@ -2625,6 +2632,80 @@ the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.true.}, then the 
   and mpif90, wrapper provided for e.g. ifort, to compile MPI-files.
 
   fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/bin/mpif90
+
+
+\item [after executing \texttt{xmeshfem3D} I've got elements with skewness of 81\% percent, what does this mean:] 
+Look at the skewness table printed in the \texttt{output\_mesher.txt} file after executing \texttt{xmeshfem3D} for the
+example given in \texttt{examples/meshfem3D\_examples/simple\_model/}:
+\begin{lyxcode}
+...~\\
+histogram of skewness (0. good - 1. bad): ~\\
+ 0.0000000E+00  -   5.0000001E-02       27648     81.81818      \% ~\\
+ 5.0000001E-02  -   0.1000000               0    0.0000000E+00  \% ~\\
+... ~\\
+\end{lyxcode}
+The first line means that you have 27,648 elements with a skewness value between 0 and 0.05 (which means the element is basically not skewed, just plain regular hexahedral element). The total number of elements you have in this mesh is (see in the \texttt{output\_mesher.txt} file a bit further down):
+\begin{lyxcode}
+...~\\
+total number of elements in entire mesh:        33792 ~\\
+... ~\\
+\end{lyxcode}
+which gives you that:  27,648 / 33,792 $\sim$ 81.8 \% of all elements are not skewed, i.e. regular elements. a fantastic value :)
+
+The histogram lists for this mesh also some stronger skewed elements, for example the worst ones belong to:
+\begin{lyxcode}
+...~\\
+0.6000000      -   0.6500000            2048     6.060606      \% ~\\
+... ~\\
+\end{lyxcode}
+
+about 6 \% of all elements have distortions with a skewness value between 0.6 and 0.65. The skewness values give you a hint of how good your mesh is. In an ideal world, you would want to have no distortions, just like the 81\% from above. Those elements give you the best approximate values by the GLL quadrature used in the spectral-element method. However, having weakly distorted elements is still fine and the solutions are still accurate enough. So empirically, values up to around 0.7 are tolerable, above that you should consider remeshing...
+
+To give you an idea why some of the elements are distorted, see the following figure \ref{fig:mesh.vp} of the mesh you obtain in the example \texttt{examples/meshfem3D\_examples/simple\_model/}. 
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=.9\textwidth]{figures/mesh_vp.jpg}
+\par\end{centering}
+\caption{Paraview visualization using the mesh vtk-files for the example given in \texttt{examples/meshfem3D\_examples/simple\_model/}.}
+\label{fig:mesh.vp}
+\end{figure}
+You will see that the mesh contains a doubling layer, where we stitch elements together such that the size of two elements will transition to the size of one element (very useful to keep the ratio of wavespeed / element\_size about constant). Those elements in this doubling layer have higher skewness values and make up those 6 \% in the histogram.
+
+\item [the code gives following error message "need at least one receiver":] 
+This means that no stations given in the input file \texttt{in\_data\_files/STATIONS} could be located within the dimensions of the mesh. This can happen for example when the mesh was created with the in-house mesher \texttt{xmeshfem3D} while using the Universal Transverse Mercator (UTM) projection but the simulation with \texttt{xspecfem3D} was suppressing this projection from latitude/longitude to x/y/z coordinates.
+ 
+In such cases, try to change your \texttt{in\_data\_files/Par\_file} and set e.g.:
+\begin{lyxcode}
+SUPPRESS\_UTM\_PROJECTION         = .false. ~\\
+\end{lyxcode}
+to be the same in \texttt{Mesh\_Par\_file} and \texttt{Par\_file}. This flag should be identical when using the in-house mesher \texttt{xmeshfem3D}, \texttt{xgenerate\_databases} and \texttt{xspecfem3D} together to run simulations.
+
+The flag determines if the coordinates you specify for your source and station locations are given as lat/lon degrees and
+must be converted to UTM coordinates. As an example, if you use \texttt{.false.} within \texttt{Mesh\_Par\_file} then you create a mesh with \texttt{xmeshfem3D} using the UTM projection from lat/lon as input format to UTM projected coordinates to store the mesh point positions, which is fine. The error then may occur if in the \texttt{Par\_file} you have this set to \texttt{.true.} so that the \texttt{xgenerate\_databases} and \texttt{xspecfem3D} suppress the UTM projection and assume that all coordinates you use now for source and receiver locations are given in meters (that is, converted) already. So it won't find the specified locations in the used mesh. As a solutions, just change the flag in \texttt{Par\_file} to be the same as in \texttt{Mesh\_Par\_file} and rerun \texttt{xgenerate\_databases} and \texttt{xspecfem3D} to make sure that your simulation works fine.
+
+
+\item [I get the following error message "forward simulation became unstable and blew up":] 
+In most cases this means that your time step size \texttt{DT} is chosen too big. Look at your files \texttt{output\_mesher.txt} or \texttt{output\_solver.txt} created in the folder \texttt{in\_out\_files/OUTPUT\_FILES/}. In these output files, find the section:
+\begin{lyxcode}
+... ~\\
+********************************************* ~\\
+*** Verification of simulation parameters *** ~\\
+********************************************* ~\\
+... ~\\
+*** Minimum period resolved =    4.308774 ~\\
+*** Maximum suggested time step =   6.8863556E-02 ~\\
+... ~\\
+... ~\\
+\end{lyxcode}
+
+then change \texttt{DT} in the \texttt{in\_data\_files/Par\_file} to be somewhere close to the maximum suggested time step. In the example above: \\
+\texttt{DT                              = 0.05d0} \\
+would (most probably) work fine. It could be also bigger than the 0.068 s suggested. This depends a bit on the distortions of
+your mesh elements. The more regular they are, the bigger you can choose \texttt{DT}. Just play with this value a bit and see
+when the simulation becomes stable ...
+
+
+
 
 \end{description}
 

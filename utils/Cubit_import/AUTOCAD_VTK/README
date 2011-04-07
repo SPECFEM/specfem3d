@@ -1,0 +1,32 @@
+----------------------------------------------------------
+README
+----------------------------------------------------------
+
+Dear all,
+
+Some of you might be interested on the mesh of a mine model. With the combination of ParaView, CUBIT and a set of small scripts I am able to generate high quality mesh. I included only major voids. Key ideas were mainly two:
+
+- Uniformly (approximately) sample the complex surfaces via ParaView
+- Convert faceted/mesh based geometry into ACIS geometry (using small scripts) for flexible operations within the CUBIT
+
+If you have more ideas I would certainly be interested.
+
+The purpose of the meshing are following two:
+
+- refine the earlier SPECFEM3D simulation 
+- computation of stress redistribution during the mining stages (for this reason I have also meshed the voids also) using our new package SPECFEM3D_ELASTOPLASTIC possibly to compare with the observed seismicity pattern .
+
+
+in this folder:
+---------------
+
+I have attached the mine mesh, wave snapshot and some routines used to facilitate meshing of AUTOCAD model. If you think it is relevant, you can certainly put in the web or manual. If you do so, maybe we need to cite following report and acknowledge something similar to: "We thank Katja Sahala, INMET mining and ISS for access to the mine model and the in-mine data".
+
+Puustjärvi, H., 1999, Pyhäsalmi modeling project, section B. Geology: Technical report,
+Geological Survey of Finland, and Outokumpu Mining Oy.
+
+Best wishes,
+Hom Nath
+
+(April, 2011)
+
