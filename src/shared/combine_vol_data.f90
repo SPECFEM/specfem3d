@@ -578,7 +578,7 @@
   ! writes out point locations and values
   allocate(mask_ibool(NGLOB_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array mask_ibool'
-  
+
   mask_ibool(:) = .false.
   numpoin = 0
   do ispec=1,NSPEC_AB
@@ -634,7 +634,7 @@
   allocate(mask_ibool(NGLOB_AB), &
           num_ibool(NGLOB_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array mask_ibool'
-  
+
   mask_ibool(:) = .false.
   num_ibool(:) = 0
   numpoin = 0
@@ -753,7 +753,7 @@
   allocate(mask_ibool(NGLOB_AB), &
           num_ibool(NGLOB_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array mask_ibool'
-  
+
   mask_ibool(:) = .false.
   num_ibool(:) = 0
   numpoin = 0

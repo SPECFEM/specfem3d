@@ -97,7 +97,7 @@ contains
                    adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour &
                           + xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
 
-                   xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1                   
+                   xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
                    if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) &
                     stop 'ERROR : too much neighbours per element, modify the mesh.'
 
@@ -144,7 +144,7 @@ contains
     integer  :: num_glob, num_part, nparts
     integer, dimension(0:nparts-1)  :: num_loc
     integer :: ier
-    
+
     ! allocates local numbering array
     allocate(glob2loc_elmnts(0:nelmnts-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array glob2loc_elmnts'
@@ -192,7 +192,7 @@ contains
     integer, dimension(0:nparts-1)  :: parts_node
     integer, dimension(0:nparts-1)  :: num_parts
     integer :: ier
-    
+
     allocate(glob2loc_nodes_nparts(0:nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array glob2loc_nodes_nparts'
 
@@ -444,7 +444,7 @@ contains
                    else
                       is_acoustic_el_adj = .false.
                    end if
-                   ! adds element if neighbor element has same material acoustic/not-acoustic 
+                   ! adds element if neighbor element has same material acoustic/not-acoustic
                    ! and lies in next partition
                    if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
                        (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
@@ -606,7 +606,7 @@ contains
 
 
   !--------------------------------------------------
-  ! Write elements on boundaries (and their four nodes on boundaries) 
+  ! Write elements on boundaries (and their four nodes on boundaries)
   ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_boundaries_database(IIN_database, iproc, nelmnts, nspec2D_xmin, nspec2D_xmax, &
@@ -1316,7 +1316,7 @@ contains
     integer  :: i, iface, ier
     integer  :: el, el_adj
     logical  :: is_repartitioned
-  
+
     ! sets acoustic/elastic flags for materials
     is_acoustic(:) = .false.
     is_elastic(:) = .false.
@@ -1445,11 +1445,11 @@ contains
     ! temporary flag arrays
     ! element ids start from 0
     allocate( is_moho(0:nelmnts-1),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array is_moho' 
+    if( ier /= 0 ) stop 'error allocating array is_moho'
     ! node ids start from 0
     allocate( node_is_moho(0:nnodes-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array node_is_moho'
-    
+
     is_moho(:) = .false.
     node_is_moho(:) = .false.
 
@@ -1493,7 +1493,7 @@ contains
     ! gets neighbors by 4 common nodes (face)
     ! contains number of adjacent elements (neighbours)
     allocate(xadj(0:nelmnts),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xadj' 
+    if( ier /= 0 ) stop 'error allocating array xadj'
     ! contains all element id indices of adjacent elements
     allocate(adjncy(0:sup_neighbour*nelmnts-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array adjncy'

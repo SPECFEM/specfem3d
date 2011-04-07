@@ -80,9 +80,9 @@
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: test_flag_cr
   integer, dimension(:,:), allocatable :: ibool_interfaces_dummy
 
-  ! gets global indices for points on MPI interfaces 
+  ! gets global indices for points on MPI interfaces
   ! (defined by my_interfaces_ext_mesh) between different partitions
-  ! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh 
+  ! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh
   ! (number of total points)
   call prepare_assemble_MPI( nelmnts_ext_mesh,elmnts_ext_mesh, &
                             ibool,nglob,ESIZE, &

@@ -113,7 +113,7 @@
           do ix = min(ixmin,ixmax), max(ixmin,ixmax)
             ! global index
             iglob = ibool(ix,iy,iz,ispec)
-            
+
             ! stores global index of point on interface
             if(.not. mask_ibool_asteroid(iglob)) then
               ! masks point as being accounted for
@@ -144,7 +144,7 @@ end subroutine prepare_assemble_MPI
 subroutine get_edge ( ngnode, n, itype, e1, e2, e3, e4, &
                     ixmin, ixmax, iymin, iymax, izmin, izmax )
 
-! returns range of local (GLL) point indices i,j,k depending on given type 
+! returns range of local (GLL) point indices i,j,k depending on given type
 ! for corner point (1), edge (2) or face (4)
 
   implicit none

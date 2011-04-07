@@ -96,7 +96,7 @@
            itag, &
            request_send_scalar_ext_mesh(iinterface) &
            )
-      ! receive request     
+      ! receive request
       call irecv_cr(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
@@ -193,7 +193,7 @@
            itag, &
            request_send_scalar_ext_mesh(iinterface) &
            )
-      ! receive request     
+      ! receive request
       call irecv_i(buffer_recv_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &
@@ -277,7 +277,7 @@
 
     ! send messages
     do iinterface = 1, num_interfaces_ext_mesh
-      ! non-blocking synchronous send request    
+      ! non-blocking synchronous send request
       call issend_cr(buffer_send_scalar_ext_mesh(1:nibool_interfaces_ext_mesh(iinterface),iinterface), &
            nibool_interfaces_ext_mesh(iinterface), &
            my_neighbours_ext_mesh(iinterface), &

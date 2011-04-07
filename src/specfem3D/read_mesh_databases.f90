@@ -334,13 +334,13 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  implicit none 
+  implicit none
   ! local parameters
   integer :: i,j,k,ispec,iglob
   integer :: iinterface,ier
   character(len=256) :: filename
   logical,dimension(:),allocatable :: iglob_is_inner
-  
+
   ! allocates arrays
   allocate(ispec_is_inner(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
@@ -356,7 +356,7 @@
       iglob_is_inner(iglob) = .false.
     enddo
   enddo
-  
+
   ! determines flags for inner elements (purely inside the partition)
   do ispec = 1, NSPEC_AB
     do k = 1, NGLLZ
@@ -378,7 +378,7 @@
                         xstore,ystore,zstore,ibool, &
                         ispec_is_inner,filename)
   endif
-  
+
   ! sets up elements for loops in acoustic simulations
   if( ACOUSTIC_SIMULATION ) then
     ! counts inner and outer elements
@@ -450,7 +450,7 @@
     !print *,'rank ',myrank,' elastic inner spec: ',nspec_inner_elastic
     !print *,'rank ',myrank,' elastic outer spec: ',nspec_outer_elastic
   endif
-  
+
   end subroutine rmd_setup_inner_outer_elemnts
 
 

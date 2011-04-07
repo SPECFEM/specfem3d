@@ -196,7 +196,7 @@
           ! sets velocity vector with maximum norm of wavefield values
           call wmo_get_max_vector(ispec,ispec2D,ipoin, &
                                   displ_element,veloc_element,accel_element, &
-                                  NGNOD2D)        
+                                  NGNOD2D)
         endif
       enddo
     endif
@@ -223,7 +223,7 @@
            nfaces_surface_glob_em_points,NPROC)
       call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
            store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)      
+           nfaces_surface_glob_em_points,NPROC)
     else
       ! all other process just send
       call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
@@ -243,7 +243,7 @@
            1,NPROC)
       call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)      
+           1,NPROC)
     endif
 
 ! creates shakemap file
@@ -271,19 +271,19 @@
                                 narraydim)
 
   ! put into this separate routine to make compilation faster
-  
-  use specfem_par,only: NDIM,ibool                                        
+
+  use specfem_par,only: NDIM,ibool
   use specfem_par_movie
   implicit none
-  
+
   integer :: ispec,ispec2D,ipoin,narraydim
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
     displ_element,veloc_element,accel_element
-    
-  ! local parameters  
+
+  ! local parameters
   integer :: i,j,k,iglob
   logical :: is_done
-                                      
+
   is_done = .false.
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -314,7 +314,7 @@
       enddo
     enddo
   enddo
-  
+
   end subroutine wmo_get_max_vector
 
 !================================================================
@@ -389,7 +389,7 @@
           ! puts velocity values into storage array
           call wmo_get_vel_vector(ispec,ispec2D,ipoin, &
                                 veloc_element, &
-                                NGLLX*NGLLY)        
+                                NGLLX*NGLLY)
         endif
       enddo
     else
@@ -408,7 +408,7 @@
           ! puts velocity values into storage array
           call wmo_get_vel_vector(ispec,ispec2D,ipoin, &
                                 veloc_element, &
-                                NGNOD2D)                
+                                NGNOD2D)
         endif
       enddo
     endif
@@ -418,7 +418,7 @@
   ! collects locations only once
   if (it == NTSTEP_BETWEEN_FRAMES ) then
     ! master collects all
-    if( myrank == 0 ) then      
+    if( myrank == 0 ) then
       call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
          store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
          nfaces_surface_glob_em_points,NPROC)
@@ -441,7 +441,7 @@
          1,NPROC)
     endif
   endif
-  
+
   ! updates/gathers velocity field (high-res or low-res)
   if( myrank == 0 ) then
     call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
@@ -463,7 +463,7 @@
          1,NPROC)
     call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
          dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)    
+         1,NPROC)
   endif
 
 ! file output
@@ -491,19 +491,19 @@
                                 narraydim)
 
   ! put into this separate routine to make compilation faster
-  
-  use specfem_par,only: NDIM,ibool                                        
+
+  use specfem_par,only: NDIM,ibool
   use specfem_par_movie
   implicit none
-  
+
   integer :: ispec,ispec2D,ipoin,narraydim
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
     veloc_element
-    
-  ! local parameters  
+
+  ! local parameters
   integer :: i,j,k,iglob
   logical :: is_done
-                                      
+
   ! velocity vector
   is_done = .false.
   do k=1,NGLLZ
@@ -519,7 +519,7 @@
       enddo
     enddo
   enddo
-  
+
   end subroutine wmo_get_vel_vector
 
 
@@ -637,7 +637,7 @@
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
           ! stores values from element
-          call wmo_get_val_elem(ispec,ipoin,val_element)          
+          call wmo_get_val_elem(ispec,ipoin,val_element)
         endif
 
       enddo
@@ -675,7 +675,7 @@
         ! acoustic pressure potential
         if( ispec_is_acoustic(ispec) ) then
           ! stores values from element
-          call wmo_get_val_elem(ispec,ipoin,val_element)                  
+          call wmo_get_val_elem(ispec,ipoin,val_element)
         endif
 
       enddo ! iloc
@@ -707,7 +707,7 @@
          1,NPROC)
     endif
   endif
-  
+
   ! master collects wavefield
   if( myrank == 0 ) then
     call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
@@ -728,7 +728,7 @@
          1,NPROC)
     call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
          dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)    
+         1,NPROC)
   endif
 
 ! file output: note that values are only stored on free surface
@@ -754,19 +754,19 @@
   subroutine wmo_get_val_elem(ispec,ipoin,val_element)
 
   ! put into this separate routine to make compilation faster
-  
-  use specfem_par,only: NDIM,ibool                                        
+
+  use specfem_par,only: NDIM,ibool
   use specfem_par_movie
   implicit none
-  
+
   integer :: ispec,ipoin
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
     val_element
-    
-  ! local parameters  
+
+  ! local parameters
   integer :: i,j,k,iglob
   logical :: is_done
-                                      
+
   ! velocity vector
   is_done = .false.
   do k=1,NGLLZ
@@ -782,7 +782,7 @@
       enddo
     enddo
   enddo
-  
+
   end subroutine wmo_get_val_elem
 
 !=====================================================================
@@ -799,7 +799,7 @@
   implicit none
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: &
     displ_element,veloc_element,accel_element
-  real(kind=CUSTOM_REAL),dimension(1):: dummy  
+  real(kind=CUSTOM_REAL),dimension(1):: dummy
   integer :: ipoin,ispec,iglob
   integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
   integer :: i,j,k,ier
@@ -863,7 +863,7 @@
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! stores maximum values
-          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)          
+          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
         endif
 
       enddo
@@ -901,7 +901,7 @@
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! stores maximum values
-          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)        
+          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
         endif
 
       enddo
@@ -948,7 +948,7 @@
            1,NPROC)
       call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
            dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)      
+           1,NPROC)
     endif
 
     ! creates shakemap file: note that values are only stored on free surface
@@ -976,19 +976,19 @@
   subroutine wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
 
   ! put into this separate routine to make compilation faster
-  
-  use specfem_par,only: NDIM,ibool                                        
+
+  use specfem_par,only: NDIM,ibool
   use specfem_par_movie
   implicit none
-  
+
   integer :: ispec,ipoin
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
     displ_element,veloc_element,accel_element
-    
-  ! local parameters  
+
+  ! local parameters
   integer :: i,j,k,iglob
   logical :: is_done
-                                      
+
   ! velocity vector
   is_done = .false.
   do k=1,NGLLZ
@@ -1011,7 +1011,7 @@
       enddo
     enddo
   enddo
-  
+
   end subroutine wmo_get_max_vector_o
 
 !=====================================================================
@@ -1028,12 +1028,12 @@
 
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: veloc_element
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob 
+  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob
   integer,dimension(:),allocatable :: valency
   integer :: ispec,ier
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
-  
+
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
   compx(1:1) = channel(3:3) ! either X or E
@@ -1052,7 +1052,7 @@
     ! allocate array for single elements
     allocate( veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if( ier /= 0 ) stop 'error allocating arrays for movie elements'
-  
+
     ! uses div as temporary array to store velocity on all gll points
     do ispec=1,NSPEC_AB
       if( .not. ispec_is_acoustic(ispec) ) cycle
@@ -1069,7 +1069,7 @@
     enddo
 
     deallocate(veloc_element)
-    
+
   endif ! acoustic
 
   ! saves full snapshot data to local disk
@@ -1080,7 +1080,7 @@
             curl_glob(NGLOB_AB), &
             valency(NGLOB_AB), stat=ier)
     if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
-    
+
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
                                 div_glob,curl_glob,valency, &
@@ -1089,7 +1089,7 @@
                                 ibool,ispec_is_elastic, &
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-    
+
     ! writes out div and curl on global points
     write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
@@ -1161,7 +1161,7 @@
     !close(27)
 
   endif
-  
+
   end subroutine wmo_movie_volume_output
 
 !=====================================================================
@@ -1173,8 +1173,8 @@
                                 ibool,ispec_is_elastic, &
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-                                
-  
+
+
 ! calculates div, curl and velocity
 
   implicit none
@@ -1184,9 +1184,9 @@
 
   ! velocity field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: veloc
-  
+
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: div_glob,curl_glob 
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: div_glob,curl_glob
   integer,dimension(NGLOB_AB) :: valency
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: div, curl_x, curl_y, curl_z
@@ -1194,17 +1194,17 @@
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
   logical,dimension(NSPEC_AB) :: ispec_is_elastic
 
-  ! array with derivatives of Lagrange polynomials 
+  ! array with derivatives of Lagrange polynomials
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-  
+
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
-                                dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl  
+                                dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
@@ -1216,7 +1216,7 @@
   div_glob(:) = 0.0_CUSTOM_REAL
   curl_glob(:) = 0.0_CUSTOM_REAL
   valency(:) = 0
-  
+
   ! loops over elements
   do ispec=1,NSPEC_AB
     if( .not. ispec_is_elastic(ispec) ) cycle
@@ -1314,7 +1314,7 @@
       div_glob(i) = div_glob(i)/valency(i)
       curl_glob(i) = curl_glob(i)/valency(i)
     endif
-    
+
   enddo
-  
+
   end subroutine wmo_movie_div_curl

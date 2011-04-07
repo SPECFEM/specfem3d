@@ -128,7 +128,7 @@ module decompose_mesh_SCOTCH
       ! note: be aware that here we can have different node ordering for a cube element;
       !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
       !
-      !          guess here it assumes that spectral elements ordering is like first 
+      !          guess here it assumes that spectral elements ordering is like first
       !          at the bottom of the element, anticlock-wise, i.e.
       !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
       !          then top (positive z-direction) of element
@@ -274,7 +274,7 @@ module decompose_mesh_SCOTCH
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #material_domain_id #material_id(<0) #type_name (="interface") 
+       !    #material_domain_id #material_id(<0) #type_name (="interface")
        !     #material_id_for_material_below #material_id_for_material_above
        !        example:     2  -1 interface 1 2
        !   - for tomography models
@@ -575,7 +575,7 @@ module decompose_mesh_SCOTCH
     ! local parameters
     integer, dimension(:),allocatable  :: num_material
     integer :: ier
-    
+
     elmnts(:,:) = elmnts(:,:) - 1
 
     ! determines maximum neighbors based on 1 common node
@@ -609,7 +609,7 @@ module decompose_mesh_SCOTCH
 
     ! gets materials id associations
     allocate(num_material(1:nspec),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array num_material'    
+    if( ier /= 0 ) stop 'error allocating array num_material'
     num_material(:) = mat(1,:)
 
     ! in case of acoustic/elastic simulation, weights elements accordingly
@@ -747,7 +747,7 @@ module decompose_mesh_SCOTCH
 
     implicit none
     !local parameters
-    
+
     allocate(my_interfaces(0:ninterfaces-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array my_interfaces'
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)

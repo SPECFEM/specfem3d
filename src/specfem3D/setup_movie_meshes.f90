@@ -42,7 +42,7 @@
   allocate(nfaces_perproc_surface_ext_mesh(NPROC), &
           faces_surface_offset_ext_mesh(NPROC),stat=ier)
   if( ier /= 0 ) stop 'error allocating array for movie faces'
-  
+
   nfaces_org = nfaces_surface_ext_mesh
   if (nfaces_surface_ext_mesh == 0) then
     ! dummy arrays
@@ -304,7 +304,7 @@
     nfaces_surface_glob_em_points = nfaces_surface_glob_ext_mesh*NGLLX*NGLLY
   else
     ! low-res movies only output at element corners
-    nfaces_perproc_surface_ext_mesh(:) = nfaces_perproc_surface_ext_mesh(:)*NGNOD2D    
+    nfaces_perproc_surface_ext_mesh(:) = nfaces_perproc_surface_ext_mesh(:)*NGNOD2D
     nfaces_surface_ext_mesh_points = nfaces_surface_ext_mesh*NGNOD2D
     nfaces_surface_glob_em_points = nfaces_surface_glob_ext_mesh*NGNOD2D
   endif

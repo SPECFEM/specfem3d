@@ -745,13 +745,13 @@
   integer, save :: first_time_called = 1
   double precision, parameter :: ZERO_TOL = 1.e-5
   integer ier
-  
+
   if(first_time_called == 1) then
      first_time_called       = 0
      AM_S%Q_resolution = 10**ATTENUATION_COMP_RESOLUTION
      AM_S%Q_max        = ATTENUATION_COMP_MAXIMUM
      Qtmp         = AM_S%Q_resolution * AM_S%Q_max
-     
+
      allocate(AM_S%tau_eps_storage(N_SLS, Qtmp), &
              AM_S%Qmu_storage(Qtmp),stat=ier)
      if( ier /= 0 ) stop 'error allocating arrays for attenuation storage'
@@ -942,7 +942,7 @@
   double precision, dimension(nf_in)   :: f_in
   double precision, dimension(nsls_in) :: tau_s_in
   integer ier
-  
+
   allocate(AS_V%f(nf_in), &
           AS_V%tau_s(nsls_in),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for attenuation simplex'

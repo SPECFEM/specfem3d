@@ -184,7 +184,7 @@ subroutine compute_forces_elastic_Dev( iphase ,NSPEC_AB,NGLOB_AB, &
   integer i,j,k
 
   imodulo_N_SLS = mod(N_SLS,3)
- 
+
   ! choses inner/outer elements
   if( iphase == 1 ) then
     num_elements = nspec_outer_elastic

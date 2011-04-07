@@ -368,7 +368,7 @@ program smooth_vol_data
           cy0(NSPEC_AB), &
           cz0(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array xl etc.'
-  
+
   do ispec = 1, nspec_AB
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -422,7 +422,7 @@ program smooth_vol_data
   allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array tk and bk'
-  
+
   tk = 0.0_CUSTOM_REAL
   bk = 0.0_CUSTOM_REAL
   do it=1,num_interfaces_ext_mesh+1
@@ -479,7 +479,7 @@ program smooth_vol_data
             cy(NSPEC_N), &
             cz(NSPEC_N),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xx etc.'
-    
+
     do ispec = 1, nspec_N
       do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -579,7 +579,7 @@ program smooth_vol_data
   !if(myrank==0) print*, 'normalizes values ...'
   allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array dat_smooth'
-  
+
   dat_smooth = 0.0_CUSTOM_REAL
   do ispec = 1, nspec_AB
     do k = 1, NGLLZ

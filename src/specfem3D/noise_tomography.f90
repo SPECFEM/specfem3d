@@ -433,9 +433,9 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB_VAL) ::  displ
   ! output parameters
   ! local parameters
-  integer :: ispec2D,ispec,i,j,k,iglob 
+  integer :: ispec2D,ispec,i,j,k,iglob
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,nspec_top) :: noise_surface_movie
-                    
+
   ! get coordinates of surface mesh and surface displacement
   do ispec2D = 1, nspec_top
     ispec = ibelm_top(ispec2D)

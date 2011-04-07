@@ -862,14 +862,14 @@ subroutine setup_sources_receivers_VTKfile()
     close(IOVTK)
 
     ! creates additional receiver and source files
-    ! extracts receiver locations 
-    filename = trim(OUTPUT_FILES)//'/sr.vtk'    
+    ! extracts receiver locations
+    filename = trim(OUTPUT_FILES)//'/sr.vtk'
     filename_new = trim(OUTPUT_FILES)//'/receiver.vtk'
     write(system_command, &
   "('awk ',a1,'{if(NR<5) print $0;if(NR==6)print ',a1,'POINTS',i6,' float',a1,';if(NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
     call system(system_command)
-    
+
     ! extracts source locations
     filename_new = trim(OUTPUT_FILES)//'/source.vtk'
     write(system_command, &

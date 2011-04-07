@@ -37,7 +37,7 @@
   implicit none
   character(len=256) :: plot_file
   integer :: ier
-  
+
   ! flag for any movie simulation
   if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
      MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_GIF_IMAGE ) then
@@ -532,7 +532,7 @@
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
 
-          ! uses fortran routines for reading          
+          ! uses fortran routines for reading
           !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
           !      action='read',form='unformatted',access='direct', &
           !      recl=b_reclen_field+2*4,iostat=ier )
@@ -541,7 +541,7 @@
           call open_file_abs_r(0,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
                               b_reclen_field*NSTEP)
-          
+
         else
           ! opens new file
 
@@ -554,7 +554,7 @@
           call open_file_abs_w(0,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
                               b_reclen_field*NSTEP)
-          
+
         endif
       endif
 
@@ -572,12 +572,12 @@
           !open(unit=IOABS_AC,file=trim(prname)//'absorb_potential.bin',status='old',&
           !      action='read',form='unformatted',access='direct', &
           !      recl=b_reclen_potential+2*4,iostat=ier )
-          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')          
+          !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
           ! uses c routines for faster reading
           call open_file_abs_r(1,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
                               b_reclen_potential*NSTEP)
-          
+
         else
           ! opens new file
           ! uses fortran routines for writing
@@ -600,12 +600,12 @@
         allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_field'
       endif
-      
+
       if( ACOUSTIC_SIMULATION ) then
         allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
       endif
-      
+
     endif
   endif
 
