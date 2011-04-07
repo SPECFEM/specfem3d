@@ -1,0 +1,17 @@
+-----------------------------------------------------------
+README
+-----------------------------------------------------------
+
+This folder contains helpful scripts and utilities to convert
+different mesh formats over to CUBIT (http://cubit.sandia.gov).
+
+- AUTOCAD_VTK/ :
+
+  contains helper scripts to convert from AUTOCAD (http://usa.autodesk.com/autocad/) 
+  output (.DXF) format to a Visualization Toolkit (http://www.vtk.org) .VTK file format.
+
+  A little utility tool is also provided to convert from a .VTK to a journal file (.JOU) which can 
+  be run within CUBIT.
+
+
+
