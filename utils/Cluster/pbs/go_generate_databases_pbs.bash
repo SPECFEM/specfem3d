@@ -2,7 +2,7 @@
 #PBS -S /bin/bash
 
 ## job name and output file
-#PBS -N go_mesher
+#PBS -N go_database
 #PBS -j oe
 #PBS -o in_out_files/OUTPUT_FILES/$PBS_JOBID.o
 
@@ -34,7 +34,7 @@ cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
 #rm -rf in_out_files/OUTPUT_FILES/src
 #cp -rp ./src in_out_files/OUTPUT_FILES/
 
-# obtain lsf job information
+# obtain job information
 cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > in_out_files/OUTPUT_FILES/jobid
 
