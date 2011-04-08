@@ -22,15 +22,17 @@ NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
 numnodes=$NPROC
 
 mkdir -p in_out_files/OUTPUT_FILES
+mkdir -p in_out_files/DATABASES_MPI
 
 # backup files used for this simulation
 cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
+cp in_data_files/meshfem3D_files/Mesh_Par_file in_out_files/OUTPUT_FILES/
 
 # save a complete copy of source files
 #rm -rf in_out_files/OUTPUT_FILES/src
 #cp -rp ./src in_out_files/OUTPUT_FILES/
 
-# obtain lsf job information
+# obtain pbs job information
 cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > in_out_files/OUTPUT_FILES/jobid
 
