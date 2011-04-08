@@ -268,7 +268,7 @@ Marie Curie program.
 The SPECFEM3D software package comes in a gzipped tar ball. In the
 directory in which you want to install the package, type
 \begin{lyxcode}
-{\small tar~-zxvf~SPECFEM3D\_V2.0.0.tar.gz}{\small \par}
+{\small tar~-zxvf~SPECFEM3D\_V2.0.1.tar.gz}{\small \par}
 \end{lyxcode}
 The directory \texttt{\small SPECFEM3D/} will then contain
 the source code. To configure the software for your system, run the
@@ -1405,8 +1405,8 @@ displacement seismograms in the right order, and \texttt{baz} is the
 back-azimuth of the station. Note that \texttt{baz} is only supplied
 when \texttt{ifile} = 4 or 5.
 
-\item Similarly, a sample program to compute adjoint sources for amplitude finite-frequency kernels 
-may be found in \texttt{utils/adjoint\_sources/amplitude} and used in the same way as described for 
+\item Similarly, a sample program to compute adjoint sources for amplitude finite-frequency kernels
+may be found in \texttt{utils/adjoint\_sources/amplitude} and used in the same way as described for
 traveltime measurements
 \begin{lyxcode}
 xcreate\_adjsrc\_amplitude~t1~t2~ifile{[}0-5]~E/N/Z-ascii-files~{[}baz].
@@ -2469,7 +2469,7 @@ Main authors: Dimitri Komatitsch and Jeroen Tromp
 Princeton University, USA,
 and University of Pau / CNRS / INRIA, France
 
-$\copyright$ Princeton University and University of Pau / CNRS / INRIA, November 2010
+$\copyright$ Princeton University and University of Pau / CNRS / INRIA, April 2011
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
@@ -2634,7 +2634,7 @@ the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.true.}, then the 
   fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/bin/mpif90
 
 
-\item [after executing \texttt{xmeshfem3D} I've got elements with skewness of 81\% percent, what does this mean:] 
+\item [after executing \texttt{xmeshfem3D} I've got elements with skewness of 81\% percent, what does this mean:]
 Look at the skewness table printed in the \texttt{output\_mesher.txt} file after executing \texttt{xmeshfem3D} for the
 example given in \texttt{examples/meshfem3D\_examples/simple\_model/}:
 \begin{lyxcode}
@@ -2661,7 +2661,7 @@ The histogram lists for this mesh also some stronger skewed elements, for exampl
 
 about 6 \% of all elements have distortions with a skewness value between 0.6 and 0.65. The skewness values give you a hint of how good your mesh is. In an ideal world, you would want to have no distortions, just like the 81\% from above. Those elements give you the best approximate values by the GLL quadrature used in the spectral-element method. However, having weakly distorted elements is still fine and the solutions are still accurate enough. So empirically, values up to around 0.7 are tolerable, above that you should consider remeshing...
 
-To give you an idea why some of the elements are distorted, see the following figure \ref{fig:mesh.vp} of the mesh you obtain in the example \texttt{examples/meshfem3D\_examples/simple\_model/}. 
+To give you an idea why some of the elements are distorted, see the following figure \ref{fig:mesh.vp} of the mesh you obtain in the example \texttt{examples/meshfem3D\_examples/simple\_model/}.
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=.9\textwidth]{figures/mesh_vp.jpg}
@@ -2671,9 +2671,9 @@ To give you an idea why some of the elements are distorted, see the following fi
 \end{figure}
 You will see that the mesh contains a doubling layer, where we stitch elements together such that the size of two elements will transition to the size of one element (very useful to keep the ratio of wavespeed / element\_size about constant). Those elements in this doubling layer have higher skewness values and make up those 6 \% in the histogram.
 
-\item [the code gives following error message "need at least one receiver":] 
+\item [the code gives following error message "need at least one receiver":]
 This means that no stations given in the input file \texttt{in\_data\_files/STATIONS} could be located within the dimensions of the mesh. This can happen for example when the mesh was created with the in-house mesher \texttt{xmeshfem3D} while using the Universal Transverse Mercator (UTM) projection but the simulation with \texttt{xspecfem3D} was suppressing this projection from latitude/longitude to x/y/z coordinates.
- 
+
 In such cases, try to change your \texttt{in\_data\_files/Par\_file} and set e.g.:
 \begin{lyxcode}
 SUPPRESS\_UTM\_PROJECTION         = .false. ~\\
@@ -2684,7 +2684,7 @@ The flag determines if the coordinates you specify for your source and station l
 must be converted to UTM coordinates. As an example, if you use \texttt{.false.} within \texttt{Mesh\_Par\_file} then you create a mesh with \texttt{xmeshfem3D} using the UTM projection from lat/lon as input format to UTM projected coordinates to store the mesh point positions, which is fine. The error then may occur if in the \texttt{Par\_file} you have this set to \texttt{.true.} so that the \texttt{xgenerate\_databases} and \texttt{xspecfem3D} suppress the UTM projection and assume that all coordinates you use now for source and receiver locations are given in meters (that is, converted) already. So it won't find the specified locations in the used mesh. As a solutions, just change the flag in \texttt{Par\_file} to be the same as in \texttt{Mesh\_Par\_file} and rerun \texttt{xgenerate\_databases} and \texttt{xspecfem3D} to make sure that your simulation works fine.
 
 
-\item [I get the following error message "forward simulation became unstable and blew up":] 
+\item [I get the following error message "forward simulation became unstable and blew up":]
 In most cases this means that your time step size \texttt{DT} is chosen too big. Look at your files \texttt{output\_mesher.txt} or \texttt{output\_solver.txt} created in the folder \texttt{in\_out\_files/OUTPUT\_FILES/}. In these output files, find the section:
 \begin{lyxcode}
 ... ~\\
