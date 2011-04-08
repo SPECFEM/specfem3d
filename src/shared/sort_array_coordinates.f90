@@ -1,13 +1,12 @@
 !=====================================================================
 !
-!          S p e c f e m 3 D  G l o b e  V e r s i o n  4 . 0
-!          --------------------------------------------------
+!               S p e c f e m 3 D  V e r s i o n  2 . 0
+!               ---------------------------------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Seismological Laboratory, California Institute of Technology, USA
-!             and University of Pau / CNRS / INRIA, France
-! (c) California Institute of Technology and University of Pau / CNRS / INRIA
-!                            February 2008
+!    Princeton University, USA and University of Pau / CNRS / INRIA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            April 2011
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
