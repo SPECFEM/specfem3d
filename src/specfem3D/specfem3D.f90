@@ -265,9 +265,10 @@
 ! MPI v. 1.1 Dimitri Komatitsch, Caltech, October 2002: Zhu's Moho map, scaling
 !  of Vs with depth, Hauksson's regional model, attenuation, oceans, movies
 !
-! MPI v. 1.0 Dimitri Komatitsch, Caltech, May 2002: first MPI version based on global code
+! MPI v. 1.0 Dimitri Komatitsch, Caltech, USA, May 2002: first MPI version based on global code
 !
-! Dimitri Komatitsch, IPG Paris, December 1996: first 3-D solver for the CM-5 Connection Machine
+! Dimitri Komatitsch, IPG Paris, France, December 1996: first 3-D solver for the CM-5 Connection Machine,
+!    parallelized using Connection Machine Fortran
 !
 
 ! ************** PROGRAM STARTS HERE **************
