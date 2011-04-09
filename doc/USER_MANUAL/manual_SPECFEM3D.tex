@@ -271,7 +271,11 @@ directory in which you want to install the package, type
 {\small tar~-zxvf~SPECFEM3D\_V2.0.1.tar.gz}{\small \par}
 \end{lyxcode}
 The directory \texttt{\small SPECFEM3D/} will then contain
-the source code. To configure the software for your system, run the
+the source code.\\
+
+We recommend that you add {\texttt{ulimit -S -s unlimited}} to your {\texttt{.bash\_profile}} file and/or {\texttt{limit stacksize unlimited }} to your {\texttt{.cshrc}} file to suppress any potential limit to the size of the Unix stack.\\
+
+Then, to configure the software for your system, run the
 \texttt{configure} shell script. This script will attempt to guess
 the appropriate configuration values for your system. However, at
 a minimum, it is recommended that you explicitly specify the appropriate
@@ -378,12 +382,13 @@ On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
 in order to turn underflow trapping off.\\
 
-Note that if you run very large meshes on a relatively small number
+If you run very large meshes on a relatively small number
 of processors, the memory size needed on each processor might become
-greater than 2 gigabytes, which is the upper limit for 32-bit addressing;
-in this case, on some compilers you may need to add \char`\"{}\texttt{-mcmodel=medium}\char`\"{}
-to the compiler options otherwise the compiler will display an error message; on an IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, using \texttt{-q64} is usually sufficient.
-
+greater than 2 gigabytes, which is the upper limit for 32-bit addressing.
+In this case, on some compilers you may need to add \texttt{``-mcmodel=medium}''
+to the compiler options otherwise the compiler will display an error
+message (for instance \texttt{``relocation truncated to fit: R\_X86\_64\_PC32 against .bss''} or something similar);
+on an IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, using \texttt{-q64} is usually sufficient.
 
 \chapter{\label{cha:Mesh-Generation}Mesh Generation}
 
