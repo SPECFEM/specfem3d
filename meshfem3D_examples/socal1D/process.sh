@@ -64,6 +64,7 @@ cd ../
 mv in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
 
 # stores setup
+cp -r in_data_files/meshfem3D_files/ in_out_files/OUTPUT_FILES/
 cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
 cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
 cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
