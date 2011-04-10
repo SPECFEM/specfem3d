@@ -1,0 +1,29 @@
+README
+(SPECFEM3D/examples/meshfem3D_examples/socal1D/example_deep/README)
+
+This example illustrates two options for extending the bottom layer of the socal1D model. In some scenarios, it is helpful to extend the boundaries to eliminate spurious reflections from boundaries.
+
+First run the default socal1D example with 1 core.
+Then try examples A and B.
+
+EXAMPLE A: Change bottom interface from -60 km to -200 km; use uniform element
+           spacing in bottom layer.
+
+ > cp Mesh_Par_file_deep ../Mesh_Par_file
+ > cd interfaces_deep.dat ../interfaces.dat
+ > cd ..
+ > ./process.sh
+
+EXAMPLE B: Change bottom interface from -60 km to -200 km; add -60 km as a
+           new interface, such that the mesh above -60 km remains identical to
+           the default model that extends to 60 km depth only.
+
+ > cp Mesh_Par_file_deep_honor60km ../Mesh_Par_file
+ > cp interfaces_deep_honor60km.dat ../interfaces.dat
+ > cp interface0.dat ..
+ > cd ..
+ > ./process.sh
+
+The models for A and B are identical, but the meshes are subtley different: as shown in honor60km_or_not.png, mesh A does not honor the 60 km interface, whereas mesh B does. Since there is no material contrast at 60 km depth, the synthetics are expected to be nearly identical.
+
+=======================
