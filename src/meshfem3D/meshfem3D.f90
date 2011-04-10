@@ -182,7 +182,7 @@
 ! MPI v. 1.0 Dimitri Komatitsch, Caltech, USA, May 2002: first MPI version based on global code
 !
 ! Dimitri Komatitsch, IPG Paris, France, December 1996: first 3-D solver for the CM-5 Connection Machine,
-!    parallelized using Connection Machine Fortran
+!    parallelized on 128 processors using Connection Machine Fortran
 !
 
 ! number of spectral elements in each block
