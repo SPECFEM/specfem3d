@@ -180,6 +180,14 @@ full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
 variations in attenuation \citep{SaKoTr10}. Adjoint capabilities and finite-frequency
 kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09,ViOp09}.\\
 
+The SEM was originally developed in computational fluid dynamics \citep{Pat84,MaPa89}
+and has been successfully adapted to address problems in seismic wave propagation.
+Early seismic wave propagation applications of the SEM, utilizing Legendre basis functions and a
+perfectly diagonal mass matrix, include \cite{CoJoTo93}, \cite{Kom97},
+\cite{FaMaPaQu97}, \cite{CaGa97}, \cite{KoVi98} and \cite{KoTr99},
+whereas applications involving Chebyshev basis functions and a nondiagonal mass matrix
+include \cite{SePr94}, \cite{PrCaSe94} and \cite{SePrPr95}.\\
+
 All SPECFEM3D software is written in Fortran90 with full portability
 in mind, and conforms strictly to the Fortran95 standard. It uses
 no obsolete or obsolescent features of Fortran77. The package uses
@@ -194,7 +202,12 @@ It also won the BULL Joseph Fourier supercomputing award in 2010.\\
 
 The next release of the code will include support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}
 as well as Convolutional or Auxiliary Differential Equation Perfectly Matched absorbing Layers (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
-It will also use the PT-SCOTCH parallel library for mesh partitioning.
+It will also use the PT-SCOTCH parallel library for mesh partitioning.\\
+
+SPECFEM3D includes coupled fluid-solid domains and
+adjoint capabilities, which enables one to address seismological inverse problems, but for linear rheologies so far.
+To accommodate visco-plastic or non-linear rheologies, the reader can refer to 
+the \href{http://geoelse.stru.polimi.it/}{GeoELSE} software package \citep{CaGa97,StPaIg09,ChMoTsBaKrKaStKr10}.
 
 \section{Citation}
 
