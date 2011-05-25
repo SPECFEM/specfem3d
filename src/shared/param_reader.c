@@ -31,6 +31,7 @@
 by Dennis McRitchie (Princeton University, USA)
 
  January 7, 2010 - par_file parsing
+ May 25, 2011 - Updated to support multi-word values
  ..
  You'll notice that the heart of the parser is a complex regular
  expression that is compiled within the C code, and then used to split
@@ -140,13 +141,15 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   }
   /* Regular expression for parsing lines from param file.
    ** Good luck reading this regular expression.  Basically, the lines of
-   ** the parameter file should be of the form 'parameter = value'.  Blank
+   ** the parameter file should be of the form 'parameter = value',
+   ** optionally followed by a #-delimited comment.  
+   ** 'value' can be any number of space- or tab-separated words. Blank
    ** lines, lines containing only white space and lines whose first non-
    ** whitespace character is '#' are ignored.  White space is generally
    ** ignored.  As you will see later in the code, if both parameter and
    ** value are not specified the line is ignored.
    */
-  char pattern[] = "^[ \t]*([^# \t]*)[ \t]*=[ \t]*([^# \t]*)[ \t]*(#.*){0,1}$";
+  char pattern[] = "^[ \t]*([^# \t]+)[ \t]*=[ \t]*([^# \t]+([ \t]+[^# \t]+)*)";
 
   // Compile the regular expression.
   status = regcomp(&compiled_pattern, pattern, REG_EXTENDED);
@@ -196,13 +199,14 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     // Clear out the return string with blanks, copy the value into it, and return.
     memset(string_read, ' ', *string_read_len);
     strncpy(string_read, value, strlen(value));
+    // printf("'%s'='%s'\n", namecopy2, value);
     free(value);
     free(namecopy);
     *ierr = 0;
     return;
   }
   // If no keyword matches, print out error and die.
-  printf("No match in parameter file for keyword %s\n", namecopy);
+  printf("No match in parameter file for keyword '%s'\n", namecopy);
   free(namecopy);
   regfree(&compiled_pattern);
   *ierr = 1;
