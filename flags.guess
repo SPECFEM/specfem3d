@@ -48,11 +48,11 @@ case $FC in
         #
         if test x"$FLAGS_NO_CHECK" = x; then
             # works with: GNU Fortran (GCC) 4.1.2 20080704        
-            FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow -fno-trapping-math"
+            FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O3 -pedantic -pedantic-errors -Waliasing -Wampersand -Wline-truncation -Wsurprising -Wunderflow"
 
-        #            FLAGS_NO_CHECK="-std=f95 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math" # -mcmodel=medium
+        #            FLAGS_NO_CHECK="-std=f95 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow" # -mcmodel=medium
         # older gfortran syntax
-        #           FLAGS_NO_CHECK="-std=f95 -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow -fno-trapping-math" # -mcmodel=medium
+        #           FLAGS_NO_CHECK="-std=f95 -fimplicit-none -frange-check -O3 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow" # -mcmodel=medium
         fi
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="\$(FLAGS_NO_CHECK)" # -fbounds-check
