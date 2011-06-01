@@ -84,6 +84,10 @@ AC_FC_FREEFORM()
 
 AC_PROG_CC
 
+AC_LANG_PUSH(C)
+AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.h]))
+AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
+AC_LANG_POP(C)
 
 #checks for Scotch
 
