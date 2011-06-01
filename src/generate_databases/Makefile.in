@@ -69,6 +69,7 @@ libgendatabases_a_OBJECTS = \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
 	$O/compute_arrays_source.o \
+	$O/multiply_arrays_source.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
 	$O/create_mass_matrices.o \
@@ -329,6 +330,9 @@ $O/define_derivation_matrices.o:  ${SHARED}/constants.h ${SHARED}/define_derivat
 
 $O/compute_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/compute_arrays_source.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_arrays_source.o ${SHARED}/compute_arrays_source.f90
+
+$O/multiply_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/multiply_arrays_source.f90
+	${FCCOMPILE_CHECK} -c -o $O/multiply_arrays_source.o ${SHARED}/multiply_arrays_source.f90
 
 $O/get_attenuation_model.o:  ${SHARED}/constants.h ${SHARED}/get_attenuation_model.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_attenuation_model.o ${SHARED}/get_attenuation_model.f90
