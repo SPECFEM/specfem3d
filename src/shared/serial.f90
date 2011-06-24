@@ -481,7 +481,7 @@
 !----
 !
 
-  subroutine issend_cr(sendbuf, sendcount, dest, sendtag, req)
+  subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
   implicit none
 
@@ -490,9 +490,9 @@
   integer sendcount, dest, sendtag, req
   real(kind=CUSTOM_REAL), dimension(sendcount) :: sendbuf
 
-  stop 'issend_cr not implemented for serial code'
+  stop 'isend_cr not implemented for serial code'
 
-  end subroutine issend_cr
+  end subroutine isend_cr
 
 !
 !----
@@ -515,16 +515,16 @@
 !----
 !
 
-  subroutine issend_i(sendbuf, sendcount, dest, sendtag, req)
+  subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
   implicit none
 
   integer sendcount, dest, sendtag, req
   integer, dimension(sendcount) :: sendbuf
 
-  stop 'issend_i not implemented for serial code'
+  stop 'isend_i not implemented for serial code'
 
-  end subroutine issend_i
+  end subroutine isend_i
 
 !
 !----
