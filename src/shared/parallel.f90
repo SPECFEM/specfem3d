@@ -716,7 +716,7 @@
 !----
 !
 
-  subroutine issend_cr(sendbuf, sendcount, dest, sendtag, req)
+  subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
   implicit none
 
@@ -731,10 +731,10 @@
 
   integer ier
 
-  call MPI_ISSEND(sendbuf(1),sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
+  call MPI_ISEND(sendbuf(1),sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
                   MPI_COMM_WORLD,req,ier)
 
-  end subroutine issend_cr
+  end subroutine isend_cr
 
 !
 !----
@@ -764,7 +764,7 @@
 !----
 !
 
-  subroutine issend_i(sendbuf, sendcount, dest, sendtag, req)
+  subroutine isend_i(sendbuf, sendcount, dest, sendtag, req)
 
   implicit none
 
@@ -779,10 +779,10 @@
 
   integer ier
 
-  call MPI_ISSEND(sendbuf(1),sendcount,MPI_INTEGER,dest,sendtag, &
+  call MPI_ISEND(sendbuf(1),sendcount,MPI_INTEGER,dest,sendtag, &
                   MPI_COMM_WORLD,req,ier)
 
-  end subroutine issend_i
+  end subroutine isend_i
 
 !
 !----
