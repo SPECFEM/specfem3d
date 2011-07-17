@@ -39,11 +39,12 @@
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
-                        LOCAL_PATH,wgllwgll_xy,free_surface_ispec,free_surface_jacobian2Dw, &
+                        LOCAL_PATH,wgllwgll_xy, &
+                        num_free_surface_faces,free_surface_ispec,free_surface_ijk,free_surface_jacobian2Dw, &
                         noise_sourcearray,irec_master_noise, &
                         normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie
 
-  use specfem_par_movie,only: nfaces_surface_ext_mesh, &
+  use specfem_par_movie,only: &
                         store_val_ux_external_mesh,store_val_uy_external_mesh,store_val_uz_external_mesh
 
   implicit none
@@ -100,7 +101,7 @@
   endif
 
 ! forward simulations
-  if (SIMULATION_TYPE == 1) then
+  if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0) then
 
     do isource = 1,NSOURCES
 
@@ -275,7 +276,7 @@
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0) then
 
     ! backward source reconstruction
     do isource = 1,NSOURCES
@@ -367,15 +368,18 @@
                                 NSTEP,accel,noise_sourcearray, &
                                 ibool,islice_selected_rec,ispec_selected_rec, &
                                 it,irec_master_noise, &
-                                nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+                                NSPEC_AB,NGLOB_AB)
     elseif ( NOISE_TOMOGRAPHY == 2 ) then
        ! second step of noise tomography, i.e., read the surface movie saved at every timestep
        ! use the movie to drive the ensemble forward wavefield
-       call noise_read_add_surface_movie(NGLLX*NGLLY*nfaces_surface_ext_mesh,accel, &
+       call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
+                              accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              free_surface_ispec,ibool,nfaces_surface_ext_mesh,noise_surface_movie, &
-                              NSTEP-it+1,free_surface_jacobian2Dw,wgllwgll_xy, &
-                              nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+                              ibool,noise_surface_movie, &
+                              NSTEP-it+1, &
+                              NSPEC_AB,NGLOB_AB, &
+                              num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                              free_surface_jacobian2Dw)
         ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
         ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
         ! note the ensemble forward sources are generally distributed on the surface of the earth
@@ -386,11 +390,14 @@
         ! use the movie to reconstruct the ensemble forward wavefield
         ! the ensemble adjoint wavefield is done as usual
         ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
-        call noise_read_add_surface_movie(NGLLX*NGLLY*nfaces_surface_ext_mesh,b_accel, &
+        call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
+                              b_accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              free_surface_ispec,ibool,nfaces_surface_ext_mesh,noise_surface_movie, &
-                              it,free_surface_jacobian2Dw,wgllwgll_xy, &
-                              nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+                              ibool,noise_surface_movie, &
+                              it, &
+                              NSPEC_AB,NGLOB_AB, &
+                              num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                              free_surface_jacobian2Dw)
     endif
   endif
 

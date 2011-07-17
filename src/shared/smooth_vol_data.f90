@@ -199,6 +199,8 @@ program smooth_vol_data
     print*,"defaults:"
     print*,"  element size   : ",element_size
     print*,"  smoothing sigma_h , sigma_v: ",sigma_h,sigma_v
+    ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
+    print*,"  smoothing scalelengths horizontal, vertical : ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)    
     print*,"  in dir : ",trim(indir)
     print*,"  out dir: ",trim(outdir)
   endif

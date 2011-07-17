@@ -510,6 +510,12 @@
       if( ier /= 0 ) stop 'error allocating array sigma_kl'
     endif
 
+    ! preconditioner
+    if ( APPROXIMATE_HESS_KL ) then
+      allocate(hess_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array hess_kl'    
+    endif
+
     ! MPI handling
     allocate(b_request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
       b_request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
@@ -563,7 +569,13 @@
             kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
             alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rho_ac_kl etc.'
-
+    
+    ! preconditioner
+    if ( APPROXIMATE_HESS_KL ) then
+      allocate(hess_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array hess_ac_kl'    
+    endif
+    
     ! MPI handling
     allocate(b_request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
       b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &

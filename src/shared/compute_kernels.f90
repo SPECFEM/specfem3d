@@ -32,7 +32,6 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_movie,only: nfaces_surface_ext_mesh
 
   implicit none
   ! local parameters
@@ -143,11 +142,88 @@
 
   ! for noise simulations --- source strength kernel
   if (NOISE_TOMOGRAPHY == 3)  &
-    call compute_kernels_strength_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh,ibool, &
+    call compute_kernels_strength_noise(NGLLSQUARE*num_free_surface_faces,ibool, &
                         sigma_kl,displ,deltat,it, &
                         normal_x_noise,normal_y_noise,normal_z_noise, &
-                        nfaces_surface_ext_mesh,noise_surface_movie, &
-                        free_surface_ispec, &
-                        nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+                        noise_surface_movie, &
+                        NSPEC_AB,NGLOB_AB, &
+                        num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
+  ! computes an approximative hessian for preconditioning kernels
+  if ( APPROXIMATE_HESS_KL ) then
+    call compute_kernels_hessian()
+  endif
+  
   end subroutine compute_kernels
+
+
+!-----------------------------------------------------------------------------
+
+  subroutine compute_kernels_hessian()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+  ! local parameters
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_accel_elm,accel_elm
+  integer :: i,j,k,ispec,iglob
+
+  ! loops over all elements
+  do ispec = 1, NSPEC_AB
+  
+    ! acoustic domains
+    if( ispec_is_acoustic(ispec) ) then
+
+      ! adjoint fields: acceleration vector
+      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                      potential_dot_dot_acoustic, accel_elm,&
+                      hprime_xx,hprime_yy,hprime_zz, &
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      ibool,rhostore)
+
+      ! adjoint fields: acceleration vector
+      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                      b_potential_dot_dot_acoustic, b_accel_elm,&
+                      hprime_xx,hprime_yy,hprime_zz, &
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      ibool,rhostore)
+    
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+
+            ! approximates hessian
+            ! term with adjoint acceleration and backward/reconstructed acceleration
+            hess_ac_kl(i,j,k,ispec) =  hess_ac_kl(i,j,k,ispec) &
+               + deltat * dot_product(accel_elm(:,i,j,k), b_accel_elm(:,i,j,k))
+
+          enddo
+        enddo
+      enddo    
+    endif
+
+    ! elastic domains
+    if( ispec_is_elastic(ispec) ) then
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          do i = 1, NGLLX
+            iglob = ibool(i,j,k,ispec)
+
+            ! approximates hessian
+            ! term with adjoint acceleration and backward/reconstructed acceleration
+            hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
+               + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
+
+          enddo
+        enddo
+      enddo    
+    endif
+    
+  enddo
+
+  end subroutine compute_kernels_hessian
+
+
