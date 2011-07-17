@@ -31,7 +31,6 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
-  use specfem_par_movie,only: nfaces_surface_ext_mesh
 
   implicit none
   integer:: ispec,i,j,k,iglob,ier
@@ -193,4 +192,51 @@
     call save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB)
   endif
 
+  ! for preconditioner
+  if ( APPROXIMATE_HESS_KL ) then
+    call save_kernels_hessian()
+  endif
+  
   end subroutine save_adjoint_kernels
+  
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine save_kernels_hessian()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+  integer :: ier
+  
+  ! acoustic domains
+  if( ACOUSTIC_SIMULATION ) then
+    ! scales approximate hessian
+    hess_ac_kl(:,:,:,:) = 2._CUSTOM_REAL * hess_ac_kl(:,:,:,:)
+
+    ! stores into file
+    open(unit=27,file=trim(prname)//'hess_acoustic_kernel.bin', &
+          status='unknown',form='unformatted',action='write',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file hess_acoustic_kernel.bin'
+    write(27) hess_ac_kl
+    close(27)
+  endif  
+
+  ! elastic domains
+  if( ELASTIC_SIMULATION ) then
+    ! scales approximate hessian
+    hess_kl(:,:,:,:) = 2._CUSTOM_REAL * hess_kl(:,:,:,:)
+
+    ! stores into file
+    open(unit=27,file=trim(prname)//'hess_kernel.bin', &
+          status='unknown',form='unformatted',action='write',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file hess_kernel.bin'
+    write(27) hess_kl
+    close(27)
+  endif  
+  
+  end subroutine save_kernels_hessian
+  

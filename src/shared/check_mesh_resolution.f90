@@ -145,7 +145,7 @@
     ! "average number of points per minimum wavelength in an element should be around 5."
 
     ! average distance between GLL points within this element
-    avg_distance = elemsize_max / NGLLX  ! since NGLLX = NGLLY = NGLLZ
+    avg_distance = elemsize_max / ( NGLLX - 1 )  ! since NGLLX = NGLLY = NGLLZ
 
     ! biggest possible minimum period such that number of points per minimum wavelength
     ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH

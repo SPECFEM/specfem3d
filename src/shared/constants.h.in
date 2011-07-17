@@ -106,7 +106,7 @@
   integer, parameter :: MAX_LENGTH_NETWORK_NAME = 8
 
 ! number of sources to be gathered by MPI_Gather
-  integer, parameter :: NGATHER_SOURCES = 10000
+  integer, parameter :: NGATHER_SOURCES = 100
 
 ! we mimic a triangle of half duration equal to half_duration_triangle
 ! using a Gaussian having a very close shape, as explained in Figure 4.2
@@ -142,6 +142,9 @@
 ! ---------------------------------------------------------------------------------------
 ! save moho mesh and compute Moho boundary kernels
   logical, parameter :: SAVE_MOHO_MESH = .false.
+
+! outputs approximate hessian for preconditioning
+  logical, parameter :: APPROXIMATE_HESS_KL = .false.
 
 ! number of steps to save the state variables in the forward simulation,
 ! to be used in the backward reconstruction in the presence of attenuation

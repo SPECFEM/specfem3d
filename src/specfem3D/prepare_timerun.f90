@@ -469,6 +469,9 @@
       mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
       kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
 
+      if ( APPROXIMATE_HESS_KL ) &
+        hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+
       ! reconstructed/backward elastic wavefields
       b_displ = 0._CUSTOM_REAL
       b_veloc = 0._CUSTOM_REAL
@@ -495,6 +498,9 @@
     if( ACOUSTIC_SIMULATION ) then
       rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
       kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+      if ( APPROXIMATE_HESS_KL ) &
+        hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
 
       ! reconstructed/backward acoustic potentials
       b_potential_acoustic = 0._CUSTOM_REAL
@@ -631,19 +637,24 @@
   ! for noise simulations
   if ( NOISE_TOMOGRAPHY /= 0 ) then
 
+    ! checks if free surface is defined  
+    if( num_free_surface_faces == 0 ) then
+      stop 'error: noise simulations need a free surface'
+    endif
+    
     ! allocates arrays
     allocate(noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP),stat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error allocating noise source array')
 
-    allocate(normal_x_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    allocate(normal_x_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
     if( ier /= 0 ) stop 'error allocating array normal_x_noise'
-    allocate(normal_y_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    allocate(normal_y_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
     if( ier /= 0 ) stop 'error allocating array normal_y_noise'
-    allocate(normal_z_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    allocate(normal_z_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
     if( ier /= 0 ) stop 'error allocating array normal_z_noise'
-    allocate(mask_noise(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
+    allocate(mask_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
     if( ier /= 0 ) stop 'error allocating array mask_noise'
-    allocate(noise_surface_movie(NDIM,NGLLX,NGLLY,nfaces_surface_ext_mesh),stat=ier)
+    allocate(noise_surface_movie(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
     if( ier /= 0 ) stop 'error allocating array noise_surface_movie'
 
     ! initializes
@@ -652,21 +663,23 @@
     normal_y_noise(:)            = 0._CUSTOM_REAL
     normal_z_noise(:)            = 0._CUSTOM_REAL
     mask_noise(:)                = 0._CUSTOM_REAL
-    noise_surface_movie(:,:,:,:) = 0._CUSTOM_REAL
+    noise_surface_movie(:,:,:) = 0._CUSTOM_REAL
 
     ! sets up noise source for master receiver station
-    call read_parameters_noise(myrank,nrec,NSTEP,NGLLX*NGLLY*nfaces_surface_ext_mesh, &
+    call read_parameters_noise(myrank,nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
                                islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
-                               noise_sourcearray,xigll,yigll,zigll,nfaces_surface_ext_mesh, &
-                               ibool,free_surface_ispec, &
+                               noise_sourcearray,xigll,yigll,zigll, &
+                               ibool, &
                                xstore,ystore,zstore, &
                                irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                               nfaces_surface_ext_mesh,NSPEC_AB,NGLOB_AB)
+                               NSPEC_AB,NGLOB_AB, &
+                               num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                               ispec_is_acoustic)
 
     ! checks flags for noise simulation
     call check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
-                                USE_HIGHRES_FOR_MOVIES, &
-                                LOCAL_PATH,nfaces_surface_ext_mesh,NSTEP)
+                                LOCAL_PATH, &
+                                num_free_surface_faces,NSTEP)
   endif
 
   end subroutine prepare_timerun_noise

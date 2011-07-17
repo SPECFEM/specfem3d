@@ -239,8 +239,9 @@ module specfem_par
 
   ! parameter module for noise simulations
   integer :: irec_master_noise, NOISE_TOMOGRAPHY
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl, noise_surface_movie
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sigma_kl
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: noise_sourcearray
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: noise_surface_movie
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: &
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
 
@@ -317,6 +318,9 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl
 
+  ! approximate hessian
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
+
   ! topographic (Moho) kernel
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:),allocatable :: &
     dsdx_top, dsdx_bot, b_dsdx_top, b_dsdx_bot
@@ -376,6 +380,9 @@ module specfem_par_acoustic
   ! kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_ac_kl, kappa_ac_kl, &
     rhop_ac_kl, alpha_ac_kl
+
+  ! approximate hessian
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl
 
   ! absorbing stacey wavefield parts
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_absorb_potential
