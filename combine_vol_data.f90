@@ -67,11 +67,13 @@
       print *, ' files have been collected in input_dir, output mesh file goes to output_dir '
       print *, ' give 0 for low resolution and 1 for high resolution'
       stop ' Reenter command line options'
+    else
+      print *, i, trim(arg(i))
     endif
   enddo
 
 ! get slice list
-  if (trim(arg(6)) == '') then
+!  if (trim(arg(6)) == '') then
     num_node = 0
     open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ios)
     if (ios /= 0) then
@@ -91,18 +93,18 @@
     indir= arg(3)
     outdir = arg(4)
     read(arg(5),*) ires
-  else
-    read(arg(1),*) proc1
-    read(arg(2),*) proc2
-    do iproc = proc1, proc2
-      node_list(iproc - proc1 + 1) = iproc
-    enddo
-    num_node = proc2 - proc1 + 1
-    filename = arg(3)
-    indir = arg(4)
-    outdir = arg(5)
-    read(arg(6),*) ires
-  endif
+!  else
+!    read(arg(1),*) proc1
+!    read(arg(2),*) proc2
+!    do iproc = proc1, proc2
+!      node_list(iproc - proc1 + 1) = iproc
+!    enddo
+!    num_node = proc2 - proc1 + 1
+!    filename = arg(3)
+!    indir = arg(4)
+!    outdir = arg(5)
+!    read(arg(6),*) ires
+!  endif
 
   if (ires == 0) then
     HIGH_RESOLUTION_MESH = .false.
@@ -314,7 +316,11 @@
       enddo !ispec
     endif
 
-    if (numpoin /= npoint) stop 'Error: number of points are not consistent'
+    if (numpoin /= npoint) then
+       print *, 'numpoin = ',numpoin
+       print *, 'npoint = ',npoint
+       stop 'Error: number of points are not consistent'
+    endif
     np = np + npoint
 
   enddo  ! all slices for points
