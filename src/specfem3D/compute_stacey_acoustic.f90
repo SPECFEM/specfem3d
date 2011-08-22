@@ -68,22 +68,22 @@
   logical:: SAVE_FORWARD
 
 ! local parameters
-  real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw
+  real(kind=CUSTOM_REAL) :: rhol,cpl,jacobianw,absorbl
   integer :: ispec,iglob,i,j,k,iface,igll
   !integer:: reclen1,reclen2
 
 ! adjoint simulations:
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
-    ! reads in absorbing boundary
-    ! the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
-
-    ! uses fortran routine
-    !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
-    !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
-    !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
-    ! uses c routine for faster reading
-    call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
-
+    ! reads in absorbing boundary array when first phase is running
+    if( phase_is_inner .eqv. .false. ) then    
+      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
+      ! uses fortran routine
+      !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
+      !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
+      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
+      ! uses c routine for faster reading
+      call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+    endif    
   endif !adjoint
 
 ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
@@ -114,16 +114,19 @@
           jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
           ! Sommerfeld condition
+          absorbl = potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
           potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                              - potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
+                                              - absorbl
 
 
           ! adjoint simulations
           if (SIMULATION_TYPE == 3) then
             b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                                - b_absorb_potential(igll,iface)
+                                                  - b_absorb_potential(igll,iface)
+
           else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-              b_absorb_potential(igll,iface) = potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
+              b_absorb_potential(igll,iface) = absorbl
+
           endif !adjoint
 
          enddo
@@ -134,11 +137,13 @@
 
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
-    ! writes out absorbing boundary value
-    ! uses fortran routine
-    !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
-    ! uses c routine
-    call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+    ! writes out absorbing boundary value only when second phase is running
+    if( phase_is_inner .eqv. .true. ) then
+      ! uses fortran routine
+      !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
+      ! uses c routine
+      call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+    endif
   endif
 
   end subroutine compute_stacey_acoustic

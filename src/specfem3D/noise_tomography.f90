@@ -259,8 +259,8 @@
   logical :: SAVE_FORWARD
   ! local parameters
   integer :: reclen
+  integer(kind=8) :: filesize
   character(len=256) :: outputname
-
 
   if (myrank == 0) then
      open(unit=IOUT_NOISE,file=trim(OUTPUT_FILES_PATH)//'NOISE_SIMULATION', &
@@ -306,14 +306,23 @@
 
   if (NOISE_TOMOGRAPHY/=0) then
      ! save/read the surface movie using the same c routine as we do for absorbing boundaries (file ID is 2)
-     reclen=CUSTOM_REAL*NDIM*NGLLSQUARE*NSPEC_TOP*NSTEP
+
+     ! size of single record
+     reclen=CUSTOM_REAL*NDIM*NGLLSQUARE*NSPEC_TOP
+     ! total file size
+     filesize = reclen
+     filesize = filesize*NSTEP
+     
      write(outputname,"('/proc',i6.6,'_surface_movie')") myrank
      if (NOISE_TOMOGRAPHY==1) call open_file_abs_w(2,trim(LOCAL_PATH)//trim(outputname), &
-                                      len_trim(trim(LOCAL_PATH)//trim(outputname)),reclen)
+                                      len_trim(trim(LOCAL_PATH)//trim(outputname)), &
+                                      filesize)
      if (NOISE_TOMOGRAPHY==2) call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
-                                      len_trim(trim(LOCAL_PATH)//trim(outputname)),reclen)
+                                      len_trim(trim(LOCAL_PATH)//trim(outputname)), &
+                                      filesize)
      if (NOISE_TOMOGRAPHY==3) call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
-                                      len_trim(trim(LOCAL_PATH)//trim(outputname)),reclen)
+                                      len_trim(trim(LOCAL_PATH)//trim(outputname)), &
+                                      filesize)
   endif
 
   end subroutine check_parameters_noise

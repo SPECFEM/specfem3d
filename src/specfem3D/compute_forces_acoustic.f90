@@ -122,7 +122,6 @@ subroutine compute_forces_acoustic()
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic )
 
-
     if(PML) then
       call compute_forces_acoustic_PML(NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
@@ -303,7 +302,6 @@ subroutine compute_forces_acoustic()
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
 
-
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
@@ -328,7 +326,6 @@ subroutine compute_forces_acoustic()
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi2_t_dot_dot,&
                         chi3_dot_dot,chi4_dot_dot)
-
 
 end subroutine compute_forces_acoustic
 

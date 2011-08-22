@@ -114,7 +114,6 @@
   ! sets up mass matrices
   call prepare_timerun_mass_matrices()
 
-
   ! initialize acoustic arrays to zero
   if( ACOUSTIC_SIMULATION ) then
     potential_acoustic(:) = 0._CUSTOM_REAL
@@ -158,6 +157,9 @@
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
   endif
+
+  ! synchronize all the processes 
+  call sync_all()
 
   ! prepares attenuation arrays
   call prepare_timerun_attenuation()
@@ -416,6 +418,7 @@
   implicit none
   ! local parameters
   integer :: ier
+  integer(kind=8) :: filesize
 
 ! seismograms
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2 ) then
@@ -533,11 +536,16 @@
         allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_field'
 
-        b_reclen_field = CUSTOM_REAL * (NDIM * NGLLSQUARE * num_abs_boundary_faces)
+        ! size of single record
+        b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
+        
+        ! total file size
+        filesize = b_reclen_field
+        filesize = filesize*NSTEP
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-
+          
           ! uses fortran routines for reading
           !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
           !      action='read',form='unformatted',access='direct', &
@@ -546,11 +554,10 @@
           ! uses c routines for faster reading
           call open_file_abs_r(0,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
-                              b_reclen_field*NSTEP)
+                              filesize)
 
         else
           ! opens new file
-
           ! uses fortran routines for writing
           !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
           !      form='unformatted',access='direct',&
@@ -559,7 +566,7 @@
           ! uses c routines for faster writing (file index 0 for acoutic domain file)
           call open_file_abs_w(0,trim(prname)//'absorb_field.bin', &
                               len_trim(trim(prname)//'absorb_field.bin'), &
-                              b_reclen_field*NSTEP)
+                              filesize)
 
         endif
       endif
@@ -570,8 +577,21 @@
         allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
 
-        b_reclen_potential = CUSTOM_REAL * (NGLLSQUARE * num_abs_boundary_faces)
+        ! size of single record
+        b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
+        
+        ! total file size (two lines to implicitly convert to 8-byte integers)
+        filesize = b_reclen_potential
+        filesize = filesize*NSTEP
 
+        ! daniel: debug check size limit
+        !if( NSTEP > 2147483648 / b_reclen_potential ) then
+        !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
+        !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
+        !  print*,'file size fortran: ',filesize
+        !  print*,'file bit size fortran: ',bit_size(filesize)
+        !endif
+        
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
           ! uses fortran routines for reading
@@ -579,10 +599,11 @@
           !      action='read',form='unformatted',access='direct', &
           !      recl=b_reclen_potential+2*4,iostat=ier )
           !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
+          
           ! uses c routines for faster reading
           call open_file_abs_r(1,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
-                              b_reclen_potential*NSTEP)
+                              filesize)
 
         else
           ! opens new file
@@ -594,7 +615,7 @@
           ! uses c routines for faster writing (file index 1 for acoutic domain file)
           call open_file_abs_w(1,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
-                              b_reclen_potential*NSTEP)
+                              filesize)
 
         endif
       endif
