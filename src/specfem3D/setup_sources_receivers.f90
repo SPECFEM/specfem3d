@@ -635,7 +635,9 @@ subroutine setup_sources_precompute_arrays()
   else
 
 ! allocate dummy array in order to be able to use it as a subroutine argument, even if unused
-    allocate(adj_sourcearrays(1,1,1,1,1,1),stat=ier)
+    nadj_rec_local = 0
+    NTSTEP_BETWEEN_READ_ADJSRC = 0
+    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy array adj_sourcearrays'
 
   endif

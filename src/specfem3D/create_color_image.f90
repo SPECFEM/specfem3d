@@ -361,8 +361,10 @@
 
   ! creating and filling array num_pixel_loc with the positions of each colored
   ! pixel owned by the local process (useful for parallel jobs)
-  allocate(num_pixel_loc(nb_pixel_loc),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array num_pixel_loc'
+  if( nb_pixel_loc > 0 ) then
+    allocate(num_pixel_loc(nb_pixel_loc),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array num_pixel_loc'
+  endif
   nb_pixel_loc = 0
   do i = 1, NX_IMAGE_color
     do j = 1, NZ_IMAGE_color
@@ -372,7 +374,11 @@
       endif
     enddo
   enddo
-
+  ! checks if array is allocated
+  if( nb_pixel_loc > 0 ) then
+    if( .not. allocated(num_pixel_loc) ) call exit_MPI(myrank,'error num_pixel_loc allocation')
+  endif
+  
   ! filling array iglob_image_color, containing info on which process owns which pixels.
   allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
   if( ier /= 0 ) stop 'error allocating array nb_pixel_per_proc'
@@ -387,17 +393,20 @@
   if( NPROC > 1 ) then
     if (myrank == 0) then
       do iproc = 1, NPROC-1
-        call recv_i(num_pixel_recv(:,iproc),nb_pixel_per_proc(iproc),iproc,42)
-
-        ! stores proc number instead where iglob_image_color wouldn't be defined (=-1)
-        do k = 1, nb_pixel_per_proc(iproc)
-          j = ceiling(real(num_pixel_recv(k,iproc)) / real(NX_IMAGE_color))
-          i = num_pixel_recv(k,iproc) - (j-1)*NX_IMAGE_color
-          iglob_image_color(i,j) = iproc
-        enddo
+        if( nb_pixel_per_proc(iproc) > 0 ) then
+          call recv_i(num_pixel_recv(:,iproc),nb_pixel_per_proc(iproc),iproc,42)
+          ! stores proc number instead where iglob_image_color wouldn't be defined (=-1)
+          do k = 1, nb_pixel_per_proc(iproc)
+            j = ceiling(real(num_pixel_recv(k,iproc)) / real(NX_IMAGE_color))
+            i = num_pixel_recv(k,iproc) - (j-1)*NX_IMAGE_color
+            iglob_image_color(i,j) = iproc
+          enddo
+        endif
       enddo
     else
-      call send_i(num_pixel_loc(:),nb_pixel_loc,0,42)
+      if( nb_pixel_loc > 0 ) then
+        call send_i(num_pixel_loc(:),nb_pixel_loc,0,42)
+      endif
     endif
   endif
 
@@ -414,10 +423,12 @@
     if( ier /= 0 ) stop 'error allocating array data_pixel_recv'
     data_pixel_recv(:) = 0._CUSTOM_REAL
   endif
-  allocate(data_pixel_send(nb_pixel_loc),stat=ier)
-  if(ier /= 0 ) call exit_mpi(myrank,'error allocating image send data')
-  data_pixel_send(:) = 0._CUSTOM_REAL
-
+  if( nb_pixel_loc > 0 ) then
+    allocate(data_pixel_send(nb_pixel_loc),stat=ier)
+    if(ier /= 0 ) call exit_mpi(myrank,'error allocating image send data')
+    data_pixel_send(:) = 0._CUSTOM_REAL
+  endif
+  
   ! handles vp background data
   call write_PNM_GIF_vp_background()
 
@@ -463,17 +474,21 @@
     ! master collects
     if (myrank == 0) then
       do iproc = 1, NPROC-1
-        call recvv_cr(data_pixel_recv(1),nb_pixel_per_proc(iproc),iproc,43)
-        ! fills vp display array
-        do k = 1, nb_pixel_per_proc(iproc)
-          j = ceiling(real(num_pixel_recv(k,iproc)) / real(NX_IMAGE_color))
-          i = num_pixel_recv(k,iproc) - (j-1)*NX_IMAGE_color
-          image_color_vp_display(i,j) = data_pixel_recv(k)
-        enddo
+        if( nb_pixel_per_proc(iproc) > 0 ) then      
+          call recvv_cr(data_pixel_recv(1),nb_pixel_per_proc(iproc),iproc,43)
+          ! fills vp display array
+          do k = 1, nb_pixel_per_proc(iproc)
+            j = ceiling(real(num_pixel_recv(k,iproc)) / real(NX_IMAGE_color))
+            i = num_pixel_recv(k,iproc) - (j-1)*NX_IMAGE_color
+            image_color_vp_display(i,j) = data_pixel_recv(k)
+          enddo
+        endif
       enddo
     else
-      ! slave processes send
-      call sendv_cr(data_pixel_send,nb_pixel_loc,0,43)
+      if( nb_pixel_loc > 0 ) then
+        ! slave processes send
+        call sendv_cr(data_pixel_send,nb_pixel_loc,0,43)
+      endif
     endif
   endif
 
@@ -528,17 +543,21 @@
   if (NPROC > 1) then
     if (myrank == 0) then
       do iproc = 1, NPROC-1
-        call recvv_cr(data_pixel_recv(1),nb_pixel_per_proc(iproc),iproc,43)
-        ! distributes on image pixels
-        do k = 1, nb_pixel_per_proc(iproc)
-          j = ceiling(real(num_pixel_recv(k,iproc)) / real(NX_IMAGE_color))
-          i = num_pixel_recv(k,iproc) - (j-1)*NX_IMAGE_color
-          image_color_data(i,j) = data_pixel_recv(k)
-        enddo
+        if( nb_pixel_per_proc(iproc) > 0 ) then
+          call recvv_cr(data_pixel_recv(1),nb_pixel_per_proc(iproc),iproc,43)
+          ! distributes on image pixels
+          do k = 1, nb_pixel_per_proc(iproc)
+            j = ceiling(real(num_pixel_recv(k,iproc)) / real(NX_IMAGE_color))
+            i = num_pixel_recv(k,iproc) - (j-1)*NX_IMAGE_color
+            image_color_data(i,j) = data_pixel_recv(k)
+          enddo
+        endif
       enddo
     else
-      ! slave processes send
-      call sendv_cr(data_pixel_send(1),nb_pixel_loc,0,43)
+      if( nb_pixel_loc > 0 ) then
+        ! slave processes send
+        call sendv_cr(data_pixel_send(1),nb_pixel_loc,0,43)
+      endif
     endif
   endif
 
@@ -814,11 +833,11 @@
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
   use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,potential_dot_acoustic,&
-                                rhostore,ispec_is_acoustic
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,veloc,ispec_is_elastic
+                                rhostore,ispec_is_acoustic,b_potential_dot_acoustic
+  use specfem_par_elastic,only: ELASTIC_SIMULATION,veloc,ispec_is_elastic,b_veloc
   use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool
+                        ibool,SIMULATION_TYPE
   implicit none
 
   integer,intent(in) :: iglob,ispec
@@ -831,18 +850,34 @@
   ! returns first element encountered for iglob index
   if( ELASTIC_SIMULATION ) then
     if( ispec_is_elastic(ispec) ) then
-      veloc_val(:) = veloc(:,iglob)
+      if( SIMULATION_TYPE == 3 ) then
+        veloc_val(:) = b_veloc(:,iglob)
+      else
+        veloc_val(:) = veloc(:,iglob)      
+      endif
+
+      ! returns with this result
       return
     endif
   endif
   if( ACOUSTIC_SIMULATION ) then
     if( ispec_is_acoustic(ispec) ) then
-      ! velocity vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+      if( SIMULATION_TYPE == 3 ) then
+        ! velocity vector for backward/reconstructed wavefield
+        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          b_potential_dot_acoustic, veloc_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore)      
+      else
+        ! velocity vector
+        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore)
+      endif
+      
       ! returns corresponding iglob velocity entry
       do k=1,NGLLZ
         do j=1,NGLLY

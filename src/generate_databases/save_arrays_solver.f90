@@ -389,7 +389,35 @@
       call write_VTK_data_elem_i(nspec,nglob, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         v_tmp_i,filename)
+
+      deallocate(iglob_tmp,v_tmp_i)
     endif
+
+    ! saves free surface points
+    if( num_free_surface_faces > 0 ) then
+      ! saves free surface interface points
+      allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+      inum = 0
+      iglob_tmp(:) = 0
+      do i=1,num_free_surface_faces
+        do j=1,NGLLSQUARE
+          inum = inum+1
+          iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
+                                  free_surface_ijk(2,j,i), &
+                                  free_surface_ijk(3,j,i), &
+                                  free_surface_ispec(i) )
+        enddo
+      enddo
+      filename = prname(1:len_trim(prname))//'free_surface'
+      call write_VTK_data_points(nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
+                        filename)
+
+      deallocate(iglob_tmp)
+    endif
+
 
     !! saves 1. MPI interface
     !    if( num_interfaces_ext_mesh >= 1 ) then

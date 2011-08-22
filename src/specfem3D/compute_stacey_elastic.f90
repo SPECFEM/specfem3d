@@ -82,16 +82,16 @@
 
 ! adjoint simulations:
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
-    ! reads in absorbing boundary
-    ! the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
-
-    ! uses fortran routine
-    !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
-    !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
-    !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
-    ! uses c routine for faster reading
-    call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
-
+    ! reads in absorbing boundary array when first phase is running
+    if( phase_is_inner .eqv. .false. ) then    
+      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
+      ! uses fortran routine
+      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
+      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
+      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
+      ! uses c routine for faster reading
+      call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+    endif    
   endif !adjoint
 
 
@@ -155,11 +155,13 @@
 
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
-    ! writes out absorbing boundary value
-    ! uses fortran routine
-    !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
-    ! uses c routine
-    call write_abs(0,b_absorb_field,b_reclen_field,it)
+    ! writes out absorbing boundary value only when second phase is running
+    if( phase_is_inner .eqv. .true. ) then    
+      ! uses fortran routine
+      !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
+      ! uses c routine
+      call write_abs(0,b_absorb_field,b_reclen_field,it)
+    endif
   endif
 
   end subroutine compute_stacey_elastic

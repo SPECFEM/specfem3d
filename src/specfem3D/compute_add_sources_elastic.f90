@@ -85,13 +85,13 @@
   logical :: ibool_read_adj_arrays
   integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
-  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearray
 
 ! local parameters
   double precision :: f0
   double precision :: stf
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
-  integer :: isource,iglob,i,j,k,ispec
+  integer :: isource,iglob,i,j,k,ispec,ier
   integer :: irec_local,irec
 
 ! plotting source time function
@@ -215,6 +215,10 @@
     ! this must be done carefully, otherwise the adjoint sources may be added twice
     if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
 
+      ! allocates temporary source array
+      allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
+      
       irec_local = 0
       do irec = 1, nrec
         ! compute source arrays
@@ -233,7 +237,8 @@
 
         endif
       enddo
-
+      deallocate(adj_sourcearray)
+      
     endif ! if(ibool_read_adj_arrays)
 
     if( it < NSTEP ) then

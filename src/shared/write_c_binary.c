@@ -26,6 +26,9 @@
 !=====================================================================
 */
 
+// for large files
+#define _FILE_OFFSET_BITS  64
+
 // after Brian's function
 
 #include "config.h"
@@ -75,7 +78,7 @@ FC_FUNC_(write_real,WRITE_REAL)(float *z) {
  Jul 18, 2003
 
  - uses functions fopen/fread/fwrite for binary file I/O
-
+  
  --------------------------------------- */
 
 #define __USE_GNU
@@ -97,7 +100,7 @@ FC_FUNC_(write_real,WRITE_REAL)(float *z) {
 
 // absorbing files: instead of passing file descriptor, we use the array index
 //                          index 0 for elastic domain file
-//                          index 1 for acoutic domain file
+//                          index 1 for acoustic domain file
 //                          (reserved, but unused yet) index 2 - for NOISE_TOMOGRAPHY (SURFACE_MOVIE)
 #define ABS_FILEID 3  // number of absorbing files, note: in C we start indexing arrays from 0
 
@@ -109,7 +112,7 @@ static char * work_buffer[ABS_FILEID];
 
 //void
 //FC_FUNC_(open_file_abs_r_fbin,OPEN_FILE_ABS_R_FBIN)(int *fid, char *filename,int *length, int *filesize){
-void open_file_abs_r_fbin(int *fid, char *filename,int *length, int *filesize){
+void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *filesize){
 
   // opens file for read access
 
@@ -118,13 +121,14 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, int *filesize){
   char * fncopy;
   char * blank;
   FILE *ft;
-
+  int ret;
+  
   // checks filesize
   if( *filesize == 0 ){
     perror("Error file size for reading");
     exit(EXIT_FAILURE);
   }
-
+  
   // Trim the file name.
   fncopy = strndup(filename, *length);
   blank = strchr(fncopy, ' ');
@@ -132,14 +136,40 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, int *filesize){
     fncopy[blank - fncopy] = '\0';
   }
 
+/*
+//daniel: debug checks file size
+// see: 
+//https://www.securecoding.cert.org/confluence/display/seccode/FIO19-C.+Do+not+use+fseek()+and+ftell()+to+compute+the+size+of+a+file
+  printf("file size: %lld \n",*filesize);
+  int fd;
+  struct stat stbuf;
+  long long size;
+  fd = open(fncopy, O_RDONLY);
+  if(fd == -1) {
+    fprintf(stderr, "Error opening file: %s exiting\n", fncopy);
+    exit(-1);
+  }  
+  if( fstat(fd, &stbuf) == 0 ){ 
+    size = stbuf.st_size;
+    printf("file size found is: %lld (Bytes) \n",size);  
+  }
+  close(fd);
+*/
+
   // opens file
-  ft = fopen( fncopy, "r+" );
+  //ft = fopen( fncopy, "r+" );
+  ft = fopen( fncopy, "rb+" ); // read binary file
   if( ft == NULL ) { perror("fopen"); exit(-1); }
 
+  
   // sets mode for full buffering
   work_buffer[*fid] = (char *)malloc(MAX_B);
-  setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
-
+  ret = setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
+  if( ret != 0 ){
+    perror("Error setting working buffer");
+    exit(EXIT_FAILURE);  
+  }
+    
   // stores file index id fid: from 0 to 8
   fp_abs[*fid] = ft;
 
@@ -148,7 +178,7 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, int *filesize){
 
 //void
 //FC_FUNC_(open_file_abs_w_fbin,OPEN_FILE_ABS_W_FBIN)(int *fid, char *filename, int *length, int *filesize){
-void open_file_abs_w_fbin(int *fid, char *filename, int *length, int *filesize){
+void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *filesize){
 
   // opens file for write access
 
@@ -157,10 +187,11 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, int *filesize){
   char * fncopy;
   char * blank;
   FILE *ft;
-
+  int ret;
+  
   // checks filesize
   if( *filesize == 0 ){
-    perror("Error file size for reading");
+    perror("Error file size for writing");
     exit(EXIT_FAILURE);
   }
 
@@ -172,13 +203,18 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, int *filesize){
   }
 
   // opens file
-  ft = fopen( fncopy, "w+" );
+  //ft = fopen( fncopy, "w+" );
+  ft = fopen( fncopy, "wb+" ); // write binary file
   if( ft == NULL ) { perror("fopen"); exit(-1); }
 
   // sets mode for full buffering
   work_buffer[*fid] = (char *)malloc(MAX_B);
-  setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
-
+  ret = setvbuf( ft, work_buffer[*fid], _IOFBF, (size_t)MAX_B );
+  if( ret != 0 ){
+    perror("Error setting working buffer");
+    exit(EXIT_FAILURE);  
+  }
+  
   // stores file index id fid: from 0 to 8
   fp_abs[*fid] = ft;
 
@@ -200,7 +236,7 @@ void close_file_abs_fbin(int * fid){
 
 //void
 //FC_FUNC_(write_abs_fbin,WRITE_ABS_FBIN)(int *fid, void *buffer, int *length, int *index){
-void write_abs_fbin(int *fid, void *buffer, int *length, int *index){
+void write_abs_fbin(int *fid, char *buffer, int *length, int *index){
 
   // writes binary file data in chunks of MAX_B
 
@@ -216,14 +252,38 @@ void write_abs_fbin(int *fid, void *buffer, int *length, int *index){
   buf = buffer;
   ret = 0;
 
-  //float dat[2];
-  //memcpy(dat,buffer,*length);
-  //printf("buffer: %f %f\n",dat[0],dat[1]);
-
+/*
+//daniel: debug
+  float dat[*length/4];
+  memcpy(dat,buffer,*length);
+  printf("buffer length: %d %d\n",*length,*index);
+  printf("buffer size: %d %d \n",sizeof(dat),sizeof(buffer));
+  int i;
+  for(i=0;i< 50;i++){
+    printf("buffer: %d %e \n",i,dat[i]);
+  }
+  
+  // positions file pointer (for reverse time access)
+  // make sure to use 64-bit arithmetic to avoid overflow for very large files
+  long long pos,cur;
+  
+  pos = ((long long)*length) * (*index -1 );  
+  cur = ftell(ft);
+  
+  printf("current position: %d %lld %lld \n",*fid,cur,pos);  
+  ret = fseek(ft, pos , SEEK_SET);
+  if ( ret != 0 ) {
+    perror("Error fseek");
+    exit(EXIT_FAILURE);
+  }
+ */
+  
+  
   // writes items of maximum MAX_B to the file
   while (remlen > 0){
 
     itemlen = MIN(remlen,MAX_B);
+    // note: we want to write out exactly *itemlen* bytes
     ret = fwrite(buf,1,itemlen,ft);
     if (ret > 0){
       donelen = donelen + ret;
@@ -235,30 +295,44 @@ void write_abs_fbin(int *fid, void *buffer, int *length, int *index){
     }
   }
 
+//daniel: debug
+//  printf("buffer done length: %d %d\n",donelen,*length);
+  
+
 }
 
 //void
 //FC_FUNC_(read_abs_fbin,READ_ABS_FBIN)(int *fid, void *buffer, int *length, int *index){
-void read_abs_fbin(int *fid, void *buffer, int *length, int *index){
+void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
 
   // reads binary file data in chunks of MAX_B
 
   FILE *ft;
-  int ret,itemlen,remlen,donelen,pos;
+  int ret,itemlen,remlen,donelen;
+  long long pos;
   void *buf;
 
   // file pointer
   ft = fp_abs[*fid];
 
   // positions file pointer (for reverse time access)
-  pos = (*length) * (*index -1 );
-  fseek(ft, pos , SEEK_SET);
+  // make sure to use 64-bit arithmetic to avoid overflow for very large files
+  pos = ((long long)*length) * (*index -1 );
+  
+  ret = fseek(ft, pos , SEEK_SET);
+  if ( ret != 0 ) {
+    perror("Error fseek");
+    exit(EXIT_FAILURE);
+  }
 
   donelen = 0;
   remlen = *length;
   buf = buffer;
   ret = 0;
 
+  // cleans buffer 
+  //memset( buf,0,remlen);
+  
   // reads items of maximum MAX_B to the file
   while (remlen > 0){
 
@@ -280,9 +354,20 @@ void read_abs_fbin(int *fid, void *buffer, int *length, int *index){
     }
   }
 
-  //float dat[2];
-  //memcpy(dat,buffer,*length);
-  //printf("return buffer: %f %f\n",dat[0],dat[1]);
+/*
+//daniel: debug
+  printf("position: %lld %d %d \n",pos,*length,*index);
+  printf("buffer done length: %d %d\n",donelen,*length);
+  float dat[*length/4];
+  memcpy(dat,buffer,*length);
+  printf("return buffer length: %d %d\n",*length,*index);
+  printf("return buffer size: %d %d \n",sizeof(dat),sizeof(buffer));  
+  int i;
+  for(i=0;i< 50;i++){
+    printf("return buffer: %d %e \n",i,dat[i]);
+  }
+*/
+  
 }
 
 
@@ -322,11 +407,11 @@ static char * map_abs[ABS_FILEID];
 // file descriptors
 static int map_fd_abs[ABS_FILEID];
 // file sizes
-static int filesize_abs[ABS_FILEID];
+static long long filesize_abs[ABS_FILEID];
 
 //void
 //FC_FUNC_(open_file_abs_w_map,OPEN_FILE_ABS_W_MAP)(int *fid, char *filename, int *length, int *filesize){
-void open_file_abs_w_map(int *fid, char *filename, int *length, int *filesize){
+void open_file_abs_w_map(int *fid, char *filename, int *length, long long *filesize){
 
   // opens file for write access
 
@@ -341,6 +426,15 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, int *filesize){
     perror("Error file size for writing");
     exit(EXIT_FAILURE);
   }
+
+  /*
+   // daniel: debug check filesize below or above 2 GB
+   //            filesize gives bytes needed; 4-byte integer limited to +- 2,147,483,648 bytes ~ 2 GB
+   float s = *filesize / 1024. / 1024. / 1024.;
+   if( s > 2.0 ){
+   printf("file size bigger than 2 GB: %lld B or %f GB \n",*filesize,s);
+   }
+   */  
 
   // Trim the file name.
   fncopy = strndup(filename, *length);
@@ -366,14 +460,13 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, int *filesize){
 
   free(fncopy);
 
-
   /* Stretch the file size to the size of the (mmapped) array of ints
    */
   filesize_abs[*fid] = *filesize;
   result = lseek(ft, filesize_abs[*fid] - 1, SEEK_SET);
   if (result == -1) {
     close(ft);
-    perror("Error calling fseek() to 'stretch' the file");
+    perror("Error calling lseek() to 'stretch' the file");
     exit(EXIT_FAILURE);
   }
 
@@ -414,7 +507,7 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, int *filesize){
 
 //void
 //FC_FUNC_(open_file_abs_r_map,OPEN_FILE_ABS_R_MAP)(int *fid, char *filename,int *length, int *filesize){
-void open_file_abs_r_map(int *fid, char *filename,int *length, int *filesize){
+void open_file_abs_r_map(int *fid, char *filename,int *length, long long *filesize){
 
   // opens file for read access
   char * fncopy;
@@ -486,12 +579,13 @@ void close_file_abs_map(int * fid){
 void write_abs_map(int *fid, char *buffer, int *length , int *index){
 
   char *map;
-  int offset;
+  long long offset;
 
   map = map_abs[*fid];
 
   // offset in bytes
-  offset =  (*index -1 ) * (*length) ;
+  // make sure to use 64-bit arithmetic to avoid overflow for very large files
+  offset =  ((long long)*index -1 ) * (*length) ;
 
   // copies buffer to map
   memcpy( &map[offset], buffer ,*length );
@@ -503,12 +597,13 @@ void write_abs_map(int *fid, char *buffer, int *length , int *index){
 void read_abs_map(int *fid, char *buffer, int *length , int *index){
 
   char *map;
-  int offset;
+  long long offset;
 
   map = map_abs[*fid];
 
   // offset in bytes
-  offset =  (*index -1 ) * (*length) ;
+  // make sure to use 64-bit arithmetic to avoid overflow for very large files
+  offset =  ((long long)*index -1 ) * (*length) ;
 
   // copies map to buffer
   memcpy( buffer, &map[offset], *length );
@@ -534,7 +629,7 @@ void read_abs_map(int *fid, char *buffer, int *length , int *index){
  */
 
 void
-FC_FUNC_(open_file_abs_w,OPEN_FILE_ABS_W)(int *fid, char *filename,int *length, int *filesize) {
+FC_FUNC_(open_file_abs_w,OPEN_FILE_ABS_W)(int *fid, char *filename,int *length, long long *filesize) {
 
 #ifdef   USE_MAP_FUNCTION
   open_file_abs_w_map(fid,filename,length,filesize);
@@ -545,7 +640,7 @@ FC_FUNC_(open_file_abs_w,OPEN_FILE_ABS_W)(int *fid, char *filename,int *length, 
 }
 
 void
-FC_FUNC_(open_file_abs_r,OPEN_FILE_ABS_R)(int *fid, char *filename,int *length, int *filesize) {
+FC_FUNC_(open_file_abs_r,OPEN_FILE_ABS_R)(int *fid, char *filename,int *length, long long *filesize) {
 
 #ifdef   USE_MAP_FUNCTION
   open_file_abs_r_map(fid,filename,length,filesize);
