@@ -27,6 +27,9 @@ very long runs; that matters mostly for surface waves.
 We should fix that one day. The only thing to do would be to design a better
 time integration scheme for the attenuation equation, without that trick; the rest
 (Newmark etc) is fine and does not need to change.
+Daniel Peter did not fix that in 2011; he only fixed the old implementation in SPECFEM3D which used a
+fixed period absorption band to an adaptive one, which uses the resolved
+periods of the mesh (as is done in the global version). The time stepping of the memory variables did not change.
 
 - we could add support for the TetGen mesh creation package, and cut each
 tetrahedron into four hexahedra using the barycenter. This could help design
