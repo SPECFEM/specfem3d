@@ -30,6 +30,13 @@ time integration scheme for the attenuation equation, without that trick; the re
 Daniel Peter did not fix that in 2011; he only fixed the old implementation in SPECFEM3D which used a
 fixed period absorption band to an adaptive one, which uses the resolved
 periods of the mesh (as is done in the global version). The time stepping of the memory variables did not change.
+Thus this IMPORTANT KNOWN BUG remains: in compute_forces_viscoelastic.f90 the calculation of
+attenuation (viscoelasticity) is slightly incorrect because the gradients
+are computed twice but *at the same time step* instead of at different
+(staggered) time steps (t_{n-1} and t_n or something like that).
+That's easy to fix but I have no time for now. Let us fix that in the future.
+It will only make a very small difference in the final seismograms therefore
+the current code with the bug can be used without any major problem.
 
 - we could add support for the TetGen mesh creation package, and cut each
 tetrahedron into four hexahedra using the barycenter. This could help design
