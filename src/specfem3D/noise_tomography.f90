@@ -126,7 +126,7 @@
   character(len=256) :: filename
 
   ! read master receiver ID -- the ID in "STATIONS"
-  filename = trim(OUTPUT_FILES_PATH)//'/../NOISE_TOMOGRAPHY/irec_master_noise'
+  filename = trim(OUTPUT_FILES_PATH)//'/../OUTPUT_FILES/NOISE_TOMOGRAPHY/irec_master_noise'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ios)
   if( ios /= 0 ) &
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file contains the ID of the master receiver')
@@ -359,7 +359,7 @@
 
   noise_src(:) = 0._CUSTOM_REAL
   ! noise file (source time function)
-  filename = trim(OUTPUT_FILES_PATH)//'/../NOISE_TOMOGRAPHY/S_squared'
+  filename = trim(OUTPUT_FILES_PATH)//'/../OUTPUT_FILES/NOISE_TOMOGRAPHY/S_squared'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ios)
   if( ios /= 0 .and. myrank == 0 )  &
     call exit_MPI(myrank, 'file '//trim(filename)//' does NOT exist! This file should have been generated using Matlab scripts')
@@ -374,7 +374,7 @@
 
 
   ! master receiver component direction, \nu_master
-  filename = trim(OUTPUT_FILES_PATH)//'/../NOISE_TOMOGRAPHY/nu_master'
+  filename = trim(OUTPUT_FILES_PATH)//'/../OUTPUT_FILES/NOISE_TOMOGRAPHY/nu_master'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ios)
   if( ios /= 0 .and. myrank == 0 ) &
     call exit_MPI(myrank,&
