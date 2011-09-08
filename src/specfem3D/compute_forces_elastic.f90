@@ -48,9 +48,11 @@ subroutine compute_forces_elastic()
       phase_is_inner = .true.
     endif
 
+
 ! elastic term
     if(USE_DEVILLE_PRODUCTS) then
-      call compute_forces_elastic_Dev(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+      if (NGLLX == 5) then
+      call compute_forces_elastic_Dev_5points(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -74,6 +76,137 @@ subroutine compute_forces_elastic()
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
                         phase_ispec_inner_elastic )
+
+      else if (NGLLX == 6) then
+      call compute_forces_elastic_Dev_6points(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        alphaval,betaval,gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        dsdx_top,dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else if (NGLLX == 7) then
+      call compute_forces_elastic_Dev_7points(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        alphaval,betaval,gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        dsdx_top,dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else if (NGLLX == 8) then
+      call compute_forces_elastic_Dev_8points(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        alphaval,betaval,gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        dsdx_top,dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else if (NGLLX == 9) then
+      call compute_forces_elastic_Dev_9points(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        alphaval,betaval,gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        dsdx_top,dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else 
+      call compute_forces_elastic_Dev_10points(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        alphaval,betaval,gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                        epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        dsdx_top,dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+      endif
     else
       call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -101,11 +234,12 @@ subroutine compute_forces_elastic()
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
                         phase_ispec_inner_elastic  )
     endif
-
+ 
     ! adjoint simulations: backward/reconstructed wavefield
     if( SIMULATION_TYPE == 3 ) then
       if(USE_DEVILLE_PRODUCTS) then
-        call compute_forces_elastic_Dev(iphase, NSPEC_AB,NGLOB_AB, &
+      if (NGLLX == 5) then
+        call compute_forces_elastic_Dev_5points(iphase, NSPEC_AB,NGLOB_AB, &
                         b_displ,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
@@ -130,6 +264,141 @@ subroutine compute_forces_elastic()
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
                         phase_ispec_inner_elastic )
+      else if (NGLLX == 6) then
+        call compute_forces_elastic_Dev_6points(iphase, NSPEC_AB,NGLOB_AB, &
+                        b_displ,b_accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        b_alphaval,b_betaval,b_gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        b_dsdx_top,b_dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else if (NGLLX == 7) then
+        call compute_forces_elastic_Dev_7points(iphase, NSPEC_AB,NGLOB_AB, &
+                        b_displ,b_accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        b_alphaval,b_betaval,b_gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        b_dsdx_top,b_dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else if (NGLLX == 8) then
+        call compute_forces_elastic_Dev_8points(iphase, NSPEC_AB,NGLOB_AB, &
+                        b_displ,b_accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        b_alphaval,b_betaval,b_gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        b_dsdx_top,b_dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else if (NGLLX == 9) then
+        call compute_forces_elastic_Dev_9points(iphase, NSPEC_AB,NGLOB_AB, &
+                        b_displ,b_accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        b_alphaval,b_betaval,b_gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        b_dsdx_top,b_dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+
+      else 
+        call compute_forces_elastic_Dev_10points(iphase, NSPEC_AB,NGLOB_AB, &
+                        b_displ,b_accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION, &
+                        one_minus_sum_beta,factor_common, &
+                        b_alphaval,b_betaval,b_gammaval, &
+                        NSPEC_ATTENUATION_AB, &
+                        b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        is_moho_top,is_moho_bot, &
+                        b_dsdx_top,b_dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        phase_ispec_inner_elastic )
+      endif
       else
         call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,&
                         b_displ,b_accel, &
@@ -160,7 +429,6 @@ subroutine compute_forces_elastic()
 
       endif
     endif
-
 
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)

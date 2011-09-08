@@ -198,8 +198,8 @@
 
   ! check that optimized routines from Deville et al. (2002) can be used
   if( USE_DEVILLE_PRODUCTS) then
-    if(NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) &
-      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ = 5'
+    if(NGLLX < 5 .or. NGLLY < 5 .or. NGLLZ < 5 .or. NGLLX > 10 .or. NGLLY > 10 .or. NGLLZ > 10) &
+      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ is in [5-10]'
   endif
 
   ! absorbing surfaces
