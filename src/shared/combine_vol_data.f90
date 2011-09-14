@@ -52,7 +52,7 @@
   integer :: NSPEC_AB, NGLOB_AB
   integer :: numpoin
   integer :: i, ios, it, ier
-  integer :: iproc, proc1, proc2, num_node, node_list(300)
+  integer :: iproc, proc1, proc2, num_node, node_list(2000)
   integer :: np, ne, npp, nee, nelement, njunk
 
   character(len=256) :: sline, arg(6), filename, indir, outdir

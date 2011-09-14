@@ -936,6 +936,12 @@
     write(IMAIN,*)
     write(IMAIN,*) 'End of source detection - done'
     write(IMAIN,*)
+    ! output source information to a file so that we can load it and write to SU headers later
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
+    do isource=1,NSOURCES
+      write(IOUT_SU,*) x_found_source(isource),y_found_source(isource),z_found_source(isource)
+    enddo
+    close(IOUT_SU)
   endif
 
   end subroutine locate_source

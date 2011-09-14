@@ -75,6 +75,8 @@
 
 ! ouput format of seismograms, ASCII or binary
   logical, parameter :: SEISMOGRAMS_BINARY = .false.
+! output format of seismograms, Seismic Unix (binary with 240-byte-headers)
+  logical, parameter :: SU_FORMAT=.false.
 
 ! input, output and main MPI I/O files
   integer, parameter :: ISTANDARD_OUTPUT = 6
@@ -94,6 +96,10 @@
   integer, parameter :: IIN_INTERFACES = 43
 ! I/O unit for noise simulations
   integer, parameter :: IIN_NOISE = 44,IOUT_NOISE = 45
+! I/O unit for SU formatted seismograms
+  integer, parameter :: IOUT_SU = 46
+! I/O unit for SU formatted adjoint sources
+  integer, parameter :: IIN_SU1 = 47, IIN_SU2 = 48, IIN_SU3 = 49
 
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.

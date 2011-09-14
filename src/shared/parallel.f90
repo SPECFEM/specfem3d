@@ -976,6 +976,46 @@
 !----
 !
 
+  subroutine send_dp(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  integer dest,sendtag
+  integer sendcount
+  double precision,dimension(sendcount):: sendbuf
+  integer ier
+
+  call MPI_SEND(sendbuf,sendcount,MPI_DOUBLE_PRECISION,dest,sendtag,MPI_COMM_WORLD,ier)
+
+  end subroutine send_dp
+
+!
+!----
+!
+
+  subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  integer dest,recvtag
+  integer recvcount
+  double precision,dimension(recvcount):: recvbuf
+  integer req(MPI_STATUS_SIZE)
+  integer ier
+
+  call MPI_RECV(recvbuf,recvcount,MPI_DOUBLE_PRECISION,dest,recvtag,MPI_COMM_WORLD,req,ier)
+
+  end subroutine recv_dp
+
+!
+!----
+!
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
