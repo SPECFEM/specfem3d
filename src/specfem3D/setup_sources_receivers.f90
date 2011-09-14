@@ -571,7 +571,7 @@ subroutine setup_sources_precompute_arrays()
 
   ! ADJOINT simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
-
+   if (.not.SU_FORMAT) then
     ! gets channel names
     do icomp=1,NDIM
       call write_channel_name(icomp,comp(icomp))
@@ -631,6 +631,14 @@ subroutine setup_sources_precompute_arrays()
     allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if( ier /= 0 ) stop 'error allocating array adj_sourcearrays'
     adj_sourcearrays = 0._CUSTOM_REAL
+   else
+    ! skip counting, because only one file per component per proc in SU_FORMAT
+    nadj_rec_local=nrec_local
+    nadj_files_found=nrec_local
+    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array adj_sourcearrays'
+    adj_sourcearrays = 0._CUSTOM_REAL
+   endif !if (.not. SU_FORMAT)
 
   else
 

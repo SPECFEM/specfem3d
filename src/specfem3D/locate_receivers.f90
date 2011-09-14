@@ -73,7 +73,6 @@
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: horiz_dist
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
-  double precision, allocatable, dimension(:,:) :: x_found_all,y_found_all,z_found_all
 
   integer irec
   integer i,j,k,ispec,iglob,iface,inode,imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
@@ -113,7 +112,6 @@
 
 ! use dynamic allocation
   double precision, dimension(:), allocatable :: final_distance
-  double precision, dimension(:,:), allocatable :: final_distance_all
   double precision distmin,final_distance_max
 
 ! receiver information
@@ -126,17 +124,37 @@
   double precision, dimension(3,3,nrec) :: nu
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
-
-  integer, allocatable, dimension(:,:) :: ispec_selected_rec_all
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
-  double precision, allocatable, dimension(:,:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
-  double precision, allocatable, dimension(:,:,:,:) :: nu_all
+
+  double precision, allocatable, dimension(:) :: x_found_all,y_found_all,z_found_all
+  double precision, dimension(:), allocatable :: final_distance_all
+  integer, allocatable, dimension(:) :: ispec_selected_rec_all
+  double precision, allocatable, dimension(:) :: xi_receiver_all,eta_receiver_all,gamma_receiver_all
+  double precision, allocatable, dimension(:,:,:) :: nu_all
 
   integer :: ier
   character(len=256) OUTPUT_FILES
 
+  real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
+  real(kind=CUSTOM_REAL) :: xmin_ELE,xmax_ELE,ymin_ELE,ymax_ELE,zmin_ELE,zmax_ELE
+  integer :: imin_temp,imax_temp,jmin_temp,jmax_temp,kmin_temp,kmax_temp
+  integer,dimension(NGLLX*NGLLY*NGLLZ) :: iglob_temp
+
 ! **************
 
+  ! dimension of model in current proc
+  xmin=minval(xstore(:));          xmax=maxval(xstore(:))
+  ymin=minval(ystore(:));          ymax=maxval(ystore(:))
+  zmin=minval(zstore(:));          zmax=maxval(zstore(:))
+  if(FASTER_RECEIVERS_POINTS_ONLY) then
+    imin_temp = 1; imax_temp = NGLLX
+    jmin_temp = 1; jmax_temp = NGLLY
+    kmin_temp = 1; kmax_temp = NGLLZ
+  else
+    imin_temp = 2; imax_temp = NGLLX - 1
+    jmin_temp = 2; jmax_temp = NGLLY - 1
+    kmin_temp = 2; kmax_temp = NGLLZ - 1
+  endif
 
   ! get MPI starting time
   time_start = wtime()
@@ -182,15 +200,15 @@
           y_found(nrec), &
           z_found(nrec), &
           final_distance(nrec), &
-          ispec_selected_rec_all(nrec,0:NPROC-1), &
-          xi_receiver_all(nrec,0:NPROC-1), &
-          eta_receiver_all(nrec,0:NPROC-1), &
-          gamma_receiver_all(nrec,0:NPROC-1), &
-          x_found_all(nrec,0:NPROC-1), &
-          y_found_all(nrec,0:NPROC-1), &
-          z_found_all(nrec,0:NPROC-1), &
-          final_distance_all(nrec,0:NPROC-1), &
-          nu_all(3,3,nrec,0:NPROC-1),stat=ier)
+          ispec_selected_rec_all(nrec), &
+          xi_receiver_all(nrec), &
+          eta_receiver_all(nrec), &
+          gamma_receiver_all(nrec), &
+          x_found_all(nrec), &
+          y_found_all(nrec), &
+          z_found_all(nrec), &
+          final_distance_all(nrec), &
+          nu_all(3,3,nrec),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for locating receivers'
 
   ! loop on all the stations
@@ -325,78 +343,136 @@
     endif
     !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
-    ! determines closest GLL point
-    ispec_selected_rec(irec) = 0
-    do ispec=1,NSPEC_AB
+    if (.not. SU_FORMAT) then
+       ! determines closest GLL point
+       ispec_selected_rec(irec) = 0
+       do ispec=1,NSPEC_AB
 
-      ! define the interval in which we look for points
-      if(FASTER_RECEIVERS_POINTS_ONLY) then
-        imin = 1
-        imax = NGLLX
+         ! define the interval in which we look for points
+         if(FASTER_RECEIVERS_POINTS_ONLY) then
+           imin = 1
+           imax = NGLLX
 
-        jmin = 1
-        jmax = NGLLY
+           jmin = 1
+           jmax = NGLLY
 
-        kmin = 1
-        kmax = NGLLZ
+           kmin = 1
+           kmax = NGLLZ
 
-      else
-        ! loop only on points inside the element
-        ! exclude edges to ensure this point is not shared with other elements
-        imin = 2
-        imax = NGLLX - 1
+         else
+           ! loop only on points inside the element
+           ! exclude edges to ensure this point is not shared with other elements
+           imin = 2
+           imax = NGLLX - 1
 
-        jmin = 2
-        jmax = NGLLY - 1
+           jmin = 2
+           jmax = NGLLY - 1
 
-        kmin = 2
-        kmax = NGLLZ - 1
-      endif
+           kmin = 2
+           kmax = NGLLZ - 1
+         endif
 
-      do k = kmin,kmax
-        do j = jmin,jmax
-          do i = imin,imax
+         do k = kmin,kmax
+           do j = jmin,jmax
+             do i = imin,imax
 
-            iglob = ibool(i,j,k,ispec)
+               iglob = ibool(i,j,k,ispec)
 
-            if (.not. RECVS_CAN_BE_BURIED_EXT_MESH) then
-              if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
-                cycle
-              endif
-            endif
+               if (.not. RECVS_CAN_BE_BURIED_EXT_MESH) then
+                 if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
+                   cycle
+                 endif
+               endif
 
-            dist = dsqrt((x_target(irec)-dble(xstore(iglob)))**2 &
-                        +(y_target(irec)-dble(ystore(iglob)))**2 &
-                        +(z_target(irec)-dble(zstore(iglob)))**2)
+               dist = dsqrt((x_target(irec)-dble(xstore(iglob)))**2 &
+                           +(y_target(irec)-dble(ystore(iglob)))**2 &
+                           +(z_target(irec)-dble(zstore(iglob)))**2)
 
-            ! keep this point if it is closer to the receiver
-            if(dist < distmin) then
-              distmin = dist
-              ispec_selected_rec(irec) = ispec
-              ix_initial_guess(irec) = i
-              iy_initial_guess(irec) = j
-              iz_initial_guess(irec) = k
+               ! keep this point if it is closer to the receiver
+               if(dist < distmin) then
+                 distmin = dist
+                 ispec_selected_rec(irec) = ispec
+                 ix_initial_guess(irec) = i
+                 iy_initial_guess(irec) = j
+                 iz_initial_guess(irec) = k
 
-              xi_receiver(irec) = dble(ix_initial_guess(irec))
-              eta_receiver(irec) = dble(iy_initial_guess(irec))
-              gamma_receiver(irec) = dble(iz_initial_guess(irec))
-              x_found(irec) = xstore(iglob)
-              y_found(irec) = ystore(iglob)
-              z_found(irec) = zstore(iglob)
-            endif
+                 xi_receiver(irec) = dble(ix_initial_guess(irec))
+                 eta_receiver(irec) = dble(iy_initial_guess(irec))
+                 gamma_receiver(irec) = dble(iz_initial_guess(irec))
+                 x_found(irec) = xstore(iglob)
+                 y_found(irec) = ystore(iglob)
+                 z_found(irec) = zstore(iglob)
+               endif
 
-          enddo
-        enddo
-      enddo
+             enddo
+           enddo
+         enddo
 
-      ! compute final distance between asked and found (converted to km)
-      final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
-        (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
+         ! compute final distance between asked and found (converted to km)
+         final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
+           (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
 
-    ! end of loop on all the spectral elements in current slice
-    enddo
+       ! end of loop on all the spectral elements in current slice
+       enddo
+    else
+       ispec_selected_rec(irec) = 0
+       ix_initial_guess(irec) = 0
+       iy_initial_guess(irec) = 0
+       iz_initial_guess(irec) = 0
+       final_distance(irec) = HUGEVAL
+       if (  (x_target(irec)>=xmin .and. x_target(irec)<=xmax) .and. &
+             (y_target(irec)>=ymin .and. y_target(irec)<=ymax) .and. &
+             (z_target(irec)>=zmin .and. z_target(irec)<=zmax) ) then
+          do ispec=1,NSPEC_AB
+             iglob_temp=reshape(ibool(:,:,:,ispec),(/NGLLX*NGLLY*NGLLZ/))
+             xmin_ELE=minval(xstore(iglob_temp))
+             xmax_ELE=maxval(xstore(iglob_temp))
+             ymin_ELE=minval(ystore(iglob_temp))
+             ymax_ELE=maxval(ystore(iglob_temp))
+             zmin_ELE=minval(zstore(iglob_temp))
+             zmax_ELE=maxval(zstore(iglob_temp))
+             if (  (x_target(irec)>=xmin_ELE .and. x_target(irec)<=xmax_ELE) .and. &
+                   (y_target(irec)>=ymin_ELE .and. y_target(irec)<=ymax_ELE) .and. &
+                   (z_target(irec)>=zmin_ELE .and. z_target(irec)<=zmax_ELE) ) then
+                ! we find the element (ispec) which "may" contain the receiver (irec)
+                ! so we only need to compute distances (which is expensive because of "dsqrt") within those elements
+                ispec_selected_rec(irec) = ispec
+                do k = kmin_temp,kmax_temp
+                  do j = jmin_temp,jmax_temp
+                    do i = imin_temp,imax_temp
+                      iglob = ibool(i,j,k,ispec)
+                      ! for comparison purpose, we don't have to do "dsqrt", which is expensive
+                      dist =      ((x_target(irec)-dble(xstore(iglob)))**2 &
+                                  +(y_target(irec)-dble(ystore(iglob)))**2 &
+                                  +(z_target(irec)-dble(zstore(iglob)))**2)
+                      if(dist < distmin) then
+                        distmin = dist
+                        ix_initial_guess(irec) = i
+                        iy_initial_guess(irec) = j
+                        iz_initial_guess(irec) = k
+                        xi_receiver(irec) = dble(ix_initial_guess(irec))
+                        eta_receiver(irec) = dble(iy_initial_guess(irec))
+                        gamma_receiver(irec) = dble(iz_initial_guess(irec))
+                        x_found(irec) = xstore(iglob)
+                        y_found(irec) = ystore(iglob)
+                        z_found(irec) = zstore(iglob)
+                      endif
+                    enddo
+                  enddo
+                enddo
+                final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 + &
+                  (y_target(irec)-y_found(irec))**2 + (z_target(irec)-z_found(irec))**2)
+             endif ! if receiver "may" be within this element
+          enddo ! do ispec=1,NSPEC_AB
+       endif ! if receiver "may" be within this proc
+    endif !if (.not. SU_FORMAT)
 
     if (ispec_selected_rec(irec) == 0) then
+      ! receiver is NOT within this proc, assign trivial values
+      ispec_selected_rec(irec) = 1
+      ix_initial_guess(irec) = 1
+      iy_initial_guess(irec) = 1
+      iz_initial_guess(irec) = 1
       final_distance(irec) = HUGEVAL
     endif
 
@@ -684,45 +760,49 @@
 
   ! synchronize all the processes to make sure all the estimates are available
   call sync_all()
-
   ! for MPI version, gather information from all the nodes
-  ispec_selected_rec_all(:,:) = -1
-  call gather_all_i(ispec_selected_rec,nrec,ispec_selected_rec_all,nrec,NPROC)
-  call gather_all_dp(xi_receiver,nrec,xi_receiver_all,nrec,NPROC)
-  call gather_all_dp(eta_receiver,nrec,eta_receiver_all,nrec,NPROC)
-  call gather_all_dp(gamma_receiver,nrec,gamma_receiver_all,nrec,NPROC)
-  call gather_all_dp(final_distance,nrec,final_distance_all,nrec,NPROC)
-  call gather_all_dp(x_found,nrec,x_found_all,nrec,NPROC)
-  call gather_all_dp(y_found,nrec,y_found_all,nrec,NPROC)
-  call gather_all_dp(z_found,nrec,z_found_all,nrec,NPROC)
-  call gather_all_dp(nu,3*3*nrec,nu_all,3*3*nrec,NPROC)
+  if (myrank/=0) then ! gather information from other processors (one at a time)
+     call send_i(ispec_selected_rec, nrec,0,0)
+     call send_dp(xi_receiver,       nrec,0,1)
+     call send_dp(eta_receiver,      nrec,0,2)
+     call send_dp(gamma_receiver,    nrec,0,3)
+     call send_dp(final_distance,    nrec,0,4)
+     call send_dp(x_found,           nrec,0,5)
+     call send_dp(y_found,           nrec,0,6)
+     call send_dp(z_found,           nrec,0,7)
+     call send_dp(nu,            3*3*nrec,0,8)
+  else
+     islice_selected_rec(:) = 0
+     do iprocloop=1,NPROC-1
+        call recv_i(ispec_selected_rec_all, nrec,iprocloop,0)
+        call recv_dp(xi_receiver_all,       nrec,iprocloop,1)
+        call recv_dp(eta_receiver_all,      nrec,iprocloop,2)
+        call recv_dp(gamma_receiver_all,    nrec,iprocloop,3)
+        call recv_dp(final_distance_all,    nrec,iprocloop,4)
+        call recv_dp(x_found_all,           nrec,iprocloop,5)
+        call recv_dp(y_found_all,           nrec,iprocloop,6)
+        call recv_dp(z_found_all,           nrec,iprocloop,7)
+        call recv_dp(nu_all,            3*3*nrec,iprocloop,8)
+        do irec=1,nrec
+           if (final_distance_all(irec) < final_distance(irec)) then
+              final_distance(irec) = final_distance_all(irec)
+              islice_selected_rec(irec) = iprocloop
+              ispec_selected_rec(irec) = ispec_selected_rec_all(irec)
+              xi_receiver(irec) = xi_receiver_all(irec)
+              eta_receiver(irec) = eta_receiver_all(irec)
+              gamma_receiver(irec) = gamma_receiver_all(irec)
+              x_found(irec) = x_found_all(irec)
+              y_found(irec) = y_found_all(irec)
+              z_found(irec) = z_found_all(irec)
+              nu(:,:,irec) = nu_all(:,:,irec)
+           endif
+        enddo
+     enddo
+  endif
+  call sync_all()
 
   ! this is executed by main process only
   if(myrank == 0) then
-
-    ! check that the gather operation went well
-    if(any(ispec_selected_rec_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for receivers')
-
-    ! MPI loop on all the results to determine the best slice
-    islice_selected_rec(:) = -1
-    do irec = 1,nrec
-    distmin = HUGEVAL
-    do iprocloop = 0,NPROC-1
-      if(final_distance_all(irec,iprocloop) < distmin) then
-        distmin = final_distance_all(irec,iprocloop)
-        islice_selected_rec(irec) = iprocloop
-        ispec_selected_rec(irec) = ispec_selected_rec_all(irec,iprocloop)
-        xi_receiver(irec) = xi_receiver_all(irec,iprocloop)
-        eta_receiver(irec) = eta_receiver_all(irec,iprocloop)
-        gamma_receiver(irec) = gamma_receiver_all(irec,iprocloop)
-        x_found(irec) = x_found_all(irec,iprocloop)
-        y_found(irec) = y_found_all(irec,iprocloop)
-        z_found(irec) = z_found_all(irec,iprocloop)
-        nu(:,:,irec) = nu_all(:,:,irec,iprocloop)
-      endif
-    enddo
-    final_distance(irec) = distmin
-    enddo
 
     do irec=1,nrec
 
@@ -809,12 +889,19 @@
     ! get the base pathname for output files
     call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
-    ! write the list of stations and associated epicentral distance
-    open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
+    !! write the list of stations and associated epicentral distance
+    !open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
+    !do irec=1,nrec
+    !  write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
+    !enddo
+    !close(27)
+
+    ! write the locations of stations, so that we can load them and write them to SU headers later
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
     do irec=1,nrec
-      write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
+      write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
     enddo
-    close(27)
+    close(IOUT_SU)
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - time_start

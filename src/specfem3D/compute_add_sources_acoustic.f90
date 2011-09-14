@@ -39,7 +39,7 @@
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
-                        station_name,network_name,adj_source_file
+                        station_name,network_name,adj_source_file,nrec_local,number_receiver_global
   implicit none
 
   include "constants.h"
@@ -88,6 +88,18 @@
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,ispec,i,j,k,ier
   integer :: irec_local,irec
+
+! adjoint sources in SU format
+  integer :: it_start,it_end
+  real(kind=CUSTOM_REAL) :: adj_temp(NSTEP)
+  real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
+  character(len=256) :: procname
+  integer,parameter :: nheader=240      ! 240 bytes
+  integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
+  integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
+  real(kind=4)    :: r4head(nheader/4)  ! 4-byte-real
+  equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
+  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
 ! plotting source time function
   if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
@@ -235,24 +247,59 @@
       allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
       if( ier /= 0 ) stop 'error allocating array adj_sourcearray'
 
-      irec_local = 0
-      do irec = 1, nrec
-        ! compute source arrays
-        if (myrank == islice_selected_rec(irec)) then
-          irec_local = irec_local + 1
+      if (.not. SU_FORMAT) then
+         !!! read ascii adjoint sources
+         irec_local = 0
+         do irec = 1, nrec
+           ! compute source arrays
+           if (myrank == islice_selected_rec(irec)) then
+             irec_local = irec_local + 1
 
-          ! reads in **sta**.**net**.**LH**.adj files
-          adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
-          call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                    xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                    adj_sourcearray, xigll,yigll,zigll, &
-                    it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
-          do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-            adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-          enddo
+             ! reads in **sta**.**net**.**LH**.adj files
+             adj_source_file = trim(station_name(irec))//'.'//trim(network_name(irec))
+             call compute_arrays_adjoint_source(myrank,adj_source_file, &
+                       xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
+                       adj_sourcearray, xigll,yigll,zigll, &
+                       it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+             do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+               adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
+             enddo
 
-        endif
-      enddo
+           endif
+         enddo
+      else
+         !!! read SU adjoint sources
+         ! range of the block we need to read
+         it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
+         it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
+         write(procname,"(i4)") myrank
+         open(unit=IIN_SU1, file=trim(adjustl(OUTPUT_FILES_PATH))//'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj', &
+                            access='direct',recl=240+4*(NSTEP))
+         do irec_local = 1,nrec_local
+           irec = number_receiver_global(irec_local)
+           read(IIN_SU1,rec=irec_local) r4head, adj_temp
+           adj_src(:,1)=adj_temp(it_start:it_end)
+           adj_src(:,2)=0.0  !TRIVIAL
+           adj_src(:,3)=0.0  !TRIVIAL
+           ! lagrange interpolators for receiver location
+           call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
+           call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
+           call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
+           ! interpolates adjoint source onto GLL points within this element
+           do k = 1, NGLLZ
+             do j = 1, NGLLY
+               do i = 1, NGLLX
+                 adj_sourcearray(:,:,i,j,k) = hxir(i) * hetar(j) * hgammar(k) * adj_src(:,:)
+               enddo
+             enddo
+           enddo
+           do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
+             adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
+           enddo
+         enddo
+         close(IIN_SU1)
+      endif !if (.not. SU_FORMAT)
+      
       deallocate(adj_sourcearray)
 
     endif ! if(ibool_read_adj_arrays)
@@ -276,13 +323,10 @@
                 do i = 1,NGLLX
                   iglob = ibool(i,j,k,ispec)
 
-                  ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                  ! note: it takes the first component of the adj_sourcearrays
-                  !          the idea is to have e.g. a pressure source, where all 3 components would be the same
                   potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                        - adj_sourcearrays(irec_local, &
+                        + adj_sourcearrays(irec_local, &
                           NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                          1,i,j,k) / kappastore(i,j,k,ispec)
+                          1,i,j,k)
                 enddo
               enddo
             enddo
