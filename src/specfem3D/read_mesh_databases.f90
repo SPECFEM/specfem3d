@@ -86,6 +86,8 @@
     if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
+    allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
 
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
@@ -107,6 +109,8 @@
     if( ier /= 0 ) stop 'error allocating array veloc'
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array accel'
+    allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'
 
     allocate(rmass(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass'

@@ -445,13 +445,25 @@ subroutine compute_forces_elastic()
 
 ! acoustic coupling
     if( ACOUSTIC_SIMULATION ) then
-      call compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
-                        ibool,accel,potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+      if( SIMULATION_TYPE == 1 ) then
+        ! forward definition: pressure=-potential_dot_dot
+        call compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
+                          ibool,accel,potential_dot_dot_acoustic, &
+                          num_coupling_ac_el_faces, &
+                          coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                          coupling_ac_el_normal, &
+                          coupling_ac_el_jacobian2Dw, &
+                          ispec_is_inner,phase_is_inner)
+      else
+        ! adoint definition: pressure^\dagger=potential^\dagger
+        call compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
+                          ibool,accel,-potential_acoustic_adj_coupling, &
+                          num_coupling_ac_el_faces, &
+                          coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                          coupling_ac_el_normal, &
+                          coupling_ac_el_jacobian2Dw, &
+                          ispec_is_inner,phase_is_inner)
+      endif
 
       ! adjoint simulations
       if( SIMULATION_TYPE == 3 ) &
