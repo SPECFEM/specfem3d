@@ -273,6 +273,7 @@ module specfem_par_elastic
 
 ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_adj_coupling
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
@@ -351,6 +352,7 @@ module specfem_par_acoustic
 ! potential
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic, &
                         potential_dot_acoustic,potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
 
 ! density
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore

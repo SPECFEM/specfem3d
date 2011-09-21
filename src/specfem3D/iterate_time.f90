@@ -324,6 +324,7 @@
   if( ELASTIC_SIMULATION ) then
     displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+    accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
   endif
 
