@@ -438,8 +438,6 @@
 
 
   if(myrank == 0) then
-! chris: I am not sure if we should suppress the following. topography should appear in the external mesh
-! leave it for now
 
     write(IMAIN,*)
     if(SUPPRESS_UTM_PROJECTION) then
@@ -576,13 +574,20 @@
   call sync_all()
 
 ! read materials' physical properties
+! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
   read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
-  allocate(materials_ext_mesh(6,nmat_ext_mesh),stat=ier)
+  allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array materials_ext_mesh'
   do imat = 1, nmat_ext_mesh
-     ! format:        #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag  #(6) material_domain_id
+     ! ielastic/acoustic format: #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag  #(6) material_domain_id
+     ! and remaining entries are filled with zeros
+     ! poroelastic format:  rhos,rhof,phi,tort,eta,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
      read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
-          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat)
+          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat), &
+          materials_ext_mesh(7,imat),  materials_ext_mesh(8,imat), materials_ext_mesh(9,imat), &
+          materials_ext_mesh(10,imat),  materials_ext_mesh(11,imat), materials_ext_mesh(12,imat), &
+          materials_ext_mesh(13,imat),  materials_ext_mesh(14,imat), materials_ext_mesh(15,imat), &
+          materials_ext_mesh(16,imat)
 
      ! output
      !print*,'materials:',materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &

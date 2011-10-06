@@ -67,6 +67,7 @@ subroutine setup_sources()
   use specfem_par
   use specfem_par_acoustic
   use specfem_par_elastic
+  use specfem_par_poroelastic
   use specfem_par_movie
   implicit none
 
@@ -107,7 +108,7 @@ subroutine setup_sources()
           UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
           PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
-          ispec_is_acoustic,ispec_is_elastic, &
+          ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   if(abs(minval(tshift_cmt)) > TINYVAL) call exit_MPI(myrank,'one tshift_cmt must be zero, others must be positive')
@@ -507,6 +508,7 @@ subroutine setup_sources_precompute_arrays()
 
   use specfem_par
   use specfem_par_elastic
+  use specfem_par_poroelastic
   use specfem_par_acoustic
   implicit none
 
@@ -536,8 +538,8 @@ subroutine setup_sources_precompute_arrays()
 
         ispec = ispec_selected_source(isource)
 
-        ! elastic moment tensor source
-        if( ispec_is_elastic(ispec) ) then
+        ! elastic or poroelastic moment tensor source
+        if( ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
           call compute_arrays_source(ispec, &
                         xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
                         Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &

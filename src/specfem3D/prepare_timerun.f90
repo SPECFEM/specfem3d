@@ -132,6 +132,18 @@
     if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
   endif
 
+  ! initialize poroelastic arrays to zero/verysmallvall
+  if( POROELASTIC_SIMULATION ) then
+    displs_poroelastic(:,:) = 0._CUSTOM_REAL
+    velocs_poroelastic(:,:) = 0._CUSTOM_REAL
+    accels_poroelastic(:,:) = 0._CUSTOM_REAL
+    displw_poroelastic(:,:) = 0._CUSTOM_REAL
+    velocw_poroelastic(:,:) = 0._CUSTOM_REAL
+    accelw_poroelastic(:,:) = 0._CUSTOM_REAL
+    ! put negligible initial value to avoid very slow underflow trapping
+    if(FIX_UNDERFLOW_PROBLEM) displs_poroelastic(:,:) = VERYSMALLVAL
+    if(FIX_UNDERFLOW_PROBLEM) displw_poroelastic(:,:) = VERYSMALLVAL
+  endif
 
   ! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
@@ -251,9 +263,6 @@
   endif ! ELASTIC_SIMULATION
 
   if(POROELASTIC_SIMULATION) then
-
-    stop 'poroelastic simulation not implemented yet'
-    ! but would be something like this...
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &

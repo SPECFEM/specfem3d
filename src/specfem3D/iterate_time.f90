@@ -81,7 +81,7 @@
     if( ELASTIC_SIMULATION ) call compute_forces_elastic()
 
     ! poroelastic solver
-    if( POROELASTIC_SIMULATION ) stop 'poroelastic simulation not implemented yet'
+    if( POROELASTIC_SIMULATION ) call compute_forces_poroelastic()
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newark time scheme
@@ -136,6 +136,7 @@
 
   use specfem_par
   use specfem_par_elastic
+  use specfem_par_poroelastic
   use specfem_par_acoustic
   implicit none
 
@@ -144,17 +145,27 @@
              ihours_remain,iminutes_remain,iseconds_remain,int_t_remain, &
              ihours_total,iminutes_total,iseconds_total,int_t_total
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!chris: Rewrite to get norm for each material when coupled simulations 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 ! compute maximum of norm of displacement in each slice
-  if( ELASTIC_SIMULATION ) then
+  if( ELASTIC_SIMULATION ) & 
     Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
-  else
-    if( ACOUSTIC_SIMULATION ) then
-      Usolidnorm = maxval(abs(potential_dot_dot_acoustic(:)))
-    endif
+  if( ACOUSTIC_SIMULATION ) &
+      Usolidnormp = maxval(abs(potential_dot_dot_acoustic(:)))
+  if( POROELASTIC_SIMULATION ) then
+    Usolidnorms = maxval(sqrt(displs_poroelastic(1,:)**2 + displs_poroelastic(2,:)**2 + &
+                             displs_poroelastic(3,:)**2))
+    Usolidnormw = maxval(sqrt(displw_poroelastic(1,:)**2 + displw_poroelastic(2,:)**2 + &
+                             displw_poroelastic(3,:)**2))
   endif
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
   call max_all_cr(Usolidnorm,Usolidnorm_all)
+  call max_all_cr(Usolidnormp,Usolidnormp_all)
+  call max_all_cr(Usolidnorms,Usolidnorms_all)
+  call max_all_cr(Usolidnormw,Usolidnormw_all)
 
 ! adjoint simulations
   if( SIMULATION_TYPE == 3 ) then
@@ -183,12 +194,13 @@
     write(IMAIN,*) 'Elapsed time in seconds = ',tCPU
     write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
-    if( ELASTIC_SIMULATION ) then
+    if( ELASTIC_SIMULATION ) &
       write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
-    else
-      if( ACOUSTIC_SIMULATION ) then
-        write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnorm_all
-      endif
+    if( ACOUSTIC_SIMULATION ) &
+        write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
+    if( POROELASTIC_SIMULATION ) then
+        write(IMAIN,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
+        write(IMAIN,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
     endif
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) write(IMAIN,*) &
@@ -233,7 +245,14 @@
     write(IOUT,*) 'Elapsed time in seconds = ',tCPU
     write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
-    write(IOUT,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
+    if( ELASTIC_SIMULATION ) &
+      write(IOUT,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
+    if( ACOUSTIC_SIMULATION ) &
+        write(IOUT,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
+    if( POROELASTIC_SIMULATION ) then
+        write(IOUT,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
+        write(IOUT,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
+    endif
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) write(IOUT,*) &
            'Max norm U (backward) in all slices = ',b_Usolidnorm_all
@@ -243,7 +262,10 @@
 ! check stability of the code, exit if unstable
 ! negative values can occur with some compilers when the unstable value is greater
 ! than the greatest possible floating-point number of the machine
-    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0) &
+    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0 &
+     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0 &
+     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0 &
+     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0) &
         call exit_MPI(myrank,'forward simulation became unstable and blew up')
     ! adjoint simulations
     if(SIMULATION_TYPE == 3 .and. (b_Usolidnorm_all > STABILITY_THRESHOLD &
@@ -326,6 +348,21 @@
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
     accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
+  endif
+
+! updates poroelastic displacements and velocities
+  if( POROELASTIC_SIMULATION ) then
+    ! solid phase
+    displs_poroelastic(:,:) = displs_poroelastic(:,:) + deltat*velocs_poroelastic(:,:) + &
+                              deltatsqover2*accels_poroelastic(:,:)
+    velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2*accels_poroelastic(:,:)
+    accels_poroelastic(:,:) = 0._CUSTOM_REAL
+
+    ! fluid phase
+    displw_poroelastic(:,:) = displw_poroelastic(:,:) + deltat*velocw_poroelastic(:,:) + &
+                              deltatsqover2*accelw_poroelastic(:,:)
+    velocw_poroelastic(:,:) = velocw_poroelastic(:,:) + deltatover2*accelw_poroelastic(:,:)
+    accelw_poroelastic(:,:) = 0._CUSTOM_REAL
   endif
 
 ! adjoint simulations

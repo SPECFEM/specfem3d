@@ -37,7 +37,7 @@
                  UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                  PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                 ispec_is_acoustic,ispec_is_elastic, &
+                 ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   implicit none
@@ -58,7 +58,7 @@
   ! arrays containing coordinates of the points
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic,ispec_is_elastic
+  logical, dimension(NSPEC_AB) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
   integer yr,jda,ho,mi
 
@@ -405,6 +405,8 @@
       idomain(isource) = IDOMAIN_ACOUSTIC
     else if( ispec_is_elastic( ispec_selected_source(isource) ) ) then
       idomain(isource) = IDOMAIN_ELASTIC
+    else if( ispec_is_poroelastic( ispec_selected_source(isource) ) ) then
+      idomain(isource) = IDOMAIN_POROELASTIC
     else
       idomain(isource) = 0
     endif
@@ -776,6 +778,8 @@
           write(IMAIN,*) '               in acoustic domain'
         else if( idomain(isource) == IDOMAIN_ELASTIC ) then
           write(IMAIN,*) '               in elastic domain'
+        else if( idomain(isource) == IDOMAIN_POROELASTIC ) then
+          write(IMAIN,*) '               in poroelastic domain'
         else
           write(IMAIN,*) '               in unknown domain'
         endif
@@ -887,8 +891,8 @@
       endif
 
       ! checks source domain
-      if( idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC ) then
-        ! only acoustic/elastic domain implement yet
+      if( idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC .and. &
+         idomain(isource) /= IDOMAIN_POROELASTIC ) then
         call exit_MPI(myrank,'source located in unknown domain')
       endif
 

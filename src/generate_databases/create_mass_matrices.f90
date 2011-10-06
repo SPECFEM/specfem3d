@@ -42,6 +42,7 @@
   double precision :: weight
   real(kind=CUSTOM_REAL) :: jacobianl
   integer :: ispec,i,j,k,iglob,ier
+  real(kind=CUSTOM_REAL) :: rho_s, rho_f, rho_bar, phi, tort
 
 ! allocates memory
   allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate rmass'
@@ -90,31 +91,30 @@
 ! poroelastic mass matrices
           if( ispec_is_poroelastic(ispec) ) then
 
-            stop 'poroelastic mass matrices not implemented yet'
+            rho_s = rhoarraystore(1,i,j,k,ispec)
+            rho_f = rhoarraystore(2,i,j,k,ispec)
+            phi = phistore(i,j,k,ispec)
+            tort = tortstore(i,j,k,ispec)
+            rho_bar = (1._CUSTOM_REAL-phi)*rho_s + phi*rho_f
 
-            !rho_solid = density(1,kmato(ispec))
-            !rho_fluid = density(2,kmato(ispec))
-            !phi = porosity(kmato(ispec))
-            !tort = tortuosity(kmato(ispec))
-            !rho_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f
-            !
-            !if(CUSTOM_REAL == SIZE_REAL) then
-            !  ! for the solid mass matrix
-            !  rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
-            !      sngl( dble(jacobianl) * weight * dble(rho_bar - phi*rho_fluid/tort) )
-            !
-            !  ! for the fluid mass matrix
-            !  rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
-            !      sngl( dble(jacobianl) * weight * dble(rho_bar*rho_fluid*tort - &
-            !                                  phi*rho_fluid*rho_fluid)/dble(rho_bar*phi) )
-            !else
-            !  rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
-            !      jacobianl * weight * (rho_bar - phi*rho_fluid/tort)
-            !
-            !  rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
-            !      jacobianl * weight * (rho_bar*rho_fluid*tort - &
-            !                                  phi*rho_fluid*rho_fluid) / (rho_bar*phi)
-            !endif
+            if(CUSTOM_REAL == SIZE_REAL) then
+              ! for the solid mass matrix
+              rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
+                  sngl( dble(jacobianl) * weight * dble(rho_bar - phi*rho_f/tort) )
+
+              ! for the fluid mass matrix
+              rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
+                  sngl( dble(jacobianl) * weight * dble(rho_bar*rho_f*tort - &
+                                              phi*rho_f*rho_f)/dble(rho_bar*phi) )
+            else
+              rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
+                  jacobianl * weight * (rho_bar - phi*rho_f/tort)
+
+              rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
+                  jacobianl * weight * (rho_bar*rho_f*tort - &
+                                              phi*rho_f*rho_f) / (rho_bar*phi)
+            endif
+
           endif
 
         enddo
