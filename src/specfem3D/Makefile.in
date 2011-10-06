@@ -115,10 +115,16 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_forces_elastic.o \
 	$O/compute_forces_elastic_Dev.o \
 	$O/compute_forces_elastic_noDev.o \
+	$O/compute_forces_poroelastic.o \
+	$O/compute_forces_solid.o \
+	$O/compute_forces_fluid.o \
 	$O/compute_add_sources_acoustic.o \
 	$O/compute_add_sources_elastic.o \
+	$O/compute_add_sources_poroelastic.o \
 	$O/compute_coupling_acoustic_el.o \
 	$O/compute_coupling_elastic_ac.o \
+	$O/compute_coupling_acoustic_po.o \
+	$O/compute_coupling_poroelastic_ac.o \
 	$O/compute_stacey_acoustic.o \
 	$O/compute_stacey_elastic.o \
 	$O/compute_gradient.o \
@@ -248,6 +254,15 @@ $O/compute_forces_elastic_Dev.o: $(SHARED)constants.h compute_forces_elastic_Dev
 $O/compute_forces_elastic.o: $(SHARED)constants.h compute_forces_elastic.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_elastic.o compute_forces_elastic.f90
 
+$O/compute_forces_poroelastic.o: $(SHARED)constants.h compute_forces_poroelastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_poroelastic.o compute_forces_poroelastic.f90
+
+$O/compute_forces_solid.o: $(SHARED)constants.h compute_forces_solid.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_solid.o compute_forces_solid.f90
+
+$O/compute_forces_fluid.o: $(SHARED)constants.h compute_forces_fluid.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_fluid.o compute_forces_fluid.f90
+
 $O/compute_forces_acoustic.o: $(SHARED)constants.h compute_forces_acoustic.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_forces_acoustic.o compute_forces_acoustic.f90
 
@@ -263,11 +278,23 @@ $O/compute_add_sources_acoustic.o: $(SHARED)constants.h compute_add_sources_acou
 $O/compute_add_sources_elastic.o: $(SHARED)constants.h compute_add_sources_elastic.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_add_sources_elastic.o compute_add_sources_elastic.f90
 
+$O/compute_add_sources_poroelastic.o: $(SHARED)constants.h compute_add_sources_poroelastic.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_add_sources_poroelastic.o compute_add_sources_poroelastic.f90
+
+$O/get_poroelastic_velocities.o: $(SHARED)constants.h get_poroelastic_velocities.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/get_poroelastic_velocities.o get_poroelastic_velocities.f90
+
 $O/compute_coupling_acoustic_el.o: $(SHARED)constants.h compute_coupling_acoustic_el.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_acoustic_el.o compute_coupling_acoustic_el.f90
 
 $O/compute_coupling_elastic_ac.o: $(SHARED)constants.h compute_coupling_elastic_ac.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_elastic_ac.o compute_coupling_elastic_ac.f90
+
+$O/compute_coupling_acoustic_po.o: $(SHARED)constants.h compute_coupling_acoustic_po.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_acoustic_po.o compute_coupling_acoustic_po.f90
+
+$O/compute_coupling_poroelastic_ac.o: $(SHARED)constants.h compute_coupling_poroelastic_ac.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/compute_coupling_poroelastic_ac.o compute_coupling_poroelastic_ac.f90
 
 $O/compute_stacey_acoustic.o: $(SHARED)constants.h compute_stacey_acoustic.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/compute_stacey_acoustic.o compute_stacey_acoustic.f90
