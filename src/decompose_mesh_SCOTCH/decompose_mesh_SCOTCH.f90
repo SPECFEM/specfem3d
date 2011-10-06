@@ -106,6 +106,8 @@ module decompose_mesh_SCOTCH
 
   integer :: aniso_flag,idomain_id
   double precision :: vp,vs,rho,qmu
+! poroelastic parameters read in a new file
+  double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
   contains
 
@@ -217,6 +219,9 @@ module decompose_mesh_SCOTCH
   !     vs                             : S-velocity
   !     Q_mu                      : 0=no attenuation
   !     anisotropy_flag        : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
+  ! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id, 
+  ! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT 
+  ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
@@ -247,7 +252,7 @@ module decompose_mesh_SCOTCH
       print*,'  bigger than defined materials in nummaterial_velocity_file:',count_def_mat
       stop 'error materials'
     endif
-    allocate(mat_prop(6,count_def_mat),stat=ier)
+    allocate(mat_prop(16,count_def_mat),stat=ier)
     if( ier /= 0 ) stop 'error allocating array mat_prop'
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
     if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
@@ -258,6 +263,24 @@ module decompose_mesh_SCOTCH
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted', iostat=ier)
     if( ier /= 0 ) stop 'error opening nummaterial_velocity_file'
+
+  ! modif to read poro parameters, added if loop on idomain_id
+  ! note: format of nummaterial_poroelastic_file located in MESH must be
+  !
+  ! #(1)rhos,#(2)rhof,#(3)phi,#(4)tort,#(5)kxx,#(6)kxy,#(7)kxz,#(8)kyy,#(9)kyz,#(10)kzz,
+  ! #(11)kappas,#(12)kappaf,#(13)kappafr,#(14)eta,#(15)mufr
+  !
+  ! where
+  !     rhos, rhof : solid & fluid density
+  !     phi : porosity
+  !     tort : tortuosity
+  !     k : permeability tensor
+  !     kappas, kappaf, kappafr : solid, fluid and frame bulk moduli
+  !     eta : fluid viscosity
+  !     mufr : frame shear modulus
+    open(unit=97, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_poroelastic_file', &
+          status='old', form='formatted', iostat=ier)
+    if( ier /= 0 ) stop 'error opening nummaterial_poroelastic_file'
 
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
     !          defined materials (material_id > 0) and undefined materials (material_id < 0 )
@@ -282,6 +305,8 @@ module decompose_mesh_SCOTCH
        ! checks material_id bounds
        if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
 
+       if(idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
+
        !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
        !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
        mat_prop(1,num_mat) = rho
@@ -290,6 +315,28 @@ module decompose_mesh_SCOTCH
        mat_prop(4,num_mat) = qmu
        mat_prop(5,num_mat) = aniso_flag
        mat_prop(6,num_mat) = idomain_id
+
+       else                             ! material is poroelastic 
+
+       read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
+       mat_prop(1,num_mat) = rhos
+       mat_prop(2,num_mat) = rhof
+       mat_prop(3,num_mat) = phi
+       mat_prop(4,num_mat) = tort
+       mat_prop(5,num_mat) = eta
+       mat_prop(6,num_mat) = idomain_id
+       mat_prop(7,num_mat) = kxx
+       mat_prop(8,num_mat) = kxy
+       mat_prop(9,num_mat) = kxz
+       mat_prop(10,num_mat) = kyy
+       mat_prop(11,num_mat) = kyz
+       mat_prop(12,num_mat) = kzz
+       mat_prop(13,num_mat) = kappas
+       mat_prop(14,num_mat) = kappaf
+       mat_prop(15,num_mat) = kappafr
+       mat_prop(16,num_mat) = mufr
+
+       endif !if(idomain_id == 1 .or. idomain_id == 2)
 
     end do
 
@@ -370,6 +417,7 @@ module decompose_mesh_SCOTCH
          endif
        endif
     end do
+    close(97)
     close(98)
 
 
@@ -638,7 +686,7 @@ module decompose_mesh_SCOTCH
     num_material(:) = mat(1,:)
 
     ! in case of acoustic/elastic simulation, weights elements accordingly
-    call acoustic_elastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
+    call acoustic_elastic_poroelastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                               num_material,mat_prop,undef_mat_prop)
 
     deallocate(num_material)

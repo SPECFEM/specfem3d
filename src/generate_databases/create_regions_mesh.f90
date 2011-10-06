@@ -49,6 +49,11 @@ module create_regions_mesh_ext_par
 ! for model density, kappa, mu
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
 
+! for poroelastic model
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:), allocatable :: etastore,phistore,tortstore
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable :: rhoarraystore,kappaarraystore,permstore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
+
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
@@ -85,6 +90,20 @@ module create_regions_mesh_ext_par
   integer, dimension(:,:,:), allocatable :: coupling_ac_el_ijk
   integer, dimension(:), allocatable :: coupling_ac_el_ispec
   integer :: num_coupling_ac_el_faces
+
+! acoustic-poroelastic coupling surface
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_po_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_po_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: coupling_ac_po_ijk
+  integer, dimension(:), allocatable :: coupling_ac_po_ispec
+  integer :: num_coupling_ac_po_faces
+
+! elastic-poroelastic coupling surface
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk
+  integer, dimension(:), allocatable :: coupling_el_po_ispec
+  integer :: num_coupling_el_po_faces
 
 ! for stacey
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
@@ -166,7 +185,7 @@ subroutine create_regions_mesh_ext(ibool, &
 
 ! material properties
   integer :: nmat_ext_mesh,nundefMat_ext_mesh
-  double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh
+  double precision, dimension(16,nmat_ext_mesh) :: materials_ext_mesh
   character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
 
 !  double precision, external :: materials_ext_mesh
@@ -307,10 +326,10 @@ subroutine create_regions_mesh_ext(ibool, &
                             nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                             nspec2D_bottom,nspec2D_top)
 
-! sets up acoustic-elastic coupling surfaces
+! sets up acoustic-elastic-poroelastic coupling surfaces
   call sync_all()
   if( myrank == 0) then
-    write(IMAIN,*) '  ...detecting acoustic-elastic surfaces '
+    write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
   endif
   call get_coupling_surfaces(myrank, &
                         nspec,nglob,ibool,NPROC, &
@@ -346,6 +365,8 @@ subroutine create_regions_mesh_ext(ibool, &
                         gammaxstore,gammaystore,gammazstore, &
                         jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
                         rhostore,kappastore,mustore, &
+                        rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore, &
+                        rho_vpI,rho_vpII,rho_vsI, &
                         rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
                         OCEANS,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
@@ -354,6 +375,10 @@ subroutine create_regions_mesh_ext(ibool, &
                         free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
                         coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
                         coupling_ac_el_ijk,coupling_ac_el_ispec,num_coupling_ac_el_faces, &
+                        coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
+                        coupling_ac_po_ijk,coupling_ac_po_ispec,num_coupling_ac_po_faces, &
+                        coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
+                        coupling_el_po_ijk,coupling_el_po_ispec,num_coupling_el_po_faces, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         prname,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
@@ -370,10 +395,12 @@ subroutine create_regions_mesh_ext(ibool, &
 
 ! checks the mesh, stability and resolved period
   call sync_all()
+!chris: check for poro: At the moment cpI & cpII are for eta=0
   call check_mesh_resolution(myrank,nspec,nglob,ibool,&
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             kappastore,mustore,rho_vp,rho_vs, &
-                            -1.0d0, model_speed_max,min_resolved_period )
+                            -1.0d0, model_speed_max,min_resolved_period, &
+                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
 
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
@@ -414,6 +441,8 @@ subroutine create_regions_mesh_ext(ibool, &
               gammaxstore,gammaystore,gammazstore)
   deallocate(jacobianstore,qmu_attenuation_store)
   deallocate(kappastore,mustore,rho_vp,rho_vs)
+  deallocate(rho_vpI,rho_vpII,rho_vsI)
+  deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
 
 end subroutine create_regions_mesh_ext
 
@@ -505,6 +534,18 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
           mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
           !vpstore(NGLLX,NGLLY,NGLLZ,nspec), &
           !vsstore(NGLLX,NGLLY,NGLLZ,nspec),
+  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+
+! array with poroelastic model
+  allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,nspec), &
+          kappaarraystore(3,NGLLX,NGLLY,NGLLZ,nspec), &
+          etastore(NGLLX,NGLLY,NGLLZ,nspec), &
+          tortstore(NGLLX,NGLLY,NGLLZ,nspec), &
+          phistore(NGLLX,NGLLY,NGLLZ,nspec), &
+          rho_vpI(NGLLX,NGLLY,NGLLZ,nspec), &
+          rho_vpII(NGLLX,NGLLY,NGLLZ,nspec), &
+          rho_vsI(NGLLX,NGLLY,NGLLZ,nspec), &
+          permstore(6,NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! arrays with mesh parameters

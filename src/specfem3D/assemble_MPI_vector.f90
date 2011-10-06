@@ -255,3 +255,152 @@
   endif
 
   end subroutine assemble_MPI_vector_ext_mesh_w
+
+!
+!--------------------------------------------------------------------------------------------------
+!
+
+  subroutine assemble_MPI_vector_ext_mesh_po_s(NPROC,NGLOB_AB,array_val1,array_val2, &
+            buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
+            buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
+            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+            request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+            request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w &
+            )
+
+! sends data
+
+  implicit none
+
+  include "constants.h"
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
+
+  integer :: NPROC
+  integer :: NGLOB_AB
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+       buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s,&
+       buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w
+
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
+  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w
+
+  integer ipoin,iinterface
+
+! here we have to assemble all the contributions between partitions using MPI
+
+! assemble only if more than one partition
+  if(NPROC > 1) then
+
+! partition border copy into the buffer
+  do iinterface = 1, num_interfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      buffer_send_vector_ext_mesh_s(:,ipoin,iinterface) = array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+      buffer_send_vector_ext_mesh_w(:,ipoin,iinterface) = array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface))
+    enddo
+  enddo
+
+! send messages
+  do iinterface = 1, num_interfaces_ext_mesh
+!val1
+    call isend_cr(buffer_send_vector_ext_mesh_s(1,1,iinterface), &
+         NDIM*nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_send_vector_ext_mesh_s(iinterface) &
+         )
+    call irecv_cr(buffer_recv_vector_ext_mesh_s(1,1,iinterface), &
+         NDIM*nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_recv_vector_ext_mesh_s(iinterface) &
+         )
+!val2
+    call isend_cr(buffer_send_vector_ext_mesh_w(1,1,iinterface), &
+         NDIM*nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_send_vector_ext_mesh_w(iinterface) &
+         )
+    call irecv_cr(buffer_recv_vector_ext_mesh_w(1,1,iinterface), &
+         NDIM*nibool_interfaces_ext_mesh(iinterface), &
+         my_neighbours_ext_mesh(iinterface), &
+         itag, &
+         request_recv_vector_ext_mesh_w(iinterface) &
+         )
+  enddo
+
+  endif
+
+  end subroutine assemble_MPI_vector_ext_mesh_po_s
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine assemble_MPI_vector_ext_mesh_po_w(NPROC,NGLOB_AB,array_val1,array_val2, &
+            buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
+            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+            request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+            request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
+
+! waits for data to receive and assembles
+
+  implicit none
+
+  include "constants.h"
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
+
+  integer :: NPROC
+  integer :: NGLOB_AB
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+       buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w
+
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
+  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w
+
+  integer ipoin,iinterface
+
+! here we have to assemble all the contributions between partitions using MPI
+
+! assemble only if more than one partition
+  if(NPROC > 1) then
+
+! wait for communications completion (recv)
+  do iinterface = 1, num_interfaces_ext_mesh
+    call wait_req(request_recv_vector_ext_mesh_s(iinterface))
+    call wait_req(request_recv_vector_ext_mesh_w(iinterface))
+  enddo
+
+! adding contributions of neighbours
+  do iinterface = 1, num_interfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+           array_val1(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh_s(:,ipoin,iinterface)
+      array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+           array_val2(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh_w(:,ipoin,iinterface)
+    enddo
+  enddo
+
+! wait for communications completion (send)
+  do iinterface = 1, num_interfaces_ext_mesh
+    call wait_req(request_send_vector_ext_mesh_s(iinterface))
+    call wait_req(request_send_vector_ext_mesh_w(iinterface))
+  enddo
+
+  endif
+
+  end subroutine assemble_MPI_vector_ext_mesh_po_w

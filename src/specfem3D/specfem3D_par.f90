@@ -179,6 +179,14 @@ module specfem_par
   integer, dimension(:), allocatable :: request_recv_scalar_ext_mesh
   integer, dimension(:), allocatable :: request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: request_recv_vector_ext_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh_s
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh_s
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh_w
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_recv_vector_ext_mesh_w
+  integer, dimension(:), allocatable :: request_send_vector_ext_mesh_s
+  integer, dimension(:), allocatable :: request_recv_vector_ext_mesh_s
+  integer, dimension(:), allocatable :: request_send_vector_ext_mesh_w
+  integer, dimension(:), allocatable :: request_recv_vector_ext_mesh_w
 
 ! for detecting surface receivers and source in case of external mesh
   logical, dimension(:), allocatable :: iglob_is_surface_external_mesh
@@ -188,7 +196,10 @@ module specfem_par
   logical, dimension(:), allocatable :: ispec_is_inner
 
 ! maximum of the norm of the displacement
-  real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all
+  real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all ! elastic
+  real(kind=CUSTOM_REAL) Usolidnormp,Usolidnormp_all ! acoustic
+  real(kind=CUSTOM_REAL) Usolidnorms,Usolidnorms_all ! solid poroelastic
+  real(kind=CUSTOM_REAL) Usolidnormw,Usolidnormw_all ! fluid (w.r.t.s) poroelastic
   integer:: Usolidnorm_index(1)
 
 ! maximum speed in velocity model
@@ -367,6 +378,13 @@ module specfem_par_acoustic
   integer, dimension(:), allocatable :: coupling_ac_el_ispec
   integer :: num_coupling_ac_el_faces
 
+! acoustic-poroelastic coupling surface
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_po_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_ac_po_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: coupling_ac_po_ijk
+  integer, dimension(:), allocatable :: coupling_ac_po_ispec
+  integer :: num_coupling_ac_po_faces
+
 ! material flag
   logical, dimension(:), allocatable :: ispec_is_acoustic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_acoustic
@@ -411,8 +429,32 @@ module specfem_par_poroelastic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic,&
     rmass_fluid_poroelastic
 
+! displacement, velocity, acceleration
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accels_poroelastic,velocs_poroelastic,displs_poroelastic
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accelw_poroelastic,velocw_poroelastic,displw_poroelastic
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accels_poroelastic,b_velocs_poroelastic,b_displs_poroelastic
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accelw_poroelastic,b_velocw_poroelastic,b_displw_poroelastic
+
+! material properties
+!  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: mustore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: etastore,tortstore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: phistore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rhoarraystore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: kappaarraystore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: permstore
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
+
+! elastic-poroelastic coupling surface
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
+  integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk
+  integer, dimension(:), allocatable :: coupling_el_po_ispec
+  integer :: num_coupling_el_po_faces
+
 ! material flag
   logical, dimension(:), allocatable :: ispec_is_poroelastic
+  integer, dimension(:,:), allocatable :: phase_ispec_inner_poroelastic
+  integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
 
   logical :: POROELASTIC_SIMULATION
 

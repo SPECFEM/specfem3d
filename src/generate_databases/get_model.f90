@@ -42,7 +42,7 @@
   integer :: nmat_ext_mesh,nundefMat_ext_mesh
 
   integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
-  double precision, dimension(6,nmat_ext_mesh) :: materials_ext_mesh
+  double precision, dimension(16,nmat_ext_mesh) :: materials_ext_mesh
   character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
 
   ! anisotropy
@@ -52,6 +52,10 @@
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
                         c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+  real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
+                        kxx,kxy,kxz,kyy,kyz,kzz,rho_bar
+  real(kind=CUSTOM_REAL) :: cpIsquare,cpIIsquare,cssquare,H_biot,M_biot,C_biot,D_biot, &
+                        afactor,bfactor,cfactor
   integer :: ispec,i,j,k,iundef,ier
   integer :: iflag,flag_below,flag_above
   integer :: iflag_aniso,idomain_id,imaterial_id
@@ -103,7 +107,13 @@
 
            ! check if the material is known or unknown
            if( imaterial_id > 0) then
-              ! gets velocity model as specified by (cubit) mesh files
+              ! gets velocity model as specified by (cubit) mesh files for elastic & acoustic
+              ! or from nummaterial_poroelastic_file for poroelastic (too many arguments for cubit)
+
+              ! material domain_id
+              idomain_id = materials_ext_mesh(6,imaterial_id)
+
+            if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then ! elastic or acoustic
 
               ! density
               ! materials_ext_mesh format:
@@ -120,8 +130,29 @@
               ! anisotropy
               iflag_aniso = materials_ext_mesh(5,imaterial_id)
 
-              ! material domain_id
-              idomain_id = materials_ext_mesh(6,imaterial_id)
+            else                                         ! poroelastic
+              ! materials_ext_mesh format: 
+              ! rhos,rhof,phi,tort,eta,domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
+
+              ! solid properties
+              rho_s =  materials_ext_mesh(1,imaterial_id)
+              kappa_s =  materials_ext_mesh(13,imaterial_id)
+              ! fluid properties
+              rho_f =  materials_ext_mesh(2,imaterial_id)
+              kappa_f =  materials_ext_mesh(14,imaterial_id)
+              eta_f =  materials_ext_mesh(5,imaterial_id)
+              ! frame properties
+              kappa_fr =  materials_ext_mesh(15,imaterial_id)
+              mu_fr =  materials_ext_mesh(16,imaterial_id)
+              phi =  materials_ext_mesh(3,imaterial_id)
+              tort =  materials_ext_mesh(4,imaterial_id)
+              kxx =  materials_ext_mesh(7,imaterial_id)
+              kxy =  materials_ext_mesh(8,imaterial_id)
+              kxz =  materials_ext_mesh(9,imaterial_id)
+              kyy =  materials_ext_mesh(10,imaterial_id)
+              kyz =  materials_ext_mesh(11,imaterial_id)
+              kzz =  materials_ext_mesh(12,imaterial_id)
+            endif !if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
 
            else if (mat_ext_mesh(2,ispec) == 1) then
 
@@ -196,6 +227,8 @@
 
            ! stores velocity model
 
+            if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then ! elastic or acoustic
+
            ! density
            rhostore(i,j,k,ispec) = rho
 
@@ -209,7 +242,57 @@
            ! Stacey, a completer par la suite
            rho_vp(i,j,k,ispec) = rho*vp
            rho_vs(i,j,k,ispec) = rho*vs
+           !
+           rho_vpI(i,j,k,ispec) = rho*vp
+           rho_vpII(i,j,k,ispec) = 0.d0
+           rho_vsI(i,j,k,ispec) = rho*vs
+           rhoarraystore(1,i,j,k,ispec) = rho
+           rhoarraystore(2,i,j,k,ispec) = rho
+           phistore(i,j,k,ispec) = 0.d0
+           tortstore(i,j,k,ispec) = 1.d0
            !end pll
+
+            else                                         ! poroelastic
+
+           ! solid properties
+           rhoarraystore(1,i,j,k,ispec) = rho_s
+           kappaarraystore(1,i,j,k,ispec) = kappa_s
+           ! fluid properties
+           rhoarraystore(2,i,j,k,ispec) = rho_f
+           kappaarraystore(2,i,j,k,ispec) = kappa_f
+           etastore(i,j,k,ispec) = eta_f
+           ! frame properties
+           kappaarraystore(3,i,j,k,ispec) = kappa_fr
+           mustore(i,j,k,ispec) = mu_fr
+           phistore(i,j,k,ispec) = phi
+           tortstore(i,j,k,ispec) = tort
+           permstore(1,i,j,k,ispec) = kxx
+           permstore(2,i,j,k,ispec) = kxy
+           permstore(3,i,j,k,ispec) = kxz
+           permstore(4,i,j,k,ispec) = kyy
+           permstore(5,i,j,k,ispec) = kyz
+           permstore(6,i,j,k,ispec) = kzz
+
+           !Biot coefficients for the input phi
+      D_biot = kappa_s*(1._CUSTOM_REAL + phi*(kappa_s/kappa_f - 1._CUSTOM_REAL))
+      H_biot = (kappa_s - kappa_fr)*(kappa_s - kappa_fr)/(D_biot - kappa_fr) + kappa_fr + 4._CUSTOM_REAL*mu_fr/3._CUSTOM_REAL
+      C_biot = kappa_s*(kappa_s - kappa_fr)/(D_biot - kappa_fr)
+      M_biot = kappa_s*kappa_s/(D_biot - kappa_fr)
+           ! Approximated velocities (no viscous dissipation)
+      rho_bar =  (1._CUSTOM_REAL - phi)*rho_s + phi*rho_f
+      afactor = rho_bar - phi/tort*rho_f
+      bfactor = H_biot + phi*rho_bar/(tort*rho_f)*M_biot - TWO*phi/tort*C_biot
+      cfactor = phi/(tort*rho_f)*(H_biot*M_biot - C_biot*C_biot)
+      cpIsquare = (bfactor + sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
+      cpIIsquare = (bfactor - sqrt(bfactor*bfactor - 4._CUSTOM_REAL*afactor*cfactor))/(2._CUSTOM_REAL*afactor)
+      cssquare = mu_fr/afactor
+
+           ! AC based on cpI,cpII & cs
+           rho_vpI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIsquare)
+           rho_vpII(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cpIIsquare)
+           rho_vsI(i,j,k,ispec) = (rho_bar - phi/tort*rho_f)*sqrt(cssquare)
+
+            endif !if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC)
 
            ! adds anisotropic perturbation to vp, vs
            if( ANISOTROPY ) then
@@ -252,7 +335,6 @@
            else if( idomain_id == IDOMAIN_ELASTIC ) then
              ispec_is_elastic(ispec) = .true.
            else if( idomain_id == IDOMAIN_POROELASTIC ) then
-             stop 'poroelastic material domain not implemented yet'
              ispec_is_poroelastic(ispec) = .true.
            else
              stop 'error material domain index'
@@ -277,7 +359,11 @@
       stop 'error material domain index element'
     endif
     ! checks if domain is unique
-    if( ispec_is_acoustic(ispec) .eqv. .true. .and. ispec_is_elastic(ispec) .eqv. .true. ) then
+    if( ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
+       ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_poroelastic(ispec) .eqv. .true.)) .or. &
+       ((ispec_is_poroelastic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.)) .or. &
+       ((ispec_is_acoustic(ispec) .eqv. .true.) .and. (ispec_is_elastic(ispec) .eqv. .true.) .and. &
+       (ispec_is_poroelastic(ispec) .eqv. .true.)) ) then
       print*,'error material domain assigned twice to element:',ispec
       print*,'acoustic: ',ispec_is_acoustic(ispec)
       print*,'elastic: ',ispec_is_elastic(ispec)

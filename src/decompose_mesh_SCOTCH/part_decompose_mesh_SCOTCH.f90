@@ -40,10 +40,12 @@ module part_decompose_mesh_SCOTCH
 ! very large and very small values
   double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
 
-! acoustic-elastic load balancing:
+! acoustic-elastic-poroelastic load balancing:
 ! assumes that elastic at least ~4 times more expensive than acoustic
+! assumes that poroelastic at least ~8 times more expensive than acoustic
   integer, parameter :: ACOUSTIC_LOAD = 1
   integer, parameter :: ELASTIC_LOAD = 4
+  integer, parameter :: POROELASTIC_LOAD = 8
 
 !  include './constants_decompose_mesh_SCOTCH.h'
 
@@ -282,7 +284,7 @@ contains
   ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
   ! 5/ second node, if relevant.
 
-  ! interface ignores acoustic and elastic elements
+  ! interface ignores acoustic, elastic and poroelastic elements
 
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
@@ -607,7 +609,7 @@ contains
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: count_def_mat,count_undef_mat
-    double precision, dimension(6,count_def_mat)  :: mat_prop
+    double precision, dimension(16,count_def_mat)  :: mat_prop
     character (len=30), dimension(6,count_undef_mat) :: undef_mat_prop
     integer  :: i
 
@@ -615,12 +617,17 @@ contains
     do i = 1, count_def_mat
       ! database material definition
       !
-      ! format:  #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+      ! format:  #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id for elastic/acoustic
+      ! format:  #rhos,#rhof,#phi,#tort,#kxx,#domain_id,#kxy,#kxz,#kyy,#kyz,#kzz,
+      !          #kappas,#kappaf,#kappafr,#eta,#mufr for poroelastic
       !
       ! (note that this order of the properties is different than the input in nummaterial_velocity_file)
       !
        write(IIN_database,*) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), &
-                            mat_prop(4,i), mat_prop(5,i), mat_prop(6,i)
+                            mat_prop(4,i), mat_prop(5,i), mat_prop(6,i), &
+                            mat_prop(7,i), mat_prop(8,i), mat_prop(9,i), &
+                            mat_prop(10,i), mat_prop(11,i), mat_prop(12,i), &
+                            mat_prop(13,i), mat_prop(14,i), mat_prop(15,i), mat_prop(16,i)
     end do
     do i = 1, count_undef_mat
        write(IIN_database,*) trim(undef_mat_prop(1,i)),' ',trim(undef_mat_prop(2,i)),' ', &
@@ -1230,16 +1237,17 @@ contains
 
 
   !--------------------------------------------------
-  ! loading : sets weights for acoustic/elastic elements to account for different
+  ! loading : sets weights for acoustic/elastic/poroelastic elements to account for different
   !               expensive calculations in specfem simulations
   !--------------------------------------------------
 
-  subroutine acoustic_elastic_load (elmnts_load,nelmnts,count_def_mat,count_undef_mat, &
+  subroutine acoustic_elastic_poroelastic_load (elmnts_load,nelmnts,count_def_mat,count_undef_mat, &
                                     num_material,mat_prop,undef_mat_prop)
   !
   ! note:
   !   acoustic material = domainID 1  (stored in mat_prop(6,..) )
   !   elastic material    = domainID 2
+  !   poroelastic material    = domainID 3
   !
     implicit none
 
@@ -1251,18 +1259,19 @@ contains
 
     ! materials
     integer, dimension(1:nelmnts), intent(in)  :: num_material
-    double precision, dimension(6,count_def_mat),intent(in)  :: mat_prop
+    double precision, dimension(16,count_def_mat),intent(in)  :: mat_prop
     character (len=30), dimension(6,count_undef_mat),intent(in) :: undef_mat_prop
 
     ! local parameters
-    logical, dimension(-count_undef_mat:count_def_mat)  :: is_acoustic, is_elastic
+    logical, dimension(-count_undef_mat:count_def_mat)  :: is_acoustic, is_elastic, is_poroelastic
     integer  :: i,el,idomain_id
 
     ! initializes flags
     is_acoustic(:) = .false.
     is_elastic(:) = .false.
+    is_poroelastic(:) = .false.
 
-    ! sets acoustic/elastic flags for defined materials
+    ! sets acoustic/elastic/poroelastic flags for defined materials
     do i = 1, count_def_mat
        idomain_id = mat_prop(6,i)
        ! acoustic material has idomain_id 1
@@ -1272,6 +1281,10 @@ contains
        ! elastic material has idomain_id 2
        if (idomain_id == 2 ) then
           is_elastic(i) = .true.
+       endif
+       ! poroelastic material has idomain_id 3
+       if (idomain_id == 3 ) then
+          is_poroelastic(i) = .true.
        endif
     enddo
 
@@ -1299,9 +1312,13 @@ contains
       if ( is_elastic(num_material(el+1)) ) then
         elmnts_load(el+1) = elmnts_load(el+1)*ELASTIC_LOAD
       endif
+      ! poroelastic element (very expensive)
+      if ( is_poroelastic(num_material(el+1)) ) then
+        elmnts_load(el+1) = elmnts_load(el+1)*POROELASTIC_LOAD
+      endif
     enddo
 
-  end subroutine acoustic_elastic_load
+  end subroutine acoustic_elastic_poroelastic_load
 
 
   !--------------------------------------------------
@@ -1321,7 +1338,7 @@ contains
 
     integer, dimension(1:nelmnts), intent(in)  :: num_material
 
-    double precision, dimension(6,nb_materials),intent(in)  :: mat_prop
+    double precision, dimension(16,nb_materials),intent(in)  :: mat_prop
 
     integer, dimension(0:nelmnts-1)  :: part
     integer, dimension(0:esize*nelmnts-1)  :: elmnts

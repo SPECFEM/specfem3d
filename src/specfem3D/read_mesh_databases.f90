@@ -187,16 +187,47 @@
   ! poroelastic
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if( POROELASTIC_SIMULATION ) then
-
-    stop 'not implemented yet: read rmass_solid_poroelastic .. '
+    ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
+    allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array displs_poroelastic'
+    allocate(velocs_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array velocs_poroelastic'
+    allocate(accels_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array accels_poroelastic'
+    allocate(displw_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array displw_poroelastic'
+    allocate(velocw_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array velocw_poroelastic'
+    allocate(accelw_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array accelw_poroelastic'
 
     allocate(rmass_solid_poroelastic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_solid_poroelastic'
     allocate(rmass_fluid_poroelastic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_fluid_poroelastic'
 
+    allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             etastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             tortstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             phistore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+             rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array poroelastic properties'
+
     read(27) rmass_solid_poroelastic
     read(27) rmass_fluid_poroelastic
+    read(27) rhoarraystore
+    read(27) kappaarraystore
+    read(27) etastore
+    read(27) tortstore
+    read(27) permstore
+    read(27) phistore
+    read(27) rho_vpI
+    read(27) rho_vpII
+    read(27) rho_vsI
   endif
 
 ! checks simulation types are valid
@@ -243,6 +274,30 @@
   read(27) coupling_ac_el_jacobian2Dw
   read(27) coupling_ac_el_normal
 
+! acoustic-poroelastic coupling surface
+  read(27) num_coupling_ac_po_faces
+  allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
+           coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
+  read(27) coupling_ac_po_ispec
+  read(27) coupling_ac_po_ijk
+  read(27) coupling_ac_po_jacobian2Dw
+  read(27) coupling_ac_po_normal
+
+! elastic-poroelastic coupling surface
+  read(27) num_coupling_el_po_faces
+  allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+           coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
+  read(27) coupling_el_po_ispec
+  read(27) coupling_el_po_ijk
+  read(27) coupling_el_po_jacobian2Dw
+  read(27) coupling_el_po_normal
+
 ! MPI interfaces
   read(27) num_interfaces_ext_mesh
   read(27) max_nibool_interfaces_ext_mesh
@@ -288,7 +343,15 @@
     request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
     request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
     request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
-    request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
+    buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+    buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+    buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+    buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+    request_send_vector_ext_mesh_s(num_interfaces_ext_mesh), &
+    request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh), &
+    request_send_vector_ext_mesh_w(num_interfaces_ext_mesh), &
+    request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
 ! locate inner and outer elements
@@ -311,8 +374,25 @@
 
 ! check courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
+      allocate(rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      rho_vpI = 0.0_CUSTOM_REAL
+      rho_vpII = 0.0_CUSTOM_REAL
+      rho_vsI = 0.0_CUSTOM_REAL
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period )
+                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period, &
+                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
+      deallocate(rho_vpI,rho_vpII,rho_vsI)
+  else if( POROELASTIC_SIMULATION ) then
+      allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      rho_vp = 0.0_CUSTOM_REAL
+      rho_vs = 0.0_CUSTOM_REAL
+      call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period, &
+                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI  )
+      deallocate(rho_vp,rho_vs)
   else if( ACOUSTIC_SIMULATION ) then
       allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array rho_vp'
@@ -321,7 +401,8 @@
       rho_vp = sqrt( kappastore / rhostore ) * rhostore
       rho_vs = 0.0_CUSTOM_REAL
       call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period )
+                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period, &
+                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
       deallocate(rho_vp,rho_vs)
   endif
 
@@ -337,6 +418,7 @@
 
   use specfem_par
   use specfem_par_elastic
+  use specfem_par_poroelastic
   use specfem_par_acoustic
   implicit none
   ! local parameters
@@ -453,6 +535,42 @@
     enddo
     !print *,'rank ',myrank,' elastic inner spec: ',nspec_inner_elastic
     !print *,'rank ',myrank,' elastic outer spec: ',nspec_outer_elastic
+  endif
+
+! sets up elements for loops in poroelastic simulations
+  if( POROELASTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    nspec_inner_poroelastic = 0
+    nspec_outer_poroelastic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_poroelastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_poroelastic = nspec_inner_poroelastic + 1
+        else
+          nspec_outer_poroelastic = nspec_outer_poroelastic + 1
+        endif
+      endif
+    enddo
+
+    ! stores indices of inner and outer elements for faster(?) computation 
+    num_phase_ispec_poroelastic = max(nspec_inner_poroelastic,nspec_outer_poroelastic)
+    allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
+    nspec_inner_poroelastic = 0
+    nspec_outer_poroelastic = 0
+    do ispec = 1, NSPEC_AB
+      if( ispec_is_poroelastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_poroelastic = nspec_inner_poroelastic + 1
+          phase_ispec_inner_poroelastic(nspec_inner_poroelastic,2) = ispec
+        else
+          nspec_outer_poroelastic = nspec_outer_poroelastic + 1
+          phase_ispec_inner_poroelastic(nspec_outer_poroelastic,1) = ispec
+        endif
+      endif
+    enddo
+    !print *,'rank ',myrank,' poroelastic inner spec: ',nspec_inner_poroelastic
+    !print *,'rank ',myrank,' poroelastic outer spec: ',nspec_outer_poroelastic
   endif
 
   end subroutine rmd_setup_inner_outer_elemnts

@@ -27,7 +27,8 @@
 
   subroutine check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     kappastore,mustore,rho_vp,rho_vs, &
-                                    DT, model_speed_max,min_resolved_period )
+                                    DT, model_speed_max,min_resolved_period, &
+                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
 
 ! check the mesh, stability and resolved period
 !
@@ -39,6 +40,9 @@
 
   integer :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
+  real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: phistore,tortstore
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
   double precision :: DT
@@ -46,6 +50,7 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
+  real(kind=CUSTOM_REAL) :: vp2min,vp2max,vp2min_glob,vp2max_glob
   real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
@@ -70,7 +75,7 @@
   !real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
 
 
-  logical :: has_vs_zero
+  logical :: has_vs_zero,has_vp2_zero
 
   ! initializations
   if( DT <= 0.0d0) then
@@ -81,6 +86,9 @@
 
   vpmin_glob = HUGEVAL
   vpmax_glob = -HUGEVAL
+
+  vp2min_glob = HUGEVAL
+  vp2max_glob = -HUGEVAL
 
   vsmin_glob = HUGEVAL
   vsmax_glob = -HUGEVAL
@@ -97,17 +105,22 @@
   dt_suggested_glob = HUGEVAL
 
   has_vs_zero = .false.
+  has_vp2_zero = .false.
 
   ! checks courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
-    call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
-                        NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
+    call get_vpvs_minmax(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
+                        has_vp2_zero,NSPEC_AB,kappastore,mustore,rho_vp,rho_vs, &
+                        phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 
     ! min/max for whole cpu partition
     vpmin_glob = min ( vpmin_glob, vpmin)
     vpmax_glob = max ( vpmax_glob, vpmax)
+
+    vp2min_glob = min ( vp2min_glob, vp2min)
+    vp2max_glob = max ( vp2max_glob, vp2max)
 
     vsmin_glob = min ( vsmin_glob, vsmin)
     vsmax_glob = max ( vsmax_glob, vsmax)
@@ -130,12 +143,12 @@
     ! based on minimum GLL point distance and maximum velocity
     ! i.e. on the maximum ratio of ( velocity / gridsize )
     if( DT_PRESENT ) then
-      cmax = max( vpmax,vsmax ) * DT / distance_min
+      cmax = max( vpmax,vp2max,vsmax ) * DT / distance_min
       cmax_glob = max(cmax_glob,cmax)
     endif
 
     ! suggested timestep
-    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
+    dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vp2max,vsmax )
     dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
     ! estimation of minimum period resolved
@@ -148,14 +161,14 @@
     avg_distance = elemsize_max / ( NGLLX - 1 )  ! since NGLLX = NGLLY = NGLLZ
 
     ! biggest possible minimum period such that number of points per minimum wavelength
-    ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
+    ! npts = ( min(vpmin,vp2min,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
     !
     ! note: obviously, this estimation depends on the choice of points per wavelength
     !          which is empirical at the moment.
     !          also, keep in mind that the minimum period is just an estimation and
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
-    pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
+    pmax = avg_distance / min( vpmin,vp2max,vsmin ) * NPTS_PER_WAVELENGTH
     pmax_glob = max(pmax_glob,pmax)
 
 
@@ -186,6 +199,14 @@
   call min_all_cr(vpmin,vpmin_glob)
   call max_all_cr(vpmax,vpmax_glob)
 
+  ! Vp2 velocity (relevant for poroelastic cases)
+  vp2min = vp2min_glob
+  if( has_vp2_zero ) vp2min = 0.0
+
+  vp2max = vp2max_glob
+  call min_all_cr(vp2min,vp2min_glob)
+  call max_all_cr(vp2max,vp2max_glob)
+
   ! Vs velocity
   vsmin = vsmin_glob
   if( has_vs_zero ) vsmin = 0.0
@@ -200,6 +221,12 @@
   endif
   if( vpmax_glob >= HUGEVAL ) then
     call exit_mpi(myrank,"error: vp maximum velocity")
+  endif
+  if( vp2min_glob < 0.0_CUSTOM_REAL ) then
+    call exit_mpi(myrank,"error: vp2 minimum velocity")
+  endif
+  if( vp2max_glob >= HUGEVAL ) then
+    call exit_mpi(myrank,"error: vp2 maximum velocity")
   endif
   if( vsmin_glob < 0.0_CUSTOM_REAL ) then
     call exit_mpi(myrank,"error: vs minimum velocity")
@@ -264,6 +291,7 @@
     write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'Model: P velocity min,max = ',vpmin_glob,vpmax_glob
+    write(IMAIN,*) 'Model: PII velocity min,max = ',vp2min_glob,vp2max_glob
     write(IMAIN,*) 'Model: S velocity min,max = ',vsmin_glob,vsmax_glob
     write(IMAIN,*) '********'
     write(IMAIN,*)
@@ -310,31 +338,37 @@
 !
 
 
-  subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
-                            NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
-
+  subroutine get_vpvs_minmax(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
+                        has_vp2_zero,NSPEC_AB,kappastore,mustore,rho_vp,rho_vs, &
+                        phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 ! calculates the min/max size of the specified element (ispec)
 
   implicit none
 
   include "constants.h"
 
-  real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
+  real(kind=CUSTOM_REAL) :: vpmin,vpmax,vp2min,vp2max,vsmin,vsmax
 
   integer :: ispec
   logical :: has_vs_zero
+  logical :: has_vp2_zero
 
   integer :: NSPEC_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
     kappastore,mustore,rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
+  real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: phistore,tortstore
 
   ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: vp_elem,vs_elem
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ):: vp_elem,vs_elem,vp2_elem
   real(kind=CUSTOM_REAL), dimension(1) :: val_min,val_max
 
   ! initializes
   vpmin = HUGEVAL
   vpmax = -HUGEVAL
+  vp2min = HUGEVAL
+  vp2max = -HUGEVAL
   vsmin = HUGEVAL
   vsmax = -HUGEVAL
 
@@ -342,6 +376,10 @@
   where( rho_vp(:,:,:,ispec) > TINYVAL )
     vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) &
                     + kappastore(:,:,:,ispec)) / rho_vp(:,:,:,ispec)
+  elsewhere(rho_vpI(:,:,:,ispec) > TINYVAL)
+    vp_elem(:,:,:) = rho_vpI(:,:,:,ispec)/( ((1._CUSTOM_REAL - phistore(:,:,:,ispec))* &
+            rhoarraystore(1,:,:,:,ispec) + phistore(:,:,:,ispec)*rhoarraystore(2,:,:,:,ispec)) -  &
+            phistore(:,:,:,ispec)/tortstore(:,:,:,ispec) * rhoarraystore(2,:,:,:,ispec) )
   elsewhere
     vp_elem(:,:,:) = 0.0
   endwhere
@@ -352,9 +390,33 @@
   vpmin = min(vpmin,val_min(1))
   vpmax = max(vpmax,val_max(1))
 
+  ! vpII
+  where( rho_vpII(:,:,:,ispec) > TINYVAL)
+    vp2_elem(:,:,:) = rho_vpII(:,:,:,ispec)/( ((1._CUSTOM_REAL - phistore(:,:,:,ispec))* &
+            rhoarraystore(1,:,:,:,ispec) + phistore(:,:,:,ispec)*rhoarraystore(2,:,:,:,ispec)) - &
+            phistore(:,:,:,ispec)/tortstore(:,:,:,ispec)* rhoarraystore(2,:,:,:,ispec) )
+  elsewhere
+    vp2_elem(:,:,:) = 0.0
+  endwhere
+
+  val_min = minval(vp2_elem(:,:,:))
+  val_max = maxval(vp2_elem(:,:,:))
+
+  ! ignore non porous region with vp2 = 0
+  if( val_min(1) > 0.0001 ) then
+      vp2min = min(vp2min,val_min(1))
+  else
+      has_vp2_zero = .true.
+  endif
+  vp2max = max(vp2max,val_max(1))
+
   ! vs
   where( rho_vs(:,:,:,ispec) > TINYVAL )
     vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
+  elsewhere(rho_vsI(:,:,:,ispec) > TINYVAL)
+    vs_elem(:,:,:) = rho_vsI(:,:,:,ispec) / ( ((1._CUSTOM_REAL - phistore(:,:,:,ispec))* &
+            rhoarraystore(1,:,:,:,ispec) + phistore(:,:,:,ispec)*rhoarraystore(2,:,:,:,ispec)) - &
+            phistore(:,:,:,ispec)/tortstore(:,:,:,ispec) * rhoarraystore(2,:,:,:,ispec) )
   elsewhere
     vs_elem(:,:,:) = 0.0
   endwhere
