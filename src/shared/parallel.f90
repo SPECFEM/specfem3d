@@ -731,7 +731,7 @@
 
   integer ier
 
-  call MPI_ISEND(sendbuf(1),sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
+  call MPI_ISEND(sendbuf,sendcount,CUSTOM_MPI_TYPE,dest,sendtag, &
                   MPI_COMM_WORLD,req,ier)
 
   end subroutine isend_cr
@@ -755,7 +755,7 @@
 
   integer ier
 
-  call MPI_IRECV(recvbuf(1),recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
+  call MPI_IRECV(recvbuf,recvcount,CUSTOM_MPI_TYPE,dest,recvtag, &
                   MPI_COMM_WORLD,req,ier)
 
   end subroutine irecv_cr
@@ -779,7 +779,7 @@
 
   integer ier
 
-  call MPI_ISEND(sendbuf(1),sendcount,MPI_INTEGER,dest,sendtag, &
+  call MPI_ISEND(sendbuf,sendcount,MPI_INTEGER,dest,sendtag, &
                   MPI_COMM_WORLD,req,ier)
 
   end subroutine isend_i
@@ -802,7 +802,7 @@
   integer, dimension(recvcount) :: recvbuf
   integer ier
 
-  call MPI_IRECV(recvbuf(1),recvcount,MPI_INTEGER,dest,recvtag, &
+  call MPI_IRECV(recvbuf,recvcount,MPI_INTEGER,dest,recvtag, &
                   MPI_COMM_WORLD,req,ier)
 
   end subroutine irecv_i
