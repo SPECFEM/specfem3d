@@ -275,17 +275,17 @@
 
   include "constants.h"
 
-! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
-
   integer :: NPROC
   integer :: NGLOB_AB
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
        buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s,&
        buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
@@ -357,16 +357,17 @@
 
   include "constants.h"
 
-! array to assemble
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
-
   integer :: NPROC
   integer :: NGLOB_AB
+
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
        buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w
 
-  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s
