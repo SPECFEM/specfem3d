@@ -658,6 +658,37 @@
 !
 !
 !----
+!  the following two subroutines are needed by locate_receivers.f90
+  subroutine send_dp(sendbuf, sendcount, dest, sendtag)
+
+  implicit none
+  include "constants.h"
+
+  integer dest,sendtag
+  integer sendcount
+  real(kind=CUSTOM_REAL),dimension(sendcount):: sendbuf
+  
+  stop 'send_dp not implemented for serial code'
+
+  end subroutine send_dp
+!
+!----
+!
+  subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
+
+  implicit none
+  include "constants.h"
+
+  integer dest,recvtag
+  integer recvcount
+  real(kind=CUSTOM_REAL),dimension(recvcount):: recvbuf
+
+  stop 'recv_dp not implemented for parallel code'
+
+  end subroutine recv_dp
+
+!
+!----
 !
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
