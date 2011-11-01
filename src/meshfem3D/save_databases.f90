@@ -96,7 +96,8 @@
    do idoubl = 1,NMATERIALS
       !write(15,*) material_properties(idoubl,:)
       matpropl(:) = material_properties(idoubl,:)
-      write(15,*) matpropl
+      ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
+      write(15,*) matpropl, 0.,0.,0.,0.,0.,0.,0.,0.,0.,0.
    end do
 
 
