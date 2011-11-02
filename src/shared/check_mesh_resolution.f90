@@ -168,7 +168,7 @@
     !          also, keep in mind that the minimum period is just an estimation and
     !          there is no such sharp cut-off period for valid synthetics.
     !          seismograms become just more and more inaccurate for periods shorter than this estimate.
-    pmax = avg_distance / min( vpmin,vp2max,vsmin ) * NPTS_PER_WAVELENGTH
+    pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
     pmax_glob = max(pmax_glob,pmax)
 
 
