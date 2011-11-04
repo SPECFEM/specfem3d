@@ -75,7 +75,7 @@
 ! adjoint simulations:
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
     ! reads in absorbing boundary array when first phase is running
-    if( phase_is_inner .eqv. .false. ) then    
+    if( phase_is_inner .eqv. .false. ) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newark scheme
       ! uses fortran routine
       !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
@@ -83,7 +83,7 @@
       !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
       ! uses c routine for faster reading
       call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
-    endif    
+    endif
   endif !adjoint
 
 ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)

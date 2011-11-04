@@ -31,15 +31,15 @@ subroutine compute_forces_poroelastic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  
+
   implicit none
 
   integer:: iphase
   logical:: phase_is_inner
-  
+
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
-  
+
     !first for points on MPI interfaces
     if( iphase == 1 ) then
       phase_is_inner = .false.
@@ -81,7 +81,7 @@ subroutine compute_forces_poroelastic()
                         phase_ispec_inner_poroelastic )
 
 
-    ! adjoint simulations: backward/reconstructed wavefield                  
+    ! adjoint simulations: backward/reconstructed wavefield
     if( SIMULATION_TYPE == 3 ) then
  stop 'adjoint poroelastic simulation not implemented yet'
     endif
@@ -142,9 +142,9 @@ subroutine compute_forces_poroelastic()
                         nadj_rec_local,adj_sourcearrays)
 
 ! assemble all the contributions between slices using MPI
-    if( phase_is_inner .eqv. .false. ) then 
-      ! sends accel values to corresponding MPI interface neighbors  
-      call assemble_MPI_vector_ext_mesh_po_s(NPROC,NGLOB_AB,accels_poroelastic, &
+    if( phase_is_inner .eqv. .false. ) then
+      ! sends accel values to corresponding MPI interface neighbors
+      call assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,accels_poroelastic, &
                         accelw_poroelastic,&
                         buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
                         buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
@@ -153,9 +153,9 @@ subroutine compute_forces_poroelastic()
                         my_neighbours_ext_mesh, &
                         request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
-                       
+
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then  
+      if( SIMULATION_TYPE == 3 ) then
 ! 'adjoint poroelastic simulation not implemented yet'
 !        call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_ADJOINT,b_accel, &
 !                        b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
@@ -164,11 +164,11 @@ subroutine compute_forces_poroelastic()
 !                        my_neighbours_ext_mesh, &
 !                        b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
-                        
+
     else
       ! waits for send/receive requests to be completed and assembles values
 ! solid phase
-      call assemble_MPI_vector_ext_mesh_po_w(NPROC,NGLOB_AB,accels_poroelastic, &
+      call assemble_MPI_vector_poro_w(NPROC,NGLOB_AB,accels_poroelastic, &
                         accelw_poroelastic,&
                         buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
                         num_interfaces_ext_mesh,&
@@ -178,15 +178,15 @@ subroutine compute_forces_poroelastic()
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then 
-! 'adjoint poroelastic simulation not implemented yet' 
+      if( SIMULATION_TYPE == 3 ) then
+! 'adjoint poroelastic simulation not implemented yet'
 !        call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_ADJOINT,b_accel, &
 !                        b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
 !                        max_nibool_interfaces_ext_mesh, &
 !                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-!                        b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)      
+!                        b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
-      
+
     endif
 
     !! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
@@ -194,7 +194,7 @@ subroutine compute_forces_poroelastic()
     !! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
     !! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
     !! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
-  
+
   enddo
 
 ! solid phase
@@ -203,7 +203,7 @@ subroutine compute_forces_poroelastic()
   accels_poroelastic(2,:) = accels_poroelastic(2,:)*rmass_solid_poroelastic(:)
   accels_poroelastic(3,:) = accels_poroelastic(3,:)*rmass_solid_poroelastic(:)
 
-  ! adjoint simulations  
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
 ! 'adjoint poroelastic simulation not implemented yet'
 !    b_accels_poroelastic(1,:) = b_accels_poroelastic(1,:)*rmass_solid_poroelastic(:)
@@ -217,7 +217,7 @@ subroutine compute_forces_poroelastic()
   accelw_poroelastic(2,:) = accelw_poroelastic(2,:)*rmass_fluid_poroelastic(:)
   accelw_poroelastic(3,:) = accelw_poroelastic(3,:)*rmass_fluid_poroelastic(:)
 
-  ! adjoint simulations  
+  ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
 ! 'adjoint poroelastic simulation not implemented yet'
 !    b_accelw_poroelastic(1,:) = b_accelw_poroelastic(1,:)*rmass_fluid_poroelastic(:)
@@ -233,13 +233,13 @@ subroutine compute_forces_poroelastic()
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
 ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
 !
-! where 
+! where
 !   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
 !   f denotes a source term (acoustic/elastic)
 !   chi_dot_dot is acoustic (fluid) potential ( dotted twice with respect to time)
 !
-! corrector: 
+! corrector:
 !   updates the velocity term which requires a(t+delta)
 ! solid phase
   velocs_poroelastic(:,:) = velocs_poroelastic(:,:) + deltatover2*accels_poroelastic(:,:)

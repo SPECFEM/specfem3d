@@ -246,9 +246,11 @@
   double precision min_elevation_all,max_elevation_all
 
 ! for Databases of external meshes
-  character(len=256) prname
+  double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
+
   integer :: dummy_node
   integer :: dummy_elmnt
+
   integer :: ispec, inode, num_interface,ie,imat,iface,icorner
   integer :: nnodes_ext_mesh, nelmnts_ext_mesh
   integer  :: num_interfaces_ext_mesh
@@ -256,23 +258,30 @@
   integer  :: nmat_ext_mesh, nundefMat_ext_mesh
   integer, dimension(:), allocatable  :: my_neighbours_ext_mesh
   integer, dimension(:), allocatable  :: my_nelmnts_neighbours_ext_mesh
+
   integer, dimension(:,:,:), allocatable  :: my_interfaces_ext_mesh
   integer, dimension(:,:), allocatable  :: ibool_interfaces_ext_mesh
   integer, dimension(:), allocatable  :: nibool_interfaces_ext_mesh
-  double precision, dimension(:,:), allocatable :: nodes_coords_ext_mesh
+
   integer, dimension(:,:), allocatable :: elmnts_ext_mesh
   integer, dimension(:,:), allocatable :: mat_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
 
+  character(len=256) prname
+
 ! boundaries and materials
+  double precision, dimension(:,:), allocatable :: materials_ext_mesh
+
   integer  :: ispec2D, boundary_number
   integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
-  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
-  integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
+
+  integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, &
+              ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable  :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
-  double precision, dimension(:,:), allocatable :: materials_ext_mesh
+
+  character (len=30), dimension(:,:), allocatable :: undef_mat_prop
 
 ! moho (optional)
   integer :: nspec2D_moho_ext
@@ -548,23 +557,33 @@
   integer :: num_xmin,num_xmax,num_ymin,num_ymax,num_top,num_bottom,num
   integer :: num_moho
   integer :: j
-  character(len=128) :: line
+  !character(len=128) :: line
 
 ! read databases about external mesh simulation
 ! global node coordinates
   call create_name_database(prname,myrank,LOCAL_PATH)
-  open(unit=IIN,file=prname(1:len_trim(prname))//'Database',status='old',action='read',form='formatted',iostat=ier)
+  !open(unit=IIN,file=prname(1:len_trim(prname))//'Database', &
+  !      status='old',action='read',form='formatted',iostat=ier)
+  open(unit=IIN,file=prname(1:len_trim(prname))//'Database', &
+        status='old',action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
     write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database'
     write(IMAIN,*) 'make sure file exists'
     call exit_mpi(myrank,'error opening database file')
   endif
-  read(IIN,*) nnodes_ext_mesh
+  !read(IIN,*) nnodes_ext_mesh
+  read(IIN) nnodes_ext_mesh
+
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array nodes_coords_ext_mesh'
+
   do inode = 1, nnodes_ext_mesh
-     read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), &
+     !read(IIN,*) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), &
+     !           nodes_coords_ext_mesh(3,inode)
+
+     read(IIN) dummy_node, nodes_coords_ext_mesh(1,inode), nodes_coords_ext_mesh(2,inode), &
                 nodes_coords_ext_mesh(3,inode)
+
   enddo
 
   call sum_all_i(nnodes_ext_mesh,num)
@@ -575,14 +594,23 @@
 
 ! read materials' physical properties
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
-  read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
+  !read(IIN,*) nmat_ext_mesh, nundefMat_ext_mesh
+  read(IIN) nmat_ext_mesh, nundefMat_ext_mesh
+
   allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array materials_ext_mesh'
   do imat = 1, nmat_ext_mesh
      ! ielastic/acoustic format: #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag  #(6) material_domain_id
      ! and remaining entries are filled with zeros
      ! poroelastic format:  rhos,rhof,phi,tort,eta,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
-     read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
+     !read(IIN,*) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
+     !     materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat), &
+     !     materials_ext_mesh(7,imat),  materials_ext_mesh(8,imat), materials_ext_mesh(9,imat), &
+     !     materials_ext_mesh(10,imat),  materials_ext_mesh(11,imat), materials_ext_mesh(12,imat), &
+     !     materials_ext_mesh(13,imat),  materials_ext_mesh(14,imat), materials_ext_mesh(15,imat), &
+     !     materials_ext_mesh(16,imat)
+
+     read(IIN) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
           materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat), &
           materials_ext_mesh(7,imat),  materials_ext_mesh(8,imat), materials_ext_mesh(9,imat), &
           materials_ext_mesh(10,imat),  materials_ext_mesh(11,imat), materials_ext_mesh(12,imat), &
@@ -606,7 +634,10 @@
      ! -1 tomography elastic tomography_model.xyz 1 2
      ! format example interface:
      ! -1 interface 14 15 1 2
-     read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
+     !read(IIN,*) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
+     !     undef_mat_prop(5,imat), undef_mat_prop(6,imat)
+
+     read(IIN) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat), undef_mat_prop(6,imat)
 
      ! output debug
@@ -620,7 +651,8 @@
   call sync_all()
 
 ! element indexing
-  read(IIN,*) nelmnts_ext_mesh
+  !read(IIN,*) nelmnts_ext_mesh
+  read(IIN) nelmnts_ext_mesh
   allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array elmnts_ext_mesh'
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
@@ -630,7 +662,11 @@
   do ispec = 1, nelmnts_ext_mesh
      ! format:
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
-     read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
+     !read(IIN,*) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
+     !     elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
+     !     elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
+
+     read(IIN) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
           elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
           elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
 
@@ -648,17 +684,28 @@
 
 
 ! read boundaries
-  read(IIN,*) boundary_number ,nspec2D_xmin
+  !read(IIN,*) boundary_number ,nspec2D_xmin
+  read(IIN) boundary_number ,nspec2D_xmin
   if(boundary_number /= 1) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_xmax
+
+  !read(IIN,*) boundary_number ,nspec2D_xmax
+  read(IIN) boundary_number ,nspec2D_xmax
   if(boundary_number /= 2) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_ymin
+
+  !read(IIN,*) boundary_number ,nspec2D_ymin
+  read(IIN) boundary_number ,nspec2D_ymin
   if(boundary_number /= 3) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_ymax
+
+  !read(IIN,*) boundary_number ,nspec2D_ymax
+  read(IIN) boundary_number ,nspec2D_ymax
   if(boundary_number /= 4) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_bottom_ext
+
+  !read(IIN,*) boundary_number ,nspec2D_bottom_ext
+  read(IIN) boundary_number ,nspec2D_bottom_ext
   if(boundary_number /= 5) stop "Error : invalid database file"
-  read(IIN,*) boundary_number ,nspec2D_top_ext
+
+  !read(IIN,*) boundary_number ,nspec2D_top_ext
+  read(IIN) boundary_number ,nspec2D_top_ext
   if(boundary_number /= 6) stop "Error : invalid database file"
 
   NSPEC2D_BOTTOM = nspec2D_bottom_ext
@@ -667,37 +714,43 @@
   allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(4,nspec2D_xmin),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_xmin etc.'
   do ispec2D = 1,nspec2D_xmin
-     read(IIN,*) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
+     !read(IIN,*) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
+     read(IIN) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
   end do
 
   allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(4,nspec2D_xmax),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_xmax etc.'
   do ispec2D = 1,nspec2D_xmax
-     read(IIN,*) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,4)
+     !read(IIN,*) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,4)
+     read(IIN) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,4)
   end do
 
   allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(4,nspec2D_ymin),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
   do ispec2D = 1,nspec2D_ymin
-     read(IIN,*) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,4)
+     !read(IIN,*) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,4)
+     read(IIN) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,4)
   end do
 
   allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(4,nspec2D_ymax),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_ymax etc.'
   do ispec2D = 1,nspec2D_ymax
-     read(IIN,*) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,4)
+     !read(IIN,*) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,4)
+     read(IIN) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,4)
   end do
 
   allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(4,nspec2D_bottom_ext),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_bottom etc.'
   do ispec2D = 1,nspec2D_bottom_ext
-     read(IIN,*) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,4)
+     !read(IIN,*) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,4)
+     read(IIN) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,4)
   end do
 
   allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(4,nspec2D_top_ext),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_top etc.'
   do ispec2D = 1,nspec2D_top_ext
-     read(IIN,*) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,4)
+     !read(IIN,*) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,4)
+     read(IIN) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,4)
   end do
 
   call sum_all_i(nspec2D_xmin,num_xmin)
@@ -716,8 +769,14 @@
   call sync_all()
 
 ! MPI interfaces between different partitions
-  ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
-  read(IIN,*) num_interfaces_ext_mesh, max_interface_size_ext_mesh
+  if( NPROC > 1 ) then
+    ! format: #number_of_MPI_interfaces  #maximum_number_of_elements_on_each_interface
+    !read(IIN,*) num_interfaces_ext_mesh, max_interface_size_ext_mesh
+    read(IIN) num_interfaces_ext_mesh, max_interface_size_ext_mesh
+  else
+    num_interfaces_ext_mesh = 0
+    max_interface_size_ext_mesh = 0
+  endif
 
   ! allocates interfaces
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
@@ -737,7 +796,8 @@
     ! where
     !     process_interface_id = rank of (neighbor) process to share MPI interface with
     !     number_of_elements_on_interface = number of interface elements
-    read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
+    !read(IIN,*) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
+    read(IIN) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
 
     ! loops over interface elements
     do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
@@ -747,7 +807,11 @@
       !     1  -  corner point only
       !     2  -  element edge
       !     4  -  element face
-      read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
+      !read(IIN,*) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
+      !            my_interfaces_ext_mesh(3,ie,num_interface), my_interfaces_ext_mesh(4,ie,num_interface), &
+      !            my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
+
+      read(IIN) my_interfaces_ext_mesh(1,ie,num_interface), my_interfaces_ext_mesh(2,ie,num_interface), &
                   my_interfaces_ext_mesh(3,ie,num_interface), my_interfaces_ext_mesh(4,ie,num_interface), &
                   my_interfaces_ext_mesh(5,ie,num_interface), my_interfaces_ext_mesh(6,ie,num_interface)
     enddo
@@ -762,15 +826,16 @@
   ! optional moho
   if( SAVE_MOHO_MESH ) then
     ! checks if additional line exists
-    read(IIN,'(a128)',iostat=ier) line
+    !read(IIN,'(a128)',iostat=ier) line
+    read(IIN,iostat=ier) boundary_number,nspec2D_moho_ext
     if( ier /= 0 ) then
       ! no moho informations given
       nspec2D_moho_ext = 0
       boundary_number = 7
-    else
-      ! tries to read in number of moho elements
-      read(line,*,iostat=ier) boundary_number ,nspec2D_moho_ext
-      if( ier /= 0 ) call exit_mpi(myrank,'error reading moho mesh in database')
+    !else
+    !  ! tries to read in number of moho elements
+    !  read(line,*,iostat=ier) boundary_number ,nspec2D_moho_ext
+    !  if( ier /= 0 ) call exit_mpi(myrank,'error reading moho mesh in database')
     endif
     if(boundary_number /= 7) stop "Error : invalid database file"
 
@@ -783,7 +848,8 @@
     if( ier /= 0 ) stop 'error allocating array ibelm_moho etc.'
     do ispec2D = 1,nspec2D_moho_ext
       ! format: #element_id #node_id1 #node_id2 #node_id3 #node_id4
-      read(IIN,*) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
+      !read(IIN,*) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
+      read(IIN) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
     end do
 
     ! user output
@@ -791,6 +857,11 @@
       write(IMAIN,*) '  moho surfaces: ',num_moho
     endif
     call sync_all()
+  else
+    ! allocate dummy array
+    nspec2D_moho_ext = 0
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dumy array ibelm_moho etc.'
   endif
 
   close(IIN)
@@ -841,7 +912,8 @@
     write(IMAIN,*) 'create regions: '
   endif
   call create_regions_mesh_ext(ibool, &
-                        xstore, ystore, zstore, nspec, npointot, myrank, LOCAL_PATH, &
+                        xstore, ystore, zstore, nspec, &
+                        npointot, myrank, LOCAL_PATH, &
                         nnodes_ext_mesh, nelmnts_ext_mesh, &
                         nodes_coords_ext_mesh, elmnts_ext_mesh, &
                         max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
@@ -855,19 +927,22 @@
                         ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
                         nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
                         nodes_ibelm_bottom,nodes_ibelm_top, &
-                        SAVE_MESH_FILES,nglob, &
+                        SAVE_MESH_FILES, &
+                        nglob, &
                         ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
                         ATTENUATION,USE_OLSEN_ATTENUATION, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
-                        itopo_bathy)
+                        itopo_bathy, &
+                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho)
 
+! now done inside create_regions_mesh_ext routine...
 ! Moho boundary parameters, 2-D jacobians and normals
-  if( SAVE_MOHO_MESH ) then
-    call create_regions_mesh_save_moho(myrank,nglob,nspec, &
-                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
-                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
-  endif
+!  if( SAVE_MOHO_MESH ) then
+!    call create_regions_mesh_save_moho(myrank,nglob,nspec, &
+!                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
+!                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
+!  endif
 
 ! defines global number of nodes in model
   NGLOB_AB = nglob

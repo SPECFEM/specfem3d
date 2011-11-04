@@ -48,9 +48,11 @@
                     coupling_ac_el_ijk,coupling_ac_el_ispec, &
                     num_coupling_ac_el_faces, &
                     coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
-                    coupling_ac_po_ijk,coupling_ac_po_ispec, num_coupling_ac_po_faces, &
+                    coupling_ac_po_ijk,coupling_ac_po_ispec, &
+                    num_coupling_ac_po_faces, &
                     coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-                    coupling_el_po_ijk,coupling_el_po_ispec, num_coupling_el_po_faces, &
+                    coupling_el_po_ijk,coupling_el_po_ispec, &
+                    num_coupling_el_po_faces, &
                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     prname,SAVE_MESH_FILES, &
@@ -59,7 +61,12 @@
                     c22store,c23store,c24store,c25store,c26store,c33store, &
                     c34store,c35store,c36store,c44store,c45store,c46store, &
                     c55store,c56store,c66store, &
-                    ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
+                    ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                    ispec_is_inner,nspec_inner_acoustic,nspec_inner_elastic,nspec_inner_poroelastic, &
+                    nspec_outer_acoustic,nspec_outer_elastic,nspec_outer_poroelastic, &
+                    num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+                    num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+                    num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic)
 
   implicit none
 
@@ -134,6 +141,7 @@
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer :: max_nibool_interfaces_ext_mesh
 
 ! file name
   character(len=256) prname
@@ -150,6 +158,21 @@
 
 ! material domain flags
   logical, dimension(nspec) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+
+! inner/outer elements
+  logical,dimension(nspec) :: ispec_is_inner
+  integer :: nspec_inner_acoustic,nspec_outer_acoustic
+  integer :: nspec_inner_elastic,nspec_outer_elastic
+  integer :: nspec_inner_poroelastic,nspec_outer_poroelastic
+
+  integer :: num_phase_ispec_acoustic
+  integer,dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
+
+  integer :: num_phase_ispec_elastic
+  integer,dimension(num_phase_ispec_elastic,2) :: phase_ispec_inner_elastic
+
+  integer :: num_phase_ispec_poroelastic
+  integer,dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
 
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -208,9 +231,11 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if( ELASTIC_SIMULATION ) then
     write(IOUT) rmass
+
     if( OCEANS) then
       write(IOUT) rmass_ocean_load
     endif
+
     !pll Stacey
     write(IOUT) rho_vp
     write(IOUT) rho_vs
@@ -235,52 +260,65 @@
 
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
-  write(IOUT) abs_boundary_ispec
-  write(IOUT) abs_boundary_ijk
-  write(IOUT) abs_boundary_jacobian2Dw
-  write(IOUT) abs_boundary_normal
+  if( num_abs_boundary_faces > 0 ) then
+    write(IOUT) abs_boundary_ispec
+    write(IOUT) abs_boundary_ijk
+    write(IOUT) abs_boundary_jacobian2Dw
+    write(IOUT) abs_boundary_normal
+  endif
 
 ! free surface
   write(IOUT) num_free_surface_faces
-  write(IOUT) free_surface_ispec
-  write(IOUT) free_surface_ijk
-  write(IOUT) free_surface_jacobian2Dw
-  write(IOUT) free_surface_normal
+  if( num_free_surface_faces > 0 ) then
+    write(IOUT) free_surface_ispec
+    write(IOUT) free_surface_ijk
+    write(IOUT) free_surface_jacobian2Dw
+    write(IOUT) free_surface_normal
+  endif
 
 ! acoustic-elastic coupling surface
   write(IOUT) num_coupling_ac_el_faces
-  write(IOUT) coupling_ac_el_ispec
-  write(IOUT) coupling_ac_el_ijk
-  write(IOUT) coupling_ac_el_jacobian2Dw
-  write(IOUT) coupling_ac_el_normal
+  if( num_coupling_ac_el_faces > 0 ) then
+    write(IOUT) coupling_ac_el_ispec
+    write(IOUT) coupling_ac_el_ijk
+    write(IOUT) coupling_ac_el_jacobian2Dw
+    write(IOUT) coupling_ac_el_normal
+  endif
 
 ! acoustic-poroelastic coupling surface
   write(IOUT) num_coupling_ac_po_faces
-  write(IOUT) coupling_ac_po_ispec
-  write(IOUT) coupling_ac_po_ijk
-  write(IOUT) coupling_ac_po_jacobian2Dw
-  write(IOUT) coupling_ac_po_normal
+  if( num_coupling_ac_po_faces > 0 ) then
+    write(IOUT) coupling_ac_po_ispec
+    write(IOUT) coupling_ac_po_ijk
+    write(IOUT) coupling_ac_po_jacobian2Dw
+    write(IOUT) coupling_ac_po_normal
+  endif
 
 ! elastic-poroelastic coupling surface
   write(IOUT) num_coupling_el_po_faces
-  write(IOUT) coupling_el_po_ispec
-  write(IOUT) coupling_el_po_ijk
-  write(IOUT) coupling_el_po_jacobian2Dw
-  write(IOUT) coupling_el_po_normal
+  if( num_coupling_el_po_faces > 0 ) then
+    write(IOUT) coupling_el_po_ispec
+    write(IOUT) coupling_el_po_ijk
+    write(IOUT) coupling_el_po_jacobian2Dw
+    write(IOUT) coupling_el_po_normal
+  endif
 
 !MPI interfaces
-  write(IOUT) num_interfaces_ext_mesh
-  write(IOUT) maxval(nibool_interfaces_ext_mesh(:))
-  write(IOUT) my_neighbours_ext_mesh
-  write(IOUT) nibool_interfaces_ext_mesh
+  max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
 
-  allocate(ibool_interfaces_ext_mesh_dummy(maxval(nibool_interfaces_ext_mesh(:)),num_interfaces_ext_mesh),stat=ier)
+  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array'
-
   do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:maxval(nibool_interfaces_ext_mesh(:)),i)
+     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
-  write(IOUT) ibool_interfaces_ext_mesh_dummy
+
+  write(IOUT) num_interfaces_ext_mesh
+  if( num_interfaces_ext_mesh > 0 ) then
+    write(IOUT) max_nibool_interfaces_ext_mesh
+    write(IOUT) my_neighbours_ext_mesh
+    write(IOUT) nibool_interfaces_ext_mesh
+    write(IOUT) ibool_interfaces_ext_mesh_dummy
+  endif
 
 ! anisotropy
   if( ANISOTROPY ) then
@@ -305,6 +343,27 @@
     write(IOUT) c55store
     write(IOUT) c56store
     write(IOUT) c66store
+  endif
+
+! inner/outer elements
+  write(IOUT) ispec_is_inner
+
+  if( ACOUSTIC_SIMULATION ) then
+    write(IOUT) nspec_inner_acoustic,nspec_outer_acoustic
+    write(IOUT) num_phase_ispec_acoustic
+    if(num_phase_ispec_acoustic > 0 ) write(IOUT) phase_ispec_inner_acoustic
+  endif
+
+  if( ELASTIC_SIMULATION ) then
+    write(IOUT) nspec_inner_elastic,nspec_outer_elastic
+    write(IOUT) num_phase_ispec_elastic
+    if(num_phase_ispec_elastic > 0 ) write(IOUT) phase_ispec_inner_elastic
+  endif
+
+  if( POROELASTIC_SIMULATION ) then
+    write(IOUT) nspec_inner_poroelastic,nspec_outer_poroelastic
+    write(IOUT) num_phase_ispec_poroelastic
+    if(num_phase_ispec_poroelastic > 0 ) write(IOUT) phase_ispec_inner_poroelastic
   endif
 
   close(IOUT)
@@ -466,6 +525,17 @@
       deallocate(iglob_tmp)
     endif
 
+
+    !! saves 1. MPI interface
+    if( num_interfaces_ext_mesh >= 1 ) then
+      filename = prname(1:len_trim(prname))//'MPI_1_points'
+      call write_VTK_data_points(nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+                        nibool_interfaces_ext_mesh(1), &
+                        filename)
+    endif
+
     ! acoustic-poroelastic domains
     if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
       ! saves points on acoustic-poroelastic coupling interface
@@ -570,3 +640,4 @@
 
 
   end subroutine save_arrays_solver_ext_mesh
+

@@ -95,10 +95,10 @@
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
   character(len=256) :: procname
   integer,parameter :: nheader=240      ! 240 bytes
-  integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
-  integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
+  !integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
+  !integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
   real(kind=4)    :: r4head(nheader/4)  ! 4-byte-real
-  equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
+  !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
 ! plotting source time function
@@ -274,7 +274,10 @@
          it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
          write(procname,"(i4)") myrank
          open(unit=IIN_SU1, file=trim(adjustl(OUTPUT_FILES_PATH))//'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj', &
-                            access='direct',recl=240+4*(NSTEP))
+                            status='old',access='direct',recl=240+4*(NSTEP),iostat = ier)
+         if( ier /= 0 ) call exit_MPI(myrank,'file '//trim(adjustl(OUTPUT_FILES_PATH)) &
+                                    //'../SEM/'//trim(adjustl(procname))//'_dx_SU.adj does not exit')
+
          do irec_local = 1,nrec_local
            irec = number_receiver_global(irec_local)
            read(IIN_SU1,rec=irec_local) r4head, adj_temp
@@ -299,7 +302,7 @@
          enddo
          close(IIN_SU1)
       endif !if (.not. SU_FORMAT)
-      
+
       deallocate(adj_sourcearray)
 
     endif ! if(ibool_read_adj_arrays)

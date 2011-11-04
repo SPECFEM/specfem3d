@@ -131,7 +131,7 @@
               iflag_aniso = materials_ext_mesh(5,imaterial_id)
 
             else                                         ! poroelastic
-              ! materials_ext_mesh format: 
+              ! materials_ext_mesh format:
               ! rhos,rhof,phi,tort,eta,domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
 
               ! solid properties

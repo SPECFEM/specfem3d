@@ -71,8 +71,8 @@
 ! first dimension  : material_id
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(NMATERIALS,6) ::  material_properties
-  double precision , dimension(6) :: matpropl
-  integer i,ispec,iglob
+  double precision , dimension(16) :: matpropl
+  integer :: i,ispec,iglob,ier
 
 ! name of the database files
   character(len=256) prname
@@ -82,62 +82,69 @@
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
+  integer, parameter :: IIN_database = 15
 
-  open(unit=15,file=prname(1:len_trim(prname))//'Database',status='unknown',action='write',form='formatted')
+  open(unit=IIN_database,file=prname(1:len_trim(prname))//'Database', &
+        status='unknown',action='write',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening Database file'
 
-  write(15,*) nglob
+  write(IIN_database) nglob
   do iglob=1,nglob
-     write(15,*) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
+     write(IIN_database) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
   end do
 
 
 ! Materials properties
-   write(15,*) NMATERIALS, 0
+   write(IIN_database) NMATERIALS, 0
    do idoubl = 1,NMATERIALS
-      !write(15,*) material_properties(idoubl,:)
-      matpropl(:) = material_properties(idoubl,:)
+      !write(IIN_database,*) material_properties(idoubl,:)
+      matpropl(:) = 0.d0
+      matpropl(1:6) = material_properties(idoubl,1:6)
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
-      write(15,*) matpropl, 0.,0.,0.,0.,0.,0.,0.,0.,0.,0.
+      write(IIN_database) matpropl
    end do
 
 
-  write(15,*) nspec
+  write(IIN_database) nspec
   do ispec=1,nspec
-      write(15,'(11i14)') ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
+      !write(IIN_database,'(11i14)') ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
+      !     ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
+      !     ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
+      write(IIN_database) ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
            ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
            ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
   end do
 
   ! Boundaries
-  write(15,*) 1,nspec2D_xmin
-  write(15,*) 2,nspec2D_xmax
-  write(15,*) 3,nspec2D_ymin
-  write(15,*) 4,nspec2D_ymax
-  write(15,*) 5,NSPEC2D_BOTTOM
-  write(15,*) 6,NSPEC2D_TOP
+  write(IIN_database) 1,nspec2D_xmin
+  write(IIN_database) 2,nspec2D_xmax
+  write(IIN_database) 3,nspec2D_ymin
+  write(IIN_database) 4,nspec2D_ymax
+  write(IIN_database) 5,NSPEC2D_BOTTOM
+  write(IIN_database) 6,NSPEC2D_TOP
 
   do i=1,nspec2D_xmin
-     write(15,*) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY,1,ibelm_xmin(i)),&
+     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY,1,ibelm_xmin(i)),&
           ibool(1,1,NGLLZ,ibelm_xmin(i)),ibool(1,NGLLY,NGLLZ,ibelm_xmin(i))
   end do
   do i=1,nspec2D_xmax
-     write(15,*) ibelm_xmax(i),ibool(NGLLX,1,1,ibelm_xmax(i)),ibool(NGLLX,NGLLY,1,ibelm_xmax(i)), &
+     write(IIN_database) ibelm_xmax(i),ibool(NGLLX,1,1,ibelm_xmax(i)),ibool(NGLLX,NGLLY,1,ibelm_xmax(i)), &
           ibool(NGLLX,1,NGLLZ,ibelm_xmax(i)),ibool(NGLLX,NGLLY,NGLLZ,ibelm_xmax(i))
   end do
   do i=1,nspec2D_ymin
-     write(15,*) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX,1,1,ibelm_ymin(i)),&
+     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX,1,1,ibelm_ymin(i)),&
           ibool(1,1,NGLLZ,ibelm_ymin(i)),ibool(NGLLX,1,NGLLZ,ibelm_ymin(i))
   end do
   do i=1,nspec2D_ymax
-     write(15,*) ibelm_ymax(i),ibool(NGLLX,NGLLY,1,ibelm_ymax(i)),ibool(1,NGLLY,1,ibelm_ymax(i)), &
+     write(IIN_database) ibelm_ymax(i),ibool(NGLLX,NGLLY,1,ibelm_ymax(i)),ibool(1,NGLLY,1,ibelm_ymax(i)), &
           ibool(NGLLX,NGLLY,NGLLZ,ibelm_ymax(i)),ibool(1,NGLLY,NGLLZ,ibelm_ymax(i))
   end do
   do i=1,NSPEC2D_BOTTOM
-     write(15,*) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX,1,1,ibelm_bottom(i)), &
+     write(IIN_database) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX,1,1,ibelm_bottom(i)), &
           ibool(NGLLX,NGLLY,1,ibelm_bottom(i)),ibool(1,NGLLY,1,ibelm_bottom(i))
   end do
   do i=1,NSPEC2D_TOP
-     write(15,*) ibelm_top(i),ibool(1,1,NGLLZ,ibelm_top(i)),ibool(NGLLX,1,NGLLZ,ibelm_top(i)), &
+     write(IIN_database) ibelm_top(i),ibool(1,1,NGLLZ,ibelm_top(i)),ibool(NGLLX,1,NGLLZ,ibelm_top(i)), &
           ibool(NGLLX,NGLLY,NGLLZ,ibelm_top(i)),ibool(1,NGLLY,NGLLZ,ibelm_top(i))
   end do
 
@@ -195,86 +202,82 @@
 
   nspec_interfaces_max = maxval(nspec_interface)
 
-  write(15,*) nb_interfaces,nspec_interfaces_max
+  write(IIN_database) nb_interfaces,nspec_interfaces_max
 
   if(interfaces(W)) then
-     write(15,*) addressing(iproc_xi-1,iproc_eta),nspec_interface(W)
+     write(IIN_database) addressing(iproc_xi-1,iproc_eta),nspec_interface(W)
      do ispec = 1,nspec
-        if(iMPIcut_xi(1,ispec))  write(15,*) ispec,4,ibool(1,1,1,ispec),ibool(1,2,1,ispec), &
+        if(iMPIcut_xi(1,ispec))  write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,2,1,ispec), &
              ibool(1,1,2,ispec),ibool(1,2,2,ispec)
      end do
   end if
 
   if(interfaces(E)) then
-     write(15,*) addressing(iproc_xi+1,iproc_eta),nspec_interface(E)
+     write(IIN_database) addressing(iproc_xi+1,iproc_eta),nspec_interface(E)
      do ispec = 1,nspec
-        if(iMPIcut_xi(2,ispec))  write(15,*) ispec,4,ibool(2,1,1,ispec),ibool(2,2,1,ispec), &
+        if(iMPIcut_xi(2,ispec))  write(IIN_database) ispec,4,ibool(2,1,1,ispec),ibool(2,2,1,ispec), &
              ibool(2,1,2,ispec),ibool(2,2,2,ispec)
      end do
   end if
 
    if(interfaces(S)) then
-     write(15,*) addressing(iproc_xi,iproc_eta-1),nspec_interface(S)
+     write(IIN_database) addressing(iproc_xi,iproc_eta-1),nspec_interface(S)
      do ispec = 1,nspec
-        if(iMPIcut_eta(1,ispec))  write(15,*) ispec,4,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
+        if(iMPIcut_eta(1,ispec))  write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
              ibool(1,1,2,ispec),ibool(2,1,2,ispec)
      end do
   end if
 
   if(interfaces(N)) then
-     write(15,*) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
+     write(IIN_database) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
      do ispec = 1,nspec
-        if(iMPIcut_eta(2,ispec))  write(15,*) ispec,4,ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
+        if(iMPIcut_eta(2,ispec))  write(IIN_database) ispec,4,ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
              ibool(2,2,2,ispec),ibool(1,2,2,ispec)
      end do
   end if
 
   if(interfaces(NW)) then
-     write(15,*) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
+     write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
      do ispec = 1,nspec
         if((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
-           write(15,*) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
+           write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
         end if
      end do
   end if
 
   if(interfaces(NE)) then
-     write(15,*) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
+     write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
      do ispec = 1,nspec
         if((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
-           write(15,*) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
+           write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
         end if
      end do
   end if
 
   if(interfaces(SE)) then
-     write(15,*) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
+     write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
      do ispec = 1,nspec
         if((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
-           write(15,*) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
+           write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
         end if
      end do
   end if
 
   if(interfaces(SW)) then
-     write(15,*) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
+     write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
      do ispec = 1,nspec
         if((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
-           write(15,*) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
+           write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
         end if
      end do
   end if
 
   else
 
-     write(15,*) 0,0
+     write(IIN_database) 0,0
 
   end if
 
-  close(15)
-
+  close(IIN_database)
 
   end subroutine save_databases
-
-
-

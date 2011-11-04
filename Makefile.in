@@ -98,6 +98,7 @@ create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
 smooth_vol_data: xsmooth_vol_data
+model_update: xmodel_update
 check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
 
 bin:
@@ -139,7 +140,7 @@ xdecompose_mesh_SCOTCH:  required reqdec
 xcreate_movie_shakemap_AVS_DX_GMT: required
 	(cd src/specfem3D ; make xcreate_movie_shakemap_AVS_DX_GMT)
 
-xcombine_vol_data: required
+xcombine_vol_data: required reqspec
 	(cd src/specfem3D ; make xcombine_vol_data)
 
 xcombine_surf_data: required
@@ -148,8 +149,12 @@ xcombine_surf_data: required
 xconvolve_source_timefunction: required
 	(cd src/specfem3D ; make xconvolve_source_timefunction)
 
-xsmooth_vol_data: required
+xsmooth_vol_data: required reqspec
 	(cd src/specfem3D ; make xsmooth_vol_data)
+
+xmodel_update: required reqspec xspecfem3D
+	(cd src/specfem3D ; make xmodel_update)
+
 
 xcheck_mesh_quality_CUBIT_Abaqus: required reqche
 	(cd src/check_mesh_quality_CUBIT_Abaqus ; make)
@@ -172,6 +177,7 @@ help:
 	@echo "    xcombine_vol_data"
 	@echo "    xcombine_surf_data"
 	@echo "    xsmooth_vol_data"
+	@echo "    xmodel_update"
 	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
 	@echo ""
 

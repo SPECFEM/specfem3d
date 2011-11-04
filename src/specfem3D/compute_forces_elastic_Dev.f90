@@ -25,7 +25,7 @@
 !=====================================================================
 
 
-subroutine compute_forces_elastic_Dev_5points( iphase ,NSPEC_AB,NGLOB_AB, &
+subroutine compute_forces_elastic_Dev_5p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -72,7 +72,8 @@ subroutine compute_forces_elastic_Dev_5points( iphase ,NSPEC_AB,NGLOB_AB, &
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,5) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(5,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -117,15 +118,15 @@ subroutine compute_forces_elastic_Dev_5points( iphase ,NSPEC_AB,NGLOB_AB, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(5,5,5) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(5,5,5) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(5,25) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(5,25) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(5,25) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
 
   equivalence(dummyx_loc,B1_m1_m2_5points)
   equivalence(dummyy_loc,B2_m1_m2_5points)
@@ -137,11 +138,11 @@ subroutine compute_forces_elastic_Dev_5points( iphase ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_5points)
   equivalence(newtempz1,E3_m1_m2_5points)
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
+  real(kind=CUSTOM_REAL), dimension(25,5) :: &
     A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(25,5) :: &
     C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(25,5) :: &
     E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_5points)
@@ -649,35 +650,13 @@ subroutine compute_forces_elastic_Dev_5points( iphase ,NSPEC_AB,NGLOB_AB, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_elastic_Dev_5points
+end subroutine compute_forces_elastic_Dev_5p
+
+!
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
 
-
-subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
+subroutine compute_forces_elastic_Dev_6p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -724,7 +703,8 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,6) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(6,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -769,15 +749,15 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(6,6,6) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(6,6,6) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_6points,B2_m1_m2_6points,B3_m1_m2_6points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_6points,C2_m1_m2_6points,C3_m1_m2_6points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_6points,E2_m1_m2_6points,E3_m1_m2_6points
+  real(kind=CUSTOM_REAL), dimension(6,36) :: B1_m1_m2_6points,B2_m1_m2_6points,B3_m1_m2_6points
+  real(kind=CUSTOM_REAL), dimension(6,36) :: C1_m1_m2_6points,C2_m1_m2_6points,C3_m1_m2_6points
+  real(kind=CUSTOM_REAL), dimension(6,36) :: E1_m1_m2_6points,E2_m1_m2_6points,E3_m1_m2_6points
 
   equivalence(dummyx_loc,B1_m1_m2_6points)
   equivalence(dummyy_loc,B2_m1_m2_6points)
@@ -789,11 +769,11 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_6points)
   equivalence(newtempz1,E3_m1_m2_6points)
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
+  real(kind=CUSTOM_REAL), dimension(36,6) :: &
     A1_mxm_m2_m1_6points,A2_mxm_m2_m1_6points,A3_mxm_m2_m1_6points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(36,6) :: &
     C1_mxm_m2_m1_6points,C2_mxm_m2_m1_6points,C3_mxm_m2_m1_6points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(36,6) :: &
     E1_mxm_m2_m1_6points,E2_mxm_m2_m1_6points,E3_mxm_m2_m1_6points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_6points)
@@ -881,19 +861,19 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,3)*B1_m1_m2_6points(3,j) + &
                                   hprime_xx(i,4)*B1_m1_m2_6points(4,j) + &
                                   hprime_xx(i,5)*B1_m1_m2_6points(5,j) + &
-                                  hprime_xx(i,6)*B1_m1_m2_6points(6,j) 
+                                  hprime_xx(i,6)*B1_m1_m2_6points(6,j)
             C2_m1_m2_6points(i,j) = hprime_xx(i,1)*B2_m1_m2_6points(1,j) + &
                                   hprime_xx(i,2)*B2_m1_m2_6points(2,j) + &
                                   hprime_xx(i,3)*B2_m1_m2_6points(3,j) + &
                                   hprime_xx(i,4)*B2_m1_m2_6points(4,j) + &
                                   hprime_xx(i,5)*B2_m1_m2_6points(5,j) + &
-                                  hprime_xx(i,6)*B2_m1_m2_6points(6,j) 
+                                  hprime_xx(i,6)*B2_m1_m2_6points(6,j)
             C3_m1_m2_6points(i,j) = hprime_xx(i,1)*B3_m1_m2_6points(1,j) + &
                                   hprime_xx(i,2)*B3_m1_m2_6points(2,j) + &
                                   hprime_xx(i,3)*B3_m1_m2_6points(3,j) + &
                                   hprime_xx(i,4)*B3_m1_m2_6points(4,j) + &
                                   hprime_xx(i,5)*B3_m1_m2_6points(5,j) + &
-                                  hprime_xx(i,6)*B3_m1_m2_6points(6,j) 
+                                  hprime_xx(i,6)*B3_m1_m2_6points(6,j)
           enddo
         enddo
 
@@ -908,19 +888,19 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
                             dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyx_loc(i,5,k)*hprime_xxT(5,j) + &
-                            dummyx_loc(i,6,k)*hprime_xxT(6,j) 
+                            dummyx_loc(i,6,k)*hprime_xxT(6,j)
               tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
                             dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyy_loc(i,5,k)*hprime_xxT(5,j) + &
-                            dummyy_loc(i,6,k)*hprime_xxT(6,j) 
+                            dummyy_loc(i,6,k)*hprime_xxT(6,j)
               tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
                             dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyz_loc(i,5,k)*hprime_xxT(5,j) + &
-                            dummyz_loc(i,6,k)*hprime_xxT(6,j) 
+                            dummyz_loc(i,6,k)*hprime_xxT(6,j)
             enddo
           enddo
         enddo
@@ -933,19 +913,19 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A1_mxm_m2_m1_6points(i,3)*hprime_xxT(3,j) + &
                                       A1_mxm_m2_m1_6points(i,4)*hprime_xxT(4,j) + &
                                       A1_mxm_m2_m1_6points(i,5)*hprime_xxT(5,j) + &
-                                      A1_mxm_m2_m1_6points(i,6)*hprime_xxT(6,j) 
+                                      A1_mxm_m2_m1_6points(i,6)*hprime_xxT(6,j)
             C2_mxm_m2_m1_6points(i,j) = A2_mxm_m2_m1_6points(i,1)*hprime_xxT(1,j) + &
                                       A2_mxm_m2_m1_6points(i,2)*hprime_xxT(2,j) + &
                                       A2_mxm_m2_m1_6points(i,3)*hprime_xxT(3,j) + &
                                       A2_mxm_m2_m1_6points(i,4)*hprime_xxT(4,j) + &
                                       A2_mxm_m2_m1_6points(i,5)*hprime_xxT(5,j) + &
-                                      A2_mxm_m2_m1_6points(i,6)*hprime_xxT(6,j) 
+                                      A2_mxm_m2_m1_6points(i,6)*hprime_xxT(6,j)
             C3_mxm_m2_m1_6points(i,j) = A3_mxm_m2_m1_6points(i,1)*hprime_xxT(1,j) + &
                                       A3_mxm_m2_m1_6points(i,2)*hprime_xxT(2,j) + &
                                       A3_mxm_m2_m1_6points(i,3)*hprime_xxT(3,j) + &
                                       A3_mxm_m2_m1_6points(i,4)*hprime_xxT(4,j) + &
                                       A3_mxm_m2_m1_6points(i,5)*hprime_xxT(5,j) + &
-                                      A3_mxm_m2_m1_6points(i,6)*hprime_xxT(6,j) 
+                                      A3_mxm_m2_m1_6points(i,6)*hprime_xxT(6,j)
           enddo
         enddo
 
@@ -1176,19 +1156,19 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,3)*C1_m1_m2_6points(3,j) + &
                                   hprimewgll_xxT(i,4)*C1_m1_m2_6points(4,j) + &
                                   hprimewgll_xxT(i,5)*C1_m1_m2_6points(5,j) + &
-                                  hprimewgll_xxT(i,6)*C1_m1_m2_6points(6,j) 
+                                  hprimewgll_xxT(i,6)*C1_m1_m2_6points(6,j)
             E2_m1_m2_6points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_6points(1,j) + &
                                   hprimewgll_xxT(i,2)*C2_m1_m2_6points(2,j) + &
                                   hprimewgll_xxT(i,3)*C2_m1_m2_6points(3,j) + &
                                   hprimewgll_xxT(i,4)*C2_m1_m2_6points(4,j) + &
                                   hprimewgll_xxT(i,5)*C2_m1_m2_6points(5,j) + &
-                                  hprimewgll_xxT(i,6)*C2_m1_m2_6points(6,j) 
+                                  hprimewgll_xxT(i,6)*C2_m1_m2_6points(6,j)
             E3_m1_m2_6points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_6points(1,j) + &
                                   hprimewgll_xxT(i,2)*C3_m1_m2_6points(2,j) + &
                                   hprimewgll_xxT(i,3)*C3_m1_m2_6points(3,j) + &
                                   hprimewgll_xxT(i,4)*C3_m1_m2_6points(4,j) + &
                                   hprimewgll_xxT(i,5)*C3_m1_m2_6points(5,j) + &
-                                  hprimewgll_xxT(i,6)*C3_m1_m2_6points(6,j) 
+                                  hprimewgll_xxT(i,6)*C3_m1_m2_6points(6,j)
           enddo
         enddo
 
@@ -1203,19 +1183,19 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempx2(i,3,k)*hprimewgll_xx(3,j) + &
                                tempx2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempx2(i,5,k)*hprimewgll_xx(5,j) + &
-                               tempx2(i,6,k)*hprimewgll_xx(6,j) 
+                               tempx2(i,6,k)*hprimewgll_xx(6,j)
               newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempy2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempy2(i,3,k)*hprimewgll_xx(3,j) + &
                                tempy2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempy2(i,5,k)*hprimewgll_xx(5,j) + &
-                               tempy2(i,6,k)*hprimewgll_xx(6,j) 
+                               tempy2(i,6,k)*hprimewgll_xx(6,j)
               newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempz2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempz2(i,3,k)*hprimewgll_xx(3,j) + &
                                tempz2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempz2(i,5,k)*hprimewgll_xx(5,j) + &
-                               tempz2(i,6,k)*hprimewgll_xx(6,j) 
+                               tempz2(i,6,k)*hprimewgll_xx(6,j)
             enddo
           enddo
         enddo
@@ -1228,19 +1208,19 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C1_mxm_m2_m1_6points(i,3)*hprimewgll_xx(3,j) + &
                                       C1_mxm_m2_m1_6points(i,4)*hprimewgll_xx(4,j) + &
                                       C1_mxm_m2_m1_6points(i,5)*hprimewgll_xx(5,j) + &
-                                      C1_mxm_m2_m1_6points(i,6)*hprimewgll_xx(6,j) 
+                                      C1_mxm_m2_m1_6points(i,6)*hprimewgll_xx(6,j)
             E2_mxm_m2_m1_6points(i,j) = C2_mxm_m2_m1_6points(i,1)*hprimewgll_xx(1,j) + &
                                       C2_mxm_m2_m1_6points(i,2)*hprimewgll_xx(2,j) + &
                                       C2_mxm_m2_m1_6points(i,3)*hprimewgll_xx(3,j) + &
                                       C2_mxm_m2_m1_6points(i,4)*hprimewgll_xx(4,j) + &
                                       C2_mxm_m2_m1_6points(i,5)*hprimewgll_xx(5,j) + &
-                                      C2_mxm_m2_m1_6points(i,6)*hprimewgll_xx(6,j) 
+                                      C2_mxm_m2_m1_6points(i,6)*hprimewgll_xx(6,j)
             E3_mxm_m2_m1_6points(i,j) = C3_mxm_m2_m1_6points(i,1)*hprimewgll_xx(1,j) + &
                                       C3_mxm_m2_m1_6points(i,2)*hprimewgll_xx(2,j) + &
                                       C3_mxm_m2_m1_6points(i,3)*hprimewgll_xx(3,j) + &
                                       C3_mxm_m2_m1_6points(i,4)*hprimewgll_xx(4,j) + &
                                       C3_mxm_m2_m1_6points(i,5)*hprimewgll_xx(5,j) + &
-                                      C3_mxm_m2_m1_6points(i,6)*hprimewgll_xx(6,j) 
+                                      C3_mxm_m2_m1_6points(i,6)*hprimewgll_xx(6,j)
           enddo
         enddo
 
@@ -1319,35 +1299,13 @@ subroutine compute_forces_elastic_Dev_6points( iphase ,NSPEC_AB,NGLOB_AB, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_elastic_Dev_6points
+end subroutine compute_forces_elastic_Dev_6p
+
+!
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
 
-
-subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
+subroutine compute_forces_elastic_Dev_7p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -1394,7 +1352,8 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,7) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(7,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -1439,15 +1398,15 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(7,7,7) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(7,7,7) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_7points,B2_m1_m2_7points,B3_m1_m2_7points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_7points,C2_m1_m2_7points,C3_m1_m2_7points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_7points,E2_m1_m2_7points,E3_m1_m2_7points
+  real(kind=CUSTOM_REAL), dimension(7,49) :: B1_m1_m2_7points,B2_m1_m2_7points,B3_m1_m2_7points
+  real(kind=CUSTOM_REAL), dimension(7,49) :: C1_m1_m2_7points,C2_m1_m2_7points,C3_m1_m2_7points
+  real(kind=CUSTOM_REAL), dimension(7,49) :: E1_m1_m2_7points,E2_m1_m2_7points,E3_m1_m2_7points
 
   equivalence(dummyx_loc,B1_m1_m2_7points)
   equivalence(dummyy_loc,B2_m1_m2_7points)
@@ -1459,11 +1418,11 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_7points)
   equivalence(newtempz1,E3_m1_m2_7points)
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
+  real(kind=CUSTOM_REAL), dimension(49,7) :: &
     A1_mxm_m2_m1_7points,A2_mxm_m2_m1_7points,A3_mxm_m2_m1_7points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(49,7) :: &
     C1_mxm_m2_m1_7points,C2_mxm_m2_m1_7points,C3_mxm_m2_m1_7points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(49,7) :: &
     E1_mxm_m2_m1_7points,E2_mxm_m2_m1_7points,E3_mxm_m2_m1_7points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_7points)
@@ -1552,21 +1511,21 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,4)*B1_m1_m2_7points(4,j) + &
                                   hprime_xx(i,5)*B1_m1_m2_7points(5,j) + &
                                   hprime_xx(i,6)*B1_m1_m2_7points(6,j) + &
-                                  hprime_xx(i,7)*B1_m1_m2_7points(7,j) 
+                                  hprime_xx(i,7)*B1_m1_m2_7points(7,j)
             C2_m1_m2_7points(i,j) = hprime_xx(i,1)*B2_m1_m2_7points(1,j) + &
                                   hprime_xx(i,2)*B2_m1_m2_7points(2,j) + &
                                   hprime_xx(i,3)*B2_m1_m2_7points(3,j) + &
                                   hprime_xx(i,4)*B2_m1_m2_7points(4,j) + &
                                   hprime_xx(i,5)*B2_m1_m2_7points(5,j) + &
                                   hprime_xx(i,6)*B2_m1_m2_7points(6,j) + &
-                                  hprime_xx(i,7)*B2_m1_m2_7points(7,j) 
+                                  hprime_xx(i,7)*B2_m1_m2_7points(7,j)
             C3_m1_m2_7points(i,j) = hprime_xx(i,1)*B3_m1_m2_7points(1,j) + &
                                   hprime_xx(i,2)*B3_m1_m2_7points(2,j) + &
                                   hprime_xx(i,3)*B3_m1_m2_7points(3,j) + &
                                   hprime_xx(i,4)*B3_m1_m2_7points(4,j) + &
                                   hprime_xx(i,5)*B3_m1_m2_7points(5,j) + &
                                   hprime_xx(i,6)*B3_m1_m2_7points(6,j) + &
-                                  hprime_xx(i,7)*B3_m1_m2_7points(7,j) 
+                                  hprime_xx(i,7)*B3_m1_m2_7points(7,j)
           enddo
         enddo
 
@@ -1582,21 +1541,21 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyx_loc(i,5,k)*hprime_xxT(5,j) + &
                             dummyx_loc(i,6,k)*hprime_xxT(6,j) + &
-                            dummyx_loc(i,7,k)*hprime_xxT(7,j) 
+                            dummyx_loc(i,7,k)*hprime_xxT(7,j)
               tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
                             dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyy_loc(i,5,k)*hprime_xxT(5,j) + &
                             dummyy_loc(i,6,k)*hprime_xxT(6,j) + &
-                            dummyy_loc(i,7,k)*hprime_xxT(7,j) 
+                            dummyy_loc(i,7,k)*hprime_xxT(7,j)
               tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
                             dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
                             dummyz_loc(i,5,k)*hprime_xxT(5,j) + &
                             dummyz_loc(i,6,k)*hprime_xxT(6,j) + &
-                            dummyz_loc(i,7,k)*hprime_xxT(7,j) 
+                            dummyz_loc(i,7,k)*hprime_xxT(7,j)
             enddo
           enddo
         enddo
@@ -1610,21 +1569,21 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A1_mxm_m2_m1_7points(i,4)*hprime_xxT(4,j) + &
                                       A1_mxm_m2_m1_7points(i,5)*hprime_xxT(5,j) + &
                                       A1_mxm_m2_m1_7points(i,6)*hprime_xxT(6,j) + &
-                                      A1_mxm_m2_m1_7points(i,7)*hprime_xxT(7,j) 
+                                      A1_mxm_m2_m1_7points(i,7)*hprime_xxT(7,j)
             C2_mxm_m2_m1_7points(i,j) = A2_mxm_m2_m1_7points(i,1)*hprime_xxT(1,j) + &
                                       A2_mxm_m2_m1_7points(i,2)*hprime_xxT(2,j) + &
                                       A2_mxm_m2_m1_7points(i,3)*hprime_xxT(3,j) + &
                                       A2_mxm_m2_m1_7points(i,4)*hprime_xxT(4,j) + &
                                       A2_mxm_m2_m1_7points(i,5)*hprime_xxT(5,j) + &
                                       A2_mxm_m2_m1_7points(i,6)*hprime_xxT(6,j) + &
-                                      A2_mxm_m2_m1_7points(i,7)*hprime_xxT(7,j) 
+                                      A2_mxm_m2_m1_7points(i,7)*hprime_xxT(7,j)
             C3_mxm_m2_m1_7points(i,j) = A3_mxm_m2_m1_7points(i,1)*hprime_xxT(1,j) + &
                                       A3_mxm_m2_m1_7points(i,2)*hprime_xxT(2,j) + &
                                       A3_mxm_m2_m1_7points(i,3)*hprime_xxT(3,j) + &
                                       A3_mxm_m2_m1_7points(i,4)*hprime_xxT(4,j) + &
                                       A3_mxm_m2_m1_7points(i,5)*hprime_xxT(5,j) + &
                                       A3_mxm_m2_m1_7points(i,6)*hprime_xxT(6,j) + &
-                                      A3_mxm_m2_m1_7points(i,7)*hprime_xxT(7,j) 
+                                      A3_mxm_m2_m1_7points(i,7)*hprime_xxT(7,j)
           enddo
         enddo
 
@@ -1856,21 +1815,21 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,4)*C1_m1_m2_7points(4,j) + &
                                   hprimewgll_xxT(i,5)*C1_m1_m2_7points(5,j) + &
                                   hprimewgll_xxT(i,6)*C1_m1_m2_7points(6,j) + &
-                                  hprimewgll_xxT(i,7)*C1_m1_m2_7points(7,j) 
+                                  hprimewgll_xxT(i,7)*C1_m1_m2_7points(7,j)
             E2_m1_m2_7points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_7points(1,j) + &
                                   hprimewgll_xxT(i,2)*C2_m1_m2_7points(2,j) + &
                                   hprimewgll_xxT(i,3)*C2_m1_m2_7points(3,j) + &
                                   hprimewgll_xxT(i,4)*C2_m1_m2_7points(4,j) + &
                                   hprimewgll_xxT(i,5)*C2_m1_m2_7points(5,j) + &
                                   hprimewgll_xxT(i,6)*C2_m1_m2_7points(6,j) + &
-                                  hprimewgll_xxT(i,7)*C2_m1_m2_7points(7,j) 
+                                  hprimewgll_xxT(i,7)*C2_m1_m2_7points(7,j)
             E3_m1_m2_7points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_7points(1,j) + &
                                   hprimewgll_xxT(i,2)*C3_m1_m2_7points(2,j) + &
                                   hprimewgll_xxT(i,3)*C3_m1_m2_7points(3,j) + &
                                   hprimewgll_xxT(i,4)*C3_m1_m2_7points(4,j) + &
                                   hprimewgll_xxT(i,5)*C3_m1_m2_7points(5,j) + &
                                   hprimewgll_xxT(i,6)*C3_m1_m2_7points(6,j) + &
-                                  hprimewgll_xxT(i,7)*C3_m1_m2_7points(7,j) 
+                                  hprimewgll_xxT(i,7)*C3_m1_m2_7points(7,j)
           enddo
         enddo
 
@@ -1886,21 +1845,21 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempx2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempx2(i,5,k)*hprimewgll_xx(5,j) + &
                                tempx2(i,6,k)*hprimewgll_xx(6,j) + &
-                               tempx2(i,7,k)*hprimewgll_xx(7,j) 
+                               tempx2(i,7,k)*hprimewgll_xx(7,j)
               newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempy2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempy2(i,3,k)*hprimewgll_xx(3,j) + &
                                tempy2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempy2(i,5,k)*hprimewgll_xx(5,j) + &
                                tempy2(i,6,k)*hprimewgll_xx(6,j) + &
-                               tempy2(i,7,k)*hprimewgll_xx(7,j) 
+                               tempy2(i,7,k)*hprimewgll_xx(7,j)
               newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempz2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempz2(i,3,k)*hprimewgll_xx(3,j) + &
                                tempz2(i,4,k)*hprimewgll_xx(4,j) + &
                                tempz2(i,5,k)*hprimewgll_xx(5,j) + &
                                tempz2(i,6,k)*hprimewgll_xx(6,j) + &
-                               tempz2(i,7,k)*hprimewgll_xx(7,j) 
+                               tempz2(i,7,k)*hprimewgll_xx(7,j)
             enddo
           enddo
         enddo
@@ -1914,21 +1873,21 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C1_mxm_m2_m1_7points(i,4)*hprimewgll_xx(4,j) + &
                                       C1_mxm_m2_m1_7points(i,5)*hprimewgll_xx(5,j) + &
                                       C1_mxm_m2_m1_7points(i,6)*hprimewgll_xx(6,j) + &
-                                      C1_mxm_m2_m1_7points(i,7)*hprimewgll_xx(7,j) 
+                                      C1_mxm_m2_m1_7points(i,7)*hprimewgll_xx(7,j)
             E2_mxm_m2_m1_7points(i,j) = C2_mxm_m2_m1_7points(i,1)*hprimewgll_xx(1,j) + &
                                       C2_mxm_m2_m1_7points(i,2)*hprimewgll_xx(2,j) + &
                                       C2_mxm_m2_m1_7points(i,3)*hprimewgll_xx(3,j) + &
                                       C2_mxm_m2_m1_7points(i,4)*hprimewgll_xx(4,j) + &
                                       C2_mxm_m2_m1_7points(i,5)*hprimewgll_xx(5,j) + &
                                       C2_mxm_m2_m1_7points(i,6)*hprimewgll_xx(6,j) + &
-                                      C2_mxm_m2_m1_7points(i,7)*hprimewgll_xx(7,j) 
+                                      C2_mxm_m2_m1_7points(i,7)*hprimewgll_xx(7,j)
             E3_mxm_m2_m1_7points(i,j) = C3_mxm_m2_m1_7points(i,1)*hprimewgll_xx(1,j) + &
                                       C3_mxm_m2_m1_7points(i,2)*hprimewgll_xx(2,j) + &
                                       C3_mxm_m2_m1_7points(i,3)*hprimewgll_xx(3,j) + &
                                       C3_mxm_m2_m1_7points(i,4)*hprimewgll_xx(4,j) + &
                                       C3_mxm_m2_m1_7points(i,5)*hprimewgll_xx(5,j) + &
                                       C3_mxm_m2_m1_7points(i,6)*hprimewgll_xx(6,j) + &
-                                      C3_mxm_m2_m1_7points(i,7)*hprimewgll_xx(7,j) 
+                                      C3_mxm_m2_m1_7points(i,7)*hprimewgll_xx(7,j)
           enddo
         enddo
 
@@ -2007,35 +1966,13 @@ subroutine compute_forces_elastic_Dev_7points( iphase ,NSPEC_AB,NGLOB_AB, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_elastic_Dev_7points
+end subroutine compute_forces_elastic_Dev_7p
+
+!
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
 
-
-subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
+subroutine compute_forces_elastic_Dev_8p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -2082,7 +2019,8 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,8) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(8,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -2127,15 +2065,15 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(8,8,8) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(8,8,8) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_8points,B2_m1_m2_8points,B3_m1_m2_8points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_8points,C2_m1_m2_8points,C3_m1_m2_8points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_8points,E2_m1_m2_8points,E3_m1_m2_8points
+  real(kind=CUSTOM_REAL), dimension(8,64) :: B1_m1_m2_8points,B2_m1_m2_8points,B3_m1_m2_8points
+  real(kind=CUSTOM_REAL), dimension(8,64) :: C1_m1_m2_8points,C2_m1_m2_8points,C3_m1_m2_8points
+  real(kind=CUSTOM_REAL), dimension(8,64) :: E1_m1_m2_8points,E2_m1_m2_8points,E3_m1_m2_8points
 
   equivalence(dummyx_loc,B1_m1_m2_8points)
   equivalence(dummyy_loc,B2_m1_m2_8points)
@@ -2147,11 +2085,11 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_8points)
   equivalence(newtempz1,E3_m1_m2_8points)
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
+  real(kind=CUSTOM_REAL), dimension(64,8) :: &
     A1_mxm_m2_m1_8points,A2_mxm_m2_m1_8points,A3_mxm_m2_m1_8points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(64,8) :: &
     C1_mxm_m2_m1_8points,C2_mxm_m2_m1_8points,C3_mxm_m2_m1_8points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(64,8) :: &
     E1_mxm_m2_m1_8points,E2_mxm_m2_m1_8points,E3_mxm_m2_m1_8points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_8points)
@@ -2241,7 +2179,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,5)*B1_m1_m2_8points(5,j) + &
                                   hprime_xx(i,6)*B1_m1_m2_8points(6,j) + &
                                   hprime_xx(i,7)*B1_m1_m2_8points(7,j) + &
-                                  hprime_xx(i,8)*B1_m1_m2_8points(8,j) 
+                                  hprime_xx(i,8)*B1_m1_m2_8points(8,j)
             C2_m1_m2_8points(i,j) = hprime_xx(i,1)*B2_m1_m2_8points(1,j) + &
                                   hprime_xx(i,2)*B2_m1_m2_8points(2,j) + &
                                   hprime_xx(i,3)*B2_m1_m2_8points(3,j) + &
@@ -2249,7 +2187,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,5)*B2_m1_m2_8points(5,j) + &
                                   hprime_xx(i,6)*B2_m1_m2_8points(6,j) + &
                                   hprime_xx(i,7)*B2_m1_m2_8points(7,j) + &
-                                  hprime_xx(i,8)*B2_m1_m2_8points(8,j) 
+                                  hprime_xx(i,8)*B2_m1_m2_8points(8,j)
             C3_m1_m2_8points(i,j) = hprime_xx(i,1)*B3_m1_m2_8points(1,j) + &
                                   hprime_xx(i,2)*B3_m1_m2_8points(2,j) + &
                                   hprime_xx(i,3)*B3_m1_m2_8points(3,j) + &
@@ -2257,7 +2195,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,5)*B3_m1_m2_8points(5,j) + &
                                   hprime_xx(i,6)*B3_m1_m2_8points(6,j) + &
                                   hprime_xx(i,7)*B3_m1_m2_8points(7,j) + &
-                                  hprime_xx(i,8)*B3_m1_m2_8points(8,j) 
+                                  hprime_xx(i,8)*B3_m1_m2_8points(8,j)
           enddo
         enddo
 
@@ -2274,7 +2212,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyx_loc(i,5,k)*hprime_xxT(5,j) + &
                             dummyx_loc(i,6,k)*hprime_xxT(6,j) + &
                             dummyx_loc(i,7,k)*hprime_xxT(7,j) + &
-                            dummyx_loc(i,8,k)*hprime_xxT(8,j) 
+                            dummyx_loc(i,8,k)*hprime_xxT(8,j)
               tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
@@ -2282,7 +2220,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyy_loc(i,5,k)*hprime_xxT(5,j) + &
                             dummyy_loc(i,6,k)*hprime_xxT(6,j) + &
                             dummyy_loc(i,7,k)*hprime_xxT(7,j) + &
-                            dummyy_loc(i,8,k)*hprime_xxT(8,j) 
+                            dummyy_loc(i,8,k)*hprime_xxT(8,j)
               tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
@@ -2290,7 +2228,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyz_loc(i,5,k)*hprime_xxT(5,j) + &
                             dummyz_loc(i,6,k)*hprime_xxT(6,j) + &
                             dummyz_loc(i,7,k)*hprime_xxT(7,j) + &
-                            dummyz_loc(i,8,k)*hprime_xxT(8,j) 
+                            dummyz_loc(i,8,k)*hprime_xxT(8,j)
             enddo
           enddo
         enddo
@@ -2305,7 +2243,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A1_mxm_m2_m1_8points(i,5)*hprime_xxT(5,j) + &
                                       A1_mxm_m2_m1_8points(i,6)*hprime_xxT(6,j) + &
                                       A1_mxm_m2_m1_8points(i,7)*hprime_xxT(7,j) + &
-                                      A1_mxm_m2_m1_8points(i,8)*hprime_xxT(8,j) 
+                                      A1_mxm_m2_m1_8points(i,8)*hprime_xxT(8,j)
             C2_mxm_m2_m1_8points(i,j) = A2_mxm_m2_m1_8points(i,1)*hprime_xxT(1,j) + &
                                       A2_mxm_m2_m1_8points(i,2)*hprime_xxT(2,j) + &
                                       A2_mxm_m2_m1_8points(i,3)*hprime_xxT(3,j) + &
@@ -2313,7 +2251,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A2_mxm_m2_m1_8points(i,5)*hprime_xxT(5,j) + &
                                       A2_mxm_m2_m1_8points(i,6)*hprime_xxT(6,j) + &
                                       A2_mxm_m2_m1_8points(i,7)*hprime_xxT(7,j) + &
-                                      A2_mxm_m2_m1_8points(i,8)*hprime_xxT(8,j) 
+                                      A2_mxm_m2_m1_8points(i,8)*hprime_xxT(8,j)
             C3_mxm_m2_m1_8points(i,j) = A3_mxm_m2_m1_8points(i,1)*hprime_xxT(1,j) + &
                                       A3_mxm_m2_m1_8points(i,2)*hprime_xxT(2,j) + &
                                       A3_mxm_m2_m1_8points(i,3)*hprime_xxT(3,j) + &
@@ -2321,7 +2259,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A3_mxm_m2_m1_8points(i,5)*hprime_xxT(5,j) + &
                                       A3_mxm_m2_m1_8points(i,6)*hprime_xxT(6,j) + &
                                       A3_mxm_m2_m1_8points(i,7)*hprime_xxT(7,j) + &
-                                      A3_mxm_m2_m1_8points(i,8)*hprime_xxT(8,j) 
+                                      A3_mxm_m2_m1_8points(i,8)*hprime_xxT(8,j)
           enddo
         enddo
 
@@ -2554,7 +2492,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,5)*C1_m1_m2_8points(5,j) + &
                                   hprimewgll_xxT(i,6)*C1_m1_m2_8points(6,j) + &
                                   hprimewgll_xxT(i,7)*C1_m1_m2_8points(7,j) + &
-                                  hprimewgll_xxT(i,8)*C1_m1_m2_8points(8,j) 
+                                  hprimewgll_xxT(i,8)*C1_m1_m2_8points(8,j)
             E2_m1_m2_8points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_8points(1,j) + &
                                   hprimewgll_xxT(i,2)*C2_m1_m2_8points(2,j) + &
                                   hprimewgll_xxT(i,3)*C2_m1_m2_8points(3,j) + &
@@ -2562,7 +2500,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,5)*C2_m1_m2_8points(5,j) + &
                                   hprimewgll_xxT(i,6)*C2_m1_m2_8points(6,j) + &
                                   hprimewgll_xxT(i,7)*C2_m1_m2_8points(7,j) + &
-                                  hprimewgll_xxT(i,8)*C2_m1_m2_8points(8,j) 
+                                  hprimewgll_xxT(i,8)*C2_m1_m2_8points(8,j)
             E3_m1_m2_8points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_8points(1,j) + &
                                   hprimewgll_xxT(i,2)*C3_m1_m2_8points(2,j) + &
                                   hprimewgll_xxT(i,3)*C3_m1_m2_8points(3,j) + &
@@ -2570,7 +2508,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,5)*C3_m1_m2_8points(5,j) + &
                                   hprimewgll_xxT(i,6)*C3_m1_m2_8points(6,j) + &
                                   hprimewgll_xxT(i,7)*C3_m1_m2_8points(7,j) + &
-                                  hprimewgll_xxT(i,8)*C3_m1_m2_8points(8,j) 
+                                  hprimewgll_xxT(i,8)*C3_m1_m2_8points(8,j)
           enddo
         enddo
 
@@ -2587,7 +2525,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempx2(i,5,k)*hprimewgll_xx(5,j) + &
                                tempx2(i,6,k)*hprimewgll_xx(6,j) + &
                                tempx2(i,7,k)*hprimewgll_xx(7,j) + &
-                               tempx2(i,8,k)*hprimewgll_xx(8,j) 
+                               tempx2(i,8,k)*hprimewgll_xx(8,j)
               newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempy2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempy2(i,3,k)*hprimewgll_xx(3,j) + &
@@ -2595,7 +2533,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempy2(i,5,k)*hprimewgll_xx(5,j) + &
                                tempy2(i,6,k)*hprimewgll_xx(6,j) + &
                                tempy2(i,7,k)*hprimewgll_xx(7,j) + &
-                               tempy2(i,8,k)*hprimewgll_xx(8,j) 
+                               tempy2(i,8,k)*hprimewgll_xx(8,j)
               newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempz2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempz2(i,3,k)*hprimewgll_xx(3,j) + &
@@ -2603,7 +2541,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempz2(i,5,k)*hprimewgll_xx(5,j) + &
                                tempz2(i,6,k)*hprimewgll_xx(6,j) + &
                                tempz2(i,7,k)*hprimewgll_xx(7,j) + &
-                               tempz2(i,8,k)*hprimewgll_xx(8,j) 
+                               tempz2(i,8,k)*hprimewgll_xx(8,j)
             enddo
           enddo
         enddo
@@ -2618,7 +2556,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C1_mxm_m2_m1_8points(i,5)*hprimewgll_xx(5,j) + &
                                       C1_mxm_m2_m1_8points(i,6)*hprimewgll_xx(6,j) + &
                                       C1_mxm_m2_m1_8points(i,7)*hprimewgll_xx(7,j) + &
-                                      C1_mxm_m2_m1_8points(i,8)*hprimewgll_xx(8,j) 
+                                      C1_mxm_m2_m1_8points(i,8)*hprimewgll_xx(8,j)
             E2_mxm_m2_m1_8points(i,j) = C2_mxm_m2_m1_8points(i,1)*hprimewgll_xx(1,j) + &
                                       C2_mxm_m2_m1_8points(i,2)*hprimewgll_xx(2,j) + &
                                       C2_mxm_m2_m1_8points(i,3)*hprimewgll_xx(3,j) + &
@@ -2626,7 +2564,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C2_mxm_m2_m1_8points(i,5)*hprimewgll_xx(5,j) + &
                                       C2_mxm_m2_m1_8points(i,6)*hprimewgll_xx(6,j) + &
                                       C2_mxm_m2_m1_8points(i,7)*hprimewgll_xx(7,j) + &
-                                      C2_mxm_m2_m1_8points(i,8)*hprimewgll_xx(8,j) 
+                                      C2_mxm_m2_m1_8points(i,8)*hprimewgll_xx(8,j)
             E3_mxm_m2_m1_8points(i,j) = C3_mxm_m2_m1_8points(i,1)*hprimewgll_xx(1,j) + &
                                       C3_mxm_m2_m1_8points(i,2)*hprimewgll_xx(2,j) + &
                                       C3_mxm_m2_m1_8points(i,3)*hprimewgll_xx(3,j) + &
@@ -2634,7 +2572,7 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C3_mxm_m2_m1_8points(i,5)*hprimewgll_xx(5,j) + &
                                       C3_mxm_m2_m1_8points(i,6)*hprimewgll_xx(6,j) + &
                                       C3_mxm_m2_m1_8points(i,7)*hprimewgll_xx(7,j) + &
-                                      C3_mxm_m2_m1_8points(i,8)*hprimewgll_xx(8,j) 
+                                      C3_mxm_m2_m1_8points(i,8)*hprimewgll_xx(8,j)
           enddo
         enddo
 
@@ -2713,35 +2651,13 @@ subroutine compute_forces_elastic_Dev_8points( iphase ,NSPEC_AB,NGLOB_AB, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_elastic_Dev_8points
+end subroutine compute_forces_elastic_Dev_8p
+
+!
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
 
-
-subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
+subroutine compute_forces_elastic_Dev_9p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -2788,7 +2704,8 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,9) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(9,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -2833,15 +2750,15 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(9,9,9) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(9,9,9) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_9points,B2_m1_m2_9points,B3_m1_m2_9points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_9points,C2_m1_m2_9points,C3_m1_m2_9points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_9points,E2_m1_m2_9points,E3_m1_m2_9points
+  real(kind=CUSTOM_REAL), dimension(9,81) :: B1_m1_m2_9points,B2_m1_m2_9points,B3_m1_m2_9points
+  real(kind=CUSTOM_REAL), dimension(9,81) :: C1_m1_m2_9points,C2_m1_m2_9points,C3_m1_m2_9points
+  real(kind=CUSTOM_REAL), dimension(9,81) :: E1_m1_m2_9points,E2_m1_m2_9points,E3_m1_m2_9points
 
   equivalence(dummyx_loc,B1_m1_m2_9points)
   equivalence(dummyy_loc,B2_m1_m2_9points)
@@ -2853,11 +2770,11 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_9points)
   equivalence(newtempz1,E3_m1_m2_9points)
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
+  real(kind=CUSTOM_REAL), dimension(81,9) :: &
     A1_mxm_m2_m1_9points,A2_mxm_m2_m1_9points,A3_mxm_m2_m1_9points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(81,9) :: &
     C1_mxm_m2_m1_9points,C2_mxm_m2_m1_9points,C3_mxm_m2_m1_9points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(81,9) :: &
     E1_mxm_m2_m1_9points,E2_mxm_m2_m1_9points,E3_mxm_m2_m1_9points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_9points)
@@ -2948,7 +2865,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,6)*B1_m1_m2_9points(6,j) + &
                                   hprime_xx(i,7)*B1_m1_m2_9points(7,j) + &
                                   hprime_xx(i,8)*B1_m1_m2_9points(8,j) + &
-                                  hprime_xx(i,9)*B1_m1_m2_9points(9,j) 
+                                  hprime_xx(i,9)*B1_m1_m2_9points(9,j)
             C2_m1_m2_9points(i,j) = hprime_xx(i,1)*B2_m1_m2_9points(1,j) + &
                                   hprime_xx(i,2)*B2_m1_m2_9points(2,j) + &
                                   hprime_xx(i,3)*B2_m1_m2_9points(3,j) + &
@@ -2957,7 +2874,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,6)*B2_m1_m2_9points(6,j) + &
                                   hprime_xx(i,7)*B2_m1_m2_9points(7,j) + &
                                   hprime_xx(i,8)*B2_m1_m2_9points(8,j) + &
-                                  hprime_xx(i,9)*B2_m1_m2_9points(9,j) 
+                                  hprime_xx(i,9)*B2_m1_m2_9points(9,j)
             C3_m1_m2_9points(i,j) = hprime_xx(i,1)*B3_m1_m2_9points(1,j) + &
                                   hprime_xx(i,2)*B3_m1_m2_9points(2,j) + &
                                   hprime_xx(i,3)*B3_m1_m2_9points(3,j) + &
@@ -2966,7 +2883,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,6)*B3_m1_m2_9points(6,j) + &
                                   hprime_xx(i,7)*B3_m1_m2_9points(7,j) + &
                                   hprime_xx(i,8)*B3_m1_m2_9points(8,j) + &
-                                  hprime_xx(i,9)*B3_m1_m2_9points(9,j) 
+                                  hprime_xx(i,9)*B3_m1_m2_9points(9,j)
           enddo
         enddo
 
@@ -2984,7 +2901,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyx_loc(i,6,k)*hprime_xxT(6,j) + &
                             dummyx_loc(i,7,k)*hprime_xxT(7,j) + &
                             dummyx_loc(i,8,k)*hprime_xxT(8,j) + &
-                            dummyx_loc(i,9,k)*hprime_xxT(9,j) 
+                            dummyx_loc(i,9,k)*hprime_xxT(9,j)
               tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
@@ -2993,7 +2910,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyy_loc(i,6,k)*hprime_xxT(6,j) + &
                             dummyy_loc(i,7,k)*hprime_xxT(7,j) + &
                             dummyy_loc(i,8,k)*hprime_xxT(8,j) + &
-                            dummyy_loc(i,9,k)*hprime_xxT(9,j) 
+                            dummyy_loc(i,9,k)*hprime_xxT(9,j)
               tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
@@ -3002,7 +2919,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyz_loc(i,6,k)*hprime_xxT(6,j) + &
                             dummyz_loc(i,7,k)*hprime_xxT(7,j) + &
                             dummyz_loc(i,8,k)*hprime_xxT(8,j) + &
-                            dummyz_loc(i,9,k)*hprime_xxT(9,j) 
+                            dummyz_loc(i,9,k)*hprime_xxT(9,j)
             enddo
           enddo
         enddo
@@ -3018,7 +2935,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A1_mxm_m2_m1_9points(i,6)*hprime_xxT(6,j) + &
                                       A1_mxm_m2_m1_9points(i,7)*hprime_xxT(7,j) + &
                                       A1_mxm_m2_m1_9points(i,8)*hprime_xxT(8,j) + &
-                                      A1_mxm_m2_m1_9points(i,9)*hprime_xxT(9,j) 
+                                      A1_mxm_m2_m1_9points(i,9)*hprime_xxT(9,j)
             C2_mxm_m2_m1_9points(i,j) = A2_mxm_m2_m1_9points(i,1)*hprime_xxT(1,j) + &
                                       A2_mxm_m2_m1_9points(i,2)*hprime_xxT(2,j) + &
                                       A2_mxm_m2_m1_9points(i,3)*hprime_xxT(3,j) + &
@@ -3027,7 +2944,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A2_mxm_m2_m1_9points(i,6)*hprime_xxT(6,j) + &
                                       A2_mxm_m2_m1_9points(i,7)*hprime_xxT(7,j) + &
                                       A2_mxm_m2_m1_9points(i,8)*hprime_xxT(8,j) + &
-                                      A2_mxm_m2_m1_9points(i,9)*hprime_xxT(9,j) 
+                                      A2_mxm_m2_m1_9points(i,9)*hprime_xxT(9,j)
             C3_mxm_m2_m1_9points(i,j) = A3_mxm_m2_m1_9points(i,1)*hprime_xxT(1,j) + &
                                       A3_mxm_m2_m1_9points(i,2)*hprime_xxT(2,j) + &
                                       A3_mxm_m2_m1_9points(i,3)*hprime_xxT(3,j) + &
@@ -3036,7 +2953,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A3_mxm_m2_m1_9points(i,6)*hprime_xxT(6,j) + &
                                       A3_mxm_m2_m1_9points(i,7)*hprime_xxT(7,j) + &
                                       A3_mxm_m2_m1_9points(i,8)*hprime_xxT(8,j) + &
-                                      A3_mxm_m2_m1_9points(i,9)*hprime_xxT(9,j) 
+                                      A3_mxm_m2_m1_9points(i,9)*hprime_xxT(9,j)
           enddo
         enddo
 
@@ -3270,7 +3187,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,6)*C1_m1_m2_9points(6,j) + &
                                   hprimewgll_xxT(i,7)*C1_m1_m2_9points(7,j) + &
                                   hprimewgll_xxT(i,8)*C1_m1_m2_9points(8,j) + &
-                                  hprimewgll_xxT(i,9)*C1_m1_m2_9points(9,j) 
+                                  hprimewgll_xxT(i,9)*C1_m1_m2_9points(9,j)
             E2_m1_m2_9points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_9points(1,j) + &
                                   hprimewgll_xxT(i,2)*C2_m1_m2_9points(2,j) + &
                                   hprimewgll_xxT(i,3)*C2_m1_m2_9points(3,j) + &
@@ -3279,7 +3196,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,6)*C2_m1_m2_9points(6,j) + &
                                   hprimewgll_xxT(i,7)*C2_m1_m2_9points(7,j) + &
                                   hprimewgll_xxT(i,8)*C2_m1_m2_9points(8,j) + &
-                                  hprimewgll_xxT(i,9)*C2_m1_m2_9points(9,j) 
+                                  hprimewgll_xxT(i,9)*C2_m1_m2_9points(9,j)
             E3_m1_m2_9points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_9points(1,j) + &
                                   hprimewgll_xxT(i,2)*C3_m1_m2_9points(2,j) + &
                                   hprimewgll_xxT(i,3)*C3_m1_m2_9points(3,j) + &
@@ -3288,7 +3205,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,6)*C3_m1_m2_9points(6,j) + &
                                   hprimewgll_xxT(i,7)*C3_m1_m2_9points(7,j) + &
                                   hprimewgll_xxT(i,8)*C3_m1_m2_9points(8,j) + &
-                                  hprimewgll_xxT(i,9)*C3_m1_m2_9points(9,j) 
+                                  hprimewgll_xxT(i,9)*C3_m1_m2_9points(9,j)
           enddo
         enddo
 
@@ -3306,7 +3223,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempx2(i,6,k)*hprimewgll_xx(6,j) + &
                                tempx2(i,7,k)*hprimewgll_xx(7,j) + &
                                tempx2(i,8,k)*hprimewgll_xx(8,j) + &
-                               tempx2(i,9,k)*hprimewgll_xx(9,j) 
+                               tempx2(i,9,k)*hprimewgll_xx(9,j)
               newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempy2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempy2(i,3,k)*hprimewgll_xx(3,j) + &
@@ -3315,7 +3232,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempy2(i,6,k)*hprimewgll_xx(6,j) + &
                                tempy2(i,7,k)*hprimewgll_xx(7,j) + &
                                tempy2(i,8,k)*hprimewgll_xx(8,j) + &
-                               tempy2(i,9,k)*hprimewgll_xx(9,j) 
+                               tempy2(i,9,k)*hprimewgll_xx(9,j)
               newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempz2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempz2(i,3,k)*hprimewgll_xx(3,j) + &
@@ -3324,7 +3241,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempz2(i,6,k)*hprimewgll_xx(6,j) + &
                                tempz2(i,7,k)*hprimewgll_xx(7,j) + &
                                tempz2(i,8,k)*hprimewgll_xx(8,j) + &
-                               tempz2(i,9,k)*hprimewgll_xx(9,j) 
+                               tempz2(i,9,k)*hprimewgll_xx(9,j)
             enddo
           enddo
         enddo
@@ -3340,7 +3257,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C1_mxm_m2_m1_9points(i,6)*hprimewgll_xx(6,j) + &
                                       C1_mxm_m2_m1_9points(i,7)*hprimewgll_xx(7,j) + &
                                       C1_mxm_m2_m1_9points(i,8)*hprimewgll_xx(8,j) + &
-                                      C1_mxm_m2_m1_9points(i,9)*hprimewgll_xx(9,j) 
+                                      C1_mxm_m2_m1_9points(i,9)*hprimewgll_xx(9,j)
             E2_mxm_m2_m1_9points(i,j) = C2_mxm_m2_m1_9points(i,1)*hprimewgll_xx(1,j) + &
                                       C2_mxm_m2_m1_9points(i,2)*hprimewgll_xx(2,j) + &
                                       C2_mxm_m2_m1_9points(i,3)*hprimewgll_xx(3,j) + &
@@ -3349,7 +3266,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C2_mxm_m2_m1_9points(i,6)*hprimewgll_xx(6,j) + &
                                       C2_mxm_m2_m1_9points(i,7)*hprimewgll_xx(7,j) + &
                                       C2_mxm_m2_m1_9points(i,8)*hprimewgll_xx(8,j) + &
-                                      C2_mxm_m2_m1_9points(i,9)*hprimewgll_xx(9,j) 
+                                      C2_mxm_m2_m1_9points(i,9)*hprimewgll_xx(9,j)
             E3_mxm_m2_m1_9points(i,j) = C3_mxm_m2_m1_9points(i,1)*hprimewgll_xx(1,j) + &
                                       C3_mxm_m2_m1_9points(i,2)*hprimewgll_xx(2,j) + &
                                       C3_mxm_m2_m1_9points(i,3)*hprimewgll_xx(3,j) + &
@@ -3358,7 +3275,7 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C3_mxm_m2_m1_9points(i,6)*hprimewgll_xx(6,j) + &
                                       C3_mxm_m2_m1_9points(i,7)*hprimewgll_xx(7,j) + &
                                       C3_mxm_m2_m1_9points(i,8)*hprimewgll_xx(8,j) + &
-                                      C3_mxm_m2_m1_9points(i,9)*hprimewgll_xx(9,j) 
+                                      C3_mxm_m2_m1_9points(i,9)*hprimewgll_xx(9,j)
           enddo
         enddo
 
@@ -3437,35 +3354,13 @@ subroutine compute_forces_elastic_Dev_9points( iphase ,NSPEC_AB,NGLOB_AB, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_elastic_Dev_9points
+end subroutine compute_forces_elastic_Dev_9p
+
+!
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
 
-
-subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
+subroutine compute_forces_elastic_Dev_10p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -3512,7 +3407,8 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,10) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(10,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -3557,15 +3453,15 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(10,10,10) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+  real(kind=CUSTOM_REAL), dimension(10,10,10) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_10points,B2_m1_m2_10points,B3_m1_m2_10points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_10points,C2_m1_m2_10points,C3_m1_m2_10points
-  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_10points,E2_m1_m2_10points,E3_m1_m2_10points
+  real(kind=CUSTOM_REAL), dimension(10,100) :: B1_m1_m2_10points,B2_m1_m2_10points,B3_m1_m2_10points
+  real(kind=CUSTOM_REAL), dimension(10,100) :: C1_m1_m2_10points,C2_m1_m2_10points,C3_m1_m2_10points
+  real(kind=CUSTOM_REAL), dimension(10,100) :: E1_m1_m2_10points,E2_m1_m2_10points,E3_m1_m2_10points
 
   equivalence(dummyx_loc,B1_m1_m2_10points)
   equivalence(dummyy_loc,B2_m1_m2_10points)
@@ -3577,11 +3473,11 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
   equivalence(newtempy1,E2_m1_m2_10points)
   equivalence(newtempz1,E3_m1_m2_10points)
 
-  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: &
+  real(kind=CUSTOM_REAL), dimension(100,10) :: &
     A1_mxm_m2_m1_10points,A2_mxm_m2_m1_10points,A3_mxm_m2_m1_10points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(100,10) :: &
     C1_mxm_m2_m1_10points,C2_mxm_m2_m1_10points,C3_mxm_m2_m1_10points
-  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
+  real(kind=CUSTOM_REAL), dimension(100,10) :: &
     E1_mxm_m2_m1_10points,E2_mxm_m2_m1_10points,E3_mxm_m2_m1_10points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_10points)
@@ -3673,7 +3569,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,7)*B1_m1_m2_10points(7,j) + &
                                   hprime_xx(i,8)*B1_m1_m2_10points(8,j) + &
                                   hprime_xx(i,9)*B1_m1_m2_10points(9,j) + &
-                                  hprime_xx(i,10)*B1_m1_m2_10points(10,j) 
+                                  hprime_xx(i,10)*B1_m1_m2_10points(10,j)
             C2_m1_m2_10points(i,j) = hprime_xx(i,1)*B2_m1_m2_10points(1,j) + &
                                   hprime_xx(i,2)*B2_m1_m2_10points(2,j) + &
                                   hprime_xx(i,3)*B2_m1_m2_10points(3,j) + &
@@ -3683,7 +3579,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,7)*B2_m1_m2_10points(7,j) + &
                                   hprime_xx(i,8)*B2_m1_m2_10points(8,j) + &
                                   hprime_xx(i,9)*B2_m1_m2_10points(9,j) + &
-                                  hprime_xx(i,10)*B2_m1_m2_10points(10,j) 
+                                  hprime_xx(i,10)*B2_m1_m2_10points(10,j)
             C3_m1_m2_10points(i,j) = hprime_xx(i,1)*B3_m1_m2_10points(1,j) + &
                                   hprime_xx(i,2)*B3_m1_m2_10points(2,j) + &
                                   hprime_xx(i,3)*B3_m1_m2_10points(3,j) + &
@@ -3693,7 +3589,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprime_xx(i,7)*B3_m1_m2_10points(7,j) + &
                                   hprime_xx(i,8)*B3_m1_m2_10points(8,j) + &
                                   hprime_xx(i,9)*B3_m1_m2_10points(9,j) + &
-                                  hprime_xx(i,10)*B3_m1_m2_10points(10,j) 
+                                  hprime_xx(i,10)*B3_m1_m2_10points(10,j)
           enddo
         enddo
 
@@ -3712,7 +3608,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                             dummyx_loc(i,7,k)*hprime_xxT(7,j) + &
                             dummyx_loc(i,8,k)*hprime_xxT(8,j) + &
                             dummyx_loc(i,9,k)*hprime_xxT(9,j) + &
-                            dummyx_loc(i,10,k)*hprime_xxT(10,j) 
+                            dummyx_loc(i,10,k)*hprime_xxT(10,j)
               tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
                             dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
                             dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
@@ -3749,7 +3645,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A1_mxm_m2_m1_10points(i,7)*hprime_xxT(7,j) + &
                                       A1_mxm_m2_m1_10points(i,8)*hprime_xxT(8,j) + &
                                       A1_mxm_m2_m1_10points(i,9)*hprime_xxT(9,j) + &
-                                      A1_mxm_m2_m1_10points(i,10)*hprime_xxT(10,j) 
+                                      A1_mxm_m2_m1_10points(i,10)*hprime_xxT(10,j)
             C2_mxm_m2_m1_10points(i,j) = A2_mxm_m2_m1_10points(i,1)*hprime_xxT(1,j) + &
                                       A2_mxm_m2_m1_10points(i,2)*hprime_xxT(2,j) + &
                                       A2_mxm_m2_m1_10points(i,3)*hprime_xxT(3,j) + &
@@ -3759,7 +3655,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A2_mxm_m2_m1_10points(i,7)*hprime_xxT(7,j) + &
                                       A2_mxm_m2_m1_10points(i,8)*hprime_xxT(8,j) + &
                                       A2_mxm_m2_m1_10points(i,9)*hprime_xxT(9,j) + &
-                                      A2_mxm_m2_m1_10points(i,10)*hprime_xxT(10,j) 
+                                      A2_mxm_m2_m1_10points(i,10)*hprime_xxT(10,j)
             C3_mxm_m2_m1_10points(i,j) = A3_mxm_m2_m1_10points(i,1)*hprime_xxT(1,j) + &
                                       A3_mxm_m2_m1_10points(i,2)*hprime_xxT(2,j) + &
                                       A3_mxm_m2_m1_10points(i,3)*hprime_xxT(3,j) + &
@@ -3769,7 +3665,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       A3_mxm_m2_m1_10points(i,7)*hprime_xxT(7,j) + &
                                       A3_mxm_m2_m1_10points(i,8)*hprime_xxT(8,j) + &
                                       A3_mxm_m2_m1_10points(i,9)*hprime_xxT(9,j) + &
-                                      A3_mxm_m2_m1_10points(i,10)*hprime_xxT(10,j) 
+                                      A3_mxm_m2_m1_10points(i,10)*hprime_xxT(10,j)
           enddo
         enddo
 
@@ -4004,7 +3900,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,7)*C1_m1_m2_10points(7,j) + &
                                   hprimewgll_xxT(i,8)*C1_m1_m2_10points(8,j) + &
                                   hprimewgll_xxT(i,9)*C1_m1_m2_10points(9,j) + &
-                                  hprimewgll_xxT(i,10)*C1_m1_m2_10points(10,j) 
+                                  hprimewgll_xxT(i,10)*C1_m1_m2_10points(10,j)
             E2_m1_m2_10points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_10points(1,j) + &
                                   hprimewgll_xxT(i,2)*C2_m1_m2_10points(2,j) + &
                                   hprimewgll_xxT(i,3)*C2_m1_m2_10points(3,j) + &
@@ -4024,7 +3920,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                   hprimewgll_xxT(i,7)*C3_m1_m2_10points(7,j) + &
                                   hprimewgll_xxT(i,8)*C3_m1_m2_10points(8,j) + &
                                   hprimewgll_xxT(i,9)*C3_m1_m2_10points(9,j) + &
-                                  hprimewgll_xxT(i,10)*C3_m1_m2_10points(10,j) 
+                                  hprimewgll_xxT(i,10)*C3_m1_m2_10points(10,j)
           enddo
         enddo
 
@@ -4053,7 +3949,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                tempy2(i,7,k)*hprimewgll_xx(7,j) + &
                                tempy2(i,8,k)*hprimewgll_xx(8,j) + &
                                tempy2(i,9,k)*hprimewgll_xx(9,j) + &
-                               tempy2(i,10,k)*hprimewgll_xx(10,j) 
+                               tempy2(i,10,k)*hprimewgll_xx(10,j)
               newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
                                tempz2(i,2,k)*hprimewgll_xx(2,j) + &
                                tempz2(i,3,k)*hprimewgll_xx(3,j) + &
@@ -4080,7 +3976,7 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
                                       C1_mxm_m2_m1_10points(i,7)*hprimewgll_xx(7,j) + &
                                       C1_mxm_m2_m1_10points(i,8)*hprimewgll_xx(8,j) + &
                                       C1_mxm_m2_m1_10points(i,9)*hprimewgll_xx(9,j) + &
-                                      C1_mxm_m2_m1_10points(i,10)*hprimewgll_xx(10,j) 
+                                      C1_mxm_m2_m1_10points(i,10)*hprimewgll_xx(10,j)
             E2_mxm_m2_m1_10points(i,j) = C2_mxm_m2_m1_10points(i,1)*hprimewgll_xx(1,j) + &
                                       C2_mxm_m2_m1_10points(i,2)*hprimewgll_xx(2,j) + &
                                       C2_mxm_m2_m1_10points(i,3)*hprimewgll_xx(3,j) + &
@@ -4179,4 +4075,4 @@ subroutine compute_forces_elastic_Dev_10points( iphase ,NSPEC_AB,NGLOB_AB, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_elastic_Dev_10points
+end subroutine compute_forces_elastic_Dev_10p

@@ -170,7 +170,7 @@
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
   endif
 
-  ! synchronize all the processes 
+  ! synchronize all the processes
   call sync_all()
 
   ! prepares attenuation arrays
@@ -208,6 +208,7 @@
     write(IMAIN,*) '           time step: ',sngl(DT),' s'
     write(IMAIN,*) 'number of time steps: ',NSTEP
     write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
+    write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
     write(IMAIN,*)
   endif
 
@@ -547,14 +548,14 @@
 
         ! size of single record
         b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
-        
+
         ! total file size
         filesize = b_reclen_field
         filesize = filesize*NSTEP
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-          
+
           ! uses fortran routines for reading
           !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
           !      action='read',form='unformatted',access='direct', &
@@ -588,7 +589,7 @@
 
         ! size of single record
         b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
-        
+
         ! total file size (two lines to implicitly convert to 8-byte integers)
         filesize = b_reclen_potential
         filesize = filesize*NSTEP
@@ -600,7 +601,7 @@
         !  print*,'file size fortran: ',filesize
         !  print*,'file bit size fortran: ',bit_size(filesize)
         !endif
-        
+
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
           ! uses fortran routines for reading
@@ -608,7 +609,7 @@
           !      action='read',form='unformatted',access='direct', &
           !      recl=b_reclen_potential+2*4,iostat=ier )
           !if( ier /= 0 ) call exit_mpi(myrank,'error opening proc***_absorb_potential.bin file')
-          
+
           ! uses c routines for faster reading
           call open_file_abs_r(1,trim(prname)//'absorb_potential.bin', &
                               len_trim(trim(prname)//'absorb_potential.bin'), &
@@ -667,11 +668,11 @@
   ! for noise simulations
   if ( NOISE_TOMOGRAPHY /= 0 ) then
 
-    ! checks if free surface is defined  
+    ! checks if free surface is defined
     if( num_free_surface_faces == 0 ) then
       stop 'error: noise simulations need a free surface'
     endif
-    
+
     ! allocates arrays
     allocate(noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP),stat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error allocating noise source array')

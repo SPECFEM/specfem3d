@@ -146,11 +146,11 @@
              ihours_total,iminutes_total,iseconds_total,int_t_total
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!chris: Rewrite to get norm for each material when coupled simulations 
+!chris: Rewrite to get norm for each material when coupled simulations
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! compute maximum of norm of displacement in each slice
-  if( ELASTIC_SIMULATION ) & 
+  if( ELASTIC_SIMULATION ) &
     Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
   if( ACOUSTIC_SIMULATION ) &
       Usolidnormp = maxval(abs(potential_dot_dot_acoustic(:)))
@@ -346,7 +346,7 @@
   if( ELASTIC_SIMULATION ) then
     displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-    accel_adj_coupling(:,:) = accel(:,:)
+    if( SIMULATION_TYPE /= 1 ) accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
   endif
 
