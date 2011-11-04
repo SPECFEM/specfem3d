@@ -34,7 +34,7 @@
   use specfem_par_poroelastic
   implicit none
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  integer :: ier
+  integer :: ier,inum
 
 ! start reading the databasesa
 
@@ -86,9 +86,10 @@
     if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
-    allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
-
+    if( SIMULATION_TYPE /= 1 ) then
+      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
+    endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
@@ -109,9 +110,10 @@
     if( ier /= 0 ) stop 'error allocating array veloc'
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array accel'
-    allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'
-
+    if( SIMULATION_TYPE /= 1 ) then
+      allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'
+    endif
     allocate(rmass(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass'
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -167,12 +169,18 @@
             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta etc.'
 
+    ! reads mass matrices
     read(27) rmass
+
     if( OCEANS ) then
       ! ocean mass matrix
       allocate(rmass_ocean_load(NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array rmass_ocean_load'
       read(27) rmass_ocean_load
+    else
+      ! dummy allocation
+      allocate(rmass_ocean_load(1),stat=ier)
+      if( ier /= 0 ) stop 'error allocating dummy array rmass_ocean_load'
     endif
     !pll
     read(27) rho_vp
@@ -244,11 +252,13 @@
           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
-  read(27) abs_boundary_ispec
-  read(27) abs_boundary_ijk
-  read(27) abs_boundary_jacobian2Dw
-  read(27) abs_boundary_normal
+  if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
+  if( num_abs_boundary_faces > 0 ) then
+    read(27) abs_boundary_ispec
+    read(27) abs_boundary_ijk
+    read(27) abs_boundary_jacobian2Dw
+    read(27) abs_boundary_normal
+  endif
 
 ! free surface
   read(27) num_free_surface_faces
@@ -256,11 +266,13 @@
           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array free_surface_ispec etc.'
-  read(27) free_surface_ispec
-  read(27) free_surface_ijk
-  read(27) free_surface_jacobian2Dw
-  read(27) free_surface_normal
+  if( ier /= 0 ) stop 'error allocating array free_surface_ispec etc.'
+  if( num_free_surface_faces > 0 ) then
+    read(27) free_surface_ispec
+    read(27) free_surface_ijk
+    read(27) free_surface_jacobian2Dw
+    read(27) free_surface_normal
+  endif
 
 ! acoustic-elastic coupling surface
   read(27) num_coupling_ac_el_faces
@@ -268,46 +280,58 @@
           coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
           coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
           coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal etc.'
-  read(27) coupling_ac_el_ispec
-  read(27) coupling_ac_el_ijk
-  read(27) coupling_ac_el_jacobian2Dw
-  read(27) coupling_ac_el_normal
+  if( ier /= 0 ) stop 'error allocating array coupling_ac_el_normal etc.'
+  if( num_coupling_ac_el_faces > 0 ) then
+    read(27) coupling_ac_el_ispec
+    read(27) coupling_ac_el_ijk
+    read(27) coupling_ac_el_jacobian2Dw
+    read(27) coupling_ac_el_normal
+  endif
 
 ! acoustic-poroelastic coupling surface
   read(27) num_coupling_ac_po_faces
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
-           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
-           coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
-           coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
-  read(27) coupling_ac_po_ispec
-  read(27) coupling_ac_po_ijk
-  read(27) coupling_ac_po_jacobian2Dw
-  read(27) coupling_ac_po_normal
+          coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
+          coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
+          coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array coupling_ac_po_normal etc.'
+  if( num_coupling_ac_po_faces > 0 ) then
+    read(27) coupling_ac_po_ispec
+    read(27) coupling_ac_po_ijk
+    read(27) coupling_ac_po_jacobian2Dw
+    read(27) coupling_ac_po_normal
+  endif
 
 ! elastic-poroelastic coupling surface
   read(27) num_coupling_el_po_faces
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
-  read(27) coupling_el_po_ispec
-  read(27) coupling_el_po_ijk
-  read(27) coupling_el_po_jacobian2Dw
-  read(27) coupling_el_po_normal
+          coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
+          coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+          coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
+  if( num_coupling_el_po_faces > 0 ) then
+    read(27) coupling_el_po_ispec
+    read(27) coupling_el_po_ijk
+    read(27) coupling_el_po_jacobian2Dw
+    read(27) coupling_el_po_normal
+  endif
 
 ! MPI interfaces
   read(27) num_interfaces_ext_mesh
-  read(27) max_nibool_interfaces_ext_mesh
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
-    nibool_interfaces_ext_mesh(num_interfaces_ext_mesh), &
-    ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+          nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh etc.'
-  read(27) my_neighbours_ext_mesh
-  read(27) nibool_interfaces_ext_mesh
-  read(27) ibool_interfaces_ext_mesh
+  if( num_interfaces_ext_mesh > 0 ) then
+    read(27) max_nibool_interfaces_ext_mesh
+    allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array ibool_interfaces_ext_mesh'
+    read(27) my_neighbours_ext_mesh
+    read(27) nibool_interfaces_ext_mesh
+    read(27) ibool_interfaces_ext_mesh
+  else
+    max_nibool_interfaces_ext_mesh = 0
+    allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
+  endif
 
   if( ANISOTROPY ) then
     read(27) c11store
@@ -333,7 +357,60 @@
     read(27) c66store
   endif
 
+! inner / outer elements
+  allocate(ispec_is_inner(NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
+  read(27) ispec_is_inner
+
+  if( ACOUSTIC_SIMULATION ) then
+    read(27) nspec_inner_acoustic,nspec_outer_acoustic
+    read(27) num_phase_ispec_acoustic
+    if( num_phase_ispec_acoustic < 0 ) stop 'error acoustic simulation: num_phase_ispec_acoustic is < zero'
+    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
+    if(num_phase_ispec_acoustic > 0 ) read(27) phase_ispec_inner_acoustic
+  endif
+
+  if( ELASTIC_SIMULATION ) then
+    read(27) nspec_inner_elastic,nspec_outer_elastic
+    read(27) num_phase_ispec_elastic
+    if( num_phase_ispec_elastic < 0 ) stop 'error elastic simulation: num_phase_ispec_elastic is < zero'
+    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
+    if(num_phase_ispec_elastic > 0 ) read(27) phase_ispec_inner_elastic
+  endif
+
+  if( POROELASTIC_SIMULATION ) then
+    read(27) nspec_inner_poroelastic,nspec_outer_poroelastic
+    read(27) num_phase_ispec_poroelastic
+    if( num_phase_ispec_poroelastic < 0 ) stop 'error poroelastic simulation: num_phase_ispec_poroelastic is < zero'
+    allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
+    if(num_phase_ispec_poroelastic > 0 ) read(27) phase_ispec_inner_poroelastic
+  endif
+
   close(27)
+
+  ! outputs total element numbers
+  call sum_all_i(count(ispec_is_acoustic(:)),inum)
+  if( myrank == 0 ) then
+    write(IMAIN,*) 'total acoustic elements    :',inum
+  endif
+  call sum_all_i(count(ispec_is_elastic(:)),inum)
+  if( myrank == 0 ) then
+    write(IMAIN,*) 'total elastic elements     :',inum
+  endif
+  call sum_all_i(count(ispec_is_poroelastic(:)),inum)
+  if( myrank == 0 ) then
+    write(IMAIN,*) 'total poroelastic elements :',inum
+  endif
+  
+  ! debug
+  !call sum_all_i(num_interfaces_ext_mesh,inum)
+  !if(myrank == 0) then
+  !  write(IMAIN,*) 'number of MPI partition interfaces: ',inum
+  !  write(IMAIN,*)
+  !endif
 
 ! MPI communications
   allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
@@ -354,9 +431,6 @@
     request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
-! locate inner and outer elements
-  call rmd_setup_inner_outer_elemnts()
-
 ! gets model dimensions
   minl = minval( xstore )
   maxl = maxval( xstore )
@@ -372,208 +446,41 @@
   LATITUDE_MIN = min_all
   LATITUDE_MAX = max_all
 
-! check courant criteria on mesh
+  ! checks courant criteria on mesh
   if( ELASTIC_SIMULATION ) then
-      allocate(rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      rho_vpI = 0.0_CUSTOM_REAL
-      rho_vpII = 0.0_CUSTOM_REAL
-      rho_vsI = 0.0_CUSTOM_REAL
-    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period, &
-                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
-      deallocate(rho_vpI,rho_vpII,rho_vsI)
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                              ibool,xstore,ystore,zstore, &
+                              kappastore,mustore,rho_vp,rho_vs, &
+                              DT,model_speed_max,min_resolved_period)
+
   else if( POROELASTIC_SIMULATION ) then
-      allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-      rho_vp = 0.0_CUSTOM_REAL
-      rho_vs = 0.0_CUSTOM_REAL
-      call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period, &
-                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI  )
-      deallocate(rho_vp,rho_vs)
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    rho_vp = 0.0_CUSTOM_REAL
+    rho_vs = 0.0_CUSTOM_REAL
+    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                    kappastore,mustore,rho_vp,rho_vs, &
+                                    DT,model_speed_max,min_resolved_period, &
+                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
+    deallocate(rho_vp,rho_vs)
   else if( ACOUSTIC_SIMULATION ) then
-      allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array rho_vp'
-      allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array rho_vs'
-      rho_vp = sqrt( kappastore / rhostore ) * rhostore
-      rho_vs = 0.0_CUSTOM_REAL
-      call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                        kappastore,mustore,rho_vp,rho_vs,DT,model_speed_max,min_resolved_period, &
-                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
-      deallocate(rho_vp,rho_vs)
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rho_vp'
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rho_vs'
+    rho_vp = sqrt( kappastore / rhostore ) * rhostore
+    rho_vs = 0.0_CUSTOM_REAL
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                              ibool,xstore,ystore,zstore, &
+                              kappastore,mustore,rho_vp,rho_vs, &
+                              DT,model_speed_max,min_resolved_period)
+    deallocate(rho_vp,rho_vs)
   endif
 
 ! reads adjoint parameters
   call read_mesh_databases_adjoint()
 
   end subroutine read_mesh_databases
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-  subroutine rmd_setup_inner_outer_elemnts()
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_poroelastic
-  use specfem_par_acoustic
-  implicit none
-  ! local parameters
-  integer :: i,j,k,ispec,iglob
-  integer :: iinterface,ier
-  character(len=256) :: filename
-  logical,dimension(:),allocatable :: iglob_is_inner
-
-  ! allocates arrays
-  allocate(ispec_is_inner(NSPEC_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
-  allocate(iglob_is_inner(NGLOB_AB),stat=ier)
-  if( ier /= 0 ) stop 'error allocating temporary array  iglob_is_inner'
-
-  ! initialize flags
-  ispec_is_inner(:) = .true.
-  iglob_is_inner(:) = .true.
-  do iinterface = 1, num_interfaces_ext_mesh
-    do i = 1, nibool_interfaces_ext_mesh(iinterface)
-      iglob = ibool_interfaces_ext_mesh(i,iinterface)
-      iglob_is_inner(iglob) = .false.
-    enddo
-  enddo
-
-  ! determines flags for inner elements (purely inside the partition)
-  do ispec = 1, NSPEC_AB
-    do k = 1, NGLLZ
-      do j = 1, NGLLY
-        do i = 1, NGLLX
-          iglob = ibool(i,j,k,ispec)
-          ispec_is_inner(ispec) = iglob_is_inner(iglob) .and. ispec_is_inner(ispec)
-        enddo
-      enddo
-    enddo
-  enddo
-
-  ! frees temporary array
-  deallocate( iglob_is_inner )
-
-  if( SAVE_MESH_FILES ) then
-    filename = prname(1:len_trim(prname))//'ispec_is_inner'
-    call write_VTK_data_elem_l(NSPEC_AB,NGLOB_AB, &
-                        xstore,ystore,zstore,ibool, &
-                        ispec_is_inner,filename)
-  endif
-
-  ! sets up elements for loops in acoustic simulations
-  if( ACOUSTIC_SIMULATION ) then
-    ! counts inner and outer elements
-    nspec_inner_acoustic = 0
-    nspec_outer_acoustic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_acoustic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_acoustic = nspec_inner_acoustic + 1
-        else
-          nspec_outer_acoustic = nspec_outer_acoustic + 1
-        endif
-      endif
-    enddo
-
-    ! stores indices of inner and outer elements for faster(?) computation
-    num_phase_ispec_acoustic = max(nspec_inner_acoustic,nspec_outer_acoustic)
-    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
-    nspec_inner_acoustic = 0
-    nspec_outer_acoustic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_acoustic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_acoustic = nspec_inner_acoustic + 1
-          phase_ispec_inner_acoustic(nspec_inner_acoustic,2) = ispec
-        else
-          nspec_outer_acoustic = nspec_outer_acoustic + 1
-          phase_ispec_inner_acoustic(nspec_outer_acoustic,1) = ispec
-        endif
-      endif
-    enddo
-    !print *,'rank ',myrank,' acoustic inner spec: ',nspec_inner_acoustic
-    !print *,'rank ',myrank,' acoustic outer spec: ',nspec_outer_acoustic
-  endif
-
-  ! sets up elements for loops in acoustic simulations
-  if( ELASTIC_SIMULATION ) then
-    ! counts inner and outer elements
-    nspec_inner_elastic = 0
-    nspec_outer_elastic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_elastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_elastic = nspec_inner_elastic + 1
-        else
-          nspec_outer_elastic = nspec_outer_elastic + 1
-        endif
-      endif
-    enddo
-
-    ! stores indices of inner and outer elements for faster(?) computation
-    num_phase_ispec_elastic = max(nspec_inner_elastic,nspec_outer_elastic)
-    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
-    nspec_inner_elastic = 0
-    nspec_outer_elastic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_elastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_elastic = nspec_inner_elastic + 1
-          phase_ispec_inner_elastic(nspec_inner_elastic,2) = ispec
-        else
-          nspec_outer_elastic = nspec_outer_elastic + 1
-          phase_ispec_inner_elastic(nspec_outer_elastic,1) = ispec
-        endif
-      endif
-    enddo
-    !print *,'rank ',myrank,' elastic inner spec: ',nspec_inner_elastic
-    !print *,'rank ',myrank,' elastic outer spec: ',nspec_outer_elastic
-  endif
-
-! sets up elements for loops in poroelastic simulations
-  if( POROELASTIC_SIMULATION ) then
-    ! counts inner and outer elements
-    nspec_inner_poroelastic = 0
-    nspec_outer_poroelastic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_poroelastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_poroelastic = nspec_inner_poroelastic + 1
-        else
-          nspec_outer_poroelastic = nspec_outer_poroelastic + 1
-        endif
-      endif
-    enddo
-
-    ! stores indices of inner and outer elements for faster(?) computation 
-    num_phase_ispec_poroelastic = max(nspec_inner_poroelastic,nspec_outer_poroelastic)
-    allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
-    nspec_inner_poroelastic = 0
-    nspec_outer_poroelastic = 0
-    do ispec = 1, NSPEC_AB
-      if( ispec_is_poroelastic(ispec) ) then
-        if( ispec_is_inner(ispec) .eqv. .true. ) then
-          nspec_inner_poroelastic = nspec_inner_poroelastic + 1
-          phase_ispec_inner_poroelastic(nspec_inner_poroelastic,2) = ispec
-        else
-          nspec_outer_poroelastic = nspec_outer_poroelastic + 1
-          phase_ispec_inner_poroelastic(nspec_outer_poroelastic,1) = ispec
-        endif
-      endif
-    enddo
-    !print *,'rank ',myrank,' poroelastic inner spec: ',nspec_inner_poroelastic
-    !print *,'rank ',myrank,' poroelastic outer spec: ',nspec_outer_poroelastic
-  endif
-
-  end subroutine rmd_setup_inner_outer_elemnts
 
 
 !
@@ -635,7 +542,11 @@
     ! preconditioner
     if ( APPROXIMATE_HESS_KL ) then
       allocate(hess_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array hess_kl'    
+      if( ier /= 0 ) stop 'error allocating array hess_kl'
+    else
+      ! dummy allocation
+      allocate(hess_kl(0,0,0,0),stat=ier)
+      if( ier /= 0 ) stop 'error allocating dummy array hess_kl'
     endif
 
     ! MPI handling
@@ -691,13 +602,17 @@
             kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
             alpha_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rho_ac_kl etc.'
-    
+
     ! preconditioner
     if ( APPROXIMATE_HESS_KL ) then
       allocate(hess_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array hess_ac_kl'    
+      if( ier /= 0 ) stop 'error allocating array hess_ac_kl'
+    else
+      ! dummy allocation
+      allocate(hess_ac_kl(0,0,0,0),stat=ier)
+      if( ier /= 0 ) stop 'error allocating dummy array hess_ac_kl'
     endif
-    
+
     ! MPI handling
     allocate(b_request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
       b_request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &

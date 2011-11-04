@@ -58,7 +58,7 @@
   ! output parameters
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
   ! local parameters
-
+  real(kind=CUSTOM_REAL) :: ldummy
 
   !*****************************************************************************************************************
   !******************************** change your noise characteristics below ****************************************
@@ -73,6 +73,11 @@
   !******************************** change your noise characteristics above ****************************************
   !*****************************************************************************************************************
 
+  ! dummy assign to avoid compiler warnings
+  ldummy = xcoord_in
+  ldummy = ycoord_in
+  ldummy = zcoord_in
+
   end subroutine noise_distribution_direction
 
 ! =============================================================================================================
@@ -83,7 +88,7 @@
   subroutine read_parameters_noise(myrank,nrec,NSTEP,nmovie_points, &
                                    islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
                                    noise_sourcearray,xigll,yigll,zigll, &
-                                   ibool, &                                   
+                                   ibool, &
                                    xstore,ystore,zstore, &
                                    irec_master_noise,normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
                                    NSPEC_AB_VAL,NGLOB_AB_VAL, &
@@ -92,9 +97,9 @@
   implicit none
   include "constants.h"
   ! input parameters
-  integer :: myrank, nrec, NSTEP, nmovie_points 
+  integer :: myrank, nrec, NSTEP, nmovie_points
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
-  
+
   integer, dimension(nrec) :: islice_selected_rec
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: ibool
@@ -105,23 +110,23 @@
   double precision, dimension(NDIM,NDIM,nrec) :: nu
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
 
-  integer :: num_free_surface_faces 
+  integer :: num_free_surface_faces
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
-  
+
   logical, dimension(NSPEC_AB_VAL) :: ispec_is_acoustic
 
 !daniel: from global code...
   !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
   !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
   !integer :: nspec_top ! equals num_free_surface_faces
-  
+
   ! output parameters
   integer :: irec_master_noise
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   real(kind=CUSTOM_REAL), dimension(nmovie_points) :: normal_x_noise,normal_y_noise,normal_z_noise,mask_noise
   ! local parameters
-  integer :: ipoin,ispec,i,j,k,iglob,ios,iface,igll 
+  integer :: ipoin,ispec,i,j,k,iglob,ios,iface,igll
   real(kind=CUSTOM_REAL) :: normal_x_noise_out,normal_y_noise_out,normal_z_noise_out,mask_noise_out
   character(len=256) :: filename
 
@@ -312,7 +317,7 @@
      ! total file size
      filesize = reclen
      filesize = filesize*NSTEP
-     
+
      write(outputname,"('/proc',i6.6,'_surface_movie')") myrank
      if (NOISE_TOMOGRAPHY==1) call open_file_abs_w(2,trim(LOCAL_PATH)//trim(outputname), &
                                       len_trim(trim(LOCAL_PATH)//trim(outputname)), &
@@ -450,9 +455,9 @@
 
   ! adds noise source (only if this proc carries the noise)
   if(myrank == islice_selected_rec(irec_master_noise)) then
-    
+
     ispec = ispec_selected_rec(irec_master_noise)
-    
+
     ! adds nosie source contributions
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -496,15 +501,15 @@
   !integer :: NSPEC2D_TOP_VAL ! equals num_free_surface_faces
   !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
   !integer :: ispec2D ! equals iface
-  
+
   ! local parameters
-  integer :: ispec,i,j,k,iglob,iface,igll 
+  integer :: ispec,i,j,k,iglob,iface,igll
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
 
-  ! loops over surface points   
+  ! loops over surface points
   ! get coordinates of surface mesh and surface displacement
   do iface = 1, num_free_surface_faces
-    
+
     ispec = free_surface_ispec(iface)
 
     do igll = 1, NGLLSQUARE
@@ -549,7 +554,7 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB_VAL) :: accel ! both input and output
   real(kind=CUSTOM_REAL), dimension(nmovie_points) :: normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
 
-  integer :: num_free_surface_faces 
+  integer :: num_free_surface_faces
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
   real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
@@ -558,10 +563,10 @@
   !integer :: nspec_top ! equals num_free_surface_faces
   !integer :: NSPEC2D_TOP_VAL ! equal num_free_surface_faces
   !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
-  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top 
+  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
                     ! equals to:                   free_surface_jacobian2Dw including weights wgllwgll
   !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  
+
   ! local parameters
   integer :: ipoin,ispec,i,j,k,iglob,iface,igll
   real(kind=CUSTOM_REAL) :: eta
@@ -573,7 +578,7 @@
   ! get coordinates of surface mesh and surface displacement
   ipoin = 0
 
-  ! loops over surface points      
+  ! loops over surface points
   ! puts noise distrubution and direction onto the surface points
   do iface = 1, num_free_surface_faces
 
@@ -592,7 +597,7 @@
             noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
 
       accel(1,iglob) = accel(1,iglob) + eta * mask_noise(ipoin) * normal_x_noise(ipoin) &
-                                  * free_surface_jacobian2Dw(igll,iface) 
+                                  * free_surface_jacobian2Dw(igll,iface)
       accel(2,iglob) = accel(2,iglob) + eta * mask_noise(ipoin) * normal_y_noise(ipoin) &
                                   * free_surface_jacobian2Dw(igll,iface)
       accel(3,iglob) = accel(3,iglob) + eta * mask_noise(ipoin) * normal_z_noise(ipoin) &
@@ -622,13 +627,13 @@
   integer :: it
   integer :: nmovie_points
   integer :: NSPEC_AB_VAL,NGLOB_AB_VAL
-  
+
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB_VAL) :: ibool
   real(kind=CUSTOM_REAL) :: deltat
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB_VAL) :: displ
   real(kind=CUSTOM_REAL), dimension(nmovie_points) :: normal_x_noise,normal_y_noise,normal_z_noise
 
-  integer :: num_free_surface_faces 
+  integer :: num_free_surface_faces
   integer, dimension(num_free_surface_faces) :: free_surface_ispec
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
@@ -652,7 +657,7 @@
   ! to keep similar structure to other kernels, the source strength kernel is saved as a volumetric kernel
   ! but only updated at the surface, because the noise is generated there
   ipoin = 0
-  
+
   ! loops over surface points
   ! puts noise distrubution and direction onto the surface points
   do iface = 1, num_free_surface_faces
@@ -698,7 +703,7 @@
   character(len=256) :: prname
 
   call create_name_database(prname,myrank,LOCAL_PATH)
-  
+
   open(unit=IOUT_NOISE,file=trim(prname)//'sigma_kernel.bin',status='unknown', &
         form='unformatted',action='write')
   write(IOUT_NOISE) Sigma_kl

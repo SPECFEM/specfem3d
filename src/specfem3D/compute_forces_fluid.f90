@@ -82,7 +82,7 @@
 
 ! adjoint simulations
   integer :: SIMULATION_TYPE
-  integer :: NSPEC_BOUN
+  !integer :: NSPEC_BOUN
   integer :: NGLOB_ADJOINT,NSPEC_ADJOINT
 ! adjoint wavefields
 !  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT):: b_displs_poroelastic,b_accels_poroelastic

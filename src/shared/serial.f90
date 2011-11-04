@@ -667,7 +667,7 @@
   integer dest,sendtag
   integer sendcount
   real(kind=CUSTOM_REAL),dimension(sendcount):: sendbuf
-  
+
   stop 'send_dp not implemented for serial code'
 
   end subroutine send_dp

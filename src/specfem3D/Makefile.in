@@ -136,6 +136,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/create_color_image.o \
 	$O/write_seismograms.o \
 	$O/write_output_ASCII.o \
+	$O/write_output_SU.o \
 	$O/detect_mesh_surfaces.o \
 	$O/setup_movie_meshes.o \
 	$O/read_topography_bathymetry.o \
@@ -149,6 +150,25 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/noise_tomography.o \
 	$(EMPTY_MACRO)
 
+
+MODEL_UPD_OBJECTS = \
+	$O/model_update.o \
+	$O/specfem3D_par.o \
+	$O/initialize_simulation.o \
+	$O/read_parameter_file.o \
+	$O/read_value_parameters.o \
+	$O/get_value_parameters.o \
+	$O/param_reader.o \
+	$O/exit_mpi.o \
+	$O/parallel.o \
+	$O/read_mesh_databases.o \
+	$O/create_name_database.o \
+	$O/check_mesh_resolution.o \
+	$O/gll_library.o \
+	$O/get_attenuation_model.o \
+	$O/save_external_bin_m_up.o \
+	$O/write_VTK_data.o \
+	$(EMPTY_MACRO)
 
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
@@ -172,6 +192,7 @@ LIBSPECFEM = $L/libspecfem.a
 @COND_PYRE_FALSE@	combine_surf_data \
 @COND_PYRE_FALSE@	convolve_source_timefunction \
 @COND_PYRE_FALSE@	smooth_vol_data \
+@COND_PYRE_FALSE@	model_update \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
 default: $(DEFAULT)
@@ -199,6 +220,7 @@ create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
 smooth_vol_data: xsmooth_vol_data
+model_update: xmodel_update
 
 xconvolve_source_timefunction: $O/convolve_source_timefunction.o
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.o
@@ -215,12 +237,14 @@ xcombine_surf_data: $O/combine_surf_data.o $O/write_c_binary.o $O/param_reader.o
 xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o $O/gll_library.o $O/exit_mpi.o $O/parallel.o
 	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.o $O/read_value_parameters.o $O/get_value_parameters.o $O/param_reader.o $O/gll_library.o $O/exit_mpi.o $O/parallel.o $(MPILIBS)
 
+xmodel_update: $(MODEL_UPD_OBJECTS)  
+	${FCLINK} -o  ${E}/xmodel_update  $(MODEL_UPD_OBJECTS) $(MPILIBS)
 
 clean:
 	rm -f $O/* *.o *.gnu *.mod $(OUTPUT)/timestamp* $(OUTPUT)/starttime*txt work.pc* \
         xgenerate_databases xspecfem3D \
         xconvolve_source_timefunction \
-        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data xsmooth_vol_data
+        xcreate_movie_shakemap_AVS_DX_GMT xcombine_vol_data xcombine_surf_data xsmooth_vol_data xmodel_update
 
 ###
 ### rule for the archive library
@@ -363,6 +387,9 @@ $O/write_seismograms.o: $(SHARED)constants.h write_seismograms.f90
 $O/write_output_ASCII.o: $(SHARED)constants.h write_output_ASCII.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/write_output_ASCII.o write_output_ASCII.f90
 
+$O/write_output_SU.o: $(SHARED)constants.h write_output_SU.f90
+	${FCCOMPILE_NO_CHECK} -c -o $O/write_output_SU.o write_output_SU.f90
+
 $O/noise_tomography.o: $(SHARED)constants.h noise_tomography.f90
 	${FCCOMPILE_NO_CHECK} -c -o $O/noise_tomography.o noise_tomography.f90
 
@@ -477,8 +504,8 @@ $O/define_derivation_matrices.o: $(SHARED)constants.h ${SHARED}/define_derivatio
 $O/compute_adj_source_frechet.o: $(SHARED)constants.h compute_adj_source_frechet.f90
 	${FCCOMPILE_CHECK} -c -o $O/compute_adj_source_frechet.o compute_adj_source_frechet.f90
 
-$O/compute_arrays_source.o: $(SHARED)constants.h ${SHARED}/compute_arrays_source.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_arrays_source.o ${SHARED}/compute_arrays_source.f90
+$O/compute_arrays_source.o: $(SHARED)constants.h compute_arrays_source.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_arrays_source.o compute_arrays_source.f90
 
 $O/multiply_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/multiply_arrays_source.f90
 	${FCCOMPILE_CHECK} -c -o $O/multiply_arrays_source.o ${SHARED}/multiply_arrays_source.f90
@@ -486,11 +513,11 @@ $O/multiply_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/multiply_arrays_so
 $O/get_attenuation_model.o: $(SHARED)constants.h ${SHARED}/get_attenuation_model.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_attenuation_model.o ${SHARED}/get_attenuation_model.f90
 
-$O/compute_boundary_kernel.o: $(SHARED)constants.h ${SHARED}/compute_boundary_kernel.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o ${SHARED}/compute_boundary_kernel.f90
+$O/compute_boundary_kernel.o: $(SHARED)constants.h compute_boundary_kernel.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o compute_boundary_kernel.f90
 
-$O/compute_kernels.o: $(SHARED)constants.h ${SHARED}/compute_kernels.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_kernels.o ${SHARED}/compute_kernels.f90
+$O/compute_kernels.o: $(SHARED)constants.h compute_kernels.f90
+	${FCCOMPILE_CHECK} -c -o $O/compute_kernels.o compute_kernels.f90
 
 $O/combine_vol_data.o: $(SHARED)constants.h ${SHARED}/combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o ${SHARED}/combine_vol_data.f90
@@ -504,9 +531,22 @@ $O/prepare_assemble_MPI.o: $(SHARED)constants.h ${SHARED}/prepare_assemble_MPI.f
 $O/PML_init.o: $(SHARED)constants.h PML_init.f90
 	${FCCOMPILE_CHECK} -c -o $O/PML_init.o PML_init.f90
 
+##
+## smoothing
+##
+
 $O/smooth_vol_data.o: $(SHARED)constants.h ${SHARED}/smooth_vol_data.f90
 	${MPIFCCOMPILE_NO_CHECK} -c -o $O/smooth_vol_data.o ${SHARED}/smooth_vol_data.f90
 
+##
+## model update
+##
+
+$O/model_update.o: $(SHARED)constants.h model_update.f90
+	${MPIFCCOMPILE_NO_CHECK} -c -o $O/model_update.o model_update.f90
+
+$O/save_external_bin_m_up.o:  ${SHARED}/constants.h save_external_bin_m_up.f90
+	${FCCOMPILE_CHECK} -c -o $O/save_external_bin_m_up.o save_external_bin_m_up.f90
 
 ###
 ### C files below

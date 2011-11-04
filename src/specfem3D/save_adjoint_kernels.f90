@@ -51,7 +51,7 @@
             iglob = ibool(i,j,k,ispec)
 
             ! isotropic adjoint kernels (see e.g. Tromp et al. 2005)
-            rhol = rho_vs(i,j,k,ispec)**2 / mustore(i,j,k,ispec)
+            rhol = rho_vs(i,j,k,ispec)*rho_vs(i,j,k,ispec) / mustore(i,j,k,ispec)
             mul = mustore(i,j,k,ispec)
             kappal = kappastore(i,j,k,ispec)
 
@@ -99,8 +99,9 @@
             ! rho prime kernel
             rhop_ac_kl(i,j,k,ispec) = rho_ac_kl(i,j,k,ispec) + kappa_ac_kl(i,j,k,ispec)
 
-            ! kappa kernel
-            alpha_ac_kl(i,j,k,ispec) = TWO *  kappa_ac_kl(i,j,k,ispec)
+            ! vp kernel
+            alpha_ac_kl(i,j,k,ispec) = 2._CUSTOM_REAL *  kappa_ac_kl(i,j,k,ispec)
+
           enddo
         enddo
       enddo
@@ -196,9 +197,9 @@
   if ( APPROXIMATE_HESS_KL ) then
     call save_kernels_hessian()
   endif
-  
+
   end subroutine save_adjoint_kernels
-  
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -211,7 +212,7 @@
 
   implicit none
   integer :: ier
-  
+
   ! acoustic domains
   if( ACOUSTIC_SIMULATION ) then
     ! scales approximate hessian
@@ -223,7 +224,7 @@
     if( ier /= 0 ) stop 'error opening file hess_acoustic_kernel.bin'
     write(27) hess_ac_kl
     close(27)
-  endif  
+  endif
 
   ! elastic domains
   if( ELASTIC_SIMULATION ) then
@@ -236,7 +237,7 @@
     if( ier /= 0 ) stop 'error opening file hess_kernel.bin'
     write(27) hess_kl
     close(27)
-  endif  
-  
+  endif
+
   end subroutine save_kernels_hessian
-  
+

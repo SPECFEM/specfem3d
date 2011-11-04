@@ -68,7 +68,6 @@ libgendatabases_a_OBJECTS = \
 	$O/assemble_MPI_scalar.o \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
-	$O/compute_arrays_source.o \
 	$O/multiply_arrays_source.o \
 	$O/create_name_database.o \
 	$O/create_regions_mesh.o \
@@ -300,7 +299,6 @@ $O/lagrange_poly.o:  ${SHARED}/constants.h ${SHARED}/lagrange_poly.f90
 $O/recompute_jacobian.o:  ${SHARED}/constants.h ${SHARED}/recompute_jacobian.f90
 	${FCCOMPILE_CHECK} -c -o $O/recompute_jacobian.o ${SHARED}/recompute_jacobian.f90
 
-
 $O/create_regions_mesh.o:  ${SHARED}/constants.h create_regions_mesh.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
 
@@ -328,20 +326,11 @@ $O/create_serial_name_database.o:  ${SHARED}/constants.h ${SHARED}/create_serial
 $O/define_derivation_matrices.o:  ${SHARED}/constants.h ${SHARED}/define_derivation_matrices.f90
 	${FCCOMPILE_CHECK} -c -o $O/define_derivation_matrices.o ${SHARED}/define_derivation_matrices.f90
 
-$O/compute_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/compute_arrays_source.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_arrays_source.o ${SHARED}/compute_arrays_source.f90
-
 $O/multiply_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/multiply_arrays_source.f90
 	${FCCOMPILE_CHECK} -c -o $O/multiply_arrays_source.o ${SHARED}/multiply_arrays_source.f90
 
 $O/get_attenuation_model.o:  ${SHARED}/constants.h ${SHARED}/get_attenuation_model.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_attenuation_model.o ${SHARED}/get_attenuation_model.f90
-
-$O/compute_boundary_kernel.o:  ${SHARED}/constants.h ${SHARED}/compute_boundary_kernel.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_boundary_kernel.o ${SHARED}/compute_boundary_kernel.f90
-
-$O/compute_kernels.o:  ${SHARED}/constants.h ${SHARED}/compute_kernels.f90
-	${FCCOMPILE_CHECK} -c -o $O/compute_kernels.o ${SHARED}/compute_kernels.f90
 
 $O/combine_vol_data.o:  ${SHARED}/constants.h ${SHARED}/combine_vol_data.f90
 	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o ${SHARED}/combine_vol_data.f90

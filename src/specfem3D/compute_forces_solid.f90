@@ -82,7 +82,7 @@
 
 ! adjoint simulations
   integer :: SIMULATION_TYPE
-  integer :: NSPEC_BOUN
+  !integer :: NSPEC_BOUN
   integer :: NGLOB_ADJOINT,NSPEC_ADJOINT
 ! adjoint wavefields
 !  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT):: b_displs_poroelastic,b_accels_poroelastic
@@ -151,6 +151,7 @@
 
 ! for attenuation
 !  real(kind=CUSTOM_REAL) :: Un,Unp1,tauinv,Sn,Snp1,theta_n,theta_np1,tauinvsquare,tauinvcube,tauinvUn
+
 
 ! compute Grad(displs_poroelastic) at time step n for attenuation
 !  if(TURN_ATTENUATION_ON) call compute_gradient_attenuation(displs_poroelastic,dux_dxl_n,duz_dxl_n, &
@@ -343,7 +344,7 @@
 
           if(SIMULATION_TYPE == 3) then ! kernels calculation
           endif
-!  endif !if(ATTENUATION) 
+!  endif !if(ATTENUATION)
 
 ! kernels calculation
 !   if(isolver == 2) then

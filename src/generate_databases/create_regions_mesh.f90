@@ -105,6 +105,14 @@ module create_regions_mesh_ext_par
   integer, dimension(:), allocatable :: coupling_el_po_ispec
   integer :: num_coupling_el_po_faces
 
+  ! Moho mesh
+  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
+  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
+  integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
+  integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
+  integer :: NSPEC2D_MOHO
+  logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
+
 ! for stacey
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
@@ -122,6 +130,24 @@ module create_regions_mesh_ext_par
 ! name of the database file
   character(len=256) prname
 
+! inner/outer elements
+  logical,dimension(:),allocatable :: ispec_is_inner
+  integer :: nspec_inner_acoustic,nspec_outer_acoustic
+  integer :: nspec_inner_elastic,nspec_outer_elastic
+  integer :: nspec_inner_poroelastic,nspec_outer_poroelastic
+
+  integer :: num_phase_ispec_acoustic
+  integer,dimension(:,:),allocatable :: phase_ispec_inner_acoustic
+
+  integer :: num_phase_ispec_elastic
+  integer,dimension(:,:),allocatable :: phase_ispec_inner_elastic
+
+  integer :: num_phase_ispec_poroelastic
+  integer,dimension(:,:),allocatable :: phase_ispec_inner_poroelastic
+
+  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
+
+
 end module create_regions_mesh_ext_par
 
 !
@@ -131,7 +157,8 @@ end module create_regions_mesh_ext_par
 ! main routine
 
 subroutine create_regions_mesh_ext(ibool, &
-                        xstore,ystore,zstore,nspec,npointot,myrank,LOCAL_PATH, &
+                        xstore,ystore,zstore,nspec, &
+                        npointot,myrank,LOCAL_PATH, &
                         nnodes_ext_mesh,nelmnts_ext_mesh, &
                         nodes_coords_ext_mesh, elmnts_ext_mesh, &
                         max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
@@ -145,15 +172,16 @@ subroutine create_regions_mesh_ext(ibool, &
                         ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
                         nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
                         nodes_ibelm_bottom,nodes_ibelm_top, &
-                        SAVE_MESH_FILES,nglob, &
+                        SAVE_MESH_FILES, &
+                        nglob, &
                         ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
                         ATTENUATION,USE_OLSEN_ATTENUATION, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
-                        itopo_bathy)
+                        itopo_bathy, &
+                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho)
 
 ! create the different regions of the mesh
-
   use create_regions_mesh_ext_par
   implicit none
   !include "constants.h"
@@ -227,6 +255,11 @@ subroutine create_regions_mesh_ext(ibool, &
   integer :: NX_TOPO,NY_TOPO
   double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
   integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
+
+! moho (optional)
+  integer :: nspec2D_moho_ext
+  integer, dimension(nspec2D_moho_ext)  :: ibelm_moho
+  integer, dimension(4,nspec2D_moho_ext) :: nodes_ibelm_moho
 
 ! local parameters
 ! static memory size needed by the solver
@@ -337,6 +370,18 @@ subroutine create_regions_mesh_ext(ibool, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
 
+! sets up up Moho surface
+  NSPEC2D_MOHO = 0
+  if( SAVE_MOHO_MESH ) then
+    call sync_all()
+    if( myrank == 0) then
+      write(IMAIN,*) '  ...setting up Moho surface'
+    endif
+    call crm_setup_moho(myrank,nglob,nspec, &
+                      nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
+                      nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
+  endif
+
 ! creates mass matrix
   call sync_all()
   if( myrank == 0) then
@@ -354,6 +399,16 @@ subroutine create_regions_mesh_ext(ibool, &
                         ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
                         itopo_bathy)
 
+! locates inner and outer elements
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...element inner/outer separation '
+  endif
+  call crm_setup_inner_outer_elemnts(myrank,nspec,nglob, &
+                                    num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                                    nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                    ibool,SAVE_MESH_FILES)
+
 ! saves the binary mesh files
   call sync_all()
   if( myrank == 0) then
@@ -368,27 +423,45 @@ subroutine create_regions_mesh_ext(ibool, &
                         rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore, &
                         rho_vpI,rho_vpII,rho_vsI, &
                         rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                        OCEANS,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                        OCEANS,rmass_ocean_load,NGLOB_OCEAN, &
+                        ibool, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
                         free_surface_normal,free_surface_jacobian2Dw, &
-                        free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
+                        free_surface_ijk,free_surface_ispec, &
+                        num_free_surface_faces, &
                         coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                        coupling_ac_el_ijk,coupling_ac_el_ispec,num_coupling_ac_el_faces, &
+                        coupling_ac_el_ijk,coupling_ac_el_ispec, &
+                        num_coupling_ac_el_faces, &
                         coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
-                        coupling_ac_po_ijk,coupling_ac_po_ispec,num_coupling_ac_po_faces, &
+                        coupling_ac_po_ijk,coupling_ac_po_ispec, &
+                        num_coupling_ac_po_faces, &
                         coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-                        coupling_el_po_ijk,coupling_el_po_ispec,num_coupling_el_po_faces, &
+                        coupling_el_po_ijk,coupling_el_po_ispec, &
+                        num_coupling_el_po_faces, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                        prname,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
+                        prname,SAVE_MESH_FILES, &
+                        ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store, &
                         c22store,c23store,c24store,c25store,c26store,c33store, &
                         c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
-                        ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
+                        ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+                        ispec_is_inner,nspec_inner_acoustic,nspec_inner_elastic,nspec_inner_poroelastic, &
+                        nspec_outer_acoustic,nspec_outer_elastic,nspec_outer_poroelastic, &
+                        num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+                        num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+                        num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic)
+
+! saves moho surface
+  if( SAVE_MOHO_MESH ) then
+    call crm_save_moho()
+  endif
 
 ! computes the approximate amount of static memory needed to run the solver
+  call sync_all()
   call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
                   OCEANS,static_memory_size)
   call max_all_dp(static_memory_size, max_static_memory_size)
@@ -396,7 +469,7 @@ subroutine create_regions_mesh_ext(ibool, &
 ! checks the mesh, stability and resolved period
   call sync_all()
 !chris: check for poro: At the moment cpI & cpII are for eta=0
-  call check_mesh_resolution(myrank,nspec,nglob,ibool,&
+  call check_mesh_resolution_poro(myrank,nspec,nglob,ibool,&
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             kappastore,mustore,rho_vp,rho_vs, &
                             -1.0d0, model_speed_max,min_resolved_period, &
@@ -814,7 +887,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 !
 
 
-  subroutine create_regions_mesh_save_moho( myrank,nglob,nspec, &
+  subroutine crm_setup_moho( myrank,nglob,nspec, &
                         nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 
@@ -834,14 +907,6 @@ subroutine crm_ext_setup_indexing(ibool, &
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
 ! local parameters
-  ! Moho mesh
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_top
-  real(CUSTOM_REAL), dimension(:,:,:),allocatable :: normal_moho_bot
-  integer,dimension(:,:,:),allocatable :: ijk_moho_top, ijk_moho_bot
-  integer,dimension(:),allocatable :: ibelm_moho_top, ibelm_moho_bot
-  integer :: NSPEC2D_MOHO
-  logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
-
   real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
   real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
@@ -1106,21 +1171,259 @@ subroutine crm_ext_setup_indexing(ibool, &
     write(IMAIN,*) '********'
   endif
 
+  deallocate(iglob_is_surface)
+  deallocate(iglob_normals)
+
+  end subroutine crm_setup_moho
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine crm_save_moho()
+
+  use create_regions_mesh_ext_par
+  implicit none
+  ! local parameters
+  integer :: ier
+
   ! saves moho files: total number of elements, corner points, all points
-  open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='unknown',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin', &
+        status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening ibelm_moho.bin file'
   write(27) NSPEC2D_MOHO
   write(27) ibelm_moho_top
   write(27) ibelm_moho_bot
   write(27) ijk_moho_top
   write(27) ijk_moho_bot
   close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='unknown',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin', &
+        status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening normal_moho.bin file'
   write(27) normal_moho_top
   write(27) normal_moho_bot
   close(27)
-  open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='unknown',form='unformatted')
+  open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin', &
+    status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening is_moho.bin file'
   write(27) is_moho_top
   write(27) is_moho_bot
   close(27)
 
-  end subroutine create_regions_mesh_save_moho
+  end subroutine crm_save_moho
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine crm_setup_inner_outer_elemnts(myrank,nspec,nglob, &
+                                  num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
+                                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                                  ibool,SAVE_MESH_FILES)
+
+! locates inner and outer elements
+
+  use create_regions_mesh_ext_par
+  implicit none
+
+  integer :: myrank,nspec,nglob
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+
+  ! MPI interfaces
+  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
+    ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+
+  logical :: SAVE_MESH_FILES
+
+  ! local parameters
+  integer :: i,j,k,ispec,iglob
+  integer :: iinterface,ier
+  integer :: ispec_inner,ispec_outer
+  real :: percentage_edge
+  character(len=256) :: filename
+  logical,dimension(:),allocatable :: iglob_is_inner
+
+  ! allocates arrays
+  allocate(ispec_is_inner(nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
+
+  ! temporary array
+  allocate(iglob_is_inner(nglob),stat=ier)
+  if( ier /= 0 ) stop 'error allocating temporary array  iglob_is_inner'
+
+  ! initialize flags
+  ispec_is_inner(:) = .true.
+  iglob_is_inner(:) = .true.
+  do iinterface = 1, num_interfaces_ext_mesh
+    do i = 1, nibool_interfaces_ext_mesh(iinterface)
+      iglob = ibool_interfaces_ext_mesh(i,iinterface)
+      iglob_is_inner(iglob) = .false.
+    enddo
+  enddo
+
+  ! determines flags for inner elements (purely inside the partition)
+  do ispec = 1, nspec
+    do k = 1, NGLLZ
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          iglob = ibool(i,j,k,ispec)
+          ispec_is_inner(ispec) = ( iglob_is_inner(iglob) .and. ispec_is_inner(ispec) )
+        enddo
+      enddo
+    enddo
+  enddo
+
+  ! frees temporary array
+  deallocate( iglob_is_inner )
+
+  if( SAVE_MESH_FILES ) then
+    filename = prname(1:len_trim(prname))//'ispec_is_inner'
+    call write_VTK_data_elem_l(nspec,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        ispec_is_inner,filename)
+  endif
+
+
+  ! sets up elements for loops in acoustic simulations
+  nspec_inner_acoustic = 0
+  nspec_outer_acoustic = 0
+  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
+  if( ACOUSTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    do ispec = 1, nspec
+      if( ispec_is_acoustic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_acoustic = nspec_inner_acoustic + 1
+        else
+          nspec_outer_acoustic = nspec_outer_acoustic + 1
+        endif
+      endif
+    enddo
+
+    ! stores indices of inner and outer elements for faster(?) computation
+    num_phase_ispec_acoustic = max(nspec_inner_acoustic,nspec_outer_acoustic)
+    if( num_phase_ispec_acoustic < 0 ) stop 'error acoustic simulation: num_phase_ispec_acoustic is < zero'
+
+    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_acoustic'
+    phase_ispec_inner_acoustic(:,:) = 0
+
+    ispec_inner = 0
+    ispec_outer = 0
+    do ispec = 1, nspec
+      if( ispec_is_acoustic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          ispec_inner = ispec_inner + 1
+          phase_ispec_inner_acoustic(ispec_inner,2) = ispec
+        else
+          ispec_outer = ispec_outer + 1
+          phase_ispec_inner_acoustic(ispec_outer,1) = ispec
+        endif
+      endif
+    enddo
+  else
+    ! allocates dummy array
+    num_phase_ispec_acoustic = 0
+    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array phase_ispec_inner_acoustic'
+    phase_ispec_inner_acoustic(:,:) = 0
+  endif
+
+  ! sets up elements for loops in acoustic simulations
+  nspec_inner_elastic = 0
+  nspec_outer_elastic = 0
+  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+  if( ELASTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    do ispec = 1, nspec
+      if( ispec_is_elastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_elastic = nspec_inner_elastic + 1
+        else
+          nspec_outer_elastic = nspec_outer_elastic + 1
+        endif
+      endif
+    enddo
+
+    ! stores indices of inner and outer elements for faster(?) computation
+    num_phase_ispec_elastic = max(nspec_inner_elastic,nspec_outer_elastic)
+    if( num_phase_ispec_elastic < 0 ) stop 'error elastic simulation: num_phase_ispec_elastic is < zero'
+
+    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_elastic'
+    phase_ispec_inner_elastic(:,:) = 0
+
+    ispec_inner = 0
+    ispec_outer = 0
+    do ispec = 1, nspec
+      if( ispec_is_elastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          ispec_inner = ispec_inner + 1
+          phase_ispec_inner_elastic(ispec_inner,2) = ispec
+        else
+          ispec_outer = ispec_outer + 1
+          phase_ispec_inner_elastic(ispec_outer,1) = ispec
+        endif
+      endif
+    enddo
+  else
+    ! allocates dummy array
+    num_phase_ispec_elastic = 0
+    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array phase_ispec_inner_elastic'
+    phase_ispec_inner_elastic(:,:) = 0
+  endif
+
+  ! sets up elements for loops in poroelastic simulations
+  nspec_inner_poroelastic = 0
+  nspec_outer_poroelastic = 0
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
+  if( POROELASTIC_SIMULATION ) then
+    ! counts inner and outer elements
+    do ispec = 1, nspec
+      if( ispec_is_poroelastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_poroelastic = nspec_inner_poroelastic + 1
+        else
+          nspec_outer_poroelastic = nspec_outer_poroelastic + 1
+        endif
+      endif
+    enddo
+
+    ! stores indices of inner and outer elements for faster(?) computation
+    num_phase_ispec_poroelastic = max(nspec_inner_poroelastic,nspec_outer_poroelastic)
+    allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array phase_ispec_inner_poroelastic'
+    nspec_inner_poroelastic = 0
+    nspec_outer_poroelastic = 0
+    do ispec = 1, nspec
+      if( ispec_is_poroelastic(ispec) ) then
+        if( ispec_is_inner(ispec) .eqv. .true. ) then
+          nspec_inner_poroelastic = nspec_inner_poroelastic + 1
+          phase_ispec_inner_poroelastic(nspec_inner_poroelastic,2) = ispec
+        else
+          nspec_outer_poroelastic = nspec_outer_poroelastic + 1
+          phase_ispec_inner_poroelastic(nspec_outer_poroelastic,1) = ispec
+        endif
+      endif
+    enddo
+  else
+    ! allocates dummy array
+    num_phase_ispec_poroelastic = 0
+    allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array phase_ispec_inner_poroelastic'
+    phase_ispec_inner_poroelastic(:,:) = 0
+  endif
+
+  ! user output
+  if(myrank == 0) then
+    percentage_edge = 100.*count(ispec_is_inner(:))/real(nspec)
+    write(IMAIN,*) '     for overlapping of communications with calculations:'
+    write(IMAIN,*) '     percentage of   edge elements ',100. -percentage_edge,'%'
+    write(IMAIN,*) '     percentage of volume elements ',percentage_edge,'%'
+  endif
+
+  end subroutine crm_setup_inner_outer_elemnts
+

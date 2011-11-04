@@ -172,34 +172,37 @@ subroutine compute_forces_acoustic()
 
 ! elastic coupling
     if(ELASTIC_SIMULATION ) then
-      if( SIMULATION_TYPE == 1 ) then
-        ! forward definition: \bfs=\frac{1}{\rho}\bfnabla\phi
-        call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                          ibool,displ,potential_dot_dot_acoustic, &
-                          num_coupling_ac_el_faces, &
-                          coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                          coupling_ac_el_normal, &
-                          coupling_ac_el_jacobian2Dw, &
-                          ispec_is_inner,phase_is_inner)
-      else
-        ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
-        call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                          ibool,-accel_adj_coupling,potential_dot_dot_acoustic, &
+      if( num_coupling_ac_el_faces > 0 ) then
+        if( SIMULATION_TYPE == 1 ) then
+          ! forward definition: \bfs=\frac{1}{\rho}\bfnabla\phi
+          call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
+                            ibool,displ,potential_dot_dot_acoustic, &
+                            num_coupling_ac_el_faces, &
+                            coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                            coupling_ac_el_normal, &
+                            coupling_ac_el_jacobian2Dw, &
+                            ispec_is_inner,phase_is_inner)
+        else
+          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+          ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
+          call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
+                            ibool,-accel_adj_coupling,potential_dot_dot_acoustic, &
+                            num_coupling_ac_el_faces, &
+                            coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                            coupling_ac_el_normal, &
+                            coupling_ac_el_jacobian2Dw, &
+                            ispec_is_inner,phase_is_inner)
+        endif
+        ! adjoint/kernel simulations
+        if( SIMULATION_TYPE == 3 ) &
+          call compute_coupling_acoustic_el(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                          ibool,b_displ,b_potential_dot_dot_acoustic, &
                           num_coupling_ac_el_faces, &
                           coupling_ac_el_ispec,coupling_ac_el_ijk, &
                           coupling_ac_el_normal, &
                           coupling_ac_el_jacobian2Dw, &
                           ispec_is_inner,phase_is_inner)
       endif
-      ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) &
-        call compute_coupling_acoustic_el(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                        ibool,b_displ,b_potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
     endif
 
 ! poroelastic coupling
@@ -320,10 +323,12 @@ subroutine compute_forces_acoustic()
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
 
-  potential_acoustic_adj_coupling(:) = potential_acoustic(:) &
+  if( SIMULATION_TYPE /= 1 ) then
+    potential_acoustic_adj_coupling(:) = potential_acoustic(:) &
                             + deltat * potential_dot_acoustic(:) &
                             + deltatsqover2 * potential_dot_dot_acoustic(:)
-
+  endif
+  
   ! adjoint simulations
   if (SIMULATION_TYPE == 3) &
     call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT, &

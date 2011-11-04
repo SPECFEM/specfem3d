@@ -180,6 +180,10 @@ program smooth_vol_data
   sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
   sigma_v2 = 2.0 * sigma_v ** 2
 
+  ! checks
+  if( sigma_h2 < 1.e-30 ) stop 'error sigma_h2 zero, must non-zero'
+  if( sigma_v2 < 1.e-30 ) stop 'error sigma_v2 zero, must non-zero'
+
   ! adds margin to search radius
   element_size = max(sigma_h,sigma_v) * 0.5
 
@@ -200,7 +204,7 @@ program smooth_vol_data
     print*,"  element size   : ",element_size
     print*,"  smoothing sigma_h , sigma_v: ",sigma_h,sigma_v
     ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
-    print*,"  smoothing scalelengths horizontal, vertical : ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)    
+    print*,"  smoothing scalelengths horizontal, vertical : ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
     print*,"  in dir : ",trim(indir)
     print*,"  out dir: ",trim(outdir)
   endif
@@ -657,6 +661,10 @@ end program smooth_vol_data
   ! local parameters
   integer :: ii,jj,kk
   real(kind=CUSTOM_REAL) :: dist_h,dist_v
+  real(kind=CUSTOM_REAL) :: sigma_h2_inv,sigma_v2_inv
+
+  sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
+  sigma_v2_inv = 1.0_CUSTOM_REAL / sigma_v2
 
   do kk = 1, NGLLZ
     do jj = 1, NGLLY
@@ -667,7 +675,7 @@ end program smooth_vol_data
             xx_elem(ii,jj,kk),yy_elem(ii,jj,kk),zz_elem(ii,jj,kk))
 
         ! gaussian function
-        exp_val(ii,jj,kk) = exp(- (dist_h*dist_h)/sigma_h2 - (dist_v*dist_v)/sigma_v2)
+        exp_val(ii,jj,kk) = exp(- sigma_h2_inv*(dist_h*dist_h) - sigma_v2_inv*(dist_v*dist_v))
       enddo
     enddo
   enddo

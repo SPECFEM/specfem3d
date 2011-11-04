@@ -260,14 +260,14 @@
 !--------------------------------------------------------------------------------------------------
 !
 
-  subroutine assemble_MPI_vector_ext_mesh_po_s(NPROC,NGLOB_AB,array_val1,array_val2, &
-            buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
-            buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
-            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-            request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
-            request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w &
-            )
+  subroutine assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,array_val1,array_val2, &
+                      buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
+                      buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
+                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+                      request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
+                      request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w &
+                      )
 
 ! sends data
 
@@ -338,13 +338,13 @@
 
   endif
 
-  end subroutine assemble_MPI_vector_ext_mesh_po_s
+  end subroutine assemble_MPI_vector_poro_s
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine assemble_MPI_vector_ext_mesh_po_w(NPROC,NGLOB_AB,array_val1,array_val2, &
+  subroutine assemble_MPI_vector_poro_w(NPROC,NGLOB_AB,array_val1,array_val2, &
             buffer_recv_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_w, &
             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
@@ -404,4 +404,4 @@
 
   endif
 
-  end subroutine assemble_MPI_vector_ext_mesh_po_w
+  end subroutine assemble_MPI_vector_poro_w

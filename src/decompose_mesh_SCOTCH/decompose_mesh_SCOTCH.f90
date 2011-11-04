@@ -109,6 +109,8 @@ module decompose_mesh_SCOTCH
 ! poroelastic parameters read in a new file
   double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
+  integer, parameter :: IIN_database = 15
+
   contains
 
   !----------------------------------------------------------------------------------------------
@@ -117,7 +119,8 @@ module decompose_mesh_SCOTCH
   subroutine read_mesh_files
     implicit none
     character(len=256)  :: line
-
+    logical :: use_poroelastic_file
+    
   ! sets number of nodes per element
     ngnod = esize
 
@@ -219,8 +222,8 @@ module decompose_mesh_SCOTCH
   !     vs                             : S-velocity
   !     Q_mu                      : 0=no attenuation
   !     anisotropy_flag        : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
-  ! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id, 
-  ! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT 
+  ! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id,
+  ! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT
   ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
@@ -280,8 +283,16 @@ module decompose_mesh_SCOTCH
   !     mufr : frame shear modulus
     open(unit=97, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_poroelastic_file', &
           status='old', form='formatted', iostat=ier)
-    if( ier /= 0 ) stop 'error opening nummaterial_poroelastic_file'
-
+    ! checks if we can use file      
+    if( ier /= 0 ) then
+      use_poroelastic_file = .false.
+      !stop 'error opening nummaterial_poroelastic_file'
+    else
+      use_poroelastic_file = .true.
+      print*, '  poroelastic material file found'
+    endif
+    ier = 0
+    
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
     !          defined materials (material_id > 0) and undefined materials (material_id < 0 )
     do imat=1,count_def_mat
@@ -305,36 +316,39 @@ module decompose_mesh_SCOTCH
        ! checks material_id bounds
        if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
 
-       if(idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
+       if(idomain_id == 1 .or. idomain_id == 2) then 
+         ! material is elastic or acoustic
 
-       !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
-       !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
-       mat_prop(1,num_mat) = rho
-       mat_prop(2,num_mat) = vp
-       mat_prop(3,num_mat) = vs
-       mat_prop(4,num_mat) = qmu
-       mat_prop(5,num_mat) = aniso_flag
-       mat_prop(6,num_mat) = idomain_id
+         !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
+         !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
+         mat_prop(1,num_mat) = rho
+         mat_prop(2,num_mat) = vp
+         mat_prop(3,num_mat) = vs
+         mat_prop(4,num_mat) = qmu
+         mat_prop(5,num_mat) = aniso_flag
+         mat_prop(6,num_mat) = idomain_id
 
-       else                             ! material is poroelastic 
-
-       read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
-       mat_prop(1,num_mat) = rhos
-       mat_prop(2,num_mat) = rhof
-       mat_prop(3,num_mat) = phi
-       mat_prop(4,num_mat) = tort
-       mat_prop(5,num_mat) = eta
-       mat_prop(6,num_mat) = idomain_id
-       mat_prop(7,num_mat) = kxx
-       mat_prop(8,num_mat) = kxy
-       mat_prop(9,num_mat) = kxz
-       mat_prop(10,num_mat) = kyy
-       mat_prop(11,num_mat) = kyz
-       mat_prop(12,num_mat) = kzz
-       mat_prop(13,num_mat) = kappas
-       mat_prop(14,num_mat) = kappaf
-       mat_prop(15,num_mat) = kappafr
-       mat_prop(16,num_mat) = mufr
+       else                             
+         ! material is poroelastic
+         if( use_poroelastic_file .eqv. .false. ) stop 'error poroelastic material requires nummaterial_poroelastic_file'
+         
+         read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
+         mat_prop(1,num_mat) = rhos
+         mat_prop(2,num_mat) = rhof
+         mat_prop(3,num_mat) = phi
+         mat_prop(4,num_mat) = tort
+         mat_prop(5,num_mat) = eta
+         mat_prop(6,num_mat) = idomain_id
+         mat_prop(7,num_mat) = kxx
+         mat_prop(8,num_mat) = kxy
+         mat_prop(9,num_mat) = kxz
+         mat_prop(10,num_mat) = kyy
+         mat_prop(11,num_mat) = kyz
+         mat_prop(12,num_mat) = kzz
+         mat_prop(13,num_mat) = kappas
+         mat_prop(14,num_mat) = kappaf
+         mat_prop(15,num_mat) = kappafr
+         mat_prop(16,num_mat) = mufr
 
        endif !if(idomain_id == 1 .or. idomain_id == 2)
 
@@ -417,7 +431,7 @@ module decompose_mesh_SCOTCH
          endif
        endif
     end do
-    close(97)
+    if( use_poroelastic_file ) close(97)
     close(98)
 
 
@@ -686,8 +700,8 @@ module decompose_mesh_SCOTCH
     num_material(:) = mat(1,:)
 
     ! in case of acoustic/elastic simulation, weights elements accordingly
-    call acoustic_elastic_poroelastic_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                              num_material,mat_prop,undef_mat_prop)
+    call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
+                                  num_material,mat_prop,undef_mat_prop)
 
     deallocate(num_material)
 
@@ -831,8 +845,8 @@ module decompose_mesh_SCOTCH
 
        ! opens output file
        write(prname, "(i6.6,'_Database')") ipart
-       open(unit=15,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
-            status='unknown', action='write', form='formatted', iostat = ier)
+       open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
+            status='unknown', action='write', form='unformatted', iostat = ier)
        if( ier /= 0 ) then
         print*,'error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
         print*
@@ -841,34 +855,36 @@ module decompose_mesh_SCOTCH
        endif
 
        ! gets number of nodes
-       call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords, &
+       call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 1)
 
        ! gets number of spectral elements
-       call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, &
+       call write_partition_database(IIN_database, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 1)
 
        ! writes out node coordinate locations
-       write(15,*) nnodes_loc
+       !write(IIN_database,*) nnodes_loc
+       write(IIN_database) nnodes_loc
 
-       call write_glob2loc_nodes_database(15, ipart, nnodes_loc, nodes_coords,&
+       call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords,&
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
 
-       call write_material_props_database(15,count_def_mat,count_undef_mat, &
+       call write_material_props_database(IIN_database,count_def_mat,count_undef_mat, &
                                   mat_prop, undef_mat_prop)
 
        ! writes out spectral element indices
-       write(15,*) nspec_loc
+       !write(IIN_database,*) nspec_loc
+       write(IIN_database) nspec_loc
 
-       call write_partition_database(15, ipart, nspec_loc, nspec, elmnts, &
+       call write_partition_database(IIN_database, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 2)
 
        ! writes out absorbing/free-surface boundaries
-       call write_boundaries_database(15, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
+       call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
                                   nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
                                   ibelm_xmin, ibelm_xmax, ibelm_ymin, &
                                   ibelm_ymax, ibelm_bottom, ibelm_top, &
@@ -878,26 +894,33 @@ module decompose_mesh_SCOTCH
                                   glob2loc_nodes_parts, glob2loc_nodes, part)
 
        ! gets number of MPI interfaces
-       call Write_interfaces_database(15, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+       call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 1, nparts)
 
        ! writes out MPI interfaces elements
-       write(15,*) my_ninterface, maxval(my_nb_interfaces)
+       !print*,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
+       if( my_ninterface == 0 ) then
+        !write(IIN_database,*) my_ninterface, 0
+        write(IIN_database) my_ninterface, 0       ! avoids problem with maxval for empty array my_nb_interfaces
+       else
+        !write(IIN_database,*) my_ninterface, maxval(my_nb_interfaces)
+        write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
+       endif
 
-       call Write_interfaces_database(15, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
+       call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
                                   my_ninterface, my_interfaces, my_nb_interfaces, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, 2, nparts)
 
        ! writes out moho surface (optional)
-       call write_moho_surface_database(15, ipart, nspec, &
+       call write_moho_surface_database(IIN_database, ipart, nspec, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, &
                                   nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
 
-       close(15)
+       close(IIN_database)
 
     end do
     print*, 'partitions: '
