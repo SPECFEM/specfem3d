@@ -1,5 +1,6 @@
-[SPECFEM3D]$ ./bin/xdecompose_mesh_SCOTCH 4 examples/homogeneous_halfspace/MESH-default/ examples/homogeneous_halfspace/DATABASES-default/
- total number of nodes:
+[homogeneous_halfspace]$ ./bin/xdecompose_mesh_SCOTCH 4 MESH-default/ DATABASES-default/ 
+
+total number of nodes: 
    nnodes =        23273
  total number of spectral elements:
    nspec =                  20736
@@ -13,14 +14,15 @@
    nspec2D_ymax =          576
    nspec2D_bottom =         1296
    nspec2D_top =         1296
- nodes valence:
+ nodes valence: 
    min =            1 max =            8
    nsize =                      8 sup_neighbour =                     38
- mesh2dual:
+ mesh2dual: 
    max_neighbour =           26
    moho elements =            0
- partitions:
+ partitions: 
    num =            4
-
- Databases files in directory: examples/homogeneous_halfspace/DATABASES-default/
+ 
+ Databases files in directory: DATABASES-default/
  finished successfully
+ 

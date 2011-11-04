@@ -258,7 +258,7 @@
 ! write ONE binary file for all receivers (nrec_local) within one proc
 ! SU format, with 240-byte-header for each trace
   if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it==NSTEP) .and. SU_FORMAT) &
-     call write_seismograms_su() 
+     call write_output_SU() 
 
   end subroutine write_seismograms
 
@@ -674,11 +674,11 @@
     enddo ! idim
   enddo ! irec_local
 
-end subroutine write_adj_seismograms2_to_file
+  end subroutine write_adj_seismograms2_to_file
 
 !=====================================================================
 
-subroutine write_channel_name(iorientation,channel)
+  subroutine write_channel_name(iorientation,channel)
 
   use specfem_par,only: DT,SUPPRESS_UTM_PROJECTION
   implicit none
@@ -727,11 +727,11 @@ subroutine write_channel_name(iorientation,channel)
 
   endif
 
-end subroutine write_channel_name
+  end subroutine write_channel_name
 
 !=====================================================================
 
-subroutine band_instrument_code(DT,bic)
+  subroutine band_instrument_code(DT,bic)
   ! This subroutine is to choose the appropriate band and instrument codes for channel names of seismograms
   ! based on the IRIS convention (first two letters of channel codes, respectively,
   ! which were LH(Z/E/N) previously).
@@ -760,105 +760,4 @@ subroutine band_instrument_code(DT,bic)
   endif
 
  end subroutine band_instrument_code
-
-!=====================================================================
-
- subroutine write_seismograms_su()
- 
- use specfem_par
- use specfem_par_acoustic
- use specfem_par_elastic
- use specfem_par_poroelastic
-
- implicit none
-
- character(len=256) procname,final_LOCAL_PATH
- integer :: irec_local,irec,ios
- real :: x_station,y_station
- 
- ! headers
- integer,parameter :: nheader=240      ! 240 bytes
- integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
- integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
- real(kind=4)    :: r4head(nheader/4)  ! 4-byte-real
- equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
-
- double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
- double precision, allocatable, dimension(:) :: x_found,y_found,z_found
- double precision :: x_found_source,y_found_source,z_found_source
-
- allocate(x_found(nrec))
- allocate(y_found(nrec))
- allocate(z_found(nrec))
- open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
- do irec=1,nrec
-   read(IIN_SU1,*) x_found(irec),y_found(irec),z_found(irec)
- enddo
- close(IIN_SU1)
- open(unit=IIN_SU1,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
- read(IIN_SU1,*) x_found_source,y_found_source,z_found_source
- close(IIN_SU1)
- ! directory to store seismograms
- if( USE_OUTPUT_FILES_PATH ) then
-   final_LOCAL_PATH = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)) // '/'
- else
-   ! create full final local path
-   final_LOCAL_PATH = trim(adjustl(LOCAL_PATH)) // '/'
- endif
- write(procname,"(i4)") myrank
-
- ! write seismograms (dx)
- open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dx_SU' ,&
-      form='unformatted', access='direct', recl=240+4*(NSTEP))
- do irec_local = 1,nrec_local
-   irec = number_receiver_global(irec_local)
-   i4head(1)  =irec
-   i4head(11) =z_found(irec)
-   i4head(13) =z_found_source
-   i4head(19) =x_found_source !utm_x_source(1)
-   i4head(20) =y_found_source !utm_y_source(1)
-   i4head(21) =x_found(irec)  !stutm_x(irec)
-   i4head(22) =y_found(irec)  !stutm_y(irec)
-   i2head(58) =NSTEP
-   i2head(59) =DT*1.0d6
-   write(IOUT_SU,rec=irec_local) r4head, seismograms_d(1,irec_local,:)
- enddo 
- close(IOUT_SU)
- ! write seismograms (dy)
- open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dy_SU' ,&
-      form='unformatted', access='direct', recl=240+4*(NSTEP))
- do irec_local = 1,nrec_local
-   irec = number_receiver_global(irec_local)
-   i4head(1)  =irec
-   i4head(11) =z_found(irec)
-   i4head(13) =z_found_source
-   i4head(19) =x_found_source !utm_x_source(1)
-   i4head(20) =y_found_source !utm_y_source(1)
-   i4head(21) =x_found(irec)  !stutm_x(irec)
-   i4head(22) =y_found(irec)  !stutm_y(irec)
-   i2head(58) =NSTEP
-   i2head(59) =DT*1.0d6
-   write(IOUT_SU,rec=irec_local) r4head, seismograms_d(2,irec_local,:)
- enddo 
- close(IOUT_SU)
-
- ! write seismograms (dz)
- open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dz_SU' ,&
-      form='unformatted', access='direct', recl=240+4*(NSTEP))
- do irec_local = 1,nrec_local
-   irec = number_receiver_global(irec_local)
-   i4head(1)  =irec
-   i4head(11) =z_found(irec)
-   i4head(13) =z_found_source
-   i4head(19) =x_found_source !utm_x_source(1)
-   i4head(20) =y_found_source !utm_y_source(1)
-   i4head(21) =x_found(irec)  !stutm_x(irec)
-   i4head(22) =y_found(irec)  !stutm_y(irec)
-   i2head(58) =NSTEP
-   i2head(59) =DT*1.0d6
-   write(IOUT_SU,rec=irec_local) r4head, seismograms_d(3,irec_local,:)
- enddo 
- close(IOUT_SU)
-
- end subroutine write_seismograms_su
 

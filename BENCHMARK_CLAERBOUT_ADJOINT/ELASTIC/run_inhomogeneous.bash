@@ -1,16 +1,30 @@
 #!/bin/bash -eu
+echo
+echo `date`
+echo
 
 NSTEP=`grep NSTEP   ./in_data_files/Par_file | cut -d = -f 2 | sed 's/ //g'`
 DT=`grep       DT   ./in_data_files/Par_file | cut -d = -f 2 | sed 's/ //g'`
 NPROC=`grep NPROC   ./in_data_files/Par_file | cut -d = -f 2 `
 
-NSTEP=3000
-DT=0.001
-percent=0.0001
-
+#daniel:
+echo "Par_file parameters:"
 echo "NSTEP=$NSTEP"
 echo "DT=$DT"
 echo "NPROC=$NPROC"
+echo
+
+#NSTEP=3000
+#DT=0.001
+#percent=0.0001
+
+percent=0.02
+echo "perturbation: $percent"
+echo
+
+#echo "NSTEP=$NSTEP"
+#echo "DT=$DT"
+#echo "NPROC=$NPROC"
 
 bin="$PWD/bin"
 in_data_files="$bin/../in_data_files"
@@ -22,6 +36,19 @@ SESAME="$bin/../../../../"
 MPIRUN="mpirun -np $NPROC "
 MPIFC="mpif90 -assume byterecl "
 
+##############################################
+
+#daniel
+do_setup=$1
+
+##############################################
+
+if [ "$do_setup" == "" ]; then
+
+echo
+echo "setting up example..."
+echo
+
 rm -rf $in_out_files $models $bin
 mkdir -p $in_out_files/DATABASES_MPI $in_out_files/OUTPUT_FILES $in_out_files/SEM/dat $in_out_files/SEM/syn
 mkdir -p $models/initial_model $models/target_model $bin
@@ -30,18 +57,44 @@ cd $SESAME
 cp ./src/shared/constants.h ./src/shared/constants.h_backup
 cp ./src/specfem3D/save_adjoint_kernels.f90 ./src/specfem3D/save_adjoint_kernels.f90_backup
 cp ./src/generate_databases/get_model.f90 ./src/generate_databases/get_model.f90_backup
-cp $bin/../constants.h ./src/shared/constants.h
-cp $bin/../get_model_internal.f90 ./src/generate_databases/get_model.f90
-cp $bin/../save_adjoint_kernels.f90 ./src/specfem3D/save_adjoint_kernels.f90
-make > $bin/../make.log
+#cp ./src/specfem3D/write_seismograms.f90  ./src/specfem3D/write_seismograms.f90_backup
+
+#daniel
+#cp $bin/../constants.h ./src/shared/constants.h
+sed -i "s:SU_FORMAT.*:SU_FORMAT = .true.:g" ./src/shared/constants.h
+sed -i "s:FIX_UNDERFLOW_PROBLEM.*:FIX_UNDERFLOW_PROBLEM = .false.:g" ./src/shared/constants.h
+
+#daniel
+#cp $bin/../get_model_internal.f90 ./src/generate_databases/get_model.f90
+sed -i "s:USE_EXTERNAL_FILES.*=.*:USE_EXTERNAL_FILES = .false.:" ./src/generate_databases/get_model.f90
+
+#daniel
+#cp $bin/../save_adjoint_kernels.f90 ./src/specfem3D/save_adjoint_kernels.f90
+sed -i "s:SAVE_WEIGHTS.*=.*:SAVE_WEIGHTS = .true.:" ./src/specfem3D/save_adjoint_kernels.f90
+
+#daniel
+#cp $bin/../write_seismograms.f90 ./src/specfem3D/write_seismograms.f90
+#patch ./src/specfem3D/write_seismograms.f90 < $bin/../write_seismograms.patch
+
+make >& $bin/../make.log
 
 cp ./bin/xmeshfem3D            $bin/xmeshfem3D
 cp ./bin/xgenerate_databases   $bin/xgenerate_databases_internal
 cp ./bin/xspecfem3D            $bin/xspecfem3D
 
-cp $bin/../get_model_external.f90 ./src/generate_databases/get_model.f90
-make > $bin/../make.log
+#daniel
+make xcombine_vol_data >> $bin/../make.log
+cp ./bin/xcombine_vol_data   $bin/
+
+#daniel
+#cp $bin/../get_model_external.f90 ./src/generate_databases/get_model.f90
+sed -i "s:USE_EXTERNAL_FILES.*=.*:USE_EXTERNAL_FILES = .true.:" ./src/generate_databases/get_model.f90
+
+make >& $bin/../make.log
+
 cp ./bin/xgenerate_databases   $bin/xgenerate_databases_external
+
+fi
 
 cd $bin
 $MPIFC $bin/../random_model_generation.f90 -o ./xrandom_model > $bin/../compile.log
@@ -64,6 +117,9 @@ $MPIRUN ./xgenerate_databases_internal
 echo "data simulation: $MPIRUN ./xspecfem3D ..."
 $MPIRUN ./xspecfem3D
 
+#daniel
+cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.dat.forward
+
 mv $in_out_files/OUTPUT_FILES/*SU $in_out_files/SEM/dat/
 cp $in_out_files/DATABASES_MPI/*rho.bin $models/target_model/
 cp $in_out_files/DATABASES_MPI/*vp.bin  $models/target_model/
@@ -76,6 +132,9 @@ echo "syn simulation: $MPIRUN ./xgenerate_databases ..."
 $MPIRUN ./xgenerate_databases_external
 echo "syn simulation: $MPIRUN ./xspecfem3D ..."
 $MPIRUN ./xspecfem3D
+
+#daniel
+cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.syn.forward
 
 mv $in_out_files/OUTPUT_FILES/*SU $in_out_files/SEM/syn/
 cp $in_out_files/DATABASES_MPI/*rho.bin $models/initial_model/
@@ -93,13 +152,26 @@ sed -e "s#^SAVE_FORWARD.*#SAVE_FORWARD = .false. #g"  < $FILE > ./tmp; mv ./tmp 
 echo "adj simulation: $MPIRUN ./xspecfem3D ..."
 $MPIRUN ./xspecfem3D
 
+#daniel
+cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.syn.adjoint
+
 ./xpostprocessing $NSTEP $DT $NPROC 
+
+if [ "$do_setup" == "" ]; then
 
 cd $SESAME
 mv ./src/generate_databases/get_model.f90_backup ./src/generate_databases/get_model.f90
 mv ./src/specfem3D/save_adjoint_kernels.f90_backup ./src/specfem3D/save_adjoint_kernels.f90
 mv ./src/shared/constants.h_backup ./src/shared/constants.h
+#mv ./src/specfem3D/write_seismograms.f90_backup ./src/specfem3D/write_seismograms.f90
 
-cd $bin/../
-rm -f compile.log make.log
-rm -rf $in_out_files $models $bin
+#cd $bin/../
+#rm -f compile.log make.log
+#rm -rf $in_out_files $models $bin
+
+fi
+
+echo 
+echo "done: `date`"
+echo
+

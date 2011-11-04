@@ -9,10 +9,10 @@ program adj_seismogram
   integer :: ios,irec,i,j,NSTEP,NPROC
   double precision :: DT
   real(kind=4),dimension(:),allocatable :: syn,dat,adj
-  integer(kind=4) :: r4head(60)
-  integer(kind=4) :: header4(1)
-  integer(kind=2) :: header2(2)
-  equivalence(header2,header4)
+  real(kind=4) :: r4head(60)
+  !integer(kind=4) :: header4(1)
+  !integer(kind=2) :: header2(2)
+  !equivalence(header2,header4)
   character(len=512) :: filename,procname,arg
 
   call MPI_Init(ier)
@@ -48,53 +48,150 @@ program adj_seismogram
 ! read 'syn', 'dat' and then write 'adj'
   ! x-component
   filename=trim(adjustl(procname))//"_dx_SU"
-  open(111,file="../in_out_files/SEM/syn/"//trim(filename),access='direct',recl=240+4*NSTEP,iostat = ios)
-  open(112,file="../in_out_files/SEM/dat/"//trim(filename),access='direct',recl=240+4*NSTEP,iostat = ios)
-  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+  open(111,file="../in_out_files/SEM/syn/"//trim(filename), &
+            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file syn'
+  open(112,file="../in_out_files/SEM/dat/"//trim(filename), &
+            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file dat'
+  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj", &
+            status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file .adj'
+  
   irec=1
   do while(ios==0)
+     
+     syn(:) = 0.0  
+     dat(:) = 0.0
+     
      read(111,rec=irec,iostat=ios) r4head,syn
-              if (ios /= 0) cycle
+     if (ios /= 0) exit
      read(112,rec=irec,iostat=ios) r4head,dat
-              if (ios /= 0) cycle
+     if (ios /= 0) exit
+     
      write(113,rec=irec,iostat=ios) r4head,syn-dat
-              if (ios /= 0) cycle
+     if (ios /= 0) exit
+     
+!daniel: outputs ascii trace
+     if( myrank == 0 .and. irec == 196 ) then
+       open(221,file="../in_out_files/SEM/syn/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(221,*) i,syn(i)
+       enddo
+       close(221)
+       open(222,file="../in_out_files/SEM/dat/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(222,*) i,dat(i)
+       enddo
+       close(222)
+       open(223,file="../in_out_files/SEM/"//trim(filename)//".adj.ascii",status='unknown')
+       do i=1,NSTEP
+         write(223,*) i,syn(i)-dat(i)
+       enddo
+       close(223)
+     endif 
+     
      irec=irec+1
   enddo
   close(111)
   close(112)
   close(113)
+  
   ! y-component
   filename=trim(adjustl(procname))//"_dy_SU"
-  open(111,file="../in_out_files/SEM/syn/"//trim(filename),access='direct',recl=240+4*NSTEP,iostat = ios)
-  open(112,file="../in_out_files/SEM/dat/"//trim(filename),access='direct',recl=240+4*NSTEP,iostat = ios)
-  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+  open(111,file="../in_out_files/SEM/syn/"//trim(filename), &
+            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file syn'
+  open(112,file="../in_out_files/SEM/dat/"//trim(filename), &
+            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file dat'
+  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj", &
+            status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file .adj'
+  
   irec=1
   do while(ios==0)
+
+     syn(:) = 0.0  
+     dat(:) = 0.0
+  
      read(111,rec=irec,iostat=ios) r4head,syn
-              if (ios /= 0) cycle
+              if (ios /= 0) exit
      read(112,rec=irec,iostat=ios) r4head,dat
-              if (ios /= 0) cycle
+              if (ios /= 0) exit
      write(113,rec=irec,iostat=ios) r4head,syn-dat
-              if (ios /= 0) cycle
+              if (ios /= 0) exit
+              
+!daniel: outputs ascii trace
+     if( myrank == 0 .and. irec == 196 ) then
+       open(221,file="../in_out_files/SEM/syn/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(221,*) i,syn(i)
+       enddo 
+       close(221)
+       open(222,file="../in_out_files/SEM/dat/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(222,*) i,dat(i)
+       enddo
+       close(222)
+       open(223,file="../in_out_files/SEM/"//trim(filename)//".adj.ascii",status='unknown')
+       do i=1,NSTEP
+         write(223,*) i,syn(i)-dat(i)
+       enddo
+       close(223)
+     endif 
+              
+              
      irec=irec+1
   enddo
   close(111)
   close(112)
   close(113)
+  
   ! z-component
   filename=trim(adjustl(procname))//"_dz_SU"
-  open(111,file="../in_out_files/SEM/syn/"//trim(filename),access='direct',recl=240+4*NSTEP,iostat = ios)
-  open(112,file="../in_out_files/SEM/dat/"//trim(filename),access='direct',recl=240+4*NSTEP,iostat = ios)
-  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+  open(111,file="../in_out_files/SEM/syn/"//trim(filename), &
+        status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file syn'
+  open(112,file="../in_out_files/SEM/dat/"//trim(filename), &
+        status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file dat'
+  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj", &
+        status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file .adj'
   irec=1
   do while(ios==0)
+  
+     syn(:) = 0.0  
+     dat(:) = 0.0
+  
      read(111,rec=irec,iostat=ios) r4head,syn
-              if (ios /= 0) cycle
+              if (ios /= 0) exit
      read(112,rec=irec,iostat=ios) r4head,dat
-              if (ios /= 0) cycle
+              if (ios /= 0) exit
      write(113,rec=irec,iostat=ios) r4head,syn-dat
-              if (ios /= 0) cycle
+              if (ios /= 0) exit
+
+!daniel: outputs ascii trace
+     if( myrank == 0 .and. irec == 196 ) then
+       open(221,file="../in_out_files/SEM/syn/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(221,*) i,syn(i)
+       enddo
+       close(221)
+       open(222,file="../in_out_files/SEM/dat/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(222,*) i,dat(i)
+       enddo
+       close(222)
+       open(223,file="../in_out_files/SEM/"//trim(filename)//".adj.ascii",status='unknown')
+       do i=1,NSTEP
+         write(223,*) i,syn(i)-dat(i)
+       enddo
+       close(223)
+     endif 
+              
+              
      irec=irec+1
   enddo
   close(111)

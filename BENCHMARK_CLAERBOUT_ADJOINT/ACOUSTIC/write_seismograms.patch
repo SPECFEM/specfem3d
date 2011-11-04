@@ -1,0 +1,9 @@
+240a230,237
+> !<FOR BENCHMARK_CLAERBOUT_ADJOINT
+>     if( ispec_is_acoustic(ispec) ) then
+>       seismograms_d(1,irec_local,it) = axd ! potential
+>       seismograms_d(2,irec_local,it) = ayd ! potential_dot
+>       seismograms_d(3,irec_local,it) = azd ! potential_dot_dot
+>     endif
+> !>FOR BENCHMARK_CLAERBOUT_ADJOINT
+> 
