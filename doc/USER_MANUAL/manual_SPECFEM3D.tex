@@ -2445,6 +2445,29 @@ where \texttt{old\_machines} is the LSF machine file used in the previous
 simulation, and \texttt{150} is the number of processors in total.
 
 
+\chapter{\label{cha:tomo}Tomographic inversion using sensitivity kernels}
+
+One of the fundamental reasons for computing sensitivity kernels (Section~\ref{sec:Adjoint-simulation-finite}) is to use them within a tomographic inversion. In other words, use recorded seismograms, make measurements with synthetic seismograms, and use the misfit between the two to iteratively improve the model described by (at least) $V_{\rm p}$, $V_{\rm s}$, and $\rho$ as a function of space.
+
+Whatever misfit function you use for the tomographic inversion \citep[several examples in][]{Tromp2005}, you will weight the sensitivity kernels with measurements. Furthermore, you will use as many measurements (stations, components, time windows) as possible per event; hence, we call these composite kernels ``event kernels,'' which are volumetric fields representing the gradient of the misfit function with respect to one of the variables (\eg $V_{\rm s}$). The basic features of an adjoint-based tomographic inversion were illustrated in \citet{Tape2007} using a conjugate-gradient algorithm; there are dozens of versions of gradient-based inversion algorithms that could alternatively be used. The tomographic inversion of \citet{Tape2009,Tape2010} used SPECFEM3D as well as several additional components which are also stored on the CIG svn server, described next.
+
+The directory containing utilities for tomographic inversion using SPECFEM3D (or other packages that evaluate misfit functions and gradients) is here on the CIG svn server:
+%
+\begin{verbatim}
+/cig/seismo/3D/ADJOINT_TOMO/
+   flexwin/     -- FLEXWIN algorithm for automated picking of time windows
+   measure_adj/ -- reads FLEXWIN output file and makes measurements, 
+                   with the option for computing adjoint sources
+   iterate_adj/ -- various tools for iterative inversion
+                   (requires pre-computed "event kernels")
+\end{verbatim}
+%
+This directory also contains a brief \verb+README+ file indicating the role of the three subdirectories, \verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+. The components for making the model update are there; however, there are no explicit rules for computing the model update, just as with any optimization problem. There are options for computing a conjugate gradient step, as well as a source subspace projection step. The workflow could use substantial ``stitching together,'' and we welcome suggestions; undoubtedly, the tomographic inversion procedure will improve with time. {\bf This is a work in progress.}
+
+The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster/README+.
+
+%============================================================
+
 \chapter*{\label{cha:Bug-Reports-and}Bug Reports and Suggestions for Improvements}
 
 To report bugs or suggest improvements to the code, please send an
@@ -2452,7 +2475,7 @@ e-mail to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-
 or Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu}, and/or use our online
 bug tracking system Roundup \urlwithparentheses{www.geodynamics.org/roundup}.
 
-
+\addcontentsline{toc}{chapter}{Notes \& Acknowledgments}
 \chapter*{Notes \& Acknowledgments}
 
 In order to keep the software package thread-safe in case a multithreaded
@@ -2475,7 +2498,7 @@ is an open-source visualization platform.
 Please e-mail your feedback, questions, comments, and suggestions
 to Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu} or to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
-
+\addcontentsline{toc}{chapter}{Copyright}
 \chapter*{Copyright}
 
 Main authors: Dimitri Komatitsch and Jeroen Tromp
@@ -2516,6 +2539,7 @@ by the Free Software Foundation (see Appendix \ref{cha:License}).\\
  Dimitri Komatitsch, IPG Paris, France, December 1996: first 3-D solver for the CM-5 Connection Machine,
     parallelized on 128 processors using Connection Machine Fortran.\\
 
+\addcontentsline{toc}{chapter}{References}
 \bibliography{bibliography}
 
 
