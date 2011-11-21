@@ -358,10 +358,12 @@ parallel file system, in which case this flag should be set to \texttt{.true.}.
 Note that this flag is not used by the database generator or the solver; it is
 only used for some of the post-processing.
 \end{description}
-The package can run either in single or in double precision. The default
-is single precision mode because this requires exactly half as much
-memory. Select your preference by selecting the appropriate setting
-in the \texttt{constants.h} file:
+The package can run either
+in single or in double precision mode. The default is single precision
+because for almost all calculations performed using the spectral-element method
+using single precision is sufficient and gives the same results (i.e. the same seismograms);
+and the single precision code is faster and requires exactly half as much memory.
+Select your preference by selecting the appropriate setting in the \texttt{constants.h} file:
 
 \begin{description}
 \item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
@@ -373,15 +375,12 @@ In the \texttt{precision.h} file:
 \item [{\texttt{CUSTOM\_MPI\_TYPE}}] Set to \texttt{MPI\_REAL} for single
 precision and \texttt{MPI\_DOUBLE\_PRECISION} for double precision.
 \end{description}
-On a new system, it is definitely worth experimenting with single
-versus double precision simulations to determine which is faster.
-Note that on many current processors (e.g., Intel, AMD, IBM Power),
-single precision calculations are often significantly faster; the
-difference can typically be 10\% to 25\%. It is therefore often worth
-using single precision if you can. We recommend running the same calculation
-once in single precision and in double precision on your system and
-then comparing the seismograms. If they are identical, you should probably
-select single precision for your future runs.\\
+On many current processors (e.g., Intel, AMD, IBM Power), single precision calculations
+are significantly faster; the difference can typically be 10\%
+to 25\%. It is therefore better to use single precision.
+What you can do once for the physical problem you want to study is run the same calculation in single precision
+and in double precision on your system and compare the seismograms.
+If they are identical (and in most cases they will), you can select single precision for your future runs.\\
 
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, we suggest running the \texttt{configure} script
 with the following options:\\
