@@ -51,8 +51,8 @@
                     coupling_ac_po_ijk,coupling_ac_po_ispec, &
                     num_coupling_ac_po_faces, &
                     coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-                    coupling_el_po_ijk,coupling_el_po_ispec, &
-                    num_coupling_el_po_faces, &
+                    coupling_el_po_ijk,coupling_po_el_ijk,coupling_el_po_ispec, &
+                    coupling_po_el_ispec,num_coupling_el_po_faces, &
                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     prname,SAVE_MESH_FILES, &
@@ -133,7 +133,9 @@
   real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces)
   real(kind=CUSTOM_REAL) :: coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces)
   integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
+  integer :: coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
   integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
+  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)
 
 ! MPI interfaces
   integer :: num_interfaces_ext_mesh
@@ -298,7 +300,9 @@
   write(IOUT) num_coupling_el_po_faces
   if( num_coupling_el_po_faces > 0 ) then
     write(IOUT) coupling_el_po_ispec
+    write(IOUT) coupling_po_el_ispec
     write(IOUT) coupling_el_po_ijk
+    write(IOUT) coupling_po_el_ijk
     write(IOUT) coupling_el_po_jacobian2Dw
     write(IOUT) coupling_el_po_normal
   endif

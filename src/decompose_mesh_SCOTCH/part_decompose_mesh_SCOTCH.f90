@@ -1372,13 +1372,14 @@ contains
 
 
   !--------------------------------------------------
-  ! Repartitioning : two coupled acoustic/elastic elements are transfered to the same partition
+  ! Repartitioning : two coupled poroelastic/elastic elements are transfered to the same partition
   !--------------------------------------------------
 
-  subroutine acoustic_elastic_repartitioning (nelmnts, nnodes, elmnts, &
+  subroutine poroelastic_elastic_repartitioning (nelmnts, nnodes, elmnts, &
                         nb_materials, num_material, mat_prop, &
                         sup_neighbour, nsize, &
-                        nproc, part, nfaces_coupled, faces_coupled)
+                        nproc, part)
+                        !nproc, part, nfaces_coupled, faces_coupled)
 
     implicit none
 
@@ -1393,11 +1394,12 @@ contains
     integer, dimension(0:nelmnts-1)  :: part
     integer, dimension(0:esize*nelmnts-1)  :: elmnts
 
-    integer, intent(out)  :: nfaces_coupled
+    integer  :: nfaces_coupled
+    !integer, intent(out)  :: nfaces_coupled
     integer, dimension(:,:), pointer  :: faces_coupled
 
 
-    logical, dimension(nb_materials)  :: is_acoustic, is_elastic
+    logical, dimension(nb_materials)  :: is_poroelastic, is_elastic
 
     ! neighbors
     integer, dimension(:), allocatable  :: xadj
@@ -1410,12 +1412,12 @@ contains
     integer  :: el, el_adj
     logical  :: is_repartitioned
 
-    ! sets acoustic/elastic flags for materials
-    is_acoustic(:) = .false.
+    ! sets poroelastic/elastic flags for materials
+    is_poroelastic(:) = .false.
     is_elastic(:) = .false.
     do i = 1, nb_materials
-       if (mat_prop(6,i) == 1 ) then
-          is_acoustic(i) = .true.
+       if (mat_prop(6,i) == 3 ) then
+          is_poroelastic(i) = .true.
        endif
        if (mat_prop(6,i) == 2 ) then
           is_elastic(i) = .true.
@@ -1439,7 +1441,7 @@ contains
     ! counts coupled elements
     nfaces_coupled = 0
     do el = 0, nelmnts-1
-       if ( is_acoustic(num_material(el+1)) ) then
+       if ( is_poroelastic(num_material(el+1)) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
              if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
                 nfaces_coupled = nfaces_coupled + 1
@@ -1455,7 +1457,7 @@ contains
     ! stores elements indices
     nfaces_coupled = 0
     do el = 0, nelmnts-1
-       if ( is_acoustic(num_material(el+1)) ) then
+       if ( is_poroelastic(num_material(el+1)) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
              if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
                 nfaces_coupled = nfaces_coupled + 1
@@ -1484,7 +1486,7 @@ contains
        endif
     enddo
 
- end subroutine acoustic_elastic_repartitioning
+ end subroutine poroelastic_elastic_repartitioning
 
   !--------------------------------------------------
   ! Repartitioning : two coupled moho surface elements are transfered to the same partition

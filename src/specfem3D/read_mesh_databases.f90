@@ -307,11 +307,15 @@
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-          coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
+          coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
+          coupling_el_po_ispec(num_coupling_el_po_faces), &
+          coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array coupling_el_po_normal etc.'
   if( num_coupling_el_po_faces > 0 ) then
     read(27) coupling_el_po_ispec
+    read(27) coupling_po_el_ispec
     read(27) coupling_el_po_ijk
+    read(27) coupling_po_el_ijk
     read(27) coupling_el_po_jacobian2Dw
     read(27) coupling_el_po_normal
   endif

@@ -699,7 +699,7 @@ module decompose_mesh_SCOTCH
     if( ier /= 0 ) stop 'error allocating array num_material'
     num_material(:) = mat(1,:)
 
-    ! in case of acoustic/elastic simulation, weights elements accordingly
+    ! in case of acoustic/elastic/poro simulation, weights elements accordingly
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                   num_material,mat_prop,undef_mat_prop)
 
@@ -790,13 +790,14 @@ module decompose_mesh_SCOTCH
     endif
 
 
-  ! re-partitioning puts acoustic-elastic coupled elements into same partition
+  ! re-partitioning puts poroelastic-elastic coupled elements into same partition
   !  integer  :: nfaces_coupled
   !  integer, dimension(:,:), pointer  :: faces_coupled
-  !    call acoustic_elastic_repartitioning (nspec, nnodes, elmnts, &
-  !                   count_def_mat, mat(1,:) , mat_prop, &
-  !                   sup_neighbour, nsize, &
-  !                   nparts, part, nfaces_coupled, faces_coupled)
+    call poroelastic_elastic_repartitioning (nspec, nnodes, elmnts, &
+                     count_def_mat, mat(1,:) , mat_prop, &
+                     sup_neighbour, nsize, &
+                     nparts, part)
+                     !nparts, part, nfaces_coupled, faces_coupled)
 
   ! re-partitioning puts moho-surface coupled elements into same partition
     call moho_surface_repartitioning (nspec, nnodes, elmnts, &
@@ -812,7 +813,7 @@ module decompose_mesh_SCOTCH
          glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, nparts)
 
   ! mpi interfaces
-    ! acoustic/elastic boundaries will be split into different MPI partitions
+    ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
     call build_interfaces(nspec, sup_neighbour, part, elmnts, &
                              xadj, adjncy, tab_interfaces, &
                              tab_size_interfaces, ninterfaces, &

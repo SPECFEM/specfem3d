@@ -313,7 +313,7 @@
 !
 
   subroutine check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    kappastore,mustore,rho_vp,rho_vs, &
+                                    kappastore,mustore, &
                                     DT, model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore, &
                                     rho_vpI,rho_vpII,rho_vsI )
@@ -327,7 +327,7 @@
   include "constants.h"
 
   integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
   real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: phistore,tortstore
@@ -400,7 +400,7 @@
 
     ! determines minimum/maximum velocities within this element
     call get_vpvs_minmax_poro(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
-                        has_vp2_zero,NSPEC_AB,kappastore,mustore,rho_vp,rho_vs, &
+                        has_vp2_zero,NSPEC_AB,kappastore,mustore, &
                         phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 
     ! min/max for whole cpu partition
@@ -459,7 +459,7 @@
     if (has_vp2_zero) then
         pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
     else
-        pmax = avg_distance / min( vpmin,vp2max,vsmin ) * NPTS_PER_WAVELENGTH
+        pmax = avg_distance / min( vpmin,vp2min,vsmin ) * NPTS_PER_WAVELENGTH
     endif
     pmax_glob = max(pmax_glob,pmax)
 
@@ -697,11 +697,12 @@
 
 
   subroutine get_vpvs_minmax_poro(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
-                        has_vp2_zero,NSPEC_AB,kappastore,mustore,rho_vp,rho_vs, &
+                        has_vp2_zero,NSPEC_AB,kappastore,mustore, &
                         phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 
 ! calculates the min/max size of the specified  element (ispec) for poroelastic domains
-
+! [CM] Note: in case of coupled acoustic-poro-elastic, rho_vpI,rho_vpII,rho_vsI, etc have
+! been appropriately defined in /src/generate_databases/get_model.f90
   implicit none
 
   include "constants.h"
@@ -714,7 +715,7 @@
 
   integer :: NSPEC_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-    kappastore,mustore,rho_vp,rho_vs
+    kappastore,mustore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
   real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: phistore,tortstore
@@ -732,10 +733,7 @@
   vsmax = -HUGEVAL
 
   ! vp
-  where( rho_vp(:,:,:,ispec) > TINYVAL )
-    vp_elem(:,:,:) = (FOUR_THIRDS * mustore(:,:,:,ispec) &
-                    + kappastore(:,:,:,ispec)) / rho_vp(:,:,:,ispec)
-  elsewhere(rho_vpI(:,:,:,ispec) > TINYVAL)
+  where(rho_vpI(:,:,:,ispec) > TINYVAL)
     vp_elem(:,:,:) = rho_vpI(:,:,:,ispec)/( ((1._CUSTOM_REAL - phistore(:,:,:,ispec))* &
             rhoarraystore(1,:,:,:,ispec) + phistore(:,:,:,ispec)*rhoarraystore(2,:,:,:,ispec)) -  &
             phistore(:,:,:,ispec)/tortstore(:,:,:,ispec) * rhoarraystore(2,:,:,:,ispec) )
@@ -770,9 +768,7 @@
   vp2max = max(vp2max,val_max(1))
 
   ! vs
-  where( rho_vs(:,:,:,ispec) > TINYVAL )
-    vs_elem(:,:,:) = mustore(:,:,:,ispec) / rho_vs(:,:,:,ispec)
-  elsewhere(rho_vsI(:,:,:,ispec) > TINYVAL)
+  where(rho_vsI(:,:,:,ispec) > TINYVAL)
     vs_elem(:,:,:) = rho_vsI(:,:,:,ispec) / ( ((1._CUSTOM_REAL - phistore(:,:,:,ispec))* &
             rhoarraystore(1,:,:,:,ispec) + phistore(:,:,:,ispec)*rhoarraystore(2,:,:,:,ispec)) - &
             phistore(:,:,:,ispec)/tortstore(:,:,:,ispec) * rhoarraystore(2,:,:,:,ispec) )

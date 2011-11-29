@@ -206,9 +206,24 @@ subroutine compute_forces_acoustic()
     endif
 
 ! poroelastic coupling
-! not implemented yet
-    !if(POROELASTIC_SIMULATION ) &
-    !  call compute_coupling_acoustic_poro()
+    if(POROELASTIC_SIMULATION )  then
+      if( num_coupling_ac_po_faces > 0 ) then
+        if( SIMULATION_TYPE == 1 ) then
+      call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
+                        ibool,displs_poroelastic,displw_poroelastic, &
+                        potential_dot_dot_acoustic, &
+                        num_coupling_ac_po_faces, &
+                        coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                        coupling_ac_po_normal, &
+                        coupling_ac_po_jacobian2Dw, &
+                        ispec_is_inner,phase_is_inner)
+        else
+      stop 'not implemented yet'  
+        endif
+        if( SIMULATION_TYPE == 3 ) &
+      stop 'not implemented yet'  
+      endif
+    endif
 
 ! sources
     call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
