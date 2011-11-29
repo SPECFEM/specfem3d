@@ -1747,7 +1747,8 @@ in the \texttt{Par\_file}. Turning on the movie flags, in particular
 \texttt{MOVIE\_VOLUME}, produces large output files. \texttt{MOVIE\_VOLUME}
 files are saved in the \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE}
 output files are saved in the \texttt{in\_out\_files/OUTPUT\_FILES} directory. We
-save the velocity field. The look of a movie is determined by the
+save the displacement field if the parameter \texttt{SAVE\_DISPLACEMENT} is set, otherwise the velocity field is saved. 
+The look of a movie is determined by the
 half-duration of the source. The half-duration should be large enough
 so that the movie does not contain frequencies that are not resolved
 by the mesh, i.e., it should not contain numerical noise. This can
@@ -1761,10 +1762,10 @@ file is replaced by
 \sqrt{(}\mathrm{\mathtt{HALF\_DURATIO}\mathtt{N}^{2}}+\mathrm{\mathtt{HDUR\_MOVI}\mathtt{E}^{2}})\]
 \textbf{NOTE:} If \texttt{HDUR\_MOVIE} is set to 0.0, the code will
 select the appropriate value of 1.1 $\times$ smallest period. As
-usual, for a point source one can set \texttt{HALF\_DURATION} in the
-\texttt{Par\_file} to be 0.0 and \texttt{HDUR\_MOVIE} = 0.0 to get
+usual, for a point source one can set \texttt{half duration} in the
+\texttt{CMTSOLUTION} file to be 0.0 and \texttt{HDUR\_MOVIE} = 0.0 in the \texttt{Par\_file} to get
 the highest frequencies resolved by the simulation, but for a finite
-source one would keep all the \texttt{HALF\_DURATIONs} as prescribed
+source one would keep all the \texttt{half durations} as prescribed
 by the finite source model and set \texttt{HDUR\_MOVIE} = 0.0.
 \end{quote}
 

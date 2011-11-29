@@ -329,12 +329,12 @@
   use specfem_par_movie
   implicit none
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: veloc_element
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: val_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
   integer :: ispec2D,ispec,ipoin,iglob,ier
 
   ! allocate array for single elements
-  allocate( veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+  allocate( val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for movie elements'
 
 ! initializes arrays for point coordinates
@@ -365,51 +365,40 @@
     ispec = faces_surface_ext_mesh_ispec(ispec2D)
 
     if( ispec_is_acoustic(ispec) ) then
-      ! velocity vector
-      call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element,&
+      if(SAVE_DISPLACEMENT) then
+        ! displacement vector
+        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore)
+      else
+        ! velocity vector
+        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_acoustic, val_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore)
+      endif
     endif
 
     if (USE_HIGHRES_FOR_MOVIES) then
+      ! all GLL points on a face
       do ipoin = 1, NGLLX*NGLLY
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        ! saves velocity vector
-        if( ispec_is_elastic(ispec) ) then
-          ! velocity x,y,z-components
-          store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc(1,iglob)
-          store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc(2,iglob)
-          store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = veloc(3,iglob)
-        endif
-
-        ! acoustic pressure potential
-        if( ispec_is_acoustic(ispec) ) then
-          ! puts velocity values into storage array
-          call wmo_get_vel_vector(ispec,ispec2D,ipoin, &
-                                veloc_element, &
+        ! puts displ/velocity values into storage array
+        call wmo_get_vel_vector(ispec,ispec2D,ipoin,iglob, &
+                                val_element, &
                                 NGLLX*NGLLY)
-        endif
       enddo
     else
+      ! only corner points
       do ipoin = 1, 4
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        ! saves velocity vector
-        if( ispec_is_elastic(ispec) ) then
-          ! velocity x,y,z-components
-          store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(1,iglob)
-          store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(2,iglob)
-          store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = veloc(3,iglob)
-        endif
-
-        ! acoustic pressure potential
-        if( ispec_is_acoustic(ispec) ) then
-          ! puts velocity values into storage array
-          call wmo_get_vel_vector(ispec,ispec2D,ipoin, &
-                                veloc_element, &
+        ! puts displ/velocity values into storage array
+        call wmo_get_vel_vector(ispec,ispec2D,ipoin,iglob, &
+                                val_element, &
                                 NGNOD2D)
-        endif
       enddo
     endif
   enddo
@@ -480,45 +469,65 @@
     close(IOUT)
   endif
 
-  deallocate(veloc_element)
+  deallocate(val_element)
 
   end subroutine wmo_create_movie_surface_em
 
 !================================================================
 
-  subroutine wmo_get_vel_vector(ispec,ispec2D,ipoin, &
-                                veloc_element, &
+  subroutine wmo_get_vel_vector(ispec,ispec2D, &
+                                ipoin,iglob, &
+                                val_element, &
                                 narraydim)
 
   ! put into this separate routine to make compilation faster
 
   use specfem_par,only: NDIM,ibool
+  use specfem_par_elastic,only: displ,veloc,ispec_is_elastic
+  use specfem_par_acoustic,only: ispec_is_acoustic
   use specfem_par_movie
   implicit none
 
-  integer :: ispec,ispec2D,ipoin,narraydim
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
-    veloc_element
+  integer,intent(in) :: ispec,ispec2D,ipoin,iglob
+  integer,intent(in) :: narraydim
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
 
   ! local parameters
-  integer :: i,j,k,iglob
+  integer :: i,j,k
   logical :: is_done
 
-  ! velocity vector
-  is_done = .false.
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
-        if( iglob == ibool(i,j,k,ispec) ) then
-          store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc_element(1,i,j,k)
-          store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc_element(2,i,j,k)
-          store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc_element(3,i,j,k)
-          is_done = .true.
-          return
-        endif
+  ! elastic displacement/velocity
+  if( ispec_is_elastic(ispec) ) then
+    if(SAVE_DISPLACEMENT) then
+      ! velocity x,y,z-components
+      store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(1,iglob)
+      store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(2,iglob)
+      store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(3,iglob)
+    else
+      ! velocity x,y,z-components
+      store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc(1,iglob)
+      store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc(2,iglob)
+      store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc(3,iglob)
+    endif
+  endif
+
+  ! acoustic pressure potential
+  if( ispec_is_acoustic(ispec) ) then
+    is_done = .false.
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          if( iglob == ibool(i,j,k,ispec) ) then
+            store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(1,i,j,k)
+            store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(2,i,j,k)
+            store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(3,i,j,k)
+            is_done = .true.
+            return
+          endif
+        enddo
       enddo
     enddo
-  enddo
+  endif
 
   end subroutine wmo_get_vel_vector
 
@@ -621,25 +630,12 @@
         j = free_surface_ijk(2,igll,iface)
         k = free_surface_ijk(3,igll,iface)
         iglob = ibool(i,j,k,ispec)
-        ! elastic displacement/velocity
-        if( ispec_is_elastic(ispec) ) then
-          if(SAVE_DISPLACEMENT) then
-             store_val_ux_external_mesh(ipoin) = displ(1,iglob)
-             store_val_uy_external_mesh(ipoin) = displ(2,iglob)
-             store_val_uz_external_mesh(ipoin) = displ(3,iglob)
-          else
-             store_val_ux_external_mesh(ipoin) = veloc(1,iglob)
-             store_val_uy_external_mesh(ipoin) = veloc(2,iglob)
-             store_val_uz_external_mesh(ipoin) = veloc(3,iglob)
-          endif
-        endif
 
-        ! acoustic pressure potential
-        if( ispec_is_acoustic(ispec) ) then
-          ! stores values from element
-          call wmo_get_val_elem(ispec,ipoin,val_element)
-        endif
-
+        ! puts displ/velocity values into storage array
+        call wmo_get_vel_vector(ispec,0, &
+                               ipoin,iglob, &
+                               val_element, &
+                               0)
       enddo
     else
       imin = minval( free_surface_ijk(1,:,iface) )
@@ -659,25 +655,11 @@
           iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
         endif
 
-        ! elastic displacement/velocity
-        if( ispec_is_elastic(ispec) ) then
-          if(SAVE_DISPLACEMENT) then
-             store_val_ux_external_mesh(ipoin) = displ(1,iglob)
-             store_val_uy_external_mesh(ipoin) = displ(2,iglob)
-             store_val_uz_external_mesh(ipoin) = displ(3,iglob)
-          else
-             store_val_ux_external_mesh(ipoin) = veloc(1,iglob)
-             store_val_uy_external_mesh(ipoin) = veloc(2,iglob)
-             store_val_uz_external_mesh(ipoin) = veloc(3,iglob)
-          endif
-        endif
-
-        ! acoustic pressure potential
-        if( ispec_is_acoustic(ispec) ) then
-          ! stores values from element
-          call wmo_get_val_elem(ispec,ipoin,val_element)
-        endif
-
+        ! puts displ/velocity values into storage array
+        call wmo_get_vel_vector(ispec,0, &
+                               ipoin,iglob, &
+                               val_element, &
+                               0)
       enddo ! iloc
     endif
   enddo ! iface
@@ -750,42 +732,6 @@
   end subroutine wmo_movie_surface_output_o
 
 !================================================================
-
-  subroutine wmo_get_val_elem(ispec,ipoin,val_element)
-
-  ! put into this separate routine to make compilation faster
-
-  use specfem_par,only: NDIM,ibool
-  use specfem_par_movie
-  implicit none
-
-  integer :: ispec,ipoin
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
-    val_element
-
-  ! local parameters
-  integer :: i,j,k,iglob
-  logical :: is_done
-
-  ! velocity vector
-  is_done = .false.
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
-        if( iglob == ibool(i,j,k,ispec) ) then
-          store_val_ux_external_mesh(ipoin) = val_element(1,i,j,k)
-          store_val_uy_external_mesh(ipoin) = val_element(2,i,j,k)
-          store_val_uz_external_mesh(ipoin) = val_element(3,i,j,k)
-          is_done = .true.
-          return
-        endif
-      enddo
-    enddo
-  enddo
-
-  end subroutine wmo_get_val_elem
-
-!=====================================================================
 
   subroutine wmo_create_shakemap_o()
 
@@ -1035,6 +981,9 @@
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
 
+  !real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: tmpdata
+  !integer :: i,j,k,iglob
+
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
   compx(1:1) = channel(3:3) ! either X or E
@@ -1184,6 +1133,57 @@
     !if( ier /= 0 ) stop 'error opening file velocity_movie'
     !write(27) velocity_movie
     !close(27)
+
+    ! norms
+    !allocate( tmpdata(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    !if( ier /= 0 ) stop 'error allocating tmpdata arrays for movie output'
+    !
+    !if( ELASTIC_SIMULATION ) then
+    !  ! norm of displacement
+    !  do ispec=1,NSPEC_AB
+    !    do k=1,NGLLZ
+    !      do j=1,NGLLY
+    !        do i=1,NGLLX
+    !          iglob = ibool(i,j,k,ispec)
+    !          tmpdata(i,j,k,ispec) = sqrt( displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2 )
+    !        enddo
+    !      enddo
+    !    enddo
+    !  enddo
+    !  write(outputname,"('/proc',i6.6,'_displ_norm_it',i6.6,'.bin')") myrank,it
+    !  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    !  if( ier /= 0 ) stop 'error opening file movie output velocity z'
+    !  write(27) tmpdata
+    !  close(27)
+    !
+    !  ! norm of acceleration
+    !  do ispec=1,NSPEC_AB
+    !    do k=1,NGLLZ
+    !      do j=1,NGLLY
+    !        do i=1,NGLLX
+    !          iglob = ibool(i,j,k,ispec)
+    !          tmpdata(i,j,k,ispec) = sqrt( accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2 )
+    !        enddo
+    !      enddo
+    !    enddo
+    !  enddo
+    !  write(outputname,"('/proc',i6.6,'_accel_norm_it',i6.6,'.bin')") myrank,it
+    !  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    !  if( ier /= 0 ) stop 'error opening file movie output velocity z'
+    !  write(27) tmpdata
+    !  close(27)
+    !endif
+    !
+    !! norm of velocity
+    !tmpdata = sqrt( velocity_x**2 + velocity_y**2 + velocity_z**2)
+    !
+    !write(outputname,"('/proc',i6.6,'_velocity_norm_it',i6.6,'.bin')") myrank,it
+    !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+    !if( ier /= 0 ) stop 'error opening file movie output velocity z'
+    !write(27) tmpdata
+    !close(27)
+    !
+    !deallocate(tmpdata)
 
   endif
 
