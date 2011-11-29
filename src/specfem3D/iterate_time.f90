@@ -78,6 +78,7 @@
     if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
 
     ! elastic solver
+    ! (needs to be done first, before poroelastic one)
     if( ELASTIC_SIMULATION ) call compute_forces_elastic()
 
     ! poroelastic solver

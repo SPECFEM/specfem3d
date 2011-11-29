@@ -112,10 +112,28 @@ subroutine compute_forces_poroelastic()
     endif
 
 ! elastic coupling
-!chris: TO DO
-    if( ELASTIC_SIMULATION ) &
- stop 'elastic-poroelastic simulation not implemented yet'
-!      call compute_coupling_poroelastic_el()
+    !print *,'entering elastic counpling'
+    if( ELASTIC_SIMULATION ) then
+      call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool,&
+                        displs_poroelastic,accels_poroelastic,displw_poroelastic,&
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz,&
+                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                        phistore,tortstore,jacobian,&
+                        displ,accel,kappastore, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store,&
+                        c22store,c23store,c24store,c25store,c26store,c33store,&
+                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
+                        num_coupling_el_po_faces, &
+                        coupling_el_po_ispec,coupling_po_el_ispec,&
+                        coupling_el_po_ijk,coupling_po_el_ijk, &
+                        coupling_el_po_normal, &
+                        coupling_el_po_jacobian2Dw, &
+                        ispec_is_inner,phase_is_inner)
+    !print *,'ok elastic counpling'  
 
       ! adjoint simulations
 !chris: TO DO
@@ -127,7 +145,7 @@ subroutine compute_forces_poroelastic()
 !                        coupling_ac_el_normal, &
 !                        coupling_ac_el_jacobian2Dw, &
 !                        ispec_is_inner,phase_is_inner)
-!    endif
+    endif
 
 ! adds source term (single-force/moment-tensor solution)
     call compute_add_sources_poroelastic( NSPEC_AB,NGLOB_AB, &
@@ -256,5 +274,134 @@ subroutine compute_forces_poroelastic()
 !  if (SIMULATION_TYPE == 3) b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + &
 !                               b_deltatover2*b_accelw_poroelastic(:,:)
 
+
+
+! elastic coupling
+   !print*, 'entering assembling displacements'
+    if( ELASTIC_SIMULATION ) &
+      call compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
+                        accel,veloc,&
+                        accels_poroelastic,velocs_poroelastic,&
+                        accelw_poroelastic,velocw_poroelastic,&
+                        rmass,rmass_solid_poroelastic,rmass_fluid_poroelastic,&
+                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,&
+                        num_coupling_el_po_faces,&
+                        coupling_el_po_ispec,coupling_el_po_ijk,&
+                        deltatover2)
+   !print*, 'ok assembling displacements'
+
+
 end subroutine compute_forces_poroelastic
 
+
+!-----------------------------------------------------------------------------------------------------------------
+
+subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
+                        accel,veloc,&
+                        accels_poroelastic,velocs_poroelastic,&
+                        accelw_poroelastic,velocw_poroelastic,&
+                        rmass,rmass_solid_poroelastic,rmass_fluid_poroelastic,&
+                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,&
+                        num_coupling_el_po_faces,&
+                        coupling_el_po_ispec,coupling_el_po_ijk,&
+                        deltatover2)
+!*******************************************************************************
+!         assembling the displacements on the elastic-poro boundaries
+!*******************************************************************************
+
+  implicit none
+  include 'constants.h'
+
+  integer :: NSPEC_AB,NGLOB_AB
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: veloc,accel
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: velocs_poroelastic,accels_poroelastic
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: velocw_poroelastic,accelw_poroelastic
+
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmass,rmass_solid_poroelastic,rmass_fluid_poroelastic
+
+! global indexing
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+
+  integer :: SIMULATION_TYPE
+  integer :: NGLOB_ADJOINT,NSPEC_ADJOINT
+
+! elastic-poroelastic coupling surface
+  integer :: num_coupling_el_po_faces
+  integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
+  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
+
+  real(kind=CUSTOM_REAL),intent(in) :: deltatover2
+
+! local variables
+  integer, dimension(NGLOB_AB) :: icount
+  integer :: ispec,i,j,k,iglob,igll,iface
+
+     icount(:)=ZERO
+
+! loops on all coupling faces
+  do iface = 1,num_coupling_el_po_faces
+
+    ! gets corresponding poroelastic spectral element
+    ispec = coupling_el_po_ispec(iface)
+
+      ! loops over common GLL points
+      do igll = 1, NGLLSQUARE
+        i = coupling_el_po_ijk(1,igll,iface)
+        j = coupling_el_po_ijk(2,igll,iface)
+        k = coupling_el_po_ijk(3,igll,iface)
+
+        ! gets global index of this common GLL point
+        iglob = ibool(i,j,k,ispec)
+        icount(iglob) = icount(iglob) + 1
+
+        if(icount(iglob) ==1)then
+
+! recovering original velocities and accelerations on boundaries (elastic side)
+          veloc(1,iglob) = veloc(1,iglob) - deltatover2*accel(1,iglob)
+          veloc(2,iglob) = veloc(2,iglob) - deltatover2*accel(2,iglob)
+          veloc(3,iglob) = veloc(3,iglob) - deltatover2*accel(3,iglob)
+          accel(1,iglob) = accel(1,iglob) / rmass(iglob)
+          accel(2,iglob) = accel(2,iglob) / rmass(iglob)
+          accel(3,iglob) = accel(3,iglob) / rmass(iglob)
+! recovering original velocities and accelerations on boundaries (poro side)
+          velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) - deltatover2*accels_poroelastic(1,iglob)
+          velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) - deltatover2*accels_poroelastic(2,iglob)
+          velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) - deltatover2*accels_poroelastic(3,iglob)
+          accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) / rmass_solid_poroelastic(iglob)
+          accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) / rmass_solid_poroelastic(iglob)
+          accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) / rmass_solid_poroelastic(iglob)
+! assembling accelerations
+          accel(1,iglob) = ( accel(1,iglob) + accels_poroelastic(1,iglob) ) / &
+                                   ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+          accel(2,iglob) = ( accel(2,iglob) + accels_poroelastic(2,iglob) ) / &
+                                   ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+          accel(3,iglob) = ( accel(3,iglob) + accels_poroelastic(3,iglob) ) / &
+                                   ( 1.0/rmass(iglob) +1.0/rmass_solid_poroelastic(iglob) )
+          accels_poroelastic(1,iglob) = accel(1,iglob)
+          accels_poroelastic(2,iglob) = accel(2,iglob)
+          accels_poroelastic(3,iglob) = accel(3,iglob)
+! updating velocities
+          velocs_poroelastic(1,iglob) = velocs_poroelastic(1,iglob) + deltatover2*accels_poroelastic(1,iglob)
+          velocs_poroelastic(2,iglob) = velocs_poroelastic(2,iglob) + deltatover2*accels_poroelastic(2,iglob)
+          velocs_poroelastic(3,iglob) = velocs_poroelastic(3,iglob) + deltatover2*accels_poroelastic(3,iglob)
+          veloc(1,iglob) = veloc(1,iglob) + deltatover2*accel(1,iglob)
+          veloc(2,iglob) = veloc(2,iglob) + deltatover2*accel(2,iglob)
+          veloc(3,iglob) = veloc(3,iglob) + deltatover2*accel(3,iglob)
+! zeros w
+          accelw_poroelastic(1,iglob) = 0.d0
+          accelw_poroelastic(2,iglob) = 0.d0
+          accelw_poroelastic(3,iglob) = 0.d0
+          velocw_poroelastic(1,iglob) = 0.d0
+          velocw_poroelastic(2,iglob) = 0.d0
+          velocw_poroelastic(3,iglob) = 0.d0
+
+   if(SIMULATION_TYPE == 3) then
+! to do
+   endif
+
+        endif !if(icount(iglob) ==1)
+     enddo ! igll
+  enddo ! iface
+
+end subroutine compute_continuity_disp_po_el

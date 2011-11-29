@@ -101,8 +101,8 @@ module create_regions_mesh_ext_par
 ! elastic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
-  integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk
-  integer, dimension(:), allocatable :: coupling_el_po_ispec
+  integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk,coupling_po_el_ijk
+  integer, dimension(:), allocatable :: coupling_el_po_ispec,coupling_po_el_ispec
   integer :: num_coupling_el_po_faces
 
   ! Moho mesh
@@ -438,8 +438,8 @@ subroutine create_regions_mesh_ext(ibool, &
                         coupling_ac_po_ijk,coupling_ac_po_ispec, &
                         num_coupling_ac_po_faces, &
                         coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-                        coupling_el_po_ijk,coupling_el_po_ispec, &
-                        num_coupling_el_po_faces, &
+                        coupling_el_po_ijk,coupling_po_el_ijk,coupling_el_po_ispec, &
+                        coupling_po_el_ispec,num_coupling_el_po_faces, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         prname,SAVE_MESH_FILES, &

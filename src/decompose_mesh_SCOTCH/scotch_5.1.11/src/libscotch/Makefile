@@ -97,6 +97,19 @@ install				: $(libdir)/libscotch$(LIB) $(libdir)/libscotcherr$(LIB) \
 	$(libdir)/libscotcherrexit$(LIB)	\
 	$(includedir)/scotch.h $(includedir)/scotchf.h
 
+$(libdir)/libscotcherr$(LIB): libscotcherr$(LIB)
+	-$(CP) libscotcherr$(LIB) $(libdir)
+$(libdir)/libscotcherrexit$(LIB): libscotcherrexit$(LIB)
+	-$(CP) libscotcherrexit$(LIB) $(libdir)
+$(includedir)/scotch.h: scotch.h
+	-$(CP) scotch.h $(includedir)
+$(includedir)/scotchf.h: scotchf.h
+	-$(CP) scotchf.h $(includedir)
+
+install				: $(libdir)/libscotch$(LIB) $(libdir)/libscotcherr$(LIB) \
+	$(libdir)/libscotcherrexit$(LIB)	\
+	$(includedir)/scotch.h $(includedir)/scotchf.h
+
 
 ptinstall			:
 					-$(CP) scotch.h $(includedir)/ptscotch.h

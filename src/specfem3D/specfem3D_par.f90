@@ -447,8 +447,8 @@ module specfem_par_poroelastic
 ! elastic-poroelastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_el_po_normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: coupling_el_po_jacobian2Dw
-  integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk
-  integer, dimension(:), allocatable :: coupling_el_po_ispec
+  integer, dimension(:,:,:), allocatable :: coupling_el_po_ijk,coupling_po_el_ijk
+  integer, dimension(:), allocatable :: coupling_el_po_ispec,coupling_po_el_ispec
   integer :: num_coupling_el_po_faces
 
 ! material flag

@@ -1022,6 +1022,7 @@
 
   use specfem_par
   use specfem_par_elastic
+  use specfem_par_poroelastic
   use specfem_par_acoustic
   use specfem_par_movie
   implicit none
@@ -1104,6 +1105,29 @@
 
     deallocate(div_glob,curl_glob,valency)
 
+  endif ! elastic
+
+  ! saves full snapshot data to local disk
+  if( POROELASTIC_SIMULATION ) then
+    ! allocate array for single elements
+    allocate(div_glob(NGLOB_AB), &
+            curl_glob(NGLOB_AB), &
+            valency(NGLOB_AB), stat=ier)
+    if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
+    ! calculates divergence and curl of velocity field
+    call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,velocs_poroelastic, &
+                                div_glob,curl_glob,valency, & 
+                                div,curl_x,curl_y,curl_z, &
+                                velocity_x,velocity_y,velocity_z, &
+                                ibool,ispec_is_poroelastic, &
+                                hprime_xx,hprime_yy,hprime_zz, &
+                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+    deallocate(div_glob,curl_glob,valency)
+  endif ! poroelastic
+
+
+  if( ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION ) then
+
     ! writes our divergence
     write(outputname,"('/proc',i6.6,'_div_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
@@ -1133,9 +1157,10 @@
     !write(27) veloc
     !close(27)
 
-  endif ! elastic
+  endif 
 
-  if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION ) then
+
+  if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
     write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file movie output velocity x'
@@ -1170,7 +1195,7 @@
                                 div_glob,curl_glob,valency, &
                                 div,curl_x,curl_y,curl_z, &
                                 velocity_x,velocity_y,velocity_z, &
-                                ibool,ispec_is_elastic, &
+                                ibool,ispec_is, &
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
 
@@ -1192,7 +1217,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: velocity_x,velocity_y,velocity_z
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
-  logical,dimension(NSPEC_AB) :: ispec_is_elastic
+  logical,dimension(NSPEC_AB) :: ispec_is
 
   ! array with derivatives of Lagrange polynomials
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
@@ -1219,7 +1244,7 @@
 
   ! loops over elements
   do ispec=1,NSPEC_AB
-    if( .not. ispec_is_elastic(ispec) ) cycle
+    if( .not. ispec_is(ispec) ) cycle
 
     ! calculates divergence and curl of velocity field
     do k=1,NGLLZ
