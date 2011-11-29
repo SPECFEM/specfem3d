@@ -35,10 +35,14 @@
   implicit none
 
   include "constants.h"
-  include "surface_from_mesher.h"
+  include "../../in_out_files/OUTPUT_FILES/surface_from_mesher.h"
 
 !-------------------------------------------------------------------------------------------------
 ! user parameters
+
+! normalizes field display values
+  logical, parameter :: NORMALIZE_OUTPUT = .false.
+
 ! threshold in percent of the maximum below which we cut the amplitude
   logical, parameter :: APPLY_THRESHOLD = .false.
   real(kind=CUSTOM_REAL), parameter :: THRESHOLD = 1._CUSTOM_REAL / 100._CUSTOM_REAL
@@ -548,44 +552,44 @@
       min_field_current = minval(field_display(:))
       max_field_current = maxval(field_display(:))
 
-      ! print minimum and maximum amplitude in current snapshot
-      print *
-      print *,'minimum amplitude in current snapshot = ',min_field_current
-      print *,'maximum amplitude in current snapshot = ',max_field_current
-      print *
-
       if(plot_shaking_map) then
-        ! compute min and max of data value to normalize
-        min_field_current = minval(field_display(:))
-        max_field_current = maxval(field_display(:))
         ! print minimum and maximum amplitude in current snapshot
         print *
         print *,'minimum amplitude in current snapshot after removal = ',min_field_current
         print *,'maximum amplitude in current snapshot after removal = ',max_field_current
+        print *
+      else
+        ! print minimum and maximum amplitude in current snapshot
+        print *
+        print *,'minimum amplitude in current snapshot = ',min_field_current
+        print *,'maximum amplitude in current snapshot = ',max_field_current
         print *
       endif
 
       ! apply scaling in all cases for movies
       if(.not. plot_shaking_map) then
 
-        ! make sure range is always symmetric and center is in zero
-        ! this assumption works only for fields that can be negative
-        ! would not work for norm of vector for instance
-        ! (we would lose half of the color palette if no negative values)
-        max_absol = max(abs(min_field_current),abs(max_field_current))
-        min_field_current = - max_absol
-        max_field_current = + max_absol
+        ! normalizes values
+        if( NORMALIZE_OUTPUT ) then
+          ! make sure range is always symmetric and center is in zero
+          ! this assumption works only for fields that can be negative
+          ! would not work for norm of vector for instance
+          ! (we would lose half of the color palette if no negative values)
+          max_absol = max(abs(min_field_current),abs(max_field_current))
+          min_field_current = - max_absol
+          max_field_current = + max_absol
 
-        ! normalize field to [0:1]
-        if( abs(max_field_current - min_field_current) > TINYVAL ) &
-          field_display(:) = (field_display(:) - min_field_current) / (max_field_current - min_field_current)
+          ! normalize field to [0:1]
+          if( abs(max_field_current - min_field_current) > TINYVAL ) &
+            field_display(:) = (field_display(:) - min_field_current) / (max_field_current - min_field_current)
 
-        ! rescale to [-1,1]
-        field_display(:) = 2.*field_display(:) - 1.
+          ! rescale to [-1,1]
+          field_display(:) = 2.*field_display(:) - 1.
 
-        ! apply threshold to normalized field
-        if(APPLY_THRESHOLD) &
-          where(abs(field_display(:)) <= THRESHOLD) field_display = 0.
+          ! apply threshold to normalized field
+          if(APPLY_THRESHOLD) &
+            where(abs(field_display(:)) <= THRESHOLD) field_display = 0.
+        endif
 
         ! apply non linear scaling to normalized field if needed
         if(NONLINEAR_SCALING) then
@@ -596,12 +600,14 @@
           endwhere
         endif
 
-        ! map back to [0,1]
-        field_display(:) = (field_display(:) + 1.) / 2.
+        ! normalizes values
+        if( NORMALIZE_OUTPUT ) then
+          ! map back to [0,1]
+          field_display(:) = (field_display(:) + 1.) / 2.
 
-        ! map field to [0:255] for AVS color scale
-        field_display(:) = 255. * field_display(:)
-
+          ! map field to [0:255] for AVS color scale
+          field_display(:) = 255. * field_display(:)
+        endif
 
       ! apply scaling only if selected for shaking map
       else if(NONLINEAR_SCALING .and. iscaling_shake == 1) then
@@ -668,21 +674,21 @@
 
       if(USE_GMT) then
 
-! output list of points
-         mask_point = .false.
-         do ispec=1,nspectot_AVS_max
-            ieoff = NGNOD2D_AVS_DX*(ispec-1)
-! four points for each element
-            do ilocnum = 1,NGNOD2D_AVS_DX
-               ibool_number = iglob(ilocnum+ieoff)
-               if(.not. mask_point(ibool_number)) then
-                  call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
-                       UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-                  write(11,*) long,lat,field_display(ilocnum+ieoff)
-               endif
-               mask_point(ibool_number) = .true.
-            enddo
-         enddo
+        ! output list of points
+        mask_point = .false.
+        do ispec=1,nspectot_AVS_max
+          ieoff = NGNOD2D_AVS_DX*(ispec-1)
+          ! four points for each element
+          do ilocnum = 1,NGNOD2D_AVS_DX
+            ibool_number = iglob(ilocnum+ieoff)
+            if(.not. mask_point(ibool_number)) then
+              call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
+                      UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+              write(11,*) long,lat,field_display(ilocnum+ieoff)
+            endif
+            mask_point(ibool_number) = .true.
+          enddo
+        enddo
 
       else
 
