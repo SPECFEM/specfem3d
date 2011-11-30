@@ -40,9 +40,10 @@ cd $currentdir
 
 # links executables
 cd bin/
-ln -s ../../../bin/xdecompose_mesh_SCOTCH
-ln -s ../../../bin/xgenerate_databases
-ln -s ../../../bin/xspecfem3D
+rm -f ./x*
+cp ../../../bin/xdecompose_mesh_SCOTCH ./
+cp ../../../bin/xgenerate_databases
+cp ../../../bin/xspecfem3D
 cd ../
 
 # decomposes mesh

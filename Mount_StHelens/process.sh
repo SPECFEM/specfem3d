@@ -18,7 +18,7 @@ echo "running example: `date`"
 currentdir=`pwd`
 
 echo
-echo "(will take about 10 minutes)"
+echo "(will take about 15 minutes)"
 echo
 
 # sets up directory structure in current example directoy
@@ -33,14 +33,9 @@ mkdir -p in_out_files/DATABASES_MPI
 rm -rf in_out_files/OUTPUT_FILES/*
 rm -rf in_out_files/DATABASES_MPI/*
 
-# sets up tomography model file
-./create_tomography_model_file.sh
-mv tomography_model.xyz in_data_files/
-echo
-
 # compiles executables in root directory
 cd ../../
-make > tmp.log
+make >& $currentdir/tmp.log
 cd $currentdir
 
 # links executables
