@@ -104,8 +104,8 @@
 !!!! NL NL for external meshes
 !--------------------------------------------
   ! muting source region
+  logical, parameter :: MUTE_SOURCE = .false.
   real(kind=CUSTOM_REAL), parameter :: RADIUS_TO_MUTE = 1000._CUSTOM_REAL
-  logical, parameter :: MUTE_SOURCE = .true.
   real(kind=CUSTOM_REAL), parameter :: X_SOURCE_EXT_MESH = -9023.021484375
   real(kind=CUSTOM_REAL), parameter :: Y_SOURCE_EXT_MESH = 6123.611328125
   real(kind=CUSTOM_REAL), parameter :: Z_SOURCE_EXT_MESH = 17.96331405639648
@@ -684,7 +684,7 @@
             if(.not. mask_point(ibool_number)) then
               call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
                       UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-              write(11,*) long,lat,field_display(ilocnum+ieoff)
+              write(11,*) sngl(long),sngl(lat),sngl(field_display(ilocnum+ieoff))
             endif
             mask_point(ibool_number) = .true.
           enddo
@@ -704,10 +704,12 @@
               ipoin = ipoin + 1
               ireorder(ibool_number) = ipoin
               if(USE_OPENDX) then
-                write(11,*) xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
+                write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
               else if(USE_AVS) then
-                write(11,'(i9,3f16.6)') ireorder(ibool_number),xp_save(ilocnum+ieoff), &
-                    yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
+                !write(11,'(i9,3f16.6)') ireorder(ibool_number),xp_save(ilocnum+ieoff), &
+                !    yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
+                write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
+                            sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
               endif
             endif
             mask_point(ibool_number) = .true.
@@ -757,13 +759,15 @@
                 if(plot_shaking_map) then
                   write(11,*) sngl(field_display(ilocnum+ieoff))
                 else
-                  write(11,"(f7.2)") field_display(ilocnum+ieoff)
+                  !write(11,"(f7.2)") field_display(ilocnum+ieoff)
+                  write(11,*) sngl(field_display(ilocnum+ieoff))
                 endif
               else
                 if(plot_shaking_map) then
-                  write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
+                  write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
                 else
-                  write(11,"(i10,1x,f7.2)") ireorder(ibool_number),field_display(ilocnum+ieoff)
+                  !write(11,"(i10,1x,f7.2)") ireorder(ibool_number),field_display(ilocnum+ieoff)
+                  write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
                 endif
               endif
             endif
