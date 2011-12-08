@@ -26,13 +26,15 @@
 
 ! utility to locate partition which is closest to given point location
 !
-! compile with:
+! compile with one of these (use your default):
 ! > gfortran -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
-! or
 ! > ifort -assume byterecl -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
+! > pgf90 -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
 !
-! run with:
+! specify a target (x,y) may be in UTM, not lon-lat, then run with:
 ! > ./bin/xlocate_partition 70000.0 11000.0 -3000.0 ./in_out_files/DATABASES_MPI/
+!
+! this will generate the output file in_out_files/DATABASES_MPI/partition_bounds.dat
 
   program locate_partition
 
@@ -85,6 +87,9 @@
   print *,'----------------------------'
   print *
   
+  ! open a text file to list the maximal bounds of each partition
+  open(11,file=trim(LOCAL_PATH)//'partition_bounds.dat',status='unknown')
+
   ! loops over slices (process partitions)
   total_distance = HUGEVAL
   total_partition = -1
@@ -130,6 +135,8 @@
     print*,'  min/max z = ',minval(zstore),maxval(zstore)
     print*
     
+    write(11,'(i10,6e18.6)') iproc,minval(xstore),maxval(xstore),minval(ystore),maxval(ystore),minval(zstore),maxval(zstore)
+
     ! gets distance to target location
     call get_closest_point(target_x,target_y,target_z, &
                          NGLOB_AB,NSPEC_AB,xstore,ystore,zstore,ibool, &
@@ -148,6 +155,8 @@
 
   enddo  ! all slices for points
   
+  close(11)
+
   ! checks
   if (total_partition < 0 ) then
     print*,'Error: partition not found among ',iproc,'partitions searched'
