@@ -471,7 +471,6 @@ subroutine create_regions_mesh_ext(ibool, &
 !chris: check for poro: At the moment cpI & cpII are for eta=0
   call check_mesh_resolution_poro(myrank,nspec,nglob,ibool,&
                             xstore_dummy,ystore_dummy,zstore_dummy, &
-                            kappastore,mustore, &
                             -1.0d0, model_speed_max,min_resolved_period, &
                             phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
 
