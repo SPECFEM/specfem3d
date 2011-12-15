@@ -170,10 +170,10 @@ subroutine compute_forces_elastic()
     !print *,'entering poro counpling' 
     if( POROELASTIC_SIMULATION ) &
       call compute_coupling_elastic_po(NSPEC_AB,NGLOB_AB,ibool,&
-                        displs_poroelastic,accels_poroelastic,displw_poroelastic,&
+                        displs_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                        kappaarraystore,rhoarraystore,mustore, &
                         phistore,tortstore,jacobian,&
                         displ,accel,kappastore, &
                         ANISOTROPY,NSPEC_ANISO, &

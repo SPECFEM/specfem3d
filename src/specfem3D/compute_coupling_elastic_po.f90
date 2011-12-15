@@ -26,10 +26,10 @@
 ! for elastic solver
 
   subroutine compute_coupling_elastic_po(NSPEC_AB,NGLOB_AB,ibool,&
-                        displs_poroelastic,accels_poroelastic,displw_poroelastic,&
+                        displs_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                        kappaarraystore,rhoarraystore,mustore, &
                         phistore,tortstore,jacobian,&
                         displ,accel,kappastore, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -53,7 +53,7 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacements, etc 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic,&
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,&
                                                       displw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,accel
   
@@ -76,10 +76,9 @@
 
 ! properties
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        etastore,phistore,tortstore,jacobian
+        phistore,tortstore,jacobian
   real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
   real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappaarraystore
-  real(kind=CUSTOM_REAL), dimension(6,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: permstore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         kappastore,mustore
 
@@ -102,13 +101,13 @@
   logical :: phase_is_inner
 
 ! local parameters
-  real(kind=CUSTOM_REAL) :: sigmap,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz 
+  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz 
   real(kind=CUSTOM_REAL) :: rhol_s,rhol_f,phil,tortl,rhol_bar
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
   real(kind=CUSTOM_REAL) :: kappal_s
-  real(kind=CUSTOM_REAL) :: etal_f,kappal_f
+  real(kind=CUSTOM_REAL) :: kappal_f
   real(kind=CUSTOM_REAL) :: mul_fr,kappal_fr
   real(kind=CUSTOM_REAL) :: D_biot,H_biot,C_biot,M_biot
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G

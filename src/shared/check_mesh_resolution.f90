@@ -400,7 +400,7 @@
 
     ! determines minimum/maximum velocities within this element
     call get_vpvs_minmax_poro(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
-                        has_vp2_zero,NSPEC_AB,kappastore,mustore, &
+                        has_vp2_zero,NSPEC_AB,&
                         phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 
     ! min/max for whole cpu partition
@@ -697,7 +697,7 @@
 
 
   subroutine get_vpvs_minmax_poro(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
-                        has_vp2_zero,NSPEC_AB,kappastore,mustore, &
+                        has_vp2_zero,NSPEC_AB, &
                         phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 
 ! calculates the min/max size of the specified  element (ispec) for poroelastic domains
@@ -714,8 +714,6 @@
   logical :: has_vp2_zero
 
   integer :: NSPEC_AB
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-    kappastore,mustore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
   real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: phistore,tortstore

@@ -54,7 +54,7 @@ subroutine compute_forces_poroelastic()
 
     call compute_forces_solid( iphase, &
                         NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
-                        velocs_poroelastic,displw_poroelastic,velocw_poroelastic,&
+                        displw_poroelastic,velocw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
@@ -102,7 +102,7 @@ subroutine compute_forces_poroelastic()
       ! adjoint simulations
       !if( SIMULATION_TYPE == 3 ) &
 ! 'adjoint acoustic-poroelastic simulation not implemented yet'
-!        call compute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+!        call ccmpute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
 !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
 !                        num_coupling_ac_el_faces, &
 !                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -118,9 +118,9 @@ subroutine compute_forces_poroelastic()
                         displs_poroelastic,accels_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
-                        kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
+                        kappaarraystore,rhoarraystore,mustore, &
                         phistore,tortstore,jacobian,&
-                        displ,accel,kappastore, &
+                        displ,kappastore, &
                         ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store,&
                         c22store,c23store,c24store,c25store,c26store,c33store,&
@@ -283,7 +283,7 @@ subroutine compute_forces_poroelastic()
                         accel,veloc,&
                         accels_poroelastic,velocs_poroelastic,&
                         accelw_poroelastic,velocw_poroelastic,&
-                        rmass,rmass_solid_poroelastic,rmass_fluid_poroelastic,&
+                        rmass,rmass_solid_poroelastic,&
                         SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,&
                         num_coupling_el_po_faces,&
                         coupling_el_po_ispec,coupling_el_po_ijk,&
@@ -300,7 +300,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
                         accel,veloc,&
                         accels_poroelastic,velocs_poroelastic,&
                         accelw_poroelastic,velocw_poroelastic,&
-                        rmass,rmass_solid_poroelastic,rmass_fluid_poroelastic,&
+                        rmass,rmass_solid_poroelastic,&
                         SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,&
                         num_coupling_el_po_faces,&
                         coupling_el_po_ispec,coupling_el_po_ijk,&
@@ -318,7 +318,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: velocs_poroelastic,accels_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: velocw_poroelastic,accelw_poroelastic
 
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmass,rmass_solid_poroelastic,rmass_fluid_poroelastic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: rmass,rmass_solid_poroelastic
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
