@@ -313,7 +313,6 @@
 !
 
   subroutine check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    kappastore,mustore, &
                                     DT, model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore, &
                                     rho_vpI,rho_vpII,rho_vsI )
@@ -327,7 +326,6 @@
   include "constants.h"
 
   integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rho_vpI,rho_vpII,rho_vsI
   real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: phistore,tortstore

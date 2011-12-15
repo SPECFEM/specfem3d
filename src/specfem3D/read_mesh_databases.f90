@@ -463,7 +463,7 @@
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    kappastore,mustore,rho_vp,rho_vs, &
+                                    rho_vp,rho_vs, &
                                     DT,model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
     deallocate(rho_vp,rho_vs)
