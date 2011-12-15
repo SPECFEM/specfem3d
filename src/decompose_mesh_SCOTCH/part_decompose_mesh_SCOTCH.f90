@@ -1375,7 +1375,7 @@ contains
   ! Repartitioning : two coupled poroelastic/elastic elements are transfered to the same partition
   !--------------------------------------------------
 
-  subroutine poroelastic_elastic_repartitioning (nelmnts, nnodes, elmnts, &
+  subroutine poro_elastic_repartitioning (nelmnts, nnodes, elmnts, &
                         nb_materials, num_material, mat_prop, &
                         sup_neighbour, nsize, &
                         nproc, part)
@@ -1486,7 +1486,7 @@ contains
        endif
     enddo
 
- end subroutine poroelastic_elastic_repartitioning
+ end subroutine poro_elastic_repartitioning
 
   !--------------------------------------------------
   ! Repartitioning : two coupled moho surface elements are transfered to the same partition

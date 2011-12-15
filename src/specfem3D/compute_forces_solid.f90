@@ -25,7 +25,7 @@
 
   subroutine compute_forces_solid( iphase, &
                         NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
-                        velocs_poroelastic,displw_poroelastic,velocw_poroelastic,&
+                        displw_poroelastic,velocw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
@@ -47,8 +47,7 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic,&
-                                                      velocs_poroelastic
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,velocw_poroelastic
 
 ! arrays with mesh parameters per slice

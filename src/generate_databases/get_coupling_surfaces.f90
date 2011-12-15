@@ -416,9 +416,9 @@
   integer,dimension(:,:,:),allocatable :: tmp_ijk
   integer,dimension(:),allocatable :: tmp_ispec
 
-  integer,dimension(NGNOD2D) :: iglob_corners_ref !,iglob_corners
+  integer,dimension(NGNOD2D) :: iglob_corners_ref 
   integer :: ispec,i,j,k,igll,ier,iglob
-  integer :: inum,iface_ref,icorner,iglob_midpoint ! iface,ispec_neighbor
+  integer :: inum,iface_ref,icorner
   integer :: count_poroelastic,count_acoustic
 
   ! mpi interface communication
@@ -680,7 +680,7 @@
 
   integer,dimension(NGNOD2D) :: iglob_corners_ref,iglob_corners_ref_el
   integer :: ispec,i,j,k,igll,ier,iglob,ispec_el,ispec_ref_el
-  integer :: inum,iface_ref,iface_ref_el,iface_el,icorner,iglob_midpoint ! iface,ispec_neighbor
+  integer :: inum,iface_ref,iface_ref_el,iface_el,icorner
   integer :: count_poroelastic,count_elastic
 
   ! mpi interface communication

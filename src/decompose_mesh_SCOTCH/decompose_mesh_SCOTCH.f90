@@ -793,7 +793,7 @@ module decompose_mesh_SCOTCH
   ! re-partitioning puts poroelastic-elastic coupled elements into same partition
   !  integer  :: nfaces_coupled
   !  integer, dimension(:,:), pointer  :: faces_coupled
-    call poroelastic_elastic_repartitioning (nspec, nnodes, elmnts, &
+    call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                      count_def_mat, mat(1,:) , mat_prop, &
                      sup_neighbour, nsize, &
                      nparts, part)
