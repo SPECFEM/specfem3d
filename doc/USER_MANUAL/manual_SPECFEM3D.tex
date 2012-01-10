@@ -564,11 +564,12 @@ and use
 \begin{lyxcode}
 {\small ./bin/xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
-to generate an AVS output file (\texttt{\small AVS\_meshquality.inp}
-in AVS UCD format) or OpenDX output file (\texttt{\small DX\_meshquality.}~\\
-\texttt{\small dx}) that can be used to investigate mesh quality,
-e.g, skewness of elements and a Gnuplot histogram (\texttt{\small mesh\_quality\_}~\\
-\texttt{\small histogram.txt}) that can be plotted with gnuplot (type
+to generate an 
+%not supported: AVS output file (\texttt{\small AVS\_meshquality.inp} in AVS UCD format) or 
+OpenDX output file (\texttt{\small DX\_mesh\_quality.dx}) 
+that can be used to investigate mesh quality, e.g. skewness of elements, 
+and a Gnuplot histogram (\texttt{\small mesh\_quality\_histogram.txt}) 
+that can be plotted with gnuplot (type
 `\texttt{\small gnuplot plot\_mesh\_quality\_histogram.gnu}'). The
 histogram is also printed to the screen.
 Analyze that skewness histogram of mesh elements to make sure no element has a skewness above approximately 0.75, otherwise the mesh is of poor quality (and if even a single element has a skewness value above 0.80, then you must definitely improve the mesh).

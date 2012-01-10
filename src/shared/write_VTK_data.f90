@@ -470,3 +470,75 @@
 
   end subroutine write_VTK_data_elem_vectors
 
+!=============================================================
+
+  subroutine write_VTK_data_elem_cr(nspec,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        elem_flag,prname_file)
+
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: nspec,nglob
+
+  ! global coordinates
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+
+  ! element flag array
+  real(kind=CUSTOM_REAL), dimension(nspec) :: elem_flag
+
+  ! file name
+  character(len=256) :: prname_file
+  !character(len=2), optional, intent(in) :: str_id
+
+  ! local parameters
+  integer :: ispec,i
+
+! write source and receiver VTK files for Paraview
+  !debug
+  !write(IMAIN,*) '  vtk file: '
+  !write(IMAIN,*) '    ',prname_file(1:len_trim(prname_file))//'.vtk'
+
+  open(IOVTK,file=prname_file(1:len_trim(prname_file))//'.vtk',status='unknown')
+  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOVTK,'(a)') 'material model VTK file'
+  write(IOVTK,'(a)') 'ASCII'
+  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
+  do i=1,nglob
+    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+  enddo
+  write(IOVTK,*) ""
+
+  ! note: indices for vtk start at 0
+  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+  do ispec=1,nspec
+    write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1,&
+          ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
+  enddo
+  write(IOVTK,*) ""
+
+  ! type: hexahedrons
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
+  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,*) ""
+
+  write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
+  !if( present( str_id ) ) then
+  !  write(IOVTK,'(a)') "SCALARS elem_flag_"//str_id//" integer"
+  !else
+  !  write(IOVTK,'(a)') "SCALARS elem_flag integer"
+  !endif
+  write(IOVTK,'(a)') "SCALARS elem_val float"
+  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  do ispec = 1,nspec
+    write(IOVTK,*) elem_flag(ispec)
+  enddo
+  write(IOVTK,*) ""
+  close(IOVTK)
+
+
+  end subroutine write_VTK_data_elem_cr

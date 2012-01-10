@@ -916,7 +916,8 @@ program model_update
   call check_mesh_resolution(myrank,NSPEC,NGLOB,ibool,&
                             xstore,ystore,zstore, &
                             kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
-                            -1.0d0, model_speed_max,min_resolved_period )
+                            -1.0d0, model_speed_max,min_resolved_period, &
+                            LOCAL_PATH,SAVE_MESH_FILES )
 
   call sync_all()
 

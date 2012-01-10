@@ -455,7 +455,8 @@
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
                               ibool,xstore,ystore,zstore, &
                               kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period)
+                              DT,model_speed_max,min_resolved_period, &
+                              LOCAL_PATH,SAVE_MESH_FILES)
 
   else if( POROELASTIC_SIMULATION ) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -477,7 +478,8 @@
     call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
                               ibool,xstore,ystore,zstore, &
                               kappastore,mustore,rho_vp,rho_vs, &
-                              DT,model_speed_max,min_resolved_period)
+                              DT,model_speed_max,min_resolved_period, &
+                              LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
   endif
 
