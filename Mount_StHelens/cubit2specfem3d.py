@@ -643,8 +643,9 @@ class mesh(object,mesh_tools):
                     filename=absname+'_bottom'
                     normal=(0,0,-1)
                 elif re.search('abs',name):
-                    print "  ...face_abs - not used so far..."
-                    continue
+                    #print "  ...face_abs - not used so far..."
+                    filename=absname+'_all'
+                    absflag=True
                 else:
                     continue
                 # opens file

@@ -59,6 +59,8 @@ def define_absorbing_surf():
     xmax_box=cubit.get_total_bounding_box("volume",list_vol)[1]
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
     ymax_box=cubit.get_total_bounding_box("volume",list_vol)[4]
+    
+    
     list_surf=cubit.parse_cubit_list("surface","all")
 #    for k in list_surf:
 #        center_point = cubit.get_center_point("surface", k)
@@ -96,40 +98,71 @@ def define_absorbing_surf():
     print '##  y length: ' + str(y_len)
     print '##  z length: ' + str(z_len)
 
-    # tolerance parameters
-    absorbing_surface_distance_tolerance=0.005
+    # debug
+    print '##  xmin: ' + str(xmin_box)
+    print '##  xmax: ' + str(xmax_box)
+    print '##  ymin: ' + str(ymin_box)
+    print '##  ymax: ' + str(ymax_box)
+    print '##  zmin: ' + str(zmin_box)
+    print '##  zmax: ' + str(zmax_box)
+
+    ############################################
+    ##
+    ## tolerance parameters
+    ##
+    ## modified for surface topography
+    ############################################
+    absorbing_surface_distance_tolerance=0.1
     topographic_surface_distance_tolerance=0.1
-    topographic_surface_normal_tolerance=0.1
+    topographic_surface_normal_tolerance=0.3
 
     for k in list_surf:
         center_point = cubit.get_center_point("surface", k)
+        
+        #debug
+        print '##surface: ' + str(k)
+        print '## center point: ' + str(center_point)
+
         if abs((center_point[0] - xmin_box)/x_len) <= absorbing_surface_distance_tolerance:
-             absorbing_surf_xmin.append(k)
-             absorbing_surf.append(k)
+          #debug 
+          print '## xmin surface: ' + str(k)
+          absorbing_surf_xmin.append(k)
+          absorbing_surf.append(k)
         elif abs((center_point[0] - xmax_box)/x_len) <= absorbing_surface_distance_tolerance:
-             absorbing_surf_xmax.append(k)
-             absorbing_surf.append(k)
+          #debug 
+          print '## xmax surface: ' + str(k)
+          absorbing_surf_xmax.append(k)
+          absorbing_surf.append(k)
         elif abs((center_point[1] - ymin_box)/y_len) <= absorbing_surface_distance_tolerance:
-             absorbing_surf_ymin.append(k)
-             absorbing_surf.append(k)
+          #debug 
+          print '## ymin surface: ' + str(k)
+          absorbing_surf_ymin.append(k)
+          absorbing_surf.append(k)
         elif abs((center_point[1] - ymax_box)/y_len) <= absorbing_surface_distance_tolerance:
-             absorbing_surf_ymax.append(k)
-             absorbing_surf.append(k)
+          #debug 
+          print '## ymax surface: ' + str(k)
+          absorbing_surf_ymax.append(k)
+          absorbing_surf.append(k)
         elif abs((center_point[2] - zmin_box)/z_len) <= absorbing_surface_distance_tolerance:
-             absorbing_surf_bottom.append(k)
-             absorbing_surf.append(k)
+          #debug 
+          print '## bottom surface: ' + str(k)
+          absorbing_surf_bottom.append(k)
+          absorbing_surf.append(k)
         else:
-            sbox=cubit.get_bounding_box('surface',k)
-            dz=abs((sbox[7] - zmax_box)/z_len)
-            normal=cubit.get_surface_normal(k)
-            zn=normal[2]
-            dn=abs(abs(zn)-1)
-            #print '## surface element: ' + str(k)
-            #print '## surface element: zn ' + str(zn)
-            #print '## surface element: dn ' + str(dn)
-            #print '## surface element: dz ' + str(dz)
-            if dz <= topographic_surface_distance_tolerance and dn < topographic_surface_normal_tolerance:
-                top_surf.append(k)
+          sbox=cubit.get_bounding_box('surface',k)
+          dz=abs((sbox[7] - zmax_box)/z_len)
+          normal=cubit.get_surface_normal(k)
+          zn=normal[2]
+          dn=abs(abs(zn)-1)
+          #debug 
+          #print '## surface element: ' + str(k)
+          #print '## surface element: zn ' + str(zn)
+          #print '## surface element: dn ' + str(dn)
+          #print '## surface element: dz ' + str(dz)
+          if dz <= topographic_surface_distance_tolerance and dn < topographic_surface_normal_tolerance:
+            #debug 
+            print '## topo surface: ' + str(k)          
+            top_surf.append(k)
     
     return absorbing_surf,absorbing_surf_xmin,absorbing_surf_xmax,absorbing_surf_ymin,absorbing_surf_ymax,absorbing_surf_bottom,top_surf
 
@@ -281,10 +314,11 @@ def build_block_side(surf_list,name,obj='surface'):
                 print 'error importing cubit'
                 import sys
                 sys.exit()
+                
     id_nodeset=cubit.get_next_nodeset_id()
     id_block=cubit.get_next_block_id()
 
-
+    # creates command string
     if obj == 'hex':
         txt='hex in node in surface'
         txt1='block '+str(id_block)+ ' '+ txt +' '+str(list(surf_list))
@@ -306,7 +340,9 @@ def build_block_side(surf_list,name,obj='surface'):
         print "##block "+str(id_block)+" name '"+name+"_notsupported (only hex,face,edge,node)'"
         txt2=''
 
-
+    # executes commands
+    print "# command: " + txt1
+    print "# command: " + txt2
     cubit.cmd(txt1)
     cubit.cmd(txt2)
 
@@ -341,21 +377,55 @@ def define_bc(*args,**keys):
 
             # model has parallel sides (e.g. a block model )
             if parallel:
-                # blocks for each side
+            
+              # blocks for each side
+              if len(xmin) == 0:
+                print ""
+                print "no abs_xmin surface found, please create block manually..."
+                print ""
+              else:
                 build_block_side(xmin,entity+'_abs_xmin',obj=entity)
+                
+              # blocks for each side
+              if len(xmax) == 0:
+                print ""
+                print "no abs_xmax surface found, please create block manually..."
+                print ""
+              else:
                 build_block_side(xmax,entity+'_abs_xmax',obj=entity)
+
+              # blocks for each side
+              if len(ymin) == 0:
+                print ""
+                print "no abs_xmin surface found, please create block manually..."
+                print ""
+              else:
                 build_block_side(ymin,entity+'_abs_ymin',obj=entity)
+
+              # blocks for each side
+              if len(ymax) == 0:
+                print ""
+                print "no abs_ymax surface found, please create block manually..."
+                print ""
+              else:
                 build_block_side(ymax,entity+'_abs_ymax',obj=entity)
+
+              # blocks for each side
+              if len(bottom) == 0:
+                print ""
+                print "no abs_bottom surface found, please create block manually..."
+                print ""
+              else:
                 build_block_side(bottom,entity+'_abs_bottom',obj=entity)
 
-                # block for all sides together
-                # NOTE:
-                #    this might fail in some CUBIT versions, when elements are already
-                #    assigned to other blocks
-                try:
-                  build_block_side(surf,entity+'_abs',obj=entity)
-                except:
-                  print "no combined surface with all sides created"
+              # block for all sides together
+              # NOTE:
+              #    this might fail in some CUBIT versions, when elements are already
+              #    assigned to other blocks
+              try:
+                build_block_side(surf,entity+'_abs',obj=entity)
+              except:
+                print "no combined surface with all sides created"
 
             else:
                 # arbitrary geometry
@@ -409,6 +479,16 @@ def define_bc(*args,**keys):
 #block 2  attribute index 2 1
 #block 2  attribute index 3 2
 
-
+# to create block manually:
+#
+# use a commands like:
+#
+# e.g. surface with topography
+# block 2 face in surface 6 
+# block 2 name "face_topo"
+#
+# e.g. all surface which are absorbing
+# block 3 face in surface 1 2 3 4 5
+# block 2 name "face_abs"
 
 

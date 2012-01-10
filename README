@@ -23,6 +23,8 @@ More complex examples are provided in:
 
 - noise_tomography/: uses the homogeneous_halfspace model for noise kernel simulations
 
+- Mount_StHelens/: a model with topography data included
+
 - homogeneous_poro/: a model using poroelastic material
 
 ***NOTE*** because of the poroelastic implementation, even in an acoustic/elastic case, the file nummaterial_poroelastic_file must be present in the MESH/ directory. Need to had a dummy file in cubit2specfem3d.py [CM - Oct. 2011]
