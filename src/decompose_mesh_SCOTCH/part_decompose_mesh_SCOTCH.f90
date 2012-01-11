@@ -1424,6 +1424,10 @@ contains
        endif
     enddo
 
+    ! checks if any poroelastic/elastic elements are set
+    !if( .not. any(is_poroelastic) ) return
+    !if( .not. any(is_elastic) ) return
+
     ! gets neighbors by 4 common nodes (face)
     allocate(xadj(0:nelmnts),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xadj'
