@@ -98,6 +98,10 @@ module specfem_par
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: NSOURCES
+  ! source encoding
+  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz) 
+  ! since they have to equal in the acoustic setting]
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
 ! receiver information
   character(len=256) :: rec_filename,filtered_rec_filename,dummystring
@@ -355,7 +359,7 @@ end module specfem_par_elastic
 
 module specfem_par_acoustic
 
-! parameter module for elastic solver
+! parameter module for acoustic solver
 
   use constants,only: CUSTOM_REAL
   implicit none

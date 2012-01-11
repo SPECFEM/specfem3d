@@ -95,6 +95,10 @@ subroutine setup_sources()
           nu_source(3,3,NSOURCES),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for sources'
 
+  ! for source encoding (acoustic sources so far only)
+  allocate(pm1_source_encoding(NSOURCES),stat=ier) 
+  if( ier /= 0 ) stop 'error allocating arrays for sources'
+
 ! locate sources in the mesh
 !
 ! returns:  islice_selected_source & ispec_selected_source,
@@ -487,12 +491,15 @@ subroutine setup_receivers_check_acoustic()
     ! user output
     call any_all_l( is_on, is_on_all )
     if( myrank == 0 .and. is_on_all ) then
-      write(IMAIN,*) '**********************************************************************'
-      write(IMAIN,*) '*** station:',irec,'                                          ***'
-      write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
-      write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
-      write(IMAIN,*) '**********************************************************************'
-      write(IMAIN,*)
+      ! limits user output if too many receivers
+      if( nrec < 1000 .and. (.not. SU_FORMAT ) ) then      
+        write(IMAIN,*) '**********************************************************************'
+        write(IMAIN,*) '*** station:',irec,'                                          ***'
+        write(IMAIN,*) '*** Warning: acoustic receiver located exactly on the free surface ***'
+        write(IMAIN,*) '*** Warning: tangential component will be zero there               ***'
+        write(IMAIN,*) '**********************************************************************'
+        write(IMAIN,*)
+      endif
     endif
 
   enddo ! num_free_surface_faces
@@ -558,6 +565,12 @@ subroutine setup_sources_precompute_arrays()
           ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
           ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
           factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
+
+          ! source encoding
+          ! determines factor +/-1 depending on sign of moment tensor 
+          ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
+          !   Geophysics, 74 (6), WCC177-WCC188.)
+          pm1_source_encoding(isource) = sign(1.0,Mxx(isource)) 
 
           ! source array interpolated on all element gll points (only used for non point sources)
           call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&

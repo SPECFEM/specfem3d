@@ -39,7 +39,8 @@
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
-                        station_name,network_name,adj_source_file,nrec_local,number_receiver_global
+                        station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
+                        pm1_source_encoding
   implicit none
 
   include "constants.h"
@@ -145,6 +146,9 @@
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
+              ! source encoding
+              stf_used = stf_used * pm1_source_encoding(isource) 
+
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
               ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
@@ -163,6 +167,9 @@
 
               ! quasi-heaviside
               !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+
+              ! source encoding
+              stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then
@@ -382,6 +389,9 @@
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
+              ! source encoding
+              stf_used = stf_used * pm1_source_encoding(isource) 
+
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
               ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
@@ -397,6 +407,12 @@
 
               ! gaussian source time
               stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+
+              ! quasi-heaviside
+              !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+
+              ! source encoding
+              stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then
