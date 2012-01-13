@@ -622,7 +622,7 @@
 
 ! get coordinate of corner in bathy/topo model
         icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
-        icornerlat = int((lat - orig_y_interface_bottom) / spacing_x_interface_bottom) + 1
+        icornerlat = int((lat - orig_y_interface_bottom) / spacing_y_interface_bottom) + 1
 
 ! avoid edge effects and extend with identical point if outside model
         if(icornerlong < 1) icornerlong = 1
