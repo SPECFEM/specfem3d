@@ -133,9 +133,9 @@ case $FC in
         ;;
     *xlf*|*/*xlf*)
         #
-        # do NOT remove option -qsave otherwise the IBM compiler allocates the
+        # on some (but not all) IBM machines one might need to add -qsave otherwise the IBM compiler allocates the
         # arrays in the stack and the code crashes if the stack size is too
-        # small (which is often the case)
+        # small (which is sometimes the case, but less often these days on large machines)
         #
         # on IBM with xlf one should also set
         #
@@ -151,9 +151,9 @@ case $FC in
         #
         if test x"$FLAGS_NO_CHECK" = x; then
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-            FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=90pure -qsuppress=1518-317 -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
+            FLAGS_NO_CHECK="-O3 -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=90pure -qsuppress=1518-317 -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
         # on MareNostrum at the Barcelona SuperComputing Center (Spain) one can use
-        # -qtune=ppc970 -qarch=ppc64v instead of -qtune=auto -qarch=auto
+        # -qtune=ppc970 -qarch=ppc64v -qsave     instead of -qtune=auto -qarch=auto
         fi
         if test x"$FLAGS_CHECK" = x; then
         #
