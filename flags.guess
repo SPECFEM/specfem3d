@@ -26,21 +26,21 @@ case $FC in
         # Intel ifort Fortran90
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -assume byterecl -traceback -ftrapuv -ftz"
+            FLAGS_CHECK="-O3 -traceback -ftrapuv -ftz"
             
         # useful for debugging...
             # for debugging: change -check nobounds to -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
 
             # ifort version 11 or 10.1 with these flags shows good performance
             # -xSSE4.2 -ftz -funroll-loops -unroll5
-            #FLAGS_CHECK="-O3 -ftz -xS -traceback -ftrapuv -vec-report0 -std95 -implicitnone -check nobounds -assume byterecl -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
-            #FLAGS_CHECK="-O3 -xS -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -assume byterecl -ftrapuv -ftz -traceback"
+            #FLAGS_CHECK="-O3 -ftz -xS -traceback -ftrapuv -vec-report0 -std95 -implicitnone -check nobounds -static-intel -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage "
+            #FLAGS_CHECK="-O3 -xS -static-intel -r8 -mcmodel=large -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -check nobounds -align sequence -ftrapuv -ftz -traceback"
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
         # standard options (leave option -ftz, which is *critical* for performance)
         # add -Winline to get information about routines that are inlined
         # add -vec-report2 to get information about loops that are vectorized or not
-            FLAGS_NO_CHECK="-O3 -assume byterecl -check nobounds -ftz"
+            FLAGS_NO_CHECK="-O3 -check nobounds -ftz"
 
         fi
         ;;
