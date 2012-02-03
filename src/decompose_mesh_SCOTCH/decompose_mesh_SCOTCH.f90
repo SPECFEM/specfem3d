@@ -120,7 +120,7 @@ module decompose_mesh_SCOTCH
     implicit none
     character(len=256)  :: line
     logical :: use_poroelastic_file
-    
+
   ! sets number of nodes per element
     ngnod = esize
 
@@ -283,7 +283,7 @@ module decompose_mesh_SCOTCH
   !     mufr : frame shear modulus
     open(unit=97, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_poroelastic_file', &
           status='old', form='formatted', iostat=ier)
-    ! checks if we can use file      
+    ! checks if we can use file
     if( ier /= 0 ) then
       use_poroelastic_file = .false.
       !stop 'error opening nummaterial_poroelastic_file'
@@ -292,7 +292,7 @@ module decompose_mesh_SCOTCH
       print*, '  poroelastic material file found'
     endif
     ier = 0
-    
+
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
     !          defined materials (material_id > 0) and undefined materials (material_id < 0 )
     do imat=1,count_def_mat
@@ -316,7 +316,7 @@ module decompose_mesh_SCOTCH
        ! checks material_id bounds
        if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
 
-       if(idomain_id == 1 .or. idomain_id == 2) then 
+       if(idomain_id == 1 .or. idomain_id == 2) then
          ! material is elastic or acoustic
 
          !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
@@ -328,10 +328,10 @@ module decompose_mesh_SCOTCH
          mat_prop(5,num_mat) = aniso_flag
          mat_prop(6,num_mat) = idomain_id
 
-       else                             
+       else
          ! material is poroelastic
          if( use_poroelastic_file .eqv. .false. ) stop 'error poroelastic material requires nummaterial_poroelastic_file'
-         
+
          read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
          mat_prop(1,num_mat) = rhos
          mat_prop(2,num_mat) = rhof

@@ -41,24 +41,25 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL
-  use PML_par,only:PML,ispec_is_PML_inum
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML,ABSORBING_CONDITIONS
+  use PML_par,only:ispec_is_PML_inum
+
   implicit none
   !include "constants.h"
   integer :: NSPEC_AB,NGLOB_AB
 
-! acoustic potentials
+  ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
         potential_acoustic,potential_dot_dot_acoustic
 
-! arrays with mesh parameters per slice
+  ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         rhostore,jacobian
 
-! array with derivatives of Lagrange polynomials and precalculated products
+  ! array with derivatives of Lagrange polynomials and precalculated products
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
@@ -94,106 +95,107 @@
     num_elements = nspec_inner_acoustic
   endif
 
-! loop over spectral elements
+  ! loop over spectral elements
   do ispec_p = 1,num_elements
 
     !if ( (ispec_is_inner(ispec) .eqv. phase_is_inner) ) then
 
-      ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
+    ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
 
-      ! only elements outside PML, inside "regular" domain
-      if( PML ) then
-        if( ispec_is_PML_inum(ispec) > 0 ) then
-         cycle
-        endif
-      endif
+    ! only elements outside PML, inside "regular" domain
+    if( ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
+      if( ispec_is_PML_inum(ispec) > 0 ) cycle
+    endif
 
 !      if( ispec_is_acoustic(ispec) ) then
 
-        ! gets values for element
-        do k=1,NGLLZ
-          do j=1,NGLLY
-            do i=1,NGLLX
-              chi_elem(i,j,k) = potential_acoustic(ibool(i,j,k,ispec))
-            enddo
-          enddo
+    ! gets values for element
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          chi_elem(i,j,k) = potential_acoustic(ibool(i,j,k,ispec))
         enddo
-        ! would check if anything to do, but might lower accuracy of computation
-        !if( maxval( abs( chi_elem ) ) < TINYVAL_SNGL ) cycle
+      enddo
+    enddo
 
-        do k=1,NGLLZ
-          do j=1,NGLLY
-            do i=1,NGLLX
+    ! would check if anything to do, but might lower accuracy of computation
+    !if( maxval( abs( chi_elem ) ) < TINYVAL_SNGL ) cycle
 
-              ! density (reciproc)
-              rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
 
-              ! derivative along x, y, z
-              ! first double loop over GLL points to compute and store gradients
-              ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-              temp1l = 0._CUSTOM_REAL
-              temp2l = 0._CUSTOM_REAL
-              temp3l = 0._CUSTOM_REAL
-              do l = 1,NGLLX
-                temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-                temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-                temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-              enddo
-
-              ! get derivatives of potential with respect to x, y and z
-              xixl = xix(i,j,k,ispec)
-              xiyl = xiy(i,j,k,ispec)
-              xizl = xiz(i,j,k,ispec)
-              etaxl = etax(i,j,k,ispec)
-              etayl = etay(i,j,k,ispec)
-              etazl = etaz(i,j,k,ispec)
-              gammaxl = gammax(i,j,k,ispec)
-              gammayl = gammay(i,j,k,ispec)
-              gammazl = gammaz(i,j,k,ispec)
-              jacobianl = jacobian(i,j,k,ispec)
-
-              ! derivatives of potential
-              dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
-              dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
-              dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
-
-              ! for acoustic medium
-              ! also add GLL integration weights
-              temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
-                            (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-              temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
-                            (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-              temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
-                            (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
-            enddo
+          ! derivative along x, y, z
+          ! first double loop over GLL points to compute and store gradients
+          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
+          temp1l = 0._CUSTOM_REAL
+          temp2l = 0._CUSTOM_REAL
+          temp3l = 0._CUSTOM_REAL
+          do l = 1,NGLLX
+            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
+            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
+            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
           enddo
+
+          ! get derivatives of potential with respect to x, y and z
+          xixl = xix(i,j,k,ispec)
+          xiyl = xiy(i,j,k,ispec)
+          xizl = xiz(i,j,k,ispec)
+          etaxl = etax(i,j,k,ispec)
+          etayl = etay(i,j,k,ispec)
+          etazl = etaz(i,j,k,ispec)
+          gammaxl = gammax(i,j,k,ispec)
+          gammayl = gammay(i,j,k,ispec)
+          gammazl = gammaz(i,j,k,ispec)
+
+          ! derivatives of potential
+          dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
+          dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
+          dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
+
+          jacobianl = jacobian(i,j,k,ispec)
+
+          ! density (reciproc)
+          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+
+          ! for acoustic medium
+          ! also add GLL integration weights
+          temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                        (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+          temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                        (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+          temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                        (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+
         enddo
+      enddo
+    enddo
 
-        ! second double-loop over GLL to compute all the terms
-        do k = 1,NGLLZ
-          do j = 1,NGLLZ
-            do i = 1,NGLLX
+    ! second double-loop over GLL to compute all the terms
+    do k = 1,NGLLZ
+      do j = 1,NGLLZ
+        do i = 1,NGLLX
 
-              ! along x,y,z direction
-              ! and assemble the contributions
-              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-              temp1l = 0._CUSTOM_REAL
-              temp2l = 0._CUSTOM_REAL
-              temp3l = 0._CUSTOM_REAL
-              do l=1,NGLLX
-                temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
-                temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
-                temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
-              enddo
-
-              ! sum contributions from each element to the global values
-              iglob = ibool(i,j,k,ispec)
-              potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                                  - ( temp1l + temp2l + temp3l )
-
-            enddo
+          ! along x,y,z direction
+          ! and assemble the contributions
+          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+          temp1l = 0._CUSTOM_REAL
+          temp2l = 0._CUSTOM_REAL
+          temp3l = 0._CUSTOM_REAL
+          do l=1,NGLLX
+            temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
+            temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
+            temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
           enddo
+
+          ! sum contributions from each element to the global values
+          iglob = ibool(i,j,k,ispec)
+          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                                              - ( temp1l + temp2l + temp3l )
+
         enddo
+      enddo
+    enddo
 
 !      endif ! end of test if acoustic element
 !    endif ! ispec_is_inner

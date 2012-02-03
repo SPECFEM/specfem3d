@@ -1065,7 +1065,7 @@
     if( ier /= 0 ) stop 'error allocating arrays for movie div and curl'
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,velocs_poroelastic, &
-                                div_glob,curl_glob,valency, & 
+                                div_glob,curl_glob,valency, &
                                 div,curl_x,curl_y,curl_z, &
                                 velocity_x,velocity_y,velocity_z, &
                                 ibool,ispec_is_poroelastic, &
@@ -1106,7 +1106,7 @@
     !write(27) veloc
     !close(27)
 
-  endif 
+  endif
 
 
   if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then

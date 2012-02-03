@@ -212,7 +212,7 @@
 !       since we start with saved wavefields b_displ( 0 ) = displ( NSTEP ) which correspond
 !       to a time (NSTEP - 1)*DT - t0
 !       (see sources for simulation_type 1 and seismograms)
-!       now, at the beginning of the time loop, the numerical Newark time scheme updates
+!       now, at the beginning of the time loop, the numerical Newmark time scheme updates
 !       the wavefields, that is b_displ( it=1) corresponds now to time (NSTEP -1 - 1)*DT - t0
 !
 ! let's define the start time t  to (1-1)*DT - t0 = -t0, and the end time T to (NSTEP-1)*DT - t0

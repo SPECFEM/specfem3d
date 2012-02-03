@@ -66,11 +66,11 @@
   do it = 1,NSTEP
 
     ! simulation status output and stability check
-    if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5) then
+    if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) then
       call it_check_stability()
     endif
 
-    ! update displacement using Newark time scheme
+    ! update displacement using Newmark time scheme
     call it_update_displacement_scheme()
 
     ! acoustic solver
@@ -85,7 +85,7 @@
     if( POROELASTIC_SIMULATION ) call compute_forces_poroelastic()
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
-    ! note: this must be read in after the Newark time scheme
+    ! note: this must be read in after the Newmark time scheme
     if( SIMULATION_TYPE == 3 .and. it == 1 ) then
      call it_read_foward_arrays()
     endif
@@ -282,7 +282,7 @@
 
   subroutine it_update_displacement_scheme()
 
-! explicit Newark time scheme with acoustic & elastic domains:
+! explicit Newmark time scheme with acoustic & elastic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
 ! chi(t+delta_t) = chi(t) + delta_t chi_dot(t) + 1/2 delta_t**2 chi_dot_dot(t)
@@ -329,7 +329,8 @@
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
 
     ! time marching potentials
-    if(PML) call PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
+    if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
+      call PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
                         potential_acoustic,potential_dot_acoustic,&
                         deltat,deltatsqover2,deltatover2,&
                         num_PML_ispec,PML_ispec,PML_damping_d,&
@@ -341,6 +342,7 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh,NPROC,&
                         ispec_is_acoustic)
+    endif
   endif
 
 ! updates elastic displacement and velocity
@@ -470,7 +472,7 @@
 ! note backward/reconstructed wavefields:
 !       storing wavefield displ() at time step it, corresponds to time (it-1)*DT - t0 (see routine write_seismograms_to_file )
 !       reconstucted wavefield b_displ() at it corresponds to time (NSTEP-it-1)*DT - t0
-!       we read in the reconstructed wavefield at the end of the time iteration loop, i.e. after the Newark scheme,
+!       we read in the reconstructed wavefield at the end of the time iteration loop, i.e. after the Newmark scheme,
 !       thus, indexing is NSTEP-it (rather than something like NSTEP-(it-1) )
     if (SIMULATION_TYPE == 3 .and. mod(NSTEP-it,NSTEP_Q_SAVE) == 0) then
       ! reads files content

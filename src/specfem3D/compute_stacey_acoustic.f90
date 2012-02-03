@@ -72,7 +72,7 @@
   integer :: ispec,iglob,i,j,k,iface,igll
   !integer:: reclen1,reclen2
 
-! adjoint simulations:
+  ! adjoint simulations:
   if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
     ! reads in absorbing boundary array when first phase is running
     if( phase_is_inner .eqv. .false. ) then
@@ -86,7 +86,7 @@
     endif
   endif !adjoint
 
-! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
+  ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
   do iface=1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
@@ -117,7 +117,6 @@
           absorbl = potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
           potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
                                               - absorbl
-
 
           ! adjoint simulations
           if (SIMULATION_TYPE == 3) then

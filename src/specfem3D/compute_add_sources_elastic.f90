@@ -190,12 +190,12 @@
 !
 ! backward/reconstructed wavefields:
 !       time for b_displ( it ) would correspond to (NSTEP - it - 1 )*DT - t0
-!       if we read in saved wavefields b_displ() before Newark time scheme
+!       if we read in saved wavefields b_displ() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
-!       since at the beginning of the time loop, the numerical Newark time scheme updates
+!       since at the beginning of the time loop, the numerical Newmark time scheme updates
 !       the wavefields, that is b_displ( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-!       b_displ is now read in after Newark time scheme:
+!       b_displ is now read in after Newmark time scheme:
 !       we read the backward/reconstructed wavefield at the end of the first time loop,
 !       such that b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !       assuming that until that end the backward/reconstructed wavefield and adjoint fields
@@ -339,7 +339,7 @@
 
   endif !adjoint
 
-! note:  b_displ() is read in after Newark time scheme, thus
+! note:  b_displ() is read in after Newmark time scheme, thus
 !           b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 

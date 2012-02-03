@@ -37,28 +37,28 @@
   !   type = 2 : velocity V_y component
   !   type = 3 : velocity V_z component
   !   type = 4 : velocity V norm
-  integer,parameter:: IMAGE_TYPE = 2
+  integer,parameter:: IMAGE_TYPE = 3
 
   ! cross-section surface
   ! cross-section origin point
   real(kind=CUSTOM_REAL),parameter:: section_xorg = 67000.0
   real(kind=CUSTOM_REAL),parameter:: section_yorg = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_zorg = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_zorg = -1000.0
 
   ! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: section_nx = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0
   real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_nz = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0
 
   ! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0
   real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0
 
   ! cross-section (in-plane) vertical-direction
   real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0
 
   ! non linear display to enhance small amplitudes in color images
   real(kind=CUSTOM_REAL), parameter :: POWER_DISPLAY_COLOR = 0.30_CUSTOM_REAL

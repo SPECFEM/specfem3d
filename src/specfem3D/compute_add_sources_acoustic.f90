@@ -147,7 +147,7 @@
               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
               ! source encoding
-              stf_used = stf_used * pm1_source_encoding(isource) 
+              stf_used = stf_used * pm1_source_encoding(isource)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -212,12 +212,12 @@
 !
 ! backward/reconstructed wavefields:
 !       time for b_potential( it ) would correspond to (NSTEP - it - 1 )*DT - t0
-!       if we read in saved wavefields b_potential() before Newark time scheme
+!       if we read in saved wavefields b_potential() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
-!       since at the beginning of the time loop, the numerical Newark time scheme updates
+!       since at the beginning of the time loop, the numerical Newmark time scheme updates
 !       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-!       b_potential is now read in after Newark time scheme:
+!       b_potential is now read in after Newmark time scheme:
 !       we read the backward/reconstructed wavefield at the end of the first time loop,
 !       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !       assuming that until that end the backward/reconstructed wavefield and adjoint fields
@@ -348,7 +348,7 @@
     endif ! it
   endif
 
-! note:  b_potential() is read in after Newark time scheme, thus
+! note:  b_potential() is read in after Newmark time scheme, thus
 !           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
@@ -390,7 +390,7 @@
               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
               ! source encoding
-              stf_used = stf_used * pm1_source_encoding(isource) 
+              stf_used = stf_used * pm1_source_encoding(isource)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need

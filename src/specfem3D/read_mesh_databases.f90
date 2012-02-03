@@ -238,7 +238,7 @@
     read(27) rho_vsI
   endif
 
-! checks simulation types are valid
+  ! checks simulation types are valid
   if( (.not. ACOUSTIC_SIMULATION ) .and. &
      (.not. ELASTIC_SIMULATION ) .and. &
      (.not. POROELASTIC_SIMULATION ) ) then
@@ -246,7 +246,7 @@
      call exit_mpi(myrank,'error no simulation type defined')
   endif
 
-! absorbing boundary surface
+  ! absorbing boundary surface
   read(27) num_abs_boundary_faces
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
@@ -260,7 +260,7 @@
     read(27) abs_boundary_normal
   endif
 
-! free surface
+  ! free surface
   read(27) num_free_surface_faces
   allocate(free_surface_ispec(num_free_surface_faces), &
           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
@@ -274,7 +274,7 @@
     read(27) free_surface_normal
   endif
 
-! acoustic-elastic coupling surface
+  ! acoustic-elastic coupling surface
   read(27) num_coupling_ac_el_faces
   allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces), &
           coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
@@ -288,7 +288,7 @@
     read(27) coupling_ac_el_normal
   endif
 
-! acoustic-poroelastic coupling surface
+  ! acoustic-poroelastic coupling surface
   read(27) num_coupling_ac_po_faces
   allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
@@ -302,7 +302,7 @@
     read(27) coupling_ac_po_normal
   endif
 
-! elastic-poroelastic coupling surface
+  ! elastic-poroelastic coupling surface
   read(27) num_coupling_el_po_faces
   allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
@@ -320,7 +320,7 @@
     read(27) coupling_el_po_normal
   endif
 
-! MPI interfaces
+  ! MPI interfaces
   read(27) num_interfaces_ext_mesh
   allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
           nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
@@ -361,7 +361,7 @@
     read(27) c66store
   endif
 
-! inner / outer elements
+  ! inner / outer elements
   allocate(ispec_is_inner(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
   read(27) ispec_is_inner
@@ -408,7 +408,7 @@
   if( myrank == 0 ) then
     write(IMAIN,*) 'total poroelastic elements :',inum
   endif
-  
+
   ! debug
   !call sum_all_i(num_interfaces_ext_mesh,inum)
   !if(myrank == 0) then
@@ -416,7 +416,7 @@
   !  write(IMAIN,*)
   !endif
 
-! MPI communications
+  ! MPI communications
   allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
     buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
     buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
@@ -435,7 +435,7 @@
     request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
-! gets model dimensions
+  ! gets model dimensions
   minl = minval( xstore )
   maxl = maxval( xstore )
   call min_all_all_cr(minl,min_all)
@@ -483,7 +483,7 @@
     deallocate(rho_vp,rho_vs)
   endif
 
-! reads adjoint parameters
+  ! reads adjoint parameters
   call read_mesh_databases_adjoint()
 
   end subroutine read_mesh_databases
@@ -505,7 +505,7 @@
 
   integer :: ier
 
-! allocates adjoint arrays for elastic simulations
+  ! allocates adjoint arrays for elastic simulations
   if( ELASTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
     ! backward displacement,velocity,acceleration fields
     allocate(b_displ(NDIM,NGLOB_ADJOINT),stat=ier)
@@ -593,7 +593,7 @@
 
   endif
 
-! allocates adjoint arrays for acoustic simulations
+  ! allocates adjoint arrays for acoustic simulations
   if( ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
 
     ! backward potentials
@@ -650,8 +650,8 @@
 
   endif
 
-! ADJOINT moho
-! moho boundary
+  ! ADJOINT moho
+  ! moho boundary
   if( ELASTIC_SIMULATION ) then
     allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
     if( ier /= 0 ) stop 'error allocating array is_moho_top etc.'

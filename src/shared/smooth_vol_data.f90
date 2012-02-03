@@ -72,6 +72,8 @@ program smooth_vol_data
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: dummy_1
   real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: dummy_2
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: dummy_3
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),allocatable :: dummy_5
+  
   integer, dimension(:),allocatable :: idummy
   logical, dimension(:),allocatable :: ldummy
   integer, dimension(:,:,:),allocatable :: idummy_3
@@ -88,7 +90,6 @@ program smooth_vol_data
 
   integer :: i,j,k,ios,it,iglob,ier,ispec2,ispec
   integer :: iproc, node_list(300)
-  integer :: np
 
   character(len=256) :: arg(7), filename, indir, outdir
   character(len=256) :: prname, prname_lp
@@ -145,7 +146,7 @@ program smooth_vol_data
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
-  if (myrank == 0) print*,"smooth:"
+  if (myrank == 0) print*,"smooth_vol_data:"
   call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! reads arguments
@@ -220,7 +221,18 @@ program smooth_vol_data
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
-  if (sizeprocs /= NPROC) call exit_mpi(myrank,'Error total number of slices')
+  ! checks if number of MPI process as specified
+  if (sizeprocs /= NPROC) then
+    if( myrank == 0 ) then
+      print*,''
+      print*,'error: run xsmooth_vol_data with the same number of MPI processes '
+      print*,'       as specified in Par_file by NPROC when slices were created'
+      print*,''
+      print*,'for example: mpirun -np ',NPROC,' ./xsmooth_vol_data ...'
+      print*,''
+    endif
+    call exit_mpi(myrank,'Error total number of slices')
+  endif
   call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! GLL points weights
@@ -235,29 +247,33 @@ program smooth_vol_data
     enddo
   enddo
 
-! ---------------------
+  ! user output formatting
+  if( myrank == 0 ) then
+    print *, ' '
+  endif
 
-! reads mesh file
-
+  ! initializes flags
   ACOUSTIC_SIMULATION = .false.
   ELASTIC_SIMULATION = .false.
   POROELASTIC_SIMULATION = .false.
-  np = 0
 
-  iproc = myrank
-  if( myrank == 0 ) then
-    print *, ' '
-    !print *, 'Reading partition ', iproc
-  endif
+! ---------------------
 
-  ! gets number of elements and global points for this partition
-  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'//'external_mesh.bin'
-  !if( myrank == 0 ) print*,trim(prname_lp)
-
+  ! reads mesh file
+  !
+  ! needs to get point locations, jacobians and MPI neighbours
+    
+  ! opens external mesh file
+  write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
   open(unit=27,file=trim(prname_lp),&
           status='old',action='read',form='unformatted',iostat=ios)
-  if( ios /= 0 ) call exit_mpi(myrank, 'error reading external mesh file')
+  if( ier /= 0 ) then
+    print*,'error: could not open database '
+    print*,'path: ',trim(prname_lp)
+    call exit_mpi(myrank, 'error reading external mesh file')
+  endif
 
+  ! gets number of elements and global points for this partition          
   read(27) NSPEC_AB
   read(27) NGLOB_AB
 
@@ -273,10 +289,11 @@ program smooth_vol_data
   read(27) ystore
   read(27) zstore
 
-  ! reads in jacobian
   allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array dummy and jacobian'
+  
+  ! needs jacobian
   read(27) dummy ! xix
   read(27) dummy ! xiy
   read(27) dummy ! xiz
@@ -288,6 +305,8 @@ program smooth_vol_data
   read(27) dummy ! gammaz
   read(27) jacobian
 
+  ! now skips all until MPI section can be read in
+  
   ! reads in partiton neighbors
   read(27) dummy ! kappastore
   read(27) dummy ! mustore
@@ -304,13 +323,16 @@ program smooth_vol_data
   call any_all_l( ANY(ldummy), POROELASTIC_SIMULATION )
 
   deallocate(ldummy)
-
   allocate(dummy_1(NGLOB_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array dummy_1'
+
+  ! acoustic
   if( ACOUSTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass_acoustic
     read(27) dummy ! rhostore
   endif
+  
+  ! elastic
   if( ELASTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass
     if( OCEANS ) then
@@ -319,9 +341,40 @@ program smooth_vol_data
     read(27) dummy ! rho_vp
     read(27) dummy ! rho_vs
   endif
+  
+  ! poroelastic
+  if( POROELASTIC_SIMULATION ) then
+    read(27) dummy_1 ! rmass_solid_poroelastic
+    read(27) dummy_1 ! rmass_fluid_poroelastic
+    allocate(dummy_5(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    read(27) dummy_5 ! rhoarraystore
+    deallocate(dummy_5)    
+    allocate(dummy_5(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    read(27) dummy_5 ! kappaarraystore
+    deallocate(dummy_5)
+    read(27) dummy ! etastore
+    read(27) dummy ! tortstore    
+    allocate(dummy_5(6,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    read(27) dummy_5 ! permstore
+    deallocate(dummy_5)
+    read(27) dummy ! phistore
+    read(27) dummy ! rho_vpI
+    read(27) dummy ! rho_vpII
+    read(27) dummy ! rho_vsI    
+  endif
+  
   deallocate(dummy_1)
   deallocate(dummy)
 
+  ! checks simulation types are valid
+  if( (.not. ACOUSTIC_SIMULATION ) .and. &
+     (.not. ELASTIC_SIMULATION ) .and. &
+     (.not. POROELASTIC_SIMULATION ) ) then
+     close(27)
+     call exit_mpi(myrank,'error no simulation type defined')
+  endif
+
+  ! absorbing boundary surface
   read(27) idummy_a ! num_abs_boundary_faces
   allocate(idummy(idummy_a), &
           idummy_3(3,NGLLSQUARE,idummy_a), &
@@ -334,39 +387,85 @@ program smooth_vol_data
   read(27) dummy_3 ! abs_boundary_normal
   deallocate( idummy,idummy_3,dummy_2,dummy_3)
 
+  ! free surface
   read(27) idummy_a ! num_free_surface_faces
   allocate(idummy(idummy_a), &
           idummy_3(3,NGLLSQUARE,idummy_a), &
           dummy_2(NGLLSQUARE,idummy_a), &
           dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
   if( ier /= 0 ) stop 'error allocating array idummy etc.'
-  read(27) idummy ! free_surface_ispec
+  read(27) idummy   ! free_surface_ispec
   read(27) idummy_3 ! free_surface_ijk
-  read(27) dummy_2 ! free_surface_jacobian2Dw
-  read(27) dummy_3 ! free_surface_normal
+  read(27) dummy_2  ! free_surface_jacobian2Dw
+  read(27) dummy_3  ! free_surface_normal
   deallocate( idummy,idummy_3,dummy_2,dummy_3)
 
+  ! acoustic-elastic coupling surface
   read(27) idummy_a ! num_coupling_ac_el_faces
-  allocate(idummy(idummy_a), &
-          idummy_3(3,NGLLSQUARE,idummy_a), &
-          dummy_2(NGLLSQUARE,idummy_a), &
-          dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array idummy etc.'
-  read(27) idummy ! coupling_ac_el_ispec
-  read(27) idummy_3 ! coupling_ac_el_ijk
-  read(27) dummy_2 ! coupling_ac_el_jacobian2Dw
-  read(27) dummy_3 ! coupling_ac_el_normal
-  deallocate( idummy,idummy_3,dummy_2,dummy_3)
+  if( idummy_a > 0 ) then
+    allocate(idummy(idummy_a), &
+            idummy_3(3,NGLLSQUARE,idummy_a), &
+            dummy_2(NGLLSQUARE,idummy_a), &
+            dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'  
+    read(27) idummy   ! coupling_ac_el_ispec
+    read(27) idummy_3 ! coupling_ac_el_ijk
+    read(27) dummy_2  ! coupling_ac_el_jacobian2Dw
+    read(27) dummy_3  ! coupling_ac_el_normal
+    deallocate( idummy,idummy_3,dummy_2,dummy_3)
+  endif
 
+  ! acoustic-poroelastic coupling surface
+  read(27) idummy_a ! num_coupling_ac_po_faces
+  if( idummy_a > 0 ) then
+    allocate(idummy(idummy_a), &
+            idummy_3(3,NGLLSQUARE,idummy_a), &
+            dummy_2(NGLLSQUARE,idummy_a), &
+            dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'  
+    read(27) idummy   ! coupling_ac_po_ispec
+    read(27) idummy_3 ! coupling_ac_po_ijk
+    read(27) dummy_2  ! coupling_ac_po_jacobian2Dw
+    read(27) dummy_3  ! coupling_ac_po_normal
+    deallocate( idummy,idummy_3,dummy_2,dummy_3)
+  endif
+
+  ! elastic-poroelastic coupling surface
+  read(27) idummy_a ! num_coupling_el_po_faces
+  if( idummy_a > 0 ) then
+    allocate(idummy(idummy_a), &
+            idummy_3(3,NGLLSQUARE,idummy_a), &
+            dummy_2(NGLLSQUARE,idummy_a), &
+            dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'  
+    read(27) idummy   ! coupling_el_po_ispec
+    read(27) idummy   ! coupling_po_el_ispec    
+    read(27) idummy_3 ! coupling_el_po_ijk
+    read(27) idummy_3 ! coupling_po_el_ijk    
+    read(27) dummy_2  ! coupling_el_po_jacobian2Dw
+    read(27) dummy_3  ! coupling_el_po_normal
+    deallocate( idummy,idummy_3,dummy_2,dummy_3)
+  endif
+
+  ! needs MPI neighbours
+  ! MPI interfaces
   read(27) num_interfaces_ext_mesh ! num_interfaces_ext_mesh
-  read(27) idummy_a ! max_nibool_interfaces_ext_mesh
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh'
-  read(27) my_neighbours_ext_mesh
-
+  if( num_interfaces_ext_mesh > 0 ) then
+    read(27) idummy_a ! max_nibool_interfaces_ext_mesh
+    allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array my_neighbours_ext_mesh'
+    read(27) my_neighbours_ext_mesh
+    ! no more information is needed from external mesh files
+  endif
+  
+  ! we're done reading in mesh arrays
   close(27)
 
-  ! get the location of the center of the elements and local points
+! ---------------------
+  
+  ! for smoothing, we use cell centers to find and locate nearby elements
+  !
+  ! sets the location of the center of the elements and local points
   allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
@@ -375,6 +474,7 @@ program smooth_vol_data
           cz0(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array xl etc.'
 
+  ! sets element center location
   do ispec = 1, nspec_AB
     do k = 1, NGLLZ
       do j = 1, NGLLY
@@ -395,6 +495,7 @@ program smooth_vol_data
   deallocate(jacobian)
 
   ! sets up slices to process
+  node_list(:) = -1
   do i=1,num_interfaces_ext_mesh
     ! adds neighbors
     node_list(i) = my_neighbours_ext_mesh(i)
@@ -486,6 +587,7 @@ program smooth_vol_data
             cz(NSPEC_N),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xx etc.'
 
+    ! sets element center location
     do ispec = 1, nspec_N
       do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -526,7 +628,6 @@ program smooth_vol_data
 
     ! finds closest elements for smoothing
     !if(myrank==0) print*, '  start looping over elements and points for smoothing ...'
-
 
     ! loop over elements to be smoothed in the current slice
     do ispec = 1, nspec_AB
@@ -611,7 +712,7 @@ program smooth_vol_data
 
 !------------------
 
-! file output
+  ! file output
 
   ! smoothed kernel file name
   write(ks_file,'(a,i6.6,a)') trim(outdir)//'/proc',myrank,'_'//trim(filename)//'_smooth.bin'

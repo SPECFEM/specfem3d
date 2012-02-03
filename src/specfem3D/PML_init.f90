@@ -70,9 +70,6 @@ module PML_par
   ! mask ibool needed for time marching
   logical,dimension(:),allocatable :: PML_mask_ibool
 
-  ! PML damping flag
-  logical:: PML = .false.
-
 end module PML_par
 
 !--------
@@ -144,9 +141,6 @@ subroutine PML_initialize()
   real(kind=CUSTOM_REAL) :: dominant_wavelength,hdur_max
   integer :: count,ilayer,sign,ier
 
-  ! sets flag
-  PML = .true.
-
   ! user output
   if( myrank == 0 ) then
     write(IMAIN,*)
@@ -157,6 +151,7 @@ subroutine PML_initialize()
   ! PML element type array: 1 = face, 2 = edge, 3 = corner
   allocate(ispec_is_PML_inum(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ispec_is_PML_inum'
+  ispec_is_PML_inum(:) = 0
   num_PML_ispec = 0
 
   ! PML interface points between PML and "regular" region
@@ -439,6 +434,8 @@ subroutine PML_set_elements(temp_is_pml_elem,temp_ispec_pml_normal,new_elemts)
   allocate(PML_ispec(num_PML_ispec), &
           PML_normal(NDIM,num_PML_ispec),stat=ier)
   if( ier /= 0 ) stop 'error allocating array PML_ispec'
+  PML_normal(:,:) = 0.0_CUSTOM_REAL
+  PML_ispec(:) = 0
 
   ! stores PML elements flags and normals
   ispecPML = 0
@@ -888,7 +885,6 @@ subroutine PML_add_layer()
           iglob_pml_normal(NDIM,NGLOB_AB), &
           ispec_pml_normal(NDIM,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array is_pml_elem etc.'
-
   iglob_pml_normal(:,:) = 0._CUSTOM_REAL
   ispec_pml_normal(:,:) = 0._CUSTOM_REAL
 

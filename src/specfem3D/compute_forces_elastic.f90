@@ -142,7 +142,7 @@ subroutine compute_forces_elastic()
                             coupling_ac_el_jacobian2Dw, &
                             ispec_is_inner,phase_is_inner)
         else
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield        
+          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
           ! adoint definition: pressure^\dagger=potential^\dagger
           call compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
                             ibool,accel,-potential_acoustic_adj_coupling, &
@@ -167,7 +167,7 @@ subroutine compute_forces_elastic()
 
 
 ! poroelastic coupling
-    !print *,'entering poro counpling' 
+    !print *,'entering poro counpling'
     if( POROELASTIC_SIMULATION ) &
       call compute_coupling_elastic_po(NSPEC_AB,NGLOB_AB,ibool,&
                         displs_poroelastic,displw_poroelastic,&
@@ -188,7 +188,7 @@ subroutine compute_forces_elastic()
                         coupling_el_po_normal, &
                         coupling_el_po_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner)
-    !print *,'ok poro counpling' 
+    !print *,'ok poro counpling'
 
 ! adds source term (single-force/moment-tensor solution)
     call compute_add_sources_elastic( NSPEC_AB,NGLOB_AB,accel, &
@@ -271,7 +271,7 @@ subroutine compute_forces_elastic()
   endif
 
 ! updates velocities
-! Newark finite-difference time scheme with elastic domains:
+! Newmark finite-difference time scheme with elastic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)

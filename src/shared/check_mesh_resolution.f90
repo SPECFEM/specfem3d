@@ -151,7 +151,7 @@
       cmax_glob = max(cmax_glob,cmax)
 
       ! debug: for vtk output
-      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax      
+      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
     endif
 
     ! suggested timestep
@@ -331,7 +331,7 @@
 
   ! debug: for vtk output
   if( SAVE_MESH_FILES ) then
-    call create_name_database(prname,myrank,LOCAL_PATH) 
+    call create_name_database(prname,myrank,LOCAL_PATH)
     ! courant number
     if( DT_PRESENT ) then
       filename = trim(prname)//'res_courant_number'
@@ -345,7 +345,7 @@
                           xstore,ystore,zstore,ibool, &
                           tmp2,filename)
     deallocate(tmp1,tmp2)
-  endif  
+  endif
 
   end subroutine check_mesh_resolution
 

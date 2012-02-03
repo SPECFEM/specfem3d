@@ -25,7 +25,7 @@
 !=====================================================================
 
 
-subroutine compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                         scalar_field, vector_field_element,&
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -111,6 +111,6 @@ subroutine compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
     enddo
   enddo
 
-end subroutine compute_gradient
+  end subroutine compute_gradient
 
 

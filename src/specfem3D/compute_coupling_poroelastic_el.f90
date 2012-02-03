@@ -52,11 +52,11 @@
 
   integer :: NSPEC_AB,NGLOB_AB
 
-! displacements, etc 
+! displacements, etc
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic,&
                                                       displw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ
-  
+
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
@@ -67,12 +67,12 @@
 
 ! elastic-poroelastic coupling surface
   integer :: num_coupling_el_po_faces
-  real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces) 
+  real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces)
   real(kind=CUSTOM_REAL) :: coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces)
   integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
   integer :: coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)   
-  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)   
+  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
+  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)
 
 ! properties
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
@@ -101,7 +101,7 @@
   logical :: phase_is_inner
 
 ! local parameters
-  real(kind=CUSTOM_REAL) :: sigmap,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz 
+  real(kind=CUSTOM_REAL) :: sigmap,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz
   real(kind=CUSTOM_REAL) :: rhol_s,rhol_f,phil,tortl,rhol_bar
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
@@ -115,7 +115,7 @@
 ! local anisotropy parameters
   real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-  
+
   integer :: iface,igll,ispec_po,ispec_el,iglob,iglob_po,iglob_el
   integer :: i,j,k,l
 
@@ -137,7 +137,7 @@
 
 ! Jacobian matrix and determinant
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  
+
 ! loops on all coupling faces
   do iface = 1,num_coupling_el_po_faces
 
@@ -151,12 +151,12 @@
       do igll = 1, NGLLSQUARE
 
     !-----------------------
-    ! from the elastic side    
+    ! from the elastic side
     !-----------------------
         i = coupling_po_el_ijk(1,igll,iface)
         j = coupling_po_el_ijk(2,igll,iface)
         k = coupling_po_el_ijk(3,igll,iface)
-        
+
         ! gets global index of this common GLL point
         ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_elastic )
         iglob_el = ibool(i,j,k,ispec_el)
@@ -286,7 +286,7 @@
 
 
     !-----------------------
-    ! from the poroelastic side    
+    ! from the poroelastic side
     !-----------------------
         i = coupling_el_po_ijk(1,igll,iface)
         j = coupling_el_po_ijk(2,igll,iface)
@@ -473,12 +473,12 @@
         ! (note convention: pointing outwards of poroelastic element)
         nx = coupling_el_po_normal(1,igll,iface)
         ny = coupling_el_po_normal(2,igll,iface)
-        nz = coupling_el_po_normal(3,igll,iface)                   
-        
-        ! gets associated, weighted 2D jacobian 
+        nz = coupling_el_po_normal(3,igll,iface)
+
+        ! gets associated, weighted 2D jacobian
         ! (note: should be the same for poroelastic and elastic element)
         jacobianw = coupling_el_po_jacobian2Dw(igll,iface)
-        
+
         ! continuity of displacement and traction on global point
         !
         ! note: continuity of displacement is enforced after the velocity update
@@ -493,11 +493,11 @@
             ( (sigma_xz*nx + sigma_yz*ny + sigma_zz*nz)/2.d0 - phil/tortl*sigmap*nz )
 ! contribution to the fluid phase
 ! w = 0
-        
+
       enddo ! igll
 
     endif
-    
+
   enddo ! iface
 
 end subroutine compute_coupling_poroelastic_el
