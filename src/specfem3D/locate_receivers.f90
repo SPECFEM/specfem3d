@@ -76,11 +76,11 @@
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
   ! local parameters
-  
+
   ! for surface locating and normal computing with external mesh
   real(kind=CUSTOM_REAL), dimension(3) :: u_vector,v_vector,w_vector
   integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
-  
+
   integer, allocatable, dimension(:) :: ix_initial_guess,iy_initial_guess,iz_initial_guess
   integer iprocloop
   integer ios
@@ -145,7 +145,7 @@
 
   ! get MPI starting time
   time_start = wtime()
-  
+
   ! user output
   if(myrank == 0) then
     write(IMAIN,*)
@@ -161,7 +161,7 @@
   xmin=minval(xstore(:));          xmax=maxval(xstore(:))
   ymin=minval(ystore(:));          ymax=maxval(ystore(:))
   zmin=minval(zstore(:));          zmax=maxval(zstore(:))
-  
+
   ! loop limits
   if(FASTER_RECEIVERS_POINTS_ONLY) then
     imin_temp = 1; imax_temp = NGLLX
@@ -192,13 +192,13 @@
       do irec=1,nrec
         read(1,*,iostat=ios) station_name(irec),network_name(irec),llat,llon,lele,lbur
         if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
-      enddo   
-      close(1) 
+      enddo
+      close(1)
       ! master reads in available station information
       if( myrank == 0 ) then
         open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-              status='old',action='read',form='unformatted',iostat=ios)            
-        if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))      
+              status='old',action='read',form='unformatted',iostat=ios)
+        if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
         write(IMAIN,*) 'station details from SU_stations_info.bin'
         allocate(x_found(nrec),y_found(nrec),z_found(nrec))
         ! reads in station infos
@@ -206,7 +206,7 @@
         read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
         read(IOUT_SU) x_found,y_found,z_found
         read(IOUT_SU) nu
-        close(IOUT_SU)  
+        close(IOUT_SU)
         ! write the locations of stations, so that we can load them and write them to SU headers later
         open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
@@ -214,7 +214,7 @@
         do irec=1,nrec
           write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
         enddo
-        close(IOUT_SU)        
+        close(IOUT_SU)
         deallocate(x_found,y_found,z_found)
       endif
       ! main process broadcasts the results to all the slices
@@ -223,7 +223,7 @@
       call bcast_all_dp(xi_receiver,nrec)
       call bcast_all_dp(eta_receiver,nrec)
       call bcast_all_dp(gamma_receiver,nrec)
-      call bcast_all_dp(nu,NDIM*NDIM*nrec)    
+      call bcast_all_dp(nu,NDIM*NDIM*nrec)
       call sync_all()
       ! user output
       if( myrank == 0 ) then
@@ -233,9 +233,9 @@
         write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
         write(IMAIN,*)
         write(IMAIN,*) 'End of receiver detection - done'
-        write(IMAIN,*)              
+        write(IMAIN,*)
       endif
-      ! everything done 
+      ! everything done
       return
     endif
   endif
@@ -292,7 +292,7 @@
                        '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
       endif
     endif
-    
+
     ! get approximate topography elevation at source long/lat coordinates
     !   set distance to huge initial value
     distmin = HUGEVAL
@@ -872,10 +872,10 @@
         write(IMAIN,*) 'error locating station # ',irec,'    ',station_name(irec),network_name(irec)
         call exit_MPI(myrank,'error locating receiver')
       endif
-      
+
       ! limits user output if too many receivers
       if( nrec < 1000 .and. (.not. SU_FORMAT ) ) then
-      
+
       write(IMAIN,*)
       write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
 
@@ -974,7 +974,7 @@
     ! stores station infos for later runs
     if( SU_FORMAT ) then
       open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-            status='unknown',action='write',form='unformatted',iostat=ios)            
+            status='unknown',action='write',form='unformatted',iostat=ios)
       if( ios == 0 ) then
         write(IOUT_SU) islice_selected_rec,ispec_selected_rec
         write(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver

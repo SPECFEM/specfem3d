@@ -101,7 +101,7 @@
 
         ! continuity of displacement and pressure on global point
         !
-        ! note: newark time scheme together with definition of scalar potential:
+        ! note: Newmark time scheme together with definition of scalar potential:
         !          pressure = - chi_dot_dot
         !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
         !          pressure at time step [t + delta_t]

@@ -319,7 +319,7 @@ end subroutine compute_arrays_adjoint_source
 !!!    ! reads in adjoint source trace
 !!!    do itime = 1, NSTEP
 !!!
-!!!      ! things become a bit tricky because of the Newark time scheme at
+!!!      ! things become a bit tricky because of the Newmark time scheme at
 !!!      ! the very beginning of the time loop. however, when we read in the backward/reconstructed
 !!!      ! wavefields at the end of the first time loop, we can use the adjoint source index from 1 to NSTEP
 !!!      ! (and then access it in reverse NSTEP-it+1  down to 1, for it=1,..NSTEP; see compute_add_sources*.f90).

@@ -133,7 +133,7 @@ subroutine compute_forces_poroelastic()
                         coupling_el_po_normal, &
                         coupling_el_po_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner)
-    !print *,'ok elastic counpling'  
+    !print *,'ok elastic counpling'
 
       ! adjoint simulations
 !chris: TO DO
@@ -244,7 +244,7 @@ subroutine compute_forces_poroelastic()
   endif !adjoint
 
 ! updates velocities
-! Newark finite-difference time scheme with elastic domains:
+! Newmark finite-difference time scheme with elastic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)

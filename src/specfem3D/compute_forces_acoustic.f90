@@ -79,7 +79,8 @@ subroutine compute_forces_acoustic()
                         num_free_surface_faces,ispec_is_acoustic)
 
 
-  if(PML) call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
+  if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
+    call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic, &
@@ -88,6 +89,7 @@ subroutine compute_forces_acoustic()
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi2_t_dot_dot,&
                         chi3_dot_dot,chi4_dot_dot)
+  endif
 
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
@@ -122,7 +124,7 @@ subroutine compute_forces_acoustic()
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic )
 
-    if(PML) then
+    if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
       call compute_forces_acoustic_PML(NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         rhostore,ispec_is_acoustic,potential_acoustic, &
@@ -147,9 +149,10 @@ subroutine compute_forces_acoustic()
 
 ! absorbing boundaries
     if(ABSORBING_CONDITIONS) then
-      if( PML .and. PML_USE_SOMMERFELD ) then
-        ! adds a Sommerfeld condition on the domain's absorbing boundaries
-        call PML_acoustic_abs_boundaries(phase_is_inner,NSPEC_AB,NGLOB_AB,&
+      if(ABSORB_USE_PML) then
+        if( PML_USE_SOMMERFELD ) then
+          ! adds a Sommerfeld condition on the domain's absorbing boundaries
+          call PML_acoustic_abs_boundaries(phase_is_inner,NSPEC_AB,NGLOB_AB,&
                         abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
                         num_abs_boundary_faces, &
                         kappastore,ibool,ispec_is_inner, &
@@ -158,6 +161,7 @@ subroutine compute_forces_acoustic()
                         num_PML_ispec,PML_ispec,ispec_is_PML_inum,&
                         chi1_dot,chi2_t,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
+        endif
       else
         call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
                         potential_dot_dot_acoustic,potential_dot_acoustic, &
@@ -218,10 +222,10 @@ subroutine compute_forces_acoustic()
                         coupling_ac_po_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner)
         else
-      stop 'not implemented yet'  
+      stop 'not implemented yet'
         endif
         if( SIMULATION_TYPE == 3 ) &
-      stop 'not implemented yet'  
+      stop 'not implemented yet'
       endif
     endif
 
@@ -282,14 +286,14 @@ subroutine compute_forces_acoustic()
     b_potential_dot_dot_acoustic(:) = b_potential_dot_dot_acoustic(:) * rmass_acoustic(:)
 
 
-  if(PML) then
+  if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
     ! divides local contributions with mass term
     call PML_acoustic_mass_update(NSPEC_AB,NGLOB_AB,&
                         ispec_is_acoustic,rmass_acoustic,ibool,&
                         num_PML_ispec,PML_ispec,&
                         chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot)
 
-    ! Newark time scheme corrector terms
+    ! Newmark time scheme corrector terms
     call PML_acoustic_time_corrector(NSPEC_AB,ispec_is_acoustic,deltatover2,&
                         num_PML_ispec,PML_ispec,PML_damping_d,&
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
@@ -298,7 +302,7 @@ subroutine compute_forces_acoustic()
 
 
 ! update velocity
-! note: Newark finite-difference time scheme with acoustic domains:
+! note: Newmark finite-difference time scheme with acoustic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
 ! chi(t+delta_t) = chi(t) + delta_t chi_dot(t) + 1/2 delta_t**2 chi_dot_dot(t)
@@ -320,7 +324,8 @@ subroutine compute_forces_acoustic()
     b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + b_deltatover2*b_potential_dot_dot_acoustic(:)
 
   ! updates potential_dot_acoustic and potential_dot_dot_acoustic inside PML region for plotting seismograms/movies
-  if(PML) call PML_acoustic_update_potentials(NGLOB_AB,NSPEC_AB, &
+  if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
+    call PML_acoustic_update_potentials(NGLOB_AB,NSPEC_AB, &
                         ibool,ispec_is_acoustic, &
                         potential_dot_acoustic,potential_dot_dot_acoustic,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -331,6 +336,7 @@ subroutine compute_forces_acoustic()
                         chi1,chi2,chi2_t,chi3,&
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi3_dot_dot,chi4_dot_dot)
+  endif
 
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB, &
@@ -343,7 +349,7 @@ subroutine compute_forces_acoustic()
                             + deltat * potential_dot_acoustic(:) &
                             + deltatsqover2 * potential_dot_dot_acoustic(:)
   endif
-  
+
   ! adjoint simulations
   if (SIMULATION_TYPE == 3) &
     call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT, &
@@ -352,7 +358,8 @@ subroutine compute_forces_acoustic()
                         num_free_surface_faces,ispec_is_acoustic)
 
 
-  if(PML) call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
+  if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
+    call PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces, &
@@ -362,6 +369,7 @@ subroutine compute_forces_acoustic()
                         chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
                         chi1_dot_dot,chi2_t_dot_dot,&
                         chi3_dot_dot,chi4_dot_dot)
+  endif
 
 end subroutine compute_forces_acoustic
 

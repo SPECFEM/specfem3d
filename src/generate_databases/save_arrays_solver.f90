@@ -307,7 +307,7 @@
     write(IOUT) coupling_el_po_normal
   endif
 
-!MPI interfaces
+  !MPI interfaces
   max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
 
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
