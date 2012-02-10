@@ -1,5 +1,13 @@
 #!/usr/bin/env python
-
+#############################################################
+#
+# script uses ACIS surface formats
+#
+# note: this script seems to work with CUBIT version > 12.2
+#          meshing takes about 15 minutes (without refinement)
+#
+#
+#############################################################
 import cubit
 import boundary_definition
 import cubit2specfem3d
@@ -7,52 +15,46 @@ import cubit2specfem3d
 import os
 import sys
 import os.path
+import time
 
+# time stamp
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+
+# working directory
+cwd = os.getcwd()
+print "#current working directory: " + str(cwd)
+if cwd[len(cwd)-14:len(cwd)] != "Mount_StHelens":
+  print ""
+  print "#please run this script from example directory: SPECFEM3D/example/Mount_StHelens/"
+  print ""
+
+cubit.cmd('version')
 cubit.cmd('reset')
-os.system('rm -f topo_brick.stl topo_vol.stl topo_vol2.stl')
 
 print "running meshing script..."
 print ""
-print "note: this script uses topography surface in STL format"
-print "         meshing will take around 2 min"
+print "note: this script uses topography surface in ACIS format"
+print "         meshing will take around 15 min"
 print ""
 
-# note: this is a workaround to use STL file formats rather than ACIS formats.
-#          for our purpose to create a simple mesh, this STL formats are faster 
+# uses developer commands
+cubit.cmd('set developer commands on')
+cubit.cmd('set import mesh tolerance 1')
 
 #############################################################
 #
-# 1. step: creates temporary brick volume in STL format
+# 0. step: loading topography surface
 #
 #############################################################
-
-# creates temporary brick volume and exports in STL format
-# new brick volume (depth will become 1/2 * 20,000 = 10,000 m)
-cubit.cmd('brick x 15000 y 22000 z 20000')
-# moves volume to UTM coordinates of topography surface
-cubit.cmd('volume 1 move x 561738. y 5116370. z 0 ')
-# saves as STL body
-cubit.cmd('export stl ascii "topo_brick.stl" overwrite')
-# clear 
-cubit.cmd('reset')
-#checks if new file available
-if not os.path.exists("topo_brick.stl"):
-  print ""
-  print "error creating new STL file topo_brick.stl, please check manually..."
-  print ""
-  cubit.cmd('pause')
-
-#############################################################
-#
-# 2. step: imports topography surface and brick volume in STL format
-#
-#############################################################
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#loading topo surface..."
 
 # topography surface
-if os.path.exists("topo.stl"):
+if os.path.exists("topo.cub"):
   print "opening existing topography surface"
+  # topography surface
   # previously run, just reopen the cubit file
-  cubit.cmd('import stl "topo.stl" merge stitch')
+  cubit.cmd('open "topo.cub"')
 else:
   # topo surface doesn't exist yet, this creates it:
   print "reading in topography surface"
@@ -61,72 +63,145 @@ else:
   # clear 
   cubit.cmd('reset')
   # now reopen the cubit file
-  cubit.cmd('import stl "topo.stl" merge stitch')
-# re-opens brick in STL format
-cubit.cmd('import stl "topo_brick.stl" merge stitch')
-# imprints topography surfaces into brick volume, creates connected surfaces
-# note: this is a develop feature
-cubit.cmd('set developer commands on')
+  cubit.cmd('open "topo.cub"')
+
+# healing the surface...
+cubit.cmd('Auto_clean volume 1 small_surfaces small_curve_size 10')
+cubit.cmd('regularize volume 1')
+
+#############################################################
+#
+# 1. step: creates temporary brick volume
+#
+#############################################################
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#creating brick..."
+
+# creates temporary brick volume 
+# new brick volume (depth will become 1/2 * 20,000 = 10,000 m)
+cubit.cmd('brick x 15000 y 22000 z 20000')
+
+# moves volume to UTM coordinates of topography surface
+cubit.cmd('volume 2 move x 561738. y 5116370. z 0 ')
+
+# temporary backup
+cubit.cmd('save as "topo_1.cub" overwrite')
+
+#############################################################
+#
+# 2. step: creates volume with topography surface
+#
+#############################################################
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#creating volume with topography..."
+
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#imprinting volume, this will take around 1 min, please be patience..."
+cubit.cmd('merge all')
 cubit.cmd('imprint all')
-# exports as STL only surfaces which will create new volume
-cubit.cmd('export stl ascii "topo_vol.stl" surface 9 5 6 8 11 13 overwrite')
-# clear 
+
+# exports only surfaces which will create single volume
+cubit.cmd('export acis "topo_2.acis" surface 3 10 12 14 15 9 ascii overwrite')
+
+# backup
+cubit.cmd('save as "topo_2.cub" overwrite')
+
+#############################################################
+#
+# 3. step: manipulate ACIS file to create a single volume
+#
+#############################################################
+# checks if new file available
+if not os.path.exists("topo_2.acis"):
+  print ""
+  print "error creating new volume, please check manually..."
+  print ""
+  cubit.cmd('pause')
+# clears workspace
 cubit.cmd('reset')
-#checks if new file available
-if not os.path.exists("topo_vol.stl"):
-  print ""
-  print "error creating new STL file topo_vol.stl, please check manually..."
-  print ""
-  cubit.cmd('pause')
+
+# imports surfaces and merges to single volume
+cubit.cmd('import acis "topo_2.acis" ascii merge_globally')
+
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#creating new volume, this will take another 2 min..."
+cubit.cmd('create volume surface all heal')
+
+# backup
+cubit.cmd('save as "topo_3.cub" overwrite')
 
 #############################################################
 #
-# 3. step: manipulate STL file to create a single volume
+# 4. step: create mesh 
 #
 #############################################################
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#initial meshing..."
+print "#(will take around 7 min)"
 
-os.system('awk \'BEGIN{print \"solid Body_1\";}{if($0 !~ /solid/) print $0;}END{print \"endsolid Body_1\";}\' topo_vol.stl > topo_vol2.stl')
-#checks if new file available
-if not os.path.exists("topo_vol2.stl"):
-  print ""
-  print "error creating new STL file topo_vol2.stl, please check manually..."
-  print ""
-  cubit.cmd('pause')
-  
-#############################################################
-#
-# 4. step: import STL volume and create mesh 
-#
-#############################################################
+# optional: refining mesh at surface
+#   
+# note: refining using ACIS surface format takes a long time ... (up to 3 hours)
+DO_TOPO_REFINEMENT = False
 
-# re-opens new volume in STL format
-cubit.cmd('import stl "topo_vol2.stl" merge stitch')
 # Meshing the volumes
-elementsize = 2000.0
-cubit.cmd('volume all size '+str(elementsize))
-# sets meshing type
-# uses a sweep algorithm in vertical (Z) direction
-cubit.cmd('volume all scheme sweep Vector 0 0 1')
-# initial coarse mesh
-cubit.cmd('mesh volume all')
-# draw/update mesh lines for visualization
-# this will draw also the tripling layer mesh lines
-cubit.cmd('draw volume all')
-# optional smoothing to improve mesh quality (takes up to 5 min)
-cubit.cmd('volume all smooth scheme condition number beta 1.0 cpu 5')
-cubit.cmd('smooth volume all')
-# refines global mesh
-cubit.cmd('refine volume 1 numsplit 1')
-cubit.cmd('draw volume all')
-# optional smoothing
-cubit.cmd('smooth volume all')
-# refines elements at topography surface
-cubit.cmd('refine surface 2 numsplit 1 bias 1.0 depth 1')
-cubit.cmd('draw volume all')
-# optional smoothing to improve mesh quality (takes up all 10 min if beta is 2.0)
-cubit.cmd('volume all smooth scheme condition number beta 2.3 cpu 10')
-cubit.cmd('smooth volume all')
-cubit.cmd('draw volume all')
+if DO_TOPO_REFINEMENT == False:
+  elementsize = 500.0
+  cubit.cmd('volume all size '+str(elementsize))
+  # note: we will mesh first the topography surface, then sweep down the mesh
+  # topography surface
+  #cubit.cmd('control skew surface 12')
+  cubit.cmd('surface 12 submap smooth off')
+  cubit.cmd('surface 12 scheme submap')
+  cubit.cmd('mesh surface 12')
+  # propagates mesh down for whole volume
+  cubit.cmd('volume 1  redistribute nodes off')
+  cubit.cmd('volume 1 scheme sweep source surface 12 target surface 7')
+  cubit.cmd('mesh volume all')
+  # draw/update mesh lines for visualization
+  # this will draw also the tripling layer mesh lines in case
+  cubit.cmd('draw volume all')
+else:
+  # optional surface refinement
+  # time stamp
+  print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+  print "#refining surface mesh..."
+  print "#(will take around 3 hours)"
+  # starts with a crude mesh
+  elementsize = 2000.0
+  cubit.cmd('volume all size '+str(elementsize))
+  # sets meshing type
+  # explicitly sets scheme for topography surface
+  cubit.cmd('surface 12 submap smooth off')
+  cubit.cmd('surface 12 scheme submap')  
+  # uses a sweep algorithm in vertical (Z) direction
+  cubit.cmd('volume all scheme sweep Vector 0 0 1')
+  # initial coarse mesh
+  cubit.cmd('mesh volume all')  
+  # optional smoothing to improve mesh quality (takes up to 5 min)
+  cubit.cmd('volume all smooth scheme condition number beta 1.0 cpu 5')
+  cubit.cmd('smooth volume all')
+  # refines global mesh
+  cubit.cmd('refine volume 1 numsplit 1')
+  cubit.cmd('draw volume all')
+  # optional smoothing
+  cubit.cmd('smooth volume all')
+  # refines elements at topography surface
+  cubit.cmd('refine surface 12 numsplit 1 bias 1.0 depth 1')
+  cubit.cmd('draw volume all')
+  # optional smoothing to improve mesh quality (takes up to 10 min)
+  cubit.cmd('volume all smooth scheme condition number beta 2.3 cpu 10')
+  cubit.cmd('smooth volume all')
+  # displays final mesh
+  cubit.cmd('draw volume all')
+
+
+# time stamp
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+print "#done meshing..."
+
+# backup
+cubit.cmd('save as "topo_4.cub" overwrite')
 
 #### End of meshing
 
@@ -151,8 +226,6 @@ cubit.cmd('block 1 attribute index 6 0 ')      # anisotropy_flag
 # optional saves backups
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
 cubit.cmd('save as "meshing.cub" overwrite')
-# cleanup
-os.system('rm -f topo_brick.stl topo_vol.stl topo_vol2.stl')
 
 #### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT
 
@@ -160,3 +233,6 @@ os.system('mkdir -p MESH')
 cubit2specfem3d.export2SESAME('MESH')
 
 # all files needed by SCOTCH are now in directory MESH
+
+# time stamp
+print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
