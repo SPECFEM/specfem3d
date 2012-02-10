@@ -570,7 +570,7 @@
           ! determines factor +/-1 depending on sign of moment tensor
           ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
           !   Geophysics, 74 (6), WCC177-WCC188.)
-          pm1_source_encoding(isource) = sign(1.0,Mxx(isource))
+          pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
 
           ! source array interpolated on all element gll points (only used for non point sources)
           call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&
@@ -748,6 +748,7 @@
 
 
   end subroutine setup_receivers_precompute_intp
+
 !
 !-------------------------------------------------------------------------------------------------
 !
