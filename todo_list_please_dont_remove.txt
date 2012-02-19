@@ -2,13 +2,15 @@
 To-do list for SPECFEM3D, by Dimitri Komatitsch
 -----------------------------------------------
 
-- add a checkpointing/restarting system with CRC-32 as in SPECFEM3D_GLOBE/tags/v4.1.0_beta_merged_mesher_solver_non_blocking_MPI/src
+- check if sigma_xz is inverted with sigma_zx and so on in compute_forces; usually this does not matter because the stress tensor is symmetric, but for Cosserat or for some C-PML formulations this could matter
+
+- add C-PML
+
+- automatic detection (coloring / flags) of the PML absorbing elements in CUBIT; read this from input files in the solver
 
 - Partitioning should be done using a parallel partitioner such as PT-SCOTCH.
 Developers and users in Switerland recently mentioned that using a serial domain decomposer such as SCOTCH was very slow for large meshes.
 Reading the (distributed or not) mesh, building the graph, distributing, and partitioning is not a problem, but redistributing the graph/mesh according to the partitioning obtained might well be. Should add support for PT-Scotch (i.e. decompose the mesh in parallel rather than serial; this will be required for very large meshes, too large to fit on a serial machine). Serial domain decomposition is already a limitation in the case of regional seismology, because serial meshes can be very large. One option would be to switch to ParMetis or PT-Scotch, i.e., the parallel version of these domain decomposition packages. I know that PT-Scotch works great and is pretty fast. Another option is ZOLTAN from Sandia National Labs, but I do not know if it is serial or parallel. I think adding support for PT-Scotch should not be too difficult if we give it a very simple initial "analytical" partition, e.g. if we have NSPEC spectral elements and NPROC domains, put the first 1..NPROC elements in domain 0, then NPROC+1...2*NPROC in domain 1 etc. That's your initial domain decomposition; then give that to PT-Scotch and ask it to optimize by moving elements between partitions.
-
-- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back; that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it. 
 
 - there is something in SPECFEM3D that we noticed a few years ago
 regarding attenuation but never fixed: on page 813 of our 1999 paper
@@ -40,6 +42,10 @@ That's easy to fix but I have no time for now. Let us fix that in the future.
 It will only make a very small difference in the final seismograms therefore
 the current code with the bug can be used without any major problem.
 
+- add a checkpointing/restarting system with CRC-32 as in SPECFEM3D_GLOBE/tags/v4.1.0_beta_merged_mesher_solver_non_blocking_MPI/src
+
+- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back; that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it. 
+
 - we could add support for the TetGen mesh creation package, and cut each
 tetrahedron into four hexahedra using the barycenter. This could help design
 meshes for sedimentary basins, in particular near basin edges. Celine Blitz is probably going to work on that in Oct, Nov and Dec 2010.
@@ -58,10 +64,6 @@ It would work for SPECFEM3D as well (with minor modifications).
 
 - put a flag to choose between a Ricker source and a Heaviside source when a force source is used
 (we can cut and paste the Heaviside implementation from the case of a CMT source)
-
-- automatic detection (coloring / flags) of the PML absorbing elements in CUBIT; read this from input files in the solver
-
-- add C-PML
 
 - etudier comment lire un maillage CUBIT stocke au format natif de CUBIT (Exodus, base sur netCDF) depuis SPECFEM3D. On pourrait utiliser la commande "ncdump" dans CUBIT si necessaire d'apres Emanuele Casarotti. Une autre option serait d'utiliser le format de stockage ABAQUS dans CUBIT.
 
