@@ -257,6 +257,16 @@
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) write(IOUT,*) &
            'Max norm U (backward) in all slices = ',b_Usolidnorm_all
+    ! estimation
+    write(IOUT,*) 'Time steps done = ',it,' out of ',NSTEP
+    write(IOUT,*) 'Time steps remaining = ',NSTEP - it    
+    write(IOUT,*) 'Estimated remaining time in seconds = ',t_remain
+    write(IOUT,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+             ihours_remain,iminutes_remain,iseconds_remain    
+    write(IOUT,*) 'Estimated total run time in seconds = ',t_total
+    write(IOUT,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
+             ihours_total,iminutes_total,iseconds_total
+    write(IOUT,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'           
     close(IOUT)
 
 

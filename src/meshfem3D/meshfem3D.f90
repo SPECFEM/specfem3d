@@ -345,11 +345,12 @@
 ! get interface data from external file to count the spectral elements along Z
   if(myrank == 0) then
      write(IMAIN,*) 'Reading interface data from file ',&
-          MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
-          ' to count the spectral elements'
+      MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
+      ' to count the spectral elements'
   end if
 
-  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE,status='old')
+  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE, &
+      status='old')
 
   max_npx_interface  = -1
   max_npy_interface  = -1
