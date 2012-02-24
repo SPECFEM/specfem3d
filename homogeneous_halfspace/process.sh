@@ -42,8 +42,8 @@ cd $currentdir
 cd bin/
 rm -f ./x*
 cp ../../../bin/xdecompose_mesh_SCOTCH ./
-cp ../../../bin/xgenerate_databases
-cp ../../../bin/xspecfem3D
+cp ../../../bin/xgenerate_databases ./
+cp ../../../bin/xspecfem3D ./
 cd ../
 
 # decomposes mesh
