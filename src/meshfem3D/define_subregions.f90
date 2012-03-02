@@ -72,7 +72,7 @@
      iy1=2*(subregions(isubregion,3) - iproc_eta*NEX_PER_PROC_ETA - 1)
      if(iy1 < 0) iy1 = 0
      iy2=2*(subregions(isubregion,4) - iproc_eta*NEX_PER_PROC_ETA - 1)
-     if(iy2 > 2*(NEX_PER_PROC_XI - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
+     if(iy2 > 2*(NEX_PER_PROC_ETA - 1)) iy2 = 2*(NEX_PER_PROC_ETA - 1)
      diy=2
 
      ir1=2*(subregions(isubregion,5) - 1)
