@@ -31,15 +31,15 @@ contains
 
 
   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-       xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
-       NGLOB_AB,npointot, &
-       NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
-       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-       NPROC_XI,NPROC_ETA, &
-       nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
-       myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-       CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-       USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                               xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
+                               NGLOB_AB,npointot, &
+                               NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
+                               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                               NPROC_XI,NPROC_ETA, &
+                               nsubregions,subregions,nblayers,ner_layer,NMATERIALS,material_properties, &
+                               myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                               CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                               USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
     ! create the different regions of the mesh
 
@@ -59,7 +59,7 @@ contains
     integer npointot
 
     logical USE_REGULAR_MESH
-    logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
+    logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
     integer NDOUBLINGS
     integer, dimension(2) :: ner_doublings
@@ -365,6 +365,7 @@ contains
     ! check that we assign a material to each element
     if(any(true_material_num(:) == -1000)) stop 'Element of undefined material found'
 
+    ! puts x,y,z locations into 1D arrays
     do ispec=1,nspec
        ieoff = NGLLCUBE*(ispec-1)
        ilocnum = 0
@@ -380,12 +381,23 @@ contains
        enddo
     enddo
 
+    ! sorts xp,yp,zp in lexicographical order (increasing values)
     call get_global(nspec,xp,yp,zp,iglob,locval,ifseg,nglob,npointot,UTM_X_MIN,UTM_X_MAX)
+
+    ! checks nglob range with pre-computed values
+    ! note: if mesh squeezes elements such that we can't distinguish two close-by mesh points anymore
+    !          the total number of mesh points might have changed
+    if(nglob /= NGLOB_AB) then
+       print*,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
+       call exit_MPI(myrank,'incorrect global number, please check mesh input parameters')
+    end if
 
     ! put in classical format
     allocate(nodes_coords(nglob,3),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_coords'
-
+    nodes_coords(:,:) = 0.0d0
+    ibool(:,:,:,:) = 0
+    
     do ispec=1,nspec
        ieoff = NGLLCUBE*(ispec-1)
        ilocnum = 0
@@ -401,27 +413,38 @@ contains
           enddo
        enddo
     enddo
-
-    if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) then
-       print*,maxval(ibool(:,:,:,:)) ,NGLOB_AB
-       call exit_MPI(myrank,'incorrect global numbering')
+    
+    ! checks ibool range
+    if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
+       print*,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
+       call exit_MPI(myrank,'incorrect global ibool numbering')
     end if
 
-    call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,nspec,nglob,prname,nodes_coords,ibool,true_material_num)
+    ! outputs mesh file for visualization
+    call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                            nspec,nglob, &
+                            prname,nodes_coords,ibool,true_material_num)
 
+    ! stores boundary informations
     call store_boundaries(myrank,iboun,nspec, &
          ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
          nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
          NSPEC2D_BOTTOM,NSPEC2D_TOP, &
          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
+    ! checks mesh resolution
     VP_MAX = maxval(material_properties(:,2))
     call check_mesh_quality(myrank,VP_MAX,nglob,nspec,nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool)
 
-      call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta,NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
-           ibool,nodes_coords,true_material_num,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
-           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
-           NMATERIALS,material_properties)
+    ! saves mesh as databases file
+    call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
+                      NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                      ibool,nodes_coords,true_material_num, &
+                      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
+                      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
+                      ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                      NMATERIALS,material_properties)
+
 
   end subroutine create_regions_mesh
 
