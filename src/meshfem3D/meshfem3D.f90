@@ -239,7 +239,7 @@
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
 ! Mesh files for visualization
-  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
+  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
 ! doublings parameters
   integer NDOUBLINGS
@@ -331,12 +331,12 @@
 
  ! nullify(subregions,material_properties)
   call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-        LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
-        CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                          UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                          NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
+                          LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
+                          INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
+                          CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                          USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
     stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
@@ -393,12 +393,12 @@
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-      NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-      NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-      NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-      NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
-      USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                        NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+                        NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+                        NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+                        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                        NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
+                        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -743,15 +743,15 @@
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-           xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
-           NGLOB_AB,npointot, &
-           NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
-           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-           NPROC_XI,NPROC_ETA, &
-           NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
-           myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
-           CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                         xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
+                         NGLOB_AB,npointot, &
+                         NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
+                         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                         NPROC_XI,NPROC_ETA, &
+                         NSUBREGIONS,subregions,number_of_layers,ner_layer,NMATERIALS,material_properties, &
+                         myrank,LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
+                         CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                         USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   if(myrank == 0) then
 ! compare to exact theoretical value (bottom is always flat)

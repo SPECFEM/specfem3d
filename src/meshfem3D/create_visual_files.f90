@@ -25,15 +25,16 @@
 !=====================================================================
 
 
-  subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,nspec,nglob,&
-       prname,nodes_coords,ibool,true_material_num)
+  subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES,&
+                                nspec,nglob,&
+                                prname,nodes_coords,ibool,true_material_num)
 
   implicit none
 
   include "constants.h"
 
 ! Mesh files for visualization
-  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
+  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
 ! number of spectral elements in each block
   integer nspec
@@ -51,7 +52,6 @@
 
 !  ---------------
   integer i,ipoin,ispec
-
 
   if(CREATE_ABAQUS_FILES) then
 
@@ -71,7 +71,7 @@
              ibool(2,2,2,ispec)
      end do
      close(64)
-
+     
   end if
 
 
@@ -127,7 +127,49 @@
 
   end if
 
+  if( CREATE_VTK_FILES ) then
+    ! vtk file output    
+    open(66,file=prname(1:len_trim(prname))//'.vtk',status='unknown')
+    write(66,'(a)') '# vtk DataFile Version 3.1'
+    write(66,'(a)') 'material model VTK file'
+    write(66,'(a)') 'ASCII'
+    write(66,'(a)') 'DATASET UNSTRUCTURED_GRID'
+    write(66, '(a,i12,a)') 'POINTS ', nglob, ' float'
+    do ipoin = 1,nglob
+      write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
+    enddo    
+    write(66,*) ""
+
+    ! note: indices for vtk start at 0
+    write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+    do ispec=1,nspec
+      write(66,'(9i12)') 8, &
+            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1,&
+            ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
+    enddo
+    write(66,*) ""
+
+    ! type: hexahedrons
+    write(66,'(a,i12)') "CELL_TYPES ",nspec
+    write(66,*) (12,ispec=1,nspec)
+    write(66,*) ""
+
+    write(66,'(a,i12)') "CELL_DATA ",nspec
+    write(66,'(a)') "SCALARS elem_val float"
+    write(66,'(a)') "LOOKUP_TABLE default"
+    do ispec = 1,nspec
+      write(66,*) true_material_num(ispec)
+    enddo
+    write(66,*) ""
+    close(66)
+  
+  endif
+
+
+
   call sync_all()
 
 
   end subroutine create_visual_files
+
+

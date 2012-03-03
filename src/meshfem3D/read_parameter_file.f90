@@ -28,12 +28,12 @@ module readParFile
 contains
 
   subroutine read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-        UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-        NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-        LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-        INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
-        CREATE_ABAQUS_FILES,CREATE_DX_FILES,&
-        USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+                                UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
+                                NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
+                                LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
+                                INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+                                CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
+                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   implicit none
 
@@ -45,7 +45,7 @@ contains
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
-  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES
+  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
 
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
@@ -149,6 +149,8 @@ contains
   call read_value_logical(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
   if(err_occurred() /= 0) return
   call read_value_logical(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'mesher.CREATE_DX_FILES')
+  if(err_occurred() /= 0) return
+  call read_value_logical(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'mesher.CREATE_VTK_FILES')
   if(err_occurred() /= 0) return
 
 ! file in which we store the databases
