@@ -32,6 +32,7 @@ NZ_DOUGLING_2                   = 9
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .true.
 CREATE_DX_FILES                 = .true.
+CREATE_VTK_FILES                = .false.
 
 # path to store the databases files
 LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
