@@ -203,8 +203,8 @@ subroutine compute_interpolated_dva_ac(displ_element,veloc_element,&
           dzd = dzd + hlagrange*displ_element(3,i,j,k)
           ! velocity
           vxd = vxd + hlagrange*veloc_element(1,i,j,k)
-          vyd = vxd + hlagrange*veloc_element(2,i,j,k)
-          vzd = vxd + hlagrange*veloc_element(3,i,j,k)
+          vyd = vyd + hlagrange*veloc_element(2,i,j,k)
+          vzd = vzd + hlagrange*veloc_element(3,i,j,k)
 
           ! x component -> acoustic potential
           axd = axd + hlagrange*potential_acoustic(iglob)
