@@ -37,7 +37,7 @@ module decompose_mesh_SCOTCH
   integer :: nparts ! e.g. 4 for partitioning for 4 CPUs or 4 processes
 
 ! mesh arrays
-  integer(long) :: nspec
+  integer :: nspec
   integer, dimension(:,:), allocatable  :: elmnts
   integer, dimension(:,:), allocatable  :: mat
   integer, dimension(:), allocatable  :: part
@@ -62,13 +62,13 @@ module decompose_mesh_SCOTCH
   integer  ::  ninterfaces
   integer  :: my_ninterface
 
-  integer(long)  :: nsize           ! Max number of elements that contain the same node.
+  integer  :: nsize           ! Max number of elements that contain the same node.
   integer  :: nb_edges
 
   integer  :: ispec, inode
   integer  :: ngnod
   integer  :: max_neighbour         ! Real maximum number of neighbours per element
-  integer(long)  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
+  integer  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
 
   integer  :: ipart, nnodes_loc, nspec_loc
   integer  :: num_elmnt, num_node, num_mat
