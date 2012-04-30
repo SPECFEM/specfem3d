@@ -6,6 +6,8 @@ To-do list for SPECFEM3D, by Dimitri Komatitsch
 
 - add C-PML
 
+- add an option to use a point source (a force) instead of a CMTSOLUTION, as suggested by Peng Chao from China.
+
 - automatic detection (coloring / flags) of the PML absorbing elements in CUBIT; read this from input files in the solver
 
 - Partitioning should be done using a parallel partitioner such as PT-SCOTCH.
