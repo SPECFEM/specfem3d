@@ -55,9 +55,9 @@ contains
   ! Creating dual graph (adjacency is defined by 'ncommonnodes' between two elements).
   !-----------------------------------------------
   subroutine mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts,&
-                        xadj, adjncy, &
-                        nnodes_elmnts, nodes_elmnts, &
-                        max_neighbour, ncommonnodes)
+                                    xadj, adjncy, &
+                                    nnodes_elmnts, nodes_elmnts, &
+                                    max_neighbour, ncommonnodes)
 
     integer(long), intent(in)  :: nelmnts
     integer, intent(in)  :: nnodes

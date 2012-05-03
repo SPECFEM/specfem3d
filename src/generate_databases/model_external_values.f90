@@ -62,8 +62,6 @@
   implicit none
 
   include "constants.h"
-  ! standard include of the MPI library
-  include 'mpif.h'
 
   integer :: myrank
 
@@ -83,7 +81,7 @@
   !if(myrank == 0) call read_external_model()
 
   ! broadcast the information read on the master to the nodes
-  !call MPI_BCAST(MEXT_V%dvs,size(MEXT_V%dvs),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
+  !call bcast_all_dp(MEXT_V%dvs, size(MEXT_V%dvs))
 
   end subroutine model_external_broadcast
 
