@@ -187,7 +187,15 @@
   call world_size(sizeprocs)
 
   ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+  if(sizeprocs /= NPROC) then
+    if( myrank == 0 ) then
+      write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
+      write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
+      print*, 'error: number of processors supposed to run on: ',NPROC
+      print*, 'error: number of MPI processors actually run on: ',sizeprocs      
+    endif
+    call exit_MPI(myrank,'wrong number of MPI processes')
+  endif
 
   ! check that we have at least one source
   if(NSOURCES < 1) call exit_MPI(myrank,'need at least one source')

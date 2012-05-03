@@ -193,11 +193,16 @@ $O/assemble_MPI_scalar.o:  ${SHARED}/constants.h ${SHARED}/assemble_MPI_scalar.f
 $O/parallel.o:  ${SHARED}/constants.h ${SHARED}/parallel.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o ${SHARED}/parallel.f90
 
+###
+###
+###
+
 $O/model_external_values.o:  ${SHARED}/constants.h model_external_values.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
 
 $O/model_tomography.o:  ${SHARED}/constants.h model_tomography.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/model_tomography.o model_tomography.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_tomography.o model_tomography.f90
+
 
 ###
 ### serial compilation without optimization

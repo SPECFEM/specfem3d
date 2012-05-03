@@ -386,7 +386,9 @@
   if(sizeprocs /= NPROC) then
     if( myrank == 0 ) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
-      write(IMAIN,*) 'error: number of processors actually run on: ',sizeprocs
+      write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
+      print*, 'error: number of processors supposed to run on: ',NPROC
+      print*, 'error: number of MPI processors actually run on: ',sizeprocs      
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif

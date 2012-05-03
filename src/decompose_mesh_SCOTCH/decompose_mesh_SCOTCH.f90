@@ -37,11 +37,11 @@ module decompose_mesh_SCOTCH
   integer :: nparts ! e.g. 4 for partitioning for 4 CPUs or 4 processes
 
 ! mesh arrays
-  integer :: nspec
+  integer(long) :: nspec
   integer, dimension(:,:), allocatable  :: elmnts
   integer, dimension(:,:), allocatable  :: mat
   integer, dimension(:), allocatable  :: part
-
+  
   integer :: nnodes
   double precision, dimension(:,:), allocatable  :: nodes_coords
 
@@ -62,13 +62,13 @@ module decompose_mesh_SCOTCH
   integer  ::  ninterfaces
   integer  :: my_ninterface
 
-  integer  :: nsize           ! Max number of elements that contain the same node.
+  integer(long)  :: nsize           ! Max number of elements that contain the same node.
   integer  :: nb_edges
 
   integer  :: ispec, inode
   integer  :: ngnod
   integer  :: max_neighbour         ! Real maximum number of neighbours per element
-  integer  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
+  integer(long)  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
 
   integer  :: ipart, nnodes_loc, nspec_loc
   integer  :: num_elmnt, num_node, num_mat
@@ -674,8 +674,10 @@ module decompose_mesh_SCOTCH
     if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
+
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, 1)
+
     print*, 'mesh2dual: '
     print*, '  max_neighbour = ',max_neighbour
 
@@ -788,8 +790,7 @@ module decompose_mesh_SCOTCH
     if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot destroy strat'
     endif
-
-
+    
   ! re-partitioning puts poroelastic-elastic coupled elements into same partition
   !  integer  :: nfaces_coupled
   !  integer, dimension(:,:), pointer  :: faces_coupled
@@ -805,7 +806,7 @@ module decompose_mesh_SCOTCH
                      nspec2D_moho,ibelm_moho,nodes_ibelm_moho )
 
 
-  ! local number of each element for each partition
+  ! local number of each element for each partition    
     call build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
 
   ! local number of each node for each partition
@@ -879,7 +880,6 @@ module decompose_mesh_SCOTCH
        ! writes out spectral element indices
        !write(IIN_database,*) nspec_loc
        write(IIN_database) nspec_loc
-
        call write_partition_database(IIN_database, ipart, nspec_loc, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 2)
