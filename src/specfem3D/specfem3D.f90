@@ -316,10 +316,6 @@
   call detect_mesh_surfaces()
 
 
-! reads topography & bathymetry
-  call read_topography_bathymetry()
-
-
 ! prepares sources and receivers
   call setup_sources_receivers()
 

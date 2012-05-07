@@ -26,41 +26,39 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-  subroutine read_topography_bathymetry()
 
-  use specfem_par
-  implicit none
-  integer :: ier
+! obsolete...
 
-! read topography and bathymetry file
-
-  if( OCEANS .and. TOPOGRAPHY ) then
-
-    NX_TOPO = NX_TOPO_SOCAL
-    NY_TOPO = NY_TOPO_SOCAL
-    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-    topo_file = TOPO_FILE_SOCAL
-
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array itopo_bathy'
-
-    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
-
-    if(myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'regional topography file read ranges in m from ', &
-        minval(itopo_bathy),' to ',maxval(itopo_bathy)
-      write(IMAIN,*)
-    endif
-
-  else
-    NX_TOPO = 1
-    NY_TOPO = 1
-    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
-    if( ier /= 0 ) stop 'error allocating dummy array itopo_bathy'
-
-  endif
-
-  end subroutine read_topography_bathymetry
+!  subroutine read_topography_bathymetry()
+!
+!  use specfem_par
+!  implicit none
+!  integer :: ier
+!
+!! read topography and bathymetry file
+!
+!  if( OCEANS .and. TOPOGRAPHY ) then
+!
+!    NX_TOPO = NX_TOPO_FILE
+!    NY_TOPO = NY_TOPO_FILE
+!    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+!    if( ier /= 0 ) stop 'error allocating array itopo_bathy'
+!
+!    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO)
+!
+!    if(myrank == 0) then
+!      write(IMAIN,*)
+!      write(IMAIN,*) 'regional topography file read ranges in m from ', &
+!        minval(itopo_bathy),' to ',maxval(itopo_bathy)
+!      write(IMAIN,*)
+!    endif
+!
+!  else
+!    NX_TOPO = 1
+!    NY_TOPO = 1
+!    allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+!    if( ier /= 0 ) stop 'error allocating dummy array itopo_bathy'
+!
+!  endif
+!
+!  end subroutine read_topography_bathymetry

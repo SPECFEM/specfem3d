@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  subroutine get_absorbing_boundary(myrank,nspec,nglob,ibool, &
+  subroutine get_absorbing_boundary(myrank,nspec,ibool, &
                             nodes_coords_ext_mesh,nnodes_ext_mesh, &
                             ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                             nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
@@ -38,7 +38,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec,nglob
+  integer :: myrank,nspec
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -111,7 +111,7 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                            ibool,nspec,nglob, &
+                            ibool,nspec,nglob_dummy, &
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             iface)
 
@@ -122,7 +122,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
@@ -132,7 +132,7 @@
     do j=1,NGLLZ
       do i=1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo
@@ -170,7 +170,7 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
-                              ibool,nspec,nglob, &
+                              ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
     iboun(iface,ispec) = .true.
@@ -180,7 +180,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
@@ -190,7 +190,7 @@
     do j=1,NGLLZ
       do i=1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo
@@ -228,7 +228,7 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
-                              ibool,nspec,nglob, &
+                              ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
     iboun(iface,ispec) = .true.
@@ -238,7 +238,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
               ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
@@ -248,7 +248,7 @@
     do j=1,NGLLZ
       do i=1,NGLLY
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo
@@ -286,7 +286,7 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
-                              ibool,nspec,nglob, &
+                              ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
     iboun(iface,ispec) = .true.
@@ -296,7 +296,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
@@ -306,7 +306,7 @@
     do j=1,NGLLZ
       do i=1,NGLLY
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo
@@ -344,7 +344,7 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
-                              ibool,nspec,nglob, &
+                              ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
     iboun(iface,ispec) = .true.
@@ -354,7 +354,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -364,7 +364,7 @@
     do j=1,NGLLY
       do i=1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo
@@ -404,7 +404,7 @@
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
-                              ibool,nspec,nglob, &
+                              ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
     iboun(iface,ispec) = .true.
@@ -414,7 +414,7 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -424,7 +424,7 @@
     do j=1,NGLLY
       do i=1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo

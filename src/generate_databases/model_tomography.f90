@@ -24,12 +24,15 @@
 !
 !=====================================================================
 
+!--------------------------------------------------------------------------------------------------
+!
 ! generic tomography file
 !
 ! note: the idea is to use an external, tomography velocity model
 !
 ! most of the routines here are place-holders, please add/implement your own routines
 !
+!--------------------------------------------------------------------------------------------------
 
   module tomography
 
@@ -38,7 +41,7 @@
   ! for external tomography:
   ! file must be in ../in_data/files/ directory
   ! (regular spaced, xyz-block file in ascii)
-  !character (len=80) :: TOMO_FILENAME = 'veryfast_tomography_abruzzo_complete.xyz'
+
   character (len=80) :: TOMO_FILENAME = 'tomography_model.xyz'
 
   ! model dimensions
@@ -164,8 +167,7 @@
 !
 
 
-  subroutine model_tomography(x_eval,y_eval,z_eval, &
-                             rho_final,vp_final,vs_final)
+  subroutine model_tomography(xmesh,ymesh,zmesh,rho_final,vp_final,vs_final,qmu_atten)
 
   use tomography
 
@@ -176,8 +178,9 @@
   !double precision, intent(in) :: ORIG_X,ORIG_Y,ORIG_Z,SPACING_X,SPACING_Y,SPACING_Z
   !double precision, intent(in) :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
 
-  double precision, intent(in) :: x_eval,y_eval,z_eval
-  real(kind=CUSTOM_REAL), intent(out) :: vp_final,vs_final,rho_final
+  double precision, intent(in) :: xmesh,ymesh,zmesh
+  
+  real(kind=CUSTOM_REAL), intent(out) :: vp_final,vs_final,rho_final,qmu_atten
 
   ! local parameters
   integer :: ix,iy,iz
@@ -191,9 +194,9 @@
     vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8,rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8
 
   ! determine spacing and cell for linear interpolation
-  spac_x = (x_eval - ORIG_X) / SPACING_X
-  spac_y = (y_eval - ORIG_Y) / SPACING_Y
-  spac_z = (z_eval - ORIG_Z) / SPACING_Z
+  spac_x = (xmesh - ORIG_X) / SPACING_X
+  spac_y = (ymesh - ORIG_Y) / SPACING_Y
+  spac_z = (zmesh - ORIG_Z) / SPACING_Z
 
   ix = int(spac_x)
   iy = int(spac_y)
@@ -244,7 +247,7 @@
   if(z_tomography(p4+1) == z_tomography(p0+1)) then
           gamma_interp_z1 = 1.d0
       else
-          gamma_interp_z1 = (z_eval-z_tomography(p0+1))/(z_tomography(p4+1)-z_tomography(p0+1))
+          gamma_interp_z1 = (zmesh-z_tomography(p0+1))/(z_tomography(p4+1)-z_tomography(p0+1))
   endif
   if(gamma_interp_z1 > 1.d0) then
           gamma_interp_z1 = 1.d0
@@ -257,7 +260,7 @@
   if(z_tomography(p5+1) == z_tomography(p1+1)) then
           gamma_interp_z2 = 1.d0
       else
-          gamma_interp_z2 = (z_eval-z_tomography(p1+1))/(z_tomography(p5+1)-z_tomography(p1+1))
+          gamma_interp_z2 = (zmesh-z_tomography(p1+1))/(z_tomography(p5+1)-z_tomography(p1+1))
   endif
   if(gamma_interp_z2 > 1.d0) then
           gamma_interp_z2 = 1.d0
@@ -270,7 +273,7 @@
   if(z_tomography(p6+1) == z_tomography(p2+1)) then
           gamma_interp_z3 = 1.d0
       else
-          gamma_interp_z3 = (z_eval-z_tomography(p2+1))/(z_tomography(p6+1)-z_tomography(p2+1))
+          gamma_interp_z3 = (zmesh-z_tomography(p2+1))/(z_tomography(p6+1)-z_tomography(p2+1))
   endif
   if(gamma_interp_z3 > 1.d0) then
           gamma_interp_z3 = 1.d0
@@ -283,7 +286,7 @@
   if(z_tomography(p7+1) == z_tomography(p3+1)) then
           gamma_interp_z4 = 1.d0
       else
-          gamma_interp_z4 = (z_eval-z_tomography(p3+1))/(z_tomography(p7+1)-z_tomography(p3+1))
+          gamma_interp_z4 = (zmesh-z_tomography(p3+1))/(z_tomography(p7+1)-z_tomography(p3+1))
   endif
   if(gamma_interp_z4 > 1.d0) then
           gamma_interp_z4 = 1.d0
@@ -362,5 +365,8 @@
   if(vp_final > VP_MAX) vp_final = VP_MAX
   if(vs_final > VS_MAX) vs_final = VS_MAX
   if(rho_final > RHO_MAX) rho_final = RHO_MAX
+
+  ! attenuation: arbitrary value, see maximum in constants.h
+  qmu_atten = ATTENUATION_COMP_MAXIMUM   
 
   end subroutine model_tomography

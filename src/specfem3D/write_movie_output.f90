@@ -146,6 +146,7 @@
     if (USE_HIGHRES_FOR_MOVIES) then
       do ipoin = 1, NGLLX*NGLLY
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
+        
         ! saves norm of displacement,velocity and acceleration vector
         if( ispec_is_elastic(ispec) ) then
           ! norm of displacement
@@ -165,7 +166,7 @@
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! sets velocity vector with maximum norm of wavefield values
-          call wmo_get_max_vector(ispec,ispec2D,ipoin, &
+          call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
                                   displ_element,veloc_element,accel_element, &
                                   NGLLX*NGLLY)
         endif
@@ -194,7 +195,7 @@
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! sets velocity vector with maximum norm of wavefield values
-          call wmo_get_max_vector(ispec,ispec2D,ipoin, &
+          call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
                                   displ_element,veloc_element,accel_element, &
                                   NGNOD2D)
         endif
@@ -266,7 +267,7 @@
 
 !================================================================
 
-  subroutine wmo_get_max_vector(ispec,ispec2D,ipoin, &
+  subroutine wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
                                 displ_element,veloc_element,accel_element, &
                                 narraydim)
 
@@ -276,15 +277,17 @@
   use specfem_par_movie
   implicit none
 
-  integer :: ispec,ispec2D,ipoin,narraydim
+  integer,intent(in) :: ispec,ispec2D,iglob,ipoin,narraydim
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
     displ_element,veloc_element,accel_element
 
   ! local parameters
-  integer :: i,j,k,iglob
+  integer :: i,j,k
   logical :: is_done
 
   is_done = .false.
+  
+  ! loops over all gll points from this element
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
@@ -809,7 +812,7 @@
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! stores maximum values
-          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
+          call wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
         endif
 
       enddo
@@ -847,7 +850,7 @@
         ! acoustic domains
         if( ispec_is_acoustic(ispec) ) then
           ! stores maximum values
-          call wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
+          call wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
         endif
 
       enddo
@@ -919,7 +922,7 @@
 
 !================================================================
 
-  subroutine wmo_get_max_vector_o(ispec,ipoin,displ_element,veloc_element,accel_element)
+  subroutine wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
 
   ! put into this separate routine to make compilation faster
 
@@ -927,20 +930,24 @@
   use specfem_par_movie
   implicit none
 
-  integer :: ispec,ipoin
+  integer,intent(in) :: ispec,iglob,ipoin
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
     displ_element,veloc_element,accel_element
 
   ! local parameters
-  integer :: i,j,k,iglob
+  integer :: i,j,k
   logical :: is_done
 
   ! velocity vector
   is_done = .false.
+    
+  ! loops over all gll points from this element
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
+        ! checks if global point is found
         if( iglob == ibool(i,j,k,ispec) ) then
+        
           ! horizontal displacement
           store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                         abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))

@@ -37,7 +37,7 @@ module decompose_mesh_SCOTCH
   integer :: nparts ! e.g. 4 for partitioning for 4 CPUs or 4 processes
 
 ! mesh arrays
-  integer(long) :: nspec
+  integer :: nspec
   integer, dimension(:,:), allocatable  :: elmnts
   integer, dimension(:,:), allocatable  :: mat
   integer, dimension(:), allocatable  :: part
@@ -62,15 +62,15 @@ module decompose_mesh_SCOTCH
   integer  ::  ninterfaces
   integer  :: my_ninterface
 
-  integer(long)  :: nsize           ! Max number of elements that contain the same node.
+  integer :: nsize           ! Max number of elements that contain the same node.
   integer  :: nb_edges
 
   integer  :: ispec, inode
   integer  :: ngnod
   integer  :: max_neighbour         ! Real maximum number of neighbours per element
-  integer(long)  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
+  integer  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
 
-  integer  :: ipart, nnodes_loc, nspec_loc
+  integer  :: ipart, nnodes_loc, nspec_local
   integer  :: num_elmnt, num_node, num_mat
 
   ! boundaries
@@ -120,7 +120,8 @@ module decompose_mesh_SCOTCH
     implicit none
     character(len=256)  :: line
     logical :: use_poroelastic_file
-
+    integer(long) :: nspec_long
+    
   ! sets number of nodes per element
     ngnod = esize
 
@@ -143,13 +144,24 @@ module decompose_mesh_SCOTCH
     print*, 'total number of nodes: '
     print*, '  nnodes = ', nnodes
 
-  ! reads mesh elements indexing
-  !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
-  ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
+    ! reads mesh elements indexing
+    !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
+    ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
           status='old', form='formatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening mesh_file'
-    read(98,*) nspec
+    read(98,*) nspec_long
+
+    ! debug check size limit
+    if( nspec_long > 2147483647 ) then
+      print *,'size exceeds integer 4-byte limit: ',nspec_long
+      print*,'bit size fortran: ',bit_size(nspec)
+      stop 'error number of elements too large'
+    endif
+    
+    ! sets number of elements (integer 4-byte)
+    nspec = nspec_long
+    
     allocate(elmnts(esize,nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array elmnts'
     do ispec = 1, nspec
@@ -647,7 +659,15 @@ module decompose_mesh_SCOTCH
       endif
     enddo
     nsize = maxval(used_nodes_elmnts(:))
+
+    ! debug check size limit
+    if( ngnod * nsize - (ngnod + (ngnod/2 - 1)*nfaces) > 2147483647 ) then
+      print *,'size exceeds integer 4-byte limit: ',sup_neighbour,ngnod,nsize,nfaces
+      print*,'bit size fortran: ',bit_size(sup_neighbour)
+    endif
+
     sup_neighbour = ngnod * nsize - (ngnod + (ngnod/2 - 1)*nfaces)
+
     print*, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
 
   end subroutine check_valence
@@ -862,7 +882,7 @@ module decompose_mesh_SCOTCH
                                   glob2loc_nodes, nnodes, 1)
 
        ! gets number of spectral elements
-       call write_partition_database(IIN_database, ipart, nspec_loc, nspec, elmnts, &
+       call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 1)
 
@@ -878,9 +898,9 @@ module decompose_mesh_SCOTCH
                                   mat_prop, undef_mat_prop)
 
        ! writes out spectral element indices
-       !write(IIN_database,*) nspec_loc
-       write(IIN_database) nspec_loc
-       call write_partition_database(IIN_database, ipart, nspec_loc, nspec, elmnts, &
+       !write(IIN_database,*) nspec_local
+       write(IIN_database) nspec_local
+       call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 2)
 

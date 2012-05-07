@@ -55,7 +55,7 @@
 
   if(CREATE_ABAQUS_FILES) then
 
-     open(unit=64,file=prname(1:len_trim(prname))//'.INP',status='unknown',action='write',form='formatted')
+     open(unit=64,file=prname(1:len_trim(prname))//'mesh.INP',status='unknown',action='write',form='formatted')
      write(64,'(a8)') '*HEADING'
 !     write(64,'(a52)') 'cubit(mesh): 04/17/2009: 18:11:24'
      write(64,'(a27)') 'SPECFEM3D meshfem3D(mesh): '
@@ -77,7 +77,7 @@
 
   if(CREATE_DX_FILES) then
 
-     open(unit=66,file=prname(1:len_trim(prname))//'.dx',status='unknown')
+     open(unit=66,file=prname(1:len_trim(prname))//'mesh.dx',status='unknown')
 
      ! write OpenDX header
      write(66,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
@@ -115,7 +115,6 @@
         write(66,*)  true_material_num(ispec)
      enddo
 
-
      write(66,*) 'attribute "dep" string "connections"'
      write(66,*) 'object "irregular positions irregular connections" class field'
      write(66,*) 'component "positions" value 1'
@@ -129,7 +128,7 @@
 
   if( CREATE_VTK_FILES ) then
     ! vtk file output    
-    open(66,file=prname(1:len_trim(prname))//'.vtk',status='unknown')
+    open(66,file=prname(1:len_trim(prname))//'mesh.vtk',status='unknown')
     write(66,'(a)') '# vtk DataFile Version 3.1'
     write(66,'(a)') 'material model VTK file'
     write(66,'(a)') 'ASCII'
@@ -165,11 +164,7 @@
   
   endif
 
-
-
   call sync_all()
 
-
   end subroutine create_visual_files
-
 

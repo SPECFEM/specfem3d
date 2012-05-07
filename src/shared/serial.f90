@@ -93,6 +93,20 @@
 !----
 !
 
+  subroutine bcast_all_r(buffer, count)
+
+  implicit none
+
+  integer count
+  real, dimension(count) :: buffer
+
+  end subroutine bcast_all_r
+
+
+!
+!----
+!
+
   subroutine gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   implicit none

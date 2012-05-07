@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-module create_regions_mesh_ext_par
+  module create_regions_mesh_ext_par
 
   include 'constants.h'
 
@@ -32,7 +32,8 @@ module create_regions_mesh_ext_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
-
+  integer :: nglob_dummy
+  
 ! Gauss-Lobatto-Legendre points and weights of integration
   double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll
 
@@ -148,7 +149,7 @@ module create_regions_mesh_ext_par
   logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
 
 
-end module create_regions_mesh_ext_par
+  end module create_regions_mesh_ext_par
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -156,110 +157,35 @@ end module create_regions_mesh_ext_par
 
 ! main routine
 
-subroutine create_regions_mesh_ext(ibool, &
-                        xstore,ystore,zstore,nspec, &
-                        npointot,myrank,LOCAL_PATH, &
-                        nnodes_ext_mesh,nelmnts_ext_mesh, &
-                        nodes_coords_ext_mesh, elmnts_ext_mesh, &
-                        max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
-                        nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
-                        num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
-                        my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
-                        my_interfaces_ext_mesh, &
-                        ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
-                        nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
-                        NSPEC2D_BOTTOM, NSPEC2D_TOP,&
-                        ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
-                        nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
-                        nodes_ibelm_bottom,nodes_ibelm_top, &
-                        SAVE_MESH_FILES, &
-                        nglob, &
-                        ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
-                        ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
-                        itopo_bathy, &
-                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho)
+  subroutine create_regions_mesh()
 
 ! create the different regions of the mesh
+
+  use generate_databases_par,only: &
+    nspec => NSPEC_AB,nglob => NGLOB_AB, &
+    ibool,xstore,ystore,zstore, &
+    npointot,myrank,LOCAL_PATH, &
+    nnodes_ext_mesh,nelmnts_ext_mesh, &
+    nodes_coords_ext_mesh, elmnts_ext_mesh, &
+    max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
+    nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
+    num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
+    my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
+    my_interfaces_ext_mesh, &
+    ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
+    nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
+    NSPEC2D_BOTTOM, NSPEC2D_TOP,&
+    ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
+    nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
+    nodes_ibelm_bottom,nodes_ibelm_top, &
+    SAVE_MESH_FILES, &
+    ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
+    ATTENUATION,USE_OLSEN_ATTENUATION, &
+    UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+    NX_TOPO,NY_TOPO,itopo_bathy, &
+    nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho  
   use create_regions_mesh_ext_par
   implicit none
-  !include "constants.h"
-
-! number of spectral elements in each block
-  integer :: nspec
-
-! arrays with the mesh
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
-
-  integer :: npointot
-
-! proc numbers for MPI
-  integer :: myrank
-  integer :: NPROC
-
-  character(len=256) :: LOCAL_PATH
-
-! data from the external mesh
-  integer :: nnodes_ext_mesh,nelmnts_ext_mesh
-  double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
-  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
-
-! static memory size needed by the solver
-  double precision :: max_static_memory_size
-
-  integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
-
-! material properties
-  integer :: nmat_ext_mesh,nundefMat_ext_mesh
-  double precision, dimension(16,nmat_ext_mesh) :: materials_ext_mesh
-  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
-
-!  double precision, external :: materials_ext_mesh
-
-! MPI communication
-  integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
-  integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: my_interfaces_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-
-! absorbing boundaries
-  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, NSPEC2D_BOTTOM, NSPEC2D_TOP
-  integer, dimension(nspec2D_xmin)  :: ibelm_xmin
-  integer, dimension(nspec2D_xmax)  :: ibelm_xmax
-  integer, dimension(nspec2D_ymin)  :: ibelm_ymin
-  integer, dimension(nspec2D_ymax)  :: ibelm_ymax
-  integer, dimension(NSPEC2D_BOTTOM)  :: ibelm_bottom
-  integer, dimension(NSPEC2D_TOP)  :: ibelm_top
-  ! node indices of boundary faces
-  integer, dimension(4,nspec2D_xmin)  :: nodes_ibelm_xmin
-  integer, dimension(4,nspec2D_xmax)  :: nodes_ibelm_xmax
-  integer, dimension(4,nspec2D_ymin)  :: nodes_ibelm_ymin
-  integer, dimension(4,nspec2D_ymax)  :: nodes_ibelm_ymax
-  integer, dimension(4,NSPEC2D_BOTTOM)  :: nodes_ibelm_bottom
-  integer, dimension(4,NSPEC2D_TOP)  :: nodes_ibelm_top
-
-  integer :: nglob
-
-  logical :: SAVE_MESH_FILES
-  logical :: ANISOTROPY
-  logical :: OCEANS,TOPOGRAPHY
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION
-
-! use integer array to store topography values
-  integer :: UTM_PROJECTION_ZONE
-  logical :: SUPPRESS_UTM_PROJECTION
-  integer :: NX_TOPO,NY_TOPO
-  double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
-  integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
-
-! moho (optional)
-  integer :: nspec2D_moho_ext
-  integer, dimension(nspec2D_moho_ext)  :: ibelm_moho
-  integer, dimension(4,nspec2D_moho_ext) :: nodes_ibelm_moho
 
 ! local parameters
 ! static memory size needed by the solver
@@ -328,13 +254,26 @@ subroutine create_regions_mesh_ext(ibool, &
   if( myrank == 0) then
     write(IMAIN,*) '  ...preparing MPI interfaces '
   endif
-  call get_MPI(myrank,nglob,nspec,ibool, &
+  call get_MPI(myrank,nglob_dummy,nspec,ibool, &
                         nelmnts_ext_mesh,elmnts_ext_mesh, &
                         my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                         ibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
                         my_neighbours_ext_mesh,NPROC)
+
+! sets up absorbing/free surface boundaries
+  call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...setting up absorbing boundaries '
+  endif
+  call get_absorbing_boundary(myrank,nspec,ibool, &
+                            nodes_coords_ext_mesh,nnodes_ext_mesh, &
+                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                            nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
+                            nodes_ibelm_bottom,nodes_ibelm_top, &
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                            nspec2D_bottom,nspec2D_top)
 
 ! sets material velocities
   call sync_all()
@@ -346,18 +285,6 @@ subroutine create_regions_mesh_ext(ibool, &
                         undef_mat_prop,nundefMat_ext_mesh, &
                         ANISOTROPY,LOCAL_PATH)
 
-! sets up absorbing/free surface boundaries
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...setting up absorbing boundaries '
-  endif
-  call get_absorbing_boundary(myrank,nspec,nglob,ibool, &
-                            nodes_coords_ext_mesh,nnodes_ext_mesh, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-                            nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
-                            nodes_ibelm_bottom,nodes_ibelm_top, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                            nspec2D_bottom,nspec2D_top)
 
 ! sets up acoustic-elastic-poroelastic coupling surfaces
   call sync_all()
@@ -365,7 +292,7 @@ subroutine create_regions_mesh_ext(ibool, &
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
   endif
   call get_coupling_surfaces(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -377,7 +304,7 @@ subroutine create_regions_mesh_ext(ibool, &
     if( myrank == 0) then
       write(IMAIN,*) '  ...setting up Moho surface'
     endif
-    call crm_setup_moho(myrank,nglob,nspec, &
+    call crm_setup_moho(myrank,nspec, &
                       nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                       nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
   endif
@@ -387,24 +314,23 @@ subroutine create_regions_mesh_ext(ibool, &
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
   endif
-  call create_mass_matrices(nglob,nspec,ibool)
+  call create_mass_matrices(nglob_dummy,nspec,ibool)
 
 ! creates ocean load mass matrix
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating ocean load mass matrix '
   endif
-  call create_mass_matrices_ocean_load(nglob,nspec,ibool,OCEANS,TOPOGRAPHY, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
-                        ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
-                        itopo_bathy)
+  call create_mass_matrices_ocean_load(nglob_dummy,nspec,ibool,OCEANS,TOPOGRAPHY, &
+                                      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                                      NX_TOPO,NY_TOPO,itopo_bathy)
 
 ! locates inner and outer elements
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element inner/outer separation '
   endif
-  call crm_setup_inner_outer_elemnts(myrank,nspec,nglob, &
+  call crm_setup_inner_outer_elemnts(myrank,nspec, &
                                     num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                                     nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                     ibool,SAVE_MESH_FILES)
@@ -415,7 +341,7 @@ subroutine create_regions_mesh_ext(ibool, &
     write(IMAIN,*) '  ...saving databases'
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
-  call save_arrays_solver_ext_mesh(nspec,nglob, &
+  call save_arrays_solver_ext_mesh(nspec,nglob_dummy, &
                         xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,&
                         gammaxstore,gammaystore,gammazstore, &
                         jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
@@ -462,17 +388,18 @@ subroutine create_regions_mesh_ext(ibool, &
 
 ! computes the approximate amount of static memory needed to run the solver
   call sync_all()
-  call memory_eval(nspec,nglob,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
+  call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
                   OCEANS,static_memory_size)
   call max_all_dp(static_memory_size, max_static_memory_size)
 
 ! checks the mesh, stability and resolved period
   call sync_all()
 !chris: check for poro: At the moment cpI & cpII are for eta=0
-  call check_mesh_resolution_poro(myrank,nspec,nglob,ibool,&
+  call check_mesh_resolution_poro(myrank,nspec,nglob_dummy,ibool,&
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             -1.0d0, model_speed_max,min_resolved_period, &
-                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI )
+                            phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                            LOCAL_PATH,SAVE_MESH_FILES )
 
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
@@ -488,7 +415,7 @@ subroutine create_regions_mesh_ext(ibool, &
 !    prname_file = prname(1:len_trim(prname))//'material_flag'
 !    allocate(elem_flag(nspec))
 !    elem_flag(:) = mat_ext_mesh(1,:)
-!    call write_VTK_data_elem_i(nspec,nglob, &
+!    call write_VTK_data_elem_i(nspec,nglob_dummy, &
 !            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
 !            elem_flag,prname_file)
 !    deallocate(elem_flag)
@@ -500,7 +427,7 @@ subroutine create_regions_mesh_ext(ibool, &
 !    !    if( iboun(1,ispec) ) itest_flag(ispec) = 1
 !    !  enddo
 !    !  prname_file = prname(1:len_trim(prname))//'iboundary1_flag'
-!    !  call write_VTK_data_elem_i(nspec,nglob, &
+!    !  call write_VTK_data_elem_i(nspec,nglob_dummy, &
 !    !            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
 !    !            itest_flag,prname_file)
 !    !  deallocate(itest_flag)
@@ -516,7 +443,7 @@ subroutine create_regions_mesh_ext(ibool, &
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
 
-end subroutine create_regions_mesh_ext
+end subroutine create_regions_mesh
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -862,9 +789,10 @@ subroutine crm_ext_setup_indexing(ibool, &
   deallocate(ifseg,stat=ier); if(ier /= 0) stop 'error in deallocate'
 
 ! unique global point locations
-  allocate(xstore_dummy(nglob), &
-          ystore_dummy(nglob), &
-          zstore_dummy(nglob),stat=ier)
+  nglob_dummy = nglob
+  allocate(xstore_dummy(nglob_dummy), &
+          ystore_dummy(nglob_dummy), &
+          zstore_dummy(nglob_dummy),stat=ier)
   if(ier /= 0) stop 'error in allocate'
   do ispec = 1, nspec
      do k = 1, NGLLZ
@@ -886,7 +814,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 !
 
 
-  subroutine crm_setup_moho( myrank,nglob,nspec, &
+  subroutine crm_setup_moho( myrank,nspec, &
                         nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 
@@ -897,7 +825,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   integer, dimension(nspec2D_moho_ext) :: ibelm_moho
   integer, dimension(4,nspec2D_moho_ext) :: nodes_ibelm_moho
 
-  integer :: myrank,nglob,nspec
+  integer :: myrank,nspec
 
   ! data from the external mesh
   integer :: nnodes_ext_mesh
@@ -942,8 +870,8 @@ subroutine crm_ext_setup_indexing(ibool, &
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
   ! temporary arrays for passing information
-  allocate(iglob_is_surface(nglob), &
-          iglob_normals(NDIM,nglob),stat=ier)
+  allocate(iglob_is_surface(nglob_dummy), &
+          iglob_normals(NDIM,nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array iglob_is_surface'
 
   iglob_is_surface = 0
@@ -967,7 +895,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
-                            ibool,nspec,nglob, &
+                            ibool,nspec,nglob_dummy, &
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             iface)
 
@@ -976,7 +904,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
@@ -986,7 +914,7 @@ subroutine crm_ext_setup_indexing(ibool, &
     do j=1,NGLLY
       do i=1,NGLLX
           call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
       enddo
@@ -1061,7 +989,7 @@ subroutine crm_ext_setup_indexing(ibool, &
         ! re-computes face infos
         ! weighted jacobian and normal
         call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
               wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
@@ -1071,7 +999,7 @@ subroutine crm_ext_setup_indexing(ibool, &
         do j=1,NGLLZ
           do i=1,NGLLX
             call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob, &
+                                      ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
                                       normal_face(:,i,j) )
           enddo
@@ -1086,7 +1014,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
         ! determines whether normal points into element or not (top/bottom distinction)
         call get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
-                              ibool,nspec,nglob, &
+                              ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               normal,idirect )
 
@@ -1215,7 +1143,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine crm_setup_inner_outer_elemnts(myrank,nspec,nglob, &
+  subroutine crm_setup_inner_outer_elemnts(myrank,nspec, &
                                   num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                                   nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                   ibool,SAVE_MESH_FILES)
@@ -1225,7 +1153,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   use create_regions_mesh_ext_par
   implicit none
 
-  integer :: myrank,nspec,nglob
+  integer :: myrank,nspec
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
   ! MPI interfaces
@@ -1249,7 +1177,7 @@ subroutine crm_ext_setup_indexing(ibool, &
   if( ier /= 0 ) stop 'error allocating array ispec_is_inner'
 
   ! temporary array
-  allocate(iglob_is_inner(nglob),stat=ier)
+  allocate(iglob_is_inner(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating temporary array  iglob_is_inner'
 
   ! initialize flags
@@ -1279,7 +1207,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   if( SAVE_MESH_FILES ) then
     filename = prname(1:len_trim(prname))//'ispec_is_inner'
-    call write_VTK_data_elem_l(nspec,nglob, &
+    call write_VTK_data_elem_l(nspec,nglob_dummy, &
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         ispec_is_inner,filename)
   endif

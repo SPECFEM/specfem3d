@@ -356,7 +356,8 @@
   subroutine check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     DT, model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore, &
-                                    rho_vpI,rho_vpII,rho_vsI )
+                                    rho_vpI,rho_vpII,rho_vsI, &
+                                    LOCAL_PATH,SAVE_MESH_FILES )
 
 ! check the mesh, stability and resolved period for poroelastic domains
 !
@@ -374,6 +375,9 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
   double precision :: DT
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
+
+  character(len=256):: LOCAL_PATH
+  logical :: SAVE_MESH_FILES
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
@@ -401,8 +405,13 @@
   !********************************************************************************
   !real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
 
-
   logical :: has_vs_zero,has_vp2_zero
+
+  ! debug: for vtk output
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
+  integer:: ier
+  character(len=256) :: filename,prname
+
 
   ! initializations
   if( DT <= 0.0d0) then
@@ -433,6 +442,16 @@
 
   has_vs_zero = .false.
   has_vp2_zero = .false.
+
+  ! debug: for vtk output
+  if( SAVE_MESH_FILES ) then
+    allocate(tmp1(NSPEC_AB),stat=ier)
+    allocate(tmp2(NSPEC_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tmp'
+    tmp1(:) = 0.0
+    tmp2(:) = 0.0
+  endif
+
 
   ! checks courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
@@ -472,6 +491,10 @@
     if( DT_PRESENT ) then
       cmax = max( vpmax,vp2max,vsmax ) * DT / distance_min
       cmax_glob = max(cmax_glob,cmax)
+
+      ! debug: for vtk output
+      if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
+
     endif
 
     ! suggested timestep
@@ -505,6 +528,9 @@
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
     !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
+
+    ! debug: for vtk output
+    if( SAVE_MESH_FILES ) tmp2(ispec) = pmax
 
   enddo
 
@@ -660,6 +686,23 @@
   if( myrank == 0 ) min_resolved_period = pmax_glob
   call bcast_all_cr(min_resolved_period,1)
 
+  ! debug: for vtk output
+  if( SAVE_MESH_FILES ) then
+    call create_name_database(prname,myrank,LOCAL_PATH)
+    ! courant number
+    if( DT_PRESENT ) then
+      filename = trim(prname)//'res_courant_number'
+      call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
+                          xstore,ystore,zstore,ibool, &
+                          tmp1,filename)
+    endif
+    ! minimum period estimate
+    filename = trim(prname)//'res_minimum_period'
+    call write_VTK_data_elem_cr(NSPEC_AB,NGLOB_AB, &
+                          xstore,ystore,zstore,ibool, &
+                          tmp2,filename)
+    deallocate(tmp1,tmp2)
+  endif
 
   end subroutine check_mesh_resolution_poro
 

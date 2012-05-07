@@ -24,6 +24,8 @@
 !
 !=====================================================================
 
+!--------------------------------------------------------------------------------------------------
+!
 ! generic model file
 !
 ! note: the idea is to super-impose velocity model values on the GLL points,
@@ -31,6 +33,8 @@
 !
 ! most of the routines here are place-holders, please add/implement your own routines
 !
+!--------------------------------------------------------------------------------------------------
+
 
   module external_model
 
@@ -111,54 +115,35 @@
 !
 
 
-  subroutine model_external_values(i,j,k,ispec,idomain_id,imaterial_id,&
-                            nspec,ibool, &
-                            iflag_aniso,qmu_atten, &
-                            rho,vp,vs, &
-                            c11,c12,c13,c14,c15,c16, &
-                            c22,c23,c24,c25,c26,c33, &
-                            c34,c35,c36,c44,c45,c46, &
-                            c55,c56,c66,ANISOTROPY)
+  subroutine model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,iflag_aniso,idomain_id )
 
 ! given a GLL point, returns super-imposed velocity model values
 
+  use generate_databases_par,only: nspec => NSPEC_AB,ibool
   use external_model
   use create_regions_mesh_ext_par
-
   implicit none
 
-  ! GLL point indices
-  integer :: i,j,k,ispec
-
-  ! acoustic/elastic/.. domain flag ( 1 = acoustic / 2 = elastic / ... )
-  integer :: idomain_id
-
-  ! associated material flag (in cubit, this would be the volume id number)
-  integer :: imaterial_id
-
-  ! local-to-global index array
-  integer :: nspec
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-
-  ! anisotropy flag
-  integer :: iflag_aniso
-
-  ! attenuation flag
-  real(kind=CUSTOM_REAL) :: qmu_atten
+  ! GLL point 
+  double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! density, Vp and Vs
   real(kind=CUSTOM_REAL) :: vp,vs,rho
 
-  ! all anisotropy coefficients
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
-                        c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
-  logical :: ANISOTROPY
+  ! attenuation flag
+  real(kind=CUSTOM_REAL) :: qmu_atten
+
+  ! anisotropy flag
+  integer :: iflag_aniso
+
+  ! acoustic/elastic/.. domain flag ( 1 = acoustic / 2 = elastic / ... )
+  integer :: idomain_id
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: x,y,z
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
   real(kind=CUSTOM_REAL) :: depth
-  integer :: iglob,idummy
+  real(kind=CUSTOM_REAL) :: elevation,distmin
 
 !---
 !
@@ -166,11 +151,10 @@
 !
 !---
 
-  ! GLL point location
-  iglob = ibool(i,j,k,ispec)
-  x = xstore_dummy(iglob)
-  y = ystore_dummy(iglob)
-  z = zstore_dummy(iglob)
+  ! GLL point location converted to real
+  x = xmesh
+  y = ymesh
+  z = zmesh
 
   ! model dimensions
   xmin = 0. ! minval(xstore_dummy)
@@ -178,14 +162,22 @@
   ymin = 0.  !minval(ystore_dummy)
   ymax = 134000. ! maxval(ystore_dummy)
   zmin = 0. ! minval(zstore_dummy)
-  zmax = -60000. ! maxval(zstore_dummy)
+  zmax = 60000. ! maxval(zstore_dummy)
 
+  ! get approximate topography elevation at target coordinates from free surface
+  call get_topo_elevation_free_closest(x,y,elevation,distmin, &
+                                  nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                  num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                    
   ! depth in Z-direction
-  depth = zmax - z
-
+  if( distmin < HUGEVAL ) then  
+    depth = elevation - z
+  else
+    depth = zmax - z
+  endif
+  
   ! normalizes depth between 0 and 1
   if( abs( zmax - zmin ) > TINYVAL ) depth = depth / (zmax - zmin)
-
 
   ! super-imposes values
   !rho = 2.6910d0+0.6924d0*depth
@@ -201,17 +193,13 @@
   vp = vp + 4562.d0 * depth
   vs = vs + 2720.d0 * depth
 
-  ! adds anisotropic velocity values
-  if( ANISOTROPY ) &
-    call model_aniso(iflag_aniso,rho,vp,vs,c11,c12,c13,c14,c15,c16, &
-                     c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45, &
-                     c46,c55,c56,c66)
+  ! attenuation: PREM crust value
+  qmu_atten=600.0d0
 
-  ! to avoid compiler warnings
-  idummy = imaterial_id
-  idummy = idomain_id
-  idummy = qmu_atten
+  ! no anisotropy
+  iflag_aniso = 0
 
+  ! elastic material
+  idomain_id = IDOMAIN_ELASTIC  
+  
   end subroutine model_external_values
-
-

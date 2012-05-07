@@ -138,7 +138,7 @@ program smooth_vol_data
   logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   integer :: idummy_a
   integer :: myrank,sizeprocs
-
+  integer :: IMODEL
 !------------------
 
   ! initialize the MPI communicator and start the NPROCTOT MPI processes
@@ -219,7 +219,7 @@ program smooth_vol_data
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

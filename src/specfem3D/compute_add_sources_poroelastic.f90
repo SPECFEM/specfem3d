@@ -228,12 +228,19 @@
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
- stop 'adjoint poroelastic simulation not implemented yet'
+    stop 'adjoint poroelastic simulation not implemented yet'
   endif !adjoint
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3) then
- stop 'adjoint poroelastic simulation not implemented yet'
+    stop 'adjoint poroelastic simulation not implemented yet'
+
+    ! to avoid compiler warning
+    i = NGLOB_ADJOINT
+    i = adj_sourcearrays(1,1,1,1,1,1)
+    i = islice_selected_rec(1)
+    i = ispec_selected_rec(1)
+    
   endif ! adjoint
 
   ! master prints out source time function to file

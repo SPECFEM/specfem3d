@@ -35,26 +35,27 @@
 !! DK DK this routine could be improved by computing the mean in addition to min and max of ratios
 !! DK DK
 
-
-
-subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
+  subroutine check_mesh_quality(myrank,VP_MAX,NGLOB,NSPEC,x,y,z,ibool, &
+                                CREATE_VTK_FILES,prname)
 
   implicit none
 
   include "constants.h"
 
-  integer :: NPOIN                    ! number of nodes
-  integer :: NSPEC
-  double precision :: VP_MAX           ! maximum vp in volume block id 3
-
-  !------------------------------------------------------------------------------------------------
-
   integer :: myrank
 
-  double precision, dimension(NPOIN) :: x,y,z
+  double precision :: VP_MAX           ! maximum vp in volume block id 3
 
+  integer :: NGLOB                    ! number of nodes
+  integer :: NSPEC
+
+  double precision, dimension(NGLOB) :: x,y,z
   integer, dimension(NGNOD,NSPEC) :: ibool
 
+  logical :: CREATE_VTK_FILES
+  character(len=256) prname
+  
+  ! local parameters
   integer :: ispec,ispec_min_edge_length,ispec_max_edge_length,ispec_max_skewness, &
        ispec_max_skewness_MPI,skewness_max_rank,NSPEC_ALL_SLICES
 
@@ -91,6 +92,10 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
   !character(len=256):: line
 
+  ! debug: for vtk output
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1
+  integer:: ier,ipoin
+
 
   if (myrank == 0) then
      write(IMAIN,*) '**************************'
@@ -119,17 +124,28 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
   ispec_min_edge_length = -1
   ispec_max_edge_length = -1
 
+  ! debug: for vtk output
+  if( CREATE_VTK_FILES ) then
+    allocate(tmp1(NSPEC),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array tmp'
+    tmp1(:) = 0.0
+  endif
+
+
   ! loop on all the elements
   do ispec = 1,NSPEC
 
-     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_suggested, &
-          equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,dt_suggested, &
+                                    equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
+                                    stability,distmin,distmax)
 
      ! store element number in which the edge of minimum or maximum length is located
      if(distmin < distance_min) ispec_min_edge_length = ispec
      if(distmax > distance_max) ispec_max_edge_length = ispec
      if(equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
 
+     if( CREATE_VTK_FILES ) tmp1(ispec) = equiangle_skewness
+     
      ! compute minimum and maximum of quality numbers
      equiangle_skewness_min = min(equiangle_skewness_min,equiangle_skewness)
      edge_aspect_ratio_min = min(edge_aspect_ratio_min,edge_aspect_ratio)
@@ -250,7 +266,7 @@ subroutine check_mesh_quality(myrank,VP_MAX,NPOIN,NSPEC,x,y,z,ibool)
 
   ! create statistics about mesh quality
   write(IMAIN,*) 'creating histogram and statistics of mesh quality'
-end if
+  end if
 
 
   ! erase histogram of skewness
@@ -259,8 +275,9 @@ end if
   ! loop on all the elements
   do ispec = 1,NSPEC
 
-     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_suggested, &
-          equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,dt_suggested, &
+                                      equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
+                                      stability,distmin,distmax)
 
      ! store skewness in histogram
      iclass = int(equiangle_skewness * dble(NCLASS))
@@ -327,9 +344,50 @@ end if
      stop 'total percentage should be 100%'
   endif
 
-end if
+  end if
 
-end subroutine check_mesh_quality
+  ! debug: for vtk output
+  if( CREATE_VTK_FILES ) then    
+    ! vtk file output    
+    open(66,file=prname(1:len_trim(prname))//'skewness.vtk',status='unknown')
+    write(66,'(a)') '# vtk DataFile Version 3.1'
+    write(66,'(a)') 'material model VTK file'
+    write(66,'(a)') 'ASCII'
+    write(66,'(a)') 'DATASET UNSTRUCTURED_GRID'
+    write(66, '(a,i12,a)') 'POINTS ', nglob, ' float'
+    do ipoin = 1,nglob
+      write(66,*) sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
+    enddo    
+    write(66,*) ""
+
+    ! note: indices for vtk start at 0
+    write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+    do ispec=1,nspec
+      write(66,'(9i12)') 8, &
+            ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1,&
+            ibool(5,ispec)-1,ibool(6,ispec)-1,ibool(8,ispec)-1,ibool(7,ispec)-1
+    enddo
+    write(66,*) ""
+
+    ! type: hexahedrons
+    write(66,'(a,i12)') "CELL_TYPES ",nspec
+    write(66,*) (12,ispec=1,nspec)
+    write(66,*) ""
+
+    write(66,'(a,i12)') "CELL_DATA ",nspec
+    write(66,'(a)') "SCALARS skewness float"
+    write(66,'(a)') "LOOKUP_TABLE default"
+    do ispec = 1,nspec
+      write(66,*) tmp1(ispec)
+    enddo
+    write(66,*) ""
+    close(66)                               
+                               
+    deallocate(tmp1)
+  endif
+
+
+  end subroutine check_mesh_quality
 
 !
 !=====================================================================
@@ -337,8 +395,9 @@ end subroutine check_mesh_quality
 
 ! create mesh quality data for a given 3D spectral element
 
-subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_suggested, &
-     equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+  subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,dt_suggested, &
+                                        equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio, &
+                                        stability,distmin,distmax)
 
   implicit none
 
@@ -346,9 +405,9 @@ subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NPOIN,VP_MAX,dt_s
 
   integer :: true_NGLLX = 5
 
-  integer :: iface,icorner,ispec,NSPEC,NPOIN,i
+  integer :: iface,icorner,ispec,NSPEC,NGLOB,i
 
-  double precision, dimension(NPOIN) :: x,y,z
+  double precision, dimension(NGLOB) :: x,y,z
 
   integer, dimension(NGNOD,NSPEC) :: ibool
 
