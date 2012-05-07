@@ -466,7 +466,8 @@
     call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                     rho_vp,rho_vs, &
                                     DT,model_speed_max,min_resolved_period, &
-                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
+                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                                    LOCAL_PATH,SAVE_MESH_FILES)
     deallocate(rho_vp,rho_vs)
   else if( ACOUSTIC_SIMULATION ) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)

@@ -46,7 +46,7 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
 
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
@@ -93,6 +93,27 @@
     write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',&
                    tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
+    write(IMAIN,'(a)',advance='no') ' velocity model: '
+    select case(IMODEL)
+    case( IMODEL_DEFAULT )
+    write(IMAIN,'(a)',advance='yes') '  default '
+    case( IMODEL_GLL )
+    write(IMAIN,'(a)',advance='yes') '  gll'
+    case( IMODEL_1D_PREM )
+    write(IMAIN,'(a)',advance='yes') '  1d_prem'
+    case( IMODEL_1D_CASCADIA )
+    write(IMAIN,'(a)',advance='yes') '  1d_cascadia'
+    case( IMODEL_1D_SOCAL )
+    write(IMAIN,'(a)',advance='yes') '  1d_socal'
+    case( IMODEL_SALTON_TROUGH )
+    write(IMAIN,'(a)',advance='yes') '  salton_trough'
+    case( IMODEL_TOMO )
+    write(IMAIN,'(a)',advance='yes') '  tomo'
+    case( IMODEL_USER_EXTERNAL )
+    write(IMAIN,'(a)',advance='yes') '  external'
+    end select
+    
+    write(IMAIN,*)    
   endif
 
   ! reads in numbers of spectral elements and points for this process' domain
@@ -191,8 +212,10 @@
     if( myrank == 0 ) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
-      print*, 'error: number of processors supposed to run on: ',NPROC
-      print*, 'error: number of MPI processors actually run on: ',sizeprocs      
+      print*
+      print*, 'error specfem3D: number of processors supposed to run on: ',NPROC
+      print*, 'error specfem3D: number of MPI processors actually run on: ',sizeprocs      
+      print*
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif

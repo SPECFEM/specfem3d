@@ -54,19 +54,19 @@ contains
   !-----------------------------------------------
   ! Creating dual graph (adjacency is defined by 'ncommonnodes' between two elements).
   !-----------------------------------------------
-  subroutine mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, elmnts,&
+  subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts,&
                                     xadj, adjncy, &
                                     nnodes_elmnts, nodes_elmnts, &
                                     max_neighbour, ncommonnodes)
 
-    integer(long), intent(in)  :: nelmnts
+    integer, intent(in)  :: nspec
     integer, intent(in)  :: nnodes
-    integer(long), intent(in)  :: nsize
-    integer(long), intent(in)  :: sup_neighbour
-    integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
+    integer, intent(in)  :: nsize
+    integer, intent(in)  :: sup_neighbour
+    integer, dimension(0:esize*nspec-1), intent(in)  :: elmnts
 
-    integer, dimension(0:nelmnts)  :: xadj
-    integer, dimension(0:sup_neighbour*nelmnts-1)  :: adjncy
+    integer, dimension(0:nspec)  :: xadj
+    integer, dimension(0:sup_neighbour*nspec-1)  :: adjncy
     integer, dimension(0:nnodes-1)  :: nnodes_elmnts
     integer, dimension(0:nsize*nnodes-1)  :: nodes_elmnts
     integer, intent(out) :: max_neighbour
@@ -88,7 +88,7 @@ contains
     nb_edges = 0
 
     ! list of elements per node
-    do i = 0, esize*nelmnts-1
+    do i = 0, esize*nspec-1
        nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/esize
        nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
     end do
@@ -144,7 +144,7 @@ contains
     max_neighbour = maxval(xadj)
 
     ! making adjacency arrays compact (to be used for partitioning)
-    do i = 0, nelmnts-1
+    do i = 0, nspec-1
        k = xadj(i)
        xadj(i) = nb_edges
        do j = 0, k-1
@@ -153,7 +153,7 @@ contains
        end do
     end do
 
-    xadj(nelmnts) = nb_edges
+    xadj(nspec) = nb_edges
 
 
   end subroutine mesh2dual_ncommonnodes
@@ -163,10 +163,10 @@ contains
   !--------------------------------------------------
   ! construct local numbering for the elements in each partition
   !--------------------------------------------------
-  subroutine build_glob2loc_elmnts(nelmnts, part, glob2loc_elmnts,nparts)
+  subroutine build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
 
-    integer(long), intent(in)  :: nelmnts
-    integer, dimension(0:nelmnts-1), intent(in)  :: part
+    integer, intent(in)  :: nspec
+    integer, dimension(0:nspec-1), intent(in)  :: part
     integer, dimension(:), pointer  :: glob2loc_elmnts
 
     integer  :: num_glob, num_part, nparts
@@ -174,7 +174,7 @@ contains
     integer :: ier
 
     ! allocates local numbering array
-    allocate(glob2loc_elmnts(0:nelmnts-1),stat=ier)
+    allocate(glob2loc_elmnts(0:nspec-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array glob2loc_elmnts'
 
     ! initializes number of local elements per partition
@@ -183,7 +183,7 @@ contains
     end do
 
     ! local numbering
-    do num_glob = 0, nelmnts-1
+    do num_glob = 0, nspec-1
        ! gets partition
        num_part = part(num_glob)
        ! increments local numbering of elements (starting with 0,1,2,...)
@@ -199,14 +199,15 @@ contains
   !--------------------------------------------------
   ! construct local numbering for the nodes in each partition
   !--------------------------------------------------
-  subroutine build_glob2loc_nodes(nelmnts, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
+  subroutine build_glob2loc_nodes(nspec, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
        glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes,nparts)
 
 !    include './constants_decompose_mesh_SCOTCH.h'
 
-    integer(long), intent(in)  :: nelmnts, nsize
-    integer, intent(in)  :: nnodes
-    integer, dimension(0:nelmnts-1), intent(in)  :: part
+    integer, intent(in)  :: nspec
+    integer, intent(in) :: nsize
+    integer, intent(in) :: nnodes
+    integer, dimension(0:nspec-1), intent(in)  :: part
     integer, dimension(0:nnodes-1), intent(in)  :: nnodes_elmnts
     integer, dimension(0:nsize*nnodes-1), intent(in)  :: nodes_elmnts
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
@@ -288,15 +289,16 @@ contains
 
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
-   subroutine build_interfaces(nelmnts, sup_neighbour, part, elmnts, xadj, adjncy, &
+   subroutine build_interfaces(nspec, sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nparts)
 
-    integer(long), intent(in)  :: nelmnts, sup_neighbour
-    integer, dimension(0:nelmnts-1), intent(in)  :: part
-    integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
-    integer, dimension(0:nelmnts), intent(in)  :: xadj
-    integer, dimension(0:sup_neighbour*nelmnts-1), intent(in)  :: adjncy
+    integer, intent(in)  :: nspec
+    integer, intent(in) :: sup_neighbour
+    integer, dimension(0:nspec-1), intent(in)  :: part
+    integer, dimension(0:esize*nspec-1), intent(in)  :: elmnts
+    integer, dimension(0:nspec), intent(in)  :: xadj
+    integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
     integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
     integer, intent(out)  :: ninterfaces
 
@@ -327,7 +329,7 @@ contains
 ! and counts same elements for each interface
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
-          do el = 0, nelmnts-1
+          do el = 0, nspec-1
              if ( part(el) == num_part ) then
                 ! looks at all neighbor elements
                 do el_adj = xadj(el), xadj(el+1)-1
@@ -358,7 +360,7 @@ contains
 
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
-          do el = 0, nelmnts-1
+          do el = 0, nspec-1
              if ( part(el) == num_part ) then
                 do el_adj = xadj(el), xadj(el+1)-1
                    ! adds element if in adjacent partition
@@ -405,20 +407,21 @@ contains
 
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
-   subroutine build_interfaces_no_ac_el_sep(nelmnts, &
+   subroutine build_interfaces_no_ac_el_sep(nspec, &
                               sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nb_materials, cs_material, num_material,nparts)
 
     integer, intent(in)  :: nb_materials,nparts
-    integer(long), intent(in)  :: nelmnts, sup_neighbour
-    integer, dimension(0:nelmnts-1), intent(in)  :: part
-    integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
-    integer, dimension(0:nelmnts), intent(in)  :: xadj
-    integer, dimension(0:sup_neighbour*nelmnts-1), intent(in)  :: adjncy
+    integer, intent(in)  :: nspec
+    integer, intent(in) :: sup_neighbour
+    integer, dimension(0:nspec-1), intent(in)  :: part
+    integer, dimension(0:esize*nspec-1), intent(in)  :: elmnts
+    integer, dimension(0:nspec), intent(in)  :: xadj
+    integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
     integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
     integer, intent(out)  :: ninterfaces
-    integer, dimension(1:nelmnts), intent(in)  :: num_material
+    integer, dimension(1:nspec), intent(in)  :: num_material
     ! vs velocities
     double precision, dimension(1:nb_materials), intent(in)  :: cs_material
 
@@ -448,7 +451,7 @@ contains
 ! and counts same elements for each interface
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
-          do el = 0, nelmnts-1
+          do el = 0, nspec-1
              if ( part(el) == num_part ) then
                 ! determines whether element is acoustic or not
                 if(num_material(el+1) > 0) then
@@ -500,7 +503,7 @@ contains
 
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
-          do el = 0, nelmnts-1
+          do el = 0, nspec-1
              if ( part(el) == num_part ) then
                 if(num_material(el+1) > 0) then
                    if ( cs_material(num_material(el+1)) < TINYVAL) then
@@ -657,7 +660,7 @@ contains
   ! Write elements on boundaries (and their four nodes on boundaries)
   ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_boundaries_database(IIN_database, iproc, nelmnts, nspec2D_xmin, nspec2D_xmax, &
+  subroutine write_boundaries_database(IIN_database, iproc, nspec, nspec2D_xmin, nspec2D_xmax, &
                         nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
                         ibelm_xmin, ibelm_xmax, ibelm_ymin, &
                         ibelm_ymax, ibelm_bottom, ibelm_top, &
@@ -668,7 +671,7 @@ contains
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
-    integer(long), intent(in)  :: nelmnts
+    integer, intent(in)  :: nspec
     integer, intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
       nspec2D_ymax, nspec2D_bottom, nspec2D_top
     integer, dimension(nspec2D_xmin), intent(in) :: ibelm_xmin
@@ -688,7 +691,7 @@ contains
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
-    integer, dimension(1:nelmnts)  :: part
+    integer, dimension(1:nspec)  :: part
 
     ! local parameters
     integer  :: i,j
@@ -954,7 +957,7 @@ contains
   !--------------------------------------------------
   ! Write elements (their nodes) pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_partition_database(IIN_database, iproc, nspec, nelmnts, elmnts, &
+  subroutine write_partition_database(IIN_database, iproc, nspec_local, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
                                       part, num_modele, ngnod, num_phase)
@@ -963,12 +966,12 @@ contains
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: num_phase, iproc
-    integer(long), intent(in)  :: nelmnts
-    integer, intent(inout)  :: nspec
-    integer, dimension(0:nelmnts-1)  :: part
-    integer, dimension(0:esize*nelmnts-1)  :: elmnts
+    integer, intent(in)  :: nspec
+    integer, intent(inout)  :: nspec_local
+    integer, dimension(0:nspec-1)  :: part
+    integer, dimension(0:esize*nspec-1)  :: elmnts
     integer, dimension(:), pointer :: glob2loc_elmnts
-    integer, dimension(2,nelmnts)  :: num_modele
+    integer, dimension(2,nspec)  :: num_modele
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
@@ -979,16 +982,16 @@ contains
 
     if ( num_phase == 1 ) then
     ! counts number of spectral elements in this partition
-       nspec = 0
-       do i = 0, nelmnts-1
+       nspec_local = 0
+       do i = 0, nspec-1
           if ( part(i) == iproc ) then
-             nspec = nspec + 1
+             nspec_local = nspec_local + 1
           end if
        end do
 
     else
     ! writes out element corner indices
-       do i = 0, nelmnts-1
+       do i = 0, nspec-1
           if ( part(i) == iproc ) then
 
              do j = 0, ngnod-1
@@ -1207,20 +1210,20 @@ contains
   ! Write elements on surface boundaries (and their four nodes on boundaries)
   ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
-  subroutine write_moho_surface_database(IIN_database, iproc, nelmnts, &
+  subroutine write_moho_surface_database(IIN_database, iproc, nspec, &
                         glob2loc_elmnts, glob2loc_nodes_nparts, &
                         glob2loc_nodes_parts, glob2loc_nodes, part, &
                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
-    integer(long), intent(in)  :: nelmnts
+    integer, intent(in)  :: nspec
 
     integer, dimension(:), pointer :: glob2loc_elmnts
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
-    integer, dimension(1:nelmnts)  :: part
+    integer, dimension(1:nspec)  :: part
 
     integer ,intent(in) :: nspec2D_moho
     integer ,dimension(nspec2D_moho), intent(in) :: ibelm_moho
@@ -1291,7 +1294,7 @@ contains
   !               expensive calculations in specfem simulations
   !--------------------------------------------------
 
-  subroutine acoustic_elastic_poro_load (elmnts_load,nelmnts,count_def_mat,count_undef_mat, &
+  subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                     num_material,mat_prop,undef_mat_prop)
   !
   ! note:
@@ -1301,14 +1304,14 @@ contains
   !
     implicit none
 
-    integer(long),intent(in) :: nelmnts
+    integer,intent(in) :: nspec
     integer, intent(in)  :: count_def_mat,count_undef_mat
 
     ! load weights
-    integer,dimension(1:nelmnts),intent(out) :: elmnts_load
+    integer,dimension(1:nspec),intent(out) :: elmnts_load
 
     ! materials
-    integer, dimension(1:nelmnts), intent(in)  :: num_material
+    integer, dimension(1:nspec), intent(in)  :: num_material
     double precision, dimension(16,count_def_mat),intent(in)  :: mat_prop
     character (len=30), dimension(6,count_undef_mat),intent(in) :: undef_mat_prop
 
@@ -1353,7 +1356,7 @@ contains
 
 
     ! sets weights for elements
-    do el = 0, nelmnts-1
+    do el = 0, nspec-1
       ! acoustic element (cheap)
       if ( is_acoustic(num_material(el+1)) ) then
         elmnts_load(el+1) = elmnts_load(el+1)*ACOUSTIC_LOAD
@@ -1375,7 +1378,7 @@ contains
   ! Repartitioning : two coupled poroelastic/elastic elements are transfered to the same partition
   !--------------------------------------------------
 
-  subroutine poro_elastic_repartitioning (nelmnts, nnodes, elmnts, &
+  subroutine poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                         nb_materials, num_material, mat_prop, &
                         sup_neighbour, nsize, &
                         nproc, part)
@@ -1383,16 +1386,17 @@ contains
 
     implicit none
 
-    integer(long),intent(in) :: nelmnts
+    integer,intent(in) :: nspec
     integer, intent(in)  :: nnodes, nproc, nb_materials
-    integer(long), intent(in) :: sup_neighbour,nsize
+    integer, intent(in) :: sup_neighbour
+    integer, intent(in) :: nsize
 
-    integer, dimension(1:nelmnts), intent(in)  :: num_material
+    integer, dimension(1:nspec), intent(in)  :: num_material
 
     double precision, dimension(16,nb_materials),intent(in)  :: mat_prop
 
-    integer, dimension(0:nelmnts-1)  :: part
-    integer, dimension(0:esize*nelmnts-1)  :: elmnts
+    integer, dimension(0:nspec-1)  :: part
+    integer, dimension(0:esize*nspec-1)  :: elmnts
 
     integer  :: nfaces_coupled
     !integer, intent(out)  :: nfaces_coupled
@@ -1429,22 +1433,22 @@ contains
     !if( .not. any(is_elastic) ) return
 
     ! gets neighbors by 4 common nodes (face)
-    allocate(xadj(0:nelmnts),stat=ier)
+    allocate(xadj(0:nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xadj'
-    allocate(adjncy(0:sup_neighbour*nelmnts-1),stat=ier)
+    allocate(adjncy(0:sup_neighbour*nspec-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
-    !call mesh2dual_ncommonnodes(nelmnts, nnodes, elmnts, xadj, adjncy, nnodes_elmnts, nodes_elmnts,4)
-    call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, &
+    !call mesh2dual_ncommonnodes(nspec, nnodes, elmnts, xadj, adjncy, nnodes_elmnts, nodes_elmnts,4)
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
                                 nodes_elmnts, max_neighbour, 4)
 
     ! counts coupled elements
     nfaces_coupled = 0
-    do el = 0, nelmnts-1
+    do el = 0, nspec-1
        if ( is_poroelastic(num_material(el+1)) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
              if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
@@ -1460,7 +1464,7 @@ contains
 
     ! stores elements indices
     nfaces_coupled = 0
-    do el = 0, nelmnts-1
+    do el = 0, nspec-1
        if ( is_poroelastic(num_material(el+1)) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
              if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
@@ -1496,27 +1500,28 @@ contains
   ! Repartitioning : two coupled moho surface elements are transfered to the same partition
   !--------------------------------------------------
 
-  subroutine moho_surface_repartitioning (nelmnts, nnodes, elmnts, &
+  subroutine moho_surface_repartitioning (nspec, nnodes, elmnts, &
                         sup_neighbour, nsize, nproc, part, &
                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
 
     implicit none
 
     ! number of (spectral) elements  ( <-> nspec )
-    integer(long),intent(in) :: nelmnts
+    integer, intent(in) :: nspec
 
     ! number of (global) nodes, number or processes
     integer, intent(in)  :: nnodes, nproc
 
     ! maximum number of neighours and max number of elements-that-contain-the-same-node
-    integer(long), intent(in) :: sup_neighbour,nsize
+    integer, intent(in) :: sup_neighbour
+    integer, intent(in) :: nsize
 
     ! partition index on each element
-    integer, dimension(0:nelmnts-1)  :: part
+    integer, dimension(0:nspec-1)  :: part
 
     ! mesh element indexing
     ! ( elmnts(esize,nspec) )
-    integer, dimension(0:esize*nelmnts-1)  :: elmnts
+    integer, dimension(0:esize*nspec-1)  :: elmnts
 
     ! moho surface
     integer ,intent(in) :: nspec2D_moho
@@ -1543,7 +1548,7 @@ contains
 
     ! temporary flag arrays
     ! element ids start from 0
-    allocate( is_moho(0:nelmnts-1),stat=ier)
+    allocate( is_moho(0:nspec-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array is_moho'
     ! node ids start from 0
     allocate( node_is_moho(0:nnodes-1),stat=ier)
@@ -1567,7 +1572,7 @@ contains
     enddo
 
     ! checks if element has moho surface
-    do el = 0, nelmnts-1
+    do el = 0, nspec-1
       if( is_moho(el) ) cycle
 
       ! loops over all element corners
@@ -1584,30 +1589,30 @@ contains
 
     ! statistics output
     counter = 0
-    do el=0, nelmnts-1
+    do el=0, nspec-1
      if ( is_moho(el) ) counter = counter + 1
     enddo
     print*,'  moho elements = ',counter
 
     ! gets neighbors by 4 common nodes (face)
     ! contains number of adjacent elements (neighbours)
-    allocate(xadj(0:nelmnts),stat=ier)
+    allocate(xadj(0:nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xadj'
     ! contains all element id indices of adjacent elements
-    allocate(adjncy(0:sup_neighbour*nelmnts-1),stat=ier)
+    allocate(adjncy(0:sup_neighbour*nspec-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
 
-    call mesh2dual_ncommonnodes(nelmnts, nnodes, nsize, sup_neighbour, &
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                         elmnts, xadj, adjncy, nnodes_elmnts, &
                         nodes_elmnts, max_neighbour, 4)
 
     ! counts coupled elements
     nfaces_coupled = 0
-    do el = 0, nelmnts-1
+    do el = 0, nspec-1
        if ( is_moho(el) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
             ! increments counter if it contains face
@@ -1622,7 +1627,7 @@ contains
 
     ! stores elements indices
     nfaces_coupled = 0
-    do el = 0, nelmnts-1
+    do el = 0, nspec-1
        if ( is_moho(el) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
              if ( is_moho(adjncy(el_adj)) ) then

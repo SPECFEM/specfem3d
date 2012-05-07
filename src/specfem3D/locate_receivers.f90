@@ -86,12 +86,17 @@
   integer ios
 
   double precision,dimension(1) :: altitude_rec,distmin_ele
-  double precision,dimension(4) :: elevation_node,dist_node
+  !double precision,dimension(4) :: elevation_node,dist_node  
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
+
+  real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
+  
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
+  
   double precision, allocatable, dimension(:) :: horiz_dist
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision dist
+  
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta,dgamma
   double precision x,y,z
   double precision xix,xiy,xiz
@@ -102,8 +107,11 @@
   double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
 
   integer irec
-  integer i,j,k,ispec,iglob,iface,inode,imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
-  integer iselected,jselected,iface_selected,iadjust,jadjust
+  integer i,j,k,ispec,iglob
+  integer imin,imax,jmin,jmax,kmin,kmax
+  !integer iface,inode,igll,jgll,kgll
+
+!  integer iselected,jselected,iface_selected,iadjust,jadjust
   integer iproc(1)
 
   ! topology of the control points of the surface element
@@ -123,7 +131,7 @@
 
   ! receiver information
   ! station information for writing the seismograms
-  integer :: iglob_selected
+!  integer :: iglob_selected
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
   double precision, allocatable, dimension(:) :: x_found_all,y_found_all,z_found_all
   double precision, dimension(:), allocatable :: final_distance_all
@@ -210,10 +218,13 @@
         ! write the locations of stations, so that we can load them and write them to SU headers later
         open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
-        if( ios /= 0 ) call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+        if( ios /= 0 ) &
+          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+          
         do irec=1,nrec
           write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
         enddo
+        
         close(IOUT_SU)
         deallocate(x_found,y_found,z_found)
       endif
@@ -273,7 +284,9 @@
   ! loop on all the stations
   do irec=1,nrec
 
-    read(1,*,iostat=ios) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
+    read(1,*,iostat=ios) station_name(irec),network_name(irec), &
+                          stlat(irec),stlon(irec),stele(irec),stbur(irec)
+                          
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
     ! convert station location to UTM
@@ -281,7 +294,8 @@
                 UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
     ! compute horizontal distance between source and receiver in km
-    horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 + (stutm_x(irec)-utm_x_source)**2) / 1000.
+    horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 &
+                            + (stutm_x(irec)-utm_x_source)**2) / 1000.d0
 
     ! print some information about stations
     if(myrank == 0) then
@@ -294,79 +308,88 @@
     endif
 
     ! get approximate topography elevation at source long/lat coordinates
-    !   set distance to huge initial value
-    distmin = HUGEVAL
-    if(num_free_surface_faces > 0) then
-      iglob_selected = 1
-      ! loop only on points inside the element
-      ! exclude edges to ensure this point is not shared with other elements
-      imin = 2
-      imax = NGLLX - 1
-      jmin = 2
-      jmax = NGLLY - 1
-      iselected = 0
-      jselected = 0
-      iface_selected = 0
-      do iface=1,num_free_surface_faces
-        do j=jmin,jmax
-          do i=imin,imax
-
-            ispec = free_surface_ispec(iface)
-            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
-            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
-            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
-            iglob = ibool(igll,jgll,kgll,ispec)
-
-            ! keep this point if it is closer to the receiver
-            dist = (stutm_x(irec)-dble(xstore(iglob)))**2 + &
-                   (stutm_y(irec)-dble(ystore(iglob)))**2
-            if(dist < distmin) then
-              distmin = dist
-              iglob_selected = iglob
-              iface_selected = iface
-              iselected = i
-              jselected = j
-              altitude_rec(1) = zstore(iglob_selected)
-            endif
-          enddo
-        enddo
-      ! end of loop on all the elements on the free surface
-      end do
-      !  weighted mean at current point of topography elevation of the four closest nodes
-      !  set distance to huge initial value
-      distmin = HUGEVAL
-      do j=jselected,jselected+1
-        do i=iselected,iselected+1
-          inode = 1
-          do jadjust=0,1
-            do iadjust= 0,1
-              ispec = free_surface_ispec(iface_selected)
-              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-              iglob = ibool(igll,jgll,kgll,ispec)
-
-              elevation_node(inode) = zstore(iglob)
-              dist_node(inode) = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
-                                       (stutm_y(irec)-dble(ystore(iglob)))**2)
-              inode = inode + 1
-            end do
-          end do
-          dist = sum(dist_node)
-          if(dist < distmin) then
-            distmin = dist
-            altitude_rec(1) = (dist_node(1)/dist)*elevation_node(1) + &
-                              (dist_node(2)/dist)*elevation_node(2) + &
-                              (dist_node(3)/dist)*elevation_node(3) + &
-                              (dist_node(4)/dist)*elevation_node(4)
-          endif
-        end do
-      end do
-    end if
+    xloc = stutm_x(irec)
+    yloc = stutm_y(irec)
+    call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
+                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+    altitude_rec(1) = loc_ele
+    distmin_ele(1) = loc_distmin
+    
+!    !   set distance to huge initial value
+!    distmin = HUGEVAL
+!    if(num_free_surface_faces > 0) then
+!      iglob_selected = 1
+!      ! loop only on points inside the element
+!      ! exclude edges to ensure this point is not shared with other elements
+!      imin = 2
+!      imax = NGLLX - 1
+!      jmin = 2
+!      jmax = NGLLY - 1
+!      iselected = 0
+!      jselected = 0
+!      iface_selected = 0
+!      do iface=1,num_free_surface_faces
+!        do j=jmin,jmax
+!          do i=imin,imax
+!
+!            ispec = free_surface_ispec(iface)
+!            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
+!            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
+!            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
+!            iglob = ibool(igll,jgll,kgll,ispec)
+!
+!            ! keep this point if it is closer to the receiver
+!            dist = (stutm_x(irec)-dble(xstore(iglob)))**2 + &
+!                   (stutm_y(irec)-dble(ystore(iglob)))**2
+!            if(dist < distmin) then
+!              distmin = dist
+!              iglob_selected = iglob
+!              iface_selected = iface
+!              iselected = i
+!              jselected = j
+!              altitude_rec(1) = zstore(iglob_selected)
+!            endif
+!          enddo
+!        enddo
+!      ! end of loop on all the elements on the free surface
+!      end do
+!      !  weighted mean at current point of topography elevation of the four closest nodes
+!      !  set distance to huge initial value
+!      distmin = HUGEVAL
+!      do j=jselected,jselected+1
+!        do i=iselected,iselected+1
+!          inode = 1
+!          do jadjust=0,1
+!            do iadjust= 0,1
+!              ispec = free_surface_ispec(iface_selected)
+!              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+!              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+!              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+!              iglob = ibool(igll,jgll,kgll,ispec)
+!
+!              elevation_node(inode) = zstore(iglob)
+!              dist_node(inode) = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
+!                                       (stutm_y(irec)-dble(ystore(iglob)))**2)
+!              inode = inode + 1
+!            end do
+!          end do
+!          dist = sum(dist_node)
+!          if(dist < distmin) then
+!            distmin = dist
+!            altitude_rec(1) = (dist_node(1)/dist)*elevation_node(1) + &
+!                              (dist_node(2)/dist)*elevation_node(2) + &
+!                              (dist_node(3)/dist)*elevation_node(3) + &
+!                              (dist_node(4)/dist)*elevation_node(4)
+!          endif
+!        end do
+!      end do
+!    end if
+    
     !  MPI communications to determine the best slice
-    distmin_ele(1)= distmin
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_rec,1,elevation_all,1,NPROC)
+    
     if(myrank == 0) then
       iproc = minloc(distmin_ele_all)
       altitude_rec(1) = elevation_all(iproc(1))
@@ -374,8 +397,6 @@
     call bcast_all_dp(altitude_rec,1)
     elevation(irec) = altitude_rec(1)
 
-    ! reset distance to huge initial value
-    distmin=HUGEVAL
 
 !     get the Cartesian components of n in the model: nu
 
@@ -405,6 +426,9 @@
       z_target(irec) = elevation(irec) - stbur(irec)
     endif
     !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
+
+    ! reset distance to huge initial value
+    distmin=HUGEVAL
 
     if (.not. SU_FORMAT) then
       ! determines closest GLL point
@@ -495,7 +519,8 @@
               (y_target(irec)>=ymin_ELE .and. y_target(irec)<=ymax_ELE) .and. &
               (z_target(irec)>=zmin_ELE .and. z_target(irec)<=zmax_ELE) ) then
             ! we find the element (ispec) which "may" contain the receiver (irec)
-            ! so we only need to compute distances (which is expensive because of "dsqrt") within those elements
+            ! so we only need to compute distances 
+            !(which is expensive because of "dsqrt") within those elements
             ispec_selected_rec(irec) = ispec
             do k = kmin_temp,kmax_temp
               do j = jmin_temp,jmax_temp
@@ -899,28 +924,30 @@
       write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
       write(IMAIN,*) '     in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
       if(FASTER_RECEIVERS_POINTS_ONLY) then
-        write(IMAIN,*) '     in point i,j,k = ',nint(xi_receiver(irec)),nint(eta_receiver(irec)),nint(gamma_receiver(irec))
+        write(IMAIN,*) '     in point i,j,k = ',nint(xi_receiver(irec)), &
+                                       nint(eta_receiver(irec)), &
+                                       nint(gamma_receiver(irec))
         write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
         write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
         write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
       else
         write(IMAIN,*) '     at coordinates: '
-        write(IMAIN,*) '       xi    = ',xi_receiver(irec)
-        write(IMAIN,*) '       eta   = ',eta_receiver(irec)
-        write(IMAIN,*) '       gamma = ',gamma_receiver(irec)
+        write(IMAIN,*) '     xi    = ',xi_receiver(irec)
+        write(IMAIN,*) '     eta   = ',eta_receiver(irec)
+        write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
       endif
       if( SUPPRESS_UTM_PROJECTION ) then
-        write(IMAIN,*) '         x: ',x_found(irec)
-        write(IMAIN,*) '         y: ',y_found(irec)
+        write(IMAIN,*) '     x: ',x_found(irec)
+        write(IMAIN,*) '     y: ',y_found(irec)
       else
         write(IMAIN,*) '     UTM x: ',x_found(irec)
         write(IMAIN,*) '     UTM y: ',y_found(irec)
       endif
       if( USE_SOURCES_RECVS_Z ) then
-        write(IMAIN,*) '         z: ',z_found(irec)
+        write(IMAIN,*) '     z: ',z_found(irec)
       else
         write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
-        write(IMAIN,*) '         z: ',z_found(irec)
+        write(IMAIN,*) '     z: ',z_found(irec)
       endif
       write(IMAIN,*)
 
@@ -965,10 +992,13 @@
     ! write the locations of stations, so that we can load them and write them to SU headers later
     open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
-    if( ios /= 0 ) call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+    if( ios /= 0 ) &
+      call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
+      
     do irec=1,nrec
       write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
     enddo
+    
     close(IOUT_SU)
 
     ! stores station infos for later runs
@@ -1032,11 +1062,13 @@
 
   end subroutine locate_receivers
 
-!=====================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
-
-  subroutine station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,filename,filtered_filename,nfilter, &
-      LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
+  subroutine station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE, &
+                            myrank,filename,filtered_filename,nfilter, &
+                            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
   implicit none
 

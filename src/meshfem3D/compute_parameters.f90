@@ -24,13 +24,13 @@
 !
 !=====================================================================
 
-subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
-     NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-     NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
-     NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-     NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
-     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
+  subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
+                               NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
+                               NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
+                               NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
+                               NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                               NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
+                               USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   implicit none
 
@@ -164,7 +164,7 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
      ! exact number of surface elements in the doubling regions
 
      ! number of elementary bricks in the two regions with doubling
-     NUM2D_DOUBLING_BRICKS_XI = (NEX_PER_PROC_XI/4 &
+     NUM2D_DOUBLING_BRICKS_XI = (NEX_PER_PROC_XI/2 &
           + NEX_DOUBLING_ABOVE_PER_PROC_XI)/2
 
      NUM2D_DOUBLING_BRICKS_ETA = (NEX_PER_PROC_ETA/2 &
@@ -204,8 +204,8 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
 
      ! 2-D addressing and buffers for summation between slices
      ! we add one to number of points because of the flag after the last point
-     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*2*2 + 1
-     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*2*2 + 1
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
 
      ! exact number of global points
 
@@ -272,7 +272,7 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
 
      NSPEC2D_NO_DOUBLING_ETA = &
           (NEX_PER_PROC_ETA/4)*NER_REGULAR1 &
-          + (NEX_PER_PROC_ETA/4)*NER_REGULAR2 &
+          + (NEX_PER_PROC_ETA/2)*NER_REGULAR2 &
           + NEX_PER_PROC_ETA*NER_REGULAR3
 
      ! exact number of surface elements in the doubling regions
@@ -315,13 +315,17 @@ subroutine compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
      NSPEC2DMAX_XMIN_XMAX = NSPEC2D_B_ETA
      NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
 
+     !debug 
+     !print*,'nspec minmax:',NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_yMAX
+
      ! theoretical number of Gauss-Lobatto points in radial direction
      !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
 
      ! 2-D addressing and buffers for summation between slices
      ! we add one to number of points because of the flag after the last point
-     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*2*2 + 1
-     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*2*2 + 1
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+
 
      ! exact number of global points
 

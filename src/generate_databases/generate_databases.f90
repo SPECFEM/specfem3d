@@ -192,7 +192,7 @@
   include "constants.h"
 
 ! number of spectral elements in each block
-  integer nspec,npointot
+  integer npointot
 
 ! local to global indexing array
   integer, dimension(:,:,:,:), allocatable :: ibool
@@ -206,9 +206,8 @@
 ! use integer array to store topography values
   integer :: UTM_PROJECTION_ZONE
   logical :: SUPPRESS_UTM_PROJECTION
+
   integer :: NX_TOPO,NY_TOPO
-  double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
-  character(len=100) :: topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! timer MPI
@@ -288,14 +287,15 @@
   integer, dimension(:), allocatable  :: ibelm_moho
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
 
-  integer :: nglob,nglob_total,nspec_total
+  integer :: nglob_total,nspec_total
 
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
 
 ! flag for noise simulation
   integer :: NOISE_TOMOGRAPHY
-
+  integer :: IMODEL
+  
   end module generate_databases_par
 
 !
@@ -380,15 +380,17 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
     if( myrank == 0 ) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
-      print*, 'error: number of processors supposed to run on: ',NPROC
-      print*, 'error: number of MPI processors actually run on: ',sizeprocs      
+      print*
+      print*, 'error generate_databases: number of processors supposed to run on: ',NPROC
+      print*, 'error generate_databases: number of MPI processors actually run on: ',sizeprocs
+      print*
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
@@ -415,6 +417,28 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
     write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
+    write(IMAIN,*)
+    
+    write(IMAIN,'(a)',advance='no') ' velocity model: '
+    select case(IMODEL)
+    case( IMODEL_DEFAULT )
+    write(IMAIN,'(a)',advance='yes') '  default '
+    case( IMODEL_GLL )
+    write(IMAIN,'(a)',advance='yes') '  gll'
+    case( IMODEL_1D_PREM )
+    write(IMAIN,'(a)',advance='yes') '  1d_prem'
+    case( IMODEL_1D_CASCADIA )
+    write(IMAIN,'(a)',advance='yes') '  1d_cascadia'
+    case( IMODEL_1D_SOCAL )
+    write(IMAIN,'(a)',advance='yes') '  1d_socal'
+    case( IMODEL_SALTON_TROUGH )
+    write(IMAIN,'(a)',advance='yes') '  salton_trough'
+    case( IMODEL_TOMO )
+    write(IMAIN,'(a)',advance='yes') '  tomo'
+    case( IMODEL_USER_EXTERNAL )
+    write(IMAIN,'(a)',advance='yes') '  external'
+    end select
+    
     write(IMAIN,*)
   endif
 
@@ -503,18 +527,13 @@
 
   if( OCEANS .and. TOPOGRAPHY ) then
 
-    ! for Southern California
-    NX_TOPO = NX_TOPO_SOCAL
-    NY_TOPO = NY_TOPO_SOCAL
-    ORIG_LAT_TOPO = ORIG_LAT_TOPO_SOCAL
-    ORIG_LONG_TOPO = ORIG_LONG_TOPO_SOCAL
-    DEGREES_PER_CELL_TOPO = DEGREES_PER_CELL_TOPO_SOCAL
-    topo_file = TOPO_FILE_SOCAL
-
+    ! values given in constants.h
+    NX_TOPO = NX_TOPO_FILE
+    NY_TOPO = NY_TOPO_FILE
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
     if( ier /= 0 ) stop 'error allocating array itopo_bathy'
 
-    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO,topo_file)
+    call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO)
 
     if(myrank == 0) then
       write(IMAIN,*)
@@ -881,24 +900,21 @@
   use generate_databases_par
   implicit none
 
-! assign theoretical number of elements
-  nspec = NSPEC_AB
-
-! compute maximum number of points
-  npointot = nspec * NGLLCUBE
+  ! compute maximum number of points
+  npointot = NSPEC_AB * NGLLCUBE
 
 ! use dynamic allocation to allocate memory for arrays
-!  allocate(idoubling(nspec))
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+!  allocate(idoubling(NSPEC_AB))
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibool'
-  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(xstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array xstore'
-  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(ystore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ystore'
-  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(zstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-  call memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh, &
+  call memory_eval_mesher(myrank,NSPEC_AB,npointot,nnodes_ext_mesh, &
                         nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
                         nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
@@ -913,41 +929,15 @@
   if(myrank == 0) then
     write(IMAIN,*) 'create regions: '
   endif
-  call create_regions_mesh_ext(ibool, &
-                        xstore, ystore, zstore, nspec, &
-                        npointot, myrank, LOCAL_PATH, &
-                        nnodes_ext_mesh, nelmnts_ext_mesh, &
-                        nodes_coords_ext_mesh, elmnts_ext_mesh, &
-                        max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
-                        nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
-                        num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
-                        my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
-                        my_interfaces_ext_mesh, &
-                        ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
-                        nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
-                        NSPEC2D_BOTTOM, NSPEC2D_TOP,&
-                        ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
-                        nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
-                        nodes_ibelm_bottom,nodes_ibelm_top, &
-                        SAVE_MESH_FILES, &
-                        nglob, &
-                        ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
-                        ATTENUATION,USE_OLSEN_ATTENUATION, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,NX_TOPO,NY_TOPO, &
-                        ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO, &
-                        itopo_bathy, &
-                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho)
-
+  call create_regions_mesh()
+  
 ! now done inside create_regions_mesh_ext routine...
 ! Moho boundary parameters, 2-D jacobians and normals
 !  if( SAVE_MOHO_MESH ) then
-!    call create_regions_mesh_save_moho(myrank,nglob,nspec, &
+!    call create_regions_mesh_save_moho(myrank,nglob,NSPEC_AB, &
 !                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
 !                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 !  endif
-
-! defines global number of nodes in model
-  NGLOB_AB = nglob
 
 ! print min and max of topography included
   min_elevation = HUGEVAL

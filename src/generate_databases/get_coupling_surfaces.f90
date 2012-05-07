@@ -26,7 +26,7 @@
 
 
   subroutine get_coupling_surfaces(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -37,7 +37,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec,nglob,NPROC
+  integer :: myrank,nspec,NPROC
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -56,21 +56,21 @@
 
   ! acoustic - elastic domain coupling
   call get_coupling_surfaces_ac_el(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
 
   ! acoustic - poroelastic domain coupling
   call get_coupling_surfaces_ac_poro(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
 
   ! elastic - poroelastic domain coupling
   call get_coupling_surfaces_el_poro(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -82,7 +82,7 @@
 !
 
   subroutine get_coupling_surfaces_ac_el(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -93,7 +93,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec,nglob,NPROC
+  integer :: myrank,nspec,NPROC
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -168,13 +168,13 @@
   tmp_jacobian2Dw(:,:) = 0.0
 
   ! sets flags for acoustic / elastic on global points
-  allocate(elastic_flag(nglob),stat=ier)
+  allocate(elastic_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array elastic_flag'
-  allocate(acoustic_flag(nglob),stat=ier)
+  allocate(acoustic_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array acoustic_flag'
-  allocate(test_flag(nglob),stat=ier)
+  allocate(test_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array test_flag'
-  allocate(mask_ibool(nglob),stat=ier)
+  allocate(mask_ibool(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array mask_ibool'
   elastic_flag(:) = 0
   acoustic_flag(:) = 0
@@ -220,18 +220,18 @@
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
   ! sums elastic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,elastic_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,elastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
   ! sums acoustic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,acoustic_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
 
   ! sums test flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,test_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
@@ -291,7 +291,7 @@
 
               ! gets face GLL 2Djacobian, weighted from element face
               call get_jacobian_boundary_face(myrank,nspec, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -302,7 +302,7 @@
                 do i=1,NGLLX
                     ! directs normals such that they point outwards of element
                     call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                                ibool,nspec,nglob, &
+                                                ibool,nspec,nglob_dummy, &
                                                 xstore_dummy,ystore_dummy,zstore_dummy, &
                                                 normal_face(:,i,j) )
                     ! makes sure that it always points away from acoustic element,
@@ -382,7 +382,7 @@
 !
 
   subroutine get_coupling_surfaces_ac_poro(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -393,7 +393,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec,nglob,NPROC
+  integer :: myrank,nspec,NPROC
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -467,11 +467,11 @@
   tmp_jacobian2Dw(:,:) = 0.0
 
   ! sets flags for acoustic / poroelastic on global points
-  allocate(poroelastic_flag(nglob),stat=ier)
+  allocate(poroelastic_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array poroelastic_flag'
-  allocate(acoustic_flag(nglob),stat=ier)
+  allocate(acoustic_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array acoustic_flag'
-  allocate(test_flag(nglob),stat=ier)
+  allocate(test_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array test_flag'
   poroelastic_flag(:) = 0
   acoustic_flag(:) = 0
@@ -517,18 +517,18 @@
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
   ! sums poroelastic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,poroelastic_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,poroelastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
   ! sums acoustic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,acoustic_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
 
   ! sums test flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,test_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
@@ -568,7 +568,7 @@
 
               ! gets face GLL 2Djacobian, weighted from element face
               call get_jacobian_boundary_face(myrank,nspec, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -579,7 +579,7 @@
                 do i=1,NGLLX
                     ! directs normals such that they point outwards of element
                     call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                                ibool,nspec,nglob, &
+                                                ibool,nspec,nglob_dummy, &
                                                 xstore_dummy,ystore_dummy,zstore_dummy, &
                                                 normal_face(:,i,j) )
                     ! reverse the sign, we know we are in a poroelastic element
@@ -644,7 +644,7 @@
 !
 
   subroutine get_coupling_surfaces_el_poro(myrank, &
-                        nspec,nglob,ibool,NPROC, &
+                        nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -655,7 +655,7 @@
   implicit none
 
 ! number of spectral elements in each block
-  integer :: myrank,nspec,nglob,NPROC
+  integer :: myrank,nspec,NPROC
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -735,11 +735,11 @@
   tmp_jacobian2Dw(:,:) = 0.0
 
   ! sets flags for elastic / poroelastic on global points
-  allocate(poroelastic_flag(nglob),stat=ier)
+  allocate(poroelastic_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array poroelastic_flag'
-  allocate(elastic_flag(nglob),stat=ier)
+  allocate(elastic_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array elastic_flag'
-  allocate(test_flag(nglob),stat=ier)
+  allocate(test_flag(nglob_dummy),stat=ier)
   if( ier /= 0 ) stop 'error allocating array test_flag'
   poroelastic_flag(:) = 0
   elastic_flag(:) = 0
@@ -785,18 +785,18 @@
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
   ! sums poroelastic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,poroelastic_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,poroelastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
   ! sums elastic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,elastic_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,elastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
 
   ! sums test flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
+  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,test_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
@@ -860,7 +860,7 @@
 
               ! gets face GLL 2Djacobian, weighted from element face
               call get_jacobian_boundary_face(myrank,nspec, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -870,7 +870,7 @@
                 do i=1,NGLLX
                     ! directs normals such that they point outwards of poroelastic element
                     call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-                                                ibool,nspec,nglob, &
+                                                ibool,nspec,nglob_dummy, &
                                                 xstore_dummy,ystore_dummy,zstore_dummy, &
                                                 normal_face(:,i,j) )
                 enddo
@@ -948,7 +948,7 @@
 ! not working properly yet...
 
 !  subroutine get_coupling_surfaces_comb(myrank, &
-!                        nspec,nglob,ibool,NPROC, &
+!                        nspec,ibool,NPROC, &
 !                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
 !                        num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
 !                        my_neighbours_ext_mesh)
@@ -959,7 +959,7 @@
 !  implicit none
 !
 !! number of spectral elements in each block
-!  integer :: myrank,nspec,nglob,NPROC
+!  integer :: myrank,nspec,NPROC
 !
 !! arrays with the mesh
 !  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -1040,17 +1040,17 @@
 !  tmp_jacobian2Dw(:,:) = 0.0
 !
 !  ! sets flags for acoustic / elastic /poroelastic on global points
-!  allocate(elastic_flag(nglob),stat=ier)
+!  allocate(elastic_flag(nglob_dummy),stat=ier)
 !  if( ier /= 0 ) stop 'error allocating array elastic_flag'
-!  allocate(acoustic_flag(nglob),stat=ier)
+!  allocate(acoustic_flag(nglob_dummy),stat=ier)
 !  if( ier /= 0 ) stop 'error allocating array acoustic_flag'
-!  allocate(poroelastic_flag(nglob),stat=ier)
+!  allocate(poroelastic_flag(nglob_dummy),stat=ier)
 !  if( ier /= 0 ) stop 'error allocating array poroelastic_flag'
-!  allocate(test_flag(nglob),stat=ier)
+!  allocate(test_flag(nglob_dummy),stat=ier)
 !  if( ier /= 0 ) stop 'error allocating array test_flag'
-!  allocate(mask_ibool_ac_el(nglob),stat=ier)
-!  allocate(mask_ibool_ac_po(nglob),stat=ier)
-!  allocate(mask_ibool_el_po(nglob),stat=ier)
+!  allocate(mask_ibool_ac_el(nglob_dummy),stat=ier)
+!  allocate(mask_ibool_ac_po(nglob_dummy),stat=ier)
+!  allocate(mask_ibool_el_po(nglob_dummy),stat=ier)
 !  if( ier /= 0 ) stop 'error allocating array mask_ibool'
 !  elastic_flag(:) = 0
 !  acoustic_flag(:) = 0
@@ -1105,22 +1105,22 @@
 !     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
 !  enddo
 !  ! sums elastic flags
-!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,elastic_flag, &
+!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,elastic_flag, &
 !                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
 !                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
 !                        my_neighbours_ext_mesh)
 !  ! sums acoustic flags
-!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,acoustic_flag, &
+!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,acoustic_flag, &
 !                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
 !                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
 !                        my_neighbours_ext_mesh)
 !  ! sums poroelastic flags
-!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,poroelastic_flag, &
+!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,poroelastic_flag, &
 !                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
 !                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
 !                        my_neighbours_ext_mesh)
 !  ! sums test flags
-!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob,test_flag, &
+!  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,test_flag, &
 !                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
 !                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
 !                        my_neighbours_ext_mesh)
@@ -1183,7 +1183,7 @@
 !
 !              ! gets face GLL 2Djacobian, weighted from element face
 !              call get_jacobian_boundary_face(myrank,nspec, &
-!                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+!                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
 !                        dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
 !                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
 !                        ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -1194,7 +1194,7 @@
 !                do i=1,NGLLX
 !                    ! directs normals such that they point outwards of element
 !                    call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-!                                                ibool,nspec,nglob, &
+!                                                ibool,nspec,nglob_dummy, &
 !                                                xstore_dummy,ystore_dummy,zstore_dummy, &
 !                                                normal_face(:,i,j) )
 !                    ! makes sure that it always points away from acoustic element,
@@ -1314,7 +1314,7 @@
 !
 !            ! gets face GLL 2Djacobian, weighted from element face
 !              call get_jacobian_boundary_face(myrank,nspec, &
-!                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+!                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
 !                        dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
 !                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
 !                        ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -1325,7 +1325,7 @@
 !                do i=1,NGLLX
 !                    ! directs normals such that they point outwards of element
 !                    call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-!                                                ibool,nspec,nglob, &
+!                                                ibool,nspec,nglob_dummy, &
 !                                                xstore_dummy,ystore_dummy,zstore_dummy, &
 !                                                normal_face(:,i,j) )
 !                    ! makes sure that it always points away from acoustic element,
@@ -1433,7 +1433,7 @@
 !
 !              ! gets face GLL 2Djacobian, weighted from element face
 !              call get_jacobian_boundary_face(myrank,nspec, &
-!                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
+!                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
 !                        dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
 !                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
 !                        ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
@@ -1443,7 +1443,7 @@
 !                do i=1,NGLLX
 !                    ! directs normals such that they point outwards of poroelastic element
 !                    call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
-!                                                ibool,nspec,nglob, &
+!                                                ibool,nspec,nglob_dummy, &
 !                                                xstore_dummy,ystore_dummy,zstore_dummy, &
 !                                                normal_face(:,i,j) )
 !                enddo

@@ -65,12 +65,13 @@ ARFLAGS = cru
 RANLIB = ranlib
 
 libgendatabases_a_OBJECTS = \
+	$O/generate_databases.o \
+	$O/create_regions_mesh.o \
 	$O/assemble_MPI_scalar.o \
 	$O/calc_jacobian.o \
 	$O/check_mesh_resolution.o \
 	$O/multiply_arrays_source.o \
 	$O/create_name_database.o \
-	$O/create_regions_mesh.o \
 	$O/create_mass_matrices.o \
 	$O/create_serial_name_database.o \
 	$O/define_derivation_matrices.o \
@@ -91,9 +92,14 @@ libgendatabases_a_OBJECTS = \
 	$O/gll_library.o \
 	$O/hex_nodes.o \
 	$O/lagrange_poly.o \
-	$O/generate_databases.o \
-	$O/model_external_values.o \
+	$O/model_1d_cascadia.o \
+	$O/model_1d_prem.o \
+	$O/model_1d_socal.o \
 	$O/model_aniso.o \
+	$O/model_default.o \
+	$O/model_external_values.o \
+	$O/model_gll.o \
+	$O/model_salton_trough.o \
 	$O/model_tomography.o \
 	$O/netlib_specfun_erf.o \
 	$O/param_reader.o \
@@ -197,23 +203,46 @@ $O/parallel.o:  ${SHARED}/constants.h ${SHARED}/parallel.f90
 ###
 ###
 
+###
+### serial compilation without optimization
+###
+$O/serial.o:  ${SHARED}/constants.h ${SHARED}/serial.f90
+	${FCCOMPILE_CHECK} -c -o $O/serial.o ${SHARED}/serial.f90
+
+###
+### model files
+###
+$O/model_1d_prem.o:  ${SHARED}/constants.h model_1d_prem.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_1d_prem.o model_1d_prem.f90
+
+$O/model_1d_cascadia.o:  ${SHARED}/constants.h model_1d_cascadia.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_1d_cascadia.o model_1d_cascadia.f90
+
+$O/model_1d_socal.o:  ${SHARED}/constants.h model_1d_socal.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_1d_socal.o model_1d_socal.f90
+
+$O/model_aniso.o:  ${SHARED}/constants.h model_aniso.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_aniso.o model_aniso.f90
+
+$O/model_default.o:  ${SHARED}/constants.h model_default.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_default.o model_default.f90
+
 $O/model_external_values.o:  ${SHARED}/constants.h model_external_values.f90
 	${FCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
+
+$O/model_gll.o:  ${SHARED}/constants.h model_gll.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_gll.o model_gll.f90
+
+$O/model_salton_trough.o:  ${SHARED}/constants.h model_salton_trough.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_salton_trough.o model_salton_trough.f90
 
 $O/model_tomography.o:  ${SHARED}/constants.h model_tomography.f90
 	${FCCOMPILE_CHECK} -c -o $O/model_tomography.o model_tomography.f90
 
 
 ###
-### serial compilation without optimization
+### program files
 ###
-
-$O/model_aniso.o:  ${SHARED}/constants.h model_aniso.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_aniso.o model_aniso.f90
-
-$O/serial.o:  ${SHARED}/constants.h ${SHARED}/serial.f90
-	${FCCOMPILE_CHECK} -c -o $O/serial.o ${SHARED}/serial.f90
-
 $O/program_generate_databases.o: program_generate_databases.f90
 	${FCCOMPILE_CHECK} -c -o $O/program_generate_databases.o program_generate_databases.f90
 

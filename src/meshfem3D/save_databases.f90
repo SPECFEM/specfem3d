@@ -37,31 +37,27 @@
 
   include "constants.h"
 
-! number of spectral elements in each block
+  ! number of spectral elements in each block
   integer nspec
 
-! number of vertices in each block
+  ! number of vertices in each block
   integer nglob
 
-! MPI cartesian topology
-! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
+  ! MPI cartesian topology
+  ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
   integer iproc_xi,iproc_eta
   integer NPROC_XI,NPROC_ETA
   logical iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec)
   integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
-! arrays with the mesh
+  ! arrays with the mesh
   integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
-!  real(kind=CUSTOM_REAL) :: nodes_coords(nglob,3)
   double precision :: nodes_coords(nglob,3)
 
-
   integer true_material_num(nspec)
-  !double precision rho,vp,vs
 
-
-! boundary parameters locator
+  ! boundary parameters locator
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
   integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
   integer ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),ibelm_xmax(NSPEC2DMAX_XMIN_XMAX)
@@ -69,24 +65,25 @@
   integer ibelm_bottom(NSPEC2D_BOTTOM)
   integer ibelm_top(NSPEC2D_TOP)
 
-! material properties
+  ! material properties
   integer :: NMATERIALS
-! first dimension  : material_id
-! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+  ! first dimension  : material_id
+  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(NMATERIALS,6) ::  material_properties
   double precision , dimension(16) :: matpropl
   integer :: i,ispec,iglob,ier
 
-! name of the database files
+  ! name of the database files
   character(len=256) prname
 
-! for MPI interfaces
+  ! for MPI interfaces
   integer ::  nb_interfaces,nspec_interfaces_max,idoubl
   logical, dimension(8) ::  interfaces
   integer, dimension(8) ::  nspec_interface
 
   integer, parameter :: IIN_database = 15
 
+  ! opens database file
   open(unit=IIN_database,file=prname(1:len_trim(prname))//'Database', &
         status='unknown',action='write',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening Database file'
@@ -96,8 +93,7 @@
      write(IIN_database) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
   end do
 
-
-! Materials properties
+  ! Materials properties
    write(IIN_database) NMATERIALS, 0
    do idoubl = 1,NMATERIALS
       !write(IIN_database,*) material_properties(idoubl,:)

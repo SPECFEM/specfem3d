@@ -396,9 +396,14 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
           velocw_poroelastic(2,iglob) = 0.d0
           velocw_poroelastic(3,iglob) = 0.d0
 
-   if(SIMULATION_TYPE == 3) then
-! to do
-   endif
+         if(SIMULATION_TYPE == 3) then
+          ! to do
+          stop 'compute_continuity_disp_po_el() : adjoint run not implemented yet'
+          
+          ! dummy to avoid compiler warnings
+          i = NGLOB_ADJOINT    
+          j = NSPEC_ADJOINT          
+         endif
 
         endif !if(icount(iglob) ==1)
      enddo ! igll

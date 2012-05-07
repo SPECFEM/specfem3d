@@ -75,7 +75,8 @@
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD
   logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH
-
+  integer :: IMODEL
+  
 ! checks given arguments
   print *
   print *,'Recombining ParaView data for slices'
@@ -151,7 +152,7 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
 
   print *, 'Slice list: '
   print *, node_list(1:num_node)

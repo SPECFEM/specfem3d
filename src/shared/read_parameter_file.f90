@@ -32,7 +32,7 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
                         SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY )
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL )
 
   implicit none
 
@@ -41,6 +41,7 @@
   integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
   integer NOISE_TOMOGRAPHY
+  integer IMODEL
 
   double precision DT,HDUR_MOVIE
 
@@ -49,12 +50,15 @@
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   character(len=256) LOCAL_PATH,CMTSOLUTION
-
+  
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
   double precision :: hdur,minval_hdur
   character(len=256) :: dummystring
   integer, external :: err_occurred
+
+  character(len=150) MODEL
+  integer :: i,irange
 
   ! opens file Par_file
   call open_parameter_file()
@@ -93,6 +97,11 @@
   if(err_occurred() /= 0) return
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
+
+  ! define the velocity model
+  call read_value_string(MODEL, 'model.MODEL')
+  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file: MODEL'
+  
   call read_value_logical(OCEANS, 'model.OCEANS')
   if(err_occurred() /= 0) return
   call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY')
@@ -131,6 +140,9 @@
   if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
+
+  ! close parameter file
+  call close_parameter_file()
 
   ! noise simulations:
   ! double the number of time steps, if running noise simulations (+/- branches)
@@ -205,12 +217,49 @@
   enddo
   close(1)
 
-! one cannot use a Heaviside source for the movies
+  ! one cannot use a Heaviside source for the movies
   if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
     stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
 
-! close parameter file
-  call close_parameter_file()
+  ! converts all string characters to lowercase
+  irange = iachar('a') - iachar('A')
+  do i = 1,len_trim(MODEL)
+    if( lge(MODEL(i:i),'A') .and. lle(MODEL(i:i),'Z') ) then
+      MODEL(i:i) = achar( iachar(MODEL(i:i)) + irange )
+    endif
+  enddo
+
+  ! determines velocity model
+  select case( trim(MODEL) )
+
+  ! default mesh model
+  case( 'default' )
+    IMODEL = IMODEL_DEFAULT
+
+  ! 1-D models
+  case( '1d_prem' )
+    IMODEL = IMODEL_1D_PREM
+  case( '1d_cascadia')
+    IMODEL = IMODEL_1D_CASCADIA
+
+  ! user models  
+  case( 'salton_trough')
+    IMODEL = IMODEL_SALTON_TROUGH
+  case( 'tomo' )
+    IMODEL = IMODEL_TOMO
+  case( 'external' )
+    IMODEL = IMODEL_USER_EXTERNAL
+  case( 'aniso' )
+    IMODEL = IMODEL_DEFAULT
+    ANISOTROPY = .true.
+  case default  
+    print*
+    print*,'********** model not recognized: ',trim(MODEL),' **************'
+    print*,'********** using model: default',' **************'
+    print*
+    IMODEL = IMODEL_DEFAULT
+  end select
+  
 
   end subroutine read_parameter_file
 

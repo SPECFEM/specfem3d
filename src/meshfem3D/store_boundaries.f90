@@ -26,10 +26,10 @@
 
 
   subroutine store_boundaries(myrank,iboun,nspec,&
-    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-    NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-    NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
+                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                              nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                              NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                              NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
   implicit none
 
@@ -45,17 +45,17 @@
 
   logical iboun(6,nspec)
 
-! global element numbering
+  ! global element numbering
   integer ispec
 
-! counters to keep track of number of elements on each of the boundaries
+  ! counters to keep track of number of elements on each of the boundaries
   integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
 
-
-! check that the parameter file is correct
+  ! check that the parameter file is correct
   if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
   if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes')
 
+  ! initializes
   ispecb1 = 0
   ispecb2 = 0
   ispecb3 = 0
@@ -63,71 +63,57 @@
   ispecb5 = 0
   ispecb6 = 0
 
+  ! determine if the element falls on a boundary
   do ispec=1,nspec
 
-! determine if the element falls on a boundary
+    ! on boundary: xmin
+    if(iboun(1,ispec)) then
+      ispecb1=ispecb1+1
+      if( ispecb1 > NSPEC2DMAX_XMIN_XMAX ) stop 'error NSPEC2DMAX_XMIN_XMAX too small'
+      ibelm_xmin(ispecb1)=ispec
+    endif
 
-! on boundary: xmin
+    ! on boundary: xmax
+    if(iboun(2,ispec)) then
+      ispecb2=ispecb2+1
+      if( ispecb2 > NSPEC2DMAX_XMIN_XMAX ) stop 'error NSPEC2DMAX_XMIN_XMAX too small'
+      ibelm_xmax(ispecb2)=ispec
+    endif
 
-  if(iboun(1,ispec)) then
+    ! on boundary: ymin
+    if(iboun(3,ispec)) then
+      ispecb3=ispecb3+1
+      if( ispecb3 > NSPEC2DMAX_YMIN_YMAX ) stop 'error NSPEC2DMAX_YMIN_YMAX too small'
+      ibelm_ymin(ispecb3)=ispec
+    endif
 
-    ispecb1=ispecb1+1
-    ibelm_xmin(ispecb1)=ispec
+    ! on boundary: ymax
+    if(iboun(4,ispec)) then
+      ispecb4=ispecb4+1
+      if( ispecb4 > NSPEC2DMAX_YMIN_YMAX ) stop 'error NSPEC2DMAX_YMIN_YMAX too small'      
+      ibelm_ymax(ispecb4)=ispec
+    endif
 
-  endif
+    ! on boundary: bottom
+    if(iboun(5,ispec)) then
+      ispecb5=ispecb5+1
+      if( ispecb5 > NSPEC2D_BOTTOM ) stop 'error NSPEC2D_BOTTOM too small'      
+      ibelm_bottom(ispecb5)=ispec
+    endif
 
-
-! on boundary: xmax
-
-  if(iboun(2,ispec)) then
-
-    ispecb2=ispecb2+1
-    ibelm_xmax(ispecb2)=ispec
-
-  endif
-
-! on boundary: ymin
-
-  if(iboun(3,ispec)) then
-
-    ispecb3=ispecb3+1
-    ibelm_ymin(ispecb3)=ispec
-
-  endif
-
-! on boundary: ymax
-
-  if(iboun(4,ispec)) then
-
-    ispecb4=ispecb4+1
-    ibelm_ymax(ispecb4)=ispec
-
-  endif
-
-! on boundary: bottom
-
-  if(iboun(5,ispec)) then
-
-    ispecb5=ispecb5+1
-    ibelm_bottom(ispecb5)=ispec
-
-  endif
-
-! on boundary: top
-
-  if(iboun(6,ispec)) then
-
-    ispecb6=ispecb6+1
-    ibelm_top(ispecb6)=ispec
-
-  endif
+    ! on boundary: top
+    if(iboun(6,ispec)) then
+      ispecb6=ispecb6+1
+      if( ispecb6 > NSPEC2D_TOP ) stop 'error NSPEC2D_TOP too small'      
+      ibelm_top(ispecb6)=ispec
+    endif
 
   enddo
 
-! check theoretical value of elements at the bottom
+  ! check theoretical value of elements at the bottom
   if(ispecb5 /= NSPEC2D_BOTTOM) call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
 
-! check theoretical value of elements at the top
+  ! check theoretical value of elements at the top
   if(ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
 
   nspec2D_xmin = ispecb1
@@ -135,20 +121,24 @@
   nspec2D_ymin = ispecb3
   nspec2D_ymax = ispecb4
 
-end subroutine store_boundaries
+  end subroutine store_boundaries
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine get_jacobian_boundaries(myrank,iboun,nspec,xstore,ystore,zstore, &
-    dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-              jacobian2D_xmin,jacobian2D_xmax, &
-              jacobian2D_ymin,jacobian2D_ymax, &
-              jacobian2D_bottom,jacobian2D_top, &
-              normal_xmin,normal_xmax, &
-              normal_ymin,normal_ymax, &
-              normal_bottom,normal_top, &
-              NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-              NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
+                            dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                            jacobian2D_xmin,jacobian2D_xmax, &
+                            jacobian2D_ymin,jacobian2D_ymax, &
+                            jacobian2D_bottom,jacobian2D_top, &
+                            normal_xmin,normal_xmax, &
+                            normal_ymin,normal_ymax, &
+                            normal_bottom,normal_top, &
+                            NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
   implicit none
 

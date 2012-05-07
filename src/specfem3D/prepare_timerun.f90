@@ -210,6 +210,10 @@
     write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
     write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
     write(IMAIN,*)
+    
+    !debug: time estimation
+    ! elastic elements: time per element t_per_element = 1.40789368e-05 s
+    ! total time = nspec * nstep * t_per_element
   endif
 
   ! prepares ADJOINT simulations

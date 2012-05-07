@@ -222,6 +222,13 @@
                 tempz1lw = tempz1lw + displw_poroelastic(3,iglob)*hp1
                 ! adjoint simulations
                 if (SIMULATION_TYPE == 3) then
+                  ! to do
+                  stop 'compute_coupling_elastic_po() : adjoint run not implemented yet'
+                  
+                  ! dummy to avoid compiler warnings
+                  iglob = NGLOB_ADJOINT    
+                  iglob = NSPEC_ADJOINT          
+                
                 endif ! adjoint
     !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 

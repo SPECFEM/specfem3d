@@ -143,6 +143,30 @@
 !----
 !
 
+  subroutine bcast_all_r(buffer, count)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+
+  include "constants.h"
+  include "precision.h"
+
+  integer count
+  real, dimension(count) :: buffer
+
+  integer ier
+
+  call MPI_BCAST(buffer,count,MPI_REAL,0,MPI_COMM_WORLD,ier)
+
+  end subroutine bcast_all_r
+
+
+!
+!----
+!
+
   subroutine gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   implicit none

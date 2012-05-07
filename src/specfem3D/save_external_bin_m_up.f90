@@ -400,7 +400,7 @@
                         v_tmp_i,filename)
     endif
 
-    !! saves 1. MPI interface
+    !debug: saves 1. MPI interface
     !    if( num_interfaces_ext_mesh >= 1 ) then
     !      filename = prname(1:len_trim(prname))//'MPI_1_points'
     !      call write_VTK_data_points(nglob, &

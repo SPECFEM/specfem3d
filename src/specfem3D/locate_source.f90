@@ -67,9 +67,10 @@
 
   integer iprocloop
 
-  integer i,j,k,ispec,iglob,iglob_selected,inode,iface,isource
-  integer imin,imax,jmin,jmax,kmin,kmax,igll,jgll,kgll
-  integer iselected,jselected,iface_selected,iadjust,jadjust
+  integer i,j,k,ispec,iglob,isource
+  integer imin,imax,jmin,jmax,kmin,kmax 
+!  integer  igll,jgll,kgll,inode,iface,iglob_selected,
+!  integer iselected,jselected,iface_selected,iadjust,jadjust
   integer iproc(1)
 
   double precision, dimension(NSOURCES) :: utm_x_source,utm_y_source
@@ -102,8 +103,12 @@
   double precision x_target_source,y_target_source,z_target_source
 
   double precision,dimension(1) :: altitude_source,distmin_ele
+  
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
-  double precision,dimension(4) :: elevation_node,dist_node
+
+!  double precision,dimension(4) :: elevation_node,dist_node
+  real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
+  
 
   integer islice_selected_source(NSOURCES)
 
@@ -208,81 +213,93 @@
                    UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
     ! get approximate topography elevation at source long/lat coordinates
-    ! set distance to huge initial value
-    distmin = HUGEVAL
-    if(num_free_surface_faces > 0) then
-      iglob_selected = 1
-      ! loop only on points inside the element
-      ! exclude edges to ensure this point is not shared with other elements
-      imin = 2
-      imax = NGLLX - 1
+    xloc = utm_x_source(isource)
+    yloc = utm_y_source(isource)
+    call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
+                              NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                              num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+    altitude_source(1) = loc_ele
+    distmin_ele(1) = loc_distmin
+    
 
-      jmin = 2
-      jmax = NGLLY - 1
-
-      iselected = 0
-      jselected = 0
-      iface_selected = 0
-      do iface=1,num_free_surface_faces
-        do j=jmin,jmax
-          do i=imin,imax
-
-            ispec = free_surface_ispec(iface)
-            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
-            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
-            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
-            iglob = ibool(igll,jgll,kgll,ispec)
-
-            ! keep this point if it is closer to the receiver
-            dist = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
-                     (utm_y_source(isource)-dble(ystore(iglob)))**2)
-            if(dist < distmin) then
-              distmin = dist
-              iglob_selected = iglob
-              iface_selected = iface
-              iselected = i
-              jselected = j
-              altitude_source(1) = zstore(iglob_selected)
-            endif
-          enddo
-        enddo
-        ! end of loop on all the elements on the free surface
-      end do
-      !  weighted mean at current point of topography elevation of the four closest nodes
-      !  set distance to huge initial value
-      distmin = HUGEVAL
-      do j=jselected,jselected+1
-        do i=iselected,iselected+1
-          inode = 1
-          do jadjust=0,1
-            do iadjust= 0,1
-              ispec = free_surface_ispec(iface_selected)
-              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-              iglob = ibool(igll,jgll,kgll,ispec)
-
-              elevation_node(inode) = zstore(iglob)
-              dist_node(inode) = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
-                        (utm_y_source(isource)-dble(ystore(iglob)))**2)
-              inode = inode + 1
-            end do
-          end do
-          dist = sum(dist_node)
-          if(dist < distmin) then
-            distmin = dist
-            altitude_source(1) = (dist_node(1)/dist)*elevation_node(1) + &
-                     (dist_node(2)/dist)*elevation_node(2) + &
-                     (dist_node(3)/dist)*elevation_node(3) + &
-                     (dist_node(4)/dist)*elevation_node(4)
-          endif
-        end do
-      end do
-    end if
+    
+!    ! set distance to huge initial value
+!    distmin = HUGEVAL
+!    if(num_free_surface_faces > 0) then
+!      iglob_selected = 1
+!      ! loop only on points inside the element
+!      ! exclude edges to ensure this point is not shared with other elements
+!      imin = 2
+!      imax = NGLLX - 1
+!
+!      jmin = 2
+!      jmax = NGLLY - 1
+!
+!      iselected = 0
+!      jselected = 0
+!      iface_selected = 0
+!      do iface=1,num_free_surface_faces
+!        do j=jmin,jmax
+!          do i=imin,imax
+!
+!            ispec = free_surface_ispec(iface)
+!            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
+!            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
+!            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
+!            iglob = ibool(igll,jgll,kgll,ispec)
+!
+!            ! keep this point if it is closer to the receiver
+!            dist = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
+!                     (utm_y_source(isource)-dble(ystore(iglob)))**2)
+!            if(dist < distmin) then
+!              distmin = dist
+!              iglob_selected = iglob
+!              iface_selected = iface
+!              iselected = i
+!              jselected = j
+!              altitude_source(1) = zstore(iglob_selected)
+!            endif
+!          enddo
+!        enddo
+!        ! end of loop on all the elements on the free surface
+!      end do
+!      !  weighted mean at current point of topography elevation of the four closest nodes
+!      !  set distance to huge initial value
+!      distmin = HUGEVAL
+!      do j=jselected,jselected+1
+!        do i=iselected,iselected+1
+!          inode = 1
+!          do jadjust=0,1
+!            do iadjust= 0,1
+!              ispec = free_surface_ispec(iface_selected)
+!              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+!              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+!              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
+!              iglob = ibool(igll,jgll,kgll,ispec)
+!
+!              elevation_node(inode) = zstore(iglob)
+!              dist_node(inode) = dsqrt((utm_x_source(isource)-dble(xstore(iglob)))**2 + &
+!                        (utm_y_source(isource)-dble(ystore(iglob)))**2)
+!              inode = inode + 1
+!            end do
+!          end do
+!          dist = sum(dist_node)
+!          if(dist < distmin) then
+!            distmin = dist
+!            altitude_source(1) = (dist_node(1)/dist)*elevation_node(1) + &
+!                     (dist_node(2)/dist)*elevation_node(2) + &
+!                     (dist_node(3)/dist)*elevation_node(3) + &
+!                     (dist_node(4)/dist)*elevation_node(4)
+!          endif
+!        end do
+!      end do
+!    end if
+!    distmin_ele(1)= distmin
+    
     !  MPI communications to determine the best slice
-    distmin_ele(1)= distmin
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
+    
     if(myrank == 0) then
       iproc = minloc(distmin_ele_all)
       altitude_source(1) = elevation_all(iproc(1))

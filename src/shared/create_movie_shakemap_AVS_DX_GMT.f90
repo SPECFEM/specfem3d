@@ -98,7 +98,7 @@
   character(len=256) OUTPUT_FILES,LOCAL_PATH
   integer NPROC
   integer ier
-
+  integer :: IMODEL
 
 !--------------------------------------------
 !!!! NL NL for external meshes
@@ -135,7 +135,7 @@
         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
 
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))

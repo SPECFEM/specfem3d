@@ -427,14 +427,16 @@ contains
 
     ! stores boundary informations
     call store_boundaries(myrank,iboun,nspec, &
-         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
-         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-         NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
+                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
+                         NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
     ! checks mesh resolution
     VP_MAX = maxval(material_properties(:,2))
-    call check_mesh_quality(myrank,VP_MAX,nglob,nspec,nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool)
+    call check_mesh_quality(myrank,VP_MAX,nglob,nspec, &
+                          nodes_coords(:,1),nodes_coords(:,2),nodes_coords(:,3),ibool, &
+                          CREATE_VTK_FILES,prname)
 
     ! saves mesh as databases file
     call save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &

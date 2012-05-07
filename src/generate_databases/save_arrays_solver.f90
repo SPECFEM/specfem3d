@@ -529,16 +529,15 @@
       deallocate(iglob_tmp)
     endif
 
-
-    !! saves 1. MPI interface
-    if( num_interfaces_ext_mesh >= 1 ) then
-      filename = prname(1:len_trim(prname))//'MPI_1_points'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-                        nibool_interfaces_ext_mesh(1), &
-                        filename)
-    endif
+    ! debug: saves 1. MPI interface
+    !if( num_interfaces_ext_mesh >= 1 ) then
+    !  filename = prname(1:len_trim(prname))//'MPI_1_points'
+    !  call write_VTK_data_points(nglob, &
+    !                    xstore_dummy,ystore_dummy,zstore_dummy, &
+    !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+    !                    nibool_interfaces_ext_mesh(1), &
+    !                    filename)
+    !endif
 
     ! acoustic-poroelastic domains
     if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
@@ -624,7 +623,7 @@
     deallocate(v_tmp_i,iglob_tmp)
     endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
 
-    !! saves 1. MPI interface
+    !debug: saves 1. MPI interface
     !    if( num_interfaces_ext_mesh >= 1 ) then
     !      filename = prname(1:len_trim(prname))//'MPI_1_points'
     !      call write_VTK_data_points(nglob, &

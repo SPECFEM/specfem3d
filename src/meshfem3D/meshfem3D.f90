@@ -213,11 +213,9 @@
   integer, dimension(:,:), allocatable :: addressing
 
 ! use integer array to store topography values
-  integer icornerlat,icornerlong !,NX_TOPO,NY_TOPO
-  double precision lat,long !,elevation,ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  integer icornerlat,icornerlong
+  double precision lat,long
   double precision long_corner,lat_corner,ratio_xi,ratio_eta
-  !character(len=100) topo_file
-  !integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! timer MPI
   double precision, external :: wtime
@@ -405,8 +403,10 @@
     if( myrank == 0 ) then
       write(IMAIN,*) 'error: number of processors supposed to run on: ',NPROC
       write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
-      print*, 'error: number of processors supposed to run on: ',NPROC
-      print*, 'error: number of MPI processors actually run on: ',sizeprocs      
+      print*
+      print*, 'error meshfem3D: number of processors supposed to run on: ',NPROC
+      print*, 'error meshfem3D: number of MPI processors actually run on: ',sizeprocs      
+      print*
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif

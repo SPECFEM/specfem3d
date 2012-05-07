@@ -225,6 +225,11 @@
               tempz3lw = 0.
 
               if (SIMULATION_TYPE == 3) then
+                ! to do
+                stop 'compute_forces_solid() : adjoint run not implemented yet'
+                ! to avoid compiler warning
+                l = NGLOB_ADJOINT
+                l = NSPEC_ADJOINT
               endif
 
 ! first double loop over GLL points to compute and store gradients
