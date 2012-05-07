@@ -1,8 +1,11 @@
-
+# simulation input parameters
+#
 # forward or adjoint simulation
-SIMULATION_TYPE = 3 
-NOISE_TOMOGRAPHY                = 0   # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
-SAVE_FORWARD = .false. 
+# 1 = forward, 2 = adjoint, 3 = both simultaneously
+SIMULATION_TYPE                 = 3
+# 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
+NOISE_TOMOGRAPHY                = 0   
+SAVE_FORWARD                    = .false.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
@@ -14,6 +17,15 @@ NPROC                           = 4
 # time step parameters
 NSTEP                           = 4000 
 DT                              = 0.0006
+
+# models:
+# available options are:
+#   default (model parameters described by mesh properties)
+# 1D models available are: 
+#   1d_prem,1d_socal,1d_cascadia
+# 3D models available are: 
+#   aniso,external,gll,salton_trough,tomo
+MODEL                           = default
 
 # parameters describing the model
 OCEANS                          = .false.

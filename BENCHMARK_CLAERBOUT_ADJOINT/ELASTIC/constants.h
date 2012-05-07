@@ -302,14 +302,14 @@
   integer, parameter :: NUM_ITER = 4
 
 ! size of topography and bathymetry file for Southern California
-  integer, parameter :: NX_TOPO_SOCAL = 1401,NY_TOPO_SOCAL = 1001
-  double precision, parameter :: ORIG_LAT_TOPO_SOCAL = 32.d0
-  double precision, parameter :: ORIG_LONG_TOPO_SOCAL = -121.d0
-  double precision, parameter :: DEGREES_PER_CELL_TOPO_SOCAL = 5.d0 / 1000.d0
-  character(len=100), parameter :: TOPO_FILE_SOCAL = 'DATA/la_topography/topo_bathy_final.dat'
+  integer, parameter :: NX_TOPO_FILE = 1401,NY_TOPO_FILE = 1001
+  double precision, parameter :: ORIG_LAT_TOPO = 32.d0
+  double precision, parameter :: ORIG_LONG_TOPO = -121.d0
+  double precision, parameter :: DEGREES_PER_CELL_TOPO = 5.d0 / 1000.d0
+  character(len=256), parameter :: TOPO_FILE = 'DATA/la_topography/topo_bathy_final.dat'
 
 ! ! size of topography and bathymetry file for Piero Basini's model
-!   integer, parameter :: NX_TOPO = 787, NY_TOPO = 793
+!   integer, parameter :: NX_TOPO_FILE = 787, NY_TOPO_FILE = 793
 !   double precision, parameter :: ORIG_LAT_TOPO = -102352.d0
 !   double precision, parameter :: ORIG_LONG_TOPO = 729806.d0
 ! ! for Piero Basini's model this is the resolution in meters of the topo file
