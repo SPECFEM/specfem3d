@@ -2,38 +2,325 @@
 To-do list for the different flavors of SPECFEM:
 ------------------------------------------------
 
+(listed in no particular order)
+
 - suggestion 01:
+----------------
+
 Zhinan commits his current clean 2D C-PML code to SVN; because changes
 made outside of SVN are useless for regular users of the application,
 and are also quickly lost
 
 - suggestion 02:
+----------------
+
 Max merges the GPU / CUDA improvements made by Peter Messmer into
 SUNFLOWER; Daniel and Jo then merge SUNFLOWER into SPECFEM3D to get a
 single version that supports both CPUs and GPUs (more precisely: either
 CPUs or GPUs, depending on the case; no mixed / hybrid model);
 we then "svn delete" SUNFLOWER and keep a single code
 
+- suggestion 03:
+----------------
 
-- see (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT; read this from input files in the solver
+Zhinan (with the help of Jo and Daniel) implements C-PML in SPECFEM3D (in that code only for now; we can cut and paste that in
+SPECFEM3D_GLOBE later if needed, but we do not need that now).
+Paul Cristini and I will then test it extensively after the summer.
+Zhinan, Daniel, Paul and Jo need to agree on a numbering convention (i.e. flags) for the different PML regions and corners (a
+binary / bit encoding technique can be used); they could use the same idea as in the convention used in 2D .
+See (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT;
+read this from input files in the solver
 
-- put a flag to choose between a Ricker source and a Heaviside source when a force source is used
+- suggestion 04:
+----------------
+
+Zhinan sees if Dirichlet or Neumann conditions are needed on the outside edge of the C-PML layers in acoustic media; in elastic
+media, a Dirichlet condition (zero displacement) is needed to prevent spurious Rayleigh waves from developing at the far end of the
+PML and making it blow up; in the acoustic case, a Dirichlet condition for pressure (zero pressure) means a Neumann (rather than
+Dirichlet) condition for the potential because pressure is related to its gradient;
+
+thus Zhinan should see (by running a simple test in the 2D code) if a Neumann condition is OK for an acoustic PML, and/or if a
+Dirichlet condition works fine as well; it could be that both are OK (because no such spurious surface waves can develop, contrary
+to the elastic case) but it is worth checking (and it is simple to check)
+
+- suggestion 05:
+----------------
+
+add an option to use a point force source in SPECFEM3D instead of a CMTSOLUTION; some users need that (very classical for instance
+in non destructive testing) and it is easy to do; the only thing to decide is what convention to use in DATA/Par_file: add a flag
+for that?
+put a flag to choose between a Ricker source and a Heaviside source when a force source is used
 (we can cut and paste the Heaviside implementation from the case of a CMT source)
 
-- fix the 3D attenuation memory size problem by making it optional and off by default.
-To do that, the following command will be very useful:
+- suggestion 06:
+----------------
+
+use PT-Scotch (the parallel version of SCOTCH) in SPECFEM3D instead of (or as an option in addition to) the serial version of
+SCOTCH; because decomposing very large 3D meshes on a serial machine (on a single processor core) can be a severe limitation and
+for some meshes that will be a major bottleneck
+
+- suggestion 07:
+----------------
+
+implement higher order time schemes in 3D by cutting and pasting what Zhinan has done in 2D; two schemes are useful: RK4 and
+LDDRK4-6 (low storage low dissipation Runge Kutta, a bit more expensive than RK4 but much better)
+
+implement these RK4 and LDDRK4-6 high-order time schemes including for viscoelastic media, as already done in the 2D code
+
+probably not a high priority, could be done last because we do not need that for current projects
+
+- suggestion 08:
+----------------
+
+fix the Stacey stability bug: already done by Zhinan in 2D and also in a demo 3D code; Jo is almost done merging that into GLOBE;
+should be done (by Daniel? by Jo?) in SPECFEM3D as well, because very useful to increase the time step
+
+- suggestion 09:
+----------------
+
+fix the attenuation time stepping bug (my RK4 time scheme from 1999 was not a true RK4); already done by Zhinan in 2D and in a demo
+3D code, Jo and Daniel should merge that in SPECFEM3D and in SPECFEM3D_GLOBE because that makes the codes significantly more
+accurate for viscoelasticity, in particular for long runs
+
+to validate that we could/should use figures 21 (a, b and c) and 22 of our 2002 GJI paper with Jeroen
+
+- suggestion 10:
+----------------
+
+the attenuation arrays are always fully 3D in the current 3D codes (at least in SPECFEM3D_GLOBE, please doublecheck in SPECFEM3D);
+i.e. even for 1D attenuation models (layer cakes with constant Q per geological layer) all these arrays are declared as (i,j,k,ispec),
+while (1,1,1,ispec) would be sufficient;
+
+this was done by Hejun, it is useful for 3D attenuation models but wastes a lot (really a lot) of memory in the case of 1D
+attenuation
+
+that would save a factor of 125 on attenuation arrays in these (very common) cases of constant Q per regions
+
+I think switching from (NGLLX,NGLLY,NGLLZ) to (1,1,1) i.e. using the lower left corner of each element in the case of 1D
+attenuation would be easy to implement and sufficient to fix the problem (since array sizes would decrease by a factor of 125).
+
+Jo should fix that in SPECFEM3D_GLOBE (I am not sure if there is the same problem in SPECFEM3D; Daniel will know); 3D attenuation
+should be optional, and off by default
+
+To do that in SPECFEM3D_GLOBE, the following command will be very useful because it will show the largest arrays used (more
+precisely: statically allocated)
+in the code ("allocatable" arrays will *NOT* appear, but we use no such big allocatable arrays in SPECFEM3D_GLOBE):
 nm --print-size --size-sort --reverse-sort --radix=d ./bin/xspecfem3D | cut -f 2- -d ' ' | less
-I think switching from (NGLLX,NGLLY,NGLLZ) to (1,1,1) i.e. using the lower left corner of each element in the case of 1D attenuation would be easy to implement and sufficient to fix the problem (since array sizes would decrease by a factor of 125).
+
+- suggestion 11:
+----------------
+
+merge all the mesh data files into a single mesh file per MPI slice;
+on large machines many people (including Dominik Goeddeke and I, also people at the UK supercomputing center) have found that
+generating more than 4O smaller files per slice in GLOBE puts a very heavy load on LUSTRE or
+GPFS shared file systems for no reason
+
+the only reason why we have many files per slice is historical; we should definitely change that
+
+I have asked Jo to reduce that to a single file per process
+
+we will need to do two things:
+
+- convert all ASCII mesh files to 'unformatted' (in particular all the MPI buffer files: list of points etc); easy to do: just add
+"form=unformatted" to the open statements, and change all write(unit_number,*) statements to simply write(unit_number)
+i.e. just get rid of the ",*"
+
+- merge all the files; easy to do in principle, just comment out all "close" and "open" statements in the code except the first
+'open' and the last "close"; also make sure that the same unit number is used in all writes (which is not the case right now: I
+remember we use 11, 12, 27, 34, IOUT and so on; you will need to make all of this a single value (called IOUT)
+
+This should be done in both SPECFEM3D and SPECFEM3D_GLOBE
+
+this is critical, because currently in GLOBE we write about 42 files per MPI slice, thus when running on 1000 cores we create
+42,000 files for no reason. Let us reduce this to 1000.
+
+- suggestion 12:
+----------------
+
+check if file 'array_dims.txt' is used or not (it seems to be unused; it seems to have been an old file for ParaView, but let us
+doublecheck)
+
+currently each MPI slice writes its own version of that file, thus if using 1000 cores we get 1000 copies of that file; that puts a
+heavy load on shared file systems for no reason
+
+Jo and Daniel, please check if it is used (in particular in ParaView postprocessing scripts) and if not please suppress it; if it
+is used, I think only rank 0 could create it, no need to have 1000 identical copies
+
+this applies to SPECFEM3D_GLOBE; I am not sure about SPECFEM3D, please doublecheck
+
+- suggestion 13:
+----------------
+
+fix auto_NER() in GLOBE when a single chunk is used and has a size of less than 90 x 90 degrees; in that case, that (relatively
+old) routine written by Brian Savage around 2006/2007 is called, and I noticed that it makes the code blow up in most cases because
+the mesh it creates and/or the time step that it automatically selects is not right (probably because the mesh has changed
+significantly since Brian wrote that routine)
+
+probably not urgent (in our group at least we almost always use the full Earth or else a chunk of size 90 x 90 degrees); but if
+other users change that the current code will likely blow up
+
+Jo could maybe do it in a few months, once all the other items and suggestions are implemented; he should probably then contact
+Brian (I do not know if Brian still uses SPECFEM)
+
+- suggestion 14:
+----------------
+
+when fixing the Stacey bug in 3D, make sure only three mass matrices are used, not four (in order to save as much memory as
+possible);
+in the acoustic elements, a single mass matrix is probably still sufficient, as already checked by Zhinan
+
+of course, when absorbing conditions are turned off, a single mass matrix should be used and the two others should be declared with
+a dummy size of 1
+
+almost already implemented by Jo in SPECFEM3D_GLOBE; can then be cut and pasted in SPECFEM3D as well
+
+already done in the 2D version
+
+- suggestion 15:
+----------------
+
+fix the Stacey / Sommerfield equations (stability issue) in acoustic elements: already done by Zhinan in 2D, Jo will do it in 3D
+but will need Zhinan to send him the equations i.e. help him do it in the 3D code
+
+should be done in both SPECFEM3D and SPECFEM3D_GLOBE; already done in SPECFEM2D
+
+- suggestion 16:
+----------------
+
+when reading the absorbing conditions back to reconstruct the forward run backwards when running the adjoint step (i.e. when
+SIMULATION_TYPE = 3), my postdoc Vadim Monteiller suggests to read the adjoint information back only every 50 or 100 iterations, by
+chunks of 50 or 100 time steps at a time, to avoid slowing down the run
+
+advantage: makes the code faster by avoiding doing I/Os at each time step
+
+drawback: more memory is needed to store these edge conditions (exactly 50 or 100 times more, but only for a few 2D arrays)
+
+useful to do? implement it as an option maybe? and then the user could choose to use 50, 100 or 1, and chosing 1 would be
+equivalent to the current behavior?
+
+- suggestion 17:
+----------------
+
+in comments in DATA/Par_file and also in the LaTeX manual of the 2D code, Zhinan should mention the CFL upper bound of the
+different time schemes that are now implemented and that can be selected by the user:
+Newark, RK4 and LDDRK4-6
+
+without such numbers as comments nor in the manual, it is difficult for users to decide what value to use for the time step (in the
+2D code, the user selects the time step, it is not computed automatically by the code)
+
+- suggestion 18:
+----------------
+
+leave Stacey as an option even once C-PML is implemented;
+because in many cases C-PML (with Dirichlet conditions on its outer edges) will be sufficient, but in principle it is possible to
+replace Dirichlet with Stacey and thus use both C-PML and Stacey simultaneously to have even better absorption;
+There is a paper by Collino and Monk in 1998 about this (for Maxwell)
+
+So let us keep Stacey in the future codes, but let us make it off by default in DATA/Par_file (and C-PML on by default)
+
+- suggestion 19:
+----------------
+
+use weights in Scotch and PT-Scotch once we add C-PML to the code;
+because C-PML elements will be more expensive because they will compute more terms and will solve more equations (for the memory
+variables / convolution terms) thus we should assign a higher weight to them when we call Scotch
+
+that is similar to what Daniel does for acoustic elements in the current version of SPECFEM3D: he uses a weight of 1 for acoustic
+elements and 3 (or something like that) for elastic elements, which use a 3D vector instead of a scalar.
+
+In principle the weighting factors can be computed analytically by counting the exact number of additional multiplications and
+additions performed by C-PML elements
+
+In PML corners this additional factor can be multiplied by 2 (for instance in the slice of PML that has X and Y damping) or by 3
+for corners that combine an X, a Y and a Z PML.
+
+easy to do once we have an expression for the weighting factors
+
+- suggestion 20:
+----------------
+
+see with Zhinan if a spring should be added to Stacey in SPECFEM3D and SPECFEM3D_GLOBE; Stacey is a dashpot and thus Zhinan and his
+advisors in China have shown that the condition can become inaccurate and have a static offset in some cases; they have shown how
+to suppress this by adding a spring in parallel to the dashpot
+
+already done in the 2D code
+
+see with Zhinan if he thinks this should be done in SPECFEM3D and SPECFEM3D_GLOBE as well, and if it would be useful
+
+should probably not be a high priority; PML and other things are more urgent
+
+- suggestion 21:
+----------------
+
+Zhinan should clean and improve the tools to solve actual inverse problems once the sensitivity kernels are created by the code;
+i.e. how to efficiently solve the linear systems, what kind of tools to use, how to make them more flexible, more user friendly,
+maybe semi-automatic or at least easier to use
+
+maybe also see if compression (wavelets?) could help
+
+this should be one of the main goals of Zhinan's stay at Princeton, as we discussed
+
+- suggestion 22:
+----------------
+
+when I said that the future codes will support either CPUs or GPUs (in the same code but not simultaneously because we do not
+compute part of the elements on the graphics cards and the rest on the CPUs): I realize that that is true but that there is an easy
+and elegant way of running hybrid calculations anyway without changing the code:
+
+- if you have N GPUs and M CPUs, start M + N MPI processes, and call CUDA only from the N processes and the CPU code only from the
+M other processes; this way, N processes do GPU calculations only, M processes do CPU calculations only, and MPI can easily make
+them run on the same nodes and communicate through MPI
+
+- since GPUs are faster than CPUs (by a speedup factor that we can call S), to get close-to-perfect load balancing, just call
+Scotch or ParScotch with that S factor as a weight for partitions that will run on CPUs and thus S times slower; by doing this,
+Scotch will assign them approximately S times fewer elements, and thus we will get very good load balancing in a mixed/hybrid CPU +
+GPU models
+
+clever and easy to do.
+
+limitation (of hybrid models in general, not of the above approach): if GPUs are 30 or 40 times faster than CPUs, doing this is
+probably not very useful and using the GPUs only is probably sufficient because using the CPUs in addition will result in a gain of
+a few percent only;
+maybe not worth doing it
+
+- suggestion 23:
+----------------
+
+in the 2D code, the way we define viscoelastic or elastic element is not very nice: we need to set Q = 9999 to turn attenuation off;
+it would be better to have a logical flag saying if a given layer has attenuation or not
+
+this suggestion comes from notes that I took while talking to Paul Cristini a few months ago therefore I am not sure I remember
+very well what Paul wanted to change about that. Paul, could you remind us more precisely the change that you had in mind?
+
+- suggestion 24:
+----------------
+
+internally in the three codes we compute a time shift t0 to shift the source and have null initial conditions, and we subtract it
+when we save the seismograms and also the source time function; that is the right thing to do, but we forgot to also add it to
+"RECORD_LENGTH_IN_MINUTES" after reading it from DATA/Par_file.
+
+As a result, the seismograms stop at RECORD_LENGTH_IN_MINUTES*60 - t0 seconds rather than the expected RECORD_LENGTH_IN_MINUTES*60
+duration.
+
+when running simulations at short periods t0 is small compared to RECORD_LENGTH_IN_MINUTES*60 and thus one hardly notices the
+problem, but the other day I ran a very long period calculation with hdur = 150 seconds and then my seismograms were 150 or 200
+seconds too short and thus I had to delete them and redo the whole simulation.
+
+Solution (easy): add t0 to RECORD_LENGTH_IN_MINUTES*60 when computing the number of time steps (NSTEPS) in the three codes
+
+Jo, could you please do that at some point? (not the first priority of course)
 
 
-- implement RK4 and LDDRK4-6 high-order time schemes, including for viscoelastic media: will be done by Zhinan Xie
+
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
 
 (items listed in no particular order)
 
-- add a checkpointing/restarting system with CRC-32 as in SPECFEM3D_GLOBE/tags/v4.1.0_beta_merged_mesher_solver_non_blocking_MPI/src , or using the fault tolerance library developed by Leonardo Bautista and Franck Cappello at INRIA
+- add a checkpointing/restarting system with CRC-32 as in
+SPECFEM3D_GLOBE/tags/v4.1.0_beta_merged_mesher_solver_non_blocking_MPI/src , or using the fault tolerance library developed by
+Leonardo Bautista and Franck Cappello at INRIA
 
 - Regarding memory size (getting an estimate of memory consumption in SPECFEM3D),
 somebody should just cut and paste my SPECFEM3D_GLOBE routine
@@ -41,14 +328,18 @@ somebody should just cut and paste my SPECFEM3D_GLOBE routine
 I call from "SPECFEM3D_GLOBE/version41_beta/src/create_header_file.f90".
 It would work for SPECFEM3D as well (with minor modifications).
 
-- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back; that is the only clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to do it.
+- For binary files (for instance Carl Tape's m16 model) we should use NETCDF to store them and read them back; that is the only
+clean way of ensuring portability between different systems; and NETCDF is free and open source therefore there is no reason not to
+do it.
 
-- in SPECFEM3D_GLOBE use a potential of (rho * u) instead of u in the fluid, in case of fluid-fluid discontinuities; probably already
-done in SPECFEM3D because of purely acoustic oil industry problems, but not done in SPECFEM3D_GLOBE because there is no first-order discontinuity inside
-the fluid outer core therefore it is not needed; thus this point is not needed except if we decide to use SPECFEM3D_GLOBE for other problems one day,
-for instance helioseismology
+- in SPECFEM3D_GLOBE use a potential of (rho * u) instead of u in the fluid, in case of fluid-fluid discontinuities; probably
+already done in SPECFEM3D because of purely acoustic oil industry problems, but not done in SPECFEM3D_GLOBE because there is no first-order
+discontinuity inside the fluid outer core therefore it is not needed; thus this point is not needed except if we decide
+to use SPECFEM3D_GLOBE for other problems one day, for instance helioseismology
 
-- merge SPECFEM3D_GLOBE into SPECFEM3D, i.e. create a single package and see the mesh of the Earth as a general mesh that we would decompose in parallel using PT-Scotch. Problem: would this scale for huge global Earth simulations, e.g. at a seismic period of 1 second on 200,000 processor cores?
+- merge SPECFEM3D_GLOBE into SPECFEM3D, i.e. create a single package and see the mesh of the Earth as a general mesh that we would
+decompose in parallel using PT-Scotch. Problem: would this scale for huge global Earth simulations, e.g. at a seismic period of 1
+second on 200,000 processor cores?
 
 - make the code compatible with helioseismology / general Cowling formulation
 
@@ -68,7 +359,8 @@ in such a case there is a bunch of MPI_GATHERS which waste a lot
 of memory and can even use all the available memory and make the run crash.
 Vala partially fixed this problem by using subsets of 1000 stations, but after
 careful analysis we have found a way of doing better and getting rid of all
-the GATHERs and *all* the extra memory (this way we won't have to limit the number of sources to a maximum of 100000, as currently done in the solver).
+the GATHERs and *all* the extra memory (this way we won't have to limit the number of sources to a maximum of 100000,
+as currently done in the solver).
 
 - something that could be made more general in the 2D code:
 at line 770 of specfem2D.F90:
@@ -78,7 +370,8 @@ in the current version. Very easy to do if needed, just that line to change.
 
 - we could add support for the TetGen mesh creation package, and cut each
 tetrahedron into four hexahedra using the barycenter. This could help design
-meshes for sedimentary basins, in particular near basin edges. Celine Blitz is probably going to work on that in Oct, Nov and Dec 2010.
+meshes for sedimentary basins, in particular near basin edges.
+Celine Blitz has worked on that in 2010 while at TOTAL.
 
 - we could add support for different polynomial degrees in different elements (p-adaptivity)
 
