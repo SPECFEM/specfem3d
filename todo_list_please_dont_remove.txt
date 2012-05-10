@@ -1,6 +1,21 @@
 
-To-do list for SPECFEM3D, by Dimitri Komatitsch
------------------------------------------------
+To-do list for the different flavors of SPECFEM:
+------------------------------------------------
+
+- suggestion 01:
+Zhinan commits his current clean 2D C-PML code to SVN; because changes 
+made outside of SVN are useless for regular users of the application, 
+and are also quickly lost
+
+- suggestion 02:
+Max merges the GPU / CUDA improvements made by Peter Messmer into 
+SUNFLOWER; Daniel and Jo then merge SUNFLOWER into SPECFEM3D to get a 
+single version that supports both CPUs and GPUs (more precisely: either 
+CPUs or GPUs, depending on the case; no mixed / hybrid model);
+we then "svn delete" SUNFLOWER and keep a single code
+
+Older to-do list of SPECFEM3D (some items are probably still useful to implement):
+----------------------------------------------------------------------------------
 
 - check if sigma_xz is inverted with sigma_zx and so on in compute_forces; usually this does not matter because the stress tensor is symmetric, but for Cosserat or for some C-PML formulations this could matter
 
@@ -71,7 +86,6 @@ It would work for SPECFEM3D as well (with minor modifications).
 
 
 by Nicolas Le Goff :
---------------------
 
 Add-ONS :
 
@@ -82,6 +96,97 @@ Add-ONS :
  - Settle the issue of normal recording for the receivers. The normal is unique, but the plane can be described using two vectors at random (while conserving an orthonormal reference), so we have no reason to choose a pair of vectors compared to the others.i
 
 
+Older to-do list of SPECFEM3D_GLOBE (some items are probably still useful to implement):
+----------------------------------------------------------------------------------------
+
+- fix the 3D attenuation memory size problem by making it optional and off by default.
+To do that, the following command will be very useful:
+nm --print-size --size-sort --reverse-sort --radix=d ./bin/xspecfem3D | cut -f 2- -d ' ' | less 
+I think switching from (NGLLX,NGLLY,NGLLZ) to (1,1,1) i.e. using the lower left corner of each element in the case of 1D attenuation would be easy to implement and sufficient to fix the problem (since array sizes would decrease by a factor of 125).
+
+- check if sigma_xz is inverted with sigma_zx and so on in compute_forces; usually this does not matter because the stress tensor is symmetric, but for Cosser
+at or for some C-PML formulations this could matter
+
+- implement RK4 and LDDRK4-6 high-order time schemes, including for viscoelastic media: will be done by Zhinan Xie
+
+- fix the RK4 attenuation implementation problem from my 1999 approximation: will be done by Zhinan Xie
+
+- implement C-PML: will be done by Zhinan Xie
+
+- use PT-Scotch to be able to switch from 6 N^2 MPI threads to any other number, and feed that to SPECFEM3D instead of SPECFEM3D_GLOBE: will be done by Joseph Charles
+
+=============================
+
+Less important for now:
+----------------------
+
+- use a better checkpointing/restarting system with CRC-32 as in SPECFEM3D_GLOBE/tags/v4.1.0_beta_merged_mesher_solver_non_blocking_MPI/src
+
+- use a potential of (rho * u) instead of u in the fluid, in case of fluid-fluid discontinuities
+
+- merge SPECFEM3D_GLOBE into SPECFEM3D, i.e. create a single package and see the mesh of the Earth as a general mesh that we would decompose in parallel using PT-Scotch. Problem: would this scale for huge global Earth simulations, e.g. at a seismic period of 1 second on 200,000 processor cores?
+
+- make the code compatible with helioseismology / general Cowling formulation
+
+- could be done by Vala:
+we could use heuristic rules to make source and receiver detection much
+faster and make these routines use far less memory. For instance using the
+latitude, longitude and depth of each source or receiver we can quickly
+determine if there is no chance for this source or receiver
+to be located in the current slice; then that processor would immediately
+switch to the next source or receiver; this could speedup the whole process by
+a factor of 10 to 100 I guess when many sources are used (e.g. Vala uses
+50,000) and/or many stations (Bernhard uses 20,000). We would
+get rid of the bottleneck in locate_sources and locate_receivers
+when one uses a huge number of sources (e.g. Vala -> 100000 sources)
+or a very large number of stations (e.g. Bernhard -> 20000 stations):
+in such a case there is a bunch of MPI_GATHERS which waste a lot
+of memory and can even use all the available memory and make the run crash.
+Vala partially fixed this problem by using subsets of 1000 stations, but after
+careful analysis we have found a way of doing better and getting rid of all
+the GATHERs and *all* the extra memory (this way we won't have to limit the number of sources to a maximum of 100000, as currently done in the solver).
+
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
+Done:
+-----
+
+- Jeroen Ritsema (from Univ of Michigan, USA) has an interesting suggestion
+(on February 22, 2010) for SPECFEM3D_GLOBE, an option that is currently missing
+but that would be easy to add, and potentially very useful:
+"If I may suggest one modification to specfem-3D: allow for 3D mantle
+structure (i.e. s20rts) and a PREM crust.
+This is helpful in isolating the mantle contribution to waveform anomalies.
+Right now, crust2.0 structure is automatically included if the mantle model is
+turned on." Solution implemented by Daniel Peter from Princeton Univ (USA) on February 23, 2010:
+"I put an option such that if one appends "_1Dcrust" to the 3D model
+name, e.g. "s20rts_1Dcrust" instead of "s20rts" in the Par_file, it
+will just take the crust from the corresponding 1D reference model
+(which is PREM for his s20rts model). Daniel. "
+
+- Purposely not done because we decided not to merge the mesher with the solver, after trying in version 4.1_beta and noticing that the merged code was difficult to write and to maintain: supprimer sections qui decrivent write_AVS_mesh_quality, check_buffers*.f90, check_mesh_quality*.f90 etc du manuel une fois que le mesher et le solver auront ete fusionnes
+
+
+
+Older to-do list of SPECFEM2D (some items are probably still useful to implement):
+----------------------------------------------------------------------------------
+
+- partitioning using weights for load-balancing
+
+- checking for points with different normals for absorbing conditions, when the absorbing edges are not in the same elements (similar to what is done for the corners).
+
+- SOMETHING THAT COULD BE MADE MORE GENERAL:
+at line 770 of specfem2D.F90:
+!! DK DK if needed in the future, here the quality factor could be different for each point
+i.e. they could be given at each (i,j,ispec) instead of at each (ispec) only
+in the current version. Very easy to do if needed, just that line to change.
+
+
+
 
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
@@ -90,5 +195,18 @@ Add-ONS :
 
 Things to add later to the manual:
 ----------------------------------
+
+- update the manuals according to the changes made from the list above
+
+
+
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+
+DONE (MOVE ITEMS ABOVE BELOW THIS LINE WHEN THEY ARE DONE):
+-----------------------------------------------------------
 
 
