@@ -182,6 +182,10 @@ already done in the 2D version
 fix the Stacey / Sommerfield equations (stability issue) in acoustic elements: already done by Zhinan in 2D, Jo will do it in 3D
 but will need Zhinan to send him the equations i.e. help him do it in the 3D code
 
+as Zhinan says, it is probably simple for Jo to make the modification by taking the code Zhinan added to modify
+"rmass_x" and making the same modifications for "rmass_acoustic"
+(only when absorbing conditions are turned on of course). 
+
 should be done in both SPECFEM3D and SPECFEM3D_GLOBE; already done in SPECFEM2D
 
 - suggestion 16:
