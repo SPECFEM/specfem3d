@@ -295,6 +295,29 @@ it would be better to have a logical flag saying if a given layer has attenuatio
 this suggestion comes from notes that I took while talking to Paul Cristini a few months ago therefore I am not sure I remember
 very well what Paul wanted to change about that. Paul, could you remind us more precisely the change that you had in mind?
 
+Answer from Paul:  
+
+My concern was to be able to have in one domain several media which can be elastic or visoelastic. Currently, there is one flag for the whole domain which makes all media elastic or visoelastic.
+
+Conclusion from Dimitri:
+
+Now I remember more clearly what the problem is, based on what you told me:
+
+- in SPECFEM2D the TURN_ATTENUATION_ON flag is global; thus either all the elastic elements become viscoelastic, or none of them
+
+- and then, to have some viscoelastic regions and others that are purely elastic, we do something weird: we set Qkappa = Qmu = 9999 and we run a viscoelastic simulation but with Q = 9999, i.e. almost no loss of energy
+
+Of course, what we should do is:
+
+- suppress the TURN_ATTENUATION_ON flag
+
+- for each material in the list of materials, add a flag that says if that material is elastic or viscoelastic; 
+or detect if Q > 9000 for instance and if so, consider that that material is elastic and turn off attenuation for it
+(the same way we detect acoustic media by checking if the S wave velocity Vs is smaller than 0.0001)
+
+Otherwise, in the current implementation, we waste memory and CPU time by doing viscoelastic simulations everywhere, even in elastic regions, when TURN_ATTENUATION_ON is on.
+
+
 - suggestion 24:
 ----------------
 
