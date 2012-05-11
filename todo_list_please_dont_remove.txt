@@ -9,7 +9,10 @@ To-do list for the different flavors of SPECFEM:
 
 Zhinan commits his current clean 2D C-PML code to SVN; because changes
 made outside of SVN are useless for regular users of the application,
-and are also quickly lost
+and are also quickly lost.
+
+Zhinan, please also include the modifications that René Matzen made to "compute_forces"
+and that he sent on May 10, 2012.
 
 - suggestion 02:
 ----------------
@@ -31,6 +34,9 @@ binary / bit encoding technique can be used); they could use the same idea as in
 
 See (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT;
 read this from input files in the solver
+
+See also if the current arrays called isPML() or PML() or something like that in SPECFEM3D need to be suppressed or on the contrary could 
+be reused. They seem to correspond to an earlier attempt a few years ago that was never finished.
 
 One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, but I never implemented all the terms.
 
@@ -347,6 +353,15 @@ association of 27 nodes but the hard-for-me step is to adapt the
 specfem3d reader and the scotch partitioning.
 
 - suggestion 26:
+----------------
+
+Zhinan will try to back-propagate some waves in 1D with viscoelasticity;
+
+Jeroen, Qinya, Zhinan and I discussed that a few months ago, some of us think the backward run is unstable when undoing attenuation but Zhinan remembers seeing some stable backward runs with a C viscous damping matrix in mechanical engineering at his institute in China, therefore it is worth trying using SPECFEM1D for instance.
+
+(in 2D we could avoid this problem by saving all the timesteps of the forward run to disk and reading them back, but in 3D is it not possible yet because the amount of I/Os would be too big; this should change in 5 to 10 years, but for now we still need to back-propagate when SIMULATION_TYPE = 3 in 3D)
+
+- suggestion 27:
 ----------------
 
 Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme). 
