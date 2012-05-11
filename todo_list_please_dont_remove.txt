@@ -2,7 +2,7 @@
 To-do list for the different flavors of SPECFEM:
 ------------------------------------------------
 
-(listed in no particular order)
+(items listed in no particular order)
 
 - suggestion 01:
 ----------------
@@ -27,9 +27,12 @@ Zhinan (with the help of Jo and Daniel) implements C-PML in SPECFEM3D (in that c
 SPECFEM3D_GLOBE later if needed, but we do not need that now).
 Paul Cristini and I will then test it extensively after the summer.
 Zhinan, Daniel, Paul and Jo need to agree on a numbering convention (i.e. flags) for the different PML regions and corners (a
-binary / bit encoding technique can be used); they could use the same idea as in the convention used in 2D .
+binary / bit encoding technique can be used); they could use the same idea as in the convention used in 2D.
+
 See (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT;
 read this from input files in the solver
+
+One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, but I never implemented all the terms.
 
 - suggestion 04:
 ----------------
@@ -58,16 +61,6 @@ put a flag to choose between a Ricker source and a Heaviside source when a force
 use PT-Scotch (the parallel version of SCOTCH) in SPECFEM3D instead of (or as an option in addition to) the serial version of
 SCOTCH; because decomposing very large 3D meshes on a serial machine (on a single processor core) can be a severe limitation and
 for some meshes that will be a major bottleneck
-
-- suggestion 07:
-----------------
-
-implement higher order time schemes in 3D by cutting and pasting what Zhinan has done in 2D; two schemes are useful: RK4 and
-LDDRK4-6 (low storage low dissipation Runge Kutta, a bit more expensive than RK4 but much better)
-
-implement these RK4 and LDDRK4-6 high-order time schemes including for viscoelastic media, as already done in the 2D code
-
-probably not a high priority, could be done last because we do not need that for current projects
 
 - suggestion 08:
 ----------------
@@ -314,7 +307,44 @@ Solution (easy): add t0 to RECORD_LENGTH_IN_MINUTES*60 when computing the number
 
 Jo, could you please do that at some point? (not the first priority of course)
 
+- suggestion 25:
+----------------
 
+Add support for 27-node elements in addition to 8-node elements; 
+that is useful for instance when handling large topographic variations or
+significantly distorted layers; we do have support for 27-node elements in
+SPECFEM3D_GLOBE but not in SPECFEM3D. I guess it would just be a
+matter of cutting and pasting the 27-node routines from SPECFEM3D_GLOBE.
+
+Users (for instance Vadim Monteiller and Paul Cristini) who use SPECFEM3D for mountain ranges for instance would be able to use curved elements, and since we have support for 27-node hexahedra in SPECFEM3D_GLOBE we could probably cut and paste that in SPECFEM3D.
+
+Vadim could probably have a look at that because he will need that for his study of the Pyrénées.
+
+As Emanuele mentioned, CUBIT has no real support for HEX27, but Gmsh does (and Paul uses Gmsh all the time; thus we could use it rather than CUBIT when curvature is needed).
+
+I guess Vadim will work on that at some point.
+
+Comment from Daniel: 
+
+keep in mind that we have two ways to mesh, in-house mesher xmeshfem3D and CUBIT/SCOTCH. if you insist on 27-node elements, i would start to implement it in the xmeshfem3D in-house mesher. that would probably show what is needed when combining it with CUBIT and SCOTCH which might be more of a problem.
+
+Comment from Emanuele: 
+
+Theoretically, Cubit can generate mesh for HEX8, HEX20, HEX27 type of
+hexahedra but higher-order nodes are created only when the mesh is
+being exported to the Exodus II file (and persist in the CUBIT
+database after file export) so after the meshing process... therefore
+basically it is a regular hex mesh with more nodes inside each
+elements (not a curvilinear element).
+
+I'm not sure if the cubit's python interface is able to extract the
+information about the internal nodes... I should take a try but in
+ any case it is possible to recreate it during the exporting phase
+from cubit/geocubit to specfem3d (or directly in specfem?)
+
+I suppose that I can easily create a script that produce a hex
+association of 27 nodes but the hard-for-me step is to adapt the
+specfem3d reader and the scotch partitioning.
 
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
@@ -392,7 +422,23 @@ Things to add later to the manual:
 
 - update the manuals according to the changes made from the list above
 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
 
+TO DO ONLY IN 2013 OR 2014 BECAUSE WE DO NOT NEED THAT FOR URGENT PROJECTS:
+---------------------------------------------------------------------------
+
+- suggestion 07:
+----------------
+
+implement higher order time schemes in 3D by cutting and pasting what Zhinan has done in 2D; two schemes are useful: RK4 and
+LDDRK4-6 (low storage low dissipation Runge Kutta, a bit more expensive than RK4 but much better)
+
+implement these RK4 and LDDRK4-6 high-order time schemes including for viscoelastic media, as already done in the 2D code
+
+probably not a high priority, could be done last because we do not need that for current projects
 
 
 ---------------------------------------------------------------------------------
