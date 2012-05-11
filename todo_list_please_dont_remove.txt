@@ -364,6 +364,18 @@ Jeroen, Qinya, Zhinan and I discussed that a few months ago, some of us think th
 - suggestion 27:
 ----------------
 
+For Emanuele and Federica:
+
+I agree that read_external_mesh() with varying parameters (for instance to import external tomographic models) is described on page 13 of the manual, but I think the description could / should be made a bit more precise.
+
+In the current version of page 13 of the manual it seems to be a relatively minor point, while in practice many users will use that feature (many/most applications will use such external models).
+
+I therefore suggest that Federica and you make it a slightly longer paragraph, and probably even make it a separate section or sub-section.
+This way, the item will appear in the table of contents.
+
+- suggestion 28:
+----------------
+
 Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme). 
 
 
