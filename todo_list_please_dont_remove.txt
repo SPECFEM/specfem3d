@@ -346,6 +346,12 @@ I suppose that I can easily create a script that produce a hex
 association of 27 nodes but the hard-for-me step is to adapt the
 specfem3d reader and the scotch partitioning.
 
+- suggestion 26:
+----------------
+
+Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme). 
+
+
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
