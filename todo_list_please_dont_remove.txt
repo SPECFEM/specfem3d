@@ -208,6 +208,9 @@ in comments in DATA/Par_file and also in the LaTeX manual of the 2D code, Zhinan
 different time schemes that are now implemented and that can be selected by the user:
 Newark, RK4 and LDDRK4-6
 
+mention also in the manual and in these comments in DATA/Par_file that using Stacey absorbing conditions slightly reduces this maximum
+CFL value i.e. the maximum time step (as a rule of thumb obtained by trial and error, it is reduced by a factor of about 0.90).
+
 without such numbers as comments nor in the manual, it is difficult for users to decide what value to use for the time step (in the
 2D code, the user selects the time step, it is not computed automatically by the code)
 
