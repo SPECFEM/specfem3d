@@ -1,0 +1,174 @@
+Subject: Re: adding fault tolerance to the official SVN version of SPECFEM3D_GLOBE
+From: "Leonardo A. Bautista Gomez"
+Date: Mon, 19 Mar 2012
+To: Dimitri Komatitsch
+CC: franck cappello, Jeroen Tromp, Daniel Peter, Joseph Charles
+
+Hi Dimitri,
+
+I have several versions of the SPECFEM3D code with and without FTI, some versions with PAPI counters, others with different tests, etc. Here I send you a version of the code with a very simple (Not complete) checkpoint. This code only checkpoints the displacement and velocity vectors, so this version is not able to properly recover but it gives you an idea of how FTI is used. From this example is simple to create a complete checkpoint version (you just need to include iteration counter and other vectors in the checkpoint).
+
+As you can see, in the file specfem3D.c, in Line 119 we initialize FTI and we give the name of a configuration file in parameter (An example of configuration file is given later in this mail). This initialization will detect the topology of the system and store it in a file. Also a new MPI communicator is created: FTI_COMM_WORLD, which should be used instead of MPI_COMM_WORLD. As you can see in the code I replaced MPI_COMM_WORLD by FTI_COMM_WORLD everywhere. This is because, as I explained in a previous mail, some MPI ranks are dedicated for encoding the local checkpoints, thus in this way we separate the FTI communication and the application communications in different communicators.
+
+Then, the important part is between lines 932 and 968. This code is using an old version of FTI (from more than one year ago). The code and the API of FTI has significantly evolve since then. Nevertheless the approach is the same. The application checkpoints in a file which name is given by FTI in a global variable, those file are created in local storage, the path to the local storage is given by the user in the configuration file. Then "everything" happens in the call to "FTI_Checkpointed()): Indeed, this function send messages to the encoding ranks to notify them that a new checkpoint has been taken. They will detect the size of the checkpoint files and encode them in groups, they will create the necessary metadata to keep track of everything and they will erase previous checkpoints once everything is finished with the current checkpoint; all this happens in parallel with the application execution, checkpoint counters are incremented and new checkpoint file names are set in the global variables. With the new API of FTI is not necessary to open the checkpoint file and write the data inside using posix calls, everything is done in a slightly more transparent fashion.
+
+If the application fails, the users change one line in the configuration file and then restart the execution. FTI will detect that this is a restart and will set the global variable FTI_Fail to TRUE (1) and regenerate all lost data, the regeneration happens in the call to FTI_Init(), so that after that line every process has a checkpoint file in local ready to be read for restart. The call to FTI_Restarted() is only to notify FTI that the application successfully recovered, so that it can continue with the future checkpoints (counters are set and metadata stored).
+
+Here you can see the structure of a FTI configuration file. Please let me know if you have questions.
+Best regards,
+
+Leo
+
+===========================================================
+========== Fichier config.fti  ============================
+===========================================================
+[Basic]
+
+# The number of processes launched per node (The same for every node), including FTI-dedicated processes.
+Node_size: 5
+
+# The interval (in ckpt. counts) between two L2 (RS encoding) checkpoints
+L2ckpt_ival: 2
+
+# The interval (in ckpt. counts) between two L3 (FS flush) checkpoints
+L3ckpt_ival: 6
+
+# Set to 1 to activate (or 0 to deactivate) the silent error check
+Silent_error_check: 0
+
+# Number of FTI-dedicated processes per node (Must be less than Node_size)
+Heads: 1
+
+# Set this to 0 if you are launching this job for the first time
+# Set this to 1 if you are recovering this job after a failure
+Failure: 0
+
+# Local directory where the local checkpoints will be stored
+Ckpt_dir: /path/to/local/SSD/for/ckpt
+
+# File system directory where the L3 checkpoints will be stored
+L3fs_dir: /path/to/file/system/ckpt
+
+# Global directory where the FTI metadata will be stored
+Meta_dir: /home/userdir/.fti
+
+# The size of the encoding groups
+Group_size: 4
+
+# The checkpoint files are decomposed in blocks of size Block_size bytes
+Block_size: 65536
+
+# The word size for Reed-Solomon encoding (Must be 16 or 32)
+Word_size: 16
+
+# The tag for MPI communications done within the FTI library
+Mpi_tag: 2612
+========================================================
+
+
+El 5 de marzo de 2012 05:06, Dimitri Komatitsch escribió:
+
+    Hi Leonardo,
+
+    Thank you very much for your answer. Yes, we are interested in seeing how the code looks like, and how we could maybe merge it into SPECFEM3D_GLOBE at some point. Currently as you say the code is specific to the (older) GPU version (Daniel and Joseph are currently working on a new one) but we all know that on future exaflop machines (or even in the next few years, in the race to exaflop) fault-tolerance systems will be needed; so let us find a way of getting a reliable one in SPECFEM (ideally based on your work).
+
+    The current basic checkpointing/restarting system that we have in SPECFEM (dumping files to the LUSTRE file system every 1000 time steps and reading them back if needed) is too limited and not suitable for the race to exaflop.
+
+    Thus yes, please send the source code to Daniel, Jo and I and we will have a look.
+
+    Thanks again,
+    Best regards,
+
+    Dimitri.
+
+
+    On 02/29/2012 03:08 AM, Leonardo A. Bautista Gomez wrote:
+
+        Hi Dimitri,
+
+        Thanks for your mail. I like very much the idea of having my work
+        reflected on the official version of SPECFEM3D_GLOBE, however I have
+        some concerns about it. I will explain them point by point, but they all
+        can be resumed in one single idea: All the work we did for SC11 was
+        focused in a specific version of SPECFEM3D (GPU-CUDA) for a very
+        specific architecture (Tsubame2.0).
+
+        * Indeed, some of the optimizations presented in the SC11 paper are
+        based on the fact that GPU-applications generally do most of the work on
+        the GPUs, leaving some CPU cores idle and we can use those for fault
+        tolerance. This was shown using the CUDA version of SPECFEM3D you sent
+        me and it worked perfectly, as presented in the paper. This could also
+        be used for homogeneous systems by "sacrificing" a thread per node which
+        will have an impact on the application performance. Whether that
+        overhead is larger than checkpointing to the PFS or not will depend on
+        the number of threads that can be spawned by node and the I/O bandwidth
+        of the machine.
+
+        * Besides the FT-dedicated threads, probably the biggest difference with
+        nowadays clusters are the SSDs on the compute nodes. In order to
+        accelerate the checkpoints we used a combination of local checkpointing
+        on SSDs and erasure codes (to guarantee availability). Thus I am not
+        sure whether is a good idea or not to implement this in an official
+        version that is aimed for the general public.
+
+        * All the optimizations presented in the SC11 paper are implemented in a
+        library that I developed, called FTI (~3K lines of code). The changes I
+        made to the SPECFEM3D code were very small, just a few tens of lines.
+        Basically I just replaced the PFS-based checkpoint with some FTI
+        function calls. We have plans to release a public version of FTI soon
+        but there is still significant work to do for that.
+
+        Since the HPC community seems to be moving toward accelerated clusters
+        (3 of the top 5 in the Top500) and new clusters with SSDs on the nodes
+        are being installed (Coastal@LLNL and CURIE@CINES), we believe this work
+        will be very useful for many machines in the near future.
+
+        Please let me know if you still want to see what the SPECFEM3D code
+        looks like with the FTI function calls or if you (or Daniel or Joseph)
+        have any question. I remember we discussed some interesting ideas such
+        as off-loading the error-detection function implemented in SPECFEM3D to
+        the FT-dedicated threads and executing it in parallel with the GPU kernels.
+
+        Thank you,
+        Best regards,
+
+        Leo
+
+               On Tue, Feb 28, 2012 at 2:32 PM, Dimitri Komatitsch wrote:
+
+                   Dear Leonardo and Franck,
+
+                   Jeroen Tromp, Daniel Peter, Joseph Charles and I (we
+                   collaborate on SPECFEM3D_GLOBE; I cc them) wonder if you have planned to
+                   merge your support for fault tolerance into the official SVN version of
+                   SPECFEM3D_GLOBE. On current petaflop and future exaflop machines we think that
+                   would be crucial, and so far I think Leonardo has developed that in a local
+                   version in Japan only.
+
+                   Thus, could Leonardo email us his version and send us an
+                   email explaining the main changes? This way we could cut and paste them into
+                   the official branch.
+
+                   PS for Daniel and Jo: the SC'11 paper that explains the way
+                   fault tolerance works is available at
+                   http://komatitsch.free.fr/published_papers/sc2011_Leonardo_Bautista_Gomez.pdf
+
+                   Thank you,
+                   Best regards,
+
+                   Dimitri.
+
+                   --
+                   Dimitri Komatitsch
+                   CNRS Research Director (DR CNRS), Laboratory of Mechanics and Acoustics,
+                   UPR 7051, Marseille, France http://komatitsch.free.fr
+
+        --
+        Leonardo A. BAUTISTA GOMEZ
+        Ph. D Candidate - Tokyo Institute of Technology
+        Department of Mathematics and Computer Sciences
+        2-12-1-W8-33 Oookayama, Meguro-ku,
+        Tokyo, 152-8550, JAPAN
+        Tel/Fax: +81-3-5734-3876 Mobile: +81-80-4199-8202
+        Web: http://matsu-www.is.titech.ac.jp/~leobago/
+

@@ -413,7 +413,7 @@ Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are pr
 
 - add a checkpointing/restarting system with CRC-32 as in
 SPECFEM3D_GLOBE/tags/v4.1.0_beta_merged_mesher_solver_non_blocking_MPI/src , or using the fault tolerance library developed by
-Leonardo Bautista and Franck Cappello at INRIA
+Leonardo Bautista and Franck Cappello at INRIA (see the content of directory "utils/fault_tolerance").
 
 - Regarding memory size (getting an estimate of memory consumption in SPECFEM3D),
 somebody should just cut and paste my SPECFEM3D_GLOBE routine
