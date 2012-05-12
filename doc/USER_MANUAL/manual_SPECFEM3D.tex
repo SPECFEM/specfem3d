@@ -779,10 +779,10 @@ where
      \item \texttt{anisotropy\_flag}  : 0=no anisotropy / 1,2,.. check with implementation in \texttt{aniso\_model.f90}
      \item \texttt{domain\_id}        : 1=acoustic / 2=elastic
 \end{itemize}
-\item [{\texttt{NMATERIALS}}] The number of regions in the mesh.
+\item [{\texttt{NREGIONS}}] The number of regions in the mesh.
 In the following lines, because the mesh is regular or 'almost regular', each region is defined as :
 \begin{lyxcode}
-  \texttt{XI\_begin}  \texttt{XI\_end}  \texttt{ETA\_begin}  \texttt{ETA\_end}  \texttt{material\_ID}
+  \texttt{NEX\_XI\_BEGIN}  \texttt{NEX\_XI\_END}  \texttt{NEX\_ETA\_BEGIN}  \texttt{NEX\_ETA\_END}  \texttt{NZ\_BEGIN}  \texttt{NZ\_END}  \texttt{material\_ID}
 \end{lyxcode}
 \end{description}
 
