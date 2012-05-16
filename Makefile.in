@@ -68,10 +68,6 @@ RANLIB = ranlib
 @COND_PYRE_FALSE@	specfem3D \
 @COND_PYRE_FALSE@	$(EMPTY_MACRO)
 
-# @COND_PYRE_FALSE@	combine_vol_data \
-# @COND_PYRE_FALSE@	combine_surf_data \
-# @COND_PYRE_FALSE@	convolve_source_timefunction \
-# @COND_PYRE_FALSE@	smooth_vol_data \
 
 default: $(DEFAULT)
 
@@ -98,6 +94,7 @@ create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
 combine_surf_data: xcombine_surf_data
 smooth_vol_data: xsmooth_vol_data
+sum_kernels: xsum_kernels
 model_update: xmodel_update
 check_mesh_quality_CUBIT_Abaqus: xcheck_mesh_quality_CUBIT_Abaqus
 
@@ -152,6 +149,9 @@ xconvolve_source_timefunction: required
 xsmooth_vol_data: required reqspec
 	(cd src/specfem3D ; make xsmooth_vol_data)
 
+xsum_kernels: required reqspec
+	(cd src/specfem3D ; make xsum_kernels)
+
 xmodel_update: required reqspec xspecfem3D
 	(cd src/specfem3D ; make xmodel_update)
 
@@ -177,6 +177,7 @@ help:
 	@echo "    xcombine_vol_data"
 	@echo "    xcombine_surf_data"
 	@echo "    xsmooth_vol_data"
+	@echo "    xsum_kernels"
 	@echo "    xmodel_update"
 	@echo "    xcheck_mesh_quality_CUBIT_Abaqus"
 	@echo ""

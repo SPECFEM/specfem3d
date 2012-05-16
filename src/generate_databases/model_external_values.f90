@@ -156,6 +156,9 @@
   y = ymesh
   z = zmesh
 
+  ! note: z coordinate will be negative below surface
+  !          convention is z-axis points up
+
   ! model dimensions
   xmin = 0. ! minval(xstore_dummy)
   xmax = 134000. ! maxval(xstore_dummy)
@@ -168,21 +171,22 @@
   call get_topo_elevation_free_closest(x,y,elevation,distmin, &
                                   nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
                                   num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+
                     
   ! depth in Z-direction
   if( distmin < HUGEVAL ) then  
     depth = elevation - z
   else
-    depth = zmax - z
+    depth = zmin - z
   endif
   
   ! normalizes depth between 0 and 1
   if( abs( zmax - zmin ) > TINYVAL ) depth = depth / (zmax - zmin)
 
-  ! super-imposes values
-  !rho = 2.6910d0+0.6924d0*depth
-  !vp = 4.1875d0+3.9382d0*depth
-  !vs = 2.1519d0+2.3481d0*depth
+  ! initial values (in m/s and kg/m^3)
+  rho = 2691.0d0
+  vp = 4187.5d0
+  vs = 2151.9d0
 
   ! adds a velocity depth gradient
   ! (e.g. from PREM mantle gradients:
