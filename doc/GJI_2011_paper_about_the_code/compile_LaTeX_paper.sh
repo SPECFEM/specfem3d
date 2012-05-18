@@ -15,17 +15,11 @@
 /bin/rm -rf *.tit >  /dev/null
 /bin/rm -rf *.spl >  /dev/null
 
-	pdflatex response-reviews
-	bibtex response-reviews
-	pdflatex response-reviews
-	pdflatex response-reviews
-	pdflatex response-reviews
-
-	pdflatex paper_sesame_2.0
-	bibtex paper_sesame_2.0 
-	pdflatex paper_sesame_2.0
-	pdflatex paper_sesame_2.0
-	pdflatex paper_sesame_2.0
+	pdflatex paper_GJI_2011_about_the_code
+	bibtex paper_GJI_2011_about_the_code
+	pdflatex paper_GJI_2011_about_the_code
+	pdflatex paper_GJI_2011_about_the_code
+	pdflatex paper_GJI_2011_about_the_code
 
 /bin/rm -rf *.dvi >  /dev/null
 /bin/rm -rf *.log >  /dev/null
