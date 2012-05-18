@@ -1,0 +1,627 @@
+%  *******************************************************************
+%  *         TABLES AND FIGURES    {extensions from AGU macros       *
+%  *******************************************************************
+
+% Additions and adjustments for tables and figures.
+
+% Footnotes for tables are to be identified with lower case alphabetics,
+% rather than numeric.  \tablenotemark and \tablenotetext commands are
+% provided analogous to \footnotemark and \footnotetext, but with the
+% identifier *required*, like \altaffilmark and \altaffiltext.  The
+% \tablenotetext must be specified before the \end{table}, since
+% \end{table} displays it.
+%
+%     \tablenotemark{TAG LETTER(S)}
+%     \tablenotetext{ALPHA TAG}{TEXT}
+%
+% Note that TAG LETTER == ALPHA TAG for corresponding text.  It is the
+% responsibility of the author to get the correspondence correct.
+%
+% The table footnotes are coupled to the table in which they occur, rather
+% than being associated with a particular page, and they are printed with
+% the table (relatively close to the caption) instead of appearing at the
+% extreme bottom of the page.  This is done to ensure that the notes wind
+% up on the same page as the table, since tables are floats and can migrate
+% from one page to another.  There is the additional benefit that the notes
+% are unambiguously attached to the proper table, which is what is required
+% in the event that the editorial requirement of one table only per page
+% is ever changed to permit several tables per page.
+%
+% Footnotes are NOT supported for figures.
+
+\def\tablenotemark#1{\rlap{$^{\rm #1}$}}
+
+% The \tablenotetext command buffers the table note text and the "proper"
+% tablenote formatting information in a token buffer.  The tablenotes are
+% dispensed into the vertical page list by \spew@tblnotes, which is
+% executed by \end{table}.  Note that certain "global" tablenote formatting
+% details are handled by \spew@tblnotes, which also clears the tblnote list.
+% Praise and honor are due to Kresten Krab Thorup (krab@iesd.auc.dk) for
+% posting ftn.sty to the Usenet, from which I drew the technique.
+
+\newtoks\@temptokenb
+\def\tblnote@list{}
+
+\def\tablenotetext#1#2{
+    \@temptokena={\vspace{.5ex}{\noindent\llap{$^{#1}$}#2}\par}
+    \@temptokenb=\expandafter{\tblnote@list}
+    \xdef\tblnote@list{\the\@temptokenb\the\@temptokena}}
+
+\def\spew@tblnotes{
+  \ifx\tblnote@list\@empty\relax
+  \else
+    \vspace{4.5ex}
+    \footnoterule
+    \vspace{.5ex}
+    {\footnotesize\tblnote@list}
+    \gdef\tblnote@list{}
+  \fi}
+
+\def\endtable{\spew@tblnotes\end@float}
+\@namedef{endtable*}{\spew@tblnotes\end@dblfloat}
+
+% Add a \tableline command for use in tabular environments.  This command
+% produces the horizontal rule(s) between the column headings and the body
+% of the table.  Authors are discouraged from using any \hlines themselves,
+% and are typically forbidden from using vertical rules by editors.
+
+\let\tableline=\hline
+
+% \@makecaption determines formatting for figure and table captions.  
+% For manuscripts, all captions should be set as flushleft paragraphs.
+
+\long\def\@makecaption#1#2{\vskip 2ex\noindent #1 #2\par}
+
+% The \tablenum command allows the author to override all automatic
+% table marking schemes.
+%
+%    \tablenum{TEXT}
+
+\def\tablenum#1{\def\thetable{#1}\let\@currentlabel\thetable
+    \addtocounter{table}{\m@ne}}
+
+% The \figurenum command allows the author to override all automatic
+% figure marking schemes.
+%
+%    \figurenum{TEXT}
+
+\def\figurenum#1{\def\thefigure{#1}\let\@currentlabel\thefigure
+    \addtocounter{figure}{\m@ne}}
+
+%
+%  ********************************************************
+%  *           PLANO TABLES        {from AGU Macros}      *
+%  ********************************************************
+
+% Plano tables are camera-ready pages that are included in a typeset
+% article the same way as line drawings, graphs, and other camera-ready
+% art, i.e., as "planographic" figures.  There are desirable properties
+% for a formatter to have that are somewhat above and beyond LaTeX'x
+% tabular environment that would facilitate the creation of such tables.
+% Among these are breaking long tables across pages, using footnotes
+% in a table, specifying comments and references for tables, etc.
+%
+% What follows was inspired by supertab.sty by Theo Jurriens, 1988.
+
+% Commands for identifying table elements in a consistent way.  Observe
+% that the formatting is embedded in the macro definitions so that the
+% author doesn't need to be concerned about stylistic nuances.
+%
+%    \tablecaption{TEXT}
+%    \tablehead{TEXT}
+%    \colhead{HEADING}
+%    \tabletail{TEXT}
+%    \tablewidth{DIMEN}
+%    \tableheadfrac{NUM}
+
+\newbox\pt@box
+\newdimen\pt@width
+\newcount\pt@line
+\newcount\pt@nlines
+\newcount\pt@ncol
+
+\def\colhead#1{\omit\hidewidth{#1}\hidewidth\global\advance\pt@ncol by\@ne}
+\def\tablecaption#1{\gdef\pt@caption{#1}} \def\pt@caption{\relax}
+\def\tablehead#1{\gdef\pt@head{\hline\hline\relax\\[-1.7ex]
+    #1\hskip\tabcolsep\\[.7ex]\hline\relax\\[-1.5ex]}} \def\pt@head{\relax}
+\def\tabletail#1{\gdef\pt@tail{#1}} \def\pt@tail{\relax}
+\def\tablewidth#1{\pt@width=#1} \pt@width\textwidth
+\def\tableheadfrac#1{\gdef\pt@headfrac{#1}} \def\pt@headfrac{.1}
+
+% Calculate the number of tabular rows that will fit in the body of the
+% table.  The height of the table body and the number of lines are
+% calculated thus:
+%
+%     bodyheight = \textheight * (1 - \pt@headfrac)
+%     \pt@nlines = bodyheight / (\arraystretch * \baselineskip)
+%
+% The row height can be seen to be valid algebraically if one examines the
+% definitions for \strutbox, \@setstrut, and \@array.  I could eliminate
+% this calculation, as well as its attendant parameters, if it were possible
+% to determine the accumulated height of the \halign box as TeX goes along.
+
+\def\pt@calcnlines{\@tempdima\pt@headfrac\textheight
+    \@tempdimb\textheight\advance\@tempdimb by-\@tempdima
+    \@tempdima\arraystretch\baselineskip
+    \divide\@tempdimb by\@tempdima
+    \global\pt@nlines\@tempdimb}
+
+% Define \pt@tabular, a ripoff of \@tabular but with \leavevmode removed
+% so tabular box can be set with \setbox.  I do this so that table notes
+% can be set to natural width of table, if desired.  Also, set \@acol
+% to \@ptabacol, which is called when building the preamble for the
+% \halign (assuming the first column format specification is "l", which
+% it should be for ApJ tables) so that \tabskip within the table is set
+% to \fill.  This permits us to toggle between natural and fixed-width
+% tables without requiring the user to change markup.  Note that by
+% forcing \tabskip always to be \fill, I pretty well nullify any
+% @{\hspace} commands the user puts in the template, but this environment
+% is for people who don't want to think about that sort of stuff anyway.
+
+\def\pt@tabular{\hbox \bgroup $\let\@acol\@ptabacol 
+   \let\@classz\@tabclassz
+   \let\@classiv\@tabclassiv \let\\\@tabularcr\@tabarray}
+
+\def\@ptabacol{\edef\@preamble{\@preamble \hskip \tabcolsep\tabskip\fill}}
+
+% Permit different identifying strings, one for the first page of the
+% table and one for continuation pages.  LaTeX's \fnum@table is set to
+% one or the other automatically in the environment.  Note that caption
+% handling is not so graceful: you have to edit inside the big macros to
+% adjust this.  Someday, I will be ambitious enough to fix this.
+
+\def\fnum@ptable{Table \thetable}
+\def\fnum@ptablecont{Table \thetable---{\rm Continued}}
+
+\def\set@mkcaption{\long\def\@makecaption##1##2{
+    \center\rm##1.\quad##2\endcenter\vskip 2.5ex}}
+\def\set@mkcaptioncont{\long\def\@makecaption##1##2{
+    \center\rm##1\endcenter\vskip 2.5ex}}
+
+\newenvironment{planotable}[1]{\def\pt@format{\string#1}%
+    \set@tblnotetext\pt@ncol=0}%
+    {\crcr\noalign{\vskip .7ex}\hline\endtabular%
+    \pt@width\wd\pt@box\box\pt@box\spew@ptblnotes%
+    \typeout{Table \thetable\space has been set to width \the\pt@width}%
+    \endcenter\end@float}
+
+\def\startdata{\pt@line=0\pt@calcnlines%
+    \ifdim\pt@width>\z@\def\@halignto{to \pt@width}\else\def\@halignto{}\fi%
+    \let\fnum@table=\fnum@ptable\set@mkcaption%
+    \@float{table}\center\caption{\pt@caption}\leavevmode%
+    \setbox\pt@box=\pt@tabular{\pt@format}\pt@head}
+
+% A kludgey kind of line delimiter is needed so that the line counter
+% can be checked prior to adding the line to the alignment box.  This
+% is bad because this form does not permit the addition of vertical
+% space using the [.5ex] construct; this has to be done with an explicit
+% \vskip.  And a disgusting \noalign is required, so I have to create
+% another silly piece of markup to accomplish this conveniently.
+%
+% What is desired, of course, is for this line count checking to take
+% place within the syntax of the regular LaTeX \\ command.  I have been
+% giving myself apoplexy trying to figure this out for the last 36 hours,
+% and I have decided I will have to wait for the onset of my "lucid
+% period" for a solution.  In the meantime...
+
+\def\pt@nl{\global\advance\pt@line by\@ne%
+  \ifnum\pt@line=\pt@nlines%
+    \endtabular\box\pt@box
+    \endcenter\end@float\clearpage%
+    \addtocounter{table}{\m@ne}%
+    \let\fnum@table=\fnum@ptablecont\set@mkcaptioncont%
+    \@float{table}\center\caption{\pt@caption}\leavevmode%
+    \global\pt@ncol=0%
+    \setbox\pt@box=\pt@tabular{\pt@format}\pt@head%
+    \global\pt@line=0%
+  \else\\
+  \fi}
+
+% Author markup commands for planotable environment line breaks.
+%
+%    \nl == \nextline
+%    \tablevspace{DIMEN}
+%    \tablebreak
+
+\let\nl=\pt@nl
+\let\nextline=\pt@nl
+
+\def\tablevspace#1{\noalign{\vskip{#1}}}
+\def\tablebreak{\pt@line\pt@nlines\advance\pt@line by\m@ne\pt@nl}
+
+% We have some specialty heads that are sometimes wanted in tables.
+%
+%    \cutinhead{TEXT}
+%    \sidehead{TEXT}
+
+\def\cutinhead#1{\noalign{\vskip 1.5ex}
+    \hline\pt@nl\noalign{\vskip -4ex}
+    \multicolumn{\pt@ncol}{c}{#1}\pt@nl
+    \noalign{\vskip .8ex}
+    \hline\pt@nl\noalign{\vskip -2ex}}
+
+\def\sidehead#1{\noalign{\vskip 1.5ex}
+    \multicolumn{\pt@ncol}{@{\hskip\z@}l}{#1}\pt@nl
+    \noalign{\vskip .5ex}}
+
+\def\set@tblnotetext{\def\tablenotetext##1##2{{%
+    \@temptokena={\vspace{0ex}{%
+    \parbox{\pt@width}{\hskip1em$^{\rm ##1}$##2}\par}}%
+    \@temptokenb=\expandafter{\tblnote@list}
+    \xdef\tblnote@list{\the\@temptokenb\the\@temptokena}}}}
+
+\def\spew@ptblnotes{
+  \ifx\tblnote@list\@empty\relax
+  \else
+    \par
+    \vspace{2ex}
+    {\tblnote@list}
+    \gdef\tblnote@list{}
+  \fi}
+
+% Special kinds of table footnotes.  Sometimes authors tabulate things
+% which have corresponding references, and it may be desirable to associate
+% these references with the table rather than (or in addition to) the
+% formal reference list.  Occasionally, authors wish to append a short
+% paragraph of explanatory notes that pertain to the entire table, but
+% which are different than the caption.
+%
+%    \tablerefs{REFERENCE LIST}
+%    \tablecomments{TEXT}
+
+\def\tablerefs#1{\@temptokena={\vspace*{3ex}{%
+    \parbox{\pt@width}{\hskip1em\rm References. --- #1}\par}}%
+    \@temptokenb=\expandafter{\tblnote@list}
+    \xdef\tblnote@list{\the\@temptokenb\the\@temptokena}}
+
+\def\tablecomments#1{\@temptokena={\vspace*{3ex}{%
+    \parbox{\pt@width}{\hskip1em\rm Note. --- #1}\par}}%
+    \@temptokenb=\expandafter{\tblnote@list}
+    \xdef\tblnote@list{\the\@temptokenb\the\@temptokena}}
+
+\def\nodata{\multicolumn{1}{c}{$\cdots$}}
+
+%%% FROM EGS.CLS
+
+\def\ModuleVersion#1[#2]{}
+    \ModuleVersion{natbib}
+        [1998/07/14 6.8c (PWD)]
+%% Natbib coding copyright (C) 1994--1998 Patrick W. Daly
+\def\NAT@sort{0}
+\newcommand\NAT@open{(} \newcommand\NAT@close{)}
+\newcommand\NAT@sep{;} \newcommand\NAT@cmt{,}
+%%\newcommand\NAT@aysep{,} \newcommand\NAT@yrsep{,}
+\newcommand\NAT@aysep{} \newcommand\NAT@yrsep{,}
+
+\def\NAT@nmfmt#1{{#1}}
+\renewcommand\@cite%
+    [3]{\ifNAT@swa\NAT@@open\if\relax#2\relax\else#2\ \fi
+        #1\if\relax#3\relax\else\NAT@cmt\ #3\fi\NAT@@close\else#1\fi\endgroup}
+\providecommand\@firstofone[1]{#1}
+\def\@citex%
+  [#1][#2]#3{%
+  \NAT@sort@cites{#3}%
+  \let\@citea\@empty
+  \@cite{\let\NAT@nm\@empty\let\NAT@year\@empty
+    \@for\@citeb:=\NAT@cite@list\do
+    {\edef\@citeb{\expandafter\@firstofone\@citeb}%
+     \if@filesw\immediate\write\@auxout{\string\citation{\@citeb}}\fi
+     \@ifundefined{b@\@citeb\@extra@b@citeb}{\@citea%
+       {\reset@font\bfseries ?}\NAT@citeundefined
+                 \PackageWarning{natbib}%
+       {Citation `\@citeb' on page \thepage \space undefined}}%
+     {\let\NAT@last@nm=\NAT@nm\let\NAT@last@yr=\NAT@year
+     \NAT@parse{\@citeb}%
+     \ifNAT@full\let\NAT@nm\NAT@all@names\else
+       \let\NAT@nm\NAT@name\fi
+     \ifNAT@swa\ifcase\NAT@ctype
+       \ifx\NAT@last@nm\NAT@nm\NAT@yrsep
+          \ifx\NAT@last@yr\NAT@year
+            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@exlab
+            \hyper@natlinkend
+          \else\unskip\
+            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@date
+            \hyper@natlinkend
+          \fi
+       \else\@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+         \NAT@nmfmt{\NAT@nm}%
+         \hyper@natlinkbreak{\NAT@aysep\ }{\@citeb\@extra@b@citeb}%
+         \NAT@date\hyper@natlinkend
+       \fi
+     \or\@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+         \NAT@nmfmt{\NAT@nm}\hyper@natlinkend
+     \or\@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+         \NAT@date\hyper@natlinkend
+     \fi \def\@citea{\NAT@sep\ }%
+     \else\ifcase\NAT@ctype
+       \ifx\NAT@last@nm\NAT@nm\NAT@yrsep
+          \ifx\NAT@last@yr\NAT@year
+            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@exlab
+            \hyper@natlinkend
+          \else\unskip\
+            \hyper@natlinkstart{\@citeb\@extra@b@citeb}\NAT@date
+            \hyper@natlinkend
+          \fi
+       \else\@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+         \NAT@nmfmt{\NAT@nm}%
+         \hyper@natlinkbreak{\ \NAT@@open\if\relax#1\relax\else#1\ \fi}%
+            {\@citeb\@extra@b@citeb}%
+         \NAT@date\hyper@natlinkend\fi
+       \or\@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+         \NAT@nmfmt{\NAT@nm}\hyper@natlinkend
+       \or\@citea\hyper@natlinkstart{\@citeb\@extra@b@citeb}%
+         \NAT@date\hyper@natlinkend\fi \def\@citea{\NAT@@close\NAT@sep\ }%
+     \fi
+     }}\ifNAT@swa\else\if\relax#2\relax\else\NAT@cmt\ #2\fi
+     \NAT@@close\fi}{#1}{#2}}
+\newif\ifNAT@par \NAT@partrue
+\newcommand\NAT@@open{\ifNAT@par\NAT@open\fi}
+\newcommand\NAT@@close{\ifNAT@par\NAT@close\fi}
+\renewcommand\@biblabel[1]{\hfill}
+\newlength{\bibhang}
+\setlength{\bibhang}{1em}
+\newlength{\bibsep}
+\setlength{\bibsep}{\z@}
+
+\newcommand\@bibsetup%
+   [1]{\setlength{\leftmargin}{\bibhang}\setlength{\itemindent}{-\leftmargin}%
+       \setlength{\itemsep}{\bibsep}\setlength{\parsep}{\z@}}
+\AtBeginDocument{\ifx\SK@def\@undefined\else
+\ifx\SK@cite\@empty\else
+  \SK@def\@citex[#1][#2]#3{\SK@\SK@@ref{#3}\SK@@citex[#1][#2]{#3}}\fi
+\ifx\SK@citeauthor\@undefined\def\HAR@checkdef{}\else
+  \let\citeauthor\SK@citeauthor
+  \let\citefullauthor\SK@citefullauthor
+  \let\citeyear\SK@citeyear\fi
+\fi}
+\newif\ifNAT@full\NAT@fullfalse
+\newif\ifNAT@swa
+\DeclareRobustCommand\citet
+   {\begingroup\NAT@swafalse\def\NAT@ctype{0}\NAT@partrue
+     \@ifstar{\NAT@fulltrue\NAT@citetp}{\NAT@fullfalse\NAT@citetp}}
+\newcommand\NAT@citetp{\@ifnextchar[{\NAT@@citetp}{\NAT@@citetp[]}}
+\newcommand\NAT@@citetp{}
+\def\NAT@@citetp[#1]{\@ifnextchar[{\@citex[#1]}{\@citex[][#1]}}
+\DeclareRobustCommand\citep
+   {\begingroup\NAT@swatrue\def\NAT@ctype{0}\NAT@partrue
+         \@ifstar{\NAT@fulltrue\NAT@citetp}{\NAT@fullfalse\NAT@citetp}}
+\DeclareRobustCommand\cite
+    {\begingroup\def\NAT@ctype{0}\NAT@partrue\NAT@swatrue
+      \@ifstar{\NAT@fulltrue\NAT@cites}{\NAT@fullfalse\NAT@cites}}
+\newcommand\NAT@cites{\@ifnextchar [{\NAT@@citetp}{%
+     \NAT@swafalse
+    \NAT@@citetp[]}}
+\DeclareRobustCommand\citeauthor
+   {\begingroup\NAT@swafalse\def\NAT@ctype{1}\NAT@parfalse
+    \@ifstar{\NAT@fulltrue\NAT@citetp}{\NAT@fullfalse\NAT@citetp}}
+\DeclareRobustCommand\citeyear
+   {\begingroup\NAT@swafalse\def\NAT@ctype{2}\NAT@parfalse\NAT@citetp}
+\DeclareRobustCommand\citeyearpar
+   {\begingroup\NAT@swatrue\def\NAT@ctype{2}\NAT@partrue\NAT@citetp}
+\newcommand\citetext[1]{\NAT@open#1\NAT@close}
+\DeclareRobustCommand\citefullauthor
+   {\citeauthor*}
+\renewcommand\nocite[1]{\@bsphack
+  \@for\@citeb:=#1\do{%
+    \edef\@citeb{\expandafter\@firstofone\@citeb}%
+    \if@filesw\immediate\write\@auxout{\string\citation{\@citeb}}\fi
+    \if*\@citeb\else
+    \@ifundefined{b@\@citeb\@extra@b@citeb}{%
+       \NAT@citeundefined \PackageWarning{natbib}%
+       {Citation `\@citeb' undefined}}{}\fi}%
+  \@esphack}
+\newcommand\NAT@parse[1]{{%
+     \let\protect=\@unexpandable@protect\let~\relax
+     \let\active@prefix=\@gobble
+     \xdef\NAT@temp{\csname b@#1\@extra@b@citeb\endcsname}}%
+     \expandafter\NAT@split\NAT@temp
+     \expandafter\NAT@parse@date\NAT@date??????@@%
+}
+\newcommand\NAT@split[4]{%
+  \gdef\NAT@num{#1}\gdef\NAT@name{#3}\gdef\NAT@date{#2}%
+  \gdef\NAT@all@names{#4}%
+  \ifx\NAT@noname\NAT@all@names \gdef\NAT@all@names{#3}\fi}
+\newcommand\NAT@parse@date{}
+\def\NAT@parse@date#1#2#3#4#5#6@@{%
+  \ifnum\the\catcode`#1=11\def\NAT@year{}\def\NAT@exlab{#1}\else
+  \ifnum\the\catcode`#2=11\def\NAT@year{#1}\def\NAT@exlab{#2}\else
+  \ifnum\the\catcode`#3=11\def\NAT@year{#1#2}\def\NAT@exlab{#3}\else
+  \ifnum\the\catcode`#4=11\def\NAT@year{#1#2#3}\def\NAT@exlab{#4}\else
+    \def\NAT@year{#1#2#3#4}\def\NAT@exlab{{#5}}\fi\fi\fi\fi}
+\newcommand\NAT@ifcmd{\futurelet\NAT@temp\NAT@ifxcmd}
+\newcommand\NAT@ifxcmd{\ifx\NAT@temp\relax\else\expandafter\NAT@bare\fi}
+\def\NAT@bare#1(#2)#3()#4\@nil#5{%
+  \stepcounter{NAT@ctr}%
+  \NAT@wrout{\arabic {NAT@ctr}}{#2}{#1}{#3}{#5}
+}
+\newcommand\NAT@wrout[5]{%
+\if@filesw
+      {\let\protect\noexpand\let~\relax
+       \immediate
+       \write\@auxout{\string\bibcite{#5}{{#1}{#2}{{#3}}{{#4}}}}}\fi
+\ignorespaces}
+\def\NAT@noname{{}}
+\renewcommand\bibitem{%
+  \@ifnextchar[{\@lbibitem}{%
+    \stepcounter{NAT@ctr}\@lbibitem[\arabic{NAT@ctr}]}}
+\def\@lbibitem[#1]#2{%
+  \if\relax\@extra@b@citeb\relax\else
+    \@ifundefined{br@#2\@extra@b@citeb}{}{%
+     \@namedef{br@#2}{\@nameuse{br@#2\@extra@b@citeb}}}\fi
+   \@ifundefined{b@#2\@extra@b@citeb}{\def\NAT@num{}}{\NAT@parse{#2}}%
+   \item[\hfil\hyper@natanchorstart{#2\@extra@b@citeb}\@biblabel{\NAT@num}%
+    \hyper@natanchorend]%
+    \NAT@ifcmd#1()()\@nil{#2}}
+\ifx\SK@lbibitem\@undefined\else
+   \let\SK@lbibitem\@lbibitem
+   \def\@lbibitem[#1]#2{%
+     \SK@lbibitem[#1]{#2}\SK@\SK@@label{#2}\ignorespaces}\fi
+\providecommand\bibcite{}
+\renewcommand\bibcite[2]{\@ifundefined{b@#1\@extra@binfo}\relax
+     {\NAT@citemultiple
+      \PackageWarningNoLine{natbib}{Citation `#1' multiply defined}}%
+  \global\@namedef{b@#1\@extra@binfo}{#2}}
+\AtEndDocument{\NAT@swatrue\renewcommand\bibcite[2]%
+                         {\NAT@testdef{#1}{#2}}}
+\newcommand\NAT@testdef[2]{%
+  \def\NAT@temp{#2}\expandafter \ifx \csname b@#1\@extra@binfo\endcsname
+    \NAT@temp \else \ifNAT@swa \NAT@swafalse
+       \PackageWarningNoLine{natbib}{Citation(s) may have
+          changed.\MessageBreak
+          Rerun to get citations correct}\fi\fi}
+%%\def\bibsection{\if@draft\newpage\fi
+%%    \noappendix\section*{\refname}}
+\def\bibsection{\section*{\refname}}
+\newcounter{NAT@ctr}
+\renewenvironment{thebibliography}[1]{%
+ \bibfont\bibsection\parindent \z@\list
+   {\@biblabel{\arabic{NAT@ctr}}}{\@bibsetup{#1}%
+    \setcounter{NAT@ctr}{0}}%
+      \def\newblock{\hskip .11em plus.33em minus.07em}%
+    \sloppy\clubpenalty4000\widowpenalty4000
+    \sfcode`\.=1000\relax
+ }{\def\@noitemerr{%
+  \PackageWarning{natbib}
+     {Empty `thebibliography' environment}}%
+  \endlist\vskip-\lastskip}
+\let\bibfont=\small
+\providecommand\reset@font{\relax}
+\providecommand\bibname{Bibliography}
+\providecommand\refname{References}
+\newcommand\NAT@citeundefined{\gdef \NAT@undefined {%
+    \PackageWarningNoLine{natbib}{There were undefined citations}}}
+\let \NAT@undefined \relax
+\newcommand\NAT@citemultiple{\gdef \NAT@multiple {%
+    \PackageWarningNoLine{natbib}{There were multiply defined citations}}}
+\let \NAT@multiple \relax
+\AtEndDocument{\NAT@undefined\NAT@multiple}
+\providecommand\@mkboth[2]{}
+\providecommand\MakeUppercase{\uppercase}
+\providecommand{\@extra@b@citeb}{}
+\gdef\@extra@binfo{}
+\providecommand\hyper@natanchorstart[1]{}
+\providecommand\hyper@natanchorend{}
+\providecommand\hyper@natlinkstart[1]{}
+\providecommand\hyper@natlinkend{}
+\providecommand\hyper@natlinkbreak[2]{#1}
+\ifnum\NAT@sort>0
+\newcommand\NAT@sort@cites[1]{%
+\@tempcntb\m@ne
+\let\@celt\delimiter
+\def\NAT@num@list{}%
+\def\NAT@cite@list{}%
+\def\NAT@nonsort@list{}%
+\@for \@citeb:=#1\do{\NAT@make@cite@list}%
+\edef\NAT@cite@list{\NAT@cite@list\NAT@nonsort@list}%
+\edef\NAT@cite@list{\expandafter\NAT@xcom\NAT@cite@list @@}}
+\begingroup \catcode`\_=8
+\gdef\NAT@make@cite@list{%
+     \edef\@citeb{\expandafter\@firstofone\@citeb}%
+    \@ifundefined{b@\@citeb\@extra@b@citeb}{\def\NAT@num{A}}%
+    {\NAT@parse{\@citeb}}%
+      \ifcat _\ifnum\z@<0\NAT@num _\else A\fi
+       \@tempcnta\NAT@num \relax
+       \ifnum \@tempcnta>\@tempcntb
+          \edef\NAT@num@list{\NAT@num@list \@celt{\NAT@num}}%
+          \edef\NAT@cite@list{\NAT@cite@list\@citeb,}%
+          \@tempcntb\@tempcnta
+       \else
+          \let\NAT@@cite@list=\NAT@cite@list \def\NAT@cite@list{}%
+          \edef\NAT@num@list{\expandafter\NAT@num@celt \NAT@num@list \@gobble @}%
+          {\let\@celt=\NAT@celt\NAT@num@list}%
+       \fi
+    \else
+       \edef\NAT@nonsort@list{\NAT@nonsort@list\@citeb,}%
+ \fi}
+\endgroup
+\def\NAT@celt#1{\ifnum #1<\@tempcnta
+  \xdef\NAT@cite@list{\NAT@cite@list\expandafter\NAT@nextc\NAT@@cite@list @@}%
+  \xdef\NAT@@cite@list{\expandafter\NAT@restc\NAT@@cite@list}%
+ \else
+  \xdef\NAT@cite@list{\NAT@cite@list\@citeb,\NAT@@cite@list}\let\@celt\@gobble%
+ \fi}
+\def\NAT@num@celt#1#2{\ifx \@celt #1%
+     \ifnum #2<\@tempcnta
+        \@celt{#2}%
+        \expandafter\expandafter\expandafter\NAT@num@celt
+     \else
+        \@celt{\number\@tempcnta}\@celt{#2}%
+  \fi\fi}
+\def\NAT@nextc#1,#2@@{#1,}
+\def\NAT@restc#1,#2{#2}
+\def\NAT@xcom#1,@@{#1}
+\else
+ \newcommand\NAT@sort@cites[1]{\edef\NAT@cite@list{#1}}\fi
+
+
+\def\ModuleVersion#1[#2]{}
+    \ModuleVersion{balance}
+         [1997/04/29 4.2b (PWD)]
+%% Balance coding copyright (C) 1994--1997 Patrick W. Daly
+\newcommand{\@BAlancecol}{\if@twocolumn
+  \setbox0=\vbox{\unvbox\@outputbox} \@tempdima=\ht0
+  \advance\@tempdima by \topskip \advance\@tempdima
+     by -\baselineskip \divide\@tempdima by 2
+     \splittopskip=\topskip
+  {\vbadness=\@M \loop \global\setbox3=\copy0
+   \global\setbox1=\vsplit3 to \@tempdima
+   \ifdim\ht3>\@tempdima \global\advance\@tempdima by 1pt \repeat}
+   \setbox\@leftcolumn=\vbox to \@tempdima{\unvbox1\vfil}
+   \setbox\@outputbox=\vbox to \@tempdima
+     {\dimen2=\dp3\unvbox3\kern-\dimen2
+      \vfil}
+  \fi}
+\newif\if@BAlanceone
+\global\@BAlanceonefalse
+\newdimen\oldvsize
+\newcommand{\@BAdblcol}{\if@firstcolumn
+       \unvbox\@outputbox \penalty\outputpenalty
+       \global\oldvsize=\@colht \global\multiply \@colht by 2
+       \global\@BAlanceonetrue
+       \global\@firstcolumnfalse
+  \else \global\@firstcolumntrue
+       \if@BAlanceone
+       \global\@BAlanceonefalse\@BAlancecol
+       \global\@colht=\oldvsize \else
+       \PackageWarningNoLine{balance}
+          {You have called \protect\balance\space
+             in second column\MessageBreak
+           Columns might not be balanced}\fi
+     \setbox\@outputbox\vbox to \@colht{\hbox to\textwidth
+     {\hbox to\columnwidth {\box\@leftcolumn \hss}\hfil
+      \vrule width\columnseprule\hfil \hbox to\columnwidth
+      {\box\@outputbox \hss}}\vfil}\@combinedblfloats
+     \@outputpage \begingroup \@dblfloatplacement
+     \@startdblcolumn \@whilesw\if@fcolmade \fi
+     {\@outputpage\@startdblcolumn}\endgroup
+  \fi}
+\newcommand{\@BAcleardblpage}{\clearpage\if@twoside \ifodd\c@page\else
+  \hbox{}\newpage\fi\fi}
+\newcommand{\@@cleardblpage}{}
+\let\@@cleardblpage=\cleardoublepage
+
+\newcommand{\@@utputdblcol}{}
+\let\@@utputdblcol=\@outputdblcol
+\newcommand{\balance}{\global\let\@outputdblcol=\@BAdblcol
+  \global\let\cleardoublepage=\@BAcleardblpage}
+\newcommand{\nobalance}{\global\let\@outputdblcol=\@@utputdblcol
+  \global\let\cleardoublepage=\@@cleardblpage}
+%%
+%% FIGBOX
+\long\def\@makenarrowcap#1#2{\hfill\vbox to \z@{\hsize=5cm \vss
+     \reset@font\small{\bf #1.} #2\par\null}}
+\def\figbox{\@ifstar{\let\egsbox\makebox\@figbox}
+  {\let\egsbox\framebox\@figbox}}
+\def\@figbox#1#2#3{\setbox\@tempboxa=\hbox{%
+  \if!#1!\egsbox{#3}\else
+  \egsbox[#1][c]{\if!#2!#3\else\@tempdima#2\relax
+  \divide\@tempdima by2\relax
+  \advance\@tempdima by-\fboxsep \advance\@tempdima by-\fboxrule
+  \vrule\@height\@tempdima\@depth\@tempdima\@width\z@
+  \vbox to \z@{\vss\hbox{#3}\vss}\fi}\fi}%
+  \@tempdima=\hsize \advance\@tempdima by-\wd\@tempboxa
+  \box\@tempboxa
+   \vspace{0pt}}
+%%
+%% IFTWOCOL
+\def\iftwocol#1#2{\if@twocolumn#1\else #2\fi}
