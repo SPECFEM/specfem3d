@@ -1,0 +1,326 @@
+% Cover letter using letter.sty
+\documentclass{letter} % Uses 10pt
+\usepackage[dvipsnames,usenames]{color}
+%Use \documentstyle[newcent]{letter} for New Century Schoolbook postscript font
+% the following commands control the margins:
+\topmargin=-1in    % Make letterhead start about 1 inch from top of page 
+\textheight=8in  % text height can be bigger for a longer letter
+\oddsidemargin=0pt % leftmargin is 1 inch
+\textwidth=6.5in   % textwidth of 6.5in leaves 1 inch for right margin
+
+%% More layout: Get rid of indenting throughout entire document
+\setlength{\parindent}{0pt}
+
+\usepackage{graphicx}
+
+
+\newcommand{\point}[2]{
+ %\begin{flushright}
+  %\fcolorbox{black}{myblue}{
+    \parbox[t]{1.\textwidth}{
+	%\begin{itemize}
+	{\it \textbf{#1:}} {\it #2}
+	%\end{itemize}
+	}
+   %}
+ %\end{flushright}
+ % \vspace{5mm} 
+}
+
+\newcommand{\response}[1]{
+ %\begin{flushright}
+  %\fcolorbox{black}{myblue}{
+    \parbox[t]{1.\textwidth}{
+	%\begin{itemize}
+	{\bf Response: } #1
+	%\end{itemize}
+	}
+   %}
+ %\end{flushright}
+  \vspace{5mm} 
+}
+
+
+%% colors to show the corrections
+\newcommand{\red}[1]{\textbf{\textcolor{Red}{#1}}}
+\newcommand{\blue}[1]{\textbf{\textcolor{Blue}{#1}}}
+\newcommand{\cyan}[1]{\textbf{\textcolor{Cyan}{#1}}}
+\newcommand{\green}[1]{\textbf{\textcolor{Green}{#1}}}
+\newcommand{\magenta}[1]{\textbf{\textcolor{Magenta}{#1}}}
+\newcommand{\orange}[1]{\textbf{\textcolor{Orange}{#1}}}
+%\newcommand{\red}[1]{#1}
+%\newcommand{\blue}[1]{#1}
+%\newcommand{\cyan}[1]{#1}
+
+%%%%%%%%%% DK DK
+% comments between authors
+\newcommand{\todaniel}[1]{\textbf{\red{*** To Daniel, from Dimitri: #1 ***}}}
+%\newcommand{\todimi}[1]{\textbf{\magenta{*** To Dimitri, from myself: #1 ***}}}
+\newcommand{\fromdimi}[1]{\textbf{\magenta{*** From Dimitri: #1 ***}}}
+%%%%%%%%%% RM RM
+% comments between authors
+\newcommand{\rolandtodaniel}[1]{\textbf{\blue{*** To Daniel, from Roland: #1 ***}}}
+
+\begin{document}
+
+\signature{Daniel Peter, \\
+Dimitri Komatitsch,\\ 
+Yang Luo,\\ 
+Roland Martin, \\
+Nicolas Le Goff, \\
+Emanuele Casarotti, \\
+Pieyre Le Loher, \\
+Federica Magnoni, \\
+Qinya Liu, \\
+C\'eline Blitz, \\
+Tarje Nissen-Meyer, \\
+Piero Basini, \\
+Jeroen Tromp }           % name for signature 
+\longindentation=0pt                       % needed to get closing flush left
+\let\raggedleft\raggedright                % needed to get date flush left
+ 
+ %%------------------------------------------------------------------------------------------------%%
+\begin{letter}
+{Prof. Jeannot Trampert \\
+Editor, Geophysical Journal International}
+ %%------------------------------------------------------------------------------------------------%%
+
+
+
+%%------------------------------------------------------------------------------------------------%%
+ 
+\opening{Dear Jeannot:} 
+ 
+This is our response to the reviews of GJI manuscript GJI-S-11-0077 entitled ``Forward and adjoint simulations of seismic wave propagation on unstructured hexahedral meshes''. Reviewer's comments are in italics, our response is in normal type. All equation and figure numbers refer to the resubmitted manuscript, unless noted otherwise.
+
+\vspace{10mm}
+%%------------------------------------------------------------------------------------------------%%
+
+{\bf {\large Response to reviewer: 1}}
+
+%%------------------------------------------------------------------------------------------------%%
+
+\point{1.1}{GENERAL REMARK:
+With the exception of the introduction, the paper is well-written and interesting to read. Nevertheless, there are substantial deficiencies. These concern (1) the scientific content that is not sufficiently clear; (2) the comparison between continuous and discontinuous Galerkin methods that seems subjective, over-simplified, insufficiently quantitative and therefore incorrect; and (3) the failure to make proper reference to other researcher’s work.
+}
+
+\textbf{Response:} Each of these three issues is addressed in subsequent responses.
+
+\point{1.2}{
+SCIENTIFIC CONTENT: It is not easy to discover the scientific content of the manuscript and the problems that have been solved. The use of unstructured meshes is standard throughout the finite-element community, and a brief look at the websites of the most common meshing software is sufficient to confirm this. In fact, for most finite-element codes – including SEM – it does not matter where the mesh is coming from, and whether it is structured or not. Examples from seismic wave propagation for mesher/solver independence and unstructured meshes may be found, for instance in Stupazzini (2004), Kaeser et al. (2007), Stupazzini et al. (2009) or at http://geoelse.stru.polimi.it/.
+
+For this manuscript to become publishable in a scientific journal, the authors should clarify which difficulties they had to overcome. Which mathematical or physical problem has been solved?
+
+At least from my point of view, it is not sufficient to generate a collection of unstructured meshed with commercial software and to plug them into a pre-existing finite-element solver.
+
+In its current form, the manuscript gives the impression that it is intended to be advertisement rather than a communication of scientific results.
+} 
+
+\textbf{Response:}
+We believe that the development of tools and services for seismology, e.g., Sambridge's ``Neighborhood Algorithm'',
+Maggi et al.'s ``Flexwin'' package, Valentine \& Woodhouse's automated data selection algorithm, or Tromp et al.'s ``ShakeMovie'' system, is of tremendous scientific value, and such papers have important ``scientific content''.
+Even though our paper may not be addressing a specific seismological problem,
+it presents a tool that has the potential to transform seismology at a fundamental level, and we firmly believe that such work merits publication in GJI.
+As computation comes to play a more-and-more important role in geophysics in general, and seismology in particular,
+students and postdocs who spend enormous amounts of time and effort on the development of open source  tools that empower the broader community must get the recognition and admiration they deserve.
+A publication such as this provides a proper reference for their efforts, and serves as a good introduction to the SEM and the related software.
+
+We find it rather upsetting that some of our efforts are trivialized by the reviewer through statements such as ``...and plug them into a pre-existing finite-element solver''. If this were true, the development of software such as ours would not involve several years worth of painstaking effort on the part of a large number of people. 
+
+Finally, let us note that Appendix~A contains entirely new material related to adjoint simulations in acoustic media, something that hopefully matches the reviewer's standard of ``scientific content''.
+Additionally, the Conclusions section now contains a paragraph describing the next grand challenge, which is the inverse problem.
+
+\point{1.3}{
+CONTINUOUS AND DISCONTINUOUS METHODS: The part of the introduction that compares continuous SEM to DG is excessive and not as fair as it should be.
+
+It is certainly a good idea to start a paper on one particular numerical method with a comparison to other methods. Therefore, I have difficulties to see why the authors are so extremely focused on DG, ignoring all the other methods that have been developed over the past couple of decades. Do not forget that FD remains to be the most widely used method in seismology. If you really want to make the point that SEM is better – in whatever sense – then you need to make a much more precise and comprehensive comparison. 
+
+Furthermore, the comparison to DG is rather biased. This will be obvious to any reader simply from the style of your expressions, even when he knows little about numerical wave propagation. Sentences like note that the SEM supersedes earlier developments of high-order methods based on discontinuous techniques are not very meaningful because they are completely over-simplified and therefore wrong (see more details below). Discontinuous Galerkin methods are a large and diverse class of numerical techniques that cannot be classified as inferior with a few imprecise statements. Also, it is well known that the suitability of a particular method depends strongly on the application. I am sure, that SEM would have trouble to compete, for instance, with FD when it comes to body wave propagation in simple media.
+
+In summary, I think that the introduction must be improved substantially.
+}
+
+\response{
+We have improved the introduction, in particular our discussion of continuous and discontinuous Galerkin methods is now more balanced.
+The paper in general and the introduction in particular already contain a large number of references ($>130$!), and it is not our aim to argue that one numerical method is better than another, rather we aim to provide some basic context and perspective.
+}
+
+
+\point{1.4}{
+REFERENCE TO OTHER RESEARCHER'S WORK: An example should be sufficient to explain what I mean: On page 2 the authors write:  
+
+``The SEM was originally developed in computational fluid dynamics (Patera 1984; Maday \& Patera 1989) and has been successfully adapted to address seismological problems. For an introduction to the SEM in seismology, see e.g., Komatitsch et al. (2005), Chaljub et al. (2007) and Tromp et al. (2008).''
+
+While this is formally correct, the authors completely ignore that the SEM was introduced to seismology by Seriani et al. (1995), Faccioli et al. (1997) and Seriani (1998).  The reader gets the impression that references to SEM can only be found in their own papers.
+
+The manuscript is replete with such examples related, for instance to the use of unstructured meshes for wave propagation, spectral-element codes for seismic applications, adjoint techniques, wave propagation in complex media and so on and so forth. Instead of giving a historically correct collection of references, the authors almost exclusively refer to themselves. 
+
+I think this is not only a question of completeness, but also a contradiction to common scientific fairness and good practice!
+}
+
+\response{
+Again, the paper contains a large number of references, reflecting the fact that we have attempted to be as comprehensive as possible.
+Still, we have reordered references to better reflect scientific history, and expanded the number of citations further to provide more balance.
+Let us note that the statement ``the authors almost exclusively refer to themselves'' is rather an overreaction considering the volume of references.
+Furthermore, the manuscript has 13 authors, so there is bound to be a significant number of references to previous work by this group.
+}
+
+%{\it {\large Minor remarks}}
+
+
+\point{1.5}{P2L39: The statement that the SEM has been successfully adapted to seismological problems requires references to Seriani et al. (1995), Faccioli et al. (1997) and Seriani (1998) who introduced the method to seismology.
+}
+
+\response{
+We reordered and added references, citing earlier work of Cohen et al. (1993), who introduced the SEM to seismic wave propagation problems.
+}
+
+\point{1.6}{P3L13: Yes, dynamic rupture simulations are an exception, but not for the reason given by the authors. The reason why DG with dynamic rupture works so well is probably the upwind scheme combined with the good dispersion properties. One can, however, show analytically that dynamic rupture with SEM does not work at all, because certain modes are amplified. See for instance, de la Puente et al. (2009). 
+}
+
+\response{
+We modified the discussion, referring, among others, to Puente et al. (2009).
+}
+
+\point{1.7}{P3L19: The statement concerning constant material properties within the DG elements is not correct. In fact a nodal DG method with high-order solution representation looks quite similar to SEM! People may choose to represent their material properties as constant, but this is their own choice, and not a restriction on the method. For DG with non-constant material properties see for instance Castro et al. (2010) or Wilcox et al. (2010).
+}
+
+\response{
+We removed this statement. But note that a benchmark of DG against normal-mode synthetics for a spherically symmetric Earth model, such as PREM, would fail to show acceptable results unless material properties vary across elements, thereby capturing wavespeed gradients. As far as we know, such a DG benchmark has thus far not been successfully performed.
+}
+
+\point{1.8}{P3L33: It is ``close'' in the sense that they are both Galerkin projections, just as FEM is.  However DG could in theory duplicate the SEM implementation with respect to tensorised basis functions.
+}
+
+\response{
+Perhaps. We would love to see confirmation of this statement, and assess if the numerical cost is the same; we doubt it!
+}
+
+\point{1.9}{General: The text is full of superlatives such as very distorted mesh elements, very good accuracy, very high efficiency, and so on. Such expressions do not bear any scientific meaning. They must be either quantified or eliminated.
+}
+
+\response{
+We have reduced the number of such statements, but we note that all such remaining statements include corroborating references for quantification and/or justification.
+}
+
+\point{1.10}{P7L4: What do you mean by average isotropic shear modulus? Does this refer to an average of elastic parameters that leads to an effective isotropic modulus? (In the sense of a Voigt average, for instance.)
+}
+
+\response{
+It is a misnomer, which we removed. Equation (6) simply gives the time-evolution of the isotropic shear modulus.
+}
+
+\point{1.11}{P7L16: I think it is a bit too general when you write that experience has shown that three solids generally suffice for simulating an absorption band. In fact, this depends on the width of the absorption band. When the upper and lower cutoffs differ by a factor of around 10, then 3 solids are indeed sufficient. However, you will need more when the band is wider (see for instance Robertsson (1996)).
+}
+
+\response{
+Yes, this issue is addressed in various references we give, specifically, in the context of the SEM, Savage et al. (2010).
+}
+
+\point{1.12}{Typos: Please spell-check the reference list. Very often words like Galerkin, France, Grenoble, Caracas, etc. do not start with capital letters.
+}
+
+\response{
+Done, thanks.
+}
+
+
+\vspace{10mm}
+%%------------------------------------------------------------------------------------------------%%
+
+{\bf {\large Response to reviewer: 2}}
+
+%%------------------------------------------------------------------------------------------------%%
+
+\point{2.1}{
+Pag. 8. Eq. 11 should hold when the source contribution is zero. If it is the case, please correct it.
+}
+
+\response{
+Yes, it is valid away from the source, or after cessation of the source.
+}
+
+\point{2.2}{
+Pag.8. I got missed in the discussion about the coupling between an acoustic medium and an elastic medium. Can authors explain how the exchange of pressure and normal displacement is performed at the interface? Does the code solve a linear system at each time step for the computation of the physical quantities at the interface or is the algorithm time-staggered and the exchanged contributions come from the previous time step ? 
+}
+
+\response{
+For details regarding the implementation, the reviewer is referred to Komatitsch \& Tromp (2002ab).
+Basically, exchanges between the fluid and solid are captured by the last sentences of sections 2.1 and 2.2.
+The exchange involves the current time step, and there is no need to solve a linear system.
+}
+
+\point{2.3}{
+Pag. 9. I am not convinced that hexahedral meshes have a smaller number of elements than tetrahedral meshes. It is true for regular grids, but as soon as corners are present in the model, coming from the modeling of a basin for instance, mesh refinement becomes more complex for hexahedra, and you can come out with a comparable or larger number of elements. I suggest to delete the part of the sentence “smaller element counts”. 
+}
+
+\response{
+The references we provide corroborate this statement. Geological models generally contain large, simple volumes, which may be meshed with fewer hexahedral elements than tetrahedral elements.
+}
+
+\point{2.4}{
+Pag. 9. Authors list several mesh generators, but only one of them comes with a reference. Can authors add references to all of the mesh generators ? 
+}
+
+\response{
+All references involve active web links and we added more references to each of the meshing tools. Perhaps GJI could include the weblink as well in the References?
+}
+
+\point{2.5}{
+Pag. 10 In the presented examples (Mount S. Helens, Aquila),  can authors also write the size of the smallest element in the mesh ? It will help in understanding the quality of the mesh as compared to the computational costs. In the figure of Aquila, some yellow bodies appear in the mesh. What are they referred to ? 
+}
+
+\response{
+The smallest element size is approximately 280~m. The yellow and blue volumes in the L'Aquila model denote slower and faster than average wavespeeds.
+}
+
+\point{2.6}{
+Pag. 13 L’Aquila case. Authors say that they honor the Moho interface. Can they add a reference to the Moho and discuss the accuracy at which they know it ? Authors state that with their mesh, they can discriminate between wave speed models. I’m a bit surprised because the mesh size itself depends on the wave speed. As compared with Mount S. Helens mesh, the two models mostly have the same discretization (90 m is the average element size), but Aquila model can tackle a larger frequency band. Why ? (Is the velocity model faster for this case ? Which one has been used ? )
+}
+
+\response{
+See Casarotti et al. 2008 for a more detailed discussion of the L'Aquila model. We just mean to say that with this mesh for the L'Aquila region one can now play with various 3D wavespeed  and/or kinematic rupture models to assess their relative performance.
+Per usual, element size (grid spacing) and the wavespeed model govern the highest frequencies on can resolve on a mesh.
+}
+
+\vspace{10mm}
+%%------------------------------------------------------------------------------------------------%%
+
+{\bf {\large Response to editor Prof. Jeannot Trampert:}}
+
+%%------------------------------------------------------------------------------------------------%%
+
+\point{4.1}{
+While reviewer two has only minor comments, reviewer one suggests to put your work better into context of existing literature. I think this can all be addressed in a moderate revision. I am looking forward to a revised manuscript and a detailed response to all comments.
+}
+
+\response{
+We have restructured and added references, thereby putting our work in a better historical context with existing literature.
+In particular, the introduction has been significantly improved.
+Note, however, that in the submitted paper we already included tens of references to papers written by others, thus reviewer \#1's statement about this is an exaggeration.
+We updated Fig.~6 to present a more standard weak and strong scaling analysis.
+We also added a figure explaining the benefits of non-blocking MPI communications.
+}
+
+
+
+
+
+%--------------------------------------------------------------------------------------------
+% SUMMARY
+
+We hope that with these modifications the manuscript is now acceptable for publication in GJI.
+ 
+\closing{Sincerely,} 
+ 
+%\encl{}  				% Enclosures
+
+\end{letter}
+
+\end{document}
+
+
+
+
+
+
