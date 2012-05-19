@@ -408,10 +408,31 @@ What you can do once for the physical problem you want to study is run the same 
 and in double precision on your system and compare the seismograms.
 If they are identical (and in most cases they will), you can select single precision for your future runs.\\
 
+\section{Adding OpenMP support in addition to MPI}
+
+OpenMP support can be enabled in addition to MPI. However, in many cases performance will not improve
+because our pure MPI implementation is already heavily optimized and thus the resulting code will in fact       
+be slightly slower. A possible exception could be IBM BlueGene-type architectures.
+
+To enable OpenMP, uncomment the OpenMP compiler option in two lines in file \texttt{src/specfem3D/Makefile.in}
+(before running \texttt{configure}) and also uncomment the \texttt{\#define USE\_OPENMP} statement in file\\
+\texttt{src/specfem3D/specfem3D.F90}.
+
+The DO-loop using OpenMP threads has a SCHEDULE property. The OMP\_SCHEDULE
+environment variable can set the scheduling policy of that DO-loop.
+Tests performed by Marcin Zielinski at SARA (The Netherlands) showed that often
+the best scheduling policy is DYNAMIC with the size of the chunk equal to the number of
+OpenMP threads, but most preferably being twice as the number of
+OpenMP threads (thus chunk size = 8 for 4 OpenMP threads etc).
+If OMP\_SCHEDULE is not set or is empty, the DO-loop will assume generic
+scheduling policy, which will slow down the job quite a bit.
+
 \section{Visualizing the subroutine calling tree of the source code}
 
 Packages such as \texttt{doxywizard} can be used to visualize the subroutine calling tree of the source code.
 \texttt{Doxywizard} is a GUI front-end for configuring and running \texttt{doxygen}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{\label{cha:Mesh-Generation}Mesh Generation}
 
