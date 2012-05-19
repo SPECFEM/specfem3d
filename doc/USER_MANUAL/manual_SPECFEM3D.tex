@@ -317,7 +317,7 @@ in order to turn underflow trapping off.\\
 If you run very large meshes on a relatively small number
 of processors, the memory size needed on each processor might become
 greater than 2 gigabytes, which is the upper limit for 32-bit addressing.
-In this case, on some compilers you may need to add \texttt{``-mcmodel=medium}''
+In this case, on some compilers you may need to add \texttt{``-mcmodel=medium}'' or \texttt{``-mcmodel=medium -shared-intel}''
 to the compiler options of CFLAGS, FCFLAGS and LDFLAGS otherwise the compiler will display an error
 message (for instance \texttt{``relocation truncated to fit: R\_X86\_64\_PC32 against .bss''} or something similar);
 on an IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, using \texttt{-q64} is usually sufficient.\\
@@ -407,6 +407,11 @@ to 25\%. It is therefore better to use single precision.
 What you can do once for the physical problem you want to study is run the same calculation in single precision
 and in double precision on your system and compare the seismograms.
 If they are identical (and in most cases they will), you can select single precision for your future runs.\\
+
+\section{Visualizing the subroutine calling tree of the source code}
+
+Packages such as \texttt{doxywizard} can be used to visualize the subroutine calling tree of the source code.
+\texttt{Doxywizard} is a GUI front-end for configuring and running \texttt{doxygen}.
 
 \chapter{\label{cha:Mesh-Generation}Mesh Generation}
 
