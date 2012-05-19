@@ -151,13 +151,16 @@ case $FC in
         #
         if test x"$FLAGS_NO_CHECK" = x; then
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-            FLAGS_NO_CHECK="-O3 -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=90pure -qsuppress=1518-317 -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
+            FLAGS_NO_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=90pure -qsuppress=1518-317 -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
         # on MareNostrum at the Barcelona SuperComputing Center (Spain) one can use
-        # -qtune=ppc970 -qarch=ppc64v -qsave     instead of -qtune=auto -qarch=auto
+        # -qtune=ppc970 -qarch=ppc64v instead of -qtune=auto -qarch=auto
+        # on "Babel" IBM BlueGene at IDRIS (France) use:
+        # -qtune=auto -qarch=450d -qsave     instead of -qtune=auto -qarch=auto
         fi
         if test x"$FLAGS_CHECK" = x; then
         #
         # to debug with IBM xlf, one can add this: -g -O0 -C -qddim -qfullpath
+        # to debug, one can add these three flags: -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF
         #
             FLAGS_CHECK="\$(FLAGS_NO_CHECK) -g -C -qddim -qfullpath"
         fi
