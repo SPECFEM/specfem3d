@@ -1,0 +1,84 @@
+
+original :
+ 
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    3.036692    
+ Elapsed time in seconds =    90.7499999998864     
+ Elapsed time in hh:mm:ss =    0 h 01 m 30 s
+ Mean elapsed time per time step in seconds =   4.124999999994836E-002
+
+-----------------
+
+new version NGLOB :
+
+ 
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    3.036692    
+ Elapsed time in seconds =    95.5060000000130     
+ Elapsed time in hh:mm:ss =    0 h 01 m 35 s
+ Mean elapsed time per time step in seconds =   4.341181818182410E-002
+ 
+-----------------
+
+new version NSPEC *seulement partielle* sans les sommes internes du GATHER :
+(tres lente, donc pas la peine d'insister, cette voie ne peut pas devenir une
+bonne voie rapide)
+
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    60.49087    
+ Elapsed time in seconds =    100.840000000104     
+ Elapsed time in hh:mm:ss =    0 h 01 m 40 s
+ Mean elapsed time per time step in seconds =   4.583636363641105E-002
+ 
+-----------------
+
+avec inlining de Deville, partie 1 :
+ 
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    3.036692    
+ Elapsed time in seconds =    67.4950000000000     
+ Elapsed time in hh:mm:ss =    0 h 01 m 07 s
+ Mean elapsed time per time step in seconds =   3.067954545454546E-002
+ 
+-------------------------------
+
+avec inlining de Deville, parties 1 et 2 :
+ 
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    3.036693    
+ Elapsed time in seconds =    46.8210000001416     
+ Elapsed time in hh:mm:ss =    0 h 00 m 46 s
+ Mean elapsed time per time step in seconds =   2.128227272733707E-002
+ 
+-------------------------------
+
+avec separation de displ, veloc, accel en trois tableaux chacun : (only 2% better, not worth the change)
+
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    3.036693    
+ Elapsed time in seconds =    45.8600000001565     
+ Elapsed time in hh:mm:ss =    0 h 00 m 45 s
+ Mean elapsed time per time step in seconds =   2.084545454552567E-002
+ 
+--------------------------
+
+avec passage de fac1, fac2 et fac3 dans des matrices constantes (ce qui
+prendrait beaucoup de memoire car il faudrait stocker trois versions
+differentes) de "jacobian" : pas de gain significatif de performance donc pas
+du tout la peine d'implementer cela :
+ 
+ Time step #         2200  out of         2200
+ Time =    554.1480      seconds out of    554.1480      seconds
+ Max norm displacement vector U in the solid (m) =    3.036693    
+ Elapsed time in seconds =    46.9840000000261     
+ Elapsed time in hh:mm:ss =    0 h 00 m 46 s
+ Mean elapsed time per time step in seconds =   2.135636363637549E-002
+ 
+-------------------
+
