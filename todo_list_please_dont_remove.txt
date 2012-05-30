@@ -404,11 +404,6 @@ This way, the item will appear in the table of contents.
 
 Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme). 
 
-- suggestion 29:
-----------------
-
-Elliott Sales de Andrade will fix the configure.ac autoconf scripts in SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE.
-
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
@@ -512,4 +507,8 @@ probably not a high priority, could be done last because we do not need that for
 DONE (MOVE ITEMS ABOVE BELOW THIS LINE WHEN THEY ARE DONE):
 -----------------------------------------------------------
 
+- suggestion 29:
+----------------
+
+Elliott Sales de Andrade will fix the configure.ac autoconf scripts in SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE.
 
