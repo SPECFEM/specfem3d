@@ -435,6 +435,12 @@ Elliott Sales de Andrade and Qinya will implement a routine to interpolate and o
 instead of the non-structured SEM grid (this can be useful for many processing packages that require a topologically-regular grid
 of points as input).
 
+- suggestion 31:
+----------------
+
+Convert the mesh database of the 2D code from ASCII to binary to produce smaller files?
+For some of Paul Cristini's 2D simulations for instance the current ASCII file become really huge
+
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
