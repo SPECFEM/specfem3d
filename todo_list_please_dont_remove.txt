@@ -404,6 +404,13 @@ This way, the item will appear in the table of contents.
 
 Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme). 
 
+- suggestion 30:
+----------------
+
+Elliott Sales de Andrade and Qinya will implement a routine to interpolate and output the sensitiviy kernels on a topologically-regular grid
+instead of the non-structured SEM grid (this can be useful for many processing packages that require a topologically-regular grid
+of points as input).
+
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
