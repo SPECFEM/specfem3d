@@ -266,13 +266,14 @@ Zhinan should clean and improve the tools to solve actual inverse problems once 
 i.e. how to efficiently solve the linear systems, what kind of tools to use, how to make them more flexible, more user friendly,
 maybe semi-automatic or at least easier to use
 
-maybe also see if compression (wavelets?) could help
-
 this should be one of the main goals of Zhinan's stay at Princeton, as we discussed
 
 Zhinan has now defined 12 sub-steps that can be used to split the work needed to solve an inverse problem into sub-tasks.
 We can problably then document these 12 sub-steps in the users manual and use some corresponding sub-directories, one per sub-step,
 to put all the tools necessary for each of these sub-steps.
+
+later, in a few months, maybe also see if compression (wavelets?) could help
+
 
 - suggestion 22:
 ----------------
