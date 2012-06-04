@@ -133,6 +133,10 @@ This should be done in both SPECFEM3D and SPECFEM3D_GLOBE
 this is critical, because currently in GLOBE we write about 42 files per MPI slice, thus when running on 1000 cores we create
 42,000 files for no reason. Let us reduce this to 1000.
 
+IMPORTANT: see if this has an impact on processing scripts, if we decide to also merge the files output by the solver (for instance the
+several different types of sensitivity kernel files) into a single file. If so, some kernel processing scripts and tools will need to be adapted
+accordingly.
+
 - suggestion 12:
 ----------------
 
