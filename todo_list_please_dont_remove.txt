@@ -341,6 +341,14 @@ or detect if Q > 9000 for instance and if so, consider that that material is ela
 
 Otherwise, in the current implementation, we waste memory and CPU time by doing viscoelastic simulations everywhere, even in elastic regions, when TURN_ATTENUATION_ON is on.
 
+More precise analysis from Dimitri: 
+this means in particular changing this in DATA/Par_file:
+
+ATTENUATION_VISCOELASTIC_SOLID  = .false.        # turn attenuation (viscoelasticity) on or off for non-poroelastic solid parts of the model
+ATTENUATION_PORO_FLUID_PART     = .false.        # turn viscous attenuation on or off for the fluid part of poroelastic parts of the model
+
+and making it local to each material set instead of global for the whole mesh.
+
 Feedback from Qinya: I agree. The way attenuation appears in the 2D Par_file is quite confusing. It will be good to clean up, or at least explain well in the manual.
 
 - suggestion 24:
