@@ -61,6 +61,8 @@ for that?
 put a flag to choose between a Ricker source and a Heaviside source when a force source is used
 (we can cut and paste the Heaviside implementation from the case of a CMT source)
 
+Feedback from Qinya: I think this is a great idea. In the past, we always had multiple versions of the same specfem code, just to be able to run point force sources. We can add a parameter `SOURCE_TYPE' in Par file, which is = 0 for moment-tensor source ( reads CMTSOLUTION, and assumes Heavside/err as source time function), and = 1 for point force source (and read something like PNTSOLUTION, including force location, direction, time shift and half duration). Now there is no standard stf to use for point force, but Heavside function does not seem to be a good idea because it will produce a static offset on all seismograms, which is not desirable. On the other hand, I don't see why Richer wavelet (2nd order derivative of Gaussian) is necessary better than Gaussian itself. One way to give user the freedom of choice is to put the stf info also in the PNTSOLUTION.
+
 - suggestion 06:
 ----------------
 
@@ -137,6 +139,11 @@ IMPORTANT: see if this has an impact on processing scripts, if we decide to also
 several different types of sensitivity kernel files) into a single file. If so, some kernel processing scripts and tools will need to be adapted
 accordingly.
 
+Feedback from Qinya: I can't agree more. We have had experience running big specfem jobs on our National Supercomputer Consortium (related to kernels for noise measurements, which generate even greater number of files). It crippled the entire file system, and the system administrators became really unfriendly to us after that ...
+
+On the other hand, I know a lot of visualization programs (paraview) actually read the individual binary files and combine them to form bigger visualization domains. So if we rewrite this, we need to write it in a form so that it is easy/faster for an external program to access  bits of it (such as x,y,z, ibool, etc). Maybe direct-accessed C binary files?
+
+
 - suggestion 12:
 ----------------
 
@@ -150,6 +157,8 @@ Jo and Daniel, please check if it is used (in particular in ParaView postprocess
 is used, I think only rank 0 could create it, no need to have 1000 identical copies
 
 this applies to SPECFEM3D_GLOBE; I am not sure about SPECFEM3D, please doublecheck
+
+Feedback from Qinya: I chose to output the exact nspec/nglob numbers for each slice to array_dims.txt in save_array_solver.txt, because the nspec/nglob number in values_from_mesher.h are only the maximum values for all slices. We need the exact numbers to read properly the topology/kernel binary files for combine_vol_data.f90, and generate the .mesh and .vtu files for paraview. If the new version of the code has exactly the same number of nspec/nglob number for all slices, it is no longer needed. Otherwise, I am sure there is a way around it. As long as we can get this info from other files, we can eliminate the array_dims.txt file.
 
 - suggestion 13:
 ----------------
@@ -204,6 +213,8 @@ drawback: more memory is needed to store these edge conditions (exactly 50 or 10
 
 useful to do? implement it as an option maybe? and then the user could choose to use 50, 100 or 1, and chosing 1 would be
 equivalent to the current behavior?
+
+Feedback from Qinya: The way I implemented this was for simplicity. It was just easier to write every step the absorbing boundary term and then read it back in reverse order in the kernel calculation. But obviously you can write in 50-step chunks, and read them back in 50-step chunks as well (make sure you still apply them in the reverse time order). We may have to be careful of the sizes of storage variables so they are not exceedingly large for some slices. For example, a model of 3x3 slices, slice 0 will have 2 absorbing boundary sides, slice 1 will have 1 a.b. side, while slice 4 will have no a.b.  We can make it a default option, but giving users the choice of 50 or 100 is just going to make the Par_file even more confusing. We could easily estimate a number from the max number of adjoint boundary elements in all slices.
 
 - suggestion 17:
 ----------------
@@ -272,8 +283,9 @@ Zhinan has now defined 12 sub-steps that can be used to split the work needed to
 We can problably then document these 12 sub-steps in the users manual and use some corresponding sub-directories, one per sub-step,
 to put all the tools necessary for each of these sub-steps.
 
-later, in a few months, maybe also see if compression (wavelets?) could help
+Later, in a few months, maybe also see if compression (wavelets?) could help
 
+Feedback from Qinya on the last point: I recently hosted a visit by Prof. Ling-yun Chiao (Chiao & Kuo 2001, Hung, Ping & Chiao 2011) from national Taiwan University, one of the first few people who started to apply wavelet to seismic inverse problem. I think we have some idea of how wavelet can potentially help with adjoint tomography, and I would love to share our thoughts with you all as well.
 
 - suggestion 22:
 ----------------
@@ -329,6 +341,7 @@ or detect if Q > 9000 for instance and if so, consider that that material is ela
 
 Otherwise, in the current implementation, we waste memory and CPU time by doing viscoelastic simulations everywhere, even in elastic regions, when TURN_ATTENUATION_ON is on.
 
+Feedback from Qinya: I agree. The way attenuation appears in the 2D Par_file is quite confusing. It will be good to clean up, or at least explain well in the manual.
 
 - suggestion 24:
 ----------------
@@ -347,6 +360,8 @@ seconds too short and thus I had to delete them and redo the whole simulation.
 Solution (easy): add t0 to RECORD_LENGTH_IN_MINUTES*60 when computing the number of time steps (NSTEPS) in the three codes
 
 Jo, could you please do that at some point? (not the first priority of course)
+
+Feedback from Qinya: This should not affect kernel calculation, as long as the same record length is used for forward and adjoint simulations.
 
 - suggestion 25:
 ----------------
@@ -513,6 +528,8 @@ LDDRK4-6 (low storage low dissipation Runge Kutta, a bit more expensive than RK4
 implement these RK4 and LDDRK4-6 high-order time schemes including for viscoelastic media, as already done in the 2D code
 
 probably not a high priority, could be done last because we do not need that for current projects
+
+Feedback from Qinya: The same time scheme should be used for forward and adjoint simulations, while special care should be taken to implement the corresponding time scheme for the back-reconstruction of forward field in kernel calculations.
 
 
 ---------------------------------------------------------------------------------
