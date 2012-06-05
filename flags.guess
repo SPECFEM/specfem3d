@@ -30,10 +30,10 @@ case $FC in
         # check: http://software.intel.com/sites/products/documentation/hpc/compilerpro/en-us/fortran/lin/compiler_f/index.htm
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -xSSE4.2 -ftz -funroll-loops -unroll5 -ftz -align sequence -vec-report0 -std95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium
+            FLAGS_CHECK="-O3 -xHost -ftz -funroll-loops -unroll5 -ftz -align sequence -vec-report0 -std95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
-            FLAGS_NO_CHECK="-O3 -xSSE4.2 -ftz -funroll-loops -unroll5 -ftz -align sequence -vec-report0 -std95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium
+            FLAGS_NO_CHECK="-O3 -xHost -ftz -funroll-loops -unroll5 -ftz -align sequence -vec-report0 -std95 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium
         fi
         # useful for debugging...
             # for debugging: change -check nobounds to -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
@@ -52,14 +52,6 @@ case $FC in
         #fi
         #if test x"$FLAGS_NO_CHECK" = x; then
         #    FLAGS_NO_CHECK="-O2 -ftz -xT -static-intel -implicitnone"
-        #fi
-        #
-        # Intel Nehalem processor architecture, Intel compiler version 11.1
-        #if test x"$FLAGS_CHECK" = x; then
-        #    FLAGS_CHECK="-O3 -xSSE4.2 -ftz -funroll-loops -unroll5"
-        #fi
-        #if test x"$FLAGS_NO_CHECK" = x; then
-        #    FLAGS_NO_CHECK="-O3 -xSSE4.2 -ftz -funroll-loops -unroll5"
         #fi
         #
         #MPI_LIBS = -Vaxlib
