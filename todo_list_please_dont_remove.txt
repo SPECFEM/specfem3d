@@ -14,6 +14,27 @@ and are also quickly lost.
 Zhinan, please also include the modifications that René Matzen made to "compute_forces"
 and that he sent on May 10, 2012.
 
+Here is a more detailed list of things to do in order to finish that:
+
+- commit the acoustic CPML routines
+
+- make sure that CPML elastic and CPML acoustic work with MPI
+
+- make sure CPML can be used without Stacey; to do this, suppress the anyabs_local flag, whose name is confusing,
+and use the PML_BOUNDARY_CONDITIONS and STACEY_ABSORBING_CONDITIONS flags instead;
+maybe define anyabs_PML and anyabs_Stacey internally in the code instead of anyabs
+
+- make sure CPML can be used with external meshes (coming from Gmsh or CUBIT) as well, using the numbering convention
+that you defined with Paul two months ago; make sure that external meshes with fluid regions and solid regions also work fine with CPML
+
+- clarify why the corners need additional arrays and additional code; 
+I still do not understand that; I thought that corners were not different from the rest in PML and that memory variables were simply summed there,
+but I see that in your code you have specific arrays for the corners, called "rmemory_dux_dx_corner()" and so on; they make the code
+(the implementation) longer and more complex, thus let us see if they are absolutely needed or if we could (maybe?) get rid of them;
+we should explain this in the LaTeX file that you are writing now to explain the CPML equations
+
+- see if CPML works with curved elements (checking the behavior with the default M2 UPPA example with topography for instance)
+
 - suggestion 02:
 ----------------
 
