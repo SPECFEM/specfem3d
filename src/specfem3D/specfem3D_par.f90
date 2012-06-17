@@ -431,8 +431,6 @@ module specfem_par_poroelastic
 ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accels_poroelastic,velocs_poroelastic,displs_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accelw_poroelastic,velocw_poroelastic,displw_poroelastic
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accels_poroelastic,b_velocs_poroelastic,b_displs_poroelastic
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accelw_poroelastic,b_velocw_poroelastic,b_displw_poroelastic
 
 ! material properties
 !  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: mustore
@@ -456,6 +454,34 @@ module specfem_par_poroelastic
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
 
   logical :: POROELASTIC_SIMULATION
+
+! ADJOINT poroelastic
+
+  ! (backward/reconstructed) wavefields
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accels_poroelastic,b_velocs_poroelastic,b_displs_poroelastic
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accelw_poroelastic,b_velocw_poroelastic,b_displw_poroelastic
+
+  ! adjoint kernels [primary kernels, density kernels, wavespeed kernels]
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: rhot_kl, rhof_kl, sm_kl, eta_kl, mufr_kl, B_kl, &
+    C_kl, M_kl, rhob_kl, rhofb_kl, phi_kl, Bb_kl, Cb_kl, Mb_kl, mufrb_kl, &
+    rhobb_kl, rhofbb_kl, phib_kl, cpI_kl, cpII_kl, cs_kl, ratio_kl
+
+  ! approximate hessian
+  !real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
+
+  ! absorbing stacey wavefield parts
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_absorb_fields_poroelastic,b_absorb_fieldw_poroelastic
+  integer :: b_reclen_fields,b_reclen_fieldw
+
+  ! for assembling backward field
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_send_vector_ext_meshs
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_send_vector_ext_meshw
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_meshs
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_meshw
+  integer, dimension(:), allocatable :: b_request_send_vector_ext_meshs
+  integer, dimension(:), allocatable :: b_request_send_vector_ext_meshw
+  integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshs
+  integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshw
 
 end module specfem_par_poroelastic
 
