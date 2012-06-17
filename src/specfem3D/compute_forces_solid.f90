@@ -32,7 +32,7 @@
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
-                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
+                        SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
 
@@ -82,10 +82,8 @@
 ! adjoint simulations
   integer :: SIMULATION_TYPE
   !integer :: NSPEC_BOUN
-  integer :: NGLOB_ADJOINT,NSPEC_ADJOINT
+  integer :: NSPEC_ADJOINT
 ! adjoint wavefields
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT):: b_displs_poroelastic,b_accels_poroelastic
-!  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_ADJOINT):: b_displw_poroelastic
 !  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
 !    mufr_kl, B_kl
 
@@ -224,14 +222,6 @@
               tempz2lw = 0.
               tempz3lw = 0.
 
-              if (SIMULATION_TYPE == 3) then
-                ! to do
-                stop 'compute_forces_solid() : adjoint run not implemented yet'
-                ! to avoid compiler warning
-                l = NGLOB_ADJOINT
-                l = NSPEC_ADJOINT
-              endif
-
 ! first double loop over GLL points to compute and store gradients
           do l = 1,NGLLX
                 hp1 = hprime_xx(i,l)
@@ -242,9 +232,6 @@
                 tempx1lw = tempx1lw + displw_poroelastic(1,iglob)*hp1
                 tempy1lw = tempy1lw + displw_poroelastic(2,iglob)*hp1
                 tempz1lw = tempz1lw + displw_poroelastic(3,iglob)*hp1
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif ! adjoint
     !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
     !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
@@ -256,9 +243,6 @@
                 tempx2lw = tempx2lw + displw_poroelastic(1,iglob)*hp2
                 tempy2lw = tempy2lw + displw_poroelastic(2,iglob)*hp2
                 tempz2lw = tempz2lw + displw_poroelastic(3,iglob)*hp2
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif ! adjoint
     !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
     !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
@@ -270,9 +254,6 @@
                 tempx3lw = tempx3lw + displw_poroelastic(1,iglob)*hp3
                 tempy3lw = tempy3lw + displw_poroelastic(2,iglob)*hp3
                 tempz3lw = tempz3lw + displw_poroelastic(3,iglob)*hp3
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif ! adjoint
           enddo
 
               xixl = xix(i,j,k,ispec)
@@ -346,10 +327,10 @@
 
     sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
-          if(SIMULATION_TYPE == 3) then ! kernels calculation
-          endif
 !  endif !if(ATTENUATION)
 
+          if(SIMULATION_TYPE == 3) then ! kernels calculation
+          l = NSPEC_ADJOINT ! to avoid compilation warnings
 ! kernels calculation
 !   if(isolver == 2) then
 !          iglob = ibool(i,j,ispec)
@@ -374,6 +355,7 @@
 !                  2._CUSTOM_REAL * dsxz * b_dsxz - &
 !                 1._CUSTOM_REAL/3._CUSTOM_REAL * (dux_dxl + duz_dzl) * (b_dux_dxl + b_duz_dzl) ) * mul_fr
 !   endif
+          endif
 
 
 ! weak formulation term based on stress tensor (non-symmetric form)
@@ -445,9 +427,6 @@
               tempy3lw = 0.
               tempz3lw = 0.
 
-              if (SIMULATION_TYPE == 3) then
-              endif
-
               do l=1,NGLLX
                 fac1 = hprimewgll_xx(l,i)
                 tempx1ls = tempx1ls + tempx1(l,j,k)*fac1
@@ -456,9 +435,6 @@
                 tempx1lw = tempx1lw + tempx1p(l,j,k)*fac1
                 tempy1lw = tempy1lw + tempy1p(l,j,k)*fac1
                 tempz1lw = tempz1lw + tempz1p(l,j,k)*fac1
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
@@ -469,9 +445,6 @@
                 tempx2lw = tempx2lw + tempx2p(i,l,k)*fac2
                 tempy2lw = tempy2lw + tempy2p(i,l,k)*fac2
                 tempz2lw = tempz2lw + tempz2p(i,l,k)*fac2
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
@@ -482,9 +455,6 @@
                 tempx3lw = tempx3lw + tempx3p(i,j,l)*fac3
                 tempy3lw = tempy3lw + tempy3p(i,j,l)*fac3
                 tempz3lw = tempz3lw + tempz3p(i,j,l)*fac3
-                ! adjoint simulations
-                if (SIMULATION_TYPE == 3) then
-                endif
               enddo
 
               fac1 = wgllwgll_yz(j,k)

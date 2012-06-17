@@ -87,7 +87,7 @@
     ! restores last time snapshot saved for backward/reconstruction of wavefields
     ! note: this must be read in after the Newmark time scheme
     if( SIMULATION_TYPE == 3 .and. it == 1 ) then
-     call it_read_foward_arrays()
+     call it_read_forward_arrays()
     endif
 
     ! write the seismograms with time shift
@@ -395,6 +395,20 @@
       b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
       b_accel(:,:) = 0._CUSTOM_REAL
     endif
+    ! poroelastic backward fields
+    if( POROELASTIC_SIMULATION ) then
+    ! solid phase
+    b_displs_poroelastic(:,:) = b_displs_poroelastic(:,:) + b_deltat*b_velocs_poroelastic(:,:) + &
+                              b_deltatsqover2*b_accels_poroelastic(:,:)
+    b_velocs_poroelastic(:,:) = b_velocs_poroelastic(:,:) + b_deltatover2*b_accels_poroelastic(:,:)
+    b_accels_poroelastic(:,:) = 0._CUSTOM_REAL
+
+    ! fluid phase
+    b_displw_poroelastic(:,:) = b_displw_poroelastic(:,:) + b_deltat*b_velocw_poroelastic(:,:) + &
+                              b_deltatsqover2*b_accelw_poroelastic(:,:)
+    b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + b_deltatover2*b_accelw_poroelastic(:,:)
+    b_accelw_poroelastic(:,:) = 0._CUSTOM_REAL
+    endif
   endif
 
 ! adjoint simulations: moho kernel
@@ -408,7 +422,7 @@
 
 !=====================================================================
 
-  subroutine it_read_foward_arrays()
+  subroutine it_read_forward_arrays()
 
   use specfem_par
   use specfem_par_acoustic
@@ -460,9 +474,19 @@
 
   endif
 
+  ! poroelastic wavefields
+  if( POROELASTIC_SIMULATION ) then
+    read(27) b_displs_poroelastic
+    read(27) b_velocs_poroelastic
+    read(27) b_accels_poroelastic
+    read(27) b_displw_poroelastic
+    read(27) b_velocw_poroelastic
+    read(27) b_accelw_poroelastic
+  endif
+
   close(27)
 
-  end subroutine it_read_foward_arrays
+  end subroutine it_read_forward_arrays
 
 !=====================================================================
 
