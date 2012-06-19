@@ -77,7 +77,7 @@ step-by-step tutorial:
      > bsub < go_decomposer_lsf.bash
 
      this creates mesh partitions "proc000***_Database" in directory in_out_files/DATABASES_MPI/.
-     the output file in_out_files/*.o contains information on the partitioning
+     the output file in_out_files/OUTPUT_FILES/*.o contains information on the partitioning
 
      note 1: the program xdecompose_mesh_SCOTCH is a serial program (runs on 1 core)
      note 2: for small jobs (like this one), you can simply launch the job on
