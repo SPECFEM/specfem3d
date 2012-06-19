@@ -49,7 +49,7 @@ module sum_par
   integer, parameter :: MAX_NUM_NODES = 1000
 
   ! default list name
-  character(len=150),parameter :: kernel_file_list = 'kernels_list.txt'
+  character(len=150),parameter :: kernel_file_list = '../kernels_list.txt'
 
   ! mesh size
   integer :: NSPEC_AB, NGLOB_AB
