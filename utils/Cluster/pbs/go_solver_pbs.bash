@@ -28,6 +28,7 @@ numnodes=$NPROC
 mkdir -p in_out_files/OUTPUT_FILES
 
 # backup files used for this simulation
+cp go_solver_pbs.bash in_out_files/OUTPUT_FILES/
 cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
 cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
 cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
