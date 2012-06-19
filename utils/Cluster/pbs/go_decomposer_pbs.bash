@@ -28,6 +28,9 @@ numnodes=$NPROC
 echo starting decomposer for $numnodes partitions
 echo " "
 
+# save a copy
+cp go_decomposer_pbs.bash in_out_files/OUTPUT_FILES/
+
 # USER CHANGE MESH DIRECTORY
 MESHDIR=examples/homogeneous_halfspace/MESH/
 
