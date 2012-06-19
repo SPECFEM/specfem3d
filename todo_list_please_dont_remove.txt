@@ -94,8 +94,11 @@ for some meshes that will be a major bottleneck
 - suggestion 08:
 ----------------
 
-fix the Stacey stability bug: already done by Zhinan in 2D and also in a demo 3D code; Jo is almost done merging that into GLOBE;
-should be done (by Daniel? by Jo?) in SPECFEM3D as well, because very useful to increase the time step
+fix the Stacey stability bug: already done by Zhinan in 2D and also in a demo 3D code; Jo is now done merging that into GLOBE;
+should be done (by Daniel? by Jo?) in SPECFEM3D as well, because very useful to increase the time step.
+
+Update on June 19, 2012: Vadim will do it in SPECFEM3D + MPI, he will test it and then send the modified code to Daniel, Jo and Dimitri,
+and then Daniel can commit it to SVN.
 
 - suggestion 09:
 ----------------
