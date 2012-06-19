@@ -182,8 +182,8 @@ program smooth_vol_data
   sigma_v2 = 2.0 * sigma_v ** 2
 
   ! checks
-  if( sigma_h2 < 1.e-30 ) stop 'error sigma_h2 zero, must non-zero'
-  if( sigma_v2 < 1.e-30 ) stop 'error sigma_v2 zero, must non-zero'
+  if( sigma_h2 < 1.e-18 ) stop 'error sigma_h2 zero, must non-zero'
+  if( sigma_v2 < 1.e-18 ) stop 'error sigma_v2 zero, must non-zero'
 
   ! adds margin to search radius
   element_size = max(sigma_h,sigma_v) * 0.5
@@ -376,30 +376,34 @@ program smooth_vol_data
 
   ! absorbing boundary surface
   read(27) idummy_a ! num_abs_boundary_faces
-  allocate(idummy(idummy_a), &
-          idummy_3(3,NGLLSQUARE,idummy_a), &
-          dummy_2(NGLLSQUARE,idummy_a), &
-          dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array idummy etc.'
-  read(27) idummy ! abs_boundary_ispec
-  read(27) idummy_3 ! abs_boundary_ijk
-  read(27) dummy_2 ! abs_boundary_jacobian2Dw
-  read(27) dummy_3 ! abs_boundary_normal
-  deallocate( idummy,idummy_3,dummy_2,dummy_3)
-
+  if( idummy_a > 0 ) then
+    allocate(idummy(idummy_a), &
+            idummy_3(3,NGLLSQUARE,idummy_a), &
+            dummy_2(NGLLSQUARE,idummy_a), &
+            dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'
+    read(27) idummy ! abs_boundary_ispec
+    read(27) idummy_3 ! abs_boundary_ijk
+    read(27) dummy_2 ! abs_boundary_jacobian2Dw
+    read(27) dummy_3 ! abs_boundary_normal
+    deallocate( idummy,idummy_3,dummy_2,dummy_3)
+  endif
+  
   ! free surface
   read(27) idummy_a ! num_free_surface_faces
-  allocate(idummy(idummy_a), &
-          idummy_3(3,NGLLSQUARE,idummy_a), &
-          dummy_2(NGLLSQUARE,idummy_a), &
-          dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array idummy etc.'
-  read(27) idummy   ! free_surface_ispec
-  read(27) idummy_3 ! free_surface_ijk
-  read(27) dummy_2  ! free_surface_jacobian2Dw
-  read(27) dummy_3  ! free_surface_normal
-  deallocate( idummy,idummy_3,dummy_2,dummy_3)
-
+  if( idummy_a > 0 ) then
+    allocate(idummy(idummy_a), &
+            idummy_3(3,NGLLSQUARE,idummy_a), &
+            dummy_2(NGLLSQUARE,idummy_a), &
+            dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'
+    read(27) idummy   ! free_surface_ispec
+    read(27) idummy_3 ! free_surface_ijk
+    read(27) dummy_2  ! free_surface_jacobian2Dw
+    read(27) dummy_3  ! free_surface_normal
+    deallocate( idummy,idummy_3,dummy_2,dummy_3)
+  endif
+  
   ! acoustic-elastic coupling surface
   read(27) idummy_a ! num_coupling_ac_el_faces
   if( idummy_a > 0 ) then
