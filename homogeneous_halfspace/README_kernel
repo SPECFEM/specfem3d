@@ -21,7 +21,7 @@ step-by-step kernel tutorial:
      update the Par_file:
 
      > cd /SPECFEM3D
-     > ./UTILS/change_simulation_type.pl -F
+     > ./utils/change_simulation_type.pl -F
 
      or change manually in /SPECFEM3D/in_data_files/Par_file:
      ...
@@ -67,20 +67,19 @@ step-by-step kernel tutorial:
    - setup adjoint stations file STATIONS_ADJOINT containing the receiver stations locations
      which will have adjoint source files in in_out_files/SEM/:
      > cd /SPECFEM3D
-     > cp examples/homogeneous_halfspace/STATIONS_ADJOINT in_data_files/
+     > cp examples/homogeneous_halfspace/in_data_files/STATIONS_ADJOINT in_data_files/
 
 
 3. run adjoint simulation with restored backward wavefields:
 
    - update the Par_file:
      > cd /SPECFEM3D
-     > ./UTILS/change_simulation_type.pl -b
+     > ./utils/change_simulation_type.pl -b
 
      or change manually in /SPECFEM3D/in_data_files/Par_file:
      # forward or adjoint simulation
      SIMULATION_TYPE                 = 3
      SAVE_FORWARD                    = .false.
-
 
    - run the backward simulation, submitting the job script:
      > qsub go_solver_pbs.bash
@@ -95,7 +94,6 @@ step-by-step kernel tutorial:
           in_out_files/DATABASES_MPI/proc000***_rho_kernel.bin
           in_out_files/DATABASES_MPI/proc000***_rhop_kernel.bin
 
-
    - visualize with Paraview, e.g. :
       > cd /SPECFEM3D
       > make xcombine_vol_data
@@ -103,8 +101,10 @@ step-by-step kernel tutorial:
       > ./xcombine_vol_data 0 3 kappa_kernel ../in_out_files/DATABASES_MPI/ ../in_out_files/OUTPUT_FILES/ 1
 
      where we use the partitions with id 0 to 3 to include all 4 processor partitions.
+     By default, this will produce the vtk file /SPECFEM3D/in_out_files/OUTPUT_FILES/kappa_kernel.vtk
+     This file can be visualized using Paraview.
 
-
+     OPTIONAL:
      To convert the mesh format to VTK, you can use utils/Visualization/Paraview/mesh2vtu:
       > cd utils/Visualization/Paraview/mesh2vtu
      Modify the Makefile according to your library paths and compile mesh2vtu:

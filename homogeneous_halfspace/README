@@ -8,7 +8,13 @@ constant elastic material property, using CUBIT and runs a forward simulation.
 step-by-step tutorial:
 
 0. check that all software is available (or that modules are loaded):
-     intel/openmpi, cubit, scotch, python, gnuplot (or xmgrace)
+	openmpi: > which mpirun
+        cubit:   > which cubit
+        scotch:  > which gout
+        python:  > which python
+     optional:
+        gnuplot: > which gnuplot
+        xmgrace: > which xmgrace
 
 1. configure package:
 
