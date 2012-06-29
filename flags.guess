@@ -13,6 +13,17 @@ if test x"$UNAME_MS" = x; then
 fi
 
 case $FC in
+    crayftn|*/crayftn)
+        #
+        # Cray Fortran
+        #
+        if test x"$FLAGS_CHECK" = x; then
+            FLAGS_CHECK="-eC -eD"  # turn on full debugging and range checking
+        fi
+        if test x"$FLAGS_NO_CHECK" = x; then
+            FLAGS_NO_CHECK="\$(FLAGS_CHECK)"
+        fi
+        ;;
     pgf90|*/pgf90)
         #
         # Beowulf Portland pgf90
