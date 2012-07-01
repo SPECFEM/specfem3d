@@ -13,7 +13,7 @@ if test x"$UNAME_MS" = x; then
 fi
 
 case $FC in
-    crayftn|*/crayftn)
+    ftn|*/ftn|crayftn|*/crayftn)
         #
         # Cray Fortran
         #
