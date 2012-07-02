@@ -81,6 +81,7 @@ program create_adjsrc_traveltime
   print *, ' '
 
   ! reads seismograms (ascii format)
+  data(:,:) = 0.0
   do i = 1, 3
     filename = trim(file(i))
     print *, 'reading asc file '//trim(filename)//' ...'
@@ -131,6 +132,7 @@ program create_adjsrc_traveltime
     if( i == i1 ) close(44)
     
     ! calculates velocity (by finite-differences)
+    out(:) = 0.0
     do itime = 2, nstep-1
        out(itime) =  (data(i,itime+1) - data(i,itime-1)) / (2 * dt)
     enddo
@@ -143,11 +145,12 @@ program create_adjsrc_traveltime
     if (ifile /= 0 .and. ifile /= i) norm = 0.0
 
     ! adjoint source
+    adj(:) = 0.0
     if (abs(norm) > EPS) then
       adj(1:nstep) = - out(1:nstep) * tw(1:nstep) / norm
     else
       print *, 'norm < EPS for file '//trim(file(i))
-      adj(:) = 0.
+      adj(:) = 0.0
     endif
     data(i,:) = adj(:)
     
