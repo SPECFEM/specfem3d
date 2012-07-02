@@ -559,13 +559,18 @@ After the block definitions are done, you export the mesh using the script \text
 \end{lyxcode}
 where
 \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
-For a tomographic model, the material definition format is:
-\begin{lyxcode}
-\texttt{domain\_ID} \texttt{material\_ID}  \texttt{tomography}  \texttt{name}
-\end{lyxcode}
-where
-\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a negative, unique identifier, \texttt{tomography} keyword for tomographic material definition and \texttt{name} the name of the tomography file. The name is not used so far, rather change the filename defined in the file \texttt{model\_tomography.f90} located in the
-\texttt{src/generate\_databases/} directory.
+
+%%magnoni
+For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details.
+%
+%For a tomographic model, the material definition format is:
+%\begin{lyxcode}
+%\texttt{domain\_ID} \texttt{material\_ID}  \texttt{tomography}  \texttt{name}
+%\end{lyxcode}
+%where
+%\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a negative, unique identifier, \texttt{tomography} keyword for tomographic material definition and \texttt{name} the name of the tomography file. The name is not used so far, rather change the filename defined in the file \texttt{model\_tomography.f90} located in the
+%\texttt{src/generate\_databases/} directory.
+%
 \item [materials\_file] Contains the material associations for each element.
 \item [nodes\_coords\_file] Contains the point locations in Cartesian coordinates of the mesh element corners.
 \item [mesh\_file] Contains the mesh element connectivity.
@@ -918,7 +923,41 @@ of generating the distributed databases but is required for the solver, i.e., yo
 parameter after running  \texttt{xgenerate\_databases}.
 \item [{\texttt{DT}}] The length of each time step in seconds.
 This feature is not used at the time of generating the distributed databases but is required for the solver.
-Please see also Section~\ref{cha:Choosing-the-Time-Step} for further details.
+Please see also Section~\ref{sec:Choosing-the-Time-Step} for further details.
+%
+\item [{\texttt{MODEL}}] Must be set to one of the following:
+%
+\begin{description}
+\item [{\textmd{Models defined by mesh parameters:}}]~
+\begin{description}
+\item [{\texttt{default}}] Uses model parameters as defined by meshing procedures described 
+in the previous Chapter~\ref{cha:Mesh-Generation}.
+\end{description}
+\end{description}
+%
+\begin{description}
+\item [{\textmd{1D~models~with~real~structure:}}]~
+\begin{description}
+\item [{\texttt{1D\_prem}}] Isotropic version of the spherically
+symmetric Preliminary Reference Earth Model (PREM) \citep{DzAn81}.
+\item [{\texttt{1D\_socal}}] A standard isotropic 1D model for Southern California.
+\item [{\texttt{1D\_cascadia}}] Isotropic 1D profile for the Cascadia region.
+\end{description}
+\end{description}
+%
+\begin{description}
+\item [{\textmd{Fully~3D~models:}}]~
+\begin{description}
+\item [{\texttt{aniso}}] For a user-specified fully anisotropic model. Parameters are set up in routines located in file \texttt{model\_aniso.f90} in directory \texttt{src/generate\_databases/}. See Chapter~\ref{cha:-Changing-the} for a discussion on how to specify your own 3D model.
+\item [{\texttt{external}}] For a user-specified isotropic model which uses externally defined model parameters. Uses external model definitions set up in routines located in file \texttt{model\_external\_values.f90} in directory \texttt{src/generate\_databases/}. Please modify these generic template routines to use your own model definitions. 
+\item [{\texttt{gll}}] For a user-specified isotropic model which uses external binary files for $v_p$, $v_s$ and $\rho$. Binary files are given in the same format as when outputted by the \texttt{xgenerate\_databases} executable when using option \texttt{SAVE\_MESH\_FILES}. These binary files define the model parameters on all GLL points which can be used for iterative inversion procedures.
+\item [{\texttt{salton\_trough}}] A 3D $V_p$ model for Southern California. Users must provide the corresponding data file \texttt{regrid3\_vel\_p.bin} in directory \texttt{DATA/st\_3D\_block\_harvard/}.
+\item [{\texttt{tomo}}] For a user-specified 3D isotropic model which uses a tomographic model file \texttt{tomographic\_model.xyz} in directory \texttt{in\_data\_files/}. See Section \ref{sec:Using-tomographic},
+for a discussion on how to specify your own 3D tomographic model.
+\end{description}
+\end{description}
+%
+%
 \item [{\texttt{OCEANS}}] Set to \texttt{.true.} if the effect of the oceans
 on seismic wave propagation should be incorporated based upon the
 approximate treatment discussed in \citet{KoTr02b}. This feature
@@ -949,16 +988,16 @@ want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} i
 on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
-Turning this option on generates large output files. See Section \ref{sec:Movies}
+Turning this option on generates large output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only relevant for the solver.
 \item [{\texttt{MOVIE\_VOLUME}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation in the Earth's interior.
-Turning this option on generates huge output files. See Section \ref{sec:Movies}
+Turning this option on generates huge output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only relevant for the solver.
 \item [{\texttt{NTSTEP\_BETWEEN\_FRAMES}}] Determines the number of timesteps
 between movie frames. Typically you want to save a snapshot every
 100 timesteps. The smaller you make this number the more output will
-be generated! See Section \ref{sec:Movies} for a discussion on the
+be generated! See Section~\ref{sec:Movies} for a discussion on the
 generation of movies. This feature is only relevant for the solver.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered, i.e., a peak ground velocity map
@@ -1011,7 +1050,7 @@ information about the source time function in the file \texttt{in\_out\_files/OU
 This feature is only relevant for the solver.
 \end{description}
 
-\section{\label{cha:Choosing-the-Time-Step}Choosing the time step \texttt{DT}}
+\section{\label{sec:Choosing-the-Time-Step}Choosing the time step \texttt{DT}}
 
 The parameter \texttt{DT} sets the length of each time step in seconds. The value of this parameter is crucial for the stability of
 the spectral-element simulation. Your time step \texttt{DT} will depend on the minimum ratio between the distance $h$ of neighboring mesh points and the wave speeds $v$ defined in your model. The condition for the time step $\Delta t$ is:
@@ -2276,6 +2315,129 @@ collect\_seismo.pl~../OUTPUT\_FILES/lsf\_machines
 
 cleanbase.pl~../OUTPUT\_FILES/machines
 \end{lyxcode}
+
+
+\chapter{{\normalsize \label{cha:-Changing-the}} Changing the Model}
+
+In this section we explain how to change the velocity model used for your simulations. 
+These changes involve contributing specific subroutines
+that replace existing subroutines in the \texttt{SPECFEM3D} package.
+Note that \texttt{SPECFEM3D} can handle Earth models with material properties that vary within each spectral element. 
+
+%% magnoni 6/12
+\section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic Earth models}
+
+To implement your own external tomographic model, you must provide your own tomography file
+\texttt{tomography\_model.xyz} and choose between two possible options: 
+(1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = tomo}, or
+(2) for more user control, set in the \texttt{Par\_file} the model parameter \texttt{MODEL = default} and use the following format in the file \texttt{MESH/nummaterial\_velocity\_file} when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
+\begin{lyxcode}
+\texttt{domain\_ID} \texttt{material\_ID} \texttt{tomography} \texttt{elastic} \texttt{file\_name} 1
+\end{lyxcode} 
+where
+\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, 
+\texttt{material\_ID} a negative, unique identifier (i.e., -1), 
+\texttt{tomography} keyword for tomographic material definition, 
+\texttt{elastic} keyword for elastic material definition, 
+\texttt{file\_name} the name of the tomography file and 
+1 a positive unique identifier. 
+The name of the tomography file is not used so far, rather change the filename (\texttt{TOMO\_FILENAME}) defined in the file \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases/} directory.
+
+The external tomographic model is represented by a grid of points with assigned material properties and homogeneous resolution along each spatial direction x, y and z.
+The ASCII file \texttt{tomography\_model.xyz} that describes the tomography should be located in the \texttt{in\_data\_files/} directory. 
+The format of the file, as read from \texttt{model\_tomography.f90}, looks like Figure \ref{fig:tomography_file},
+where
+%
+\begin{description}
+\item [{\texttt{ORIG\_X}, \texttt{END\_X}}] are, respectively, the coordinates of the initial and final tomographic grid points along the x direction (in the mesh units, e.g., $m$);
+\item [{\texttt{ORIG\_Y}, \texttt{END\_Y}}] respectively the coordinates of the initial and final tomographic grid points along the y direction (in the mesh units, e.g., $m$);
+\item [{\texttt{ORIG\_Z}, \texttt{END\_Z}}] respectively the coordinates of the initial and final tomographic grid points along the z direction (in the mesh units, e.g., $m$);
+\item [\texttt{SPACING\_X}, \texttt{SPACING\_Y}, \texttt{SPACING\_Z}] the spacing between the tomographic grid points along the x, y and z directions, respectively (in the mesh units, e.g., $m$);
+\item [\texttt{NX}, \texttt{NY}, \texttt{NZ}] the number of grid points along the spatial directions x, y and z, respectively; \texttt{NX} is given by [(\texttt{END\_X} - \texttt{ORIG\_X})/\texttt{SPACING\_X}]+1; \texttt{NY} and \texttt{NZ} are the same as \texttt{NX}, but for the y and z directions, respectively;
+\item [\texttt{VP\_MIN}, \texttt{VP\_MAX}, \texttt{VS\_MIN}, \texttt{VS\_MAX}, \texttt{RHO\_MIN}, \texttt{RHO\_MAX}] the minimum and maximum values of the wave speed \texttt{vp} and \texttt{vs} (in $m \, s^{-1}$) and of the density \texttt{rho} (in $kg \, m^{-3}$); these values could be the actual limits of the tomographic parameters in the grid or the minimum and maximum values to which we force the cut of velocity and density in the model.  
+\end{description}
+%
+After the first four lines, in the file \texttt{tomography\_model.xyz} the tomographic grid points are listed with the corresponding values of \texttt{vp}, \texttt{vs} and \texttt{rho}, scanning the grid along the x coordinate (from \texttt{ORIG\_X} to \texttt{END\_X} with step of \texttt{SPACING\_X}) for each given y (from \texttt{ORIG\_Y} to \texttt{END\_Y}, with step of \texttt{SPACING\_Y}) and each given z (from \texttt{ORIG\_Z} to \texttt{END\_Z}, with step of \texttt{SPACING\_Z}).
+%fig 
+\begin{figure}[htbp]
+\noindent \begin{centering}
+\includegraphics[width=1.0\textwidth]{figures/tomo_file.jpg}
+\par\end{centering}
+\caption{Tomography file \texttt{tomography\_model.xyz} that describes an external Earth model and that is read by \texttt{model\_tomography.f90}. The coordinates x, y and z of the grid, their limits ORIG\_X, ORIG\_Y, ORIG\_Z, END\_X, END\_Y, END\_Z and the grid spacings SPACING\_X, SPACING\_Y, SPACING\_Z should be in the units of the constructed mesh (e.g., UTM coordinates in meters).}
+\label{fig:tomography_file}
+\end{figure}
+
+The user can implement his own interpolation algorithm for the tomography model by changing the routine \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases/} directory. 
+Moreover, for models that involve both fully defined materials and a tomography description, the \texttt{nummaterial\_velocity\_file} has multiple lines each with the corresponding suitable format described above.   
+
+
+\section{{\normalsize \label{sec:Anelastic-Models}}External (an)elastic Models}
+
+To use your own external model, you can set in the \texttt{Par\_file} the model parameter \texttt{MODEL = external}.
+Three-dimensional acoustic and/or (an)elastic (attenuation) models may then be superimposed
+onto the mesh based upon your subroutine in
+\texttt{model\_external\_values.f90} located in directory \texttt{src/generate\_databases}.
+The call to this routine would be as follows
+
+\begin{lyxcode}
+call~model\_external\_values(xmesh,~ymesh,~zmesh, ~\& \\
+~~~~~~~~~~rho,~vp,~vs,~qmu\_atten,~iflag\_aniso,~idomain\_id)
+\end{lyxcode}
+%
+Input to this routine consists of:
+\begin{description}
+\item [{\texttt{xmesh,ymesh,zmesh}}] location of mesh point 
+\end{description}
+%
+Output to this routine consists of:
+\begin{description}
+\item [{\texttt{rho,vp,vs}}] isotropic model parameters for density $\rho$ ($kg/m^3$), $v_p$ ($m/s$) and $v_s$ ($m/s$)
+\item [{\texttt{qmu\_atten}}] Shear wave quality factor: $0<Q_{\mu}<9000$
+\item [{\texttt{iflag\_aniso}}] anisotropic model flag, $0$ indicating no anisotropy or $1$ using anisotropic model parameters as defined in routine file \texttt{model\_aniso.f90}
+\item [{\texttt{idomain\_id}}] domain identifier, $1$ for acoustic, $2$ for elastic, $3$ for poroelastic materials.
+\end{description}
+
+
+Note that the resolution and maximum value of anelastic models are
+truncated. This speeds the construction of the standard linear solids
+during the meshing stage. To change the resolution, currently at one
+significant figure following the decimal, or the maximum value (9000),
+consult \texttt{shared/constants.h}. 
+
+
+\section{{\normalsize \label{sec:Anisotropic-Models}}Anisotropic Models}
+
+To use your anisotropic models, you can either set in the \texttt{Par\_file} the model parameter \texttt{ANISOTROPY} to \texttt{.true.} or set the model parameter \texttt{MODEL = aniso}.
+Three-dimensional anisotropic models may be superimposed on
+the mesh based upon the subroutine in file \texttt{model\_aniso.f90} 
+located in directory \texttt{src/generate\_databases}.
+The call to this subroutine is of the form
+
+\begin{lyxcode}
+call~model\_aniso(iflag\_aniso,~rho,~vp,~vs,~\& \\
+~~~~~~~~~~c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,~\& \\
+~~~~~~~~~~c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)~
+\end{lyxcode}
+%
+Input to this routine consists of:
+\begin{description}
+\item [{\texttt{iflag\_aniso}}] flag indicating the type of the anisotropic model, i.e. $0$ for no superimposed anisotropy, $1$ or $2$ for generic pre-defined anisotropic models.
+\item [{\texttt{rho,vp,vs}}] reference isotropic model parameters for density $\rho$, $v_p$ and $v_s$.
+\end{description}
+%
+Output from the routine consists of the following non-dimensional
+model parameters:
+\begin{description}
+\item [{\texttt{c11},}] \textbf{$\cdots$,} \texttt{\textbf{c66}} 21~dimensionalized
+anisotropic elastic parameters.
+\end{description}
+
+You can replace the \texttt{model\_aniso.f90} file by
+your own version \textit{provided you do not change the call structure
+of the routine}, i.e., the new routine should take exactly the same
+input and produce the required relative output. 
+
+
 
 \chapter{Post-Processing Scripts}
 
