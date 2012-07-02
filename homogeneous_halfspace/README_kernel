@@ -35,8 +35,8 @@ step-by-step kernel tutorial:
 
    you should have now the necessary seismograms in directory in_out_files/OUTPUT_FILES/:
      ...
-     in_out_files/OUTPUT_FILES/X20.BXE.semd
-     in_out_files/OUTPUT_FILES/X20.BXN.semd
+     in_out_files/OUTPUT_FILES/X20.BXX.semd
+     in_out_files/OUTPUT_FILES/X20.BXY.semd
      in_out_files/OUTPUT_FILES/X20.BXZ.semd
      ...
 
@@ -48,10 +48,13 @@ step-by-step kernel tutorial:
      > make
 
    - specify which receiver station becomes an adjoint source,
-     e.g. using the seismograms from station 20, and create the
+     e.g. using the seismograms from station X20, and create the
      corresponding adjoint source files:
      > cd /SPECFEM3D
-     > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 10. 25. 0 in_out_files/OUTPUT_FILES/X20.DB.BX*.semd
+     > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 10. 25. 3 in_out_files/OUTPUT_FILES/X20.DB.BX*.semd
+
+     note: the traveltime adjoint source above uses the signal which arrives 
+           within a time window between 10 - 25 seconds and on the Z-component only.
 
    - make designated directory for adjoint sources:
      > mkdir in_out_files/SEM/
@@ -60,8 +63,8 @@ step-by-step kernel tutorial:
      > rename .semd.adj .adj *.adj
 
      this should create the files:
-          in_out_files/SEM/X20.DB.BXE.adj
-          in_out_files/SEM/X20.DB.BXN.adj
+          in_out_files/SEM/X20.DB.BXX.adj
+          in_out_files/SEM/X20.DB.BXY.adj
           in_out_files/SEM/X20.DB.BXZ.adj
 
    - setup adjoint stations file STATIONS_ADJOINT containing the receiver stations locations
@@ -98,11 +101,11 @@ step-by-step kernel tutorial:
       > cd /SPECFEM3D
       > make xcombine_vol_data
       > cd bin/
-      > ./xcombine_vol_data 0 3 kappa_kernel ../in_out_files/DATABASES_MPI/ ../in_out_files/OUTPUT_FILES/ 1
+      > ./xcombine_vol_data 0 3 alpha_kernel ../in_out_files/DATABASES_MPI/ ../in_out_files/OUTPUT_FILES/ 1
 
      where we use the partitions with id 0 to 3 to include all 4 processor partitions.
-     By default, this will produce the vtk file /SPECFEM3D/in_out_files/OUTPUT_FILES/kappa_kernel.vtk
-     This file can be visualized using Paraview.
+     By default, this will produce the vtk file /SPECFEM3D/in_out_files/OUTPUT_FILES/alpha_kernel.vtk
+     This file can be visualized using Paraview (see image alpha_kernel.png for reference).
 
      OPTIONAL:
      To convert the mesh format to VTK, you can use utils/Visualization/Paraview/mesh2vtu:
@@ -111,12 +114,8 @@ step-by-step kernel tutorial:
       > make
      the modify the paths to your mesh2vtu installation in the utils/Visualization/Paraview/mesh2vtu.pl file,
      and run:
-      > mesh2vtu.pl -i in_out_files/OUTPUT_FILES/kappa_kernel.mesh -o in_out_files/OUTPUT_FILES/kappa_kernel.vtu
+      > mesh2vtu.pl -i in_out_files/OUTPUT_FILES/alpha_kernel.mesh -o in_out_files/OUTPUT_FILES/alpha_kernel.vtu
 
      which creates the *.vtu file:  Paraview -> Menu File -> Open ...
-                                       (and choose the kappa_kernel.vtu)
-
-
-
-
+                                       (and choose the alpha_kernel.vtu)
 
