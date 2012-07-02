@@ -443,17 +443,6 @@ Jeroen, Qinya, Zhinan and I discussed that a few months ago, some of us think th
 
 (in 2D we could avoid this problem by saving all the timesteps of the forward run to disk and reading them back, but in 3D is it not possible yet because the amount of I/Os would be too big; this should change in 5 to 10 years, but for now we still need to back-propagate when SIMULATION_TYPE = 3 in 3D)
 
-- suggestion 27:
-----------------
-
-For Emanuele and Federica:
-
-I agree that read_external_mesh() with varying parameters (for instance to import external tomographic models) is described on page 13 of the manual, but I think the description could / should be made a bit more precise.
-
-In the current version of page 13 of the manual it seems to be a relatively minor point, while in practice many users will use that feature (many/most applications will use such external models).
-
-I therefore suggest that Federica and you make it a slightly longer paragraph, and probably even make it a separate section or sub-section.
-This way, the item will appear in the table of contents.
 
 - suggestion 28:
 ----------------
@@ -594,6 +583,18 @@ Feedback from Qinya: The same time scheme should be used for forward and adjoint
 
 DONE (MOVE ITEMS ABOVE BELOW THIS LINE WHEN THEY ARE DONE):
 -----------------------------------------------------------
+
+- suggestion 27:
+----------------
+
+For Emanuele and Federica:
+
+I agree that read_external_mesh() with varying parameters (for instance to import external tomographic models) is described on page 13 of the manual, but I think the description could / should be made a bit more precise.
+
+In the current version of page 13 of the manual it seems to be a relatively minor point, while in practice many users will use that feature (many/most applications will use such external models).
+
+I therefore suggest that Federica and you make it a slightly longer paragraph, and probably even make it a separate section or sub-section.
+This way, the item will appear in the table of contents.
 
 - suggestion 29:
 ----------------
