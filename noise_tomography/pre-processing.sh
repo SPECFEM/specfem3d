@@ -108,6 +108,13 @@ mv $in_out_files/OUTPUT_FILES/X2.DB.BXZ.semd             $in_out_files/SEM/
 # we will be using "adj_sources_contribution2" & "X1.DB.BXZ.adj" for the 2nd contribution in next part
 rm -f $in_out_files/SEM/*.adj
 cp $in_out_files/SEM/adj_sources_contribution1           $in_out_files/SEM/X2.DB.BXZ.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X2.DB.BXZ.adj > $in_out_files/SEM/X2.DB.BXX.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X2.DB.BXZ.adj > $in_out_files/SEM/X2.DB.BXY.adj
+
+awk '{print $1,0.0}' $in_out_files/SEM/X2.DB.BXZ.adj > $in_out_files/SEM/X1.DB.BXX.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X2.DB.BXZ.adj > $in_out_files/SEM/X1.DB.BXY.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X2.DB.BXZ.adj > $in_out_files/SEM/X1.DB.BXZ.adj
+
 
 # step 3 of noise simulation
 cp $in_data_files/Par_file_step3                         $in_data_files/Par_file
@@ -154,6 +161,13 @@ mpirun -np 4 ./xspecfem3D
 # we have been using "adj_sources_contribution1" & "X2.DB.BXZ.adj" for the 1st contribution in previous part
 rm -f $in_out_files/SEM/*.adj
 cp $in_out_files/SEM/adj_sources_contribution2           $in_out_files/SEM/X1.DB.BXZ.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X1.DB.BXZ.adj > $in_out_files/SEM/X1.DB.BXX.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X1.DB.BXZ.adj > $in_out_files/SEM/X1.DB.BXY.adj
+
+awk '{print $1,0.0}' $in_out_files/SEM/X1.DB.BXZ.adj > $in_out_files/SEM/X2.DB.BXX.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X1.DB.BXZ.adj > $in_out_files/SEM/X2.DB.BXY.adj
+awk '{print $1,0.0}' $in_out_files/SEM/X1.DB.BXZ.adj > $in_out_files/SEM/X2.DB.BXZ.adj
+
 
 # step 3 of noise simulation
 cp $in_data_files/Par_file_step3                         $in_data_files/Par_file

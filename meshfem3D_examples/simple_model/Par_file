@@ -33,6 +33,7 @@ TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 USE_OLSEN_ATTENUATION           = .false.
 ANISOTROPY                      = .false.
+GRAVITY                         = .false.
 
 # absorbing boundary conditions for a regional simulation
 ABSORBING_CONDITIONS            = .true.
@@ -64,4 +65,6 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
+# set to true to use GPUs 
+GPU_MODE                        = .false.
 

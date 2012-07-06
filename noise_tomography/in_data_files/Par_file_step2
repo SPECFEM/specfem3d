@@ -34,6 +34,7 @@ TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 USE_OLSEN_ATTENUATION           = .false.
 ANISOTROPY                      = .false.
+GRAVITY                         = .false.
 
 # absorbing boundary conditions for a regional simulation
 ABSORBING_CONDITIONS            = .true.
@@ -61,4 +62,7 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
+
+# set to true to use GPUs 
+GPU_MODE                        = .false.
 

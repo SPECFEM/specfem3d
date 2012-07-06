@@ -48,7 +48,11 @@ Noise Cross-Correlation Sensitivity Kernels (Tromp et al., 2010, GJI)
    3.1 - Model
          This example uses the same model as in '../examples/homogeneous_halfspace'
          In other words, the dimension of the model is 134 km * 134 km * 60 km, with Vp=2.8km/s, Vs=1.5km/s
-         "./DATABASES_MPI" contains the four partitions for the model.
+
+         "./DATABASES_MPI" contains the four partitions for the model which you can also create by
+         copying the MESH files from example '../examples/homogeneous_halfspace' and
+         run 'xdecompose_mesh_SCOTCH' as explained in the file README in '../examples/homogeneous_halfspace'        
+         
          Refer to '../examples/homogeneous_halfspace', if you don't know how to get them from CUBIT and SCOTCH.
 
    3.2 - Source and Receivers

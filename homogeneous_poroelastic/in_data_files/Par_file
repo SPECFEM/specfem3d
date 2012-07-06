@@ -50,7 +50,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = /tigress-hsm/cmorency/in_out_files/DATABASES_MPI
+LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
