@@ -154,6 +154,7 @@
       if( SAVE_MESH_FILES ) tmp1(ispec) = cmax
     endif
 
+
     ! suggested timestep
     dt_suggested = COURANT_SUGGESTED * distance_min / max( vpmax,vsmax )
     dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
@@ -406,9 +407,11 @@
   !real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
 
   logical :: has_vs_zero,has_vp2_zero
+  real(kind=CUSTOM_REAL),dimension(1) :: tmp_val
 
   ! debug: for vtk output
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1,tmp2
+
   integer:: ier
   character(len=256) :: filename,prname
 
@@ -680,11 +683,15 @@
       model_speed_max = vsmax_glob
     endif
   endif
-  call bcast_all_cr(model_speed_max,1)
+  tmp_val(1) = model_speed_max
+  call bcast_all_cr(tmp_val,1)
+  model_speed_max = tmp_val(1)
 
   ! returns minimum period
   if( myrank == 0 ) min_resolved_period = pmax_glob
-  call bcast_all_cr(min_resolved_period,1)
+  tmp_val(1) = min_resolved_period
+  call bcast_all_cr(tmp_val,1)
+  min_resolved_period = tmp_val(1)
 
   ! debug: for vtk output
   if( SAVE_MESH_FILES ) then

@@ -41,9 +41,9 @@
 
 ! set up GLL points, weights and derivation matrices for reference element (between -1,1)
   call define_derivation_matrices(xigll,yigll,zigll,wxgll,wygll,wzgll, &
-         hprime_xx,hprime_yy,hprime_zz, &
-         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
+                                hprime_xx,hprime_yy,hprime_zz, &
+                                hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                                wgllwgll_xy,wgllwgll_xz,wgllwgll_yz)
 
 ! define transpose of derivation matrix
   do j = 1,NGLLY

@@ -30,7 +30,31 @@
 
   use specfem_par
   use specfem_par_movie
+  use specfem_par_elastic
+  use specfem_par_acoustic
   implicit none
+
+  ! gets resulting array values onto CPU
+  if(GPU_MODE .and. &
+    ( &
+      EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
+      CREATE_SHAKEMAP .or. &
+      ( MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
+      ( MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
+      ( PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) &
+     ) ) then
+    ! acoustic domains
+    if( ACOUSTIC_SIMULATION ) then
+      ! transfers whole fields
+      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+    endif
+    ! elastic domains
+    if( ELASTIC_SIMULATION ) then
+      ! transfers whole fields
+      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
+    endif
+  endif
 
   ! shakemap creation
   if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
@@ -126,19 +150,19 @@
                           potential_acoustic, displ_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       ! velocity vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       ! accel ?
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
     endif
 
 
@@ -146,7 +170,7 @@
     if (USE_HIGHRES_FOR_MOVIES) then
       do ipoin = 1, NGLLX*NGLLY
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        
+
         ! saves norm of displacement,velocity and acceleration vector
         if( ispec_is_elastic(ispec) ) then
           ! norm of displacement
@@ -286,7 +310,7 @@
   logical :: is_done
 
   is_done = .false.
-  
+
   ! loops over all gll points from this element
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -374,14 +398,14 @@
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       else
         ! velocity vector
         call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       endif
     endif
 
@@ -613,14 +637,14 @@
                           potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       else
         ! velocity vector
         call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       endif
     endif
 
@@ -770,19 +794,19 @@
                           potential_acoustic, displ_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       ! velocity vector
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_acoustic, veloc_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
       ! accel ?
       call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_dot_dot_acoustic, accel_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
     endif
 
     ! save all points for high resolution, or only four corners for low resolution
@@ -940,14 +964,14 @@
 
   ! velocity vector
   is_done = .false.
-    
+
   ! loops over all gll points from this element
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
         ! checks if global point is found
         if( iglob == ibool(i,j,k,ispec) ) then
-        
+
           ! horizontal displacement
           store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
                                         abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
@@ -1019,7 +1043,7 @@
                         potential_dot_acoustic, veloc_element,&
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore)
+                        ibool,rhostore,GRAVITY)
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)

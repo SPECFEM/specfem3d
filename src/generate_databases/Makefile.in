@@ -78,14 +78,15 @@ libgendatabases_a_OBJECTS = \
 	$O/detect_surface.o \
 	$O/exit_mpi.o \
 	$O/get_absorbing_boundary.o \
-	$O/get_coupling_surfaces.o \
-	$O/get_model.o \
-	$O/get_MPI.o \
 	$O/get_attenuation_model.o \
 	$O/get_cmt.o \
+	$O/get_coupling_surfaces.o \
 	$O/get_element_face.o \
 	$O/get_global.o \
 	$O/get_jacobian_boundaries.o \
+	$O/get_model.o \
+	$O/get_MPI.o \
+	$O/get_perm_color.o \
 	$O/get_shape2D.o \
 	$O/get_shape3D.o \
 	$O/get_value_parameters.o \
@@ -98,6 +99,7 @@ libgendatabases_a_OBJECTS = \
 	$O/model_aniso.o \
 	$O/model_default.o \
 	$O/model_external_values.o \
+	$O/model_ipati.o \
 	$O/model_gll.o \
 	$O/model_salton_trough.o \
 	$O/model_tomography.o \
@@ -199,9 +201,6 @@ $O/assemble_MPI_scalar.o:  ${SHARED}/constants.h ${SHARED}/assemble_MPI_scalar.f
 $O/parallel.o:  ${SHARED}/constants.h ${SHARED}/parallel.f90
 	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o ${SHARED}/parallel.f90
 
-###
-###
-###
 
 ###
 ### serial compilation without optimization
@@ -229,6 +228,9 @@ $O/model_default.o:  ${SHARED}/constants.h model_default.f90
 
 $O/model_external_values.o:  ${SHARED}/constants.h model_external_values.f90
 	${FCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
+
+$O/model_ipati.o:  ${SHARED}/constants.h model_ipati.f90
+	${FCCOMPILE_CHECK} -c -o $O/model_ipati.o model_ipati.f90
 
 $O/model_gll.o:  ${SHARED}/constants.h model_gll.f90
 	${FCCOMPILE_CHECK} -c -o $O/model_gll.o model_gll.f90
@@ -350,6 +352,9 @@ $O/get_model.o:  ${SHARED}/constants.h get_model.f90
 
 $O/get_MPI.o:  ${SHARED}/constants.h get_MPI.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_MPI.o get_MPI.f90
+
+$O/get_perm_color.o:  ${SHARED}/constants.h get_perm_color.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_perm_color.o get_perm_color.f90
 
 $O/create_name_database.o:  ${SHARED}/constants.h ${SHARED}/create_name_database.f90
 	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o ${SHARED}/create_name_database.f90

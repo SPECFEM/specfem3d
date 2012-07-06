@@ -68,7 +68,7 @@
   integer iprocloop
 
   integer i,j,k,ispec,iglob,isource
-  integer imin,imax,jmin,jmax,kmin,kmax 
+  integer imin,imax,jmin,jmax,kmin,kmax
 !  integer  igll,jgll,kgll,inode,iface,iglob_selected,
 !  integer iselected,jselected,iface_selected,iadjust,jadjust
   integer iproc(1)
@@ -103,12 +103,12 @@
   double precision x_target_source,y_target_source,z_target_source
 
   double precision,dimension(1) :: altitude_source,distmin_ele
-  
+
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
 
 !  double precision,dimension(4) :: elevation_node,dist_node
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
-  
+
 
   integer islice_selected_source(NSOURCES)
 
@@ -220,9 +220,9 @@
                               num_free_surface_faces,free_surface_ispec,free_surface_ijk)
     altitude_source(1) = loc_ele
     distmin_ele(1) = loc_distmin
-    
 
-    
+
+
 !    ! set distance to huge initial value
 !    distmin = HUGEVAL
 !    if(num_free_surface_faces > 0) then
@@ -295,11 +295,11 @@
 !      end do
 !    end if
 !    distmin_ele(1)= distmin
-    
+
     !  MPI communications to determine the best slice
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
-    
+
     if(myrank == 0) then
       iproc = minloc(distmin_ele_all)
       altitude_source(1) = elevation_all(iproc(1))

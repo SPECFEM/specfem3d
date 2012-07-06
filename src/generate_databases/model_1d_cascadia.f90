@@ -48,7 +48,7 @@
   ! local parameters
   real(kind=CUSTOM_REAL) :: x,y,z
   real(kind=CUSTOM_REAL) :: depth
-  real(kind=CUSTOM_REAL) :: elevation,distmin  
+  real(kind=CUSTOM_REAL) :: elevation,distmin
 
   ! converts GLL point location to real
   x = xmesh
@@ -61,19 +61,19 @@
   call get_topo_elevation_free_closest(x,y,elevation,distmin, &
                     nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
                     num_free_surface_faces,free_surface_ispec,free_surface_ijk)
-  
+
   ! depth in Z-direction
-  if( distmin < HUGEVAL ) then  
+  if( distmin < HUGEVAL ) then
     depth = elevation - z
   else
     depth = - z
   endif
 
   ! depth in km
-  depth = depth / 1000.0  
+  depth = depth / 1000.0
 
   ! 1D profile Cascadia
-  
+
   ! super-imposes values
   if( depth < 1.0 ) then
     ! vp in m/s

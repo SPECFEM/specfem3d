@@ -405,7 +405,7 @@
       write(IMAIN,*) 'error: number of MPI processors actually run on: ',sizeprocs
       print*
       print*, 'error meshfem3D: number of processors supposed to run on: ',NPROC
-      print*, 'error meshfem3D: number of MPI processors actually run on: ',sizeprocs      
+      print*, 'error meshfem3D: number of MPI processors actually run on: ',sizeprocs
       print*
     endif
     call exit_MPI(myrank,'wrong number of MPI processes')

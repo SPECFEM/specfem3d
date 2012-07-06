@@ -45,6 +45,20 @@ fi
 AC_SUBST([CUSTOM_REAL])
 AC_SUBST([CUSTOM_MPI_TYPE])
 
+AC_ARG_WITH([cuda],
+    [AC_HELP_STRING([--with-cuda],
+        [build CUDA GPU enabled version @<:@default=no@:>@])],
+    [want_cuda="$withval"],
+    [want_cuda=no])
+AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" = yes])
+
+AC_ARG_WITH([openmp],
+    [AC_HELP_STRING([--with-openmp],
+        [build OpenMP enabled version @<:@default=no@:>@])],
+    [want_openmp="$withval"],
+    [want_openmp=no])
+AM_CONDITIONAL([COND_OPENMP], [test "$want_openmp" = yes])
+
 
 # Checks for programs.
 
@@ -172,7 +186,7 @@ else
    AC_MSG_ERROR([No suitable yacc or bison found])
  fi
  ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
-
+ 
  #daniel: scotch bundle
  # uses bundled scotch: current version 5.1.11
  USE_BUNDLED_SCOTCH=1
@@ -339,12 +353,16 @@ AC_ARG_VAR(MPILIBS, [extra libraries for linking MPI programs])
 AC_ARG_VAR(MPICC, [MPI C compiler command])
 AC_ARG_VAR(FLAGS_CHECK, [Fortran compiler flags for non-critical subroutines])
 AC_ARG_VAR(FLAGS_NO_CHECK, [Fortran compiler flags for creating fast, production-run code for critical subroutines])
+AC_ARG_VAR(CUDA_LIB,[Location of CUDA library libcudart])
+AC_ARG_VAR(CUDA_INC,[Location of CUDA include files])
+AC_ARG_VAR(MPI_INC,[Location of MPI include mpi.h, which is needed by nvcc when compiling cuda files])
 if test x"$MPIFC" = x; then
     MPIFC=mpif90
 fi
 if test x"$MPICC" = x; then
     MPICC=mpicc
 fi
+AC_ARG_VAR(OPENMP_LIB,[Location of extra OpenMP libraries])
 
 AC_ARG_VAR(LOCAL_PATH_IS_ALSO_GLOBAL, [files on a local path on each node are also seen as global with same path @<:@default=true@:>@])
 if test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x; then
@@ -415,9 +433,16 @@ if test "$want_pyre" = yes; then
     CIT_FC_MAIN
 fi
 
+if test "$want_cuda" = yes; then
+    CIT_CUDA_COMPILER
+fi
+
+if test "$want_openmp" = yes; then
+    CIT_FC_OPENMP_MODULE([$FC],[$FLAGS_NO_CHECK])        
+fi
+
 
 # Checks for library functions.
-
 
 AC_CONFIG_FILES([
 	Makefile
@@ -434,5 +459,11 @@ AC_CONFIG_FILES([
 ])
 AC_OUTPUT
 
+#daniel: adding custom lines to config.h.in through autoheader
+AH_BOTTOM([
+/* Uncomment and define to select optimized file i/o for regional simulations */
+/* map fails when output files are > 4GB, which is often the case for GPU simulations */
+// #define USE_MAP_FUNCTION
+])
 
 dnl end of configure.ac

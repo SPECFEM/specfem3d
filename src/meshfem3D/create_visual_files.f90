@@ -71,7 +71,7 @@
              ibool(2,2,2,ispec)
      end do
      close(64)
-     
+
   end if
 
 
@@ -127,7 +127,7 @@
   end if
 
   if( CREATE_VTK_FILES ) then
-    ! vtk file output    
+    ! vtk file output
     open(66,file=prname(1:len_trim(prname))//'mesh.vtk',status='unknown')
     write(66,'(a)') '# vtk DataFile Version 3.1'
     write(66,'(a)') 'material model VTK file'
@@ -136,7 +136,7 @@
     write(66, '(a,i12,a)') 'POINTS ', nglob, ' float'
     do ipoin = 1,nglob
       write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
-    enddo    
+    enddo
     write(66,*) ""
 
     ! note: indices for vtk start at 0
@@ -161,7 +161,7 @@
     enddo
     write(66,*) ""
     close(66)
-  
+
   endif
 
   call sync_all()

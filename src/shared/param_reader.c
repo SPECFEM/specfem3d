@@ -142,7 +142,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   /* Regular expression for parsing lines from param file.
    ** Good luck reading this regular expression.  Basically, the lines of
    ** the parameter file should be of the form 'parameter = value',
-   ** optionally followed by a #-delimited comment.  
+   ** optionally followed by a #-delimited comment.
    ** 'value' can be any number of space- or tab-separated words. Blank
    ** lines, lines containing only white space and lines whose first non-
    ** whitespace character is '#' are ignored.  White space is generally

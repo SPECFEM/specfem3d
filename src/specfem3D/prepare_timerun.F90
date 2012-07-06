@@ -76,6 +76,13 @@
     endif
 
     write(IMAIN,*)
+    if(GRAVITY) then
+      write(IMAIN,*) 'incorporating gravity'
+    else
+      write(IMAIN,*) 'no gravity'
+    endif
+
+    write(IMAIN,*)
     if(ACOUSTIC_SIMULATION) then
       write(IMAIN,*) 'incorporating acoustic simulation'
     else
@@ -176,6 +183,9 @@
   ! prepares attenuation arrays
   call prepare_timerun_attenuation()
 
+  ! prepares gravity arrays
+  call prepare_timerun_gravity()
+
   ! initializes PML arrays
   if( ABSORBING_CONDITIONS  ) then
     if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then
@@ -210,10 +220,11 @@
     write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
     write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
     write(IMAIN,*)
-    
-    !debug: time estimation
+
+    !daniel debug: time estimation
     ! elastic elements: time per element t_per_element = 1.40789368e-05 s
     ! total time = nspec * nstep * t_per_element
+
   endif
 
   ! prepares ADJOINT simulations
@@ -221,6 +232,14 @@
 
   ! prepares noise simulations
   call prepare_timerun_noise()
+
+  ! prepares GPU arrays
+  if(GPU_MODE) call prepare_timerun_GPU()
+
+#ifdef OPENMP_MODE
+  ! prepares arrays for OpenMP
+  call prepare_timerun_OpenMP()
+#endif
 
   end subroutine prepare_timerun
 
@@ -416,6 +435,100 @@
 
   end subroutine prepare_timerun_attenuation
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_gravity()
+
+! precomputes gravity factors
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
+
+  ! local parameters
+  double precision RICB,RCMB,RTOPDDOUBLEPRIME, &
+    R80,R220,R400,R600,R670,R771,RMOHO,RMIDDLE_CRUST,ROCEAN
+  double precision :: rspl_gravity(NR),gspl(NR),gspl2(NR)
+  double precision :: radius,g,dg ! radius_km
+  !double precision :: g_cmb_dble,g_icb_dble
+  double precision :: rho,drhodr,vp,vs,Qkappa,Qmu
+  integer :: nspl_gravity !int_radius
+  integer :: i,j,k,iglob,ier
+
+  ! sets up weights needed for integration of gravity
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        wgll_cube(i,j,k) = sngl( wxgll(i)*wygll(j)*wzgll(k) )
+      enddo
+    enddo
+  enddo
+
+  ! store g, rho and dg/dr=dg using normalized radius in lookup table every 100 m
+  ! get density and velocity from PREM model using dummy doubling flag
+  ! this assumes that the gravity perturbations are small and smooth
+  ! and that we can neglect the 3D model and use PREM every 100 m in all cases
+  ! this is probably a rather reasonable assumption
+  if(GRAVITY) then
+
+    ! allocates gravity arrays
+    allocate( minus_deriv_gravity(NGLOB_AB), &
+             minus_g(NGLOB_AB), stat=ier)
+    if( ier /= 0 ) stop 'error allocating gravity arrays'
+
+    ! sets up spline table
+    call make_gravity(nspl_gravity,rspl_gravity,gspl,gspl2, &
+                          ROCEAN,RMIDDLE_CRUST,RMOHO,R80,R220,R400,R600,R670, &
+                          R771,RTOPDDOUBLEPRIME,RCMB,RICB)
+
+    ! pre-calculates gravity terms for all global points
+    do iglob = 1,NGLOB_AB
+
+      ! normalized radius ( zstore values given in m, negative values for depth)
+      radius = ( R_EARTH + zstore(iglob) ) / R_EARTH
+      call spline_evaluation(rspl_gravity,gspl,gspl2,nspl_gravity,radius,g)
+
+      ! use PREM density profile to calculate gravity (fine for other 1D models)
+      call model_prem_iso(radius,rho,drhodr,vp,vs,Qkappa,Qmu, &
+                        RICB,RCMB,RTOPDDOUBLEPRIME, &
+                        R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
+
+      dg = 4.0d0*rho - 2.0d0*g/radius
+
+      ! re-dimensionalize
+      g = g * R_EARTH*(PI*GRAV*RHOAV) ! in m / s^2 ( should be around 10 m/s^2 )
+      dg = dg * R_EARTH*(PI*GRAV*RHOAV) / R_EARTH ! gradient d/dz g , in 1/s^2
+
+      minus_deriv_gravity(iglob) = - dg
+      minus_g(iglob) = - g ! in negative z-direction
+
+      ! debug
+      !if( iglob == 1 .or. iglob == 1000 .or. iglob == 10000 ) then
+      !  ! re-dimensionalize
+      !  radius = radius * R_EARTH ! in m
+      !  vp = vp * R_EARTH*dsqrt(PI*GRAV*RHOAV)  ! in m / s
+      !  rho = rho  * RHOAV  ! in kg / m^3
+      !  print*,'gravity: radius=',radius,'g=',g,'depth=',radius-R_EARTH
+      !  print*,'vp=',vp,'rho=',rho,'kappa=',(vp**2) * rho
+      !  print*,'minus_g..=',minus_g(iglob)
+      !endif
+    enddo
+
+  else
+
+    ! allocates dummy gravity arrays
+    allocate( minus_deriv_gravity(0), &
+             minus_g(0), stat=ier)
+    if( ier /= 0 ) stop 'error allocating gravity arrays'
+
+  endif
+
+  end subroutine prepare_timerun_gravity
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -553,6 +666,14 @@
         ! size of single record
         b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
 
+        ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
+        if( num_abs_boundary_faces > 2147483647 / (CUSTOM_REAL * NDIM * NGLLSQUARE) ) then
+          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
+          print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
+          print*,'bit size fortran: ',bit_size(b_reclen_field)
+          call exit_MPI(myrank,"error b_reclen_field integer limit")
+        endif
+
         ! total file size
         filesize = b_reclen_field
         filesize = filesize*NSTEP
@@ -594,12 +715,20 @@
         ! size of single record
         b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
 
+        ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
+        if( num_abs_boundary_faces > 2147483647 / (CUSTOM_REAL * NGLLSQUARE) ) then
+          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
+          print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
+          print*,'bit size fortran: ',bit_size(b_reclen_potential)
+          call exit_MPI(myrank,"error b_reclen_potential integer limit")
+        endif
+
         ! total file size (two lines to implicitly convert to 8-byte integers)
         filesize = b_reclen_potential
         filesize = filesize*NSTEP
 
-        ! daniel: debug check size limit
-        !if( NSTEP > 2147483648 / b_reclen_potential ) then
+        ! debug check size limit
+        !if( NSTEP > 2147483647 / b_reclen_potential ) then
         !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
         !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
         !  print*,'file size fortran: ',filesize
@@ -633,9 +762,8 @@
 
         endif
       endif
-
     else
-      ! dummy array
+      ! needs dummy array
       b_num_abs_boundary_faces = 1
       if( ELASTIC_SIMULATION ) then
         allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
@@ -646,9 +774,21 @@
         allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
       endif
+    endif
+  else ! ABSORBING_CONDITIONS
+    ! needs dummy array
+    b_num_abs_boundary_faces = 1
+    if( ELASTIC_SIMULATION ) then
+      allocate(b_absorb_field(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array b_absorb_field'
+    endif
 
+    if( ACOUSTIC_SIMULATION ) then
+      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
     endif
   endif
+
 
   end subroutine prepare_timerun_adjoint
 
@@ -674,7 +814,8 @@
 
     ! checks if free surface is defined
     if( num_free_surface_faces == 0 ) then
-      stop 'error: noise simulations need a free surface'
+       write(*,*) myrank, " doesn't have a free_surface_face"
+       ! stop 'error: noise simulations need a free surface'
     endif
 
     ! allocates arrays
@@ -719,3 +860,258 @@
 
   end subroutine prepare_timerun_noise
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_GPU()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  use specfem_par_movie
+
+  implicit none
+  real :: free_mb,used_mb,total_mb
+
+  ! GPU_MODE now defined in Par_file
+  if(myrank == 0 ) then
+    write(IMAIN,*)
+    write(IMAIN,*) "GPU Preparing Fields and Constants on Device."
+    write(IMAIN,*)
+  endif
+
+  ! prepares general fields on GPU
+  call prepare_constants_device(Mesh_pointer, &
+                                  NGLLX, NSPEC_AB, NGLOB_AB, &
+                                  xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
+                                  kappastore, mustore,ibool, &
+                                  num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
+                                  nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &
+                                  hprime_xx, hprime_yy, hprime_zz, &
+                                  hprimewgll_xx, hprimewgll_yy, hprimewgll_zz, &
+                                  wgllwgll_xy, wgllwgll_xz, wgllwgll_yz, &
+                                  ABSORBING_CONDITIONS, &
+                                  abs_boundary_ispec, abs_boundary_ijk, &
+                                  abs_boundary_normal, &
+                                  abs_boundary_jacobian2Dw, &
+                                  num_abs_boundary_faces, &
+                                  ispec_is_inner, &
+                                  NSOURCES, nsources_local, &
+                                  sourcearrays, islice_selected_source, ispec_selected_source, &
+                                  number_receiver_global, ispec_selected_rec, &
+                                  nrec, nrec_local, &
+                                  SIMULATION_TYPE, &
+                                  USE_MESH_COLORING_GPU, &
+                                  nspec_acoustic,nspec_elastic,&
+                                  my_neighbours_ext_mesh,&
+                                  request_send_vector_ext_mesh,&
+                                  request_recv_vector_ext_mesh,&
+                                  buffer_recv_vector_ext_mesh)
+
+
+  ! prepares fields on GPU for acoustic simulations
+  if( ACOUSTIC_SIMULATION ) then
+    call prepare_fields_acoustic_device(Mesh_pointer,rmass_acoustic,rhostore,kappastore, &
+                                  num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+                                  ispec_is_acoustic, &
+                                  NOISE_TOMOGRAPHY,num_free_surface_faces, &
+                                  free_surface_ispec,free_surface_ijk, &
+                                  ABSORBING_CONDITIONS,b_reclen_potential,b_absorb_potential, &
+                                  ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
+                                  coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                  coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
+                                  num_colors_outer_acoustic,num_colors_inner_acoustic, &
+                                  num_elem_colors_acoustic)
+
+    if( SIMULATION_TYPE == 3 ) &
+      call prepare_fields_acoustic_adj_dev(Mesh_pointer, &
+                                  SIMULATION_TYPE, &
+                                  APPROXIMATE_HESS_KL)
+
+  endif
+
+  ! prepares fields on GPU for elastic simulations
+  if( ELASTIC_SIMULATION ) then
+    call prepare_fields_elastic_device(Mesh_pointer, NDIM*NGLOB_AB, &
+                                  rmass,rho_vp,rho_vs, &
+                                  num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+                                  ispec_is_elastic, &
+                                  ABSORBING_CONDITIONS,b_absorb_field,b_reclen_field, &
+                                  SIMULATION_TYPE,SAVE_FORWARD, &
+                                  COMPUTE_AND_STORE_STRAIN, &
+                                  epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                  epsilondev_xz,epsilondev_yz, &
+                                  ATTENUATION, &
+                                  size(R_xx), &
+                                  R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                  one_minus_sum_beta,factor_common, &
+                                  alphaval,betaval,gammaval, &
+                                  OCEANS,rmass_ocean_load, &
+                                  NOISE_TOMOGRAPHY, &
+                                  free_surface_normal,free_surface_ispec,free_surface_ijk, &
+                                  num_free_surface_faces, &
+                                  ACOUSTIC_SIMULATION, &
+                                  num_colors_outer_elastic,num_colors_inner_elastic, &
+                                  num_elem_colors_elastic, &
+                                  ANISOTROPY, &
+                                  c11store,c12store,c13store,c14store,c15store,c16store, &
+                                  c22store,c23store,c24store,c25store,c26store, &
+                                  c33store,c34store,c35store,c36store, &
+                                  c44store,c45store,c46store,c55store,c56store,c66store)
+
+    if( SIMULATION_TYPE == 3 ) &
+      call prepare_fields_elastic_adj_dev(Mesh_pointer, NDIM*NGLOB_AB, &
+                                  SIMULATION_TYPE, &
+                                  COMPUTE_AND_STORE_STRAIN, &
+                                  epsilon_trace_over_3, &
+                                  b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                                  b_epsilondev_xz,b_epsilondev_yz, &
+                                  b_epsilon_trace_over_3, &
+                                  ATTENUATION,size(R_xx), &
+                                  b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                                  b_alphaval,b_betaval,b_gammaval, &
+                                  APPROXIMATE_HESS_KL)
+
+  endif
+
+  ! prepares fields on GPU for poroelastic simulations
+  if( POROELASTIC_SIMULATION ) then
+    stop 'todo poroelastic simulations on GPU'
+  endif
+
+  ! prepares needed receiver array for adjoint runs
+  if( SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3 ) &
+    call prepare_sim2_or_3_const_device(Mesh_pointer, &
+                                       islice_selected_rec,size(islice_selected_rec), &
+                                       nadj_rec_local,nrec,myrank)
+
+  ! prepares fields on GPU for noise simulations
+  if ( NOISE_TOMOGRAPHY > 0 ) then
+    ! note: noise tomography is only supported for elastic domains so far.
+
+    ! copies noise  arrays to GPU
+    call prepare_fields_noise_device(Mesh_pointer, NSPEC_AB, NGLOB_AB, &
+                                  free_surface_ispec, &
+                                  free_surface_ijk, &
+                                  num_free_surface_faces, &
+                                  SIMULATION_TYPE,NOISE_TOMOGRAPHY, &
+                                  NSTEP,noise_sourcearray, &
+                                  normal_x_noise,normal_y_noise,normal_z_noise, &
+                                  mask_noise,free_surface_jacobian2Dw)
+
+  endif ! NOISE_TOMOGRAPHY
+
+  ! prepares gravity arrays
+  if( GRAVITY ) then
+    call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
+                                    minus_deriv_gravity,minus_g,wgll_cube,&
+                                    ACOUSTIC_SIMULATION,rhostore)
+  endif
+
+  ! sends initial data to device
+
+  ! puts acoustic initial fields onto GPU
+  if( ACOUSTIC_SIMULATION ) then
+    call transfer_fields_ac_to_device(NGLOB_AB,potential_acoustic, &
+                          potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+    if( SIMULATION_TYPE == 3 ) &
+      call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
+                          b_potential_dot_acoustic,b_potential_dot_dot_acoustic,Mesh_pointer)
+  endif
+
+  ! puts elastic initial fields onto GPU
+  if( ELASTIC_SIMULATION ) then
+    ! transfer forward and backward fields to device with initial values
+    call transfer_fields_el_to_device(NDIM*NGLOB_AB,displ,veloc,accel,Mesh_pointer)
+    if(SIMULATION_TYPE == 3) &
+      call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
+  endif
+
+  ! outputs GPU usage to files for all processes
+  call output_free_device_memory(myrank)
+
+  ! outputs usage for main process
+  if( myrank == 0 ) then
+    call get_free_device_memory(free_mb,used_mb,total_mb)
+    write(IMAIN,*) "GPU usage: free  =",free_mb," MB",nint(free_mb/total_mb*100.0),"%"
+    write(IMAIN,*) "           used  =",used_mb," MB",nint(used_mb/total_mb*100.0),"%"
+    write(IMAIN,*) "           total =",total_mb," MB",nint(total_mb/total_mb*100.0),"%"
+    write(IMAIN,*)
+  endif
+
+  end subroutine prepare_timerun_GPU
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! OpenMP version uses "special" compute_forces_elastic_Dev routine
+! we need to set num_elem_colors_elastic arrays
+
+#ifdef OPENMP_MODE
+  subroutine prepare_timerun_OpenMP()
+
+  use specfem_par
+  use specfem_par_elastic
+  implicit none
+
+  ! local parameters
+  integer :: ier
+  integer :: NUM_THREADS
+  integer :: OMP_GET_MAX_THREADS
+
+  ! OpenMP for elastic simulation only supported yet
+  if( ELASTIC_SIMULATION ) then
+
+    NUM_THREADS = OMP_GET_MAX_THREADS()
+    if( myrank == 0 ) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'Using:',NUM_THREADS, ' OpenMP threads'
+      write(IMAIN,*)
+    endif
+
+    ! allocate cfe_Dev_openmp local arrays for OpenMP version
+    allocate(dummyx_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(dummyy_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(dummyz_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(newtempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempy1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempy2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempy3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+
+    ! set num_elem_colors array in case no mesh coloring is used
+    if( .not. USE_MESH_COLORING_GPU ) then
+      ! deallocate dummy array
+      if( allocated(num_elem_colors_elastic) ) deallocate(num_elem_colors_elastic)
+
+      ! loads with corresonding values
+      num_colors_outer_elastic = 1
+      num_colors_inner_elastic = 1
+      allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
+      if( ier /= 0 ) stop 'error allocating num_elem_colors_elastic array'
+
+      ! sets to all elements in inner/outer phase
+      num_elem_colors_elastic(1) = nspec_outer_elastic
+      num_elem_colors_elastic(2) = nspec_inner_elastic
+    endif
+
+  endif
+
+  end subroutine prepare_timerun_OpenMP
+#endif

@@ -24,7 +24,7 @@
 module sum_par
 
   include 'constants.h'
-  
+
   ! USER PARAMETERS
 
   ! by default, this algorithm uses transverse isotropic (bulk,bulk_betav,bulk_betah,eta) kernels to sum up
@@ -38,13 +38,13 @@ module sum_par
 
   ! 1 permille of maximum for inverting hessian
   real(kind=CUSTOM_REAL),parameter :: THRESHOLD_HESS = 1.e-3
-  
+
   ! sums all hessians before inverting and preconditioning
   logical, parameter :: USE_HESS_SUM = .true.
-  
+
   ! uses source mask to blend out source elements
   logical, parameter :: USE_SOURCE_MASK = .false.
-  
+
   ! maximum number of kernels listed
   integer, parameter :: MAX_NUM_NODES = 1000
 
@@ -53,7 +53,7 @@ module sum_par
 
   ! mesh size
   integer :: NSPEC_AB, NGLOB_AB
-    
+
 end module sum_par
 
 !
@@ -64,7 +64,7 @@ program sum_kernels
 
   use sum_par
   implicit none
-  
+
   include 'mpif.h'
   include 'precision.h'
 
@@ -102,7 +102,7 @@ program sum_kernels
     write(*,*) 'reading kernel list: '
   endif
   call mpi_barrier(MPI_COMM_WORLD,ier)
-  
+
   ! reads in event list
   nker=0
   open(unit = 20, file = trim(kernel_file_list), status = 'old',iostat = ios)
@@ -150,7 +150,7 @@ program sum_kernels
   ! reads mesh file
   !
   ! needs to get array dimensions
-    
+
   ! opens external mesh file
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
   open(unit=27,file=trim(prname_lp),&
@@ -161,7 +161,7 @@ program sum_kernels
     call exit_mpi(myrank, 'error reading external mesh file')
   endif
 
-  ! gets number of elements and global points for this partition          
+  ! gets number of elements and global points for this partition
   read(27) NSPEC_AB
   read(27) NGLOB_AB
 
@@ -177,7 +177,7 @@ program sum_kernels
 
   ! synchronizes
   call mpi_barrier(MPI_COMM_WORLD,ier)
-  
+
   ! sums up kernels
   if( USE_ISO_KERNELS ) then
 
@@ -260,18 +260,18 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
   allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           hess(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-  
-  
-  if( USE_HESS_SUM ) then  
+
+
+  if( USE_HESS_SUM ) then
     allocate( total_hess(NGLLX,NGLLY,NGLLZ,NSPEC_AB) )
-    total_hess(:,:,:,:) = 0.0_CUSTOM_REAL    
+    total_hess(:,:,:,:) = 0.0_CUSTOM_REAL
   endif
-  
-  if( USE_SOURCE_MASK ) then  
+
+  if( USE_SOURCE_MASK ) then
     allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC_AB) )
-    mask_source(:,:,:,:) = 1.0_CUSTOM_REAL      
+    mask_source(:,:,:,:) = 1.0_CUSTOM_REAL
   endif
-  
+
   ! loops over all event kernels
   total_kernel = 0._CUSTOM_REAL
   do iker = 1, nker
@@ -295,7 +295,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
     read(12) kernel
     close(12)
 
-    ! outputs norm of kernel 
+    ! outputs norm of kernel
     norm = sum( kernel * kernel )
     call mpi_reduce(norm,norm_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
     if( myrank == 0 ) then
@@ -326,7 +326,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
 
     ! note: we take absolute values for hessian (as proposed by Yang)
     hess = abs(hess)
-    
+
     ! source mask
     if( USE_SOURCE_MASK ) then
       ! reads in mask
@@ -339,10 +339,10 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
       endif
       read(12) mask_source
       close(12)
-      
+
       ! masks source elements
       kernel = kernel * mask_source
-      
+
     endif
 
     ! precondition
@@ -355,26 +355,26 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
 
       ! inverts hessian
       call invert_hess( myrank,hess )
-      
+
       ! preconditions each event kernel with its hessian
       kernel = kernel * hess
 
     endif
-    
+
     ! sums all kernels from each event
     total_kernel = total_kernel + kernel
-      
+
   enddo
 
   ! preconditions summed kernels with summed hessians
   if( USE_HESS_SUM ) then
-  
+
       ! inverts hessian matrix
       call invert_hess( myrank,total_hess )
-      
+
       ! preconditions kernel
       total_kernel = total_kernel * total_hess
-  
+
   endif
 
   ! stores summed kernels
@@ -396,7 +396,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
   deallocate(kernel,hess,total_kernel)
   if( USE_HESS_SUM ) deallocate(total_hess)
   if( USE_SOURCE_MASK ) deallocate(mask_source)
-  
+
 end subroutine sum_kernel_pre
 
 !
@@ -409,7 +409,7 @@ subroutine invert_hess( myrank,hess_matrix )
 ! the approximate hessian is only defined for diagonal elements: like
 ! H_nn = \frac{ \partial^2 \chi }{ \partial \rho_n \partial \rho_n }
 ! on all GLL points, which are indexed (i,j,k,ispec)
-  
+
   use sum_par
   implicit none
 
@@ -423,30 +423,30 @@ subroutine invert_hess( myrank,hess_matrix )
   ! local parameters
   real(kind=CUSTOM_REAL) :: maxh,maxh_all
   integer :: ier
-  
+
   ! maximum value of hessian
   maxh = maxval( abs(hess_matrix) )
 
   ! determines maximum from all slices on master
   call mpi_allreduce(maxh,maxh_all,1,CUSTOM_MPI_TYPE,MPI_MAX,MPI_COMM_WORLD,ier)
-  
+
   ! user output
   if( myrank == 0 ) then
     print*
     print*,'hessian maximum: ',maxh_all
     print*
   endif
-  
-  ! normalizes hessian 
+
+  ! normalizes hessian
   if( maxh_all < 1.e-18 ) then
-    ! hessian is zero, re-initializes 
+    ! hessian is zero, re-initializes
     hess_matrix = 1.0_CUSTOM_REAL
     !call exit_mpi(myrank,'error hessian too small')
   else
     ! since hessian has absolute values, this scales between [0,1]
-    hess_matrix = hess_matrix / maxh_all  
+    hess_matrix = hess_matrix / maxh_all
   endif
-  
+
 
   ! inverts hessian values
   where( abs(hess_matrix(:,:,:,:)) > THRESHOLD_HESS )
@@ -457,5 +457,5 @@ subroutine invert_hess( myrank,hess_matrix )
 
   ! rescales hessian
   !hess_matrix = hess_matrix * maxh_all
-  
+
 end subroutine invert_hess

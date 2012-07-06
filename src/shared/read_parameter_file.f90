@@ -50,7 +50,7 @@
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
 
   character(len=256) LOCAL_PATH,CMTSOLUTION
-  
+
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
   double precision :: hdur,minval_hdur
@@ -101,7 +101,7 @@
   ! define the velocity model
   call read_value_string(MODEL, 'model.MODEL')
   if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file: MODEL'
-  
+
   call read_value_logical(OCEANS, 'model.OCEANS')
   if(err_occurred() /= 0) return
   call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY')
@@ -178,15 +178,15 @@
   call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION',&
        IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
 
-  open(unit=1,file=CMTSOLUTION,iostat=ios,status='old',action='read')
+  open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
   if(ios /= 0) stop 'error opening CMTSOLUTION file'
 
   icounter = 0
   do while(ios == 0)
-    read(1,"(a)",iostat=ios) dummystring
+    read(21,"(a)",iostat=ios) dummystring
     if(ios == 0) icounter = icounter + 1
   enddo
-  close(1)
+  close(21)
 
   if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
     stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
@@ -195,27 +195,27 @@
   if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
 
   ! compute the minimum value of hdur in CMTSOLUTION file
-  open(unit=1,file=CMTSOLUTION,status='old',action='read')
+  open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
   minval_hdur = HUGEVAL
   do isource = 1,NSOURCES
 
     ! skip other information
     do idummy = 1,3
-      read(1,"(a)") dummystring
+      read(21,"(a)") dummystring
     enddo
 
     ! read half duration and compute minimum
-    read(1,"(a)") dummystring
+    read(21,"(a)") dummystring
     read(dummystring(15:len_trim(dummystring)),*) hdur
     minval_hdur = min(minval_hdur,hdur)
 
     ! skip other information
     do idummy = 1,9
-      read(1,"(a)") dummystring
+      read(21,"(a)") dummystring
     enddo
 
   enddo
-  close(1)
+  close(21)
 
   ! one cannot use a Heaviside source for the movies
   if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
@@ -242,24 +242,62 @@
   case( '1d_cascadia')
     IMODEL = IMODEL_1D_CASCADIA
 
-  ! user models  
+  ! user models
+  case( '1d_prem_pb' )
+    IMODEL = IMODEL_1D_PREM_PB
+  case( 'aniso' )
+    IMODEL = IMODEL_DEFAULT
+    ANISOTROPY = .true.
+  case( 'external' )
+    IMODEL = IMODEL_USER_EXTERNAL
+  case( 'ipati' )
+    IMODEL = IMODEL_IPATI
+  case( 'gll' )
+    IMODEL = IMODEL_GLL
   case( 'salton_trough')
     IMODEL = IMODEL_SALTON_TROUGH
   case( 'tomo' )
     IMODEL = IMODEL_TOMO
-  case( 'external' )
-    IMODEL = IMODEL_USER_EXTERNAL
-  case( 'aniso' )
-    IMODEL = IMODEL_DEFAULT
-    ANISOTROPY = .true.
-  case default  
+
+  case default
     print*
     print*,'********** model not recognized: ',trim(MODEL),' **************'
     print*,'********** using model: default',' **************'
     print*
     IMODEL = IMODEL_DEFAULT
   end select
-  
+
+  ! check
+  if( IMODEL == IMODEL_IPATI ) then
+    if( USE_RICKER_IPATI .eqv. .false. ) stop 'please set USE_RICKER_IPATI to true in shared/constants.h and recompile'
+  endif
 
   end subroutine read_parameter_file
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_gpu_mode(GPU_MODE,GRAVITY)
+
+  implicit none
+  include "constants.h"
+
+  logical :: GPU_MODE
+  logical :: GRAVITY
+
+  ! initializes flags
+  GPU_MODE = .false.
+  GRAVITY = .false.
+
+  ! opens file Par_file
+  call open_parameter_file()
+
+  call read_value_logical(GPU_MODE, 'solver.GPU_MODE')
+  call read_value_logical(GRAVITY, 'solver.GRAVITY')
+
+  ! close parameter file
+  call close_parameter_file()
+
+  end subroutine read_gpu_mode
 

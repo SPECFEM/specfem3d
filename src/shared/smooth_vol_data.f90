@@ -73,7 +73,7 @@ program smooth_vol_data
   real(kind=CUSTOM_REAL), dimension(:,:),allocatable :: dummy_2
   real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: dummy_3
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),allocatable :: dummy_5
-  
+
   integer, dimension(:),allocatable :: idummy
   logical, dimension(:),allocatable :: ldummy
   integer, dimension(:,:,:),allocatable :: idummy_3
@@ -262,7 +262,7 @@ program smooth_vol_data
   ! reads mesh file
   !
   ! needs to get point locations, jacobians and MPI neighbours
-    
+
   ! opens external mesh file
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
   open(unit=27,file=trim(prname_lp),&
@@ -273,7 +273,7 @@ program smooth_vol_data
     call exit_mpi(myrank, 'error reading external mesh file')
   endif
 
-  ! gets number of elements and global points for this partition          
+  ! gets number of elements and global points for this partition
   read(27) NSPEC_AB
   read(27) NGLOB_AB
 
@@ -292,7 +292,7 @@ program smooth_vol_data
   allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating array dummy and jacobian'
-  
+
   ! needs jacobian
   read(27) dummy ! xix
   read(27) dummy ! xiy
@@ -306,7 +306,7 @@ program smooth_vol_data
   read(27) jacobian
 
   ! now skips all until MPI section can be read in
-  
+
   ! reads in partiton neighbors
   read(27) dummy ! kappastore
   read(27) dummy ! mustore
@@ -331,7 +331,7 @@ program smooth_vol_data
     read(27) dummy_1 ! rmass_acoustic
     read(27) dummy ! rhostore
   endif
-  
+
   ! elastic
   if( ELASTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass
@@ -341,28 +341,28 @@ program smooth_vol_data
     read(27) dummy ! rho_vp
     read(27) dummy ! rho_vs
   endif
-  
+
   ! poroelastic
   if( POROELASTIC_SIMULATION ) then
     read(27) dummy_1 ! rmass_solid_poroelastic
     read(27) dummy_1 ! rmass_fluid_poroelastic
     allocate(dummy_5(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) dummy_5 ! rhoarraystore
-    deallocate(dummy_5)    
+    deallocate(dummy_5)
     allocate(dummy_5(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) dummy_5 ! kappaarraystore
     deallocate(dummy_5)
     read(27) dummy ! etastore
-    read(27) dummy ! tortstore    
+    read(27) dummy ! tortstore
     allocate(dummy_5(6,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) dummy_5 ! permstore
     deallocate(dummy_5)
     read(27) dummy ! phistore
     read(27) dummy ! rho_vpI
     read(27) dummy ! rho_vpII
-    read(27) dummy ! rho_vsI    
+    read(27) dummy ! rho_vsI
   endif
-  
+
   deallocate(dummy_1)
   deallocate(dummy)
 
@@ -388,7 +388,7 @@ program smooth_vol_data
     read(27) dummy_3 ! abs_boundary_normal
     deallocate( idummy,idummy_3,dummy_2,dummy_3)
   endif
-  
+
   ! free surface
   read(27) idummy_a ! num_free_surface_faces
   if( idummy_a > 0 ) then
@@ -403,7 +403,7 @@ program smooth_vol_data
     read(27) dummy_3  ! free_surface_normal
     deallocate( idummy,idummy_3,dummy_2,dummy_3)
   endif
-  
+
   ! acoustic-elastic coupling surface
   read(27) idummy_a ! num_coupling_ac_el_faces
   if( idummy_a > 0 ) then
@@ -411,7 +411,7 @@ program smooth_vol_data
             idummy_3(3,NGLLSQUARE,idummy_a), &
             dummy_2(NGLLSQUARE,idummy_a), &
             dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array idummy etc.'  
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'
     read(27) idummy   ! coupling_ac_el_ispec
     read(27) idummy_3 ! coupling_ac_el_ijk
     read(27) dummy_2  ! coupling_ac_el_jacobian2Dw
@@ -426,7 +426,7 @@ program smooth_vol_data
             idummy_3(3,NGLLSQUARE,idummy_a), &
             dummy_2(NGLLSQUARE,idummy_a), &
             dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array idummy etc.'  
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'
     read(27) idummy   ! coupling_ac_po_ispec
     read(27) idummy_3 ! coupling_ac_po_ijk
     read(27) dummy_2  ! coupling_ac_po_jacobian2Dw
@@ -441,11 +441,11 @@ program smooth_vol_data
             idummy_3(3,NGLLSQUARE,idummy_a), &
             dummy_2(NGLLSQUARE,idummy_a), &
             dummy_3(NDIM,NGLLSQUARE,idummy_a),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array idummy etc.'  
+    if( ier /= 0 ) stop 'error allocating array idummy etc.'
     read(27) idummy   ! coupling_el_po_ispec
-    read(27) idummy   ! coupling_po_el_ispec    
+    read(27) idummy   ! coupling_po_el_ispec
     read(27) idummy_3 ! coupling_el_po_ijk
-    read(27) idummy_3 ! coupling_po_el_ijk    
+    read(27) idummy_3 ! coupling_po_el_ijk
     read(27) dummy_2  ! coupling_el_po_jacobian2Dw
     read(27) dummy_3  ! coupling_el_po_normal
     deallocate( idummy,idummy_3,dummy_2,dummy_3)
@@ -461,12 +461,12 @@ program smooth_vol_data
     read(27) my_neighbours_ext_mesh
     ! no more information is needed from external mesh files
   endif
-  
+
   ! we're done reading in mesh arrays
   close(27)
 
 ! ---------------------
-  
+
   ! for smoothing, we use cell centers to find and locate nearby elements
   !
   ! sets the location of the center of the elements and local points

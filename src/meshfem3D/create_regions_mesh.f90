@@ -397,7 +397,7 @@ contains
     if( ier /= 0 ) stop 'error allocating array nodes_coords'
     nodes_coords(:,:) = 0.0d0
     ibool(:,:,:,:) = 0
-    
+
     do ispec=1,nspec
        ieoff = NGLLCUBE*(ispec-1)
        ilocnum = 0
@@ -413,7 +413,7 @@ contains
           enddo
        enddo
     enddo
-    
+
     ! checks ibool range
     if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
        print*,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob

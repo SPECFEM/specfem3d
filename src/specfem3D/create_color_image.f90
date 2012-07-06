@@ -33,32 +33,32 @@
   ! USER PARAMETER
 
   ! image data output:
-  !   type = 1 : velocity V_x component
-  !   type = 2 : velocity V_y component
-  !   type = 3 : velocity V_z component
-  !   type = 4 : velocity V norm
-  integer,parameter:: IMAGE_TYPE = 3
+  !   type = 1 : displ/velocity x-component
+  !   type = 2 : displ/velocity y-component
+  !   type = 3 : displ/velocity z-component
+  !   type = 4 : displ/velocity norm
+  integer,parameter:: IMAGE_TYPE = 3 ! 4
 
   ! cross-section surface
   ! cross-section origin point
-  real(kind=CUSTOM_REAL),parameter:: section_xorg = 67000.0
-  real(kind=CUSTOM_REAL),parameter:: section_yorg = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_zorg = -1000.0
+  real(kind=CUSTOM_REAL),parameter:: section_xorg = 0.0 ! 67000.0
+  real(kind=CUSTOM_REAL),parameter:: section_yorg = 0.0 ! 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_zorg = -100.0 ! 0.0
 
   ! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0 !1.0
+  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0 !0.0
+  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0 !0.0
 
   ! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0 ! 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0 !1.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0 ! 0.0
 
   ! cross-section (in-plane) vertical-direction
-  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0 ! 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0 ! 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0 ! 1.0
 
   ! non linear display to enhance small amplitudes in color images
   real(kind=CUSTOM_REAL), parameter :: POWER_DISPLAY_COLOR = 0.30_CUSTOM_REAL
@@ -118,6 +118,7 @@
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: dist_pixel_image,dist_pixel_recv
   real(kind=CUSTOM_REAL):: pixel_midpoint_x,pixel_midpoint_z,x_loc,z_loc,xtmp,ztmp
   real(kind=CUSTOM_REAL):: ratio
+  real(kind=CUSTOM_REAL):: distance_x1,distance_x2,distance_z1,distance_z2
   integer:: npgeo,npgeo_glob
   integer:: i,j,k,iproc,iglob,ispec,ier
   ! data from mesh
@@ -129,6 +130,8 @@
   !character(len=256) :: vtkfilename
   integer :: zoom_factor = 4
   logical :: zoom
+  integer, dimension(1) :: tmp_pixel_loc
+  integer, dimension(1,0:NPROC-1) :: tmp_pixel_per_proc
 
   ! checks image type
   if(IMAGE_TYPE > 4 .or. IMAGE_TYPE < 1) then
@@ -263,8 +266,17 @@
   endif
 
   ! create all the pixels
-  size_pixel_horizontal = (xmax_color_image - xmin_color_image) / dble(NX_IMAGE_color)
-  size_pixel_vertical = (zmax_color_image - zmin_color_image) / dble(NZ_IMAGE_color)
+  if( NX_IMAGE_color /= 0 ) then
+    size_pixel_horizontal = (xmax_color_image - xmin_color_image) / dble(NX_IMAGE_color)
+  else
+    size_pixel_horizontal = 0.0
+  endif
+
+  if( NZ_IMAGE_color /= 0 ) then
+    size_pixel_vertical = (zmax_color_image - zmin_color_image) / dble(NZ_IMAGE_color)
+  else
+    size_pixel_vertical = 0.0
+  endif
 
   if (myrank == 0) then
     write(IMAIN,*) '  image points: ',npgeo_glob
@@ -285,6 +297,19 @@
   iglob_image_color(:,:) = -1
   ispec_image_color(:,:) = 0
   dist_pixel_image(:,:) = HUGEVAL
+
+  if( zoom ) then
+    distance_x1 = zoom_factor*size_pixel_horizontal
+    distance_x2 = (zoom_factor+1)*size_pixel_horizontal
+    distance_z1 = zoom_factor*size_pixel_vertical
+    distance_z2 = (zoom_factor+1)*size_pixel_vertical
+  else
+    distance_x1 = 0.0
+    distance_x2 = 2.0*size_pixel_horizontal
+    distance_z1 = 0.0
+    distance_z2 = 2.0*size_pixel_vertical
+  endif
+
   do j=1,NZ_IMAGE_color
     do i=1,NX_IMAGE_color
       ! calculates midpoint of pixel
@@ -307,15 +332,8 @@
         z_loc = zcoord(iglob)
 
         ! checks if inside pixel range for larger numbers of points, minimizing computation time
-        if( zoom ) then
-          if( x_loc < xtmp-zoom_factor*size_pixel_horizontal .or. &
-             x_loc > xtmp + (zoom_factor+1)*size_pixel_horizontal ) cycle
-          if( z_loc < ztmp-zoom_factor*size_pixel_vertical .or. &
-             z_loc > ztmp + (zoom_factor+1)*size_pixel_vertical ) cycle
-        else
-          if( x_loc < xtmp .or. x_loc > xtmp + size_pixel_horizontal ) cycle
-          if( z_loc < ztmp .or. z_loc > ztmp + size_pixel_vertical ) cycle
-        endif
+        if( x_loc < xtmp - distance_x1 .or. x_loc > xtmp + distance_x2 ) cycle
+        if( z_loc < ztmp - distance_z1 .or. z_loc > ztmp + distance_z2 ) cycle
 
         ! stores closest iglob
         x_loc = pixel_midpoint_x - x_loc
@@ -382,7 +400,10 @@
   ! filling array iglob_image_color, containing info on which process owns which pixels.
   allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
   if( ier /= 0 ) stop 'error allocating array nb_pixel_per_proc'
-  call gather_all_i(nb_pixel_loc,1,nb_pixel_per_proc,1,NPROC)
+
+  tmp_pixel_loc(1) = nb_pixel_loc
+  call gather_all_i(tmp_pixel_loc,1,tmp_pixel_per_proc,1,NPROC)
+  nb_pixel_per_proc(:) = tmp_pixel_per_proc(1,:)
 
   ! allocates receiving array
   if ( myrank == 0 ) then
@@ -506,7 +527,7 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM) :: veloc_val
+  real(kind=CUSTOM_REAL),dimension(NDIM) :: val_vector
   real(kind=CUSTOM_REAL):: temp
   integer :: i,j,k,iglob,ispec,iproc
 
@@ -523,15 +544,15 @@
     ispec = ispec_image_color(i,j)
 
     ! gets velocity for point iglob
-    call get_iglob_veloc(iglob,ispec,veloc_val)
+    call get_iglob_veloc(iglob,ispec,val_vector)
 
     ! data type
     if( IMAGE_TYPE == 4 ) then
       ! velocity norm
-      temp = sqrt( veloc_val(1)**2 + veloc_val(2)**2 + veloc_val(3)**2 )
+      temp = sqrt( val_vector(1)**2 + val_vector(2)**2 + val_vector(3)**2 )
     else
       ! velocity component
-      temp = veloc_val(IMAGE_TYPE)
+      temp = val_vector(IMAGE_TYPE)
     endif
 
     ! stores data
@@ -829,53 +850,89 @@
 
 !=============================================================
 
-  subroutine get_iglob_veloc(iglob,ispec,veloc_val)
+  subroutine get_iglob_veloc(iglob,ispec,val_vector)
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,potential_dot_acoustic,&
-                                rhostore,ispec_is_acoustic,b_potential_dot_acoustic
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,veloc,ispec_is_elastic,b_veloc
+  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
+                                rhostore,ispec_is_acoustic, &
+                                b_potential_acoustic,b_potential_dot_acoustic
+  use specfem_par_elastic,only: ELASTIC_SIMULATION,displ,veloc, &
+                                ispec_is_elastic,b_displ,b_veloc
   use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,SIMULATION_TYPE
+                        ibool,SIMULATION_TYPE,GRAVITY
+  use specfem_par_movie,only:SAVE_DISPLACEMENT
   implicit none
 
   integer,intent(in) :: iglob,ispec
-  real(kind=CUSTOM_REAL),dimension(NDIM),intent(out):: veloc_val
+  real(kind=CUSTOM_REAL),dimension(NDIM),intent(out):: val_vector
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: veloc_element
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: val_element
   integer :: i,j,k
 
   ! returns first element encountered for iglob index
   if( ELASTIC_SIMULATION ) then
     if( ispec_is_elastic(ispec) ) then
-      if( SIMULATION_TYPE == 3 ) then
-        veloc_val(:) = b_veloc(:,iglob)
+      if(SAVE_DISPLACEMENT) then
+        if( SIMULATION_TYPE == 3 ) then
+          ! to display re-constructed wavefield
+          !val_vector(:) = b_displ(:,iglob)
+          ! to display adjoint wavefield
+          val_vector(:) = displ(:,iglob)
+        else
+          val_vector(:) = displ(:,iglob)
+        endif
       else
-        veloc_val(:) = veloc(:,iglob)
+        if( SIMULATION_TYPE == 3 ) then
+          ! to display re-constructed wavefield
+          !val_vector(:) = b_veloc(:,iglob)
+          ! to display adjoint wavefield
+          val_vector(:) = veloc(:,iglob)
+        else
+          val_vector(:) = veloc(:,iglob)
+        endif
       endif
 
       ! returns with this result
       return
     endif
   endif
+
   if( ACOUSTIC_SIMULATION ) then
     if( ispec_is_acoustic(ispec) ) then
-      if( SIMULATION_TYPE == 3 ) then
-        ! velocity vector for backward/reconstructed wavefield
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          b_potential_dot_acoustic, veloc_element,&
+      if(SAVE_DISPLACEMENT) then
+        if( SIMULATION_TYPE == 3 ) then
+          ! displacement vector from backward potential
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          b_potential_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
+        else
+          ! displacement vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_acoustic, val_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+        endif
       else
-        ! velocity vector
-        call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element,&
+        if( SIMULATION_TYPE == 3 ) then
+          ! velocity vector for backward/reconstructed wavefield
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          b_potential_dot_acoustic, val_element,&
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore)
+                          ibool,rhostore,GRAVITY)
+        else
+          ! velocity vector
+          call compute_gradient(ispec,NSPEC_AB,NGLOB_AB, &
+                          potential_dot_acoustic, val_element,&
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          ibool,rhostore,GRAVITY)
+        endif
       endif
 
       ! returns corresponding iglob velocity entry
@@ -883,7 +940,7 @@
         do j=1,NGLLY
           do i=1,NGLLX
             if( ibool(i,j,k,ispec) == iglob ) then
-              veloc_val(:) = veloc_element(:,i,j,k)
+              val_vector(:) = val_element(:,i,j,k)
               return
             endif
           enddo

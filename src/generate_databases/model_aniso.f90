@@ -316,5 +316,28 @@
   c56 = - d46
   c66 = d66
 
+! unused: fills values with the isotropic model
+!  c11 = rho*vpv*vpv
+!  c12 = rho*(vpv*vpv-2.*vsv*vsv)
+!  c13 = c12
+!  c14 = 0.d0
+!  c15 = 0.d0
+!  c16 = 0.d0
+!  c22 = c11
+!  c23 = c12
+!  c24 = 0.d0
+!  c25 = 0.d0
+!  c26 = 0.d0
+!  c33 = c11
+!  c34 = 0.d0
+!  c35 = 0.d0
+!  c36 = 0.d0
+!  c44 = rho*vsv*vsv
+!  c45 = 0.d0
+!  c46 = 0.d0
+!  c55 = c44
+!  c56 = 0.d0
+!  c66 = c44
+
   end subroutine model_aniso
 

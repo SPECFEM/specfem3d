@@ -38,7 +38,7 @@
 
     ! maximum number of slices
     integer,parameter :: MAX_NUM_NODES = 600
-    
+
   end module vtk
 
 !
@@ -76,9 +76,9 @@
 
   integer :: i, ios, it, ier
   integer :: iproc, proc1, proc2, num_node
-  
+
   integer,dimension(MAX_NUM_NODES) :: node_list
-  
+
   integer :: np, ne, npp, nee, nelement, njunk
 
   character(len=256) :: sline, arg(6), filename, indir, outdir
@@ -382,9 +382,9 @@
   include 'constants.h'
 
   integer,intent(in) :: num_node
-  integer,dimension(MAX_NUM_NODES),intent(in) :: node_list  
+  integer,dimension(MAX_NUM_NODES),intent(in) :: node_list
   character(len=256),intent(in) :: LOCAL_PATH
-  
+
   integer,intent(out) :: npp,nee
   logical,intent(in) :: HIGH_RESOLUTION_MESH
 

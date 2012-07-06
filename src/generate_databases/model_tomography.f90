@@ -82,7 +82,7 @@
   !if(myrank == 0) call read_external_model()
   ! broadcast the information read on the master to the nodes, e.g.
   !call bcast_all_i(nrecord,1)
-  
+
   !if( myrank /= 0 ) then
   ! allocate( vp_tomography(1:nrecord) ,stat=ier)
   ! if( ier /= 0 ) stop 'error allocating array vp_tomography'
@@ -161,7 +161,6 @@
 
   end subroutine read_model_tomography
 
-
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -179,7 +178,7 @@
   !double precision, intent(in) :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
-  
+
   real(kind=CUSTOM_REAL), intent(out) :: vp_final,vs_final,rho_final,qmu_atten
 
   ! local parameters
@@ -367,6 +366,6 @@
   if(rho_final > RHO_MAX) rho_final = RHO_MAX
 
   ! attenuation: arbitrary value, see maximum in constants.h
-  qmu_atten = ATTENUATION_COMP_MAXIMUM   
+  qmu_atten = ATTENUATION_COMP_MAXIMUM
 
   end subroutine model_tomography

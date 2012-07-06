@@ -24,7 +24,8 @@
 !
 !=====================================================================
 
-subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+
+  subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface_id )
@@ -174,13 +175,13 @@ subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
 
   endif
 
-end subroutine get_element_face_id
+  end subroutine get_element_face_id
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine get_element_face_gll_indices(iface,ijk_face,NGLLA,NGLLB )
+  subroutine get_element_face_gll_indices(iface,ijk_face,NGLLA,NGLLB )
 
 ! returns local indices in ijk_face for specified face
 
@@ -368,10 +369,10 @@ subroutine get_element_face_gll_indices(iface,ijk_face,NGLLA,NGLLB )
 end subroutine get_element_face_gll_indices
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+  subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                 ibool,nspec,nglob, &
                                 xstore_dummy,ystore_dummy,zstore_dummy, &
                                 normal)
@@ -463,13 +464,13 @@ subroutine get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
   endif
   !print*,'face ',iface,'scalarproduct:',tmp
 
-end subroutine get_element_face_normal
+  end subroutine get_element_face_normal
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
-subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
+  subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
                                 ibool,nspec,nglob, &
                                 xstore_dummy,ystore_dummy,zstore_dummy, &
                                 normal,idirect)
@@ -565,5 +566,50 @@ subroutine get_element_face_normal_idirect(ispec,iface,xcoord,ycoord,zcoord, &
     idirect = 1
   endif
 
-end subroutine get_element_face_normal_idirect
+  end subroutine get_element_face_normal_idirect
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_element_corners(ispec,iface_ref,xcoord,ycoord,zcoord,iglob_corners_ref, &
+                                ibool,nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                iface_all_corner_ijk)
+
+  implicit none
+
+  include "constants.h"
+
+  integer,intent(in) :: ispec,iface_ref,nspec,nglob
+
+  ! face corner locations
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D),intent(out) :: xcoord,ycoord,zcoord
+  integer,dimension(NGNOD2D),intent(out):: iglob_corners_ref
+
+  ! index array
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  ! global point locations
+  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+
+  ! assumes NGNOD2D == 4
+  integer,dimension(3,4,6) :: iface_all_corner_ijk
+
+  ! local parameters
+  integer :: icorner,i,j,k
+
+  ! loops over corners
+  do icorner = 1,NGNOD2D
+    i = iface_all_corner_ijk(1,icorner,iface_ref)
+    j = iface_all_corner_ijk(2,icorner,iface_ref)
+    k = iface_all_corner_ijk(3,icorner,iface_ref)
+
+    ! global reference indices
+    iglob_corners_ref(icorner) = ibool(i,j,k,ispec)
+
+    ! reference corner coordinates
+    xcoord(icorner) = xstore_dummy(iglob_corners_ref(icorner))
+    ycoord(icorner) = ystore_dummy(iglob_corners_ref(icorner))
+    zcoord(icorner) = zstore_dummy(iglob_corners_ref(icorner))
+  enddo
+
+  end subroutine get_element_corners

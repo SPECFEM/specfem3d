@@ -85,3 +85,9 @@
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
 #undef YYTEXT_POINTER
+
+
+/* Uncomment and define to select optimized file i/o for regional simulations */
+/* map fails when output files are > 4GB, which is often the case for GPU simulations */
+// #define USE_MAP_FUNCTION
+

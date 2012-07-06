@@ -90,8 +90,8 @@
      call it_read_forward_arrays()
     endif
 
-    ! write the seismograms with time shift
-    if (nrec_local > 0) then
+    ! write the seismograms with time shift (GPU_MODE transfer included)
+    if (nrec_local > 0 .or. ( WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0 ) ) then
       call write_seismograms()
     endif
 
@@ -111,12 +111,14 @@
     endif
 
     ! first step of noise tomography, i.e., save a surface movie at every time step
-    if ( NOISE_TOMOGRAPHY == 1 ) then
-      call noise_save_surface_movie(displ, &
-                              ibool, &
-                              noise_surface_movie,it, &
-                              NSPEC_AB,NGLOB_AB, &
-                              num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+    if ( NOISE_TOMOGRAPHY == 1) then
+      if( num_free_surface_faces > 0) then
+        call noise_save_surface_movie(displ,ibool, &
+                            noise_surface_movie,it, &
+                            NSPEC_AB,NGLOB_AB, &
+                            num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                            Mesh_pointer,GPU_MODE)
+      endif
     endif
 
 !
@@ -124,8 +126,38 @@
 !
   enddo   ! end of main time loop
 
+  call it_print_elapsed_time()
+
+  ! Transfer fields from GPU card to host for further analysis
+  if(GPU_MODE) call it_transfer_from_GPU()
+
   end subroutine iterate_time
 
+
+!=====================================================================
+
+  subroutine it_print_elapsed_time()
+    use specfem_par
+    use specfem_par_elastic
+    use specfem_par_acoustic
+    implicit none
+
+    ! local parameters
+    double precision :: tCPU
+    integer :: ihours,iminutes,iseconds,int_tCPU
+
+    if(myrank == 0) then
+       ! elapsed time since beginning of the simulation
+       tCPU = wtime() - time_start
+       int_tCPU = int(tCPU)
+       ihours = int_tCPU / 3600
+       iminutes = (int_tCPU - 3600*ihours) / 60
+       iseconds = int_tCPU - 3600*ihours - 60*iminutes
+       write(IMAIN,*) 'Time-Loop Complete. Timing info:'
+       write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
+       write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    endif
+  end subroutine it_print_elapsed_time
 
 !=====================================================================
 
@@ -146,47 +178,104 @@
              ihours_remain,iminutes_remain,iseconds_remain,int_t_remain, &
              ihours_total,iminutes_total,iseconds_total,int_t_total
 
+  ! maximum of the norm of the displacement
+  real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all ! elastic
+  real(kind=CUSTOM_REAL) Usolidnormp,Usolidnormp_all ! acoustic
+  real(kind=CUSTOM_REAL) Usolidnorms,Usolidnorms_all ! solid poroelastic
+  real(kind=CUSTOM_REAL) Usolidnormw,Usolidnormw_all ! fluid (w.r.t.s) poroelastic
+
+  ! norm of the backward displacement
+  real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
+
+  ! initializes
+  Usolidnorm_all = 0.0_CUSTOM_REAL
+  Usolidnormp_all = 0.0_CUSTOM_REAL
+  Usolidnorms_all = 0.0_CUSTOM_REAL
+  Usolidnormw_all = 0.0_CUSTOM_REAL
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !chris: Rewrite to get norm for each material when coupled simulations
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ! compute maximum of norm of displacement in each slice
-  if( ELASTIC_SIMULATION ) &
-    Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
-  if( ACOUSTIC_SIMULATION ) &
+  if( ELASTIC_SIMULATION ) then
+    if( GPU_MODE) then
+      ! way 2: just get maximum of field from GPU
+      call get_norm_elastic_from_device(Usolidnorm,Mesh_pointer,1)
+    else
+      Usolidnorm = maxval(sqrt(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
+    endif
+
+    ! check stability of the code, exit if unstable
+    ! negative values can occur with some compilers when the unstable value is greater
+    ! than the greatest possible floating-point number of the machine
+    if(Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0) &
+      call exit_MPI(myrank,'forward simulation became unstable and blew up')
+
+    ! compute the maximum of the maxima for all the slices using an MPI reduction
+    call max_all_cr(Usolidnorm,Usolidnorm_all)
+  endif
+
+  if( ACOUSTIC_SIMULATION ) then
+    if(GPU_MODE) then
+      ! way 2: just get maximum of field from GPU
+      call get_norm_acoustic_from_device(Usolidnormp,Mesh_pointer,1)
+    else
       Usolidnormp = maxval(abs(potential_dot_dot_acoustic(:)))
+    endif
+
+    ! compute the maximum of the maxima for all the slices using an MPI reduction
+    call max_all_cr(Usolidnormp,Usolidnormp_all)
+  endif
+
   if( POROELASTIC_SIMULATION ) then
     Usolidnorms = maxval(sqrt(displs_poroelastic(1,:)**2 + displs_poroelastic(2,:)**2 + &
                              displs_poroelastic(3,:)**2))
     Usolidnormw = maxval(sqrt(displw_poroelastic(1,:)**2 + displw_poroelastic(2,:)**2 + &
                              displw_poroelastic(3,:)**2))
+
+    ! compute the maximum of the maxima for all the slices using an MPI reduction
+    call max_all_cr(Usolidnorms,Usolidnorms_all)
+    call max_all_cr(Usolidnormw,Usolidnormw_all)
   endif
 
-! compute the maximum of the maxima for all the slices using an MPI reduction
-  call max_all_cr(Usolidnorm,Usolidnorm_all)
-  call max_all_cr(Usolidnormp,Usolidnormp_all)
-  call max_all_cr(Usolidnorms,Usolidnorms_all)
-  call max_all_cr(Usolidnormw,Usolidnormw_all)
 
-! adjoint simulations
+  ! adjoint simulations
   if( SIMULATION_TYPE == 3 ) then
     if( ELASTIC_SIMULATION ) then
-      b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
+      ! way 2
+      if(GPU_MODE) then
+        call get_norm_elastic_from_device(b_Usolidnorm,Mesh_pointer,3)
+      else
+        b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
+      endif
     else
       if( ACOUSTIC_SIMULATION ) then
-        b_Usolidnorm = maxval(abs(b_potential_dot_dot_acoustic(:)))
+        ! way 2
+        if(GPU_MODE) then
+          call get_norm_acoustic_from_device(b_Usolidnorm,Mesh_pointer,3)
+        else
+          b_Usolidnorm = maxval(abs(b_potential_dot_dot_acoustic(:)))
+        endif
       endif
     endif
-    call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
-   endif
+    ! check stability of the code, exit if unstable
+    ! negative values can occur with some compilers when the unstable value is greater
+    ! than the greatest possible floating-point number of the machine
+    if(b_Usolidnorm > STABILITY_THRESHOLD .or. b_Usolidnorm < 0) &
+      call exit_MPI(myrank,'backward simulation became unstable and blew up')
 
-! user output
+    ! compute max of all slices
+    call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
+  endif
+
+  ! user output
   if(myrank == 0) then
 
     write(IMAIN,*) 'Time step # ',it
     write(IMAIN,*) 'Time: ',sngl((it-1)*DT-t0),' seconds'
 
-! elapsed time since beginning of the simulation
+    ! elapsed time since beginning of the simulation
     tCPU = wtime() - time_start
     int_tCPU = int(tCPU)
     ihours = int_tCPU / 3600
@@ -194,11 +283,13 @@
     iseconds = int_tCPU - 3600*ihours - 60*iminutes
     write(IMAIN,*) 'Elapsed time in seconds = ',tCPU
     write(IMAIN,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
-    write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
-    if( ELASTIC_SIMULATION ) &
+    write(IMAIN,*) 'Mean elapsed time per time step in seconds = ',sngl(tCPU/dble(it))
+    if( ELASTIC_SIMULATION ) then
       write(IMAIN,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
-    if( ACOUSTIC_SIMULATION ) &
+    endif
+    if( ACOUSTIC_SIMULATION ) then
         write(IMAIN,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
+    endif
     if( POROELASTIC_SIMULATION ) then
         write(IMAIN,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
         write(IMAIN,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
@@ -207,7 +298,7 @@
     if (SIMULATION_TYPE == 3) write(IMAIN,*) &
            'Max norm U (backward) in all slices = ',b_Usolidnorm_all
 
-! compute estimated remaining simulation time
+    ! compute estimated remaining simulation time
     t_remain = (NSTEP - it) * (tCPU/dble(it))
     int_t_remain = int(t_remain)
     ihours_remain = int_t_remain / 3600
@@ -215,17 +306,17 @@
     iseconds_remain = int_t_remain - 3600*ihours_remain - 60*iminutes_remain
     write(IMAIN,*) 'Time steps done = ',it,' out of ',NSTEP
     write(IMAIN,*) 'Time steps remaining = ',NSTEP - it
-    write(IMAIN,*) 'Estimated remaining time in seconds = ',t_remain
+    write(IMAIN,*) 'Estimated remaining time in seconds = ',sngl(t_remain)
     write(IMAIN,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_remain,iminutes_remain,iseconds_remain
 
-! compute estimated total simulation time
+    ! compute estimated total simulation time
     t_total = t_remain + tCPU
     int_t_total = int(t_total)
     ihours_total = int_t_total / 3600
     iminutes_total = (int_t_total - 3600*ihours_total) / 60
     iseconds_total = int_t_total - 3600*ihours_total - 60*iminutes_total
-    write(IMAIN,*) 'Estimated total run time in seconds = ',t_total
+    write(IMAIN,*) 'Estimated total run time in seconds = ',sngl(t_total)
     write(IMAIN,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_total,iminutes_total,iseconds_total
     write(IMAIN,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
@@ -238,7 +329,7 @@
     endif
     write(IMAIN,*)
 
-! write time stamp file to give information about progression of simulation
+    ! write time stamp file to give information about progression of simulation
     write(outputname,"('/timestamp',i6.6)") it
     open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown')
     write(IOUT,*) 'Time step # ',it
@@ -246,10 +337,12 @@
     write(IOUT,*) 'Elapsed time in seconds = ',tCPU
     write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
     write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
-    if( ELASTIC_SIMULATION ) &
+    if( ELASTIC_SIMULATION ) then
       write(IOUT,*) 'Max norm displacement vector U in all slices (m) = ',Usolidnorm_all
-    if( ACOUSTIC_SIMULATION ) &
+    endif
+    if( ACOUSTIC_SIMULATION ) then
         write(IOUT,*) 'Max norm pressure P in all slices (Pa) = ',Usolidnormp_all
+    endif
     if( POROELASTIC_SIMULATION ) then
         write(IOUT,*) 'Max norm displacement vector Us in all slices (m) = ',Usolidnorms_all
         write(IOUT,*) 'Max norm displacement vector W in all slices (m) = ',Usolidnormw_all
@@ -259,28 +352,27 @@
            'Max norm U (backward) in all slices = ',b_Usolidnorm_all
     ! estimation
     write(IOUT,*) 'Time steps done = ',it,' out of ',NSTEP
-    write(IOUT,*) 'Time steps remaining = ',NSTEP - it    
+    write(IOUT,*) 'Time steps remaining = ',NSTEP - it
     write(IOUT,*) 'Estimated remaining time in seconds = ',t_remain
     write(IOUT,"(' Estimated remaining time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
-             ihours_remain,iminutes_remain,iseconds_remain    
+             ihours_remain,iminutes_remain,iseconds_remain
     write(IOUT,*) 'Estimated total run time in seconds = ',t_total
     write(IOUT,"(' Estimated total run time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") &
              ihours_total,iminutes_total,iseconds_total
-    write(IOUT,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'           
+    write(IOUT,*) 'We have done ',sngl(100.d0*dble(it)/dble(NSTEP)),'% of that'
     close(IOUT)
 
-
-! check stability of the code, exit if unstable
-! negative values can occur with some compilers when the unstable value is greater
-! than the greatest possible floating-point number of the machine
-    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0 &
-     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0 &
-     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0 &
-     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0) &
+    ! check stability of the code, exit if unstable
+    ! negative values can occur with some compilers when the unstable value is greater
+    ! than the greatest possible floating-point number of the machine
+    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0 &
+     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0.0 &
+     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0.0 &
+     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0.0) &
         call exit_MPI(myrank,'forward simulation became unstable and blew up')
     ! adjoint simulations
     if(SIMULATION_TYPE == 3 .and. (b_Usolidnorm_all > STABILITY_THRESHOLD &
-      .or. b_Usolidnorm_all < 0)) &
+      .or. b_Usolidnorm_all < 0.0)) &
         call exit_MPI(myrank,'backward simulation became unstable and blew up')
 
   endif ! myrank
@@ -331,15 +423,27 @@
 
 ! updates acoustic potentials
   if( ACOUSTIC_SIMULATION ) then
-    potential_acoustic(:) = potential_acoustic(:) &
+
+    if(.NOT. GPU_MODE) then
+      ! on CPU
+      potential_acoustic(:) = potential_acoustic(:) &
                             + deltat * potential_dot_acoustic(:) &
                             + deltatsqover2 * potential_dot_dot_acoustic(:)
-    potential_dot_acoustic(:) = potential_dot_acoustic(:) &
+      potential_dot_acoustic(:) = potential_dot_acoustic(:) &
                                 + deltatover2 * potential_dot_dot_acoustic(:)
-    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+      potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+    else
+      ! on GPU
+      call it_update_displacement_ac_cuda(Mesh_pointer, NGLOB_AB, &
+                                        deltat, deltatsqover2, deltatover2, &
+                                        SIMULATION_TYPE, b_deltat, b_deltatsqover2, b_deltatover2)
+    endif
 
     ! time marching potentials
     if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
+      if( GPU_MODE ) call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
+
       call PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
                         potential_acoustic,potential_dot_acoustic,&
                         deltat,deltatsqover2,deltatover2,&
@@ -352,15 +456,28 @@
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh,NPROC,&
                         ispec_is_acoustic)
+
+      if( GPU_MODE ) call transfer_fields_ac_to_device(NGLOB_AB,potential_acoustic, &
+                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
     endif
-  endif
+
+  endif ! ACOUSTIC_SIMULATION
 
 ! updates elastic displacement and velocity
   if( ELASTIC_SIMULATION ) then
-    displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
-    veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-    if( SIMULATION_TYPE /= 1 ) accel_adj_coupling(:,:) = accel(:,:)
-    accel(:,:) = 0._CUSTOM_REAL
+
+    if(.NOT. GPU_MODE) then
+      ! on CPU
+      displ(:,:) = displ(:,:) + deltat*veloc(:,:) + deltatsqover2*accel(:,:)
+      veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
+      if( SIMULATION_TYPE /= 1 ) accel_adj_coupling(:,:) = accel(:,:)
+      accel(:,:) = 0._CUSTOM_REAL
+    else
+      ! on GPU
+      ! Includes SIM_TYPE 1 & 3 (for noise tomography)
+      call it_update_displacement_cuda(Mesh_pointer, size(displ), deltat, deltatsqover2,&
+             deltatover2, SIMULATION_TYPE, b_deltat, b_deltatsqover2, b_deltatover2)
+    endif
   endif
 
 ! updates poroelastic displacements and velocities
@@ -379,7 +496,7 @@
   endif
 
 ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 3 .and. .NOT. GPU_MODE) then
     ! acoustic backward fields
     if( ACOUSTIC_SIMULATION ) then
       b_potential_acoustic(:) = b_potential_acoustic(:) &
@@ -389,6 +506,7 @@
                                   + b_deltatover2 * b_potential_dot_dot_acoustic(:)
       b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
     endif
+
     ! elastic backward fields
     if( ELASTIC_SIMULATION ) then
       b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
@@ -450,6 +568,11 @@
     read(27) b_potential_acoustic
     read(27) b_potential_dot_acoustic
     read(27) b_potential_dot_dot_acoustic
+
+    ! transfers fields onto GPU
+    if(GPU_MODE) &
+      call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
+                          b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
   endif
 
   ! elastic wavefields
@@ -458,18 +581,29 @@
     read(27) b_veloc
     read(27) b_accel
 
+    ! puts elastic wavefield to GPU
+    if(GPU_MODE) &
+      call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
+
     ! memory variables if attenuation
     if( ATTENUATION ) then
-       read(27) b_R_xx
-       read(27) b_R_yy
-       read(27) b_R_xy
-       read(27) b_R_xz
-       read(27) b_R_yz
-       read(27) b_epsilondev_xx
-       read(27) b_epsilondev_yy
-       read(27) b_epsilondev_xy
-       read(27) b_epsilondev_xz
-       read(27) b_epsilondev_yz
+      read(27) b_R_xx
+      read(27) b_R_yy
+      read(27) b_R_xy
+      read(27) b_R_xz
+      read(27) b_R_yz
+      read(27) b_epsilondev_xx
+      read(27) b_epsilondev_yy
+      read(27) b_epsilondev_xy
+      read(27) b_epsilondev_xz
+      read(27) b_epsilondev_yz
+
+      ! puts elastic attenuation arrays to GPU
+      if(GPU_MODE) &
+          call transfer_b_fields_att_to_device(Mesh_pointer, &
+                                            b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
+                                            b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+                                            size(b_epsilondev_xx))
     endif
 
   endif
@@ -514,9 +648,17 @@
       open(unit=27,file=trim(prname_Q)//trim(outputname),status='old',&
             action='read',form='unformatted')
       if( ELASTIC_SIMULATION ) then
+        ! reads arrays from disk files
         read(27) b_displ
         read(27) b_veloc
         read(27) b_accel
+
+        ! puts elastic fields onto GPU
+        if(GPU_MODE) then
+          ! wavefields
+          call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
+        endif
+
         read(27) b_R_xx
         read(27) b_R_yy
         read(27) b_R_xy
@@ -527,11 +669,28 @@
         read(27) b_epsilondev_xy
         read(27) b_epsilondev_xz
         read(27) b_epsilondev_yz
+
+        ! puts elastic fields onto GPU
+        if(GPU_MODE) then
+          ! attenuation arrays
+          call transfer_b_fields_att_to_device(Mesh_pointer, &
+                                            b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
+                                            b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+                                            size(b_epsilondev_xx))
+        endif
       endif
+
       if( ACOUSTIC_SIMULATION ) then
+        ! reads arrays from disk files
         read(27) b_potential_acoustic
         read(27) b_potential_dot_acoustic
         read(27) b_potential_dot_dot_acoustic
+
+        ! puts acoustic fields onto GPU
+        if(GPU_MODE) &
+          call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
+                              b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
+
       endif
       close(27)
     else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. mod(it,NSTEP_Q_SAVE) == 0) then
@@ -540,9 +699,24 @@
       open(unit=27,file=trim(prname_Q)//trim(outputname),status='unknown',&
            action='write',form='unformatted')
       if( ELASTIC_SIMULATION ) then
+        ! gets elastic fields from GPU onto CPU
+        if(GPU_MODE) then
+          call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
+        endif
+
+        ! writes to disk file
         write(27) displ
         write(27) veloc
         write(27) accel
+
+        if(GPU_MODE) then
+          ! attenuation arrays
+          call transfer_fields_att_from_device(Mesh_pointer, &
+                                            R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+                                            epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                                            size(epsilondev_xx))
+        endif
+
         write(27) R_xx
         write(27) R_yy
         write(27) R_xy
@@ -555,6 +729,12 @@
         write(27) epsilondev_yz
       endif
       if( ACOUSTIC_SIMULATION ) then
+       ! gets acoustic fields from GPU onto CPU
+        if(GPU_MODE) &
+          call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
+
+        ! writes to disk file
         write(27) potential_acoustic
         write(27) potential_dot_acoustic
         write(27) potential_dot_dot_acoustic
@@ -564,3 +744,80 @@
   endif ! it
 
   end subroutine it_store_attenuation_arrays
+
+
+!=====================================================================
+
+  subroutine it_transfer_from_GPU()
+
+! transfers fields on GPU back onto CPU
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+
+  ! to store forward wave fields
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+
+    ! acoustic potentials
+    if( ACOUSTIC_SIMULATION ) &
+      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
+                            potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
+
+    ! elastic wavefield
+    if( ELASTIC_SIMULATION ) then
+      call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
+
+      if (ATTENUATION) &
+        call transfer_fields_att_from_device(Mesh_pointer, &
+                                            R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+                                            epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+                                            size(epsilondev_xx))
+
+    endif
+  else if (SIMULATION_TYPE == 3) then
+
+    ! to store kernels
+    ! acoustic domains
+    if( ACOUSTIC_SIMULATION ) then
+      ! only in case needed...
+      !call transfer_b_fields_ac_from_device(NGLOB_AB,b_potential_acoustic, &
+      !                      b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
+
+      ! acoustic kernels
+      call transfer_kernels_ac_to_host(Mesh_pointer,rho_ac_kl,kappa_ac_kl,NSPEC_AB)
+    endif
+
+    ! elastic domains
+    if( ELASTIC_SIMULATION ) then
+      ! only in case needed...
+      !call transfer_b_fields_from_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
+
+      ! elastic kernels
+      call transfer_kernels_el_to_host(Mesh_pointer,rho_kl,mu_kl,kappa_kl,NSPEC_AB)
+    endif
+
+    ! specific noise strength kernel
+    if( NOISE_TOMOGRAPHY == 3 ) then
+      call transfer_kernels_noise_to_host(Mesh_pointer,Sigma_kl,NSPEC_AB)
+    endif
+
+    ! approximative hessian for preconditioning kernels
+    if ( APPROXIMATE_HESS_KL ) then
+      if( ELASTIC_SIMULATION ) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
+      if( ACOUSTIC_SIMULATION ) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)
+    endif
+
+  endif
+
+  ! frees allocated memory on GPU
+  call prepare_cleanup_device(Mesh_pointer, &
+                              SIMULATION_TYPE,SAVE_FORWARD, &
+                              ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
+                              ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
+                              ATTENUATION,ANISOTROPY,OCEANS, &
+                              APPROXIMATE_HESS_KL)
+
+  end subroutine it_transfer_from_GPU

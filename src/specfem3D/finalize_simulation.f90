@@ -36,10 +36,10 @@
 
   integer :: irec_local
 
-! save last frame
+  ! save last frame
 
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    open(unit=27,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
+     open(unit=27,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
           status='unknown',form='unformatted')
 
     if( ACOUSTIC_SIMULATION ) then

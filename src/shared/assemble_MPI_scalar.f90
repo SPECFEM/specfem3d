@@ -356,4 +356,3 @@
 
   end subroutine assemble_MPI_scalar_ext_mesh_w
 
-

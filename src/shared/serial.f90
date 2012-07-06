@@ -38,6 +38,8 @@
 !
 
   double precision function wtime()
+
+  implicit none
   real :: ct
 
   ! note: for simplicity, we take cpu_time which returns the elapsed CPU time in seconds
@@ -45,6 +47,7 @@
   call cpu_time(ct)
 
   wtime = ct
+
   end function wtime
 
 !
@@ -682,11 +685,10 @@
   subroutine send_dp(sendbuf, sendcount, dest, sendtag)
 
   implicit none
-  include "constants.h"
 
   integer dest,sendtag
   integer sendcount
-  real(kind=CUSTOM_REAL),dimension(sendcount):: sendbuf
+  double precision,dimension(sendcount):: sendbuf
 
   stop 'send_dp not implemented for serial code'
 
@@ -697,13 +699,12 @@
   subroutine recv_dp(recvbuf, recvcount, dest, recvtag)
 
   implicit none
-  include "constants.h"
 
   integer dest,recvtag
   integer recvcount
-  real(kind=CUSTOM_REAL),dimension(recvcount):: recvbuf
+  double precision,dimension(recvcount):: recvbuf
 
-  stop 'recv_dp not implemented for parallel code'
+  stop 'recv_dp not implemented for serial code'
 
   end subroutine recv_dp
 

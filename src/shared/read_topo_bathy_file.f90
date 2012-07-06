@@ -48,7 +48,7 @@
     print*,'error opening topography file: ',trim(TOPO_FILE)
     stop 'error opening topography file'
   endif
-  
+
   ! reads in values
   do iy=1,NY_TOPO
     do ix=1,NX_TOPO
@@ -74,7 +74,7 @@
   include "constants.h"
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
-  
+
   real(kind=CUSTOM_REAL),intent(out) :: target_elevation
 
   integer :: NX_TOPO,NY_TOPO
@@ -87,7 +87,7 @@
   double precision :: xval,yval,long,lat
   double precision :: long_corner,lat_corner,ratio_xi,ratio_eta
   integer :: icornerlong,icornerlat
-            
+
   ! get coordinates of current point
   xval = dble(x_target)
   yval = dble(y_target)
@@ -127,7 +127,7 @@
         itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
   end subroutine get_topo_bathy_elevation
-  
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -143,10 +143,10 @@
   include "constants.h"
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
-  
+
   real(kind=CUSTOM_REAL),intent(out) :: target_elevation
   real(kind=CUSTOM_REAL),intent(out) :: target_distmin
-  
+
   integer :: NSPEC_AB,NGLOB_AB
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -160,7 +160,7 @@
   integer, dimension(3,NGLLSQUARE,num_free_surface_faces) :: free_surface_ijk
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(4) :: elevation_node,dist_node  
+  real(kind=CUSTOM_REAL),dimension(4) :: elevation_node,dist_node
   real(kind=CUSTOM_REAL) :: distmin,dist
 
   integer :: iface,i,j,ispec,iglob,igll,jgll,kgll
@@ -172,26 +172,26 @@
   integer,parameter :: MIDX = (NGLLX+1)/2
   integer,parameter :: MIDY = (NGLLY+1)/2
   integer,parameter :: MIDZ = (NGLLZ+1)/2
-  
+
   real(kind=CUSTOM_REAL) :: typical_size
   logical :: located_target
-  
+
   ! initialize
   target_elevation = 0.0_CUSTOM_REAL
   target_distmin = HUGEVAL
-  
-  
+
+
   if(num_free_surface_faces > 0) then
 
     ! computes typical size of elements at the surface (uses first element for estimation)
     if( USE_DISTANCE_CRITERION ) then
-      ispec = free_surface_ispec(1)    
+      ispec = free_surface_ispec(1)
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
       ! use 10 times the distance as a criterion for point detection
       typical_size = 10. * typical_size
     endif
-    
+
     ! flag to check that we located at least one target element
     located_target = .false.
 
@@ -200,7 +200,7 @@
     iselected = 2
     jselected = 2
     iface_selected = 1
-      
+
     ! loops over all free surface faces
     do iface=1,num_free_surface_faces
       ispec = free_surface_ispec(iface)
@@ -208,10 +208,10 @@
       ! exclude elements that are too far from target
       if( USE_DISTANCE_CRITERION ) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-        dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2 
+        dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
         if( dist > typical_size ) cycle
       endif
-      
+
       ! loop only on points inside the element
       ! exclude edges to ensure this point is not shared with other elements
       do j = 2,NGLLY - 1
@@ -220,13 +220,13 @@
           igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
           jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
           kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
-          
+
           iglob = ibool(igll,jgll,kgll,ispec)
 
           ! distance (squared) to target
           dist = ( x_target - xstore(iglob) )**2 + &
                  ( y_target - ystore(iglob) )**2
-                 
+
           ! keep this point if it is closer to the receiver
           if(dist < distmin) then
             distmin = dist
@@ -238,8 +238,8 @@
             located_target = .true.
           endif
         enddo
-      enddo      
-    end do    
+      enddo
+    end do
 
     ! if we have not located a target element, the point is not in this slice
     ! therefore use first element only for fictitious iterative search
@@ -248,7 +248,7 @@
       jselected = 2
       iface_selected = 1
     endif
-    
+
     !  weighted mean at current point of topography elevation of the four closest nodes
     !  set distance to huge initial value
     distmin = HUGEVAL
@@ -264,23 +264,23 @@
             jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
             kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
             iglob = ibool(igll,jgll,kgll,ispec)
-      
+
             ! stores node infos
             inode = inode + 1
             elevation_node(inode) = zstore(iglob)
             dist_node(inode) = sqrt( (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2 )
           end do
         end do
-        
+
         ! weighted elevation
         dist = sum( dist_node(:) )
         if(dist < distmin) then
-        
+
           ! sets new minimum distance (of all 4 closest nodes)
           distmin = dist
           target_distmin = distmin
-          
-          ! interpolates elevation 
+
+          ! interpolates elevation
           if( dist > TINYVAL ) then
             target_elevation =  (dist_node(1)/dist)*elevation_node(1) + &
                                 (dist_node(2)/dist)*elevation_node(2) + &
@@ -290,10 +290,10 @@
             stop 'error summed distance to node is zero'
           endif
         endif
-        
-      end do      
+
+      end do
     end do
-    
+
   end if
 
   end subroutine get_topo_elevation_free
@@ -313,10 +313,10 @@
   include "constants.h"
 
   real(kind=CUSTOM_REAL),intent(in) :: x_target,y_target
-  
+
   real(kind=CUSTOM_REAL),intent(out) :: target_elevation
   real(kind=CUSTOM_REAL),intent(out) :: target_distmin
-  
+
   integer :: NSPEC_AB,NGLOB_AB
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -339,26 +339,26 @@
   integer,parameter :: MIDX = (NGLLX+1)/2
   integer,parameter :: MIDY = (NGLLY+1)/2
   integer,parameter :: MIDZ = (NGLLZ+1)/2
-  
+
   real(kind=CUSTOM_REAL) :: typical_size
   logical :: located_target
-  
+
   ! initialize
   target_elevation = 0.0_CUSTOM_REAL
   target_distmin = HUGEVAL
-  
-  
+
+
   if(num_free_surface_faces > 0) then
 
     ! computes typical size of elements at the surface (uses first element for estimation)
     if( USE_DISTANCE_CRITERION ) then
-      ispec = free_surface_ispec(1)    
+      ispec = free_surface_ispec(1)
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
       ! use 10 times the distance as a criterion for point detection
       typical_size = 10. * typical_size
     endif
-    
+
     ! flag to check that we located at least one target element
     located_target = .false.
 
@@ -372,22 +372,22 @@
       ! excludes elements that are too far from target
       if( USE_DISTANCE_CRITERION ) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-        dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2 
+        dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
         if( dist > typical_size ) cycle
       endif
-      
+
       ! loop only on points inside the element
       do i = 1,NGLLSQUARE
         igll = free_surface_ijk(1,i,iface)
         jgll = free_surface_ijk(2,i,iface)
         kgll = free_surface_ijk(3,i,iface)
-        
+
         iglob = ibool(igll,jgll,kgll,ispec)
 
         ! distance (squared) to target
         dist = ( x_target - xstore(iglob) )**2 + &
                ( y_target - ystore(iglob) )**2
-               
+
         ! keep this point if it is closer to the receiver
         if(dist < distmin) then
           distmin = dist
@@ -397,8 +397,8 @@
           target_distmin = dist
           located_target = .true.
         endif
-      enddo      
-    end do    
+      enddo
+    end do
 
     ! if we have not located a target element, the point is not in this slice
     ! therefore use first element only for fictitious iterative search
@@ -409,10 +409,10 @@
       ! elevation (given in z - coordinate)
       target_elevation = zstore(iglob)
       target_distmin = ( x_target - xstore(iglob) )**2 + ( y_target - ystore(iglob) )**2
-      located_target = .true.      
+      located_target = .true.
     endif
-        
+
   end if
 
   end subroutine get_topo_elevation_free_closest
-  
+
