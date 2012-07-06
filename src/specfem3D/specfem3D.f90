@@ -1,6 +1,6 @@
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
@@ -244,6 +244,9 @@
 !
 ! Evolution of the code:
 ! ---------------------
+!
+! MPI v. 2.1 "Sesame" (Spectral ElementS on Any MEsh), July 2012:
+! Max Rietmann, Peter Messmer, Daniel Peter: support for CUDA GPUs
 !
 ! MPI v. 2.0 "Sesame" (Spectral ElementS on Any MEsh), November 2010:
 ! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,

@@ -1,7 +1,7 @@
 /*
 !=====================================================================
 !
-!               S p e c f e m 3 D  V e r s i o n  2 . 0
+!               S p e c f e m 3 D  V e r s i o n  2 . 1
 !               ---------------------------------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
