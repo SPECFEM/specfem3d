@@ -29,14 +29,18 @@
                         scalar_field, vector_field_element,&
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore)
+                        ibool,rhostore,GRAVITY)
 
 ! calculates gradient of given acoustic scalar (potential) field on all GLL points in one, single element
 ! note:
 !   displacement s = (rho)^{-1} \del \chi
 !   velocity          v = (rho)^{-1} \del \ddot \chi
 !
+!  in case of gravity:
+!   displacement s = \del \chi
+!   velocity          v = \del \ddot \chi
 ! returns: (1/rho) times gradient vector field (vector_field_element) in specified element
+!             or in gravity case, just gradient vector field
 
   implicit none
   include 'constants.h'
@@ -58,6 +62,8 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
+
+  logical :: GRAVITY
 
 ! local parameters
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
@@ -100,7 +106,12 @@
         gammayl = gammay(i,j,k,ispec)
         gammazl = gammaz(i,j,k,ispec)
 
-        rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+        ! daniel: TODO - check gravity case here
+        if( GRAVITY ) then
+          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+        else
+          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+        endif
 
         ! derivatives of acoustic scalar potential field on GLL points
         vector_field_element(1,i,j,k) = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl

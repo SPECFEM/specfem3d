@@ -237,7 +237,7 @@
     C(i)=W(ind(i))
   enddo
 
-end subroutine swap_all
+  end subroutine swap_all
 
 ! ------------------------------------------------------------------
 
@@ -292,4 +292,4 @@ end subroutine swap_all
   deallocate(copy_ibool_ori,stat=ier); if(ier /= 0) stop 'error in deallocate'
   deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'
 
-end subroutine get_global_indirect_addressing
+  end subroutine get_global_indirect_addressing

@@ -42,8 +42,32 @@ module specfem_par
 
   implicit none
 
-! attenuation
-  integer :: NSPEC_ATTENUATION_AB
+! parameters deduced from parameters read from file
+  integer :: NPROC
+  integer :: NSPEC_AB, NGLOB_AB
+
+! mesh parameters
+  integer, dimension(:,:,:,:), allocatable :: ibool
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
+
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+
+! material properties
+  ! isotropic
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappastore,mustore
+
+! CUDA mesh pointer<->integer wrapper
+  integer(kind=8) :: Mesh_pointer
+
+! Global GPU toggle. Set in Par_file
+  logical :: GPU_MODE
+
+! use integer array to store topography values
+  integer :: NX_TOPO,NY_TOPO
+  !double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
+  !character(len=100) :: topo_file
+  integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: abs_boundary_normal
@@ -59,16 +83,10 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! mesh parameters
-  integer, dimension(:,:,:,:), allocatable :: ibool
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore,ystore,zstore
+! attenuation
+  integer :: NSPEC_ATTENUATION_AB
+  character(len=256) prname_Q
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
-
-! material properties
-  ! isotropic
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappastore,mustore
 
 ! additional mass matrix for ocean load
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
@@ -91,7 +109,7 @@ module specfem_par
   double precision, external :: comp_source_time_function
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
-  integer :: NSOURCES
+  integer :: NSOURCES,nsources_local
   ! source encoding
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz)
   ! since they have to equal in the acoustic setting]
@@ -101,8 +119,9 @@ module specfem_par
   character(len=256) :: rec_filename,filtered_rec_filename,dummystring
   integer :: nrec,nrec_local,nrec_tot_found
   integer :: nrec_simulation
-  integer, allocatable, dimension(:) :: islice_selected_rec,ispec_selected_rec,number_receiver_global
-  double precision, allocatable, dimension(:) :: xi_receiver,eta_receiver,gamma_receiver
+  integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
+  integer, dimension(:), allocatable :: number_receiver_global
+  double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
 
 ! timing information for the stations
@@ -137,17 +156,16 @@ module specfem_par
   double precision, external :: wtime
   double precision :: time_start
 
-! parameters read from parameter file
-  integer :: NPROC_XI,NPROC_ETA
-  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
+! parameters
   integer :: SIMULATION_TYPE
+  integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer :: IMODEL
-  
+
   double precision :: DT
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,ANISOTROPY
+  logical :: GRAVITY
 
   logical :: SAVE_FORWARD,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
 
@@ -155,11 +173,11 @@ module specfem_par
 
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,prname,prname_Q
+! parameters read from mesh parameter file
+  integer :: NPROC_XI,NPROC_ETA
+  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-! parameters deduced from parameters read from file
-  integer :: NPROC
-  integer :: NSPEC_AB, NGLOB_AB
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,prname
 
 ! names of the data files for all the processors in MPI
   character(len=256) outputname
@@ -194,13 +212,6 @@ module specfem_par
 ! MPI partition surfaces
   logical, dimension(:), allocatable :: ispec_is_inner
 
-! maximum of the norm of the displacement
-  real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all ! elastic
-  real(kind=CUSTOM_REAL) Usolidnormp,Usolidnormp_all ! acoustic
-  real(kind=CUSTOM_REAL) Usolidnorms,Usolidnorms_all ! solid poroelastic
-  real(kind=CUSTOM_REAL) Usolidnormw,Usolidnormw_all ! fluid (w.r.t.s) poroelastic
-  integer:: Usolidnorm_index(1)
-
 ! maximum speed in velocity model
   real(kind=CUSTOM_REAL):: model_speed_max
 
@@ -209,6 +220,10 @@ module specfem_par
 !!$  logical, dimension(:), allocatable :: ispec_is_regolith
 !!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
 !!!! NL NL REGOLITH
+
+  ! gravity
+  real(kind=CUSTOM_REAL), dimension(:),allocatable :: minus_deriv_gravity,minus_g
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
 
 ! ADJOINT parameters
@@ -240,9 +255,6 @@ module specfem_par
 
   ! adjoint elements
   integer :: NSPEC_ADJOINT, NGLOB_ADJOINT
-
-  ! norm of the backward displacement
-   real(kind=CUSTOM_REAL) b_Usolidnorm, b_Usolidnorm_all
 
   ! length of reading blocks
   integer :: NTSTEP_BETWEEN_READ_ADJSRC
@@ -285,6 +297,12 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_adj_coupling
 
+! variables needed for OpenMP version
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
+       dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3,&
+       newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3,&
+       tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
+
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
@@ -308,8 +326,12 @@ module specfem_par_elastic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_elastic
   integer :: num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic
 
-  logical :: ELASTIC_SIMULATION
+! mesh coloring
+  integer :: num_colors_outer_elastic,num_colors_inner_elastic
+  integer, dimension(:), allocatable :: num_elem_colors_elastic
+  integer :: nspec_elastic
 
+  logical :: ELASTIC_SIMULATION
 
 ! ADJOINT elastic
 
@@ -388,6 +410,11 @@ module specfem_par_acoustic
   logical, dimension(:), allocatable :: ispec_is_acoustic
   integer, dimension(:,:), allocatable :: phase_ispec_inner_acoustic
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
+
+! mesh coloring
+  integer :: num_colors_outer_acoustic,num_colors_inner_acoustic
+  integer, dimension(:), allocatable :: num_elem_colors_acoustic
+  integer :: nspec_acoustic
 
   logical :: ACOUSTIC_SIMULATION
 

@@ -295,7 +295,7 @@
 ! flag for noise simulation
   integer :: NOISE_TOMOGRAPHY
   integer :: IMODEL
-  
+
   end module generate_databases_par
 
 !
@@ -418,7 +418,7 @@
     write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
     write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
     write(IMAIN,*)
-    
+
     write(IMAIN,'(a)',advance='no') ' velocity model: '
     select case(IMODEL)
     case( IMODEL_DEFAULT )
@@ -437,8 +437,10 @@
     write(IMAIN,'(a)',advance='yes') '  tomo'
     case( IMODEL_USER_EXTERNAL )
     write(IMAIN,'(a)',advance='yes') '  external'
+    case( IMODEL_IPATI )
+    write(IMAIN,'(a)',advance='yes') '  ipati'
     end select
-    
+
     write(IMAIN,*)
   endif
 
@@ -588,8 +590,8 @@
   open(unit=IIN,file=prname(1:len_trim(prname))//'Database', &
         status='old',action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database'
-    write(IMAIN,*) 'make sure file exists'
+    print*,'rank ',myrank,' error opening file: ',prname(1:len_trim(prname))//'Database'
+    print*,'please make sure file exists'
     call exit_mpi(myrank,'error opening database file')
   endif
   !read(IIN,*) nnodes_ext_mesh
@@ -930,7 +932,8 @@
     write(IMAIN,*) 'create regions: '
   endif
   call create_regions_mesh()
-  
+
+! now done inside create_regions_mesh_ext routine...
 ! now done inside create_regions_mesh_ext routine...
 ! Moho boundary parameters, 2-D jacobians and normals
 !  if( SAVE_MOHO_MESH ) then

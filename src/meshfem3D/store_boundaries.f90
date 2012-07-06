@@ -90,21 +90,21 @@
     ! on boundary: ymax
     if(iboun(4,ispec)) then
       ispecb4=ispecb4+1
-      if( ispecb4 > NSPEC2DMAX_YMIN_YMAX ) stop 'error NSPEC2DMAX_YMIN_YMAX too small'      
+      if( ispecb4 > NSPEC2DMAX_YMIN_YMAX ) stop 'error NSPEC2DMAX_YMIN_YMAX too small'
       ibelm_ymax(ispecb4)=ispec
     endif
 
     ! on boundary: bottom
     if(iboun(5,ispec)) then
       ispecb5=ispecb5+1
-      if( ispecb5 > NSPEC2D_BOTTOM ) stop 'error NSPEC2D_BOTTOM too small'      
+      if( ispecb5 > NSPEC2D_BOTTOM ) stop 'error NSPEC2D_BOTTOM too small'
       ibelm_bottom(ispecb5)=ispec
     endif
 
     ! on boundary: top
     if(iboun(6,ispec)) then
       ispecb6=ispecb6+1
-      if( ispecb6 > NSPEC2D_TOP ) stop 'error NSPEC2D_TOP too small'      
+      if( ispecb6 > NSPEC2D_TOP ) stop 'error NSPEC2D_TOP too small'
       ibelm_top(ispecb6)=ispec
     endif
 

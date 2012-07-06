@@ -703,9 +703,10 @@
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 !local parameters
-  real(kind=CUSTOM_REAL) :: mindist
+  real(kind=CUSTOM_REAL) :: mindist,distance
   integer, dimension(:), allocatable :: valence_external_mesh
   integer :: ispec,i,j,k,iglob,ier,count
+  real(kind=CUSTOM_REAL),parameter :: TOLERANCE_DISTANCE = 0.9
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence_external_mesh(nglob),stat=ier)
@@ -722,6 +723,7 @@
                   + (ystore(ibool(1,1,1,:)) - ystore(ibool(2,1,1,:)))**2 &
                   + (zstore(ibool(1,1,1,:)) - zstore(ibool(2,1,1,:)))**2 )
   mindist = sqrt(mindist)
+  distance = TOLERANCE_DISTANCE*mindist
 
 ! sets valence value to one corresponding to process rank  for points on cross-sections
   do ispec = 1, nspec
@@ -732,7 +734,7 @@
 
           ! chooses points close to cross-section
           if( abs((xstore(iglob)-section_xorg)*section_nx + (ystore(iglob)-section_yorg)*section_ny &
-                 + (zstore(iglob)-section_zorg)*section_nz )  < 0.8*mindist ) then
+                 + (zstore(iglob)-section_zorg)*section_nz )  < distance ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
           endif

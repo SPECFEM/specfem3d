@@ -49,7 +49,7 @@
   integer, intent(in) :: nundefMat_ext_mesh
   character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
 
-  integer, intent(in) :: imaterial_id,imaterial_def  
+  integer, intent(in) :: imaterial_id,imaterial_def
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
@@ -60,11 +60,11 @@
 
   real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
                            kxx,kxy,kxz,kyy,kyz,kzz
-  
+
   ! local parameters
   integer :: iflag,flag_below,flag_above
   integer :: iundef
-  
+
   ! check if the material is known or unknown
   if( imaterial_id > 0 ) then
     ! gets velocity model as specified by (cubit) mesh files for elastic & acoustic
@@ -74,8 +74,8 @@
     idomain_id = materials_ext_mesh(6,imaterial_id)
 
     select case( idomain_id )
-        
-    case( IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC) 
+
+    case( IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
       ! elastic or acoustic
 
       ! density
@@ -93,7 +93,7 @@
       ! anisotropy
       iflag_aniso = materials_ext_mesh(5,imaterial_id)
 
-    case( IDOMAIN_POROELASTIC ) 
+    case( IDOMAIN_POROELASTIC )
       ! poroelastic
       ! materials_ext_mesh format:
       ! rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz
@@ -120,9 +120,9 @@
     case default
       print*,'error: domain id = ',idomain_id,'not recognized'
       stop 'error: domain not recognized'
-      
+
     end select
-    
+
   else if ( imaterial_def == 1 ) then
 
     stop 'material: interface not implemented yet'
@@ -142,7 +142,7 @@
     rho = materials_ext_mesh(1,iflag)
     vp = materials_ext_mesh(2,iflag)
     vs = materials_ext_mesh(3,iflag)
-    qmu_atten = materials_ext_mesh(4,iflag)    
+    qmu_atten = materials_ext_mesh(4,iflag)
     iflag_aniso = materials_ext_mesh(5,iflag)
     idomain_id = materials_ext_mesh(6,iflag)
 
@@ -154,7 +154,7 @@
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
     ! no anisotropy
-    iflag_aniso = 0   
+    iflag_aniso = 0
 
     ! sets acoustic/elastic domain as given in materials properties
     iundef = - imaterial_id    ! iundef must be positive

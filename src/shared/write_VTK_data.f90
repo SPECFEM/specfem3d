@@ -38,16 +38,19 @@
 
   integer :: nspec,nglob
 
-! global coordinates
+  ! global coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! element flag array
+  ! element flag array
   integer, dimension(nspec) :: elem_flag
-  integer :: ispec,i
 
-! file name
-  character(len=256) prname_file
+  ! file name
+  character(len=256) :: prname_file
+  !character(len=2), optional, intent(in) :: str_id
+
+  ! local parameters
+  integer :: ispec,i
 
 ! write source and receiver VTK files for Paraview
   !debug
@@ -79,6 +82,11 @@
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
+  !if( present( str_id ) ) then
+  !  write(IOVTK,'(a)') "SCALARS elem_flag_"//str_id//" integer"
+  !else
+  !  write(IOVTK,'(a)') "SCALARS elem_flag integer"
+  !endif
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
   write(IOVTK,'(a)') "LOOKUP_TABLE default"
   do ispec = 1,nspec

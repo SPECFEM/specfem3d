@@ -604,11 +604,16 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+NVCC
 PYTHON_EGG_LDFLAGS
 PYTHON_EGG_CPPFLAGS
 PYTHON_EGG_CFLAGS
 PYTHONPATH
 LOCAL_PATH_IS_ALSO_GLOBAL
+OPENMP_LIB
+MPI_INC
+CUDA_INC
+CUDA_LIB
 FLAGS_NO_CHECK
 FLAGS_CHECK
 MPICC
@@ -673,6 +678,10 @@ PYTHON_EXEC_PREFIX
 PYTHON_PREFIX
 PYTHON_VERSION
 PYTHON
+COND_OPENMP_FALSE
+COND_OPENMP_TRUE
+COND_CUDA_FALSE
+COND_CUDA_TRUE
 CUSTOM_MPI_TYPE
 CUSTOM_REAL
 COND_MPI_FALSE
@@ -723,6 +732,8 @@ enable_option_checking
 with_pyre
 with_mpi
 enable_double_precision
+with_cuda
+with_openmp
 with_scotch_dir
 with_scotch_includedir
 with_scotch_libdir
@@ -749,6 +760,10 @@ MPILIBS
 MPICC
 FLAGS_CHECK
 FLAGS_NO_CHECK
+CUDA_LIB
+CUDA_INC
+MPI_INC
+OPENMP_LIB
 LOCAL_PATH_IS_ALSO_GLOBAL
 PYTHON
 PYTHONPATH'
@@ -1375,6 +1390,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-pyre             build Pyrized version [default=no]
   --with-mpi              build parallel version [default=yes]
+  --with-cuda             build CUDA GPU enabled version [default=no]
+  --with-openmp           build OpenMP enabled version [default=no]
   --with-scotch-dir       define the root path to Scotch (e.g. /opt/scotch/)
   --with-scotch-includedir
                           define the path to the Scotch headers (e.g.
@@ -1413,6 +1430,11 @@ Some influential environment variables:
   FLAGS_NO_CHECK
               Fortran compiler flags for creating fast, production-run code
               for critical subroutines
+  CUDA_LIB    Location of CUDA library libcudart
+  CUDA_INC    Location of CUDA include files
+  MPI_INC     Location of MPI include mpi.h, which is needed by nvcc when
+              compiling cuda files
+  OPENMP_LIB  Location of extra OpenMP libraries
   LOCAL_PATH_IS_ALSO_GLOBAL
               files on a local path on each node are also seen as global with
               same path [default=true]
@@ -2276,6 +2298,40 @@ else
     CUSTOM_MPI_TYPE=MPI_DOUBLE_PRECISION
 fi
 
+
+
+
+# Check whether --with-cuda was given.
+if test "${with_cuda+set}" = set; then :
+  withval=$with_cuda; want_cuda="$withval"
+else
+  want_cuda=no
+fi
+
+ if test "$want_cuda" = yes; then
+  COND_CUDA_TRUE=
+  COND_CUDA_FALSE='#'
+else
+  COND_CUDA_TRUE='#'
+  COND_CUDA_FALSE=
+fi
+
+
+
+# Check whether --with-openmp was given.
+if test "${with_openmp+set}" = set; then :
+  withval=$with_openmp; want_openmp="$withval"
+else
+  want_openmp=no
+fi
+
+ if test "$want_openmp" = yes; then
+  COND_OPENMP_TRUE=
+  COND_OPENMP_FALSE='#'
+else
+  COND_OPENMP_TRUE='#'
+  COND_OPENMP_FALSE=
+fi
 
 
 
@@ -6390,12 +6446,16 @@ LDFLAGS=${ac_save_ldflags}
 
 
 
+
+
+
 if test x"$MPIFC" = x; then
     MPIFC=mpif90
 fi
 if test x"$MPICC" = x; then
     MPICC=mpicc
 fi
+
 
 
 if test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x; then
@@ -6708,9 +6768,131 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 fi
 
+if test "$want_cuda" = yes; then
+
+  # Extract the first word of "nvcc", so it can be a program name with args.
+set dummy nvcc; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_NVCC+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $NVCC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_NVCC="$NVCC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_NVCC="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+NVCC=$ac_cv_path_NVCC
+if test -n "$NVCC"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $NVCC" >&5
+$as_echo "$NVCC" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+  if test -z "$NVCC" ; then
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot find 'nvcc' program.
+See \`config.log' for more details" "$LINENO" 5; }
+    NVCC=`echo "Error: nvcc is not installed." ; false`
+  fi
+
+fi
+
+if test "$want_openmp" = yes; then
+
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+cit_fc_save_fc=$FC
+cit_fc_save_fcflags=$FCFLAGS
+FC=$FC
+FCFLAGS="$FCFLAGS $FLAGS_NO_CHECK"
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether OpenMP directives work" >&5
+$as_echo_n "checking whether OpenMP directives work... " >&6; }
+
+#AC_COMPILE_IFELSE(_CIT_FC_TRIVIAL_OPENMP_PROGRAM, [
+#    AC_MSG_RESULT(yes)
+#], [
+#    AC_MSG_RESULT(no)
+#    AC_MSG_FAILURE([cannot compile a trivial OpenMP program using $FC])
+#])
+
+cat > conftest.$ac_ext <<_ACEOF
+
+      program main
+
+       implicit none
+       integer OMP_get_thread_num
+       integer OMP_GET_MAX_THREADS
+       integer NUM_THREADS
+       integer thread_id
+
+       NUM_THREADS = OMP_GET_MAX_THREADS()
+       !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(thread_id)
+       thread_id = OMP_get_thread_num()+1
+       !$OMP END PARALLEL
+
+      end
+
+_ACEOF
+if ac_fn_fc_try_link "$LINENO"; then :
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+else
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot link a trivial OpenMP program using $FC with flags: $FLAGS_NO_CHECK
+See \`config.log' for more details" "$LINENO" 5; }
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+FC=$cit_fc_save_fc
+FCFLAGS=$cit_fc_save_fcflags
+
+
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+fi
+
 
 # Checks for library functions.
-
 
 ac_config_files="$ac_config_files Makefile src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
 
@@ -6829,6 +7011,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_MPI_TRUE}" && test -z "${COND_MPI_FALSE}"; then
   as_fn_error $? "conditional \"COND_MPI\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_CUDA_TRUE}" && test -z "${COND_CUDA_FALSE}"; then
+  as_fn_error $? "conditional \"COND_CUDA\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_OPENMP_TRUE}" && test -z "${COND_OPENMP_FALSE}"; then
+  as_fn_error $? "conditional \"COND_OPENMP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -8016,5 +8206,7 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
+
+#daniel: adding custom lines to config.h.in through autoheader
 
 

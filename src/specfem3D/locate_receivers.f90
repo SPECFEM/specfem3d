@@ -86,17 +86,17 @@
   integer ios
 
   double precision,dimension(1) :: altitude_rec,distmin_ele
-  !double precision,dimension(4) :: elevation_node,dist_node  
+  !double precision,dimension(4) :: elevation_node,dist_node
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
 
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
-  
+
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
-  
+
   double precision, allocatable, dimension(:) :: horiz_dist
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision dist
-  
+
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta,dgamma
   double precision x,y,z
   double precision xix,xiy,xiz
@@ -220,11 +220,11 @@
               status='unknown',action='write',iostat=ios)
         if( ios /= 0 ) &
           call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
-          
+
         do irec=1,nrec
           write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
         enddo
-        
+
         close(IOUT_SU)
         deallocate(x_found,y_found,z_found)
       endif
@@ -286,7 +286,7 @@
 
     read(1,*,iostat=ios) station_name(irec),network_name(irec), &
                           stlat(irec),stlon(irec),stele(irec),stbur(irec)
-                          
+
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
     ! convert station location to UTM
@@ -315,7 +315,7 @@
                                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
     altitude_rec(1) = loc_ele
     distmin_ele(1) = loc_distmin
-    
+
 !    !   set distance to huge initial value
 !    distmin = HUGEVAL
 !    if(num_free_surface_faces > 0) then
@@ -385,11 +385,11 @@
 !        end do
 !      end do
 !    end if
-    
+
     !  MPI communications to determine the best slice
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_rec,1,elevation_all,1,NPROC)
-    
+
     if(myrank == 0) then
       iproc = minloc(distmin_ele_all)
       altitude_rec(1) = elevation_all(iproc(1))
@@ -499,6 +499,7 @@
       ! end of loop on all the spectral elements in current slice
       enddo
     else
+      ! SeismicUnix format
       ispec_selected_rec(irec) = 0
       ix_initial_guess(irec) = 0
       iy_initial_guess(irec) = 0
@@ -519,7 +520,7 @@
               (y_target(irec)>=ymin_ELE .and. y_target(irec)<=ymax_ELE) .and. &
               (z_target(irec)>=zmin_ELE .and. z_target(irec)<=zmax_ELE) ) then
             ! we find the element (ispec) which "may" contain the receiver (irec)
-            ! so we only need to compute distances 
+            ! so we only need to compute distances
             !(which is expensive because of "dsqrt") within those elements
             ispec_selected_rec(irec) = ispec
             do k = kmin_temp,kmax_temp
@@ -994,11 +995,11 @@
               status='unknown',action='write',iostat=ios)
     if( ios /= 0 ) &
       call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
-      
+
     do irec=1,nrec
       write(IOUT_SU,*) x_found(irec),y_found(irec),z_found(irec)
     enddo
-    
+
     close(IOUT_SU)
 
     ! stores station infos for later runs

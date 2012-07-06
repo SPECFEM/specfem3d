@@ -28,114 +28,124 @@
 ! for external mesh
 
   subroutine save_arrays_solver_ext_mesh(nspec,nglob, &
-                    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
-                    gammaxstore,gammaystore,gammazstore, &
-                    jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
-                    rhostore,kappastore,mustore, &
-                    rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore, &
-                    rho_vpI,rho_vpII,rho_vsI, &
-                    rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                    OCEANS,rmass_ocean_load,NGLOB_OCEAN,&
+!                    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
+!                    gammaxstore,gammaystore,gammazstore, &
+!                    jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
+!                    rhostore,kappastore,mustore, &
+!                    rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore, &
+!                    rho_vpI,rho_vpII,rho_vsI, &
+!                    rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
+                    OCEANS, &
+!                    rmass_ocean_load,NGLOB_OCEAN,&
                     ibool, &
-                    xstore_dummy,ystore_dummy,zstore_dummy, &
-                    abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                    abs_boundary_ijk,abs_boundary_ispec, &
-                    num_abs_boundary_faces, &
-                    free_surface_normal,free_surface_jacobian2Dw, &
-                    free_surface_ijk,free_surface_ispec, &
-                    num_free_surface_faces, &
-                    coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                    coupling_ac_el_ijk,coupling_ac_el_ispec, &
-                    num_coupling_ac_el_faces, &
-                    coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
-                    coupling_ac_po_ijk,coupling_ac_po_ispec, &
-                    num_coupling_ac_po_faces, &
-                    coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-                    coupling_el_po_ijk,coupling_po_el_ijk,coupling_el_po_ispec, &
-                    coupling_po_el_ispec,num_coupling_el_po_faces, &
+!                    xstore_dummy,ystore_dummy,zstore_dummy, &
+!                    abs_boundary_normal,abs_boundary_jacobian2Dw, &
+!                    abs_boundary_ijk,abs_boundary_ispec, &
+!                    num_abs_boundary_faces, &
+!                    free_surface_normal,free_surface_jacobian2Dw, &
+!                    free_surface_ijk,free_surface_ispec, &
+!                    num_free_surface_faces, &
+!                    coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
+!                    coupling_ac_el_ijk,coupling_ac_el_ispec, &
+!                    num_coupling_ac_el_faces, &
+!                    coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
+!                    coupling_ac_po_ijk,coupling_ac_po_ispec, &
+!                    num_coupling_ac_po_faces, &
+!                    coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
+!                    coupling_el_po_ijk,coupling_po_el_ijk,coupling_el_po_ispec, &
+!                    coupling_po_el_ispec,num_coupling_el_po_faces, &
                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-                    prname,SAVE_MESH_FILES, &
-                    ANISOTROPY,NSPEC_ANISO, &
-                    c11store,c12store,c13store,c14store,c15store,c16store, &
-                    c22store,c23store,c24store,c25store,c26store,c33store, &
-                    c34store,c35store,c36store,c44store,c45store,c46store, &
-                    c55store,c56store,c66store, &
-                    ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-                    ispec_is_inner,nspec_inner_acoustic,nspec_inner_elastic,nspec_inner_poroelastic, &
-                    nspec_outer_acoustic,nspec_outer_elastic,nspec_outer_poroelastic, &
-                    num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
-                    num_phase_ispec_elastic,phase_ispec_inner_elastic, &
-                    num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic)
+!                    prname, &
+                    SAVE_MESH_FILES, &
+                    ANISOTROPY &
+!                    NSPEC_ANISO, &
+!                    c11store,c12store,c13store,c14store,c15store,c16store, &
+!                    c22store,c23store,c24store,c25store,c26store,c33store, &
+!                    c34store,c35store,c36store,c44store,c45store,c46store, &
+!                    c55store,c56store,c66store, &
+!                    ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
+!                    ispec_is_inner,nspec_inner_acoustic,nspec_inner_elastic,nspec_inner_poroelastic, &
+!                    nspec_outer_acoustic,nspec_outer_elastic,nspec_outer_poroelastic, &
+!                    num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+!                    num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+!                    num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic, &
+!                    num_colors_outer_acoustic,num_colors_inner_acoustic, &
+!                    num_elem_colors_acoustic, &
+!                    num_colors_outer_elastic,num_colors_inner_elastic, &
+!                    num_elem_colors_elastic, &
+              )
+
+  use create_regions_mesh_ext_par
 
   implicit none
 
-  include "constants.h"
+!  include "constants.h"
 
   integer :: nspec,nglob
 
 ! jacobian
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xixstore,xiystore,xizstore, &
-            etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp,rho_vs
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xixstore,xiystore,xizstore, &
+!            etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp,rho_vs
 
 ! attenuation
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: qmu_attenuation_store
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: qmu_attenuation_store
 
 ! material
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore,kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: etastore,phistore,tortstore
-  real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,nspec) :: rhoarraystore
-  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,nspec) :: kappaarraystore
-  real(kind=CUSTOM_REAL), dimension(6,NGLLX,NGLLY,NGLLZ,nspec) :: permstore
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vpI,rho_vpII,rho_vsI
-  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass,rmass_acoustic, &
-            rmass_solid_poroelastic,rmass_fluid_poroelastic
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore,kappastore,mustore
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: etastore,phistore,tortstore
+!  real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,nspec) :: rhoarraystore
+!  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,nspec) :: kappaarraystore
+!  real(kind=CUSTOM_REAL), dimension(6,NGLLX,NGLLY,NGLLZ,nspec) :: permstore
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vpI,rho_vpII,rho_vsI
+!  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass,rmass_acoustic, &
+!            rmass_solid_poroelastic,rmass_fluid_poroelastic
 ! ocean load
   logical :: OCEANS
-  integer :: NGLOB_OCEAN
-  real(kind=CUSTOM_REAL),dimension(NGLOB_OCEAN) :: rmass_ocean_load
+!  integer :: NGLOB_OCEAN
+!  real(kind=CUSTOM_REAL),dimension(NGLOB_OCEAN) :: rmass_ocean_load
 
 ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+!  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
 ! absorbing boundary surface
-  integer :: num_abs_boundary_faces
-  real(kind=CUSTOM_REAL) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
-  real(kind=CUSTOM_REAL) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+!  integer :: num_abs_boundary_faces
+!  real(kind=CUSTOM_REAL) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
+!  real(kind=CUSTOM_REAL) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
+!  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+!  integer :: abs_boundary_ispec(num_abs_boundary_faces)
 
 ! free surface
-  integer :: num_free_surface_faces
-  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
-  real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ispec(num_free_surface_faces)
+!  integer :: num_free_surface_faces
+!  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
+!  real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
+!  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+!  integer :: free_surface_ispec(num_free_surface_faces)
 
 ! acoustic-elastic coupling surface
-  integer :: num_coupling_ac_el_faces
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
+!  integer :: num_coupling_ac_el_faces
+!  real(kind=CUSTOM_REAL) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
+!  real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
+!  integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
+!  integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
 ! acoustic-poroelastic coupling surface
-  integer :: num_coupling_ac_po_faces
-  real(kind=CUSTOM_REAL) :: coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces)
-  real(kind=CUSTOM_REAL) :: coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces)
-  integer :: coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces)
-  integer :: coupling_ac_po_ispec(num_coupling_ac_po_faces)
+!  integer :: num_coupling_ac_po_faces
+!  real(kind=CUSTOM_REAL) :: coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces)
+!  real(kind=CUSTOM_REAL) :: coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces)
+!  integer :: coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces)
+!  integer :: coupling_ac_po_ispec(num_coupling_ac_po_faces)
 
 ! elastic-poroelastic coupling surface
-  integer :: num_coupling_el_po_faces
-  real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces)
-  real(kind=CUSTOM_REAL) :: coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
-  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)
+!  integer :: num_coupling_el_po_faces
+!  real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces)
+!  real(kind=CUSTOM_REAL) :: coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces)
+!  integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
+!  integer :: coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
+!  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
+!  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)
 
 ! MPI interfaces
   integer :: num_interfaces_ext_mesh
@@ -146,35 +156,43 @@
   integer :: max_nibool_interfaces_ext_mesh
 
 ! file name
-  character(len=256) prname
+!  character(len=256) prname
   logical :: SAVE_MESH_FILES
 
 ! anisotropy
   logical :: ANISOTROPY
-  integer :: NSPEC_ANISO
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
-            c11store,c12store,c13store,c14store,c15store,c16store, &
-            c22store,c23store,c24store,c25store,c26store,c33store, &
-            c34store,c35store,c36store,c44store,c45store,c46store, &
-            c55store,c56store,c66store
+!  integer :: NSPEC_ANISO
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
+!            c11store,c12store,c13store,c14store,c15store,c16store, &
+!            c22store,c23store,c24store,c25store,c26store,c33store, &
+!            c34store,c35store,c36store,c44store,c45store,c46store, &
+!            c55store,c56store,c66store
 
 ! material domain flags
-  logical, dimension(nspec) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+!  logical, dimension(nspec) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
 ! inner/outer elements
-  logical,dimension(nspec) :: ispec_is_inner
-  integer :: nspec_inner_acoustic,nspec_outer_acoustic
-  integer :: nspec_inner_elastic,nspec_outer_elastic
-  integer :: nspec_inner_poroelastic,nspec_outer_poroelastic
+!  logical,dimension(nspec) :: ispec_is_inner
+!  integer :: nspec_inner_acoustic,nspec_outer_acoustic
+!  integer :: nspec_inner_elastic,nspec_outer_elastic
+!  integer :: nspec_inner_poroelastic,nspec_outer_poroelastic
 
-  integer :: num_phase_ispec_acoustic
-  integer,dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
+!  integer :: num_phase_ispec_acoustic
+!  integer,dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
 
-  integer :: num_phase_ispec_elastic
-  integer,dimension(num_phase_ispec_elastic,2) :: phase_ispec_inner_elastic
+!  integer :: num_phase_ispec_elastic
+!  integer,dimension(num_phase_ispec_elastic,2) :: phase_ispec_inner_elastic
 
-  integer :: num_phase_ispec_poroelastic
-  integer,dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
+!  integer :: num_phase_ispec_poroelastic
+!  integer,dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
+
+  ! mesh coloring
+!  integer :: num_colors_outer_acoustic,num_colors_inner_acoustic
+!  integer, dimension(num_colors_outer_acoustic + num_colors_inner_acoustic) :: &
+!    num_elem_colors_acoustic
+!  integer :: num_colors_outer_elastic,num_colors_inner_elastic
+!  integer, dimension(num_colors_outer_elastic + num_colors_inner_elastic) :: &
+!    num_elem_colors_elastic
 
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
@@ -183,13 +201,15 @@
   !real(kind=CUSTOM_REAL) :: minimum(1)
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: ier,i
-  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
+!  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   character(len=256) :: filename
 
   integer, dimension(:), allocatable :: iglob_tmp
   integer :: j,inum
 
-! saves mesh file proc***_external_mesh.bin
+  logical,parameter :: DEBUG = .false.
+
+  ! saves mesh file proc***_external_mesh.bin
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
@@ -247,6 +267,8 @@
 ! poroelastic
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if( POROELASTIC_SIMULATION ) then
+    stop 'not implemented yet: write rmass_solid_poroelastic .. '
+
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
     write(IOUT) rhoarraystore
@@ -370,6 +392,18 @@
     if(num_phase_ispec_poroelastic > 0 ) write(IOUT) phase_ispec_inner_poroelastic
   endif
 
+  ! mesh coloring
+  if( USE_MESH_COLORING_GPU ) then
+    if( ACOUSTIC_SIMULATION ) then
+      write(IOUT) num_colors_outer_acoustic,num_colors_inner_acoustic
+      write(IOUT) num_elem_colors_acoustic
+    endif
+    if( ELASTIC_SIMULATION ) then
+      write(IOUT) num_colors_outer_elastic,num_colors_inner_elastic
+      write(IOUT) num_elem_colors_elastic
+    endif
+  endif
+
   close(IOUT)
 
 
@@ -461,180 +495,181 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
                         qmu_attenuation_store,filename)
 
-    ! VTK file output
-    ! acoustic-elastic domains
-    if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
-      ! saves points on acoustic-elastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-      inum = 0
-      iglob_tmp(:) = 0
-      do i=1,num_coupling_ac_el_faces
-        do j=1,NGLLSQUARE
-          inum = inum+1
-          iglob_tmp(inum) = ibool(coupling_ac_el_ijk(1,j,i), &
-                                  coupling_ac_el_ijk(2,j,i), &
-                                  coupling_ac_el_ijk(3,j,i), &
-                                  coupling_ac_el_ispec(i) )
-        enddo
-      enddo
-      filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
-                        filename)
-
-      ! saves acoustic/elastic flag
-      allocate(v_tmp_i(nspec),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
-      do i=1,nspec
-        if( ispec_is_acoustic(i) ) then
-          v_tmp_i(i) = 1
-        else if( ispec_is_elastic(i) ) then
-          v_tmp_i(i) = 2
-        else
-          v_tmp_i(i) = 0
-        endif
-      enddo
-      filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp_i,filename)
-
-      deallocate(iglob_tmp,v_tmp_i)
-    endif
-
-    ! saves free surface points
-    if( num_free_surface_faces > 0 ) then
-      ! saves free surface interface points
-      allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-      inum = 0
-      iglob_tmp(:) = 0
-      do i=1,num_free_surface_faces
-        do j=1,NGLLSQUARE
-          inum = inum+1
-          iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
-                                  free_surface_ijk(2,j,i), &
-                                  free_surface_ijk(3,j,i), &
-                                  free_surface_ispec(i) )
-        enddo
-      enddo
-      filename = prname(1:len_trim(prname))//'free_surface'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
-                        filename)
-
-      deallocate(iglob_tmp)
-    endif
-
-    ! debug: saves 1. MPI interface
-    !if( num_interfaces_ext_mesh >= 1 ) then
-    !  filename = prname(1:len_trim(prname))//'MPI_1_points'
-    !  call write_VTK_data_points(nglob, &
-    !                    xstore_dummy,ystore_dummy,zstore_dummy, &
-    !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-    !                    nibool_interfaces_ext_mesh(1), &
-    !                    filename)
-    !endif
-
-    ! acoustic-poroelastic domains
-    if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
-      ! saves points on acoustic-poroelastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_po_faces),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-      inum = 0
-      iglob_tmp(:) = 0
-      do i=1,num_coupling_ac_po_faces
-        do j=1,NGLLSQUARE
-          inum = inum+1
-          iglob_tmp(inum) = ibool(coupling_ac_po_ijk(1,j,i), &
-                                  coupling_ac_po_ijk(2,j,i), &
-                                  coupling_ac_po_ijk(3,j,i), &
-                                  coupling_ac_po_ispec(i) )
-        enddo
-      enddo
-      filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_coupling_ac_po_faces, &
-                        filename)
-
-      ! saves acoustic/poroelastic flag
-      allocate(v_tmp_i(nspec),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
-      do i=1,nspec
-        if( ispec_is_acoustic(i) ) then
-          v_tmp_i(i) = 1
-        else if( ispec_is_poroelastic(i) ) then
-          v_tmp_i(i) = 2
-        else
-          v_tmp_i(i) = 0
-        endif
-      enddo
-      filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp_i,filename)
-
-    deallocate(v_tmp_i,iglob_tmp)
-    endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
-
-    ! elastic-poroelastic domains
-    if( ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
-      ! saves points on elastic-poroelastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_el_po_faces),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-      inum = 0
-      iglob_tmp(:) = 0
-      do i=1,num_coupling_el_po_faces
-        do j=1,NGLLSQUARE
-          inum = inum+1
-          iglob_tmp(inum) = ibool(coupling_el_po_ijk(1,j,i), &
-                                  coupling_el_po_ijk(2,j,i), &
-                                  coupling_el_po_ijk(3,j,i), &
-                                  coupling_el_po_ispec(i) )
-        enddo
-      enddo
-      filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_coupling_el_po_faces, &
-                        filename)
-
-      ! saves elastic/poroelastic flag
-      allocate(v_tmp_i(nspec),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
-      do i=1,nspec
-        if( ispec_is_elastic(i) ) then
-          v_tmp_i(i) = 1
-        else if( ispec_is_poroelastic(i) ) then
-          v_tmp_i(i) = 2
-        else
-          v_tmp_i(i) = 0
-        endif
-      enddo
-      filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp_i,filename)
-
-    deallocate(v_tmp_i,iglob_tmp)
-    endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
-
-    !debug: saves 1. MPI interface
-    !    if( num_interfaces_ext_mesh >= 1 ) then
-    !      filename = prname(1:len_trim(prname))//'MPI_1_points'
-    !      call write_VTK_data_points(nglob, &
-    !                        xstore_dummy,ystore_dummy,zstore_dummy, &
-    !                        ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-    !                        nibool_interfaces_ext_mesh(1), &
-    !                        filename)
-    !    endif
-    !
-
     deallocate(v_tmp)
+
+    ! VTK file output
+    if( DEBUG ) then
+      ! acoustic-elastic domains
+      if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
+        ! saves points on acoustic-elastic coupling interface
+        allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+        inum = 0
+        iglob_tmp(:) = 0
+        do i=1,num_coupling_ac_el_faces
+          do j=1,NGLLSQUARE
+            inum = inum+1
+            iglob_tmp(inum) = ibool(coupling_ac_el_ijk(1,j,i), &
+                                    coupling_ac_el_ijk(2,j,i), &
+                                    coupling_ac_el_ijk(3,j,i), &
+                                    coupling_ac_el_ispec(i) )
+          enddo
+        enddo
+        filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
+        call write_VTK_data_points(nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy, &
+                          iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
+                          filename)
+
+        ! saves acoustic/elastic flag
+        allocate(v_tmp_i(nspec),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array v_tmp_i'
+        do i=1,nspec
+          if( ispec_is_acoustic(i) ) then
+            v_tmp_i(i) = 1
+          else if( ispec_is_elastic(i) ) then
+            v_tmp_i(i) = 2
+          else
+            v_tmp_i(i) = 0
+          endif
+        enddo
+        filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
+        call write_VTK_data_elem_i(nspec,nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                          v_tmp_i,filename)
+
+        deallocate(iglob_tmp,v_tmp_i)
+      endif
+
+      ! saves free surface points
+      if( num_free_surface_faces > 0 ) then
+        ! saves free surface interface points
+        allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+        inum = 0
+        iglob_tmp(:) = 0
+        do i=1,num_free_surface_faces
+          do j=1,NGLLSQUARE
+            inum = inum+1
+            iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
+                                    free_surface_ijk(2,j,i), &
+                                    free_surface_ijk(3,j,i), &
+                                    free_surface_ispec(i) )
+          enddo
+        enddo
+        filename = prname(1:len_trim(prname))//'free_surface'
+        call write_VTK_data_points(nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy, &
+                          iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
+                          filename)
+
+        deallocate(iglob_tmp)
+      endif
+
+      ! debug: saves 1. MPI interface
+      !if( num_interfaces_ext_mesh >= 1 ) then
+      !  filename = prname(1:len_trim(prname))//'MPI_1_points'
+      !  call write_VTK_data_points(nglob, &
+      !                    xstore_dummy,ystore_dummy,zstore_dummy, &
+      !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+      !                    nibool_interfaces_ext_mesh(1), &
+      !                    filename)
+      !endif
+
+      ! acoustic-poroelastic domains
+      if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+        ! saves points on acoustic-poroelastic coupling interface
+        allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_po_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+        inum = 0
+        iglob_tmp(:) = 0
+        do i=1,num_coupling_ac_po_faces
+          do j=1,NGLLSQUARE
+            inum = inum+1
+            iglob_tmp(inum) = ibool(coupling_ac_po_ijk(1,j,i), &
+                                    coupling_ac_po_ijk(2,j,i), &
+                                    coupling_ac_po_ijk(3,j,i), &
+                                    coupling_ac_po_ispec(i) )
+          enddo
+        enddo
+        filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
+        call write_VTK_data_points(nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy, &
+                          iglob_tmp,NGLLSQUARE*num_coupling_ac_po_faces, &
+                          filename)
+
+        ! saves acoustic/poroelastic flag
+        allocate(v_tmp_i(nspec),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array v_tmp_i'
+        do i=1,nspec
+          if( ispec_is_acoustic(i) ) then
+            v_tmp_i(i) = 1
+          else if( ispec_is_poroelastic(i) ) then
+            v_tmp_i(i) = 2
+          else
+            v_tmp_i(i) = 0
+          endif
+        enddo
+        filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
+        call write_VTK_data_elem_i(nspec,nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                          v_tmp_i,filename)
+
+      deallocate(v_tmp_i,iglob_tmp)
+      endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
+
+      ! elastic-poroelastic domains
+      if( ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+        ! saves points on elastic-poroelastic coupling interface
+        allocate( iglob_tmp(NGLLSQUARE*num_coupling_el_po_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+        inum = 0
+        iglob_tmp(:) = 0
+        do i=1,num_coupling_el_po_faces
+          do j=1,NGLLSQUARE
+            inum = inum+1
+            iglob_tmp(inum) = ibool(coupling_el_po_ijk(1,j,i), &
+                                    coupling_el_po_ijk(2,j,i), &
+                                    coupling_el_po_ijk(3,j,i), &
+                                    coupling_el_po_ispec(i) )
+          enddo
+        enddo
+        filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
+        call write_VTK_data_points(nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy, &
+                          iglob_tmp,NGLLSQUARE*num_coupling_el_po_faces, &
+                          filename)
+
+        ! saves elastic/poroelastic flag
+        allocate(v_tmp_i(nspec),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array v_tmp_i'
+        do i=1,nspec
+          if( ispec_is_elastic(i) ) then
+            v_tmp_i(i) = 1
+          else if( ispec_is_poroelastic(i) ) then
+            v_tmp_i(i) = 2
+          else
+            v_tmp_i(i) = 0
+          endif
+        enddo
+        filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
+        call write_VTK_data_elem_i(nspec,nglob, &
+                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                          v_tmp_i,filename)
+
+      deallocate(v_tmp_i,iglob_tmp)
+      endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
+
+      !debug: saves 1. MPI interface
+      !if( num_interfaces_ext_mesh >= 1 ) then
+      !  filename = prname(1:len_trim(prname))//'MPI_1_points'
+      !  call write_VTK_data_points(nglob, &
+      !                    xstore_dummy,ystore_dummy,zstore_dummy, &
+      !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+      !                    nibool_interfaces_ext_mesh(1), &
+      !                    filename)
+      !endif
+    endif ! DEBUG
 
   endif ! SAVE_MESH_FILES
 

@@ -31,6 +31,9 @@ program pre_meshfem3D
                                   check_valence, &
                                   scotch_partitioning, &
                                   write_mesh_databases
+
+! daniel: ifort
+!  USE IFPORT,only: getarg
   implicit none
   integer :: i
   character(len=256) :: arg(3)

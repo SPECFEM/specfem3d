@@ -43,7 +43,7 @@
   double precision, parameter :: GOCAD_ST_V_X = 109670.74, GOCAD_ST_V_Y = 71530.72
   double precision, parameter :: GOCAD_ST_W_Z =  7666.334
   double precision, parameter :: GOCAD_ST_NO_DATA_VALUE = -99999
-  
+
   real,dimension(:,:,:),allocatable :: vp_array
 
   end module salton_trough_par
@@ -63,8 +63,8 @@
 
   ! local parameters
   integer :: ier
-  
-  
+
+
   allocate(vp_array(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW),stat=ier)
   if( ier /= 0 ) call exit_mpi(myrank,'error allocating vp_array for salton')
 
@@ -92,11 +92,11 @@
 
   ! array length
   reclen=(GOCAD_ST_NU * GOCAD_ST_NV * GOCAD_ST_NW) * 4
-  
-  ! file name  
+
+  ! file name
   call get_value_string(SALTON_SEA_MODEL_FILE,'model.SALTON_SEA_MODEL_FILE', &
                        'DATA/st_3D_block_harvard/regrid3_vel_p.bin')
- 
+
   ! reads in file values
   open(11,file=trim(SALTON_SEA_MODEL_FILE), &
         status='old',action='read',form='unformatted',access='direct',recl=reclen,iostat=ios)
@@ -104,10 +104,10 @@
     print *,'error opening file: ',trim(SALTON_SEA_MODEL_FILE),' iostat = ', ios
     call exit_mpi(0,'Error opening file salton trough')
   endif
-  
-  read(11,rec=1,iostat=ios) vp_array  
+
+  read(11,rec=1,iostat=ios) vp_array
   if (ios /= 0) stop 'Error reading vp_array'
-  
+
   close(11)
 
   end subroutine read_salton_sea_model
@@ -126,7 +126,7 @@
   use create_regions_mesh_ext_par
   implicit none
 
-  ! GLL point 
+  ! GLL point
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! density, Vp and Vs
@@ -139,20 +139,20 @@
   double precision :: uc,vc,wc
   double precision :: vp_st,vs_st,rho_st
 
-  ! GLL point location converted to u,v,w  
+  ! GLL point location converted to u,v,w
   call vx_xyz2uvw(xmesh,ymesh,zmesh,uc,vc,wc)
 
   ! model values
   call vx_xyz_interp(uc,vc,wc,vp_st,vs_st,rho_st)
-  
+
   ! converts to custom real
   vp = vp_st
   vs = vs_st
   rho = rho_st
-  
+
   ! no attenuation info
   qmu_atten = 0.0
-  
+
   end subroutine model_salton_trough
 
 !
@@ -221,7 +221,7 @@
     v8 = vp_array(i,j+1,k+1)
     vi = vp_array(i+ixi,j+ieta,k+iga)
     !    print *, v1, v2, v3, v4, v5, v6, v7, v8
-    
+
     if ((v1 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
        (v2 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
        (v3 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
@@ -240,7 +240,7 @@
                 v8 * (1-xi) * eta * ga)
     else if ((vi - GOCAD_ST_NO_DATA_VALUE) > eps) then
       vp = dble(vi)
-      
+
   !    else if ((v1 - GOCAD_ST_NO_DATA_VALUE) > eps) then
   !      vp = dble(v1)
   !    else if ((v2 - GOCAD_ST_NO_DATA_VALUE) > eps) then
@@ -257,21 +257,21 @@
   !      vp = dble(v7)
   !    else if ((v7 - GOCAD_ST_NO_DATA_VALUE) > eps) then
   !      vp = dble(v8)
-  
+
     else
       vp = GOCAD_ST_NO_DATA_VALUE
     endif
-    
+
     ! depth
     zmesh = wc / (GOCAD_ST_NW - 1) * GOCAD_ST_W_Z + GOCAD_ST_O_Z
-    
+
     ! vs
     if (zmesh > -8500.)  then
       vs = vp / (2 - (0.27*zmesh/(-8500)))
     else
       vs = vp/1.73
     endif
-    
+
     ! density
     if (vp > 2160.) then
       rho = vp/3 + 1280.

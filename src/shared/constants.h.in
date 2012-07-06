@@ -70,10 +70,16 @@
 ! for optimized routines by Deville et al. (2002)
   integer, parameter :: m1 = NGLLX, m2 = NGLLX * NGLLY
 
+!!-----------------------------------------------------------
+!!
+!! seismogram and i/o output
+!!
+!!-----------------------------------------------------------
 ! ouput format of seismograms, ASCII or binary
   logical, parameter :: SEISMOGRAMS_BINARY = .false.
+
 ! output format of seismograms, Seismic Unix (binary with 240-byte-headers)
-  logical, parameter :: SU_FORMAT=.false.
+  logical, parameter :: SU_FORMAT = .false.
 
 ! input, output and main MPI I/O files
   integer, parameter :: ISTANDARD_OUTPUT = 6
@@ -101,6 +107,12 @@
 ! ignore variable name field (junk) at the beginning of each input line
   logical, parameter :: IGNORE_JUNK = .true.,DONT_IGNORE_JUNK = .false.
 
+!!-----------------------------------------------------------
+!!
+!! source/receiver setup
+!!
+!!-----------------------------------------------------------
+
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
 
@@ -123,6 +135,12 @@
 ! use directory OUTPUT_FILES/ for seismogram output
   logical,parameter :: USE_OUTPUT_FILES_PATH = .true.
 
+!!-----------------------------------------------------------
+!!
+!! absorption and PML
+!!
+!!-----------------------------------------------------------
+
 ! absorb top surface
 ! (defined in mesh as 'free_surface_file')
   logical,parameter :: ABSORB_FREE_SURFACE = .false.
@@ -132,6 +150,12 @@
 ! (only acoustic domains supported...)
 ! (user parameters can be specified in PML_init.f90)
   logical,parameter :: ABSORB_USE_PML = .false.
+
+!!-----------------------------------------------------------
+!!
+!! directory structure
+!!
+!!-----------------------------------------------------------
 
 ! paths for inputs and outputs files
   character(len=256), parameter :: IN_DATA_FILES_PATH = '../in_data_files/'
@@ -173,6 +197,9 @@
   double precision, parameter :: FACTOR_FORCE_SOURCE = 1.d15
   integer, parameter :: COMPONENT_FORCE_SOURCE = 3  ! takes direction in comp E/N/Z = 1/2/3
 
+! set to use a Ricker source time function instead of a gaussian
+  logical, parameter :: USE_RICKER_IPATI = .false.
+
 ! use this t0 as earliest starting time rather than the automatically calculated one
 ! (must be positive and bigger than the automatically one to be effective;
 !  simulation will start at t = - t0)
@@ -189,6 +216,13 @@
 ! Z record corresponds to the normal, while E and N are two tangent vectors
 ! that completes an orthonormal.
   logical, parameter :: EXT_MESH_RECV_NORMAL = .false.
+
+
+!!-----------------------------------------------------------
+!!
+!! image outputs
+!!
+!!-----------------------------------------------------------
 
 ! shakemaps and movies can not be generated during the same run. Mutually exclusive.
   logical, parameter :: EXTERNAL_MESH_MOVIE_SURFACE = .false.
@@ -214,6 +248,26 @@
 ! sensitive to actual size of model, assumes reference sphere of radius 1
 ! this is an absolute value for normalized coordinates in the Earth
   double precision, parameter :: SMALLVAL_TOL = 1.d-10
+
+!!-----------------------------------------------------------
+!!
+!! mesh optimization
+!!
+!!-----------------------------------------------------------
+
+! add mesh coloring for the GPU + MPI implementation
+  logical, parameter :: USE_MESH_COLORING_GPU = .false.
+  integer, parameter :: MAX_NUMBER_OF_COLORS = 1000
+
+! enhanced coloring:
+!
+! using Droux algorithm
+! try several times with one more color before giving up
+  logical, parameter :: USE_DROUX_OPTIMIZATION = .false.
+  integer, parameter :: MAX_NB_TRIES_OF_DROUX_1993 = 15
+!
+! postprocess the colors to balance them if Droux (1993) algorithm is not used
+  logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------
@@ -316,12 +370,44 @@
 ! flag for projection from latitude/longitude to UTM, and back
   integer, parameter :: ILONGLAT2UTM = 0, IUTM2LONGLAT = 1
 
+!!-----------------------------------------------------------
+!!
+!! OCEANS load approximation
+!!
+!!-----------------------------------------------------------
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
 ! density of sea water
   real(kind=CUSTOM_REAL), parameter :: RHO_OCEANS = 1020.0
 
+!!-----------------------------------------------------------
+!!
+!! GRAVITY
+!!
+!!-----------------------------------------------------------
+! gravitational constant
+  double precision, parameter :: GRAV = 6.6723d-11
+! number of layers in PREM
+  integer, parameter :: NR = 640
+! for lookup table for gravity every 100 m in radial direction of Earth model
+  integer, parameter :: NRAD_GRAVITY = 70000
+! R_EARTH is the radius of the bottom of the oceans (radius of Earth in m)
+  double precision, parameter :: R_EARTH = 6371000.d0
+! same radius in km
+  double precision, parameter :: R_EARTH_KM = R_EARTH / 1000.d0
+! radius of the Earth for gravity calculation
+  double precision, parameter :: R_EARTH_GRAVITY = 6371000.d0
+! radius of the ocean floor for gravity calculation
+  double precision, parameter :: ROCEAN_GRAVITY = 6368000.d0
+! average density in the full Earth to normalize equation
+  double precision, parameter :: RHOAV = 5514.3d0
+
+!!-----------------------------------------------------------
+!!
+!! DOMAINS
+!!
+!!-----------------------------------------------------------
 ! material domain ids
   integer, parameter :: IDOMAIN_ACOUSTIC    = 1
   integer, parameter :: IDOMAIN_ELASTIC     = 2
@@ -339,3 +425,5 @@
   integer, parameter :: IMODEL_USER_EXTERNAL    = 6
   integer, parameter :: IMODEL_GLL              = 7
   integer, parameter :: IMODEL_SALTON_TROUGH    = 8
+  integer, parameter :: IMODEL_1D_PREM_PB       = 9
+  integer, parameter :: IMODEL_IPATI            = 10

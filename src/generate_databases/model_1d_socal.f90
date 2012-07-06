@@ -26,13 +26,13 @@
 
 !--------------------------------------------------------------------------------------------------
 !
-! 1D Southern California model 
+! 1D Southern California model
 !
 ! model is the standard model used in southern California:
-!   Kanamori and Hadley (1975), Dreger and Helmberger (1990), Wald-Hutton,Given (1995)   
+!   Kanamori and Hadley (1975), Dreger and Helmberger (1990), Wald-Hutton,Given (1995)
 !
 !--------------------------------------------------------------------------------------------------
-   
+
   subroutine model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
 ! given a GLL point, returns super-imposed velocity model values
@@ -49,12 +49,12 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: depth,x,y,z
-  
+
   ! mesh point location
   x = xmesh
   y = ymesh
   z = zmesh
-  
+
   ! depth in m
   depth = -zmesh
 
@@ -88,5 +88,5 @@
 
   ! no attenuation information
   qmu_atten = 0.d0
-  
+
   end subroutine model_1D_socal

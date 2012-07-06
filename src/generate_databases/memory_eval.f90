@@ -152,10 +152,10 @@
 ! compute the approximate amount of static memory needed to run the mesher
 
  subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh, &
-              nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
-              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
-              nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-              static_memory_size_request)
+                              nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
+                              max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
+                              nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
+                              static_memory_size_request)
 
   implicit none
 
@@ -166,7 +166,7 @@
            max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
            nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top
 
-  integer,intent(inout) :: static_memory_size_request
+  double precision,intent(inout) :: static_memory_size_request
 
   ! local parameters
   integer :: static_memory_size

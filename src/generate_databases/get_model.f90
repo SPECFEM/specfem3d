@@ -24,14 +24,16 @@
 !
 !=====================================================================
 
+
   subroutine get_model(myrank,nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
                         materials_ext_mesh,nmat_ext_mesh, &
                         undef_mat_prop,nundefMat_ext_mesh, &
-                        ANISOTROPY,LOCAL_PATH)
+                        ANISOTROPY)
 
   use generate_databases_par,only: IMODEL
   use create_regions_mesh_ext_par
   implicit none
+
 
   ! number of spectral elements in each block
   integer :: myrank,nspec
@@ -59,26 +61,34 @@
                         afactor,bfactor,cfactor
 
   integer :: ispec,i,j,k
-  
+
   ! material domain
   integer :: idomain_id
-  
+
   integer :: imaterial_id,imaterial_def
 
   ! gll point location
-  double precision :: xmesh,ymesh,zmesh  
+  double precision :: xmesh,ymesh,zmesh
   integer :: iglob
-  character(len=256) LOCAL_PATH
+
+  ! timing
+  double precision, external :: wtime
+  double precision :: time_start,tCPU
 
   ! initializes element domain flags
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-  ! prepares tomography model if needed for elements with undefined material definitions
-  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-    call model_tomography_broadcast(myrank)    
-  endif
+  !debug
+  !print*,"nundefMat_ext_mesh:",nundefMat_ext_mesh
+
+! prepares tomography model if needed for elements with undefined material definitions
+  ! TODO: Max -- somehow this code is breaking when I try to run
+  ! Piero's PREM
+  ! if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+  ! call model_tomography_broadcast(myrank)
+  ! endif
 
   ! prepares external model values if needed
   select case( IMODEL )
@@ -92,6 +102,8 @@
 ! in case, see file model_interface_bedrock.f90:
 !  call model_bedrock_broadcast(myrank)
 
+  ! get MPI starting time
+  time_start = wtime()
 
   ! material properties on all GLL points: taken from material values defined for
   ! each spectral element in input mesh
@@ -106,7 +118,7 @@
           vp = 0._CUSTOM_REAL
           vs = 0._CUSTOM_REAL
           rho = 0._CUSTOM_REAL
-          
+
           rho_s = 0._CUSTOM_REAL
           kappa_s = 0._CUSTOM_REAL
           rho_f = 0._CUSTOM_REAL
@@ -122,7 +134,7 @@
           kyy = 0._CUSTOM_REAL
           kyz = 0._CUSTOM_REAL
           kzz = 0._CUSTOM_REAL
-          
+
           qmu_atten = 0._CUSTOM_REAL
 
           c11 = 0._CUSTOM_REAL
@@ -154,7 +166,7 @@
           zmesh = zstore_dummy(iglob)
 
           ! material index 1: associated material number
-          ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic        
+          ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
           imaterial_id = mat_ext_mesh(1,ispec)
 
           ! material index 2: associated material definition
@@ -173,12 +185,12 @@
                                c22,c23,c24,c25,c26,c33, &
                                c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                                ANISOTROPY)
-          
+
 
           ! stores velocity model
 
-          if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then 
-          
+          if(idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
+
             ! elastic or acoustic material
 
             ! density
@@ -204,8 +216,8 @@
             tortstore(i,j,k,ispec) = 1.d0
             !end pll
 
-          else                                         
-            
+          else
+
             ! poroelastic material
 
             ! solid properties
@@ -277,11 +289,11 @@
 
           ! stores material domain
           select case( idomain_id )
-          case( IDOMAIN_ACOUSTIC )          
+          case( IDOMAIN_ACOUSTIC )
             ispec_is_acoustic(ispec) = .true.
           case( IDOMAIN_ELASTIC )
             ispec_is_elastic(ispec) = .true.
-          case( IDOMAIN_POROELASTIC )           
+          case( IDOMAIN_POROELASTIC )
             ispec_is_poroelastic(ispec) = .true.
           case default
             stop 'error material domain index'
@@ -290,6 +302,17 @@
         enddo
       enddo
     enddo
+
+    ! user output
+    if(myrank == 0 ) then
+      if( mod(ispec,nspec/10) == 0 ) then
+        tCPU = wtime() - time_start
+        ! remaining
+        tCPU = (10.0-ispec/(nspec/10.0))/ispec/(nspec/10.0)*tCPU
+        write(IMAIN,*) "    ",ispec/(nspec/10) * 10," %", &
+                      " time remaining:", tCPU,"s"
+      endif
+    endif
   enddo
 
   ! checks material domains
@@ -317,16 +340,6 @@
       stop 'error material domain index element'
     endif
   enddo
-
-  ! GLL model
-  ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
-  ! can be used for importing updated model in iterative inversions
-  if( IMODEL == IMODEL_GLL ) then
-    ! note:
-    ! import the model from files in SPECFEM format
-    ! note that those those files should be saved in LOCAL_PATH    
-    call model_gll(myrank,nspec,LOCAL_PATH)
-  endif
 
   end subroutine get_model
 
@@ -356,7 +369,7 @@
   integer, intent(in) :: nundefMat_ext_mesh
   character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
 
-  integer, intent(in) :: imaterial_id,imaterial_def  
+  integer, intent(in) :: imaterial_id,imaterial_def
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
@@ -374,18 +387,20 @@
 
   ! local parameters
   integer :: iflag_aniso
-  
+  integer :: iundef,imaterial_PB
+
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
 
   ! initializes with default values
+  ! no anisotropy
   iflag_aniso = 0
   idomain_id = IDOMAIN_ELASTIC
-  
+
   ! selects chosen velocity model
   select case( IMODEL )
 
-  case( IMODEL_DEFAULT, IMODEL_GLL )
+  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI )
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                           undef_mat_prop,nundefMat_ext_mesh, &
@@ -395,11 +410,21 @@
                           iflag_aniso,qmu_atten,idomain_id, &
                           rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
-        
+
   case( IMODEL_1D_PREM )
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-                      
+
+  case( IMODEL_1D_PREM_PB )
+    ! 1D model profile from PREM modified by Piero
+    imaterial_PB = abs(imaterial_id)
+    call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
+    ! attenuation: arbitrary value, see maximum in constants.h
+    qmu_atten = ATTENUATION_COMP_MAXIMUM
+    ! sets acoustic/elastic domain as given in materials properties
+    iundef = - imaterial_id    ! iundef must be positive
+    read(undef_mat_prop(6,iundef),*) idomain_id
+
   case( IMODEL_1D_CASCADIA )
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
@@ -411,7 +436,7 @@
   case( IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
-      
+
   case( IMODEL_TOMO )
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
@@ -420,9 +445,9 @@
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,iflag_aniso,idomain_id)
-  
-  case default  
-    stop 'error: model not implemented yet'    
+
+  case default
+    stop 'error: model not implemented yet'
   end select
 
   ! adds anisotropic default model
@@ -430,7 +455,7 @@
     call model_aniso(iflag_aniso,rho,vp,vs, &
                     c11,c12,c13,c14,c15,c16, &
                     c22,c23,c24,c25,c26,c33, &
-                    c34,c35,c36,c44,c45,c46,c55,c56,c66)  
+                    c34,c35,c36,c44,c45,c46,c55,c56,c66)
   endif
 
   ! for pure acoustic simulations (a way of avoiding re-mesh, re-partition etc.)
@@ -439,5 +464,41 @@
   if( USE_PURE_ACOUSTIC_MOD ) then
     idomain_id = IDOMAIN_ACOUSTIC
   endif
-  
+
   end subroutine get_model_values
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine get_model_binaries(myrank,nspec,LOCAL_PATH)
+
+! reads in material parameters from external binary files
+
+  use generate_databases_par,only: IMODEL
+  use create_regions_mesh_ext_par
+  implicit none
+
+  ! number of spectral elements in each block
+  integer :: myrank,nspec
+  character(len=256) :: LOCAL_PATH
+
+  ! external GLL models
+  ! variables for importing models from files in SPECFEM format, e.g.,  proc000000_vp.bin etc.
+  ! can be used for importing updated model in iterative inversions
+
+  ! note: we read in these binary files after mesh coloring, since mesh coloring is permuting arrays.
+  !          here, the ordering in **_vp.bin etc. can be permuted as they are outputted when saving mesh files
+
+  select case( IMODEL )
+  case( IMODEL_GLL )
+    ! note:
+    ! import the model from files in SPECFEM format
+    ! note that those those files should be saved in LOCAL_PATH
+    call model_gll(myrank,nspec,LOCAL_PATH)
+  case( IMODEL_IPATI )
+    ! import the model from modified files in SPECFEM format
+    call model_ipati(myrank,nspec,LOCAL_PATH)
+  end select
+
+  end subroutine get_model_binaries
