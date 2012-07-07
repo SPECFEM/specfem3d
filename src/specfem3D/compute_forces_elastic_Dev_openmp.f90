@@ -4,8 +4,8 @@
 !               ---------------------------------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!    Princeton University, USA and CNRS / INRIA / University of Pau
+! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
 !                            October 2011
 !
 ! This program is free software; you can redistribute it and/or modify

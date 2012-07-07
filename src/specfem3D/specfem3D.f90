@@ -4,9 +4,9 @@
 !               ---------------------------------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and University of Pau / CNRS / INRIA
-! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
-!                            April 2011
+!    Princeton University, USA and CNRS / INRIA / University of Pau
+! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
+!                             July 2012
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -49,6 +49,20 @@
 ! volume = {3},
 ! pages = {1-32},
 ! number = {1}}
+!
+! @ARTICLE{PeKoLuMaLeCaLeMaLiBlNiBaTr11,
+! author = {Daniel Peter and Dimitri Komatitsch and Yang Luo and Roland Martin
+!     and Nicolas {Le Goff} and Emanuele Casarotti and Pieyre {Le Loher}
+!     and Federica Magnoni and Qinya Liu and C\'eline Blitz and Tarje Nissen-Meyer
+!     and Piero Basini and Jeroen Tromp},
+! title = {Forward and adjoint simulations of seismic wave propagation on fully
+!     unstructured hexahedral meshes},
+! journal={Geophys. J. Int.},
+! year = {2011},
+! volume = {186},
+! pages = {721-739},
+! number = {2},
+! doi = {10.1111/j.1365-246X.2011.05044.x}}
 !
 ! or
 !
@@ -201,6 +215,20 @@
 ! pages = {1-32},
 ! number = {1}}
 !
+! @ARTICLE{PeKoLuMaLeCaLeMaLiBlNiBaTr11,
+! author = {Daniel Peter and Dimitri Komatitsch and Yang Luo and Roland Martin
+!     and Nicolas {Le Goff} and Emanuele Casarotti and Pieyre {Le Loher}
+!     and Federica Magnoni and Qinya Liu and C\'eline Blitz and Tarje Nissen-Meyer
+!     and Piero Basini and Jeroen Tromp},
+! title = {Forward and adjoint simulations of seismic wave propagation on fully
+!     unstructured hexahedral meshes},
+! journal={Geophys. J. Int.},
+! year = {2011},
+! volume = {186},
+! pages = {721-739},
+! number = {2},
+! doi = {10.1111/j.1365-246X.2011.05044.x}}
+!
 ! or
 !
 ! @ARTICLE{LiTr06,
@@ -245,10 +273,11 @@
 ! Evolution of the code:
 ! ---------------------
 !
-! MPI v. 2.1 "Sesame" (Spectral ElementS on Any MEsh), July 2012:
-! Max Rietmann, Peter Messmer, Daniel Peter: support for CUDA GPUs
+! MPI v. 2.1, July 2012:
+! Max Rietmann, Peter Messmer, Daniel Peter, Dimitri Komatitsch, Joseph Charles, Zhinan Xie:
+! support for CUDA GPUs, better CFL stability for the Stacey absorbing conditions.
 !
-! MPI v. 2.0 "Sesame" (Spectral ElementS on Any MEsh), November 2010:
+! MPI v. 2.0, November 2010:
 ! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
 ! Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
 ! and Emanuele Casarotti, INGV Roma, Italy:
