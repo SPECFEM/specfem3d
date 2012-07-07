@@ -100,9 +100,8 @@
 \textbf{User Manual}}
 
 \author{$\copyright$ Princeton University (USA) and\\
-University of Pau / CNRS / INRIA (France)\\
-Version 2.1 \\
-"Sesame"}
+CNRS / INRIA / University of Pau (France)\\
+Version 2.1}
 
 \date{\noindent \today}
 
@@ -118,7 +117,6 @@ Ebru Bozda\u{g},
 Emanuele Casarotti,
 Joseph Charles,
 Min Chen,
-Hom Nath Gharti,
 Vala Hj\"orleifsd\'ottir,
 Sue Kientz,
 Dimitri Komatitsch,
@@ -132,9 +130,11 @@ Federica Magnoni,
 Roland Martin,
 Dennis McRitchie,
 Matthias Meschede,
+Peter Messmer,
 David Mich\'ea,
 Tarje Nissen-Meyer,
 Daniel Peter,
+Max Rietmann,
 Brian Savage,
 Bernhard Schuberth,
 Anne Sieminski,
@@ -158,7 +158,9 @@ by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR
 The software package SPECFEM3D simulates seismic
 wave propagation at the local or regional scale
 based upon the spectral-element method (SEM).
-The SEM is a continuous Galerkin technique, which can easily be made discontinous \citep{BeMaPa94,Ch00,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11}; it is then close to a particular case of the discontinuous Galerkin technique \citep{ReHi73,Arn82,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,AiMoMu06,BeLaPi06,DuKa06,DeSeWh08,PuAmKa09,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions \citep{WiStBuGh10,AcKo11}.
+The SEM is a continuous Galerkin technique \citep{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11},
+which can easily be made discontinous \citep{BeMaPa94,Ch00,KoWoHu02,ChCaVi03,LaWaBe05,Kop06,WiStBuGh10,AcKo11};
+it is then close to a particular case of the discontinuous Galerkin technique \citep{ReHi73,Arn82,FaRi99,HuHuRa99,CoKaSh00,GiHeWa02,RiWh03,MoRi05,GrScSc06,AiMoMu06,BeLaPi06,DuKa06,DeSeWh08,PuAmKa09,WiStBuGh10,DeSe10,EtChViGl10}, with optimized efficiency because of its tensorized basis functions \citep{WiStBuGh10,AcKo11}.
 In particular, it can accurately handle very distorted mesh elements \citep{OlSe11}.\\
 
 It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu02,Coh02,DeSe07,SeOl08}.
@@ -171,8 +173,8 @@ a continuous formulation is sufficient because material property contrasts are n
 conforming mesh doubling bricks can efficiently handle mesh size variations \citep{KoTr02a,KoLiTrSuStSh04,LeChLiKoHuTr08,LeChKoHuTr09,LeKoHuTr09}.\\
 
 For a detailed introduction to the SEM as applied to regional
-seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08} and
-in particular \citet{KoLiTrSuStSh04}.
+seismic wave propagation, please consult \citet{KoVi98,KoTr99,ChKoViCaVaFe07,TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11} and
+in particular \citet{KoLiTrSuStSh04,LeKoHuTr09,LeChKoHuTr09,LeChLiKoHuTr08,GoAmTaCaSmSaMaKo09,WiKoScTr04}.
 A detailed theoretical analysis of the dispersion
 and stability properties of the SEM is available in \citet{Coh02}, \citet{DeSe07}, \citet{SeOl07} and \citet{SeOl08}.\\
 
@@ -181,7 +183,7 @@ speed, density, a 3D crustal model, topography and bathymetry are
 included. The package can accommodate
 full 21-parameter anisotropy (see~\citet{ChTr07}) as well as lateral
 variations in attenuation \citep{SaKoTr10}. Adjoint capabilities and finite-frequency
-kernel simulations are included \citep{LiTr06,TrKoLi08,FiIgBuKe09,ViOp09}.\\
+kernel simulations are included \citep{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,LiTr06,FiIgBuKe09,ViOp09}.\\
 
 The SEM was originally developed in computational fluid dynamics \citep{Pat84,MaPa89}
 and has been successfully adapted to address problems in seismic wave propagation.
@@ -203,13 +205,15 @@ and \url{www.sc-conference.org/sc2003/nr_finalaward.html}).
 It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
 It also won the BULL Joseph Fourier supercomputing award in 2010.\\
 
-The next release of the code will include support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}
-as well as Convolutional or Auxiliary Differential Equation Perfectly Matched absorbing Layers (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
+This new release of the code (version 2.1) includes support for GPU graphics card acceleration \citep{KoMiEr09,KoGoErMi10,KoErGoMi10,MiKo10,Kom11}.\\
+
+The next release of the code will include support Convolution or Auxiliary Differential Equation Perfectly Matched absorbing Layers
+(C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
 It will also use the PT-SCOTCH parallel library for mesh partitioning.\\
 
 SPECFEM3D includes coupled fluid-solid domains and
-adjoint capabilities, which enables one to address seismological inverse problems, but for linear rheologies so far.
-To accommodate visco-plastic or non-linear rheologies, the reader can refer to 
+adjoint capabilities, which enables one to address seismological inverse problems, but for linear rheologies only so far.
+To accommodate visco-plastic or non-linear rheologies, the reader can refer to
 the \href{http://geoelse.stru.polimi.it/}{GeoELSE} software package \citep{CaGa97,StPaIg09,ChMoTsBaKrKaStKr10}.
 
 \section{Citation}
@@ -220,10 +224,15 @@ of the following articles:
 \begin{description}
 
 \item [Numerical simulations in general] ~\\
-Forward simulations are described in detail in \cite{TrKoLi08,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,KoGoErMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}. Additional aspects dealing with adjoint simulations are described in
-\cite{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoHjLiZhPeBoMcFrTrHu10}.
+Forward and adjoint simulations are described in detail in \cite{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,KoGoErMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
+Additional aspects dealing with adjoint simulations are described in
+\cite{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoHjLiZhPeBoMcFrTrHu10,PeKoLuMaLeCaLeMaLiBlNiBaTr11}.
 Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores is shown for instance in
-\cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11}.
+\cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11},
+
+\item [GPU computing] ~\\
+Computing on GPU graphics cards for acoustic or seismic wave propagation applications
+is described in detail in \cite{KoMiEr09,KoGoErMi10,KoErGoMi10,MiKo10,Kom11}.
 
 \end{description}
 
@@ -413,7 +422,7 @@ If they are identical (and in most cases they will), you can select single preci
 \section{Adding OpenMP support in addition to MPI}
 
 OpenMP support can be enabled in addition to MPI. However, in many cases performance will not improve
-because our pure MPI implementation is already heavily optimized and thus the resulting code will in fact       
+because our pure MPI implementation is already heavily optimized and thus the resulting code will in fact
 be slightly slower. A possible exception could be IBM BlueGene-type architectures.
 
 To enable OpenMP, uncomment the OpenMP compiler option in two lines in file \texttt{src/specfem3D/Makefile.in}
@@ -606,11 +615,11 @@ and use
 \begin{lyxcode}
 {\small ./bin/xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
-to generate an 
-%not supported: AVS output file (\texttt{\small AVS\_meshquality.inp} in AVS UCD format) or 
-OpenDX output file (\texttt{\small DX\_mesh\_quality.dx}) 
-that can be used to investigate mesh quality, e.g. skewness of elements, 
-and a Gnuplot histogram (\texttt{\small mesh\_quality\_histogram.txt}) 
+to generate an
+%not supported: AVS output file (\texttt{\small AVS\_meshquality.inp} in AVS UCD format) or
+OpenDX output file (\texttt{\small DX\_mesh\_quality.dx})
+that can be used to investigate mesh quality, e.g. skewness of elements,
+and a Gnuplot histogram (\texttt{\small mesh\_quality\_histogram.txt})
 that can be plotted with gnuplot (type
 `\texttt{\small gnuplot plot\_mesh\_quality\_histogram.gnu}'). The
 histogram is also printed to the screen.
@@ -930,7 +939,7 @@ Please see also Section~\ref{sec:Choosing-the-Time-Step} for further details.
 \begin{description}
 \item [{\textmd{Models defined by mesh parameters:}}]~
 \begin{description}
-\item [{\texttt{default}}] Uses model parameters as defined by meshing procedures described 
+\item [{\texttt{default}}] Uses model parameters as defined by meshing procedures described
 in the previous Chapter~\ref{cha:Mesh-Generation}.
 \end{description}
 \end{description}
@@ -949,7 +958,7 @@ symmetric Preliminary Reference Earth Model (PREM) \citep{DzAn81}.
 \item [{\textmd{Fully~3D~models:}}]~
 \begin{description}
 \item [{\texttt{aniso}}] For a user-specified fully anisotropic model. Parameters are set up in routines located in file \texttt{model\_aniso.f90} in directory \texttt{src/generate\_databases/}. See Chapter~\ref{cha:-Changing-the} for a discussion on how to specify your own 3D model.
-\item [{\texttt{external}}] For a user-specified isotropic model which uses externally defined model parameters. Uses external model definitions set up in routines located in file \texttt{model\_external\_values.f90} in directory \texttt{src/generate\_databases/}. Please modify these generic template routines to use your own model definitions. 
+\item [{\texttt{external}}] For a user-specified isotropic model which uses externally defined model parameters. Uses external model definitions set up in routines located in file \texttt{model\_external\_values.f90} in directory \texttt{src/generate\_databases/}. Please modify these generic template routines to use your own model definitions.
 \item [{\texttt{gll}}] For a user-specified isotropic model which uses external binary files for $v_p$, $v_s$ and $\rho$. Binary files are given in the same format as when outputted by the \texttt{xgenerate\_databases} executable when using option \texttt{SAVE\_MESH\_FILES}. These binary files define the model parameters on all GLL points which can be used for iterative inversion procedures.
 \item [{\texttt{salton\_trough}}] A 3D $V_p$ model for Southern California. Users must provide the corresponding data file \texttt{regrid3\_vel\_p.bin} in directory \texttt{DATA/st\_3D\_block\_harvard/}.
 \item [{\texttt{tomo}}] For a user-specified 3D isotropic model which uses a tomographic model file \texttt{tomographic\_model.xyz} in directory \texttt{in\_data\_files/}. See Section \ref{sec:Using-tomographic},
@@ -1824,7 +1833,7 @@ in the \texttt{Par\_file}. Turning on the movie flags, in particular
 \texttt{MOVIE\_VOLUME}, produces large output files. \texttt{MOVIE\_VOLUME}
 files are saved in the \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE}
 output files are saved in the \texttt{in\_out\_files/OUTPUT\_FILES} directory. We
-save the displacement field if the parameter \texttt{SAVE\_DISPLACEMENT} is set, otherwise the velocity field is saved. 
+save the displacement field if the parameter \texttt{SAVE\_DISPLACEMENT} is set, otherwise the velocity field is saved.
 The look of a movie is determined by the
 half-duration of the source. The half-duration should be large enough
 so that the movie does not contain frequencies that are not resolved
@@ -2319,32 +2328,32 @@ cleanbase.pl~../OUTPUT\_FILES/machines
 
 \chapter{{\normalsize \label{cha:-Changing-the}} Changing the Model}
 
-In this section we explain how to change the velocity model used for your simulations. 
+In this section we explain how to change the velocity model used for your simulations.
 These changes involve contributing specific subroutines
 that replace existing subroutines in the \texttt{SPECFEM3D} package.
-Note that \texttt{SPECFEM3D} can handle Earth models with material properties that vary within each spectral element. 
+Note that \texttt{SPECFEM3D} can handle Earth models with material properties that vary within each spectral element.
 
 %% magnoni 6/12
 \section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic Earth models}
 
 To implement your own external tomographic model, you must provide your own tomography file
-\texttt{tomography\_model.xyz} and choose between two possible options: 
+\texttt{tomography\_model.xyz} and choose between two possible options:
 (1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = tomo}, or
 (2) for more user control, set in the \texttt{Par\_file} the model parameter \texttt{MODEL = default} and use the following format in the file \texttt{MESH/nummaterial\_velocity\_file} when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
 \begin{lyxcode}
 \texttt{domain\_ID} \texttt{material\_ID} \texttt{tomography} \texttt{elastic} \texttt{file\_name} 1
-\end{lyxcode} 
+\end{lyxcode}
 where
-\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, 
-\texttt{material\_ID} a negative, unique identifier (i.e., -1), 
-\texttt{tomography} keyword for tomographic material definition, 
-\texttt{elastic} keyword for elastic material definition, 
-\texttt{file\_name} the name of the tomography file and 
-1 a positive unique identifier. 
+\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials,
+\texttt{material\_ID} a negative, unique identifier (i.e., -1),
+\texttt{tomography} keyword for tomographic material definition,
+\texttt{elastic} keyword for elastic material definition,
+\texttt{file\_name} the name of the tomography file and
+1 a positive unique identifier.
 The name of the tomography file is not used so far, rather change the filename (\texttt{TOMO\_FILENAME}) defined in the file \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases/} directory.
 
 The external tomographic model is represented by a grid of points with assigned material properties and homogeneous resolution along each spatial direction x, y and z.
-The ASCII file \texttt{tomography\_model.xyz} that describes the tomography should be located in the \texttt{in\_data\_files/} directory. 
+The ASCII file \texttt{tomography\_model.xyz} that describes the tomography should be located in the \texttt{in\_data\_files/} directory.
 The format of the file, as read from \texttt{model\_tomography.f90}, looks like Figure \ref{fig:tomography_file},
 where
 %
@@ -2354,11 +2363,11 @@ where
 \item [{\texttt{ORIG\_Z}, \texttt{END\_Z}}] respectively the coordinates of the initial and final tomographic grid points along the z direction (in the mesh units, e.g., $m$);
 \item [\texttt{SPACING\_X}, \texttt{SPACING\_Y}, \texttt{SPACING\_Z}] the spacing between the tomographic grid points along the x, y and z directions, respectively (in the mesh units, e.g., $m$);
 \item [\texttt{NX}, \texttt{NY}, \texttt{NZ}] the number of grid points along the spatial directions x, y and z, respectively; \texttt{NX} is given by [(\texttt{END\_X} - \texttt{ORIG\_X})/\texttt{SPACING\_X}]+1; \texttt{NY} and \texttt{NZ} are the same as \texttt{NX}, but for the y and z directions, respectively;
-\item [\texttt{VP\_MIN}, \texttt{VP\_MAX}, \texttt{VS\_MIN}, \texttt{VS\_MAX}, \texttt{RHO\_MIN}, \texttt{RHO\_MAX}] the minimum and maximum values of the wave speed \texttt{vp} and \texttt{vs} (in $m \, s^{-1}$) and of the density \texttt{rho} (in $kg \, m^{-3}$); these values could be the actual limits of the tomographic parameters in the grid or the minimum and maximum values to which we force the cut of velocity and density in the model.  
+\item [\texttt{VP\_MIN}, \texttt{VP\_MAX}, \texttt{VS\_MIN}, \texttt{VS\_MAX}, \texttt{RHO\_MIN}, \texttt{RHO\_MAX}] the minimum and maximum values of the wave speed \texttt{vp} and \texttt{vs} (in $m \, s^{-1}$) and of the density \texttt{rho} (in $kg \, m^{-3}$); these values could be the actual limits of the tomographic parameters in the grid or the minimum and maximum values to which we force the cut of velocity and density in the model.
 \end{description}
 %
 After the first four lines, in the file \texttt{tomography\_model.xyz} the tomographic grid points are listed with the corresponding values of \texttt{vp}, \texttt{vs} and \texttt{rho}, scanning the grid along the x coordinate (from \texttt{ORIG\_X} to \texttt{END\_X} with step of \texttt{SPACING\_X}) for each given y (from \texttt{ORIG\_Y} to \texttt{END\_Y}, with step of \texttt{SPACING\_Y}) and each given z (from \texttt{ORIG\_Z} to \texttt{END\_Z}, with step of \texttt{SPACING\_Z}).
-%fig 
+%fig
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=1.0\textwidth]{figures/tomo_file.jpg}
@@ -2367,8 +2376,8 @@ After the first four lines, in the file \texttt{tomography\_model.xyz} the tomog
 \label{fig:tomography_file}
 \end{figure}
 
-The user can implement his own interpolation algorithm for the tomography model by changing the routine \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases/} directory. 
-Moreover, for models that involve both fully defined materials and a tomography description, the \texttt{nummaterial\_velocity\_file} has multiple lines each with the corresponding suitable format described above.   
+The user can implement his own interpolation algorithm for the tomography model by changing the routine \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases/} directory.
+Moreover, for models that involve both fully defined materials and a tomography description, the \texttt{nummaterial\_velocity\_file} has multiple lines each with the corresponding suitable format described above.
 
 
 \section{{\normalsize \label{sec:Anelastic-Models}}External (an)elastic Models}
@@ -2386,7 +2395,7 @@ call~model\_external\_values(xmesh,~ymesh,~zmesh, ~\& \\
 %
 Input to this routine consists of:
 \begin{description}
-\item [{\texttt{xmesh,ymesh,zmesh}}] location of mesh point 
+\item [{\texttt{xmesh,ymesh,zmesh}}] location of mesh point
 \end{description}
 %
 Output to this routine consists of:
@@ -2402,14 +2411,14 @@ Note that the resolution and maximum value of anelastic models are
 truncated. This speeds the construction of the standard linear solids
 during the meshing stage. To change the resolution, currently at one
 significant figure following the decimal, or the maximum value (9000),
-consult \texttt{shared/constants.h}. 
+consult \texttt{shared/constants.h}.
 
 
 \section{{\normalsize \label{sec:Anisotropic-Models}}Anisotropic Models}
 
 To use your anisotropic models, you can either set in the \texttt{Par\_file} the model parameter \texttt{ANISOTROPY} to \texttt{.true.} or set the model parameter \texttt{MODEL = aniso}.
 Three-dimensional anisotropic models may be superimposed on
-the mesh based upon the subroutine in file \texttt{model\_aniso.f90} 
+the mesh based upon the subroutine in file \texttt{model\_aniso.f90}
 located in directory \texttt{src/generate\_databases}.
 The call to this subroutine is of the form
 
@@ -2435,7 +2444,7 @@ anisotropic elastic parameters.
 You can replace the \texttt{model\_aniso.f90} file by
 your own version \textit{provided you do not change the call structure
 of the routine}, i.e., the new routine should take exactly the same
-input and produce the required relative output. 
+input and produce the required relative output.
 
 
 
@@ -2657,7 +2666,7 @@ The directory containing utilities for tomographic inversion using SPECFEM3D (or
 \begin{verbatim}
 /cig/seismo/3D/ADJOINT_TOMO/
    flexwin/     -- FLEXWIN algorithm for automated picking of time windows
-   measure_adj/ -- reads FLEXWIN output file and makes measurements, 
+   measure_adj/ -- reads FLEXWIN output file and makes measurements,
                    with the option for computing adjoint sources
    iterate_adj/ -- various tools for iterative inversion
                    (requires pre-computed "event kernels")
@@ -2704,21 +2713,21 @@ to Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu} or to the CIG Compu
 
 Main authors: Dimitri Komatitsch and Jeroen Tromp
 
-Princeton University, USA,
-and University of Pau / CNRS / INRIA, France
+Princeton University, USA, and CNRS / INRIA / University of Pau, France
 
-$\copyright$ Princeton University and University of Pau / CNRS / INRIA, April 2011
+$\copyright$ Princeton University and CNRS / INRIA / University of Pau, July 2012
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published
 by the Free Software Foundation (see Appendix \ref{cha:License}).\\
 
 \textbf{\underline{Evolution of the code:}}\\
-  
- MPI v 2.1 `Sesame' (Spectral ElementS on Any MEsh), July 2012: 
- Max Rietmann, Peter Messmer, Daniel Peter: support for CUDA GPUs. \\
 
- MPI v. 2.0 `Sesame' (Spectral ElementS on Any MEsh), November 2010:
+ MPI v 2.1, July 2012:
+ Max Rietmann, Peter Messmer, Daniel Peter, Dimitri Komatitsch, Joseph Charles, Zhinan Xie: support for CUDA GPUs,
+better CFL stability for the Stacey absorbing conditions. \\
+
+ MPI v. 2.0, November 2010:
  Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
  Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
  and Emanuele Casarotti, INGV Roma, Italy:
