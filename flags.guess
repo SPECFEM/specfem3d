@@ -18,7 +18,7 @@ case $FC in
         # Cray Fortran
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-eC -eD"  # turn on full debugging and range checking
+            FLAGS_CHECK="-eC -eD -hfp2"  # turn on full debugging and range checking
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
             FLAGS_NO_CHECK="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
