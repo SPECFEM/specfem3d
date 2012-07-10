@@ -51,9 +51,9 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)
-    write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
     if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
+    write(IMAIN,*)    
   endif
 
   end subroutine setup_sources_receivers

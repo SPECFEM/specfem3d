@@ -71,8 +71,9 @@
 #endif
 
 // error checking after cuda function calls
-/* #define ENABLE_VERY_SLOW_ERROR_CHECKING */
+//#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
+// helper functions
 #define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
 
 double get_time();
@@ -124,7 +125,7 @@ typedef float reald;
 // requires CUDA version >= 4.0, see check below
 // Use textures for d_displ and d_accel -- 10% performance boost
 #define USE_TEXTURES_FIELDS
-//
+
 // Using texture memory for the hprime-style constants is slower on
 // Fermi generation hardware, but *may* be faster on Kepler
 // generation.
@@ -181,7 +182,7 @@ typedef struct mesh_ {
   int NGLOB_AB;
 
   int myrank;
-  int NPROCS;
+  int NPROC;
 
   // interpolators
   realw* d_xix; realw* d_xiy; realw* d_xiz;
@@ -215,26 +216,23 @@ typedef struct mesh_ {
   float* h_recv_accel_buffer;
   float* h_recv_b_accel_buffer;
   float* recv_buffer;
-  int size_mpi_send_buffer;
-  int size_mpi_recv_buffer;
-
-
+  int size_mpi_buffer;
 
   // buffers and constants for the MPI-send required for async-memcpy
   // + non-blocking MPI
-  float* buffer_recv_vector_ext_mesh;
+  //daniel: check if needed
+  //float* buffer_recv_vector_ext_mesh;
   int num_interfaces_ext_mesh;
   int max_nibool_interfaces_ext_mesh;
-  int* nibool_interfaces_ext_mesh;
-  int* my_neighbours_ext_mesh;
-  int* request_send_vector_ext_mesh;
-  int* request_recv_vector_ext_mesh;
-
+  //int* nibool_interfaces_ext_mesh;
+  //int* my_neighbours_ext_mesh;
+  //int* request_send_vector_ext_mesh;
+  //int* request_recv_vector_ext_mesh;
 
   // overlapped memcpy streams
   cudaStream_t compute_stream;
   cudaStream_t copy_stream;
-  cudaStream_t b_copy_stream;
+  //cudaStream_t b_copy_stream;
 
   // ------------------------------------------------------------------ //
   // elastic wavefield parameters

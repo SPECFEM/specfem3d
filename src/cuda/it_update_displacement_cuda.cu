@@ -28,15 +28,15 @@
 
 #include <stdio.h>
 #include <cuda.h>
-#include <cublas.h>
+//#include <cublas.h>
 
 #include "config.h"
 #include "mesh_constants_cuda.h"
 
 
-#define CUBLAS_ERROR(s,n)  if (s != CUBLAS_STATUS_SUCCESS) {  \
-fprintf (stderr, "CUBLAS Memory Write Error @ %d\n",n); \
-exit(EXIT_FAILURE); }
+//#define CUBLAS_ERROR(s,n)  if (s != CUBLAS_STATUS_SUCCESS) {  \
+//fprintf (stderr, "CUBLAS Memory Write Error @ %d\n",n); \
+//exit(EXIT_FAILURE); }
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -84,12 +84,6 @@ TRACE("it_update_displacement_cuda");
   //int i,device;
 
   int size = *size_F;
-  realw deltat = *deltat_F;
-  realw deltatsqover2 = *deltatsqover2_F;
-  realw deltatover2 = *deltatover2_F;
-  realw b_deltat = *b_deltat_F;
-  realw b_deltatsqover2 = *b_deltatsqover2_F;
-  realw b_deltatover2 = *b_deltatover2_F;
   //cublasStatus status;
 
   int blocksize = BLOCKSIZE_KERNEL1;
@@ -110,7 +104,11 @@ TRACE("it_update_displacement_cuda");
 //  exit_on_cuda_error("Before UpdateDispVeloc_kernel");
 //#endif
 
-  //launch kernel
+  realw deltat = *deltat_F;
+  realw deltatsqover2 = *deltatsqover2_F;
+  realw deltatover2 = *deltatover2_F;
+  
+  //launch kernel  
   UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_displ,mp->d_veloc,mp->d_accel,
                                            size,deltat,deltatsqover2,deltatover2);
 
@@ -123,7 +121,10 @@ TRACE("it_update_displacement_cuda");
 
   // kernel for backward fields
   if(*SIMULATION_TYPE == 3) {
-
+    realw b_deltat = *b_deltat_F;
+    realw b_deltatsqover2 = *b_deltatsqover2_F;
+    realw b_deltatover2 = *b_deltatover2_F;
+    
     UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
                                              size,b_deltat,b_deltatsqover2,b_deltatover2);
 
@@ -186,12 +187,6 @@ TRACE("it_update_displacement_ac_cuda");
 
   //int i,device;
   int size = *size_F;
-  realw deltat = *deltat_F;
-  realw deltatsqover2 = *deltatsqover2_F;
-  realw deltatover2 = *deltatover2_F;
-  realw b_deltat = *b_deltat_F;
-  realw b_deltatsqover2 = *b_deltatsqover2_F;
-  realw b_deltatover2 = *b_deltatover2_F;
   //cublasStatus status;
 
   int blocksize = BLOCKSIZE_KERNEL1;
@@ -207,6 +202,10 @@ TRACE("it_update_displacement_ac_cuda");
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
+  realw deltat = *deltat_F;
+  realw deltatsqover2 = *deltatsqover2_F;
+  realw deltatover2 = *deltatover2_F;
+  
   //launch kernel
   UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
                                            mp->d_potential_dot_acoustic,
@@ -214,6 +213,10 @@ TRACE("it_update_displacement_ac_cuda");
                                            size,deltat,deltatsqover2,deltatover2);
 
   if(*SIMULATION_TYPE == 3) {
+    realw b_deltat = *b_deltat_F;
+    realw b_deltatsqover2 = *b_deltatsqover2_F;
+    realw b_deltatover2 = *b_deltatover2_F;
+    
     UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
                                              mp->d_b_potential_dot_acoustic,
                                              mp->d_b_potential_dot_dot_acoustic,

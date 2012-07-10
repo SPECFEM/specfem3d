@@ -303,12 +303,13 @@ __global__ void get_maximum_kernel(realw* array, int size, realw* d_max){
    */
 
   // reduction example:
-  __shared__ realw sdata[256] ;
+  __shared__ realw sdata[BLOCKSIZE_TRANSFER] ;
 
   // load shared mem
   unsigned int tid = threadIdx.x;
-  unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
-
+  unsigned int bx = blockIdx.y*gridDim.x+blockIdx.x;
+  unsigned int i = tid + bx*blockDim.x;  
+  
   // loads absolute values into shared memory
   sdata[tid] = (i < size) ? fabs(array[i]) : 0.0 ;
 
@@ -327,7 +328,7 @@ __global__ void get_maximum_kernel(realw* array, int size, realw* d_max){
   }
 
   // write result for this block to global mem
-  if (tid == 0) d_max[blockIdx.x] = sdata[0];
+  if (tid == 0) d_max[bx] = sdata[0];
 
 }
 
@@ -381,15 +382,21 @@ TRACE("get_norm_acoustic_from_device");
   // way 2 b: timing Elapsed time: 1.236916e-03
   // launch simple reduction kernel
   realw* h_max;
-  int blocksize = 256;
-
-  int num_blocks_x = (int) ceil(mp->NGLOB_AB/blocksize);
+  int blocksize = BLOCKSIZE_TRANSFER;
+  int size_padded = ((int)ceil(((double)mp->NGLOB_AB)/((double)blocksize)))*blocksize;
+  int num_blocks_x = size_padded/blocksize;  
+  int num_blocks_y = 1;
+  while(num_blocks_x > 65535) {
+    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
+    num_blocks_y = num_blocks_y*2;
+  }
+  
   //printf("num_blocks_x %i \n",num_blocks_x);
 
-  h_max = (realw*) calloc(num_blocks_x,sizeof(realw));
-  cudaMalloc((void**)&d_max,num_blocks_x*sizeof(realw));
+  h_max = (realw*) calloc(num_blocks_x*num_blocks_y,sizeof(realw));
+  cudaMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw));
 
-  dim3 grid(num_blocks_x,1);
+  dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
   if(*SIMULATION_TYPE == 1 ){
@@ -404,11 +411,12 @@ TRACE("get_norm_acoustic_from_device");
                                          d_max);
   }
 
-  print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*sizeof(realw),cudaMemcpyDeviceToHost),222);
+  print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),
+                                     cudaMemcpyDeviceToHost),222);
 
   // determines max for all blocks
   max = h_max[0];
-  for(int i=1;i<num_blocks_x;i++) {
+  for(int i=1;i<num_blocks_x*num_blocks_y;i++) {
     if( max < h_max[i]) max = h_max[i];
   }
 
@@ -457,7 +465,7 @@ TRACE("get_norm_acoustic_from_device");
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("after get_norm_acoustic_from_device");
+  exit_on_cuda_error("get_norm_acoustic_from_device");
 #endif
 }
 
@@ -470,11 +478,12 @@ TRACE("get_norm_acoustic_from_device");
 __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
 
   // reduction example:
-  __shared__ realw sdata[256] ;
+  __shared__ realw sdata[BLOCKSIZE_TRANSFER] ;
 
   // load shared mem
   unsigned int tid = threadIdx.x;
-  unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+  unsigned int bx = blockIdx.y*gridDim.x+blockIdx.x;
+  unsigned int i = tid + bx*blockDim.x;  
 
   // loads values into shared memory: assume array is a vector array
   sdata[tid] = (i < size) ? sqrt(array[i*3]*array[i*3]
@@ -496,7 +505,7 @@ __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
   }
 
   // write result for this block to global mem
-  if (tid == 0) d_max[blockIdx.x] = sdata[0];
+  if (tid == 0) d_max[bx] = sdata[0];
 
 }
 
@@ -505,8 +514,8 @@ __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
 extern "C"
 void FC_FUNC_(get_norm_elastic_from_device,
               GET_NORM_ELASTIC_FROM_DEVICE)(realw* norm,
-                                                 long* Mesh_pointer_f,
-                                                 int* SIMULATION_TYPE) {
+                                            long* Mesh_pointer_f,
+                                            int* SIMULATION_TYPE) {
 
   TRACE("get_norm_elastic_from_device");
   //double start_time = get_time();
@@ -515,19 +524,24 @@ void FC_FUNC_(get_norm_elastic_from_device,
   realw max;
   realw *d_max;
 
-  max = 0;
+  max = 0.0;
 
   // launch simple reduction kernel
   realw* h_max;
-  int blocksize = 256;
-
-  int num_blocks_x = (int) ceil(mp->NGLOB_AB/blocksize);
+  int blocksize = BLOCKSIZE_TRANSFER;
+  int size_padded = ((int)ceil(((double)mp->NGLOB_AB)/((double)blocksize)))*blocksize;
+  int num_blocks_x = size_padded/blocksize;  
+  int num_blocks_y = 1;
+  while(num_blocks_x > 65535) {
+    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
+    num_blocks_y = num_blocks_y*2;
+  }
+  
   //printf("num_blocks_x %i \n",num_blocks_x);
+  h_max = (realw*) calloc(num_blocks_x*num_blocks_y,sizeof(realw));
+  cudaMalloc((void**)&d_max,num_blocks_x*num_blocks_y*sizeof(realw));
 
-  h_max = (realw*) calloc(num_blocks_x,sizeof(realw));
-  cudaMalloc((void**)&d_max,num_blocks_x*sizeof(realw));
-
-  dim3 grid(num_blocks_x,1);
+  dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
   if(*SIMULATION_TYPE == 1 ){
@@ -542,11 +556,18 @@ void FC_FUNC_(get_norm_elastic_from_device,
                                                 d_max);
   }
 
-  print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*sizeof(realw),cudaMemcpyDeviceToHost),222);
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  //double end_time = get_time();
+  //printf("Elapsed time: %e\n",end_time-start_time);
+  exit_on_cuda_error("kernel get_norm_elastic_from_device");
+#endif
+  
+  print_CUDA_error_if_any(cudaMemcpy(h_max,d_max,num_blocks_x*num_blocks_y*sizeof(realw),
+                                     cudaMemcpyDeviceToHost),222);
 
   // determines max for all blocks
   max = h_max[0];
-  for(int i=1;i<num_blocks_x;i++) {
+  for(int i=1;i<num_blocks_x*num_blocks_y;i++) {
     if( max < h_max[i]) max = h_max[i];
   }
 
@@ -559,7 +580,7 @@ void FC_FUNC_(get_norm_elastic_from_device,
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("after get_norm_elastic_from_device");
+  exit_on_cuda_error("get_norm_elastic_from_device");
 #endif
 }
 

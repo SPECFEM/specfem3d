@@ -136,31 +136,6 @@
 
 !=====================================================================
 
-  subroutine it_print_elapsed_time()
-    use specfem_par
-    use specfem_par_elastic
-    use specfem_par_acoustic
-    implicit none
-
-    ! local parameters
-    double precision :: tCPU
-    integer :: ihours,iminutes,iseconds,int_tCPU
-
-    if(myrank == 0) then
-       ! elapsed time since beginning of the simulation
-       tCPU = wtime() - time_start
-       int_tCPU = int(tCPU)
-       ihours = int_tCPU / 3600
-       iminutes = (int_tCPU - 3600*ihours) / 60
-       iseconds = int_tCPU - 3600*ihours - 60*iminutes
-       write(IMAIN,*) 'Time-Loop Complete. Timing info:'
-       write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
-       write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
-    endif
-  end subroutine it_print_elapsed_time
-
-!=====================================================================
-
   subroutine it_check_stability()
 
 ! computes the maximum of the norm of the displacement
@@ -209,8 +184,8 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    if(Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0) &
-      call exit_MPI(myrank,'forward simulation became unstable and blew up')
+    !if(Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0.0_CUSTOM_REAL) &
+    !  call exit_MPI(myrank,'single forward simulation became unstable and blew up')
 
     ! compute the maximum of the maxima for all the slices using an MPI reduction
     call max_all_cr(Usolidnorm,Usolidnorm_all)
@@ -262,8 +237,8 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    if(b_Usolidnorm > STABILITY_THRESHOLD .or. b_Usolidnorm < 0) &
-      call exit_MPI(myrank,'backward simulation became unstable and blew up')
+    !if(b_Usolidnorm > STABILITY_THRESHOLD .or. b_Usolidnorm < 0.0_CUSTOM_REAL) &
+    !  call exit_MPI(myrank,'single backward simulation became unstable and blew up')
 
     ! compute max of all slices
     call max_all_cr(b_Usolidnorm,b_Usolidnorm_all)
@@ -365,10 +340,10 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0 &
-     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0.0 &
-     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0.0 &
-     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0.0) &
+    if(Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0_CUSTOM_REAL &
+     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0.0_CUSTOM_REAL &
+     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0.0_CUSTOM_REAL &
+     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0.0_CUSTOM_REAL) &
         call exit_MPI(myrank,'forward simulation became unstable and blew up')
     ! adjoint simulations
     if(SIMULATION_TYPE == 3 .and. (b_Usolidnorm_all > STABILITY_THRESHOLD &
@@ -745,6 +720,32 @@
 
   end subroutine it_store_attenuation_arrays
 
+!=====================================================================
+
+  subroutine it_print_elapsed_time()
+  
+    use specfem_par
+    use specfem_par_elastic
+    use specfem_par_acoustic
+    implicit none
+
+    ! local parameters
+    double precision :: tCPU
+    integer :: ihours,iminutes,iseconds,int_tCPU
+
+    if(myrank == 0) then
+       ! elapsed time since beginning of the simulation
+       tCPU = wtime() - time_start
+       int_tCPU = int(tCPU)
+       ihours = int_tCPU / 3600
+       iminutes = (int_tCPU - 3600*ihours) / 60
+       iseconds = int_tCPU - 3600*ihours - 60*iminutes
+       write(IMAIN,*) 'Time-Loop Complete. Timing info:'
+       write(IMAIN,*) 'Total elapsed time in seconds = ',tCPU
+       write(IMAIN,"(' Total elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    endif
+
+  end subroutine it_print_elapsed_time
 
 !=====================================================================
 
