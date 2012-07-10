@@ -33,10 +33,92 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+  implicit none  
+  ! local parameters
+  double precision :: tCPU
 
+  ! get MPI starting time
+  time_start = wtime()
+
+  ! user output infos
+  call prepare_timerun_user_output()
+
+  ! sets up mass matrices
+  call prepare_timerun_mass_matrices()
+
+  ! initializes arrays
+  call prepare_timerun_init_wavefield()
+
+  ! sets up time increments
+  call prepare_timerun_constants()
+
+  ! prepares attenuation arrays
+  call prepare_timerun_attenuation()
+
+  ! prepares gravity arrays
+  call prepare_timerun_gravity()
+
+  ! initializes PML arrays
+  if( ABSORBING_CONDITIONS  ) then
+    if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then
+      write(IMAIN,*) 'NOTE: adjoint simulations and PML not supported yet...'
+    else
+      if( ABSORB_USE_PML ) then
+        call PML_initialize()
+      endif
+    endif
+  endif
+
+  ! prepares ADJOINT simulations
+  call prepare_timerun_adjoint()
+
+  ! prepares noise simulations
+  call prepare_timerun_noise()
+
+  ! prepares GPU arrays
+  if(GPU_MODE) call prepare_timerun_GPU()
+
+#ifdef OPENMP_MODE
+  ! prepares arrays for OpenMP
+  call prepare_timerun_OpenMP()
+#endif
+
+  ! synchronize all the processes
+  call sync_all()
+
+  ! elapsed time since beginning of preparation
+  if(myrank == 0) then
+    tCPU = wtime() - time_start
+    write(IMAIN,*)
+    write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
+    write(IMAIN,*)
+    write(IMAIN,*) 'time loop:'
+    write(IMAIN,*)
+    write(IMAIN,*) '           time step: ',sngl(DT),' s'
+    write(IMAIN,*) 'number of time steps: ',NSTEP
+    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
+    write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
+    write(IMAIN,*)
+
+    !daniel debug: time estimation
+    ! elastic elements: time per element t_per_element = 1.40789368e-05 s
+    ! total time = nspec * nstep * t_per_element
+  endif  
+  
+  end subroutine prepare_timerun
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_user_output()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  use specfem_par_movie  
   implicit none
-  character(len=256) :: plot_file
-  integer :: ier
 
   ! flag for any movie simulation
   if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
@@ -102,7 +184,6 @@
     else
       write(IMAIN,*) 'no poroelastic simulation'
     endif
-    write(IMAIN,*)
 
     write(IMAIN,*)
     if(MOVIE_SIMULATION) then
@@ -110,16 +191,97 @@
     else
       write(IMAIN,*) 'no movie simulation'
     endif
+
+    write(IMAIN,*)
     write(IMAIN,*)
 
   endif
+
+  end subroutine prepare_timerun_user_output
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_mass_matrices()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
 
   ! synchronize all the processes before assembling the mass matrix
   ! to make sure all the nodes have finished to read their databases
   call sync_all()
 
-  ! sets up mass matrices
-  call prepare_timerun_mass_matrices()
+  ! the mass matrix needs to be assembled with MPI here once and for all
+  if(ACOUSTIC_SIMULATION) then
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        my_neighbours_ext_mesh)
+
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
+    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
+
+  endif
+
+  if(ELASTIC_SIMULATION) then
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+
+    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass <= 0._CUSTOM_REAL) rmass = 1._CUSTOM_REAL
+    rmass(:) = 1._CUSTOM_REAL / rmass(:)
+
+    if(OCEANS ) then
+      if( minval(rmass_ocean_load(:)) <= 0._CUSTOM_REAL) &
+        call exit_MPI(myrank,'negative ocean load mass matrix term')
+      rmass_ocean_load(:) = 1. / rmass_ocean_load(:)
+    endif
+
+  endif
+
+  if(POROELASTIC_SIMULATION) then
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+
+    ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
+    where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
+    where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
+    rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
+    rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
+
+  endif
+
+  !debug
+  !if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
+
+  end subroutine prepare_timerun_mass_matrices
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_init_wavefield()
+
+! initializes arrays
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  implicit none
 
   ! initialize acoustic arrays to zero
   if( ACOUSTIC_SIMULATION ) then
@@ -152,6 +314,23 @@
     if(FIX_UNDERFLOW_PROBLEM) displw_poroelastic(:,:) = VERYSMALLVAL
   endif
 
+  end subroutine prepare_timerun_init_wavefield
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_constants()
+
+! precomputes constants for time integration
+
+  use specfem_par
+  implicit none
+  ! local parameters
+  character(len=256) :: plot_file
+  integer :: ier
+
   ! distinguish between single and double precision for reals
   if(CUSTOM_REAL == SIZE_REAL) then
     deltat = sngl(DT)
@@ -160,6 +339,19 @@
   endif
   deltatover2 = deltat/2._CUSTOM_REAL
   deltatsqover2 = deltat*deltat/2._CUSTOM_REAL
+
+  ! adjoint runs: timing
+  if (SIMULATION_TYPE == 3) then
+    ! backward/reconstructed wavefields: time stepping is in time-reversed sense
+    ! (negative time increments)
+    if(CUSTOM_REAL == SIZE_REAL) then
+      b_deltat = - sngl(DT)
+    else
+      b_deltat = - DT
+    endif
+    b_deltatover2 = b_deltat/2._CUSTOM_REAL
+    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+  endif
 
   ! seismograms
   if (nrec_local > 0) then
@@ -177,26 +369,6 @@
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
   endif
 
-  ! synchronize all the processes
-  call sync_all()
-
-  ! prepares attenuation arrays
-  call prepare_timerun_attenuation()
-
-  ! prepares gravity arrays
-  call prepare_timerun_gravity()
-
-  ! initializes PML arrays
-  if( ABSORBING_CONDITIONS  ) then
-    if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then
-      write(IMAIN,*) 'NOTE: adjoint simulations and PML not supported yet...'
-    else
-      if( ABSORB_USE_PML ) then
-        call PML_initialize()
-      endif
-    endif
-  endif
-
   ! opens source time function file
   if(PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
     ! print the source-time function
@@ -209,106 +381,11 @@
         write(plot_file,"('/plot_source_time_function',i2,'.txt')") NSOURCES
       endif
     endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown')
+    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
+    if( ier /= 0 ) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 
-  ! user output
-  if(myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) '           time step: ',sngl(DT),' s'
-    write(IMAIN,*) 'number of time steps: ',NSTEP
-    write(IMAIN,*) 'total simulated time: ',sngl(NSTEP*DT),' seconds'
-    write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
-    write(IMAIN,*)
-
-    !daniel debug: time estimation
-    ! elastic elements: time per element t_per_element = 1.40789368e-05 s
-    ! total time = nspec * nstep * t_per_element
-
-  endif
-
-  ! prepares ADJOINT simulations
-  call prepare_timerun_adjoint()
-
-  ! prepares noise simulations
-  call prepare_timerun_noise()
-
-  ! prepares GPU arrays
-  if(GPU_MODE) call prepare_timerun_GPU()
-
-#ifdef OPENMP_MODE
-  ! prepares arrays for OpenMP
-  call prepare_timerun_OpenMP()
-#endif
-
-  end subroutine prepare_timerun
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine prepare_timerun_mass_matrices()
-
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
-  implicit none
-
-! the mass matrix needs to be assembled with MPI here once and for all
-  if(ACOUSTIC_SIMULATION) then
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                        my_neighbours_ext_mesh)
-
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
-    rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
-
-  endif ! ACOUSTIC_SIMULATION
-
-  if(ELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
-
-    ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass <= 0._CUSTOM_REAL) rmass = 1._CUSTOM_REAL
-    rmass(:) = 1._CUSTOM_REAL / rmass(:)
-
-    if(OCEANS ) then
-      if( minval(rmass_ocean_load(:)) <= 0._CUSTOM_REAL) &
-        call exit_MPI(myrank,'negative ocean load mass matrix term')
-      rmass_ocean_load(:) = 1. / rmass_ocean_load(:)
-    endif
-
-  endif ! ELASTIC_SIMULATION
-
-  if(POROELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
-
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
-
-    ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL
-    where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
-    rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
-    rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
-
-  endif ! POROELASTIC_SIMULATION
-
-  if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
-
-
-  end subroutine prepare_timerun_mass_matrices
+  end subroutine prepare_timerun_constants
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -566,21 +643,6 @@
     allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
     if( ier /= 0 ) stop 'error allocating array seismograms_eps'
     seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
-  endif
-
-! timing
-  if (SIMULATION_TYPE == 3) then
-
-    ! backward/reconstructed wavefields: time stepping is in time-reversed sense
-    ! (negative time increments)
-    if(CUSTOM_REAL == SIZE_REAL) then
-      b_deltat = - sngl(DT)
-    else
-      b_deltat = - DT
-    endif
-    b_deltatover2 = b_deltat/2._CUSTOM_REAL
-    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
-
   endif
 
 ! attenuation backward memories
@@ -879,7 +941,6 @@
   if(myrank == 0 ) then
     write(IMAIN,*)
     write(IMAIN,*) "GPU Preparing Fields and Constants on Device."
-    write(IMAIN,*)
   endif
 
   ! prepares general fields on GPU

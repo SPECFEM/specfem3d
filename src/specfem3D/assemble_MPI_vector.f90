@@ -446,15 +446,15 @@
   ! assemble only if more than one partition
   if(NPROC > 1) then
 
-  ! wait for communications completion (recv)
-  !write(IMAIN,*) "sending MPI_wait"
-  do iinterface = 1, num_interfaces_ext_mesh
-    call wait_req(request_recv_vector_ext_mesh(iinterface))
-  enddo
+    ! wait for communications completion (recv)
+    !write(IMAIN,*) "sending MPI_wait"
+    do iinterface = 1, num_interfaces_ext_mesh
+      call wait_req(request_recv_vector_ext_mesh(iinterface))
+    enddo
 
-  ! send contributions to GPU
-  call transfer_boundary_to_device_a(Mesh_pointer, buffer_recv_vector_ext_mesh, &
-                                    num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh)
+    ! send contributions to GPU
+    call transfer_boundary_to_device_a(Mesh_pointer, buffer_recv_vector_ext_mesh, &
+                                      num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh)
   endif
 
   ! This step is done via previous function transfer_and_assemble...

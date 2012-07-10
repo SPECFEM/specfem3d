@@ -80,7 +80,7 @@ void pause_for_debugger(int pause) {
     char hostname[256];
     gethostname(hostname, sizeof(hostname));
     printf("PID %d on %s:%d ready for attach\n", getpid(), hostname,myrank);
-    FILE *file = fopen("/scratch/eiger/rietmann/attach_gdb.txt","w+");
+    FILE *file = fopen("./attach_gdb.txt","w+");
     if (file != NULL){
       fprintf(file,"PID %d on %s:%d ready for attach\n", getpid(), hostname,myrank);
       fclose(file);
@@ -97,16 +97,35 @@ void exit_on_cuda_error(char* kernel_name) {
   // sync and check to catch errors from previous async operations
   cudaThreadSynchronize();
   cudaError_t err = cudaGetLastError();
-  if (err != cudaSuccess)
-    {
-      fprintf(stderr,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
-      pause_for_debugger(0);
-      //free(kernel_name);
+  if (err != cudaSuccess){
+    fprintf(stderr,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
+
+    //debugging
+    //pause_for_debugger(0);
+
+    // outputs error file
+    FILE* fp;
+    int myrank;
+    char filename[BUFSIZ];  
 #ifdef WITH_MPI
-      MPI_Abort(MPI_COMM_WORLD,1);
-#endif
-      exit(EXIT_FAILURE);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+    myrank = 0;
+#endif  
+    sprintf(filename,"../in_out_files/OUTPUT_FILES/error_message_%06d.txt",myrank);
+    fp = fopen(filename,"a+");
+    if (fp != NULL){
+      fprintf(fp,"Error after %s: %s\n", kernel_name, cudaGetErrorString(err));
+      fclose(fp);
     }
+    
+    // stops program
+    //free(kernel_name);
+#ifdef WITH_MPI
+    MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+    exit(EXIT_FAILURE);
+  }
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -115,6 +134,24 @@ void exit_on_error(char* info)
 {
   printf("\nERROR: %s\n",info);
   fflush(stdout);
+  
+  // outputs error file
+  FILE* fp;
+  int myrank;
+  char filename[BUFSIZ];  
+#ifdef WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+  myrank = 0;
+#endif  
+  sprintf(filename,"../in_out_files/OUTPUT_FILES/error_message_%06d.txt",myrank);
+  fp = fopen(filename,"a+");
+  if (fp != NULL){
+    fprintf(fp,"ERROR: %s\n",info);
+    fclose(fp);
+  }
+  
+  // stops program
 #ifdef WITH_MPI
   MPI_Abort(MPI_COMM_WORLD,1);
 #endif
@@ -131,6 +168,24 @@ void print_CUDA_error_if_any(cudaError_t err, int num)
   {
     printf("\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
     fflush(stdout);
+
+    // outputs error file
+    FILE* fp;
+    int myrank;
+    char filename[BUFSIZ];  
+#ifdef WITH_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+#else
+    myrank = 0;
+#endif  
+    sprintf(filename,"../in_out_files/OUTPUT_FILES/error_message_%06d.txt",myrank);
+    fp = fopen(filename,"a+");
+    if (fp != NULL){
+      fprintf(fp,"\nCUDA error !!!!! <%s> !!!!! \nat CUDA call error code: # %d\n",cudaGetErrorString(err),num);
+      fclose(fp);
+    }
+
+    // stops program
 #ifdef WITH_MPI
     MPI_Abort(MPI_COMM_WORLD,1);
 #endif
@@ -491,9 +546,8 @@ void FC_FUNC_(prepare_cuda_device,
   if (device_count == 0) exit_on_error("CUDA runtime error: there is no device supporting CUDA\n");
   *ncuda_devices = device_count;
 
-
   // Sets the active device
-  if(device_count > 1) {
+  if(device_count >= 1) {
     // generalized for more GPUs per node
     // note: without previous context release, cudaSetDevice will complain with the cuda error
     //         "setting the device when a process is active is not allowed"
@@ -631,15 +685,14 @@ TRACE("prepare_constants_device");
     exit_on_error("NGLLX must be 5 for CUDA devices");
   }
 
-
+  // sets number of processes
 #ifdef WITH_MPI
   int nproc;
   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
-  mp->NPROCS=nproc;
+  mp->NPROC = nproc;
 #else
-  mp->NPROCS = 1;
+  mp->NPROC = 1;
 #endif
-
 
   // sets global parameters
   mp->NSPEC_AB = *NSPEC_AB;
@@ -669,36 +722,6 @@ TRACE("prepare_constants_device");
     print_CUDA_error_if_any(cudaBindTexture(0, d_hprime_xx_tex_ptr, mp->d_hprime_xx, &channelDesc, sizeof(realw)*(NGLL2)), 4001);
   }
   #endif
-
-
-  // Allocate pinned mpi-buffers.
-  // MPI buffers use pinned memory allocated by cudaMallocHost, which
-  // enables the use of asynchronous memory copies from host <->
-  // device
-  int size_mpi_buffer = 3 * (*num_interfaces_ext_mesh) * (*max_nibool_interfaces_ext_mesh);
-  print_CUDA_error_if_any(cudaMallocHost((void**)&(mp->h_send_accel_buffer),sizeof(float)*(size_mpi_buffer)),8004);
-  mp->send_buffer = (float*)malloc((size_mpi_buffer)*sizeof(float));
-  mp->size_mpi_send_buffer = size_mpi_buffer;
-
-  print_CUDA_error_if_any(cudaMallocHost((void**)&(mp->h_recv_accel_buffer),sizeof(float)*(size_mpi_buffer)),8004);
-  mp->recv_buffer = (float*)malloc((size_mpi_buffer)*sizeof(float));
-  mp->size_mpi_recv_buffer = size_mpi_buffer;
-
-  print_CUDA_error_if_any(cudaMallocHost((void**)&(mp->h_send_b_accel_buffer),sizeof(float)*(size_mpi_buffer)),8004);
-  // mp->b_send_buffer = (float*)malloc((size_mpi_buffer)*sizeof(float));
-
-  mp->num_interfaces_ext_mesh = *num_interfaces_ext_mesh;
-  mp->max_nibool_interfaces_ext_mesh = *max_nibool_interfaces_ext_mesh;
-  mp->nibool_interfaces_ext_mesh = h_nibool_interfaces_ext_mesh;
-  mp->my_neighbours_ext_mesh = my_neighbours_ext_mesh;
-  mp->request_send_vector_ext_mesh = request_send_vector_ext_mesh;
-  mp->request_recv_vector_ext_mesh = request_recv_vector_ext_mesh;
-  mp->buffer_recv_vector_ext_mesh = buffer_recv_vector_ext_mesh;
-
-  // setup two streams, one for compute and one for host<->device memory copies
-  cudaStreamCreate(&mp->compute_stream);
-  cudaStreamCreate(&mp->copy_stream);
-  cudaStreamCreate(&mp->b_copy_stream);
 
   /* Assuming NGLLX=5. Padded is then 128 (5^3+3) */
   int size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
@@ -764,6 +787,41 @@ TRACE("prepare_constants_device");
                                        cudaMemcpyHostToDevice),1204);
   }
 
+  // Allocate pinned mpi-buffers.
+  // MPI buffers use pinned memory allocated by cudaMallocHost, which
+  // enables the use of asynchronous memory copies from host <->
+  // device
+  int size_mpi_buffer = 3 * (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
+  // send buffer
+  mp->size_mpi_buffer = size_mpi_buffer;  
+  if( mp->size_mpi_buffer > 0 ){
+    print_CUDA_error_if_any(cudaMallocHost((void**)&(mp->h_send_accel_buffer),sizeof(float)*(mp->size_mpi_buffer)),8004);
+    mp->send_buffer = (float*)malloc((mp->size_mpi_buffer)*sizeof(float));
+    // adjoint
+    print_CUDA_error_if_any(cudaMallocHost((void**)&(mp->h_send_b_accel_buffer),sizeof(float)*(size_mpi_buffer)),8004);
+    // mp->b_send_buffer = (float*)malloc((size_mpi_buffer)*sizeof(float));
+
+    // receive buffer
+    print_CUDA_error_if_any(cudaMallocHost((void**)&(mp->h_recv_accel_buffer),sizeof(float)*(mp->size_mpi_buffer)),8004);
+    mp->recv_buffer = (float*)malloc((mp->size_mpi_buffer)*sizeof(float));  
+  }
+
+  //daniel: check if needed
+  //mp->nibool_interfaces_ext_mesh = h_nibool_interfaces_ext_mesh;
+  //mp->my_neighbours_ext_mesh = my_neighbours_ext_mesh;
+  //mp->request_send_vector_ext_mesh = request_send_vector_ext_mesh;
+  //mp->request_recv_vector_ext_mesh = request_recv_vector_ext_mesh;
+  //mp->buffer_recv_vector_ext_mesh = buffer_recv_vector_ext_mesh;
+  
+  // setup two streams, one for compute and one for host<->device memory copies
+  // compute stream
+  cudaStreamCreate(&mp->compute_stream);
+  // copy stream (needed to transfer mpi buffers)
+  if( mp->size_mpi_buffer > 0 ){
+    cudaStreamCreate(&mp->copy_stream);
+    //cudaStreamCreate(&mp->b_copy_stream);  
+  }
+  
   // inner elements
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ispec_is_inner,mp->NSPEC_AB*sizeof(int)),1205);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_ispec_is_inner, h_ispec_is_inner,
@@ -906,9 +964,12 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_dot_dot_acoustic),sizeof(realw)*size_glob),2003);
 
   // mpi buffer
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_potential_dot_dot_buffer),
+  if( mp->num_interfaces_ext_mesh > 0 ){
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_potential_dot_dot_buffer),
                       (mp->max_nibool_interfaces_ext_mesh)*(mp->num_interfaces_ext_mesh)*sizeof(realw)),2004);
-
+  }
+  
+  // mass matrix
   print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_rmass_acoustic),sizeof(realw)*size_glob),2005);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_rmass_acoustic,rmass_acoustic,
                                      sizeof(realw)*size_glob,cudaMemcpyHostToDevice),2100);
@@ -1145,9 +1206,11 @@ TRACE("prepare_fields_elastic_device");
   #endif
 
   // mpi buffer
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_accel_buffer),
-                        3*(mp->max_nibool_interfaces_ext_mesh)*(mp->num_interfaces_ext_mesh)*sizeof(realw)),4004);
-
+  if( mp->size_mpi_buffer > 0 ){
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_accel_buffer),
+                                      mp->size_mpi_buffer*sizeof(realw)),4004);
+  }
+  
   // mass matrix
   print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_rmass),sizeof(realw)*mp->NGLOB_AB),4005);
   // transfer element data

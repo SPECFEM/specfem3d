@@ -255,13 +255,11 @@ subroutine compute_forces_elastic()
                my_neighbours_ext_mesh, &
                request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
        else ! GPU_MODE==1
-
           ! transfers boundary region to host asynchronously. The
           ! MPI-send is done from within compute_forces_elastic_cuda,
           ! once the inner element kernels are launched, and the
           ! memcpy has finished. see compute_forces_elastic_cuda:1655
           call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
-
        endif ! GPU_MODE
 
        ! adjoint simulations
@@ -284,7 +282,6 @@ subroutine compute_forces_elastic()
                   nibool_interfaces_ext_mesh,&
                   my_neighbours_ext_mesh, &
                   b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
-
           endif ! GPU
        endif !adjoint
 
