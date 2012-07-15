@@ -459,6 +459,12 @@ module specfem_par_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accels_poroelastic,velocs_poroelastic,displs_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accelw_poroelastic,velocw_poroelastic,displw_poroelastic
 
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+    epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,epsilonsdev_xz,epsilonsdev_yz, &
+    epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,epsilonwdev_xz,epsilonwdev_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+    epsilons_trace_over_3,epsilonw_trace_over_3
+
 ! material properties
 !  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: mustore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: etastore,tortstore
@@ -488,8 +494,14 @@ module specfem_par_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accels_poroelastic,b_velocs_poroelastic,b_displs_poroelastic
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_accelw_poroelastic,b_velocw_poroelastic,b_displw_poroelastic
 
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+    b_epsilonsdev_xx,b_epsilonsdev_yy,b_epsilonsdev_xy,b_epsilonsdev_xz,b_epsilonsdev_yz, &
+    b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy,b_epsilonwdev_xz,b_epsilonwdev_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
+    b_epsilons_trace_over_3,b_epsilonw_trace_over_3
+
   ! adjoint kernels [primary kernels, density kernels, wavespeed kernels]
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: rhot_kl, rhof_kl, sm_kl, eta_kl, mufr_kl, B_kl, &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhot_kl, rhof_kl, sm_kl, eta_kl, mufr_kl, B_kl, &
     C_kl, M_kl, rhob_kl, rhofb_kl, phi_kl, Bb_kl, Cb_kl, Mb_kl, mufrb_kl, &
     rhobb_kl, rhofbb_kl, phib_kl, cpI_kl, cpII_kl, cs_kl, ratio_kl
 

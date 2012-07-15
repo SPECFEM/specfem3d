@@ -31,6 +31,7 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
+  use specfem_par_poroelastic
 
   implicit none
 
@@ -65,6 +66,15 @@
         write(27) epsilondev_xz
         write(27) epsilondev_yz
       endif
+    endif
+
+    if( POROELASTIC_SIMULATION ) then
+      write(27) displs_poroelastic
+      write(27) velocs_poroelastic
+      write(27) accels_poroelastic
+      write(27) displw_poroelastic
+      write(27) velocw_poroelastic
+      write(27) accelw_poroelastic
     endif
 
     close(27)

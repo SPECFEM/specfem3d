@@ -27,11 +27,13 @@
   subroutine compute_kernels()
 
 ! kernel calculations
-! see e.g. Tromp et al. (2005)
+! see e.g. Tromp et al. (2005) for elastic calculation
+! and Morency et al. (2009) for poroelastic calculation
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
+  use specfem_par_poroelastic
   implicit none
 
   ! elastic simulations
@@ -42,6 +44,11 @@
   ! elastic simulations
   if( ACOUSTIC_SIMULATION ) then
     call compute_kernels_ac()
+  endif
+
+  ! poroelastic simulations
+  if( POROELASTIC_SIMULATION ) then
+    call compute_kernels_po()
   endif
 
   ! computes an approximative hessian for preconditioning kernels
@@ -231,6 +238,112 @@
 
   end subroutine compute_kernels_ac
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine compute_kernels_po()
+
+! kernel calculations
+! see e.g. Morency et al. (2009)
+
+  use specfem_par
+  use specfem_par_poroelastic
+
+  implicit none
+  ! local parameters
+  integer :: i,j,k,ispec,iglob
+  real(kind=CUSTOM_REAL), dimension(5) :: epsilonsdev_loc,b_epsilonsdev_loc
+
+  if( .not. GPU_MODE ) then
+    ! updates kernels on CPU
+    do ispec = 1, NSPEC_AB
+
+      ! poroelastic domains
+      if( ispec_is_poroelastic(ispec) ) then
+
+         do k = 1, NGLLZ
+            do j = 1, NGLLY
+               do i = 1, NGLLX
+                  iglob = ibool(i,j,k,ispec)
+
+                  ! 8 isotropic kernels
+                  ! note: takes displacement from backward/reconstructed
+                  ! (forward) field b_displ
+                  !          and acceleration from adjoint field accel
+                  !          (containing adjoint sources)
+                  !
+                  ! note: : time integral summation uses deltat
+                  ! 3 density kernels, see Morency et al. (2009),
+                  ! equations (39)-(41)
+                  rhot_kl(i,j,k,ispec) =  rhot_kl(i,j,k,ispec) &
+                       + deltat * dot_product(accels_poroelastic(:,iglob), b_displs_poroelastic(:,iglob))
+
+                  rhof_kl(i,j,k,ispec) =  rhof_kl(i,j,k,ispec) &
+                       + deltat * ( dot_product(accelw_poroelastic(:,iglob), b_displs_poroelastic(:,iglob)) &
+                       + dot_product(accels_poroelastic(:,iglob), b_displw_poroelastic(:,iglob)) )
+
+                  sm_kl(i,j,k,ispec) =  sm_kl(i,j,k,ispec) &
+                       + deltat * dot_product(accelw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
+
+                  ! kernel for viscous damping, see e.g. Morency et al. (2009),
+                  ! equation (42)      
+                  eta_kl(i,j,k,ispec) =  eta_kl(i,j,k,ispec) &
+                       + deltat * dot_product(velocw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
+
+                  ! kernel for frame shear modulus, see e.g. Morency et al. (2009),
+                  ! equation (46)
+                  ! note: multiplication with 2*mufr(x) will be done after the
+                  ! time loop
+                  epsilonsdev_loc(1) = epsilonsdev_xx(i,j,k,ispec)
+                  epsilonsdev_loc(2) = epsilonsdev_yy(i,j,k,ispec)
+                  epsilonsdev_loc(3) = epsilonsdev_xy(i,j,k,ispec)
+                  epsilonsdev_loc(4) = epsilonsdev_xz(i,j,k,ispec)
+                  epsilonsdev_loc(5) = epsilonsdev_yz(i,j,k,ispec)
+
+                  b_epsilonsdev_loc(1) = b_epsilonsdev_xx(i,j,k,ispec)
+                  b_epsilonsdev_loc(2) = b_epsilonsdev_yy(i,j,k,ispec)
+                  b_epsilonsdev_loc(3) = b_epsilonsdev_xy(i,j,k,ispec)
+                  b_epsilonsdev_loc(4) = b_epsilonsdev_xz(i,j,k,ispec)
+                  b_epsilonsdev_loc(5) = b_epsilonsdev_yz(i,j,k,ispec)
+
+                  mufr_kl(i,j,k,ispec) =  mufr_kl(i,j,k,ispec) &
+                       + deltat * (epsilonsdev_loc(1)*b_epsilonsdev_loc(1) + epsilonsdev_loc(2)*b_epsilonsdev_loc(2) &
+                       + (epsilonsdev_loc(1)+epsilonsdev_loc(2)) * (b_epsilonsdev_loc(1)+b_epsilonsdev_loc(2)) &
+                       + 2 * (epsilonsdev_loc(3)*b_epsilonsdev_loc(3) + epsilonsdev_loc(4)*b_epsilonsdev_loc(4) + &
+                       epsilonsdev_loc(5)*b_epsilonsdev_loc(5)) )
+
+                  ! 3 kernels for the bulk moduli, see e.g. Morency et al. (2009),
+                  ! equations (43)-(45)
+                  ! note: multiplication by respective moduli will be done after the
+                  ! time loop
+                  B_kl(i,j,k,ispec) = B_kl(i,j,k,ispec) &
+                       + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
+                       * b_epsilons_trace_over_3(i,j,k,ispec))
+                
+                  C_kl(i,j,k,ispec) = C_kl(i,j,k,ispec) &
+                       + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
+                       * b_epsilonw_trace_over_3(i,j,k,ispec) &
+                       + 9 * epsilonw_trace_over_3(i,j,k,ispec) &
+                       * b_epsilons_trace_over_3(i,j,k,ispec) )
+
+                  M_kl(i,j,k,ispec) = M_kl(i,j,k,ispec) &
+                       + deltat * (9 * epsilonw_trace_over_3(i,j,k,ispec) &
+                       * b_epsilonw_trace_over_3(i,j,k,ispec))
+               enddo
+            enddo
+         enddo
+      endif !ispec_is_poroelastic
+
+    enddo
+
+  else
+    ! TO DO
+    ! updates kernels on GPU
+    !call compute_kernels_poroelastic_cuda(Mesh_pointer,deltat)
+  endif
+
+  end subroutine compute_kernels_po
 !
 !-------------------------------------------------------------------------------------------------
 !

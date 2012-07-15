@@ -34,6 +34,8 @@
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
+                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
+                        epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
@@ -52,6 +54,10 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic,&
                                                       velocw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
+       epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,epsilonwdev_xz,epsilonwdev_yz
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilonw_trace_over_3
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -330,7 +336,12 @@
     sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
           if(SIMULATION_TYPE == 3) then ! kernels calculation
-          l = NSPEC_ADJOINT ! to avoid compilation warning
+    epsilonw_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonwdev_xx(i,j,k,ispec) = duxdxl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonwdev_yy(i,j,k,ispec) = duydyl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonwdev_xy(i,j,k,ispec) = 0.5 * duxdyl_plus_duydxl
+    epsilonwdev_xz(i,j,k,ispec) = 0.5 * duzdxl_plus_duxdzl
+    epsilonwdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
           endif
 !  endif !if(VISCOATTENUATION)
 
@@ -457,8 +468,6 @@
     accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + ( fac1*(rhol_f/rhol_bar*tempz1ls - tempz1lw) &
            + fac2*(rhol_f/rhol_bar*tempz2ls - tempz2lw) + fac3*(rhol_f/rhol_bar*tempz3ls - tempz3lw) )
 
-          if(SIMULATION_TYPE == 3) then ! kernels calculation
-          endif
 
 !
 !---- viscous damping

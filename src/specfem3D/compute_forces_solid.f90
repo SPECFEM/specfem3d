@@ -34,6 +34,8 @@
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
+                        epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,&
+                        epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
@@ -51,6 +53,10 @@
 ! displacement and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,velocw_poroelastic
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
+       epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,epsilonsdev_xz,epsilonsdev_yz
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilons_trace_over_3
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -332,31 +338,12 @@
 !  endif !if(ATTENUATION)
 
           if(SIMULATION_TYPE == 3) then ! kernels calculation
-          l = NSPEC_ADJOINT ! to avoid compilation warnings
-! kernels calculation
-!   if(isolver == 2) then
-!          iglob = ibool(i,j,ispec)
-!            dsxx =  dux_dxl
-!            dsxz = HALF * (duz_dxl + dux_dzl)
-!            dszz =  duz_dzl
-!
-!            dwxx =  dwx_dxl
-!            dwxz = HALF * (dwz_dxl + dwx_dzl)
-!            dwzz =  dwz_dzl
-!
-!            b_dsxx =  b_dux_dxl
-!            b_dsxz = HALF * (b_duz_dxl + b_dux_dzl)
-!            b_dszz =  b_duz_dzl
-!
-!            b_dwxx =  b_dwx_dxl
-!            b_dwxz = HALF * (b_dwz_dxl + b_dwx_dzl)
-!            b_dwzz =  b_dwz_dzl
-!
-!            B_k(iglob) = (dux_dxl + duz_dzl) *  (b_dux_dxl + b_duz_dzl) * (H_biot - FOUR_THIRDS * mul_fr)
-!            mufr_k(iglob) = (dsxx * b_dsxx + dszz * b_dszz + &
-!                  2._CUSTOM_REAL * dsxz * b_dsxz - &
-!                 1._CUSTOM_REAL/3._CUSTOM_REAL * (dux_dxl + duz_dzl) * (b_dux_dxl + b_duz_dzl) ) * mul_fr
-!   endif
+    epsilons_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonsdev_xx(i,j,k,ispec) = duxdxl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonsdev_yy(i,j,k,ispec) = duydyl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonsdev_xy(i,j,k,ispec) = 0.5 * duxdyl_plus_duydxl
+    epsilonsdev_xz(i,j,k,ispec) = 0.5 * duzdxl_plus_duxdzl
+    epsilonsdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
           endif
 
 
@@ -391,8 +378,6 @@
           tempy3p(i,j,k) = jacobianl * sigmap*gammayl
           tempz3p(i,j,k) = jacobianl * sigmap*gammazl
 
-          if(SIMULATION_TYPE == 3) then ! kernels calculation
-          endif
 
         enddo
       enddo
@@ -480,9 +465,6 @@
     accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) - ( fac1*(tempz1ls - phil/tortl*tempz1lw) &
            + fac2*(tempz2ls - phil/tortl*tempz2lw) + fac3*(tempz3ls - phil/tortl*tempz3lw) )
 
-          if(SIMULATION_TYPE == 3) then ! kernels calculation
-          endif
-
 !
 !---- viscous damping
 !
@@ -523,7 +505,7 @@
           bl_relaxed(5) = etal_f*invpermlyz
           bl_relaxed(6) = etal_f*invpermlzz
 
-!    ifVISCOATTENUATION) then
+!    if(VISCOATTENUATION) then
 !          bl_unrelaxed(1) = etal_f*invpermlxx*theta_e/theta_s
 !          bl_unrelaxed(2) = etal_f*invpermlxz*theta_e/theta_s
 !          bl_unrelaxed(3) = etal_f*invpermlzz*theta_e/theta_s
