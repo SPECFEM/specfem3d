@@ -50,8 +50,9 @@ subroutine compute_forces_poroelastic()
     endif
 
 !Note: Contrary to the elastic & acoustic case, the absorbing implementation is within compute_forces
-!due to the number of properties which were needed
+!due to the number of material properties which were needed
 
+    if( .NOT. GPU_MODE ) then
 ! solid phase
 
     call compute_forces_solid( iphase, &
@@ -63,6 +64,8 @@ subroutine compute_forces_poroelastic()
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
+                        epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,&
+                        epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
@@ -78,6 +81,8 @@ subroutine compute_forces_poroelastic()
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
+                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
+                        epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
@@ -97,6 +102,8 @@ stop 'adjoint poroelastic simulation not fully implemented yet'
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
+                        b_epsilonsdev_xx,b_epsilonsdev_yy,b_epsilonsdev_xy,&
+                        b_epsilonsdev_xz,b_epsilonsdev_yz,b_epsilons_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
@@ -112,11 +119,17 @@ stop 'adjoint poroelastic simulation not fully implemented yet'
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
+                        b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy,&
+                        b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
     endif
 
+    else
+      ! on GPU
+stop 'GPU for poroelastic simulation not implemented'
+    endif ! GPU_MODE
 
 ! acoustic coupling
     if( ACOUSTIC_SIMULATION ) then

@@ -261,6 +261,24 @@
              rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array poroelastic properties'
 
+    ! needed for kernel computations
+    allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array epsilonsdev_xx etc.'
+
+    allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array epsilons_trace_over_3 etc.'
+
+
     read(27) rmass_solid_poroelastic
     read(27) rmass_fluid_poroelastic
     read(27) rhoarraystore
@@ -800,6 +818,149 @@
              b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
              b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
     if( ier /= 0 ) stop 'error allocating array dsdx_top etc.'
+  endif
+
+  ! allocates adjoint arrays for poroelastic simulations
+  if( POROELASTIC_SIMULATION .and. SIMULATION_TYPE == 3 ) then
+    ! backward displacement,velocity,acceleration for the solid (s) & fluid (w) phases
+    allocate(b_displs_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_displs_poroelastic'
+    allocate(b_velocs_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_velocs_poroelastic'
+    allocate(b_accels_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_accels_poroelastic'
+    allocate(b_displw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_displw_poroelastic'
+    allocate(b_velocw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_velocw_poroelastic'
+    allocate(b_accelw_poroelastic(NDIM,NGLOB_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_accelw_poroelastic'
+
+    ! adjoint kernels
+
+    ! primary, isotropic kernels
+    allocate(rhot_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            rhof_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            sm_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rhot_kl etc.'
+    allocate(mufr_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array mufr_kl'
+    allocate(B_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            C_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            M_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+    if( ier /= 0 ) stop 'error allocating array B_kl etc.'
+
+    ! density, isotropic kernels
+    allocate(rhob_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            rhofb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            phi_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rhob_kl etc.'
+    allocate(mufrb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array mufrb_kl'
+    allocate(Bb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            Cb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            Mb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+    if( ier /= 0 ) stop 'error allocating array Bb_kl etc.'
+
+    ! wavespeed, isotropic kernels
+    allocate(rhobb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            rhofbb_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            phib_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            ratio_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rhobb_kl etc.'
+    allocate(cs_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array cs_kl'
+    allocate(cpI_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            cpII_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), stat=ier)
+    if( ier /= 0 ) stop 'error allocating array cpI_kl etc.'
+
+    ! MPI handling
+    allocate(b_request_send_vector_ext_meshs(num_interfaces_ext_mesh), &
+      b_request_recv_vector_ext_meshs(num_interfaces_ext_mesh), &
+      b_buffer_send_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+      b_buffer_recv_vector_ext_meshs(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_meshs etc.'
+
+    allocate(b_request_send_vector_ext_meshw(num_interfaces_ext_mesh), &
+      b_request_recv_vector_ext_meshw(num_interfaces_ext_mesh), &
+      b_buffer_send_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
+      b_buffer_recv_vector_ext_meshw(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_request_send_vector_ext_meshw etc.'
+
+    ! arrays needed for kernel computations
+    allocate(b_epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_epsilonsdev_xx etc.'
+
+    allocate(b_epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
+            b_epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array b_epsilons_trace_over_3 etc.'
+
+  else ! dummy arrays
+
+    ! backward displacement,velocity,acceleration for the solid (s) & fluid (w)
+    ! phases
+    allocate(b_displs_poroelastic(1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array b_displs_poroelastic'
+    allocate(b_velocs_poroelastic(1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array b_velocs_poroelastic'
+    allocate(b_accels_poroelastic(1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array b_accels_poroelastic'
+    allocate(b_displw_poroelastic(1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array b_displw_poroelastic'
+    allocate(b_velocw_poroelastic(1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array b_velocw_poroelastic'
+    allocate(b_accelw_poroelastic(1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array b_accelw_poroelastic'
+
+    ! adjoint kernels
+
+    ! primary, isotropic kernels
+    allocate(rhot_kl(1,1,1,1), &
+            rhof_kl(1,1,1,1), &
+            sm_kl(1,1,1,1), &
+            eta_kl(1,1,1,1), stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array rhot_kl etc.'
+    allocate(mufr_kl(1,1,1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array mufr_kl'
+    allocate(B_kl(1,1,1,1), &
+            C_kl(1,1,1,1), &
+            M_kl(1,1,1,1), stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array B_kl etc.'
+
+    ! density, isotropic kernels
+    allocate(rhob_kl(1,1,1,1), &
+            rhofb_kl(1,1,1,1), &
+            phi_kl(1,1,1,1), stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array rhob_kl etc.'
+    allocate(mufrb_kl(1,1,1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array mufrb_kl'
+    allocate(Bb_kl(1,1,1,1), &
+            Cb_kl(1,1,1,1), &
+            Mb_kl(1,1,1,1), stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array Bb_kl etc.'
+
+    ! wavespeed, isotropic kernels
+    allocate(rhobb_kl(1,1,1,1), &
+            rhofbb_kl(1,1,1,1), &
+            phib_kl(1,1,1,1), &
+            ratio_kl(1,1,1,1), stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array rhobb_kl etc.'
+    allocate(cs_kl(1,1,1,1),stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array cs_kl'
+    allocate(cpI_kl(1,1,1,1), &
+            cpII_kl(1,1,1,1), stat=ier)
+    if( ier /= 0 ) stop 'error allocating dummy array cpI_kl etc.'
+
   endif
 
   end subroutine read_mesh_databases_adjoint

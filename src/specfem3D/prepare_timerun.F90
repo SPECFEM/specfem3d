@@ -703,6 +703,32 @@
     endif
   endif
 
+    ! poroelastic domain
+    if( POROELASTIC_SIMULATION ) then
+      rhot_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      rhof_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      sm_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      eta_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      mufr_kl(:,:,:,:)    = 0._CUSTOM_REAL
+      B_kl(:,:,:,:) = 0._CUSTOM_REAL
+      C_kl(:,:,:,:) = 0._CUSTOM_REAL
+      M_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+      !if ( APPROXIMATE_HESS_KL ) &
+      !  hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+
+      ! reconstructed/backward elastic wavefields
+      b_displs_poroelastic = 0._CUSTOM_REAL
+      b_velocs_poroelastic = 0._CUSTOM_REAL
+      b_accels_poroelastic = 0._CUSTOM_REAL
+      b_displw_poroelastic = 0._CUSTOM_REAL
+      b_velocw_poroelastic = 0._CUSTOM_REAL
+      b_accelw_poroelastic = 0._CUSTOM_REAL
+      if(FIX_UNDERFLOW_PROBLEM) b_displs_poroelastic = VERYSMALLVAL
+      if(FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
+
+    endif
+
 ! initialize Moho boundary index
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
     ispec2D_moho_top = 0
