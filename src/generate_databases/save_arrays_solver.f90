@@ -27,181 +27,38 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh(nspec,nglob, &
-!                    xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore, &
-!                    gammaxstore,gammaystore,gammazstore, &
-!                    jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
-!                    rhostore,kappastore,mustore, &
-!                    rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore, &
-!                    rho_vpI,rho_vpII,rho_vsI, &
-!                    rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                    OCEANS, &
-!                    rmass_ocean_load,NGLOB_OCEAN,&
-                    ibool, &
-!                    xstore_dummy,ystore_dummy,zstore_dummy, &
-!                    abs_boundary_normal,abs_boundary_jacobian2Dw, &
-!                    abs_boundary_ijk,abs_boundary_ispec, &
-!                    num_abs_boundary_faces, &
-!                    free_surface_normal,free_surface_jacobian2Dw, &
-!                    free_surface_ijk,free_surface_ispec, &
-!                    num_free_surface_faces, &
-!                    coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-!                    coupling_ac_el_ijk,coupling_ac_el_ispec, &
-!                    num_coupling_ac_el_faces, &
-!                    coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
-!                    coupling_ac_po_ijk,coupling_ac_po_ispec, &
-!                    num_coupling_ac_po_faces, &
-!                    coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-!                    coupling_el_po_ijk,coupling_po_el_ijk,coupling_el_po_ispec, &
-!                    coupling_po_el_ispec,num_coupling_el_po_faces, &
+  subroutine save_arrays_solver_ext_mesh(nspec,nglob,OCEANS,ibool, &
                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-!                    prname, &
-                    SAVE_MESH_FILES, &
-                    ANISOTROPY &
-!                    NSPEC_ANISO, &
-!                    c11store,c12store,c13store,c14store,c15store,c16store, &
-!                    c22store,c23store,c24store,c25store,c26store,c33store, &
-!                    c34store,c35store,c36store,c44store,c45store,c46store, &
-!                    c55store,c56store,c66store, &
-!                    ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-!                    ispec_is_inner,nspec_inner_acoustic,nspec_inner_elastic,nspec_inner_poroelastic, &
-!                    nspec_outer_acoustic,nspec_outer_elastic,nspec_outer_poroelastic, &
-!                    num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
-!                    num_phase_ispec_elastic,phase_ispec_inner_elastic, &
-!                    num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic, &
-!                    num_colors_outer_acoustic,num_colors_inner_acoustic, &
-!                    num_elem_colors_acoustic, &
-!                    num_colors_outer_elastic,num_colors_inner_elastic, &
-!                    num_elem_colors_elastic, &
-              )
+                    SAVE_MESH_FILES,ANISOTROPY)
 
   use create_regions_mesh_ext_par
 
   implicit none
 
-!  include "constants.h"
-
   integer :: nspec,nglob
-
-! jacobian
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xixstore,xiystore,xizstore, &
-!            etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp,rho_vs
-
-! attenuation
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: qmu_attenuation_store
-
-! material
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore,kappastore,mustore
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: etastore,phistore,tortstore
-!  real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,nspec) :: rhoarraystore
-!  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,nspec) :: kappaarraystore
-!  real(kind=CUSTOM_REAL), dimension(6,NGLLX,NGLLY,NGLLZ,nspec) :: permstore
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vpI,rho_vpII,rho_vsI
-!  real(kind=CUSTOM_REAL), dimension(nglob) :: rmass,rmass_acoustic, &
-!            rmass_solid_poroelastic,rmass_fluid_poroelastic
-! ocean load
+  ! ocean load
   logical :: OCEANS
-!  integer :: NGLOB_OCEAN
-!  real(kind=CUSTOM_REAL),dimension(NGLOB_OCEAN) :: rmass_ocean_load
-
-! mesh coordinates
+  ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-!  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
-
-! absorbing boundary surface
-!  integer :: num_abs_boundary_faces
-!  real(kind=CUSTOM_REAL) :: abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces)
-!  real(kind=CUSTOM_REAL) :: abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces)
-!  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-!  integer :: abs_boundary_ispec(num_abs_boundary_faces)
-
-! free surface
-!  integer :: num_free_surface_faces
-!  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
-!  real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
-!  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-!  integer :: free_surface_ispec(num_free_surface_faces)
-
-! acoustic-elastic coupling surface
-!  integer :: num_coupling_ac_el_faces
-!  real(kind=CUSTOM_REAL) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
-!  real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
-!  integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
-!  integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
-
-! acoustic-poroelastic coupling surface
-!  integer :: num_coupling_ac_po_faces
-!  real(kind=CUSTOM_REAL) :: coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces)
-!  real(kind=CUSTOM_REAL) :: coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces)
-!  integer :: coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces)
-!  integer :: coupling_ac_po_ispec(num_coupling_ac_po_faces)
-
-! elastic-poroelastic coupling surface
-!  integer :: num_coupling_el_po_faces
-!  real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces)
-!  real(kind=CUSTOM_REAL) :: coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces)
-!  integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-!  integer :: coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-!  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
-!  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)
-
-! MPI interfaces
+  ! MPI interfaces
   integer :: num_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
-  integer :: max_nibool_interfaces_ext_mesh
 
-! file name
-!  character(len=256) prname
   logical :: SAVE_MESH_FILES
-
-! anisotropy
   logical :: ANISOTROPY
-!  integer :: NSPEC_ANISO
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
-!            c11store,c12store,c13store,c14store,c15store,c16store, &
-!            c22store,c23store,c24store,c25store,c26store,c33store, &
-!            c34store,c35store,c36store,c44store,c45store,c46store, &
-!            c55store,c56store,c66store
 
-! material domain flags
-!  logical, dimension(nspec) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
-
-! inner/outer elements
-!  logical,dimension(nspec) :: ispec_is_inner
-!  integer :: nspec_inner_acoustic,nspec_outer_acoustic
-!  integer :: nspec_inner_elastic,nspec_outer_elastic
-!  integer :: nspec_inner_poroelastic,nspec_outer_poroelastic
-
-!  integer :: num_phase_ispec_acoustic
-!  integer,dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
-
-!  integer :: num_phase_ispec_elastic
-!  integer,dimension(num_phase_ispec_elastic,2) :: phase_ispec_inner_elastic
-
-!  integer :: num_phase_ispec_poroelastic
-!  integer,dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
-
-  ! mesh coloring
-!  integer :: num_colors_outer_acoustic,num_colors_inner_acoustic
-!  integer, dimension(num_colors_outer_acoustic + num_colors_inner_acoustic) :: &
-!    num_elem_colors_acoustic
-!  integer :: num_colors_outer_elastic,num_colors_inner_elastic
-!  integer, dimension(num_colors_outer_elastic + num_colors_inner_elastic) :: &
-!    num_elem_colors_elastic
-
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
   integer,dimension(:),allocatable :: v_tmp_i
 
-  !real(kind=CUSTOM_REAL) :: minimum(1)
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+  integer :: max_nibool_interfaces_ext_mesh
+
   integer :: ier,i
-!  logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,POROELASTIC_SIMULATION
   character(len=256) :: filename
 
   integer, dimension(:), allocatable :: iglob_tmp

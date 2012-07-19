@@ -107,7 +107,7 @@ foreach $name (@objects) {
       # function declaration
       if($line =~ /{/){
         # function declaration ends
-        if( $line =~ /PREPARE_CUDA_DEVICE/ ){
+        if( $line =~ /INITIALIZE_CUDA_DEVICE/ ){
           # adds warning
           print IOUT "$line \n$warning\} \n\n";
         }else{

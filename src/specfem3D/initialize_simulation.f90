@@ -348,6 +348,7 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   implicit none
+  ! local parameters
   integer :: ncuda_devices,ncuda_devices_min,ncuda_devices_max
 
   ! GPU_MODE now defined in Par_file
@@ -372,7 +373,7 @@
   endif
 
   ! initializes GPU and outputs info to files for all processes
-  call prepare_cuda_device(myrank,ncuda_devices)
+  call initialize_cuda_device(myrank,ncuda_devices)
 
   ! collects min/max of local devices found for statistics
   call sync_all()

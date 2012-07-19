@@ -185,7 +185,7 @@ TRACE("transfer_asmbl_pot_to_device");
   // cudaEventCreate(&start);
   // cudaEventCreate(&stop);
   // cudaEventRecord( start, 0 );
-  
+
   if( *num_interfaces_ext_mesh == 0 ) return;
 
   // copies buffer onto GPU

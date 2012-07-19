@@ -5,9 +5,9 @@
 !               ---------------------------------------
 !
 !          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
+!    Princeton University, USA and University of Pau / CNRS / INRIA
+! (c) Princeton University / California Institute of Technology and University of Pau / CNRS / INRIA
+!                            April 2011
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -38,6 +38,17 @@ typedef float realw;
 //
 // src/cuda/check_fields_cuda.cu
 //
+
+void FC_FUNC_(pause_for_debug,PAUSE_FOR_DEBUG)() {}
+
+void FC_FUNC_(output_free_device_memory,
+              OUTPUT_FREE_DEVICE_MEMORY)(int* myrank) {}
+
+ void FC_FUNC_(show_free_device_memory,
+ SHOW_FREE_DEVICE_MEMORY)() {}
+
+void FC_FUNC_(get_free_device_memory,
+              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total ) {}
 
 void FC_FUNC_(check_max_norm_displ_gpu,
               CHECK_MAX_NORM_DISPL_GPU)(int* size, realw* displ,long* Mesh_pointer_f,int* announceID) {}
@@ -76,8 +87,8 @@ void FC_FUNC_(get_norm_acoustic_from_device,
 
 void FC_FUNC_(get_norm_elastic_from_device,
               GET_NORM_ELASTIC_FROM_DEVICE)(realw* norm,
-                                                 long* Mesh_pointer_f,
-                                                 int* SIMULATION_TYPE) {}
+                                            long* Mesh_pointer_f,
+                                            int* SIMULATION_TYPE) {}
 
 
 //
@@ -353,6 +364,17 @@ void FC_FUNC_(compute_stacey_elastic_cuda,
 
 
 //
+// src/cuda/initialize_cuda.cu
+//
+
+void FC_FUNC_(initialize_cuda_device,
+              INITIALIZE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices) {
+ fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA Support. To enable GPU support, reconfigure with --with-cuda flag.\n");
+ exit(1);
+}
+
+
+//
 // src/cuda/it_update_displacement_cuda.cu
 //
 
@@ -406,23 +428,6 @@ void FC_FUNC_(noise_read_add_surface_movie_cu,
 //
 // src/cuda/prepare_mesh_constants_cuda.cu
 //
-
-void FC_FUNC_(pause_for_debug,PAUSE_FOR_DEBUG)() {}
-
-void FC_FUNC_(output_free_device_memory,
-              OUTPUT_FREE_DEVICE_MEMORY)(int* myrank) {}
-
-void FC_FUNC_(show_free_device_memory,
-              SHOW_FREE_DEVICE_MEMORY)() {}
-
-void FC_FUNC_(get_free_device_memory,
-              get_FREE_DEVICE_MEMORY)(realw* free, realw* used, realw* total ) {}
-
-void FC_FUNC_(prepare_cuda_device,
-              PREPARE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices) {
- fprintf(stderr,"ERROR: GPU_MODE enabled without GPU/CUDA Support. To enable GPU support, reconfigure with --with-cuda flag.\n");
- exit(1);
-}
 
 void FC_FUNC_(prepare_constants_device,
               PREPARE_CONSTANTS_DEVICE)(long* Mesh_pointer,

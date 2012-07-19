@@ -73,20 +73,17 @@
 // error checking after cuda function calls
 //#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
-// helper functions
+// maximum function
 #define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
 
+// utility functions: defined in check_fields_cuda.cu
 double get_time();
-
+void get_free_memory(double* free_db, double* used_db, double* total_db);
 void print_CUDA_error_if_any(cudaError_t err, int num);
-
 void pause_for_debugger(int pause);
-
 void exit_on_cuda_error(char* kernel_name);
-
 void exit_on_error(char* info);
-
-void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
+//void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 
 /* ----------------------------------------------------------------------------------------------- */
 

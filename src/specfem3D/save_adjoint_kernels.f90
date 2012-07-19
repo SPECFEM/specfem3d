@@ -38,7 +38,7 @@
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: weights_kernel
   real(kind=CUSTOM_REAL) :: rhol_s,rhol_f,rhol_bar,phil,tortl
-  real(kind=CUSTOM_REAL) :: mul_s,kappal_s
+  real(kind=CUSTOM_REAL) :: kappal_s ! mul_s
   real(kind=CUSTOM_REAL) :: kappal_f,etal_f
   real(kind=CUSTOM_REAL) :: mul_fr,kappal_fr
   real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz

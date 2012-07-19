@@ -933,15 +933,6 @@
   endif
   call create_regions_mesh()
 
-! now done inside create_regions_mesh_ext routine...
-! now done inside create_regions_mesh_ext routine...
-! Moho boundary parameters, 2-D jacobians and normals
-!  if( SAVE_MOHO_MESH ) then
-!    call create_regions_mesh_save_moho(myrank,nglob,NSPEC_AB, &
-!                        nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
-!                        nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
-!  endif
-
 ! print min and max of topography included
   min_elevation = HUGEVAL
   max_elevation = -HUGEVAL

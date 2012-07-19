@@ -33,7 +33,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  implicit none  
+  implicit none
   ! local parameters
   double precision :: tCPU
 
@@ -103,8 +103,8 @@
     !daniel debug: time estimation
     ! elastic elements: time per element t_per_element = 1.40789368e-05 s
     ! total time = nspec * nstep * t_per_element
-  endif  
-  
+  endif
+
   end subroutine prepare_timerun
 
 !
@@ -117,7 +117,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use specfem_par_movie  
+  use specfem_par_movie
   implicit none
 
   ! flag for any movie simulation

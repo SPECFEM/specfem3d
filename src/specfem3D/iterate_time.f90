@@ -723,7 +723,7 @@
 !=====================================================================
 
   subroutine it_print_elapsed_time()
-  
+
     use specfem_par
     use specfem_par_elastic
     use specfem_par_acoustic

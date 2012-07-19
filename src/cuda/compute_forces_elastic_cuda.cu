@@ -150,7 +150,7 @@ TRACE("transfer_boun_accel_from_device");
     // cudaEventDestroy( stop );
     // printf("boundary xfer d->h Time: %f ms\n",time);
   }
-  
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("transfer_boun_accel_from_device");
 #endif
@@ -170,7 +170,7 @@ void FC_FUNC_(transfer_boundary_from_device_a,
   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
 
   if( mp->size_mpi_buffer > 0 ){
-  
+
 //daniel: todo - check below with this...
     int blocksize = BLOCKSIZE_TRANSFER;
     int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
@@ -277,7 +277,7 @@ void FC_FUNC_(transfer_boundary_to_device_a,
   if( mp->size_mpi_buffer > 0 ){
     // copy on host memory
     memcpy(mp->h_recv_accel_buffer,buffer_recv_vector_ext_mesh,mp->size_mpi_buffer*sizeof(realw));
-  
+
     // cudaMemcpyAsync(mp->d_send_accel_buffer, buffer_recv_vector_ext_mesh,
     //        mp->size_mpi_buffer*sizeof(realw),cudaMemcpyHostToDevice,mp->compute_stream);
     //printf("xfer to device\n");
@@ -372,7 +372,7 @@ TRACE("transfer_asmbl_accel_to_device");
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   if( mp->size_mpi_buffer > 0 ){
-  
+
     //daniel: todo - check if this copy is only needed for adjoint simulation, otherwise it is called asynchronously?
     if(*FORWARD_OR_ADJOINT == 1 ){
       // Wait until previous copy stream finishes. We assemble while other compute kernels execute.
@@ -422,7 +422,7 @@ TRACE("transfer_asmbl_accel_to_device");
     // cudaEventDestroy( stop );
     // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
   }
-  
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   //double end_time = get_time();
   //printf("Elapsed time: %e\n",end_time-start_time);
@@ -1636,10 +1636,10 @@ void FC_FUNC_(compute_forces_elastic_cuda,
       //daniel: we use the same stream, so kernels are executed one after the other
       // synchronizes in case we run on only 1 process to avoid race-conditions
       //if( mp->NPROC == 1 ){
-      //  // Wait until previous compute stream finishes.         
-      //  cudaStreamSynchronize(mp->compute_stream);        
+      //  // Wait until previous compute stream finishes.
+      //  cudaStreamSynchronize(mp->compute_stream);
       //}
-      
+
     }
 
   }else{

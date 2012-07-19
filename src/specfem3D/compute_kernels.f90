@@ -287,7 +287,7 @@
                        + deltat * dot_product(accelw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
 
                   ! kernel for viscous damping, see e.g. Morency et al. (2009),
-                  ! equation (42)      
+                  ! equation (42)
                   eta_kl(i,j,k,ispec) =  eta_kl(i,j,k,ispec) &
                        + deltat * dot_product(velocw_poroelastic(:,iglob), b_displw_poroelastic(:,iglob))
 
@@ -320,7 +320,7 @@
                   B_kl(i,j,k,ispec) = B_kl(i,j,k,ispec) &
                        + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
                        * b_epsilons_trace_over_3(i,j,k,ispec))
-                
+
                   C_kl(i,j,k,ispec) = C_kl(i,j,k,ispec) &
                        + deltat * (9 * epsilons_trace_over_3(i,j,k,ispec) &
                        * b_epsilonw_trace_over_3(i,j,k,ispec) &
