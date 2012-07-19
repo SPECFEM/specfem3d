@@ -55,6 +55,7 @@
 
 */
 
+/* ----------------------------------------------------------------------------------------------- */
 
 // Initially sets the blocks_x to be the num_blocks, and adds rows as
 // needed. If an additional row is added, the row length is cut in

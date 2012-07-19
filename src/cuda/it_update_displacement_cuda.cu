@@ -107,8 +107,8 @@ TRACE("it_update_displacement_cuda");
   realw deltat = *deltat_F;
   realw deltatsqover2 = *deltatsqover2_F;
   realw deltatover2 = *deltatover2_F;
-  
-  //launch kernel  
+
+  //launch kernel
   UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_displ,mp->d_veloc,mp->d_accel,
                                            size,deltat,deltatsqover2,deltatover2);
 
@@ -124,7 +124,7 @@ TRACE("it_update_displacement_cuda");
     realw b_deltat = *b_deltat_F;
     realw b_deltatsqover2 = *b_deltatsqover2_F;
     realw b_deltatover2 = *b_deltatover2_F;
-    
+
     UpdateDispVeloc_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
                                              size,b_deltat,b_deltatsqover2,b_deltatover2);
 
@@ -205,7 +205,7 @@ TRACE("it_update_displacement_ac_cuda");
   realw deltat = *deltat_F;
   realw deltatsqover2 = *deltatsqover2_F;
   realw deltatover2 = *deltatover2_F;
-  
+
   //launch kernel
   UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
                                            mp->d_potential_dot_acoustic,
@@ -216,7 +216,7 @@ TRACE("it_update_displacement_ac_cuda");
     realw b_deltat = *b_deltat_F;
     realw b_deltatsqover2 = *b_deltatsqover2_F;
     realw b_deltatover2 = *b_deltatover2_F;
-    
+
     UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
                                              mp->d_b_potential_dot_acoustic,
                                              mp->d_b_potential_dot_dot_acoustic,

@@ -29,14 +29,6 @@
 
 # @configure_input@
 
-## example:
-# CUDA_LIBS = -L/apps/eiger/Cuda-4.0/cuda/lib64 -lcuda -lcudart -lcublas
-# CUDA_INC = -I/apps/eiger/Cuda-4.0/cuda/include
-# MPI_INC = -I/apps/eiger/mvapich2/1.5.1p1/mvapich2-gnu/include
-##
-#CUDA_LIBS= -L/u/dpeter/install/cuda/lib64 -lcudart -lcublas
-#MPI_INC= -I/usr/local/openmpi/1.4.3/gcc/x86_64/include
-
 # CUDA
 # with configure: ./configure --with-cuda CUDA_LIB=.. CUDA_INC=.. MPI_INC=..
 
@@ -150,6 +142,7 @@ CUDA_OBJECTS = \
 	$O/compute_kernels_cuda.cuda.o \
 	$O/compute_stacey_acoustic_cuda.cuda.o \
 	$O/compute_stacey_elastic_cuda.cuda.o \
+	$O/initialize_cuda.cuda.o \
 	$O/it_update_displacement_cuda.cuda.o \
 	$O/noise_tomography_cuda.cuda.o \
 	$O/prepare_mesh_constants_cuda.cuda.o \

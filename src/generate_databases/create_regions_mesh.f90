@@ -334,53 +334,10 @@
     write(IMAIN,*) '  ...saving databases'
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
-  call save_arrays_solver_ext_mesh(nspec,nglob_dummy, &
-!                        xixstore,xiystore,xizstore,etaxstore,etaystore,etazstore,&
-!                        gammaxstore,gammaystore,gammazstore, &
-!                        jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
-!                        rhostore,kappastore,mustore, &
-!                        rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore, &
-!                        rho_vpI,rho_vpII,rho_vsI, &
-!                        rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                        OCEANS, &
-!                        rmass_ocean_load,NGLOB_OCEAN, &
-                        ibool, &
-!                        xstore_dummy,ystore_dummy,zstore_dummy, &
-!                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
-!                        abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
-!                        free_surface_normal,free_surface_jacobian2Dw, &
-!                        free_surface_ijk,free_surface_ispec, &
-!                        num_free_surface_faces, &
-!                        coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-!                        coupling_ac_el_ijk,coupling_ac_el_ispec, &
-!                        num_coupling_ac_el_faces, &
-!                        coupling_ac_po_normal,coupling_ac_po_jacobian2Dw, &
-!                        coupling_ac_po_ijk,coupling_ac_po_ispec, &
-!                        num_coupling_ac_po_faces, &
-!                        coupling_el_po_normal,coupling_el_po_jacobian2Dw, &
-!                        coupling_el_po_ijk,coupling_po_el_ijk,coupling_el_po_ispec, &
-!                        coupling_po_el_ispec,num_coupling_el_po_faces, &
+  call save_arrays_solver_ext_mesh(nspec,nglob_dummy,OCEANS,ibool, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
-!                        prname, &
-                        SAVE_MESH_FILES, &
-                        ANISOTROPY &
-!                        NSPEC_ANISO, &
-!                        c11store,c12store,c13store,c14store,c15store,c16store, &
-!                        c22store,c23store,c24store,c25store,c26store,c33store, &
-!                        c34store,c35store,c36store,c44store,c45store,c46store, &
-!                        c55store,c56store,c66store, &
-!                        ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-!                        ispec_is_inner,nspec_inner_acoustic,nspec_inner_elastic,nspec_inner_poroelastic, &
-!                        nspec_outer_acoustic,nspec_outer_elastic,nspec_outer_poroelastic, &
-!                        num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
-!                        num_phase_ispec_elastic,phase_ispec_inner_elastic, &
-!                        num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic, &
-!                        num_colors_outer_acoustic,num_colors_inner_acoustic, &
-!                        num_elem_colors_acoustic, &
-!                        num_colors_outer_elastic,num_colors_inner_elastic, &
-!                        num_elem_colors_elastic, &
-                      )
+                        SAVE_MESH_FILES,ANISOTROPY)
 
 ! saves moho surface
   if( SAVE_MOHO_MESH ) then
