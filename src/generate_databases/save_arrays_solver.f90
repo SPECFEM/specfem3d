@@ -124,8 +124,6 @@
 ! poroelastic
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if( POROELASTIC_SIMULATION ) then
-    stop 'not implemented yet: write rmass_solid_poroelastic .. '
-
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
     write(IOUT) rhoarraystore
