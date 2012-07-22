@@ -5,18 +5,18 @@
 SIMULATION_TYPE                 = 1   
 # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
 NOISE_TOMOGRAPHY                = 0   
-SAVE_FORWARD                    = .false.
+SAVE_FORWARD                    = .true.
 
 # UTM projection parameters
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 16
+NPROC                           = 14
 
 # time step parameters
-NSTEP                           = 4000 #4000
-DT                              = 3.d-5 #0.5d-3
+NSTEP                           = 4000
+DT                              = 5.d-5 #0.5d-3
 
 # models:
 # available options are:
@@ -33,6 +33,7 @@ TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 USE_OLSEN_ATTENUATION           = .false.
 ANISOTROPY                      = .false.
+GRAVITY                         = .false.
 
 # absorbing boundary conditions for a regional simulation
 ABSORBING_CONDITIONS            = .false.
@@ -53,12 +54,17 @@ SAVE_MESH_FILES                 = .true.
 LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 500
+NTSTEP_BETWEEN_OUTPUT_INFO      = 250
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
+# interval in time steps for reading adjoint traces
+# # 0 = read the whole adjoint sources at the same time
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
-
+# set to true to use GPUs 
+GPU_MODE                        = .false.
