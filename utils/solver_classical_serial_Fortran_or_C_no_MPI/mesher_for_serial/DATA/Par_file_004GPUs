@@ -111,3 +111,6 @@ RECEIVERS_CAN_BE_BURIED         = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
+# set to true to use GPUs 
+GPU_MODE                        = .false.
+
