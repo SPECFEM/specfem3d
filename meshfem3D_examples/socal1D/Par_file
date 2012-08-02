@@ -65,4 +65,6 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
+# set to true to use GPUs 
+GPU_MODE                        = .false.
 
