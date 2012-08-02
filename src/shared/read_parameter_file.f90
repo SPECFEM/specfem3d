@@ -239,6 +239,8 @@
   ! 1-D models
   case( '1d_prem' )
     IMODEL = IMODEL_1D_PREM
+  case( '1d_socal' )
+    IMODEL = IMODEL_1D_SOCAL
   case( '1d_cascadia')
     IMODEL = IMODEL_1D_CASCADIA
 
