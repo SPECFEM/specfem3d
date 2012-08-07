@@ -1,0 +1,696 @@
+%
+% new Latex2E GJI class file
+% don't use "times" package because of a bug
+\documentclass[onecolumn,extra]{gji_modified_cours_UPPA}
+%
+% T1 encoding gives better PDF and allows for 8 bits
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{graphicx}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% A4 paper
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\textwidth 17cm
+\textheight 24.8cm
+\oddsidemargin -4.5mm
+\evensidemargin -4.5mm
+\topmargin -11mm
+
+% biblio GJI
+\bibliographystyle{gji}
+\renewcommand{\cite}[1]{\citet{#1}}
+% roman d for dV in integrals
+\newcommand{\rmd}{\mathrm{d}}
+
+% roman i for complex number
+\newcommand{\myiomega}{\mathrm{i} \omega}
+
+\input{newcommands}
+
+\begin{document}
+
+\title{Notes about 3D C-PML equations for SPECFEM3D}
+%
+\author[Dimitri Komatitsch, Zhinan Xie]{Dimitri Komatitsch, Zhinan Xie\\
+CNRS Marseille, France}
+%
+\date{August 8, 2012}
+
+\maketitle
+
+\begin{figure}
+\includegraphics[scale=0.5]{pml_schematic.png}
+\caption{Schematic of a typical wave-equation problem, in which there is some finite region of interest where sources,
+inhomogeneous media, nonlinearities and etc are being investigated, from which some radiative waves escape to infinity.
+The perfect absorbing layer, which was used to truncated out computational region, is placed adjacent to the edges of the
+computational region}
+\end{figure}
+
+\noindent
+Adjacent to 3DCPML, we assume the motion is governed by 3D elastic wave equation. In differential form it is given by:
+%
+\begin{eqnarray}
+\varepsilon_{xx} & = & \partial_x u_x \nonumber \\
+\varepsilon_{yy} & = & \partial_y u_y \nonumber \\
+\varepsilon_{zz} & = & \partial_z u_z \nonumber \\
+\varepsilon_{xy} & = & \frac{1}{2} (\partial_x u_y + \partial_y u_x) \,\, , \,\, \varepsilon_{yx} =  \varepsilon_{xy} \nonumber \\
+\varepsilon_{xz} & = & \frac{1}{2} (\partial_x u_z + \partial_z u_x) \,\, , \,\, \varepsilon_{zx} =  \varepsilon_{xz} \nonumber \\
+\varepsilon_{yz} & = & \frac{1}{2} (\partial_y u_z + \partial_z u_y) \,\, , \,\, \varepsilon_{zy} =  \varepsilon_{yz}
+\end{eqnarray}
+%
+\noindent and
+%
+\begin{eqnarray}
+\sigma_{xx} & = & (\lambda + 2 \mu) \, \varepsilon_{xx} + \lambda \, \varepsilon_{yy} + \lambda \, \varepsilon_{zz} \nonumber \\
+\sigma_{yy} & = & \lambda \, \varepsilon_{xx} + (\lambda + 2 \mu) \, \varepsilon_{yy} + \lambda \, \varepsilon_{zz} \nonumber \\
+\sigma_{zz} & = & \lambda \, \varepsilon_{xx} + \lambda \, \varepsilon_{yy} + (\lambda + 2 \mu) \, \varepsilon_{zz} \nonumber \\
+\sigma_{xy} & = & 2 \mu \, \varepsilon_{xy} \,\, , \,\, \sigma_{yx} =  \sigma_{xy} \nonumber \\
+\sigma_{xz} & = & 2 \mu \, \varepsilon_{xz} \,\, , \,\, \sigma_{zx} =  \sigma_{xz} \nonumber \\
+\sigma_{yz} & = & 2 \mu \, \varepsilon_{yz} \,\, , \,\, \sigma_{yz} =  \sigma_{zy}
+\end{eqnarray}
+%
+\noindent and
+%
+\begin{eqnarray}
+\rho \, \frac{\partial^2 u_x}{\partial t^2} & = & \partial_x \sigma_{xx} + \partial_y \sigma_{xy} + \partial_z \sigma_{xz} + f_x \nonumber \\
+\rho \, \frac{\partial^2 u_y}{\partial t^2} & = & \partial_x \sigma_{yx} + \partial_y \sigma_{yy} + \partial_z \sigma_{yz} + f_y \nonumber \\
+\rho \, \frac{\partial^2 u_z}{\partial t^2} & = & \partial_x \sigma_{zx} + \partial_y \sigma_{zy} + \partial_z \sigma_{zz} + f_z
+\end{eqnarray}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\clearpage
+%
+%\noindent To obtain the CPML form, we just need to replace each spatial derivative with that same derivative multiplied by $1/s$.
+%Thus, with CPML, in differential form in 2D this gives (noting $\frac{\partial^2 u_x}{\partial t^2}$ instead of $-\omega^2 u_x$ for now, even though we perform a Fourier transform,
+%because we will perform an inverse Fourier transform later and thus get the term $\frac{\partial^2 u_x}{\partial t^2}$ back):
+%
+\noindent To obtain the CPML form, we firstly perform a Fourier transform on above equation,
+then replace each spatial derivative with that same derivative multiplied by $1/s$
+to make the plane wave entering into CPML without reflection and decaying exponentially along the x, y, z or in all directions.
+Thus,in differential form in 3D the frequency-domain equation govened the motion in CPML gives:
+%
+\begin{eqnarray}
+\varepsilon_{xx} & = & \frac{1}{s_x}\partial_x u_x \nonumber \\
+\varepsilon_{yy} & = & \frac{1}{s_y}\partial_y u_y \nonumber \\
+\varepsilon_{zz} & = & \frac{1}{s_z}\partial_z u_z \nonumber \\
+\varepsilon_{xy} & = & \frac{1}{2} (\frac{1}{s_x} \partial_x u_y + \frac{1}{s_y} \partial_y u_x) \,\, , \,\, \varepsilon_{yx} =  \varepsilon_{xy} \nonumber \\
+\varepsilon_{xz} & = & \frac{1}{2} (\frac{1}{s_x} \partial_x u_z + \frac{1}{s_z} \partial_z u_x) \,\, , \,\, \varepsilon_{zx} =  \varepsilon_{xz} \nonumber \\
+\varepsilon_{yz} & = & \frac{1}{2} (\frac{1}{s_y} \partial_y u_z + \frac{1}{s_z} \partial_z u_y) \,\, , \,\, \varepsilon_{zy} =  \varepsilon_{yz}
+\end{eqnarray}
+%
+\noindent and
+%
+\begin{eqnarray}
+\sigma_{xx} & = & (\lambda + 2 \mu) \, \varepsilon_{xx} + \lambda \, \varepsilon_{yy} + \lambda \, \varepsilon_{zz} \nonumber \\
+\sigma_{yy} & = & \lambda \, \varepsilon_{xx} + (\lambda + 2 \mu) \, \varepsilon_{yy} + \lambda \, \varepsilon_{zz} \nonumber \\
+\sigma_{zz} & = & \lambda \, \varepsilon_{xx} + \lambda \, \varepsilon_{yy} + (\lambda + 2 \mu) \, \varepsilon_{zz} \nonumber \\
+\sigma_{xy} & = & 2 \mu \, \varepsilon_{xy} \,\, , \,\, \sigma_{yx} =  \sigma_{xy} \nonumber \\
+\sigma_{xz} & = & 2 \mu \, \varepsilon_{xz} \,\, , \,\, \sigma_{zx} =  \sigma_{xz} \nonumber \\
+\sigma_{yz} & = & 2 \mu \, \varepsilon_{yz} \,\, , \,\, \sigma_{yz} =  \sigma_{zy}
+\end{eqnarray}
+%
+\noindent and
+%
+\begin{eqnarray}
+- \rho \, \omega^2 u_x  & = & \frac{1}{s_x} \partial_x \sigma_{xx} + \frac{1}{s_y} \partial_y \sigma_{xy} + \frac{1}{s_z} \partial_z \sigma_{xz} + f_x \nonumber \\
+- \rho \, \omega^2 u_y  & = & \frac{1}{s_x} \partial_x \sigma_{yx} + \frac{1}{s_y} \partial_y \sigma_{yy} + \frac{1}{s_z} \partial_z \sigma_{yz} + f_y \nonumber \\
+- \rho \, \omega^2 u_z  & = & \frac{1}{s_x} \partial_x \sigma_{zx} + \frac{1}{s_y} \partial_y \sigma_{zy} + \frac{1}{s_z} \partial_z \sigma_{zz} + f_z
+\end{eqnarray}
+%
+where $s_x = \kappa_x + \frac{d_x}{\alpha_x + \myiomega}$ , $s_y = \kappa_y + \frac{d_y}{\alpha_y + \myiomega}$ and
+$s_z = \kappa_z + \frac{d_z}{\alpha_z + \myiomega}$. $\kappa_x ,d_x,\alpha_x;\kappa_y ,d_y,\alpha_y;\kappa_z ,d_z,\alpha_z$
+valued following the way used in paper \cite{FeVi05}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\noindent In the frequency domain we define:
+\begin{equation}
+\partial_{\tilde{x}} = \frac{1}{s_x}\, \partial_ x,
+\label{diffmapping}
+\end{equation}
+%
+and we know from \cite{KoMa07} that $\partial_x$ is then transformed in the time domain into:
+\begin{equation}
+\partial_{\tilde{x}}= \frac{1}{\kappa_x} \partial_{x}
+- \frac{d_x}{\kappa_x^2} H(t) e^{-(d_x/\kappa_x + \alpha_x)t} * \partial_ x \, .
+\end{equation}
+
+\noindent This means that $\frac{1}{s_x}$ is transformed by inverse Fourier transform into
+$\frac{1}{\kappa_x} - \frac{d_x}{\kappa_x^2} H(t) e^{-(d_x/\kappa_x + \alpha_x)t} *$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\clearpage
+
+\noindent
+Here we extended the approach used in \cite{Mat11} to get an stable CPML implementation for spectral element method: Let us multiply the set of equation (6) by $s_x s_y s_z$,
+This will results in a more complex mass matrix on the left-hand side.
+And let us get rid of the source term because there is no source in the PML layers, we have:
+\begin{eqnarray}
+- \rho s_x s_y s_z \omega^2 u_x  & = & s_y s_z \partial_x \sigma_{xx} + s_x s_z \partial_y \sigma_{xy} + s_x s_y \partial_z \sigma_{xz} \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_y  & = & s_y s_z \partial_x \sigma_{yx} + s_x s_z \partial_y \sigma_{yy} + s_x s_y \partial_z \sigma_{yz} \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_z  & = & s_y s_z \partial_x \sigma_{zx} + s_x s_z \partial_y \sigma_{zy} + s_x s_y \partial_z \sigma_{zz}
+\end{eqnarray}
+%
+\noindent since $s_y s_z$ does not depend on $x$ ,
+$s_x s_z$ does not depend on $y$ and $s_x s_y$ does not depend on $z$:
+%
+\begin{eqnarray}
+- \rho s_x s_y s_z \omega^2 u_x  & = &  \partial_x (s_y s_z \sigma_{xx}) + \partial_y (s_x s_z \sigma_{xy}) + \partial_z (s_x s_y \sigma_{xz}) \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_y  & = &  \partial_x (s_y s_z \sigma_{yx}) + \partial_y (s_x s_z \sigma_{yy}) + \partial_z (s_x s_y \sigma_{yz}) \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_z  & = &  \partial_x (s_y s_z \sigma_{zx}) + \partial_y (s_x s_z \sigma_{zy}) + \partial_z (s_x s_y \sigma_{zz})
+\end{eqnarray}
+\noindent By inserting the definition of the stress tensor we get:
+\begin{eqnarray}
+- \rho s_x s_y s_z \omega^2 u_x  & = &  \partial_x (s_y s_z ((\lambda + 2 \mu) \, \varepsilon_{xx} + \lambda \, \varepsilon_{yy} + \lambda \, \varepsilon_{zz}))
++ \partial_y (s_x s_z (2 \mu \, \varepsilon_{xy})) + \partial_z (s_x s_y (2 \mu \, \varepsilon_{xz})) \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_y  & = &  \partial_x (s_y s_z (2 \mu \, \varepsilon_{xy}))
++ \partial_y (s_x s_z (\lambda \, \varepsilon_{xx} + (\lambda + 2 \mu) \, \varepsilon_{yy} + \lambda \, \varepsilon_{zz}))
++ \partial_z (s_x s_y (2 \mu \, \varepsilon_{yz})) \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_z  & = &  \partial_x (s_y s_z (2 \mu \, \varepsilon_{xz}))
++ \partial_y (s_x s_z (2 \mu \, \varepsilon_{yz}))
++ \partial_z (s_x s_y (\lambda \, \varepsilon_{xx} + \lambda \, \varepsilon_{yy} + (\lambda + 2 \mu) \, \varepsilon_{zz}))
+\end{eqnarray}
+
+\noindent Then, inserting the definition of the strain tensor we get:
+\begin{eqnarray}
+-\rho s_x s_y s_z \omega^2 u_x& = &\partial_x (s_y s_z ((\lambda + 2 \mu)\frac{1}{s_x}\partial_x u_x + \lambda\frac{1}{s_y}\partial_y u_y + \lambda\frac{1}{s_z}\partial_z u_z))
++ \partial_y (s_x s_z (\mu (\frac{1}{s_x} \partial_x u_y + \frac{1}{s_y} \partial_y u_x))) \nonumber \\
+&\,& \,+\,\, \partial_z (s_x s_y (\mu(\frac{1}{s_x} \partial_x u_z + \frac{1}{s_z}\partial_z u_x)) \nonumber \\
+-\rho s_x s_y s_z \omega^2 u_y  & = &  \partial_x (s_y s_z (\mu(\frac{1}{s_x} \partial_x u_y + \frac{1}{s_y}\partial_y u_x)))
++ \partial_y (s_x s_z (\lambda\frac{1}{s_x}\partial_x u_x + (\lambda + 2 \mu)\frac{1}{s_y}\partial_y u_y + \lambda\frac{1}{s_z}\partial_z u_z))\nonumber \\
+&\,& \,+\,\, \partial_z (s_x s_y (\mu(\frac{1}{s_y} \partial_y u_z + \frac{1}{s_z} \partial_z u_y))) \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_z  & = &  \partial_x (s_y s_z (\mu(\frac{1}{s_x} \partial_x u_z + \frac{1}{s_z} \partial_z u_x)))
++ \partial_y (s_x s_z (\mu(\frac{1}{s_y} \partial_y u_z + \frac{1}{s_z} \partial_z u_y))) \nonumber \\
+&\,& \,+\,\, \partial_z (s_x s_y (\lambda\frac{1}{s_x}\partial_x u_x + \lambda\frac{1}{s_y}\partial_y u_y + (\lambda + 2 \mu)(\frac{1}{s_z}\partial_z u_z)))
+\end{eqnarray}
+\noindent Grouping the $s_x$,$s_y$ and $s_z$ factors we get:
+\begin{eqnarray}
+-\rho s_x s_y s_z \omega^2 u_x& = &\partial_x ((\lambda + 2 \mu)\frac{s_y s_z}{s_x}\partial_x u_x + \lambda s_z \partial_y u_y + \lambda s_y \partial_z u_z)
++ \partial_y (\mu s_z \partial_x u_y + \mu \frac{s_x s_z}{s_y} \partial_y u_x) \nonumber \\
+&\,& \,+\,\, \partial_z (\mu s_y \partial_x u_z + \mu \frac{s_x s_y}{s_z}\partial_z u_x) \nonumber \\
+-\rho s_x s_y s_z \omega^2 u_y  & = &  \partial_x (\mu \frac{s_y s_z}{s_x} \partial_x u_y + \mu s_z \partial_y u_x )
++ \partial_y (\lambda s_z \partial_x u_x + (\lambda + 2 \mu)\frac{s_x s_z}{s_y}\partial_y u_y + \lambda s_x \partial_z u_z)\nonumber \\
+&\,& \,+\,\, \partial_z ( \mu s_x \partial_y u_z + \mu \frac{s_x s_y}{s_z} \partial_z u_y) \nonumber \\
+- \rho s_x s_y s_z \omega^2 u_z  & = &  \partial_x ( \mu \frac{s_y s_z}{s_x} \partial_x u_z + \mu s_y \partial_z u_x )
++ \partial_y ( \mu \frac{s_x s_z}{s_y} \partial_y u_z + \mu s_x \partial_z u_y ) \nonumber \\
+&\,& \,+\,\, \partial_z ( \lambda s_y\partial_x u_x + \lambda s_x \partial_y u_y + (\lambda + 2 \mu)\frac{s_x s_y}{s_z}\partial_z u_z)
+\end{eqnarray}
+
+\noindent Let us note that the above equation, if interpreted in terms of an equivalent stress tensor, implies that such a stress tensor is not symmetric any more.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\clearpage
+
+\noindent
+With CPML, in variational form, in 3D with a test vector $\mathbf{w} = (w_x,w_y,w_z)$ this gives
+(let us get rid of the source term because there is no source in the PML layers):
+%
+\begin{eqnarray}
+%
+\int_\Omega -\rho s_x s_y s_z \omega^2 u_x & = & \int_\Omega \Bigg( w_x \partial_x ((\lambda + 2 \mu)\frac{s_y s_z}{s_x}\partial_x u_x + \lambda s_z \partial_y u_y + \lambda s_y \partial_z u_z)
++ w_x \partial_y (\mu s_z \partial_x u_y + \mu \frac{s_x s_z}{s_y} \partial_y u_x) \nonumber  \\
+&\,& \,+\,\, w_x \partial_z (\mu s_y \partial_x u_z + \mu \frac{s_x s_y}{s_z}\partial_z u_x)\Bigg) \nonumber \\
+%
+\int_\Omega -\rho s_x s_y s_z \omega^2 u_y  & = & \int_\Omega \Bigg( w_y \partial_x (\mu \frac{s_y s_z}{s_x} \partial_x u_y + \mu s_z \partial_y u_x )
++ w_y \partial_y (\lambda s_z \partial_x u_x + (\lambda + 2 \mu)\frac{s_x s_z}{s_y}\partial_y u_y + \lambda s_x \partial_z u_z)\nonumber \\
+&\,& \,+\,\, w_y \partial_z ( \mu s_x \partial_y u_z + \mu \frac{s_x s_y}{s_z} \partial_z u_y) \Bigg) \nonumber \\
+%
+\int_\Omega - \rho s_x s_y s_z \omega^2 u_z  & = & \int_\Omega \Bigg( w_z \partial_x ( \mu \frac{s_y s_z}{s_x} \partial_x u_z + \mu s_y \partial_z u_x )
++ w_z \partial_y ( \mu \frac{s_x s_z}{s_y} \partial_y u_z + \mu s_x \partial_z u_y ) \nonumber \\
+&\,& \,+\,\, w_z \partial_z ( \lambda s_y\partial_x u_x + \lambda s_x \partial_y u_y + (\lambda + 2 \mu)\frac{s_x s_y}{s_z}\partial_z u_z)\Bigg)
+\end{eqnarray}
+%
+Integrating by parts (and ignoring the boundary integral term because of the Dirichlet conditions that we will apply
+later on that boundary, because its contribution would be erased by the Dirichlet condition) we get
+%
+\begin{eqnarray}
+%
+\int_\Omega -\rho s_x s_y s_z \omega^2 u_x & = & \int_\Omega \Bigg(((\lambda + 2 \mu)\frac{s_y s_z}{s_x}\partial_x u_x + \lambda s_z \partial_y u_y + \lambda s_y \partial_z u_z) \partial_x w_x
++ (\mu s_z \partial_x u_y + \mu \frac{s_x s_z}{s_y} \partial_y u_x) \partial_y w_x   \nonumber  \\
+&\,& \,+\,\, (\mu s_y \partial_x u_z + \mu \frac{s_x s_y}{s_z}\partial_z u_x) \partial_z w_x \Bigg) \nonumber \\
+%
+\int_\Omega -\rho s_x s_y s_z \omega^2 u_y  & = & \int_\Omega \Bigg((\mu \frac{s_y s_z}{s_x} \partial_x u_y + \mu s_z \partial_y u_x )\partial_x w_y
++ (\lambda s_z \partial_x u_x + (\lambda + 2 \mu)\frac{s_x s_z}{s_y}\partial_y u_y + \lambda s_x \partial_z u_z) \partial_y w_y  \nonumber \\
+&\,& \,+\,\, ( \mu s_x \partial_y u_z + \mu \frac{s_x s_y}{s_z} \partial_z u_y) \partial_z w_y  \Bigg) \nonumber \\
+%
+\int_\Omega - \rho s_x s_y s_z \omega^2 u_z  & = & \int_\Omega \Bigg( ( \mu \frac{s_y s_z}{s_x} \partial_x u_z + \mu s_y \partial_z u_x ) \partial_x w_z
++ ( \mu \frac{s_x s_z}{s_y} \partial_y u_z + \mu s_x \partial_z u_y ) \partial_y w_z   \nonumber \\
+&\,& \,+\,\,( \lambda s_y\partial_x u_x + \lambda s_x \partial_y u_y + (\lambda + 2 \mu)\frac{s_x s_y}{s_z}\partial_z u_z) \partial_z w_z \Bigg)
+\end{eqnarray}
+%
+\noindent
+Inverse FT of $- \omega^2 s_x s_y s_z$ computed using MAPLE for left-hand side:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_x \kappa_y \kappa_z \, , \, A_1 =d_x \kappa_y \kappa_z + d_y \kappa_x \kappa_z + d_z \kappa_x \kappa_y $$
+$$A_2 = d_x d_y \kappa_z +d_x d_z \kappa_y + d_y d_z \kappa_x-\alpha( d_x \kappa_y \kappa_z + d_y \kappa_x \kappa_z + d_z \kappa_x \kappa_y)$$
+$$A_3= d_x d_y d_z - 2 \alpha  (d_x d_y \kappa_z +d_x d_z \kappa_y + d_y d_z \kappa_x  )
+      +\alpha ^2 (d_x \kappa_y \kappa_z +  d_y \kappa_x \kappa_z + d_z \kappa_x \kappa_y) $$
+$$A_4= -2 \alpha  d_x d_y d_z+\alpha ^2 (d_x d_y \kappa_z + d_x d_z \kappa_y + d_y d_z \kappa_x), A_5=\frac{1}{2} \alpha ^2 d_x d_y d_z$$
+Here in order to solve the singularity problem arised using definition of $\alpha_x$, $\alpha_y$ and $\alpha_z$, we set $$\alpha_x=\alpha_y=\alpha_z=const=\alpha$$
+where $\alpha_x, \alpha_y$ or $\alpha_z$  is nonzero \\
+
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\\\
+a): $d_x \neq 0 $
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) $$
+with
+$$A_6=\frac{\kappa_y \kappa_z}{\kappa_x},\,A_7=\frac{d_y d_z}{d_x},
+\,A_8=\frac{(d_y \kappa_x - d_x \kappa_y )(d_x \kappa_z - d_z \kappa_x )}{d_x \kappa^{2}_x}$$\\
+b): $d_x = 0 $
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-\alpha\,t} \, t \, H(t) $$
+with
+$$A_6=\frac{\kappa_y \kappa_z}{\kappa_x},\,A_7=\frac{d_z \kappa_y + d_y \kappa_z}{\kappa_x},\,
+A_8=\frac{d_y d_z}{\kappa_x}
+$$
+\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\\\
+a): $d_y \neq 0 $
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) $$
+with
+$$A_9=\frac{\kappa_x \kappa_z}{\kappa_y},\,A_{10}=\frac{d_x d_z}{d_y},
+\,A_{11}=\frac{(d_x \kappa_y - d_y \kappa_x )(d_y \kappa_z - d_z \kappa_y )}{d_y \kappa^{2}_y}$$\\
+b): $d_y = 0 $
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-\alpha\,t} \, t \, H(t) $$
+with
+$$A_9=\frac{\kappa_x \kappa_z}{\kappa_y},\,A_{10}=\frac{d_z \kappa_x + d_x \kappa_z}{\kappa_y},\,
+A_{11}=\frac{d_x d_z}{\kappa_y}
+$$
+\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\\\
+a): $d_z \neq 0 $
+$$A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t) $$
+with
+$$A_{12}=\frac{\kappa_x \kappa_y}{\kappa_z},\,A_{13}=\frac{d_x d_y}{d_z},
+\,A_{14}=\frac{(d_x \kappa_z - d_z \kappa_x )(d_z \kappa_y - d_y \kappa_z )}{d_z \kappa^{2}_z}$$\\
+b): $d_z = 0 $
+$$A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-\alpha\,t} \, t \, H(t) $$
+with
+$$A_{12}=\frac{\kappa_x \kappa_y}{\kappa_z},\,A_{13}=\frac{d_y \kappa_x + d_x \kappa_y}{\kappa_z},\,
+A_{14}=\frac{d_x d_y}{\kappa_z}
+$$
+\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha\,t} \, H(t) $$
+with
+$$A_{15}= \kappa_x, \, A_{16}=d_x $$
+\\
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha\,t} \, H(t) $$
+with
+$$A_{17}= \kappa_y, \, A_{18}=d_y $$
+\\
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha\,t} \, H(t) $$
+with
+$$A_{19}= \kappa_z, \, A_{20}=d_z $$
+
+Thus going back to the time domain, in which a product in the Fourier transform domain becomes a convolution in the time domain, we get
+%
+\begin{eqnarray}
+%
+&&\int_\Omega \rho \Big(A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)\Big) \ast u_x \nonumber  \\
+&& =  \int_\Omega \Bigg(\Big((\lambda + 2 \mu)(A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t))\ast\partial_x u_x
++\lambda (A_{19}\delta(t) + A_{20} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t)) \ast \partial_y u_y \nonumber\\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\, + \lambda (A_{17}\delta(t) + A_{18} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t))\ast \partial_z u_z\Big) \partial_x w_x\nonumber\\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+ \Big(\mu (A_{19}\delta(t) + A_{20} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t)) \ast \partial_x u_y
++ \mu (A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) ) \ast\partial_y u_x\Big) \partial_y w_x   \nonumber  \\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+ \Big(\mu (A_{17}\delta(t) + A_{18} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t))\ast \partial_x u_z
++ \mu (A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t))\ast\partial_z u_x\Big) \partial_z w_x \Bigg) \nonumber \\ \nonumber \\
+%
+&&\int_\Omega \rho \Big(A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)\Big) \ast u_y \nonumber  \\
+&&=  \int_\Omega \Bigg(\Big(\mu (A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) )\ast \partial_x u_y
++ \mu (A_{19}\delta(t) + A_{20} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t)) \ast\partial_y u_x \Big)\partial_x w_y \nonumber\\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+ \Big(\lambda (A_{19}\delta(t) + A_{20} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t)) \ast \partial_x u_x
++ (\lambda + 2 \mu)(A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) )\ast\partial_y u_y\nonumber\\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+ \lambda (A_{15}\delta(t) + A_{16} {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t))\ast \partial_z u_z\Big) \partial_y w_y  \nonumber \\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+ \Big( \mu (A_{15}\delta(t) + A_{16} {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t))\ast \partial_y u_z
++ \mu (A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t))\ast \partial_z u_y\Big) \partial_z w_y  \Bigg) \nonumber \\ \nonumber \\
+%
+&&\int_\Omega \rho \Big(A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)\Big) \ast u_z \nonumber  \\
+&& =  \int_\Omega \Bigg( \Big( \mu (A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t))\ast \partial_x u_z
++ \mu (A_{17}\delta(t) + A_{18} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t)) \ast \partial_z u_x \Big) \partial_x w_z \nonumber  \\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\, + \Big( \mu (A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t)) \ast \partial_y u_z
++ \mu (A_{15}\delta(t) + A_{16} {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t)) \ast \partial_z u_y \Big) \partial_y w_z   \nonumber \\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+\Big( \lambda (A_{17}\delta(t) + A_{18} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t))\ast \partial_x u_x
++ \lambda (A_{15}\delta(t) + A_{16} {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t)) \ast \partial_y u_y\nonumber \\
+&&\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,+ (\lambda + 2 \mu)(A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t))\ast\partial_z u_z\Big) \partial_z w_z \Bigg)
+\end{eqnarray}
+%
+Take the first equation of set (16) as example,Remembering that $u * \delta'(t) = u' * \delta(t)$ and $u * \delta''(t) = u'' * \delta(t)$, we
+expanding the left hand side of the equation
+%
+$$\int_\Omega \rho A_0 \frac{\partial^2 u_x}{\partial t^2}w_x+
+\int_\Omega \rho A_1 \frac{\partial u_x}{\partial t} w_x +
+\int_\Omega \rho A_2 u_x w_x +
+\int_\Omega \rho (A_3 {\rm e}^{-\alpha\,t} \, H(t)) \ast u_x+
+\int_\Omega \rho (A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)) \ast u_x +
+\int_\Omega \rho (A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)) \ast u_x
+$$
+%
+
+Note that, following \cite{Hug87} equation (9.1.12) page 491, and as also mentioned by \cite{Mat11}, the term $\rho \, A_1$ is a damping
+matrix $C$ related to velocity and thus it adds a $\rho \, \frac{\Delta t}{2} \, A_1$ term to the mass matrix in the
+explicit Newmark scheme ($\alpha = \frac{1}{2}$, $\beta = 0$).
+
+Eq. 16 is the equation set of corner PML where $\kappa_x,d_x,\alpha_x;\kappa_y,d_y,\alpha_y; and \kappa_z,d_z,\alpha_z$ are not zero everywhere. But in the edge PML
+like XYPML, XZPML and YZPML or surface PML like XPML, YPML and ZPML, it is not the same. In that case, we have:\\
+a):XYPML\\
+$\kappa_x,d_x$ and $\kappa_y,d_y$ defined as usual; $\alpha_x=\alpha_y=\alpha$ but $\kappa_z = 1 ,d_z= 0,\alpha_z= 0$.\\
+In this case inverse FT of $-\omega^2 s_x s_y s_z$ is:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_x \kappa_y \, , \, A_1 =d_x \kappa_y + d_y \kappa_x \, , \,A_2 = d_x d_y -\alpha(d_y \kappa_x + d_x \kappa_y)$$
+$$A_3= - 2 \alpha d_x d_y +\alpha ^2 (d_x \kappa_y +  d_y \kappa_x),A_4= \alpha ^2 d_x d_y, A_5=0 $$
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) $$
+with
+$$A_6=\frac{\kappa_y}{\kappa_x},\,A_7=0,\,A_8=\frac{d_y \kappa_x-d_x \kappa_y }{\kappa^2_x} $$\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) $$
+with
+$$A_9=\frac{\kappa_x}{\kappa_y},\,A_{10}=0,
+\,A_{11}=\frac{(d_x \kappa_y - d_y \kappa_x )}{\kappa^{2}_y}$$\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\
+$$ A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-\alpha \,t} t H(t) $$
+with
+$$A_{12}=\kappa_x \kappa_y,\,A_{13}=d_x\kappa_y+d_y\kappa_x,
+\,A_{14}=d_xd_y$$\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{15}= \kappa_x, \, A_{16}=d_x $$
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{17}= \kappa_y, \, A_{18}=d_y $$
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{19}= 1, \, A_{20}=0 $$
+b):XZPML\\
+$\kappa_x,d_x$ and $\kappa_z,d_z$ defined as usual; $\alpha_x=\alpha_z=\alpha$ but $\kappa_y = 1 ,d_y= 0,\alpha_y= 0$\\
+In this case inverse FT of $-\omega^2 s_x s_y s_z$ is:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_x \kappa_z \, , \, A_1 =d_x \kappa_z + d_z \kappa_x \, , \,A_2 = d_x d_z -\alpha(d_z \kappa_x + d_x \kappa_z)$$
+$$A_3= - 2 \alpha d_x d_z +\alpha ^2 (d_x \kappa_z +  d_z \kappa_x),A_4= \alpha ^2 d_x d_z, A_5=0 $$
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) $$
+with
+$$A_6=\frac{\kappa_z}{\kappa_x},\,A_7=0,\,A_8=\frac{d_z \kappa_x-d_x \kappa_z }{\kappa^2_x} $$\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-\alpha\,t} \, tH(t) $$
+with
+$$A_9=\kappa_x \kappa_z,\,A_{10}=d_x\kappa_z+d_z\kappa_x,
+\,A_{11}=d_xd_z$$\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\
+$$A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t) $$
+with
+$$A_{12}=\frac{\kappa_x}{\kappa_z},\,A_{13}=0,
+\,A_{14}=\frac{d_x \kappa_z-d_z \kappa_x }{\kappa^2_z}$$\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{15}= \kappa_x, \, A_{16}=d_x $$
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{17}= 1, \, A_{18}=0 $$
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{19}= \kappa_z, \, A_{20}=d_z $$
+c):YZPML\\
+$\kappa_y,d_y$ and $\kappa_z,d_z$ defined as usual; $\alpha_y=\alpha_z=\alpha$ but $\kappa_x = 1 ,d_x= 0,\alpha_x= 0$\\
+In this case inverse FT of $-\omega^2 s_x s_y s_z$ is:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_y \kappa_z \, , \, A_1 =d_y \kappa_z + d_z \kappa_y \, , \,A_2 = d_y d_z -\alpha(d_z \kappa_y + d_y \kappa_z)$$
+$$A_3= - 2 \alpha d_y d_z +\alpha ^2 (d_y \kappa_z +  d_z \kappa_y),A_4= \alpha ^2 d_y d_z, A_5=0 $$
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-\alpha\,t} \, tH(t) $$
+with
+$$A_6=\kappa_y \kappa_z,\,A_7=d_y \kappa_z+\kappa_y d_z,\,A_8=d_y d_z $$\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) $$
+with
+$$A_9=\frac{\kappa_z}{\kappa_y},\,A_{10}=0,
+\,A_{11}=\frac{d_z \kappa_y-d_y \kappa_z }{\kappa^2_y}$$\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\
+$$A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t) $$
+with
+$$A_{12}=\frac{\kappa_y}{\kappa_z},\,A_{13}=0,
+\,A_{14}=\frac{d_y \kappa_z-d_z \kappa_y }{\kappa^2_z}$$\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{15}= 1, \, A_{16}=0 $$
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{17}= \kappa_y, \, A_{18}=d_y $$
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{19}= \kappa_z, \, A_{20}=d_z $$
+d):XPML\\
+$\kappa_x,d_x$ defined as usual; $\alpha_x=\alpha$ but $\kappa_y = 1 ,d_y= 0,\alpha_y= 0$;$\,$ $\kappa_z = 1 ,d_z= 0,\alpha_z= 0$\\
+In this case inverse FT of $-\omega^2 s_x s_y s_z$ is:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_x \, , \, A_1 =d_x\, , \,A_2 = -\alpha d_x $$
+$$A_3= \alpha ^2 d_x , A_4= 0, A_5=0 $$
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) $$
+with
+$$A_6=\frac{1}{\kappa_x},\,A_7=0,\,A_8=-\frac{d_x}{\kappa^2_x} $$\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) $$
+with
+$$A_9=\kappa_x,\,A_{10}=d_x,
+\,A_{11}= 0 $$\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\
+$$ A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t) $$
+with
+$$A_{12}=\kappa_x ,\,A_{13}=d_x,
+\,A_{14}=0$$\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{15}= \kappa_x, \, A_{16}=d_x $$
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{17}= 1, \, A_{18}=0 $$
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{19}= 1, \, A_{20}=0 $$
+e):YPML\\
+$\kappa_y,d_y$ defined as usual; $\alpha_y=\alpha$ but $\kappa_x = 1 ,d_x= 0,\alpha_x= 0$;$\,$ $\kappa_z = 1 ,d_z= 0,\alpha_z= 0$\\
+In this case inverse FT of $-\omega^2 s_x s_y s_z$ is:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_y \, , \, A_1 =d_x\, , \,A_2 = -\alpha d_y $$
+$$A_3= \alpha ^2 d_y , A_4= 0, A_5=0 $$
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) $$
+with
+$$A_6=\kappa_y,\,A_7=d_y,\,A_8=0 $$\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) $$
+with
+$$A_9=\frac{1}{\kappa_y},\,A_{10}=0,
+\,A_{11}= -\frac{d_y}{\kappa^2_y} $$\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\
+$$ A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t) $$
+with
+$$A_{12}=\kappa_y ,\,A_{13}=d_y,
+\,A_{14}=0$$\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{15}= 1, \, A_{16}=0 $$
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{17}= \kappa_y, \, A_{18}=d_y $$
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{19}= 1, \, A_{20}=0 $$
+f):ZPML\\
+$\kappa_z,d_z$ defined as usual; $\alpha_z=\alpha$ but $\kappa_x = 1 ,d_x= 0,\alpha_x= 0$;$\,$ $\kappa_y = 1 ,d_y= 0,\alpha_y= 0$\\
+In this case inverse FT of $-\omega^2 s_x s_y s_z$ is:
+$$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
++ A_3 {\rm e}^{-\alpha\,t} \, H(t)
++ A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
++ A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
+with
+$$A_0 = \kappa_z \, , \, A_1 =d_z\, , \,A_2 = -\alpha d_z $$
+$$A_3= \alpha ^2 d_z , A_4= 0, A_5=0 $$
+\noindent
+Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
+$$A_6\delta(t) + A_7 {\rm e}^{-\alpha\,t} \, H(t) + A_8 {\rm e}^{-t(\alpha+\frac{d_x}{\kappa_x})} \, H(t) $$
+with
+$$A_6=\kappa_z,\,A_7=d_z,\,A_8=0 $$\\
+\noindent
+Inverse FT of $\frac{s_x s_z}{s_y}$ computed using MAPLE for right-hand side:\\
+$$A_9\delta(t) + A_{10} {\rm e}^{-\alpha\,t} \, H(t) + A_{11} {\rm e}^{-t(\alpha+\frac{d_y}{\kappa_y})} \, H(t) $$
+with
+$$A_9=\kappa_z,\,A_{10}=d_z,
+\,A_{11}=0  $$\\
+\noindent
+Inverse FT of $\frac{s_x s_y}{s_z}$ computed using MAPLE for right-hand side:\\
+$$ A_{12}\delta(t) + A_{13} {\rm e}^{-\alpha\,t} \, H(t) + A_{14} {\rm e}^{-t(\alpha+\frac{d_z}{\kappa_z})} \, H(t) $$
+with
+$$A_{12}=\frac{1}{\kappa_z} ,\,A_{13}=0,
+\,A_{14}=-\frac{d_z}{\kappa^2_z}$$\\
+\noindent
+Inverse FT of $s_x$ computed using MAPLE for right-hand side:
+$$A_{15}\delta(t) + A_{16} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{15}= 1, \, A_{16}=0 $$
+\noindent
+Inverse FT of $s_y$ computed using MAPLE for right-hand side:
+$$A_{17}\delta(t) + A_{18} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{17}= 1, \, A_{18}=0 $$
+\noindent
+Inverse FT of $s_z$ computed using MAPLE for right-hand side:
+$$A_{19}\delta(t) + A_{20} {\rm e}^{-\alpha \,t} \, H(t) $$
+with
+$$A_{19}= \kappa_y, \, A_{20}=d_z $$
+\\
+The time domain equation of CPML in edge-PML and surface-PML can be derived directly following the above way used to get the
+time domain equation of CPML in corner-PML
+\\
+\section{Time scheme for the convolution terms}
+The last step is to find a recursive way of computing all the convolutions.
+Equations for first-order convolution
+performed using the first-order-accurate recursive approach of \cite{LuHu92}
+(but they are unstable in practice):
+\begin{equation}
+\partial_{\tilde{x}} = \frac{1}{\kappa_x} \partial_ x + \psi_x
+\label{memory_variable_replace}
+\end{equation}
+%
+with
+\begin{equation}
+\psi_x^n = b_x \psi_x^{n - 1} + a_x \left(\partial_ x\right)^{n - \frac{1}{2}} \, .
+\label{time_evolution_psi}
+\end{equation}
+%
+Equations for second-order convolution:
+%
+To get a stable time scheme we thus use the second-order-accurate recursive approach developed recently in in Wang and Texeira 2006,
+which is that for a mathematical convolution
+$$f(t) = a {\rm e}^{-bt} H(t) * u(t) = a \psi_(t)$$
+from Wang and Texeira 2006 we know that we can compute the discrete form using
+\begin{equation}
+\psi^n = {\rm e}^{-b \Delta t} \psi^{n-1} + (\frac{1}{b} (1 - {\rm e}^{-b \Delta t /2})) u^n
++ (\frac{1}{b} (1 - {\rm e}^{-b \Delta t /2 }) {\rm e}^{-b \Delta t /2} \ ) u^{n-1}
+\end{equation}
+%
+It can also used to compute mathematical convolutions as following
+$$g(t) = [a {\rm e}^{-bt} t H(t)] * u(t)$$
+which gives
+$$g(t) = \int_{-\infty}^{t} a {\rm e}^{-b (t-\tau)} (t-\tau) H(t-\tau) u(\tau) d \tau$$
+according to linearity of convolution we have
+$$g(t) = at\int_{-\infty}^{t}  {\rm e}^{-b (t-\tau)} H(t-\tau) u(\tau) d \tau - a\int_{-\infty}^{t}  {\rm e}^{-b (t-\tau)} H(t-\tau) \tau u(\tau) d \tau $$
+or
+$$g(t) = at [  {\rm e}^{-bt} H(t) * u(t)] - a [ {\rm e}^{-bt} H(t) * (t u(t))] $$
+Then the same discrete scheme (19) can be used to compute the first and second  square brackets term on the right hand.
+%
+Also we can used to compute mathematical convolutions as following
+$$g(t) = [a {\rm e}^{-bt} t^2 H(t)] * u(t)$$
+which gives
+$$g(t) = \int_{-\infty}^{t} a {\rm e}^{-b (t-\tau)} (t-\tau)^2 H(t-\tau) u(\tau) d \tau$$
+according to linearity of convolution we have
+$$g(t) = at^2\int_{-\infty}^{t}  {\rm e}^{-b (t-\tau)}  H(t-\tau) u(\tau) d \tau -
+2at\int_{-\infty}^{t}  {\rm e}^{-b (t-\tau)}  \tau H(t-\tau) u(\tau) d \tau+
+\int_{-\infty}^{t} a {\rm e}^{-b (t-\tau)} \tau^2 H(t-\tau) u(\tau) d \tau$$
+or
+$$g(t) = at^2[{\rm e}^{-bt} H(t) * u(t)] -
+2at[{\rm e}^{-bt} H(t) * (t u(t))]+
+[ {\rm e}^{-bt} H(t) * (t^2 u(t))]$$
+Then the same discrete scheme (19) can be used to compute the first, second and third square brackets term on the right hand.
+%
+%
+%
+%
+%
+%
+%%%%%%%%% BIBLIOGRAPHY %%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%\newpage
+\bibliography{Biblio1}
+%
+\end{document}
