@@ -66,7 +66,7 @@ module decompose_mesh_SCOTCH
   integer  :: nb_edges
 
   integer  :: ispec, inode
-  integer  :: ngnod
+  integer  :: NGNOD
   integer  :: max_neighbour         ! Real maximum number of neighbours per element
   integer  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
 
@@ -123,7 +123,7 @@ module decompose_mesh_SCOTCH
     integer(long) :: nspec_long
 
   ! sets number of nodes per element
-    ngnod = esize
+    NGNOD = esize
 
   ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
@@ -661,12 +661,12 @@ module decompose_mesh_SCOTCH
     nsize = maxval(used_nodes_elmnts(:))
 
     ! debug check size limit
-    if( ngnod * nsize - (ngnod + (ngnod/2 - 1)*nfaces) > 2147483647 ) then
-      print *,'size exceeds integer 4-byte limit: ',sup_neighbour,ngnod,nsize,nfaces
+    if( NGNOD * nsize - (NGNOD + (NGNOD/2 - 1)*nfaces) > 2147483647 ) then
+      print *,'size exceeds integer 4-byte limit: ',sup_neighbour,NGNOD,nsize,nfaces
       print*,'bit size fortran: ',bit_size(sup_neighbour)
     endif
 
-    sup_neighbour = ngnod * nsize - (ngnod + (ngnod/2 - 1)*nfaces)
+    sup_neighbour = NGNOD * nsize - (NGNOD + (NGNOD/2 - 1)*nfaces)
 
     print*, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
 
@@ -889,7 +889,7 @@ module decompose_mesh_SCOTCH
 
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 1)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1)
 
        !debug
        !print*, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
@@ -911,7 +911,7 @@ module decompose_mesh_SCOTCH
        write(IIN_database) nspec_local
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, ngnod, 2)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
 
        ! writes out absorbing/free-surface boundaries
        call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &

@@ -26,7 +26,7 @@
 
 
   subroutine prepare_assemble_MPI (nelmnts,knods, &
-                                   ibool,npoin,ngnode, &
+                                   ibool,npoin,NGNOD, &
                                    ninterface, max_interface_size, &
                                    my_nelmnts_neighbours, my_interfaces, &
                                    ibool_interfaces_asteroid, &
@@ -43,10 +43,10 @@
 
 ! spectral element indexing
 ! ( nelmnts = number of spectral elements
-!   ngnode = number of element corners (8)
+!   NGNOD = number of element corners (8)
 !   knods = corner indices array )
-  integer, intent(in)  :: nelmnts,ngnode
-  integer, dimension(ngnode,nelmnts), intent(in)  :: knods
+  integer, intent(in)  :: nelmnts,NGNOD
+  integer, dimension(NGNOD,nelmnts), intent(in)  :: knods
 
 ! global number of points
   integer, intent(in) :: npoin
@@ -70,7 +70,7 @@
   logical, dimension(:),allocatable  :: mask_ibool_asteroid
 
   integer  :: ixmin, ixmax, iymin, iymax, izmin, izmax
-  integer, dimension(ngnode)  :: n
+  integer, dimension(NGNOD)  :: n
   integer  :: e1, e2, e3, e4
   integer  :: ispec,k,ix,iy,iz,ier,itype,iglob
   integer  :: npoin_interface_asteroid
@@ -93,7 +93,7 @@
       ! type of interface: (1) corner point, (2) edge, (4) face
       itype = my_interfaces(2,ispec_interface,num_interface)
       ! gets spectral element corner indices  (defines all nodes of face/edge)
-      do k = 1, ngnode
+      do k = 1, NGNOD
          n(k) = knods(k,ispec)
       end do
 
@@ -104,7 +104,7 @@
       e4 = my_interfaces(6,ispec_interface,num_interface)
 
       ! gets i,j,k ranges for interface type
-      call get_edge(ngnode, n, itype, e1, e2, e3, e4, &
+      call get_edge(NGNOD, n, itype, e1, e2, e3, e4, &
                    ixmin, ixmax, iymin, iymax, izmin, izmax)
 
       ! counts number and stores indices of (global) points on MPI interface
@@ -141,7 +141,7 @@ end subroutine prepare_assemble_MPI
 !----
 !
 
-subroutine get_edge ( ngnode, n, itype, e1, e2, e3, e4, &
+subroutine get_edge ( NGNOD, n, itype, e1, e2, e3, e4, &
                     ixmin, ixmax, iymin, iymax, izmin, izmax )
 
 ! returns range of local (GLL) point indices i,j,k depending on given type
@@ -152,8 +152,8 @@ subroutine get_edge ( ngnode, n, itype, e1, e2, e3, e4, &
   include "constants.h"
 
 ! corner node indices per spectral element (8)
-  integer, intent(in)  :: ngnode
-  integer, dimension(ngnode), intent(in)  :: n
+  integer, intent(in)  :: NGNOD
+  integer, dimension(NGNOD), intent(in)  :: n
 
 ! interface type & nodes
   integer, intent(in)  :: itype, e1, e2, e3, e4
