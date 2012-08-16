@@ -50,6 +50,14 @@
 
   integer :: NSPEC_AB,NGLOB_AB
 
+! adjoint simulations
+  integer :: SIMULATION_TYPE
+  !integer :: NSPEC_BOUN
+  integer :: NSPEC_ADJOINT
+! adjoint wavefields
+!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
+!    mufr_kl, B_kl
+
 ! displacement and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic,&
                                                       velocw_poroelastic
@@ -86,16 +94,6 @@
   integer :: iphase
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
   integer, dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
-
-
-! adjoint simulations
-  integer :: SIMULATION_TYPE
-  !integer :: NSPEC_BOUN
-  integer :: NSPEC_ADJOINT
-! adjoint wavefields
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
-!    mufr_kl, B_kl
-
 
 !---
 !--- local variables
