@@ -1,30 +1,31 @@
 /*
-!=====================================================================
-!
-!               S p e c f e m 3 D  V e r s i o n  2 . 1
-!               ---------------------------------------
-!
-!          Main authors: Dimitri Komatitsch and Jeroen Tromp
-!    Princeton University, USA and CNRS / INRIA / University of Pau
-! (c) Princeton University / California Institute of Technology and CNRS / INRIA / University of Pau
-!                             July 2012
-!
-! This program is free software; you can redistribute it and/or modify
-! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
-! (at your option) any later version.
-!
-! This program is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU General Public License for more details.
-!
-! You should have received a copy of the GNU General Public License along
-! with this program; if not, write to the Free Software Foundation, Inc.,
-! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-!
-!=====================================================================
-*/
+ !=====================================================================
+ !
+ !          S p e c f e m 3 D  G l o b e  V e r s i o n  5 . 1
+ !          --------------------------------------------------
+ !
+ !          Main authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !             and CNRS / INRIA / University of Pau, France
+ ! (c) Princeton University and CNRS / INRIA / University of Pau
+ !                            April 2011
+ !
+ ! This program is free software; you can redistribute it and/or modify
+ ! it under the terms of the GNU General Public License as published by
+ ! the Free Software Foundation; either version 2 of the License, or
+ ! (at your option) any later version.
+ !
+ ! This program is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! GNU General Public License for more details.
+ !
+ ! You should have received a copy of the GNU General Public License along
+ ! with this program; if not, write to the Free Software Foundation, Inc.,
+ ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ !
+ !=====================================================================
+ */
 
 // for large files
 #define _FILE_OFFSET_BITS  64
@@ -42,9 +43,19 @@
 static int fd;
 
 void
-FC_FUNC_(open_file,OPEN_FILE)(char *file) {
+FC_FUNC_(open_file_create,OPEN_FILE)(char *file) {
   /*    fprintf(stderr, "Opening file: %s\n", file); */
-  fd = open(file, O_WRONLY | O_CREAT, 0644);
+  fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  if(fd == -1) {
+    fprintf(stderr, "Error opening file: %s exiting\n", file);
+    exit(-1);
+  }
+}
+
+void
+FC_FUNC_(open_file_append,OPEN_FILE)(char *file) {
+  /*    fprintf(stderr, "Opening file: %s\n", file); */
+  fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0644);
   if(fd == -1) {
     fprintf(stderr, "Error opening file: %s exiting\n", file);
     exit(-1);
@@ -65,6 +76,56 @@ FC_FUNC_(write_integer,WRITE_INTEGER)(int *z) {
 void
 FC_FUNC_(write_real,WRITE_REAL)(float *z) {
   int dummy_unused_variable = write(fd, z, sizeof(float));
+}
+
+/* BS BS begin. Added section for writing SAC binary data*/
+void
+FC_FUNC_(write_n_real,WRITE_N_REAL)(float *z,int *n) {
+  int dummy_unused_variable = write(fd, z, *n*sizeof(float));
+}
+
+void
+FC_FUNC_(write_character,WRITE_CHARACTER)(char *z, int *lchar) {
+  int dummy_unused_variable = write(fd, z, *lchar*sizeof(char));
+}
+
+// LQY -- added for combine_vol/surf_data to write multiple binary files simultaneously --
+
+void
+FC_FUNC_(open_file_fd,OPEN_FILE_FD)(char *file, int *pfd) {
+  /*    fprintf(stderr, "Opening file: %s\n", file); */
+  *pfd = open(file, O_WRONLY | O_CREAT, 0644);
+  if(*pfd == -1) {
+    fprintf(stderr, "Error opening file: %s exiting\n", file);
+    exit(-1);
+  }
+}
+
+void
+FC_FUNC_(close_file_fd,CLOSE_FILE_FD)(int *pfd) {
+  /*    fprintf(stderr, "Closing file\n"); */
+  close(*pfd);
+}
+
+void
+FC_FUNC_(write_integer_fd,WRITE_INTEGER_FD)(int *pfd, int *z) {
+  int dummy_unused_variable = write(*pfd, z, sizeof(int));
+}
+
+void
+FC_FUNC_(write_real_fd,WRITE_REAL_FD)(int *pfd, float *z) {
+  int dummy_unused_variable = write(*pfd, z, sizeof(float));
+}
+
+/* BS BS begin. Added section for writing SAC binary data*/
+void
+FC_FUNC_(write_n_real_fd,WRITE_N_REAL_FD)(int *pfd, float *z,int *n) {
+  int dummy_unused_variable = write(*pfd, z, *n*sizeof(float));
+}
+
+void
+FC_FUNC_(write_character_fd,WRITE_CHARACTER_FD)(int *pfd, char *z, int *lchar) {
+  int dummy_unused_variable = write(*pfd, z, *lchar*sizeof(char));
 }
 
 
@@ -89,9 +150,9 @@ FC_FUNC_(write_real,WRITE_REAL)(float *z) {
 
 /* fastest performance on nehalem nodes:
 
- Linux 2.6.18-164.11.1.el5 #1 SMP Wed Jan 20 10:04:55 EST 2010 x86_64 x86_64 x86_64 GNU/Linux
+Linux 2.6.18-164.11.1.el5 #1 SMP Wed Jan 20 10:04:55 EST 2010 x86_64 x86_64 x86_64 GNU/Linux
 
- achieved with 16 KB buffers: */
+achieved with 16 KB buffers: */
 
 //#define MAX_B 65536 // 64 KB
 //#define MAX_B 32768 // 32 KB
@@ -99,10 +160,10 @@ FC_FUNC_(write_real,WRITE_REAL)(float *z) {
 //#define MAX_B 8192 // 8 KB
 
 // absorbing files: instead of passing file descriptor, we use the array index
-//                          index 0 for elastic domain file
-//                          index 1 for acoustic domain file
-//                          (reserved, but unused yet) index 2 - for NOISE_TOMOGRAPHY (SURFACE_MOVIE)
-#define ABS_FILEID 3  // number of absorbing files, note: in C we start indexing arrays from 0
+//                          first 0 - 3 indices for crust mantle files
+//                          last 4 - 8 indices for outer core files
+//                          index 9 - for NOISE_TOMOGRAPHY (SURFACE_MOVIE)
+#define ABS_FILEID 10
 
 // file points
 static FILE * fp_abs[ABS_FILEID];
@@ -114,10 +175,10 @@ static char * work_buffer[ABS_FILEID];
 //FC_FUNC_(open_file_abs_r_fbin,OPEN_FILE_ABS_R_FBIN)(int *fid, char *filename,int *length, int *filesize){
 void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *filesize){
 
-  // opens file for read access
+// opens file for read access
 
-  //This sequence assigns the MAX_B array work_buffer to the file pointer
-  // to be used for its buffering. performance should benefit.
+//This sequence assigns the MAX_B array work_buffer to the file pointer
+// to be used for its buffering. performance should benefit.
   char * fncopy;
   char * blank;
   FILE *ft;
@@ -136,31 +197,9 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *files
     fncopy[blank - fncopy] = '\0';
   }
 
-/*
-//debug checks file size
-// see:
-//https://www.securecoding.cert.org/confluence/display/seccode/FIO19-C.+Do+not+use+fseek()+and+ftell()+to+compute+the+size+of+a+file
-  printf("file size: %lld \n",*filesize);
-  int fd;
-  struct stat stbuf;
-  long long size;
-  fd = open(fncopy, O_RDONLY);
-  if(fd == -1) {
-    fprintf(stderr, "Error opening file: %s exiting\n", fncopy);
-    exit(-1);
-  }
-  if( fstat(fd, &stbuf) == 0 ){
-    size = stbuf.st_size;
-    printf("file size found is: %lld (Bytes) \n",size);
-  }
-  close(fd);
-*/
-
   // opens file
-  //ft = fopen( fncopy, "r+" );
-  ft = fopen( fncopy, "rb+" ); // read binary file
+  ft = fopen( fncopy, "rb+" );
   if( ft == NULL ) { perror("fopen"); exit(-1); }
-
 
   // sets mode for full buffering
   work_buffer[*fid] = (char *)malloc(MAX_B);
@@ -180,7 +219,7 @@ void open_file_abs_r_fbin(int *fid, char *filename,int *length, long long *files
 //FC_FUNC_(open_file_abs_w_fbin,OPEN_FILE_ABS_W_FBIN)(int *fid, char *filename, int *length, int *filesize){
 void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *filesize){
 
-  // opens file for write access
+// opens file for write access
 
   //This sequence assigns the MAX_B array work_buffer to the file pointer
   // to be used for its buffering. performance should benefit.
@@ -203,8 +242,7 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *file
   }
 
   // opens file
-  //ft = fopen( fncopy, "w+" );
-  ft = fopen( fncopy, "wb+" ); // write binary file
+  ft = fopen( fncopy, "wb+" );
   if( ft == NULL ) { perror("fopen"); exit(-1); }
 
   // sets mode for full buffering
@@ -226,7 +264,7 @@ void open_file_abs_w_fbin(int *fid, char *filename, int *length, long long *file
 //FC_FUNC_(close_file_abs_fbin,CLOSE_FILE_ABS_FBIN)(int * fid){
 void close_file_abs_fbin(int * fid){
 
-  // closes file
+// closes file
 
   fclose(fp_abs[*fid]);
 
@@ -238,11 +276,14 @@ void close_file_abs_fbin(int * fid){
 //FC_FUNC_(write_abs_fbin,WRITE_ABS_FBIN)(int *fid, void *buffer, int *length, int *index){
 void write_abs_fbin(int *fid, char *buffer, int *length, int *index){
 
-  // writes binary file data in chunks of MAX_B
+// writes binary file data in chunks of MAX_B
 
   FILE *ft;
   int itemlen,remlen,donelen,ret;
-  char *buf;
+// DK DK fixed the warning we got when compiling with Intel icc
+// DK DK solution found at http://osdir.com/ml/network.quagga.devel/2004-09/msg00090.html
+// DK DK  void *buf;
+  char *buf = NULL;
 
   // file pointer
   ft = fp_abs[*fid];
@@ -252,42 +293,15 @@ void write_abs_fbin(int *fid, char *buffer, int *length, int *index){
   buf = buffer;
   ret = 0;
 
-/*
-//debug
-  float dat[*length/4];
-  memcpy(dat,buffer,*length);
-  printf("buffer length: %d %d\n",*length,*index);
-  printf("buffer size: %d %d \n",sizeof(dat),sizeof(buffer));
-  int i;
-  for(i=0;i< 50;i++){
-    printf("buffer: %d %e \n",i,dat[i]);
-  }
-
-  // positions file pointer (for reverse time access)
-  // make sure to use 64-bit arithmetic to avoid overflow for very large files
-  long long pos,cur;
-
-  pos = ((long long)*length) * (*index -1 );
-  cur = ftell(ft);
-
-  printf("current position: %d %lld %lld \n",*fid,cur,pos);
-  ret = fseek(ft, pos , SEEK_SET);
-  if ( ret != 0 ) {
-    perror("Error fseek");
-    exit(EXIT_FAILURE);
-  }
- */
-
-
   // writes items of maximum MAX_B to the file
   while (remlen > 0){
 
     itemlen = MIN(remlen,MAX_B);
-    // note: we want to write out exactly *itemlen* bytes
     ret = fwrite(buf,1,itemlen,ft);
     if (ret > 0){
       donelen = donelen + ret;
       remlen = remlen - MAX_B;
+      // this shifts the pointer position, thus is used in arithmetic, compilers might warn about this...
       buf += MAX_B;
     }
     else{
@@ -295,26 +309,26 @@ void write_abs_fbin(int *fid, char *buffer, int *length, int *index){
     }
   }
 
-  //debug
-  //  printf("buffer done length: %d %d\n",donelen,*length);
 }
 
 //void
 //FC_FUNC_(read_abs_fbin,READ_ABS_FBIN)(int *fid, void *buffer, int *length, int *index){
 void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
 
-  // reads binary file data in chunks of MAX_B
+// reads binary file data in chunks of MAX_B
 
   FILE *ft;
   int ret,itemlen,remlen,donelen;
   long long pos;
-  char *buf;
+// DK DK fixed the warning we got when compiling with Intel icc
+// DK DK solution found at http://osdir.com/ml/network.quagga.devel/2004-09/msg00090.html
+// DK DK  void *buf;
+  char *buf = NULL;
 
   // file pointer
   ft = fp_abs[*fid];
 
   // positions file pointer (for reverse time access)
-  // make sure to use 64-bit arithmetic to avoid overflow for very large files
   pos = ((long long)*length) * (*index -1 );
 
   ret = fseek(ft, pos , SEEK_SET);
@@ -327,9 +341,6 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
   remlen = *length;
   buf = buffer;
   ret = 0;
-
-  // cleans buffer
-  //memset( buf,0,remlen);
 
   // reads items of maximum MAX_B to the file
   while (remlen > 0){
@@ -345,6 +356,7 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
     if (ret > 0){
       donelen = donelen + ret;
       remlen = remlen - MAX_B;
+      // this shifts the pointer position, thus is used in arithmetic, compilers might warn about this...
       buf += MAX_B;
     }
     else{
@@ -352,19 +364,6 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
     }
   }
 
-/*
-// debug
-  printf("position: %lld %d %d \n",pos,*length,*index);
-  printf("buffer done length: %d %d\n",donelen,*length);
-  float dat[*length/4];
-  memcpy(dat,buffer,*length);
-  printf("return buffer length: %d %d\n",*length,*index);
-  printf("return buffer size: %d %d \n",sizeof(dat),sizeof(buffer));
-  int i;
-  for(i=0;i< 50;i++){
-    printf("return buffer: %d %e \n",i,dat[i]);
-  }
-*/
 }
 
 
@@ -375,24 +374,24 @@ void read_abs_fbin(int *fid, char *buffer, int *length, int *index){
  IO performance test
 
 
- A Performance Comparison of "read" and "mmap" in the Solaris 8 OS
+A Performance Comparison of "read" and "mmap" in the Solaris 8 OS
 
- By Oyetunde Fadele, September 2002
+By Oyetunde Fadele, September 2002
 
- http://developers.sun.com/solaris/articles/read_mmap.html
+http://developers.sun.com/solaris/articles/read_mmap.html
 
- or
+or
 
- High-performance network programming, Part 2: Speed up processing at both the client and server
+High-performance network programming, Part 2: Speed up processing at both the client and server
 
- by Girish Venkatachalam
+by Girish Venkatachalam
 
- http://www.ibm.com/developerworks/aix/library/au-highperform2/
+http://www.ibm.com/developerworks/aix/library/au-highperform2/
 
 
  - uses functions mmap/memcpy for mapping file I/O
 
- -------------------------------------  */
+-------------------------------------  */
 
 
 #include <errno.h>
@@ -410,7 +409,7 @@ static long long filesize_abs[ABS_FILEID];
 //FC_FUNC_(open_file_abs_w_map,OPEN_FILE_ABS_W_MAP)(int *fid, char *filename, int *length, int *filesize){
 void open_file_abs_w_map(int *fid, char *filename, int *length, long long *filesize){
 
-  // opens file for write access
+// opens file for write access
 
   int ft;
   int result;
@@ -423,15 +422,6 @@ void open_file_abs_w_map(int *fid, char *filename, int *length, long long *files
     perror("Error file size for writing");
     exit(EXIT_FAILURE);
   }
-
-  /*
-   // debug check filesize below or above 2 GB
-   //            filesize gives bytes needed; 4-byte integer limited to +- 2,147,483,648 bytes ~ 2 GB
-   float s = *filesize / 1024. / 1024. / 1024.;
-   if( s > 2.0 ){
-   printf("file size bigger than 2 GB: %lld B or %f GB \n",*filesize,s);
-   }
-   */
 
   // Trim the file name.
   fncopy = strndup(filename, *length);
@@ -581,7 +571,6 @@ void write_abs_map(int *fid, char *buffer, int *length , int *index){
   map = map_abs[*fid];
 
   // offset in bytes
-  // make sure to use 64-bit arithmetic to avoid overflow for very large files
   offset =  ((long long)*index -1 ) * (*length) ;
 
   // copies buffer to map
@@ -599,7 +588,6 @@ void read_abs_map(int *fid, char *buffer, int *length , int *index){
   map = map_abs[*fid];
 
   // offset in bytes
-  // make sure to use 64-bit arithmetic to avoid overflow for very large files
   offset =  ((long long)*index -1 ) * (*length) ;
 
   // copies map to buffer
@@ -610,20 +598,20 @@ void read_abs_map(int *fid, char *buffer, int *length , int *index){
 
 /*
 
- wrapper functions
+wrapper functions
 
- - for your preferred, optimized file i/o ;
- e.g. uncomment  // #define USE_MAP... in config.h to use mmap routines
- or comment out (default) to use fopen/fwrite/fread functions
+- for your preferred, optimized file i/o ;
+  e.g. uncomment  // #define USE_MAP... in config.h to use mmap routines
+         or comment out (default) to use fopen/fwrite/fread functions
 
  note: mmap functions should work fine for local harddisk directories, but can lead to
- problems with global (e.g. NFS) directories
+           problems with global (e.g. NFS) directories
 
- (on nehalem, Linux 2.6.18-164.11.1.el5 #1 SMP Wed Jan 20 10:04:55 EST 2010 x86_64 x86_64 x86_64 GNU/Linux
- - mmap functions are about 20 % faster than conventional fortran, unformatted file i/o
- - fwrite/fread function are about 12 % faster than conventional fortran, unformatted file i/o )
+  (on nehalem, Linux 2.6.18-164.11.1.el5 #1 SMP Wed Jan 20 10:04:55 EST 2010 x86_64 x86_64 x86_64 GNU/Linux
+    - mmap functions are about 20 % faster than conventional fortran, unformatted file i/o
+    - fwrite/fread function are about 12 % faster than conventional fortran, unformatted file i/o )
 
- */
+*/
 
 void
 FC_FUNC_(open_file_abs_w,OPEN_FILE_ABS_W)(int *fid, char *filename,int *length, long long *filesize) {
