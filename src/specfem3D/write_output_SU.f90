@@ -40,10 +40,9 @@
 
   ! headers
   integer,parameter :: nheader=240      ! 240 bytes
-  integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
+!! DK DK  integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
   integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
-  real(kind=4)    :: r4head(nheader/4)  ! 4-byte-real
-  equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
+!! DK DK  equivalence (i2head,i4head)    ! share the same 240-byte-memory
 
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision :: x_found_source,y_found_source,z_found_source
@@ -84,7 +83,7 @@
 
   ! write seismograms (dx)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dx_SU' ,&
-      form='unformatted', access='direct', recl=240+4*(NSTEP), iostat=ier)
+      form='unformatted', access='direct', recl=240+4*NSTEP, iostat=ier)
   if( ier /= 0 ) stop 'error opening ***_dx_SU file'
 
   do irec_local = 1,nrec_local
@@ -96,20 +95,23 @@
    i4head(20) =y_found_source !utm_y_source(1)
    i4head(21) =x_found(irec)  !stutm_x(irec)
    i4head(22) =y_found(irec)  !stutm_y(irec)
-   i2head(58) =NSTEP
-   i2head(59) =DT*1.0d6
+!! DK DK   i2head(58) =NSTEP
+!! DK DK   i2head(59) =DT*1.0d6
+!! DK DK almost all modern processors are little-endian, thus we do not need an equivalence statement any more
+!! DK DK (some compilers give a warning message for the equivalent statement that we used to have above)
+   i4head(58/2) = NSTEP + 65536*int(DT*1.0d6)
 
    ! convert to real 4-byte
    rtmpseis(1:NSTEP) = seismograms_d(1,irec_local,1:NSTEP)
 
    ! write record
-   write(IOUT_SU,rec=irec_local) r4head, rtmpseis
+   write(IOUT_SU,rec=irec_local) i4head, rtmpseis
   enddo
   close(IOUT_SU)
 
   ! write seismograms (dy)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dy_SU' ,&
-      form='unformatted', access='direct', recl=240+4*(NSTEP), iostat=ier)
+      form='unformatted', access='direct', recl=240+4*NSTEP, iostat=ier)
   if( ier /= 0 ) stop 'error opening ***_dy_SU file'
 
   do irec_local = 1,nrec_local
@@ -121,20 +123,23 @@
    i4head(20) =y_found_source !utm_y_source(1)
    i4head(21) =x_found(irec)  !stutm_x(irec)
    i4head(22) =y_found(irec)  !stutm_y(irec)
-   i2head(58) =NSTEP
-   i2head(59) =DT*1.0d6
+!! DK DK   i2head(58) =NSTEP
+!! DK DK   i2head(59) =DT*1.0d6
+!! DK DK almost all modern processors are little-endian, thus we do not need an equivalence statement any more
+!! DK DK (some compilers give a warning message for the equivalent statement that we used to have above)
+   i4head(58/2) = NSTEP + 65536*int(DT*1.0d6)
 
    ! convert to real 4-byte
    rtmpseis(1:NSTEP) = seismograms_d(2,irec_local,1:NSTEP)
 
    ! write record
-   write(IOUT_SU,rec=irec_local) r4head, rtmpseis
+   write(IOUT_SU,rec=irec_local) i4head, rtmpseis
   enddo
   close(IOUT_SU)
 
   ! write seismograms (dz)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dz_SU' ,&
-      form='unformatted', access='direct', recl=240+4*(NSTEP), iostat=ier)
+      form='unformatted', access='direct', recl=240+4*NSTEP, iostat=ier)
   if( ier /= 0 ) stop 'error opening ***_dz_SU file'
 
   do irec_local = 1,nrec_local
@@ -146,14 +151,17 @@
    i4head(20) =y_found_source !utm_y_source(1)
    i4head(21) =x_found(irec)  !stutm_x(irec)
    i4head(22) =y_found(irec)  !stutm_y(irec)
-   i2head(58) =NSTEP
-   i2head(59) =DT*1.0d6
+!! DK DK   i2head(58) =NSTEP
+!! DK DK   i2head(59) =DT*1.0d6
+!! DK DK almost all modern processors are little-endian, thus we do not need an equivalence statement any more
+!! DK DK (some compilers give a warning message for the equivalent statement that we used to have above)
+   i4head(58/2) = NSTEP + 65536*int(DT*1.0d6)
 
    ! convert to real 4-byte
    rtmpseis(1:NSTEP) = seismograms_d(3,irec_local,1:NSTEP)
 
    ! write record
-   write(IOUT_SU,rec=irec_local) r4head, rtmpseis
+   write(IOUT_SU,rec=irec_local) i4head, rtmpseis
   enddo
   close(IOUT_SU)
 
