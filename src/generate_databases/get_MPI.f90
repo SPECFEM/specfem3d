@@ -85,7 +85,7 @@
   ! and stores them in ibool_interfaces_ext_mesh & nibool_interfaces_ext_mesh
   ! (number of total points)
   call prepare_assemble_MPI( nelmnts_ext_mesh,elmnts_ext_mesh, &
-                            ibool,nglob,ESIZE, &
+                            ibool,nglob, &
                             num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
                             my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
