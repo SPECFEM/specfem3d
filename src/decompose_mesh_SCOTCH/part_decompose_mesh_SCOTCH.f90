@@ -960,7 +960,7 @@ contains
   subroutine write_partition_database(IIN_database, iproc, nspec_local, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
-                                      part, num_modele, ngnod, num_phase)
+                                      part, num_modele, NGNOD, num_phase)
 
 !    include './constants_decompose_mesh_SCOTCH.h'
 
@@ -975,10 +975,10 @@ contains
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
-    integer, intent(in)  :: ngnod
+    integer, intent(in)  :: NGNOD
 
     integer  :: i,j,k
-    integer, dimension(0:ngnod-1)  :: loc_nodes
+    integer, dimension(0:NGNOD-1)  :: loc_nodes
 
     if ( num_phase == 1 ) then
     ! counts number of spectral elements in this partition
@@ -994,8 +994,8 @@ contains
        do i = 0, nspec-1
           if ( part(i) == iproc ) then
 
-             do j = 0, ngnod-1
-                do k = glob2loc_nodes_nparts(elmnts(i*ngnod+j)), glob2loc_nodes_nparts(elmnts(i*ngnod+j)+1)-1
+             do j = 0, NGNOD-1
+                do k = glob2loc_nodes_nparts(elmnts(i*NGNOD+j)), glob2loc_nodes_nparts(elmnts(i*NGNOD+j)+1)-1
 
                    if ( glob2loc_nodes_parts(k) == iproc ) then
                       loc_nodes(j) = glob2loc_nodes(k)
@@ -1007,9 +1007,9 @@ contains
              ! format:
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
              !write(IIN_database,*) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
-             !                     num_modele(2,i+1),(loc_nodes(k)+1, k=0,ngnod-1)
+             !                     num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
              write(IIN_database) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
-                                  num_modele(2,i+1),(loc_nodes(k)+1, k=0,ngnod-1)
+                                  num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
           end if
        end do
     end if
