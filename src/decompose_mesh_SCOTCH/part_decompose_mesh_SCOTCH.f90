@@ -958,8 +958,7 @@ contains
                                       glob2loc_nodes_parts, glob2loc_nodes, &
                                       part, num_modele, NGNOD, num_phase)
 
-!    include './constants_decompose_mesh_SCOTCH.h'
-
+    integer, intent(in)  :: NGNOD
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: num_phase, iproc
     integer, intent(in)  :: nspec
@@ -971,7 +970,6 @@ contains
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
     integer, dimension(:), pointer  :: glob2loc_nodes_parts
     integer, dimension(:), pointer  :: glob2loc_nodes
-    integer, intent(in)  :: NGNOD
 
     integer  :: i,j,k
     integer, dimension(0:NGNOD-1)  :: loc_nodes
