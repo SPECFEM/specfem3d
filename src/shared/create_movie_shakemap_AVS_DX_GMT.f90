@@ -409,8 +409,6 @@
             do i = 1,NGLLX-1
               ieoff = NGNOD2D_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
               do ilocnum = 1,NGNOD2D_AVS_DX
-                !            do k = 1,NGNOD2D_AVS_DX
-
 
                 if(ilocnum == 1) then
                   xp(ieoff+ilocnum) = dble(x(i,j))
@@ -425,11 +423,6 @@
                   zp(ieoff+ilocnum) = dble(z(i+1,j+1))
                   field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
 
-                  !                xp(ieoff+ilocnum) = dble(x(i+1,j))
-                  !                yp(ieoff+ilocnum) = dble(y(i+1,j))
-                  !                zp(ieoff+ilocnum) = dble(z(i+1,j))
-                  !                field_display(ieoff+ilocnum) = dble(display(i+1,j))
-
                 elseif(ilocnum == 3) then
 
                   ! accounts for different ordering of square points
@@ -438,10 +431,6 @@
                   zp(ieoff+ilocnum) = dble(z(i+1,j))
                   field_display(ieoff+ilocnum) = dble(display(i+1,j))
 
-                  !                xp(ieoff+ilocnum) = dble(x(i+1,j+1))
-                  !                yp(ieoff+ilocnum) = dble(y(i+1,j+1))
-                  !                zp(ieoff+ilocnum) = dble(z(i+1,j+1))
-                  !                field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
                 else
                   xp(ieoff+ilocnum) = dble(x(i,j+1))
                   yp(ieoff+ilocnum) = dble(y(i,j+1))
@@ -450,13 +439,6 @@
                 endif
 
               enddo
-
-              !if( j==1 .and. ispec==1) then
-              !print*,'p1',xp(ieoff+1),yp(ieoff+1),zp(ieoff+1)
-              !print*,'p2',xp(ieoff+2),yp(ieoff+2),zp(ieoff+2)
-              !print*,'p3',xp(ieoff+3),yp(ieoff+3),zp(ieoff+3)
-              !print*,'p4',xp(ieoff+4),yp(ieoff+4),zp(ieoff+4)
-              !endif
 
             enddo
           enddo
@@ -522,8 +504,6 @@
                 ! velocity z-component
                 field_display(ilocnum+ieoff) = vectorz
               endif
-              ! takes norm of velocity vector
-              !field_display(ilocnum+ieoff) =sqrt(vectorz**2+vectory**2+vectorx**2)
             endif
 
           enddo
@@ -706,8 +686,6 @@
               if(USE_OPENDX) then
                 write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
               else if(USE_AVS) then
-                !write(11,'(i9,3f16.6)') ireorder(ibool_number),xp_save(ilocnum+ieoff), &
-                !    yp_save(ilocnum+ieoff),zp_save(ilocnum+ieoff)
                 write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
                             sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
               endif
@@ -759,14 +737,12 @@
                 if(plot_shaking_map) then
                   write(11,*) sngl(field_display(ilocnum+ieoff))
                 else
-                  !write(11,"(f7.2)") field_display(ilocnum+ieoff)
                   write(11,*) sngl(field_display(ilocnum+ieoff))
                 endif
               else
                 if(plot_shaking_map) then
                   write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
                 else
-                  !write(11,"(i10,1x,f7.2)") ireorder(ibool_number),field_display(ilocnum+ieoff)
                   write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
                 endif
               endif
@@ -801,7 +777,6 @@ enddo ! it
   if(USE_AVS) print *,'AVS files are stored in ', trim(OUTPUT_FILES), '/AVS_*.inp'
   if(USE_GMT) print *,'GMT files are stored in ', trim(OUTPUT_FILES), '/gmt_*.xyz'
   print *
-
 
   deallocate(store_val_x)
   deallocate(store_val_y)

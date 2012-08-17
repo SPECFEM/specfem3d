@@ -50,60 +50,6 @@
 ! number of points and of hex or quad elements
 ! number of points of a hex or quad element
 
-! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_3D_lisse_300_in_meters.inp'
-! integer, parameter :: NPOIN = 98692, NSPEC = 90585, NGNOD = 8
-! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-! double precision, parameter :: delta_t = 1.d-3
-! double precision, parameter :: VP_MAX = 3000.d0
-
-! character(len=100), parameter :: cubit_mesh_file = 'regolite_3D_rego3d_70m_in_meters.inp'
-! integer, parameter :: NPOIN = 4050696, NSPEC = 3410265, NGNOD = 8
-! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-! double precision, parameter :: delta_t = 3.d-4
-! double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
-
-! character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp.inp'
-! integer, parameter :: NPOIN = 5924713, NSPEC = 5797440, NGNOD = 8
-! logical, parameter :: IGNORE_OTHER_HEADERS = .true.
-! double precision, parameter :: delta_t = 3.d-4
-! double precision, parameter :: VP_MAX = 3000.d0
-
-! character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp_regolith_only.inp'
-! integer, parameter :: NPOIN = 5924713, NSPEC = 252928, NGNOD = 8
-! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-! double precision, parameter :: delta_t = 3.d-4
-! double precision, parameter :: VP_MAX = 900.d0 ! because only regolith, no bedrock
-
-!  character(len=100), parameter :: cubit_mesh_file = 'rego3d_70_disp_bedrock_only.inp'
-!  integer, parameter :: NPOIN = 5924713, NSPEC = 5797440 - 252928, NGNOD = 8
-!  logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-!  double precision, parameter :: delta_t = 3.d-4
-!  double precision, parameter :: VP_MAX = 3000.d0
-
-! character(len=100), parameter :: cubit_mesh_file = 'HOMOGENE_2D_in_meters.inp'
-! integer, parameter :: NPOIN = 3882, NSPEC = 3744, NGNOD = 4
-! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-! double precision, parameter :: delta_t = 5.d-3
-! double precision, parameter :: VP_MAX = 3000.d0
-
-! character(len=100), parameter :: cubit_mesh_file = 'eros_complexe_2d_regolite_fractures_modifie_in_meters.inp'
-! integer, parameter :: NPOIN = 57807, NSPEC = 56983, NGNOD = 4
-! logical, parameter :: IGNORE_OTHER_HEADERS = .true.
-! double precision, parameter :: delta_t = 1.5d-4
-! double precision, parameter :: VP_MAX = 3000.d0
-
-! character(len=100), parameter :: cubit_mesh_file = 'REGOLITE_only_no_fractures_2D_in_meters.inp'
-! integer, parameter :: NPOIN = 32536, NSPEC = 31695, NGNOD = 4
-! logical, parameter :: IGNORE_OTHER_HEADERS = .true.
-! double precision, parameter :: delta_t = 1.5d-4
-! double precision, parameter :: VP_MAX = 900.d0 ! because the smallest element is in the regolith layer, not in the bedrock
-
-! character(len=100), parameter :: cubit_mesh_file = 'david_mesh_doubl_500_900_6layers.inp'
-! integer, parameter :: NPOIN = 4513255, NSPEC = 4379190, NGNOD = 8
-! logical, parameter :: IGNORE_OTHER_HEADERS = .false.
-! double precision, parameter :: delta_t = 1.5d-4
-! double precision, parameter :: VP_MAX = 3000.d0
-
 ! example: layered_halfspace
 !                 Cubit -> File -> Export... Abacus (*.inp)
 !                                         ( block ids: 1 2 3 ) volumes only
