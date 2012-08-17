@@ -96,17 +96,6 @@
   enddo
   midpoint(:) = midpoint(:) / 4.0
 
-  ! checks: this holds only for planar face
-  !if( midpoint(1) /= (xcoord(1)+xcoord(3))/2.0 .or. midpoint(1) /= (xcoord(2)+xcoord(4))/2.0  ) then
-  !  print*,'error midpoint x:',midpoint(1),(xcoord(1)+xcoord(3))/2.0,(xcoord(2)+xcoord(4))/2.0
-  !endif
-  !if( midpoint(2) /= (ycoord(1)+ycoord(3))/2.0 .or. midpoint(2) /= (ycoord(2)+ycoord(4))/2.0  ) then
-  !  print*,'error midpoint y:',midpoint(1),(ycoord(1)+ycoord(3))/2.0,(ycoord(2)+ycoord(4))/2.0
-  !endif
-  !if( midpoint(3) /= (zcoord(1)+zcoord(3))/2.0 .or. midpoint(3) /= (zcoord(2)+zcoord(4))/2.0  ) then
-  !  print*,'error midpoint z:',midpoint(1),(zcoord(1)+zcoord(3))/2.0,(zcoord(2)+zcoord(4))/2.0
-  !endif
-
 ! determines element face by minimum distance of midpoints
   midpoint_faces(:,:) = 0.0
   do ifa=1,6
@@ -140,7 +129,6 @@
   iloc = minloc(midpoint_distances)
 
   ! checks that found midpoint is close enough
-  !print*,'face:', midpoint_distances(iloc(1))
   if( midpoint_distances(iloc(1)) > 1.e-4 * &
           (   (xcoord(1)-xcoord(2))**2 &
             + (ycoord(1)-ycoord(2))**2 &
@@ -162,16 +150,6 @@
     stop 'error element face midpoint'
   else
     iface_id = iloc(1)
-
-    !print*,'face:',iface_id
-    !do icorner=1,NGNOD2D
-    !  i = iface_all_corner_ijk(1,icorner,iloc(1))
-    !  j = iface_all_corner_ijk(2,icorner,iloc(1))
-    !  k = iface_all_corner_ijk(3,icorner,iloc(1))
-    !  iglob = ibool(i,j,k,ispec)
-    !  print*,'corner:',icorner,'xyz:',sngl(xstore_dummy(iglob)), &
-    !            sngl(ystore_dummy(iglob)),sngl(zstore_dummy(iglob))
-    !enddo
 
   endif
 
@@ -195,7 +173,6 @@
   integer :: NGLLA,NGLLB
   integer,dimension(3,NGLLA,NGLLB) :: ijk_face
 
-!  integer  :: icorner,i,j,k,iglob,iloc(1)
   integer :: i,j,k
   integer :: ngll,i_gll,j_gll,k_gll
 
@@ -291,80 +268,6 @@
     print*,'error element face ngll:',ngll,NGLLA,NGLLB
     stop 'error element face ngll'
   endif
-!
-!! corner locations
-!  do icorner=1,NGNOD2D
-!    i = iface_all_corner_ijk(1,icorner,iface)
-!    j = iface_all_corner_ijk(2,icorner,iface)
-!    k = iface_all_corner_ijk(3,icorner,iface)
-!    iglob = ibool(i,j,k,ispec)
-!    xcoord_iboun(icorner) = xstore_dummy(iglob)
-!    ycoord_iboun(icorner) = ystore_dummy(iglob)
-!    zcoord_iboun(icorner) = zstore_dummy(iglob)
-!    ! looks at values
-!    !print*,'corner:',icorner,'xyz:',sngl(xcoord_iboun(icorner)),sngl(ycoord_iboun(icorner)),sngl(zcoord_iboun(icorner))
-!  enddo
-!
-!! determines initial orientation given by three corners of the face
-!  ! (CUBIT orders corners such that normal points outwards of element)
-!  ! cross-product of vectors from corner 1 to corner 2 and from corner 1 to corner 3
-!  face_n(1) =   (ycoord(2)-ycoord(1))*(zcoord(3)-zcoord(1)) - (zcoord(2)-zcoord(1))*(ycoord(3)-ycoord(1))
-!  face_n(2) = - (xcoord(2)-xcoord(1))*(zcoord(3)-zcoord(1)) + (zcoord(2)-zcoord(1))*(xcoord(3)-xcoord(1))
-!  face_n(3) =   (xcoord(2)-xcoord(1))*(ycoord(3)-ycoord(1)) - (ycoord(2)-ycoord(1))*(xcoord(3)-xcoord(1))
-!  face_n(:) = face_n(:)/(sqrt( face_n(1)**2 + face_n(2)**2 + face_n(3)**2) )
-!
-!! checks that this normal direction is outwards of element:
-!  ! takes additional corner out of face plane and determines scalarproduct to normal
-!  select case( iface )
-!  case(1) ! opposite to xmin face
-!    iglob = ibool(NGLLX,1,1,ispec)
-!  case(2) ! opposite to xmax face
-!    iglob = ibool(1,1,1,ispec)
-!  case(3) ! opposite to ymin face
-!    iglob = ibool(1,NGLLY,1,ispec)
-!  case(4) ! opposite to ymax face
-!    iglob = ibool(1,1,1,ispec)
-!  case(5) ! opposite to bottom
-!    iglob = ibool(1,1,NGLLZ,ispec)
-!  case(6) ! opposite to top
-!    iglob = ibool(1,1,1,ispec)
-!  end select
-!  ! vector from corner 1 to this opposite one
-!  xcoord(4) = xstore_dummy(iglob) - xcoord(1)
-!  ycoord(4) = ystore_dummy(iglob) - ycoord(1)
-!  zcoord(4) = zstore_dummy(iglob) - zcoord(1)
-!
-!  ! scalarproduct
-!  tmp = xcoord(4)*face_n(1) + ycoord(4)*face_n(2) + zcoord(4)*face_n(3)
-!
-!  ! makes sure normal points outwards, that is points away from this additional corner and scalarproduct is negative
-!  if( tmp > 0.0 ) then
-!    face_n(:) = - face_n(:)
-!  endif
-!  !print*,'face ',iface,'scalarproduct:',tmp
-!
-!! determines orientation of gll corner locations and sets it such that normal points outwards
-!  ! cross-product
-!  face_ntmp(1) =   (ycoord_iboun(2)-ycoord_iboun(1))*(zcoord_iboun(3)-zcoord_iboun(1)) &
-!                     - (zcoord_iboun(2)-zcoord_iboun(1))*(ycoord_iboun(3)-ycoord_iboun(1))
-!  face_ntmp(2) = - (xcoord_iboun(2)-xcoord_iboun(1))*(zcoord_iboun(3)-zcoord_iboun(1)) &
-!                      + (zcoord_iboun(2)-zcoord_iboun(1))*(xcoord_iboun(3)-xcoord_iboun(1))
-!  face_ntmp(3) =   (xcoord_iboun(2)-xcoord_iboun(1))*(ycoord_iboun(3)-ycoord_iboun(1))&
-!                       - (ycoord_iboun(2)-ycoord_iboun(1))*(xcoord_iboun(3)-xcoord_iboun(1))
-!  face_ntmp(:) = face_ntmp(:)/(sqrt( face_ntmp(1)**2 + face_ntmp(2)**2 + face_ntmp(3)**2) )
-!  if( abs( (face_n(1)-face_ntmp(1))**2+(face_n(2)-face_ntmp(2))**2+(face_n(3)-face_ntmp(3))**2) > 0.1 ) then
-!    !print*,'error orientation face 1:',ispec,face_n(:)
-!    !swap corners 2 and 4 ( switches clockwise / anti-clockwise )
-!    tmp = xcoord_iboun(2)
-!    xcoord_iboun(2) = xcoord_iboun(4)
-!    xcoord_iboun(4) = tmp
-!    tmp = ycoord_iboun(2)
-!    ycoord_iboun(2) = ycoord_iboun(4)
-!    ycoord_iboun(4) = tmp
-!    tmp = zcoord_iboun(2)
-!    zcoord_iboun(2) = zcoord_iboun(4)
-!    zcoord_iboun(4) = tmp
-!  endif
 
 end subroutine get_element_face_gll_indices
 
@@ -400,7 +303,6 @@ end subroutine get_element_face_gll_indices
 ! local parameters
   real(kind=CUSTOM_REAL) :: face_n(3),tmp,v_tmp(3)
   integer :: iglob
-
 
 ! determines initial orientation given by three corners on the face
   ! cross-product of vectors from corner 1 to corner 2 and from corner 1 to corner 3
@@ -456,13 +358,9 @@ end subroutine get_element_face_gll_indices
 ! otherwise determines orientation of normal and flips direction such that normal points outwards
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
   if( tmp < 0.0 ) then
-    !print*,'element face normal: orientation ',ispec,iface,tmp
-    !print*,'face normal: ',face_n(:)
-    !print*,'     normal: ',normal(:)
     !swap
     normal(:) = - normal(:)
   endif
-  !print*,'face ',iface,'scalarproduct:',tmp
 
   end subroutine get_element_face_normal
 
@@ -613,3 +511,4 @@ end subroutine get_element_face_gll_indices
   enddo
 
   end subroutine get_element_corners
+

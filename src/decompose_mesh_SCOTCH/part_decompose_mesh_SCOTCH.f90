@@ -43,8 +43,6 @@ module part_decompose_mesh_SCOTCH
   integer, parameter :: ELASTIC_LOAD = 4
   integer, parameter :: POROELASTIC_LOAD = 8
 
-!  include './constants_decompose_mesh_SCOTCH.h'
-
 contains
 
   !-----------------------------------------------
@@ -197,8 +195,6 @@ contains
   !--------------------------------------------------
   subroutine build_glob2loc_nodes(nspec, nnodes, nsize, nnodes_elmnts, nodes_elmnts, part, &
        glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes,nparts)
-
-!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: nspec
     integer, intent(in) :: nsize
@@ -590,9 +586,6 @@ contains
        do i = 0, nnodes-1
           do j = glob2loc_nodes_nparts(i), glob2loc_nodes_nparts(i+1)-1
              if ( glob2loc_nodes_parts(j) == iproc ) then
-                !write(IIN_database,*) glob2loc_nodes(j)+1, nodes_coords(1,i+1), &
-                !                      nodes_coords(2,i+1), nodes_coords(3,i+1)
-
                 write(IIN_database) glob2loc_nodes(j)+1, nodes_coords(1,i+1), &
                                       nodes_coords(2,i+1), nodes_coords(3,i+1)
              end if
@@ -615,8 +608,8 @@ contains
     character (len=30), dimension(6,count_undef_mat) :: undef_mat_prop
     integer  :: i
 
-    !write(IIN_database,*)  count_def_mat,count_undef_mat
     write(IIN_database)  count_def_mat,count_undef_mat
+
     do i = 1, count_def_mat
       ! database material definition
       !
@@ -626,24 +619,14 @@ contains
       !
       ! (note that this order of the properties is different than the input in nummaterial_velocity_file)
       !
-      !write(IIN_database,*) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), &
-      !                      mat_prop(4,i), mat_prop(5,i), mat_prop(6,i), &
-      !                      mat_prop(7,i), mat_prop(8,i), mat_prop(9,i), &
-      !                      mat_prop(10,i), mat_prop(11,i), mat_prop(12,i), &
-      !                      mat_prop(13,i), mat_prop(14,i), mat_prop(15,i), mat_prop(16,i)
-
        write(IIN_database) mat_prop(1,i), mat_prop(2,i), mat_prop(3,i), &
                             mat_prop(4,i), mat_prop(5,i), mat_prop(6,i), &
                             mat_prop(7,i), mat_prop(8,i), mat_prop(9,i), &
                             mat_prop(10,i), mat_prop(11,i), mat_prop(12,i), &
                             mat_prop(13,i), mat_prop(14,i), mat_prop(15,i), mat_prop(16,i)
-
     end do
-    do i = 1, count_undef_mat
-       !write(IIN_database,*) trim(undef_mat_prop(1,i)),' ',trim(undef_mat_prop(2,i)),' ', &
-       !                     trim(undef_mat_prop(3,i)),' ',trim(undef_mat_prop(4,i)),' ', &
-       !                     trim(undef_mat_prop(5,i)),' ',trim(undef_mat_prop(6,i))
 
+    do i = 1, count_undef_mat
        write(IIN_database) undef_mat_prop(1,i),undef_mat_prop(2,i), &
                           undef_mat_prop(3,i),undef_mat_prop(4,i), &
                           undef_mat_prop(5,i),undef_mat_prop(6,i)
@@ -702,7 +685,6 @@ contains
           loc_nspec2D_xmin = loc_nspec2D_xmin + 1
        end if
     end do
-    !write(IIN_database,*) 1, loc_nspec2D_xmin
     write(IIN_database) 1, loc_nspec2D_xmin
 
     loc_nspec2D_xmax = 0
@@ -711,7 +693,6 @@ contains
           loc_nspec2D_xmax = loc_nspec2D_xmax + 1
        end if
     end do
-    !write(IIN_database,*) 2, loc_nspec2D_xmax
     write(IIN_database) 2, loc_nspec2D_xmax
 
     loc_nspec2D_ymin = 0
@@ -720,7 +701,6 @@ contains
           loc_nspec2D_ymin = loc_nspec2D_ymin + 1
        end if
     end do
-    !write(IIN_database,*) 3, loc_nspec2D_ymin
     write(IIN_database) 3, loc_nspec2D_ymin
 
     loc_nspec2D_ymax = 0
@@ -729,7 +709,6 @@ contains
           loc_nspec2D_ymax = loc_nspec2D_ymax + 1
        end if
     end do
-    !write(IIN_database,*) 4, loc_nspec2D_ymax
     write(IIN_database) 4, loc_nspec2D_ymax
 
     loc_nspec2D_bottom = 0
@@ -738,7 +717,6 @@ contains
           loc_nspec2D_bottom = loc_nspec2D_bottom + 1
        end if
     end do
-    !write(IIN_database,*) 5, loc_nspec2D_bottom
     write(IIN_database) 5, loc_nspec2D_bottom
 
     loc_nspec2D_top = 0
@@ -747,7 +725,6 @@ contains
           loc_nspec2D_top = loc_nspec2D_top + 1
        end if
     end do
-    !write(IIN_database,*) 6, loc_nspec2D_top
     write(IIN_database) 6, loc_nspec2D_top
 
     ! outputs element index and element node indices
@@ -781,9 +758,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_xmin(i)-1)+1, &
-          !                      loc_node1, loc_node2, loc_node3, loc_node4
-
           write(IIN_database) glob2loc_elmnts(ibelm_xmin(i)-1)+1, &
                                 loc_node1, loc_node2, loc_node3, loc_node4
        end if
@@ -815,8 +789,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_xmax(i)-1)+1, &
-          !                      loc_node1, loc_node2, loc_node3, loc_node4
           write(IIN_database) glob2loc_elmnts(ibelm_xmax(i)-1)+1, &
                                 loc_node1, loc_node2, loc_node3, loc_node4
        end if
@@ -848,8 +820,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_ymin(i)-1)+1, &
-          !                      loc_node1, loc_node2, loc_node3, loc_node4
           write(IIN_database) glob2loc_elmnts(ibelm_ymin(i)-1)+1, &
                                 loc_node1, loc_node2, loc_node3, loc_node4
        end if
@@ -881,8 +851,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_ymax(i)-1)+1, &
-          !                     loc_node1, loc_node2, loc_node3, loc_node4
           write(IIN_database) glob2loc_elmnts(ibelm_ymax(i)-1)+1, &
                                loc_node1, loc_node2, loc_node3, loc_node4
        end if
@@ -914,7 +882,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_bottom(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
           write(IIN_database) glob2loc_elmnts(ibelm_bottom(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
        end if
     end do
@@ -941,7 +908,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_top(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
           write(IIN_database) glob2loc_elmnts(ibelm_top(i)-1)+1, loc_node1, loc_node2, loc_node3, loc_node4
        end if
 
@@ -1000,8 +966,6 @@ contains
 
              ! format:
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
-             !write(IIN_database,*) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
-             !                     num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
              write(IIN_database) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
                                   num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
           end if
@@ -1021,8 +985,6 @@ contains
                               my_ninterface, my_interfaces, my_nb_interfaces, glob2loc_elmnts, &
                               glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                               glob2loc_nodes, num_phase, nparts)
-
-!    include './constants_decompose_mesh_SCOTCH.h'
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
@@ -1076,10 +1038,8 @@ contains
          do j = i+1, nparts-1
             if ( my_interfaces(num_interface) == 1 ) then
                if ( i == iproc ) then
-                  !write(IIN_database,*) j, my_nb_interfaces(num_interface)
                   write(IIN_database) j, my_nb_interfaces(num_interface)
                else
-                  !write(IIN_database,*) i, my_nb_interfaces(num_interface)
                   write(IIN_database) i, my_nb_interfaces(num_interface)
                end if
 
@@ -1091,34 +1051,6 @@ contains
                      local_elmnt = glob2loc_elmnts(tab_interfaces(k*7+1))+1
                   end if
 
-!!$                  if ( tab_interfaces(k*7+2) == 1 ) then
-!!$                     do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
-!!$                          glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-!!$                        if ( glob2loc_nodes_parts(l) == iproc ) then
-!!$                           local_nodes(1) = glob2loc_nodes(l)+1
-!!$                        end if
-!!$                     end do
-!!$
-!!$                     write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), local_nodes(1), -1
-!!$                  else
-!!$                     if ( tab_interfaces(k*7+2) == 2 ) then
-!!$                        do l = glob2loc_nodes_nparts(tab_interfaces(k*7+3)), &
-!!$                             glob2loc_nodes_nparts(tab_interfaces(k*7+3)+1)-1
-!!$                           if ( glob2loc_nodes_parts(l) == iproc ) then
-!!$                              local_nodes(1) = glob2loc_nodes(l)+1
-!!$                           end if
-!!$                        end do
-!!$                        do l = glob2loc_nodes_nparts(tab_interfaces(k*7+4)), &
-!!$                           glob2loc_nodes_nparts(tab_interfaces(k*7+4)+1)-1
-!!$                           if ( glob2loc_nodes_parts(l) == iproc ) then
-!!$                              local_nodes(2) = glob2loc_nodes(l)+1
-!!$                           end if
-!!$                        end do
-!!$                        write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), local_nodes(1), local_nodes(2)
-!!$                     else
-!!$                        write(IIN_database,*) "erreur_write_interface_", tab_interfaces(k*7+2)
-!!$                     end if
-!!$                  end if
                   select case (tab_interfaces(k*7+2))
                   case (1)
                      ! single point element
@@ -1128,8 +1060,6 @@ contains
                            local_nodes(1) = glob2loc_nodes(l)+1
                         end if
                      end do
-                     !write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), &
-                     !                   local_nodes(1), -1, -1, -1
                      write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
                                         local_nodes(1), -1, -1, -1
 
@@ -1147,8 +1077,6 @@ contains
                            local_nodes(2) = glob2loc_nodes(l)+1
                         end if
                      end do
-                     !write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), &
-                     !                   local_nodes(1), local_nodes(2), -1, -1
                      write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
                                         local_nodes(1), local_nodes(2), -1, -1
 
@@ -1179,8 +1107,6 @@ contains
                            local_nodes(4) = glob2loc_nodes(l)+1
                         end if
                      end do
-                     !write(IIN_database,*) local_elmnt, tab_interfaces(k*7+2), &
-                     !     local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
                      write(IIN_database) local_elmnt, tab_interfaces(k*7+2), &
                           local_nodes(1), local_nodes(2),local_nodes(3), local_nodes(4)
 
@@ -1242,7 +1168,6 @@ contains
     if( loc_nspec2D_moho == 0 ) return
 
     ! format: #surface_id, #number of elements
-    !write(IIN_database,*) 7, loc_nspec2D_moho
     write(IIN_database) 7, loc_nspec2D_moho
 
     ! outputs element index and element node indices
@@ -1274,8 +1199,6 @@ contains
                 loc_node4 = glob2loc_nodes(j)+1
              end if
           end do
-          !write(IIN_database,*) glob2loc_elmnts(ibelm_moho(i)-1)+1, &
-          !                    loc_node1, loc_node2, loc_node3, loc_node4
           write(IIN_database) glob2loc_elmnts(ibelm_moho(i)-1)+1, &
                               loc_node1, loc_node2, loc_node3, loc_node4
        end if
@@ -1436,7 +1359,6 @@ contains
     if( ier /= 0 ) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
-    !call mesh2dual_ncommonnodes(nspec, nnodes, elmnts, xadj, adjncy, nnodes_elmnts, nodes_elmnts,4)
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
                                 nodes_elmnts, max_neighbour, 4)
@@ -1663,7 +1585,6 @@ contains
     deallocate(faces_coupled)
 
  end subroutine moho_surface_repartitioning
-
 
 end module part_decompose_mesh_SCOTCH
 
