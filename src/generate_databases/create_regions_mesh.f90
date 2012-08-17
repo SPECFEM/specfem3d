@@ -608,7 +608,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
 ! data from the external mesh
   integer :: nnodes_ext_mesh,nelmnts_ext_mesh
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
-  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
+  integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
 ! proc numbers for MPI
   integer :: myrank

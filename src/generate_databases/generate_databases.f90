@@ -676,7 +676,7 @@
 ! element indexing
   !read(IIN,*) nelmnts_ext_mesh
   read(IIN) nelmnts_ext_mesh
-  allocate(elmnts_ext_mesh(esize,nelmnts_ext_mesh),stat=ier)
+  allocate(elmnts_ext_mesh(NGNOD,nelmnts_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array elmnts_ext_mesh'
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array mat_ext_mesh'

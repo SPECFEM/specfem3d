@@ -66,7 +66,6 @@ module decompose_mesh_SCOTCH
   integer  :: nb_edges
 
   integer  :: ispec, inode
-  integer  :: NGNOD
   integer  :: max_neighbour         ! Real maximum number of neighbours per element
   integer  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
 
@@ -122,9 +121,6 @@ module decompose_mesh_SCOTCH
     logical :: use_poroelastic_file
     integer(long) :: nspec_long
 
-  ! sets number of nodes per element
-    NGNOD = esize
-
   ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
           status='old', form='formatted', iostat = ier)
@@ -162,7 +158,7 @@ module decompose_mesh_SCOTCH
     ! sets number of elements (integer 4-byte)
     nspec = nspec_long
 
-    allocate(elmnts(esize,nspec),stat=ier)
+    allocate(elmnts(NGNOD,nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array elmnts'
     do ispec = 1, nspec
       ! format: # element_id  #id_node1 ... #id_node8
@@ -646,7 +642,7 @@ module decompose_mesh_SCOTCH
     mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
     do ispec = 1, nspec
-      do inode = 1, ESIZE
+      do inode = 1, NGNOD
         mask_nodes_elmnts(elmnts(inode,ispec)) = .true.
         used_nodes_elmnts(elmnts(inode,ispec)) = used_nodes_elmnts(elmnts(inode,ispec)) + 1
       enddo

@@ -28,17 +28,13 @@ module part_decompose_mesh_SCOTCH
 
   implicit none
 
+  include "../shared/constants.h"
+
 ! Useful kind types
   integer ,parameter :: short = SELECTED_INT_KIND(4), long = SELECTED_INT_KIND(18)
 
-! Number of nodes per elements.
-  integer, parameter  :: ESIZE = 8
-
 ! Number of faces per element.
   integer, parameter  :: nfaces = 6
-
-! very large and very small values
-  double precision, parameter :: HUGEVAL = 1.d+30,TINYVAL = 1.d-9
 
 ! acoustic-elastic-poroelastic load balancing:
 ! assumes that elastic at least ~4 times more expensive than acoustic
@@ -63,7 +59,7 @@ contains
     integer, intent(in)  :: nnodes
     integer, intent(in)  :: nsize
     integer, intent(in)  :: sup_neighbour
-    integer, dimension(0:esize*nspec-1), intent(in)  :: elmnts
+    integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
 
     integer, dimension(0:nspec)  :: xadj
     integer, dimension(0:sup_neighbour*nspec-1)  :: adjncy
@@ -88,8 +84,8 @@ contains
     nb_edges = 0
 
     ! list of elements per node
-    do i = 0, esize*nspec-1
-       nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/esize
+    do i = 0, NGNOD*nspec-1
+       nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/NGNOD
        nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
     end do
 
@@ -101,8 +97,8 @@ contains
              connectivity = 0
              elem_base = nodes_elmnts(k+j*nsize)
              elem_target = nodes_elmnts(l+j*nsize)
-             do n = 1, esize
-                num_node = elmnts(esize*elem_base+n-1)
+             do n = 1, NGNOD
+                num_node = elmnts(NGNOD*elem_base+n-1)
                 do m = 0, nnodes_elmnts(num_node)-1
                    if ( nodes_elmnts(m+num_node*nsize) == elem_target ) then
                       connectivity = connectivity + 1
@@ -296,7 +292,7 @@ contains
     integer, intent(in)  :: nspec
     integer, intent(in) :: sup_neighbour
     integer, dimension(0:nspec-1), intent(in)  :: part
-    integer, dimension(0:esize*nspec-1), intent(in)  :: elmnts
+    integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
     integer, dimension(0:nspec), intent(in)  :: xadj
     integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
     integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
@@ -368,12 +364,12 @@ contains
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
                       ncommon_nodes = 0
-                      do num_node = 0, esize-1
-                         do num_node_bis = 0, esize-1
-                            if ( elmnts(el*esize+num_node) == elmnts(adjncy(el_adj)*esize+num_node_bis) ) then
+                      do num_node = 0, NGNOD-1
+                         do num_node_bis = 0, NGNOD-1
+                            if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
                                tab_interfaces(tab_size_interfaces(num_interface)*7 &
                                               +num_edge*7+3+ncommon_nodes) &
-                                    = elmnts(el*esize+num_node)
+                                    = elmnts(el*NGNOD+num_node)
                                ncommon_nodes = ncommon_nodes + 1
                             end if
                          end do
@@ -416,7 +412,7 @@ contains
     integer, intent(in)  :: nspec
     integer, intent(in) :: sup_neighbour
     integer, dimension(0:nspec-1), intent(in)  :: part
-    integer, dimension(0:esize*nspec-1), intent(in)  :: elmnts
+    integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
     integer, dimension(0:nspec), intent(in)  :: xadj
     integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
     integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
@@ -529,12 +525,12 @@ contains
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
                       ncommon_nodes = 0
-                      do num_node = 0, esize-1
-                         do num_node_bis = 0, esize-1
-                            if ( elmnts(el*esize+num_node) == elmnts(adjncy(el_adj)*esize+num_node_bis) ) then
+                      do num_node = 0, NGNOD-1
+                         do num_node_bis = 0, NGNOD-1
+                            if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
                                tab_interfaces(tab_size_interfaces(num_interface)*7 &
                                              +num_edge*7+3+ncommon_nodes) &
-                                    = elmnts(el*esize+num_node)
+                                    = elmnts(el*NGNOD+num_node)
                                ncommon_nodes = ncommon_nodes + 1
                             end if
                          end do
@@ -969,7 +965,7 @@ contains
     integer, intent(in)  :: nspec
     integer, intent(inout)  :: nspec_local
     integer, dimension(0:nspec-1)  :: part
-    integer, dimension(0:esize*nspec-1)  :: elmnts
+    integer, dimension(0:NGNOD*nspec-1)  :: elmnts
     integer, dimension(:), pointer :: glob2loc_elmnts
     integer, dimension(2,nspec)  :: num_modele
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
@@ -1398,7 +1394,7 @@ contains
     double precision, dimension(16,nb_materials),intent(in)  :: mat_prop
 
     integer, dimension(0:nspec-1)  :: part
-    integer, dimension(0:esize*nspec-1)  :: elmnts
+    integer, dimension(0:NGNOD*nspec-1)  :: elmnts
 
     ! local parameters
     integer  :: nfaces_coupled
@@ -1525,8 +1521,8 @@ contains
     integer, dimension(0:nspec-1)  :: part
 
     ! mesh element indexing
-    ! ( elmnts(esize,nspec) )
-    integer, dimension(0:esize*nspec-1)  :: elmnts
+    ! ( elmnts(NGNOD,nspec) )
+    integer, dimension(0:NGNOD*nspec-1)  :: elmnts
 
     ! moho surface
     integer ,intent(in) :: nspec2D_moho
@@ -1582,9 +1578,9 @@ contains
 
       ! loops over all element corners
       counter = 0
-      do i=0,esize-1
+      do i=0,NGNOD-1
         ! note: assumes that node indices in elmnts array are in the range from 0 to nodes-1
-        inode = elmnts(el*esize+i)
+        inode = elmnts(el*NGNOD+i)
         if( node_is_moho(inode) ) counter = counter + 1
       enddo
 

@@ -173,7 +173,7 @@
 
   ! memory usage, in generate_database() routine so far
   static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
-        + NDIM*nnodes_ext_mesh*8 + ESIZE*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
+        + NDIM*nnodes_ext_mesh*8 + NGNOD*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
         + 5*nmat_ext_mesh*8 + 3*num_interfaces_ext_mesh &
         + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
         + NGLLX*NGLLX*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &

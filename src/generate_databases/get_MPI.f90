@@ -44,7 +44,7 @@
 
 ! external mesh, element indexing
   integer :: nelmnts_ext_mesh
-  integer, dimension(ESIZE,nelmnts_ext_mesh) :: elmnts_ext_mesh
+  integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
 
