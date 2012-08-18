@@ -2038,4 +2038,6 @@
           iboun_sb(8,4) = .true.
           iboun_sb(8,5) = .true.
   END SELECT
+
   end subroutine define_basic_doubling_brick
+

@@ -143,7 +143,6 @@
       write(*,*) '   interface:',iinterface,num_points1,num_points2
       call exit_mpi(myrank,'error sorting MPI interface')
     endif
-    !write(*,*) myrank,'intfc',iinterface,num_points2,nibool_interfaces_ext_mesh_true(iinterface)
 
     ! cleanup temporary arrays
     deallocate(xp)
@@ -205,8 +204,6 @@
      ibool_interfaces_dummy(:,iinterface) = &
       ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,iinterface)
      count = count + nibool_interfaces_ext_mesh(iinterface)
-     !write(*,*) myrank,'interfaces ',iinterface, &
-     !            nibool_interfaces_ext_mesh(iinterface),max_nibool_interfaces_ext_mesh
   enddo
   call sync_all()
 
@@ -243,3 +240,4 @@
   endif
 
   end subroutine get_MPI
+

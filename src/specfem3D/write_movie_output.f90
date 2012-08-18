@@ -113,7 +113,6 @@
            accel_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for movie elements'
 
-
 ! initializes arrays for point coordinates
   if (it == 1) then
     store_val_ux_external_mesh(:) = -HUGEVAL
@@ -164,7 +163,6 @@
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
     endif
-
 
     ! high-resolution
     if (USE_HIGHRES_FOR_MOVIES) then
@@ -1012,9 +1010,6 @@
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
 
-  !real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: tmpdata
-  !integer :: i,j,k,iglob
-
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
   compx(1:1) = channel(3:3) ! either X or E
@@ -1132,13 +1127,7 @@
     write(27) curl_z
     close(27)
 
-    !write(outputname,"('veloc_proc',i6.6,'_it',i6.6,'.bin')") myrank,it
-    !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted')
-    !write(27) veloc
-    !close(27)
-
   endif
-
 
   if( ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
     write(outputname,"('/proc',i6.6,'_velocity_',a1,'_it',i6.6,'.bin')") myrank,compx,it
@@ -1159,63 +1148,6 @@
     write(27) velocity_z
     close(27)
 
-    !write(outputname,"('/proc',i6.6,'_veloc_it',i6.6,'.bin')") myrank,it
-    !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    !if( ier /= 0 ) stop 'error opening file velocity_movie'
-    !write(27) velocity_movie
-    !close(27)
-
-    ! norms
-    !allocate( tmpdata(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    !if( ier /= 0 ) stop 'error allocating tmpdata arrays for movie output'
-    !
-    !if( ELASTIC_SIMULATION ) then
-    !  ! norm of displacement
-    !  do ispec=1,NSPEC_AB
-    !    do k=1,NGLLZ
-    !      do j=1,NGLLY
-    !        do i=1,NGLLX
-    !          iglob = ibool(i,j,k,ispec)
-    !          tmpdata(i,j,k,ispec) = sqrt( displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2 )
-    !        enddo
-    !      enddo
-    !    enddo
-    !  enddo
-    !  write(outputname,"('/proc',i6.6,'_displ_norm_it',i6.6,'.bin')") myrank,it
-    !  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    !  if( ier /= 0 ) stop 'error opening file movie output velocity z'
-    !  write(27) tmpdata
-    !  close(27)
-    !
-    !  ! norm of acceleration
-    !  do ispec=1,NSPEC_AB
-    !    do k=1,NGLLZ
-    !      do j=1,NGLLY
-    !        do i=1,NGLLX
-    !          iglob = ibool(i,j,k,ispec)
-    !          tmpdata(i,j,k,ispec) = sqrt( accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2 )
-    !        enddo
-    !      enddo
-    !    enddo
-    !  enddo
-    !  write(outputname,"('/proc',i6.6,'_accel_norm_it',i6.6,'.bin')") myrank,it
-    !  open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    !  if( ier /= 0 ) stop 'error opening file movie output velocity z'
-    !  write(27) tmpdata
-    !  close(27)
-    !endif
-    !
-    !! norm of velocity
-    !tmpdata = sqrt( velocity_x**2 + velocity_y**2 + velocity_z**2)
-    !
-    !write(outputname,"('/proc',i6.6,'_velocity_norm_it',i6.6,'.bin')") myrank,it
-    !open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    !if( ier /= 0 ) stop 'error opening file movie output velocity z'
-    !write(27) tmpdata
-    !close(27)
-    !
-    !deallocate(tmpdata)
-
   endif
 
   end subroutine wmo_movie_volume_output
@@ -1229,7 +1161,6 @@
                                 ibool,ispec_is, &
                                 hprime_xx,hprime_yy,hprime_zz, &
                                 xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-
 
 ! calculates div, curl and velocity
 
@@ -1374,3 +1305,4 @@
   enddo
 
   end subroutine wmo_movie_div_curl
+

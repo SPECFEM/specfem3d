@@ -24,11 +24,8 @@
 !
 !=====================================================================
 
-
-
 module createRegMesh
 contains
-
 
   subroutine create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
                                xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
@@ -244,9 +241,7 @@ contains
        nmeshregions = 1
     else
        call define_superbrick(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
-       !call define_superbrick_one_layer(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
        nspec_sb = NSPEC_DOUBLING_SUPERBRICK
-       !nspec_sb = NSPEC_SUPERBRICK_1L
        if(NDOUBLINGS == 1) then
           nmeshregions = 3
        else if(NDOUBLINGS == 2) then
@@ -278,9 +273,6 @@ contains
                 ioffset_y = iy+iay*iaddy(ia)
                 ioffset_z = ir+iar*iaddz(ia)
 
-                !xelm(ia) = xgrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
-                !yelm(ia) = ygrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
-                !zelm(ia) = zgrid(ir+iar*iaddz(ia),ix+iax*iaddx(ia),iy+iay*iaddy(ia))
                 xelm(ia) = xgrid(ioffset_z,ioffset_x,ioffset_y)
                 yelm(ia) = ygrid(ioffset_z,ioffset_x,ioffset_y)
                 zelm(ia) = zgrid(ioffset_z,ioffset_x,ioffset_y)
@@ -447,9 +439,7 @@ contains
                       ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                       NMATERIALS,material_properties)
 
-
   end subroutine create_regions_mesh
 
 end module createRegMesh
-
 

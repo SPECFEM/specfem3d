@@ -134,7 +134,6 @@ module decompose_mesh_SCOTCH
     do inode = 1, nnodes
     ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
       read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
-    !if(num_node /= inode)  stop "ERROR : Invalid nodes_coords file."
     end do
     close(98)
     print*, 'total number of nodes: '
@@ -166,31 +165,16 @@ module decompose_mesh_SCOTCH
       ! note: be aware that here we can have different node ordering for a cube element;
       !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
       !
-      !          guess here it assumes that spectral elements ordering is like first
+      !          here our code assumes that element ordering is:
       !          at the bottom of the element, anticlock-wise, i.e.
       !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
       !          then top (positive z-direction) of element
       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
 
-      !read(98,*) num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
-      !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
-
       read(98,*) num_elmnt, elmnts(1,num_elmnt), elmnts(2,num_elmnt),elmnts(3,num_elmnt), elmnts(4,num_elmnt), &
             elmnts(5,num_elmnt), elmnts(6,num_elmnt), elmnts(7,num_elmnt), elmnts(8,num_elmnt)
 
       if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
-
-
-      !outputs info for each element to see ordering
-      !print*,'ispec: ',ispec
-      !print*,'  ',num_elmnt, elmnts(5,num_elmnt), elmnts(1,num_elmnt),elmnts(4,num_elmnt), elmnts(8,num_elmnt), &
-      !      elmnts(6,num_elmnt), elmnts(2,num_elmnt), elmnts(3,num_elmnt), elmnts(7,num_elmnt)
-      !print*,'elem:',num_elmnt
-      !do i=1,8
-      !  print*,' i ',i,'val :',elmnts(i,num_elmnt),&
-      !    nodes_coords(1,elmnts(i,num_elmnt)),nodes_coords(2,elmnts(i,num_elmnt)),nodes_coords(3,elmnts(i,num_elmnt))
-      !enddo
-      !print*
 
     end do
     close(98)
@@ -207,7 +191,7 @@ module decompose_mesh_SCOTCH
     do ispec = 1, nspec
       ! format: # id_element #flag
       ! note: be aware that elements may not be sorted in materials_file
-      read(98,*) num_mat,mat(1,num_mat) !mat(1,ispec)!, mat(2,ispec)
+      read(98,*) num_mat,mat(1,num_mat)
       if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
     end do
     close(98)
@@ -309,7 +293,6 @@ module decompose_mesh_SCOTCH
        ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
        !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_mu #(5) anisotropy_flag
        !
-       !read(98,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
        ! reads lines unti it reaches a defined material
        num_mat = -1
        do while( num_mat < 0 .and. ier == 0)
@@ -327,8 +310,6 @@ module decompose_mesh_SCOTCH
        if(idomain_id == 1 .or. idomain_id == 2) then
          ! material is elastic or acoustic
 
-         !read(98,*) num_mat, mat_prop(1,num_mat),mat_prop(2,num_mat),&
-         !           mat_prop(3,num_mat),mat_prop(4,num_mat),mat_prop(5,num_mat)
          mat_prop(1,num_mat) = rho
          mat_prop(2,num_mat) = vp
          mat_prop(3,num_mat) = vs
@@ -374,7 +355,7 @@ module decompose_mesh_SCOTCH
        !   - for tomography models
        !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name
        !        example:     2  -1 tomography elastic tomography_model.xyz 1
-       ! reads lines unti it reaches a defined material
+       ! reads lines until it reaches a defined material
        num_mat = 1
        do while( num_mat >= 0 .and. ier == 0 )
          read(98,'(A256)',iostat=ier) line
@@ -397,17 +378,8 @@ module decompose_mesh_SCOTCH
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
        endif
 
-       !read(98,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-       !                 undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
-
-       ! debug output
-       !print*,'properties:'
-       !print*,undef_mat_prop(:,imat)
-       !print*
-
        ! checks material_id
        read(undef_mat_prop(1,imat),*) num_mat
-       !print *,'material_id: ',num_mat
        if(num_mat > 0 .or. -num_mat > count_undef_mat)  &
             stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
        if(num_mat /= -imat)  &
@@ -491,17 +463,8 @@ module decompose_mesh_SCOTCH
       !          doesn't necessarily have to start on top-rear, then bottom-rear, bottom-front, and finally top-front i.e.:
       !          point 1 = (0,1,1), point 2 = (0,1,0), point 3 = (0,0,0), point 4 = (0,0,1)
       read(98,*) ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
-            nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)
+            nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D) !! DK DK see if we need NGNOD here
 
-      !outputs info for each element for check of ordering
-      !print*,'ispec2d:',ispec2d
-      !print*,'  xmin:', ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
-      !      nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D)
-      !do i=1,4
-      !  print*,'i',i,'val:',ibelm_xmin(ispec2d),nodes_coords(1,nodes_ibelm_xmin(i,ispec2D)), &
-      !      nodes_coords(2,nodes_ibelm_xmin(i,ispec2D)),nodes_coords(3,nodes_ibelm_xmin(i,ispec2D))
-      !enddo
-      !print*
     end do
     close(98)
     print*, 'absorbing boundaries:'
@@ -891,7 +854,6 @@ module decompose_mesh_SCOTCH
        !print*, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
 
        ! writes out node coordinate locations
-       !write(IIN_database,*) nnodes_loc
        write(IIN_database) nnodes_loc
 
 
@@ -903,7 +865,6 @@ module decompose_mesh_SCOTCH
                                   mat_prop, undef_mat_prop)
 
        ! writes out spectral element indices
-       !write(IIN_database,*) nspec_local
        write(IIN_database) nspec_local
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
@@ -928,10 +889,8 @@ module decompose_mesh_SCOTCH
        ! writes out MPI interfaces elements
        !print*,' my interfaces:',my_ninterface,maxval(my_nb_interfaces)
        if( my_ninterface == 0 ) then
-        !write(IIN_database,*) my_ninterface, 0
         write(IIN_database) my_ninterface, 0       ! avoids problem with maxval for empty array my_nb_interfaces
        else
-        !write(IIN_database,*) my_ninterface, maxval(my_nb_interfaces)
         write(IIN_database) my_ninterface, maxval(my_nb_interfaces)
        endif
 
@@ -961,3 +920,4 @@ module decompose_mesh_SCOTCH
 !end program pre_meshfem3D
 
 end module decompose_mesh_SCOTCH
+

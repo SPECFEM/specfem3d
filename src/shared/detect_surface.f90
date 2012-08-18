@@ -385,8 +385,6 @@
 
 ! tries to find closest face if points are inside
   do ispec = 1,nspec
-    ! checks if already assigned
-    !if( ispec_is_surface_external_mesh(ispec) ) cycle
 
     ! in case element has still unresolved points in interior,
     ! we take closest element face to cross-section plane
@@ -437,8 +435,6 @@
 
 
         ! x cross-section plane
-        !minface = minloc(midpoint_dist_x)
-        !iface = minface(1)
         i = iface_midpoint_ijk(1,iface)
         j = iface_midpoint_ijk(2,iface)
         k = iface_midpoint_ijk(3,iface)
@@ -455,8 +451,6 @@
         endif
 
         ! y cross-section plane
-        !minface = minloc(midpoint_dist_y)
-        !iface = minface(1)
         i = iface_midpoint_ijk(1,iface)
         j = iface_midpoint_ijk(2,iface)
         k = iface_midpoint_ijk(3,iface)
@@ -473,8 +467,6 @@
         endif
 
         ! z cross-section plane
-        !minface = minloc(midpoint_dist_z)
-        !iface = minface(1)
         i = iface_midpoint_ijk(1,iface)
         j = iface_midpoint_ijk(2,iface)
         k = iface_midpoint_ijk(3,iface)
@@ -772,3 +764,4 @@
   num_iglob_image_surface = count
 
   end subroutine detect_surface_PNM_GIF_image
+

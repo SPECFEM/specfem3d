@@ -98,15 +98,12 @@
     ! sets element
     ispec = ibelm_xmin(ispec2D)
 
-    !if(myrank == 0 ) print*,'xmin:',ispec2D,ispec
-
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
     do icorner=1,NGNOD2D
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_xmin(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_xmin(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_xmin(icorner,ispec2D))
-      !print*,'corner look:',icorner,xcoord(icorner),ycoord(icorner),zcoord(icorner)
     enddo
 
     ! sets face id of reference element associated with this face

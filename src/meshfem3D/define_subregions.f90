@@ -24,7 +24,6 @@
 !
 !=====================================================================
 
-
   subroutine define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi,iproc_eta,&
        isubregion,nbsubregions,subregions,nblayers,ner_layer,&
        iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
@@ -319,7 +318,5 @@
 
   end if
 
-
   end subroutine define_mesh_regions
-
 

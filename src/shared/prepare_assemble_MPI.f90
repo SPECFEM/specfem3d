@@ -24,7 +24,6 @@
 !
 !=====================================================================
 
-
   subroutine prepare_assemble_MPI (nelmnts,knods, &
                                    ibool,npoin, &
                                    ninterface, max_interface_size, &

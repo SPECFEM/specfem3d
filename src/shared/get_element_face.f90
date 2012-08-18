@@ -24,7 +24,6 @@
 !
 !=====================================================================
 
-
   subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
                               ibool,nspec,nglob, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
@@ -81,7 +80,6 @@
                   iface5_corner_ijk,iface6_corner_ijk /),all_faces_shape)
 
 ! face orientation
-  !real(kind=CUSTOM_REAL) :: face_n(3),face_ntmp(3),tmp
   integer  :: ifa,icorner,i,j,k,iglob,iloc(1)
 
 ! initializes

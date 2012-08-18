@@ -316,76 +316,6 @@
     altitude_rec(1) = loc_ele
     distmin_ele(1) = loc_distmin
 
-!    !   set distance to huge initial value
-!    distmin = HUGEVAL
-!    if(num_free_surface_faces > 0) then
-!      iglob_selected = 1
-!      ! loop only on points inside the element
-!      ! exclude edges to ensure this point is not shared with other elements
-!      imin = 2
-!      imax = NGLLX - 1
-!      jmin = 2
-!      jmax = NGLLY - 1
-!      iselected = 0
-!      jselected = 0
-!      iface_selected = 0
-!      do iface=1,num_free_surface_faces
-!        do j=jmin,jmax
-!          do i=imin,imax
-!
-!            ispec = free_surface_ispec(iface)
-!            igll = free_surface_ijk(1,(j-1)*NGLLY+i,iface)
-!            jgll = free_surface_ijk(2,(j-1)*NGLLY+i,iface)
-!            kgll = free_surface_ijk(3,(j-1)*NGLLY+i,iface)
-!            iglob = ibool(igll,jgll,kgll,ispec)
-!
-!            ! keep this point if it is closer to the receiver
-!            dist = (stutm_x(irec)-dble(xstore(iglob)))**2 + &
-!                   (stutm_y(irec)-dble(ystore(iglob)))**2
-!            if(dist < distmin) then
-!              distmin = dist
-!              iglob_selected = iglob
-!              iface_selected = iface
-!              iselected = i
-!              jselected = j
-!              altitude_rec(1) = zstore(iglob_selected)
-!            endif
-!          enddo
-!        enddo
-!      ! end of loop on all the elements on the free surface
-!      end do
-!      !  weighted mean at current point of topography elevation of the four closest nodes
-!      !  set distance to huge initial value
-!      distmin = HUGEVAL
-!      do j=jselected,jselected+1
-!        do i=iselected,iselected+1
-!          inode = 1
-!          do jadjust=0,1
-!            do iadjust= 0,1
-!              ispec = free_surface_ispec(iface_selected)
-!              igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-!              jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-!              kgll = free_surface_ijk(3,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
-!              iglob = ibool(igll,jgll,kgll,ispec)
-!
-!              elevation_node(inode) = zstore(iglob)
-!              dist_node(inode) = dsqrt((stutm_x(irec)-dble(xstore(iglob)))**2 + &
-!                                       (stutm_y(irec)-dble(ystore(iglob)))**2)
-!              inode = inode + 1
-!            end do
-!          end do
-!          dist = sum(dist_node)
-!          if(dist < distmin) then
-!            distmin = dist
-!            altitude_rec(1) = (dist_node(1)/dist)*elevation_node(1) + &
-!                              (dist_node(2)/dist)*elevation_node(2) + &
-!                              (dist_node(3)/dist)*elevation_node(3) + &
-!                              (dist_node(4)/dist)*elevation_node(4)
-!          endif
-!        end do
-!      end do
-!    end if
-
     !  MPI communications to determine the best slice
     call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
     call gather_all_dp(altitude_rec,1,elevation_all,1,NPROC)
@@ -425,7 +355,6 @@
       ! burial depth in STATIONS file given in m
       z_target(irec) = elevation(irec) - stbur(irec)
     endif
-    !if (myrank == 0) write(IOVTK,*) x_target(irec), y_target(irec), z_target(irec)
 
     ! reset distance to huge initial value
     distmin=HUGEVAL
@@ -983,13 +912,6 @@
       write(IMAIN,*) '************************************************************'
     endif
 
-    !! write the list of stations and associated epicentral distance
-    !open(unit=27,file=trim(OUTPUT_FILES)//'/output_list_stations.txt',status='unknown')
-    !do irec=1,nrec
-    !  write(27,*) station_name(irec),'.',network_name(irec),' : ',horiz_dist(irec),' km horizontal distance'
-    !enddo
-    !close(27)
-
     ! write the locations of stations, so that we can load them and write them to SU headers later
     open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
               status='unknown',action='write',iostat=ios)
@@ -1109,8 +1031,6 @@
 
   ! reads in station locations
   open(unit=IIN, file=trim(filename), status = 'old', iostat = ios)
-  !do irec = 1,nrec
-  !    read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
   do while(ios == 0)
     read(IIN,"(a256)",iostat = ios) dummystring
     if( ios /= 0 ) exit
@@ -1152,11 +1072,7 @@
         if( stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
            stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
 
-          ! w/out formating
-          ! write(IOUT,*) trim(station_name),' ',trim(network_name),' ',sngl(stlat), &
-          !              ' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
-
-          ! w/ specific format
+          ! with specific format
           write(IOUT,'(a10,1x,a10,4e18.6)') &
                             trim(station_name),trim(network_name), &
                             sngl(stlat),sngl(stlon),sngl(stele),sngl(stbur)

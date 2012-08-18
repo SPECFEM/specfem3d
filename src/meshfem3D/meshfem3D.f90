@@ -270,9 +270,6 @@
   double precision Z_DEPTH_BLOCK !,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  !logical TOPOGRAPHY,MOHO_MAP_LUPEI
-  !logical BASEMENT_MAP,HAUKSSON_REGIONAL_MODEL,HARVARD_3D_GOCAD_MODEL,IMPOSE_MINIMUM_VP_GOCAD
-
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
 
 ! Mesh files for visualization
@@ -282,7 +279,7 @@
   integer NDOUBLINGS
   integer, dimension(2) :: ner_doublings
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH !,MODEL
+  character(len=256) OUTPUT_FILES,LOCAL_PATH
 
 ! parameters deduced from parameters read from file
   integer NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA
@@ -296,13 +293,6 @@
                NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
 
   double precision min_elevation,max_elevation
-  !double precision min_elevation_all,max_elevation_all
-
-! for tapered basement map
-  !integer icorner_x,icorner_y
-  !integer iz_basement
-  !double precision x_corner,y_corner
-  !character(len=256) BASEMENT_MAP_FILE
 
 ! interfaces parameters
   logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
