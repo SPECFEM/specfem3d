@@ -66,15 +66,12 @@
   double precision :: distance_min,distance_max
   double precision :: distmin,distmax
 
-  !double precision :: equiangle_skewness_min_MPI,edge_aspect_ratio_min_MPI,diagonal_aspect_ratio_min_MPI
   double precision :: equiangle_skewness_max_MPI,edge_aspect_ratio_max_MPI,diagonal_aspect_ratio_max_MPI
   double precision :: distance_min_MPI,distance_max_MPI
-  !double precision :: distmin_MPI,distmax_MPI,skewness_AVS_DX_max_MPI,skewness_AVS_DX_max
-  ! double precision :: skewness_AVS_DX_min_MPI,skewness_AVS_DX_min
   ! for stability
   double precision :: dt_suggested,dt_suggested_max,dt_suggested_max_MPI
   double precision :: stability,stability_min,stability_max,max_CFL_stability_limit
-  double precision :: stability_max_MPI !,max_CFL_stability_limit_MPI,stability_MPI,stability_min_MPI
+  double precision :: stability_max_MPI
 
   ! For MPI maxloc reduction
   double precision, dimension(2) :: buf_maxloc_send,buf_maxloc_recv
@@ -182,16 +179,12 @@
   call max_all_dp(edge_aspect_ratio_max,edge_aspect_ratio_max_MPI)
   call max_all_dp(diagonal_aspect_ratio_max,diagonal_aspect_ratio_max_MPI)
 
-
-
   if((myrank == skewness_max_rank) .and. (myrank /= 0)) then
      tmp_ispec_max_skewness(1) = ispec_max_skewness
      call send_i_t(tmp_ispec_max_skewness,1,0)
   end if
 
-
   if(myrank == 0) then
-
 
      if(skewness_max_rank /= myrank) then
         call recv_i_t(tmp_ispec_max_skewness_MPI,1,skewness_max_rank)
@@ -221,7 +214,6 @@
   write(IMAIN,*) '*** max equiangle skewness = ',equiangle_skewness_max_MPI,' in element ',ispec_max_skewness_MPI, &
        ' of slice ',skewness_max_rank
   write(IMAIN,*) '***'
-  ! write(IMAIN,*) 'min equiangle skewness = ',equiangle_skewness_min
   write(IMAIN,*)
   write(IMAIN,*) 'max deviation angle from a right angle (90 degrees) is therefore = ',90.*equiangle_skewness_max_MPI
   write(IMAIN,*)
@@ -229,19 +221,15 @@
   write(IMAIN,*) 'or ',180. - 90.*(1. - equiangle_skewness_max_MPI),' degrees'
   write(IMAIN,*)
   write(IMAIN,*) 'max edge aspect ratio = ',edge_aspect_ratio_max_MPI
-  ! write(IMAIN,*) 'min edge aspect ratio = ',edge_aspect_ratio_min
   write(IMAIN,*)
   write(IMAIN,*) 'max diagonal aspect ratio = ',diagonal_aspect_ratio_max_MPI
-  ! write(IMAIN,*) 'min diagonal aspect ratio = ',diagonal_aspect_ratio_min
   write(IMAIN,*)
-  !write(IMAIN,*) 'max stability = ',stability_max_MPI
   write(IMAIN,*) '***'
   write(IMAIN,'(a50,f13.8)') ' *** Maximum suggested time step for simulation = ',dt_suggested_max_MPI
   write(IMAIN,*) '***'
   write(IMAIN,*) '*** max stability = ',stability_max_MPI
   write(IMAIN,*) '*** computed using VP_MAX = ',VP_MAX
   write(IMAIN,*) '***'
-  ! write(IMAIN,*) 'min stability = ',stability_min
 
   ! max stability CFL value is different in 2D and in 3D
   if(NGNOD == 8) then
@@ -266,12 +254,9 @@
   endif
   write(IMAIN,*)
 
-
-
   ! create statistics about mesh quality
   write(IMAIN,*) 'creating histogram and statistics of mesh quality'
   end if
-
 
   ! erase histogram of skewness
   classes_skewness(:) = 0
@@ -291,14 +276,12 @@
 
   enddo
 
-
   ! sum skewness results in all processes
   do iclass = 0,NCLASS-1
      call sum_all_i(classes_skewness(iclass),classes_skewnessMPI(iclass))
   end do
 
   call sum_all_i(NSPEC,NSPEC_ALL_SLICES)
-
 
   if(myrank == 0) then
   ! create histogram of skewness and save in Gnuplot file
@@ -373,7 +356,7 @@
     enddo
     write(66,*) ""
 
-    ! type: hexahedrons
+    ! type: hexahedra
     write(66,'(a,i12)') "CELL_TYPES ",nspec
     write(66,*) (12,ispec=1,nspec)
     write(66,*) ""
@@ -559,5 +542,4 @@
   diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
 
 end subroutine create_mesh_quality_data_3D
-
 

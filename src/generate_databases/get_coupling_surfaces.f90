@@ -24,7 +24,6 @@
 !
 !=====================================================================
 
-
   subroutine get_coupling_surfaces(myrank, &
                         nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
@@ -208,11 +207,6 @@
   integer,dimension(3,6),parameter :: iface_all_midpointijk = &
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
-
-  ! test vtk output
-  !integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: gll_data
-  !character(len=256):: prname_file
-
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
   if( ier /= 0 ) stop 'error allocating array tmp_normal'
@@ -387,11 +381,6 @@
   integer,dimension(3,6),parameter :: iface_all_midpointijk = &
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
-
-  ! test vtk output
-  !integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: gll_data
-  !character(len=256):: prname_file
-
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
   if( ier /= 0 ) stop 'error allocating array tmp_normal'
@@ -558,11 +547,6 @@
   integer,dimension(3,6),parameter :: iface_all_midpointijk = &
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
-
-  ! test vtk output
-  !integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: gll_data
-  !character(len=256):: prname_file
-
 ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
   if( ier /= 0 ) stop 'error allocating array tmp_normal'
@@ -623,8 +607,8 @@
                 if ( (iglob_corners_ref(1) == iglob_corners_ref_el(3)) .and. &
                   (iglob_corners_ref(3) == iglob_corners_ref_el(1)) ) then
 
-                  iface_ref_el = iface_el ![CM]: for some reason this shows a wrong orientation
-                                          ! but the calcul is ok.
+                  iface_ref_el = iface_el ![Christina Morency]: for some reason this shows a wrong orientation
+                                          ! but the calculation is ok.
                   ispec_ref_el = ispec_el
 
                   ! gets face GLL points i,j,k indices from poroelastic element face

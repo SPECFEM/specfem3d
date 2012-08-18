@@ -339,7 +339,7 @@
   use specfem_par_acoustic
   implicit none
 
-  integer :: irec,isource,ier !,ios
+  integer :: irec,isource,ier
 
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
@@ -350,14 +350,6 @@
     call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
 
-    ! get total number of stations
-    !open(unit=IIN,file=rec_filename,iostat=ios,status='old',action='read')
-    !nrec = 0
-    !do while(ios == 0)
-    !  read(IIN,"(a)",iostat=ios) dummystring
-    !  if(ios == 0) nrec = nrec + 1
-    !enddo
-    !close(IIN)
     if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
     call sync_all()
 
@@ -528,10 +520,10 @@
   real(kind=CUSTOM_REAL) :: factor_source
   real(kind=CUSTOM_REAL) :: junk
   integer :: isource,ispec
-  integer :: irec !,irec_local
+  integer :: irec
   integer :: i,j,k,iglob
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
-  character(len=3),dimension(NDIM) :: comp ! = (/ "BHE", "BHN", "BHZ" /)
+  character(len=3),dimension(NDIM) :: comp
   character(len=256) :: filename
 
   ! forward simulations
@@ -620,7 +612,7 @@
   else
     ! SIMULATION_TYPE == 2
     ! allocate dummy array (needed for subroutine calls)
-    allocate(sourcearrays(0,0,0,0,0),stat=ier)
+    allocate(sourcearrays(1,1,1,1,1),stat=ier)
     if( ier /= 0 ) stop 'error allocating dummy sourcearrays'
   endif
 
@@ -806,10 +798,6 @@
   real(kind=CUSTOM_REAL),dimension(NGNOD) :: xelm,yelm,zelm
   integer :: ia,ispec,isource,irec,ier,totalpoints
 
-  !INTEGER(kind=4) :: system_command_status
-  !integer :: ret
-  !integer,external :: system
-
   character(len=256) :: filename,filename_new,system_command,system_command1,system_command2
 
   ! determines number of points for vtk file
@@ -949,40 +937,21 @@
   "('awk ',a1,'{if(NR<5) print $0;if(NR==5)print ',a1,'POINTS',i6,' float',a1,';if(NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
-!daniel:
-! gfortran
-!      call system(trim(system_command),system_command_status)
-! ifort
-!      ret = system(trim(system_command))
-
       ! extracts source locations
-      !"('awk ',a1,'{if(NR< 6 + ',i6,') print $0}END{print}',a1,' < ',a,' > ',a)")&
       filename_new = trim(OUTPUT_FILES)//'/source.vtk'
 
       write(system_command1, &
   "('awk ',a1,'{if(NR<5) print $0;if(NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &
         "'",'"',NSOURCES,'"'
 
-      !daniel
-      !print*,'command 1:',trim(system_command1)
-
       write(system_command2, &
   "('if(NR>5 && NR <6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
         NSOURCES,'" "',"'",trim(filename),trim(filename_new)
 
-      !print*,'command 2:',trim(system_command2)
-
       system_command = trim(system_command1)//trim(system_command2)
-
-      !print*,'command:',trim(system_command)
-!daniel:
-! gfortran
-!      call system(trim(system_command),system_command_status)
-! ifort
-!      ret = system(trim(system_command))
 
     endif
   endif
 
-
   end subroutine setup_sources_receivers_VTKfile
+

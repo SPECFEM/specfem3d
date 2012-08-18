@@ -196,11 +196,6 @@
   double precision :: static_memory_size
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
-! for vtk output
-!  character(len=256) prname_file
-!  integer,dimension(:),allocatable :: itest_flag
-!  integer, dimension(:), allocatable :: elem_flag
-
 ! initializes arrays
   call sync_all()
   if( myrank == 0) then
@@ -433,21 +428,6 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
 ! local parameters
   integer :: ier
-
-! memory test
-!  logical,dimension(:),allocatable :: test_mem
-!
-! tests memory availability (including some small buffer of 10*1024 byte)
-!  allocate( test_mem(int(max_static_memory_size)+10*1024),stat=ier)
-!  if(ier /= 0) then
-!    write(IMAIN,*) 'error: try to increase the available process stack size by'
-!    write(IMAIN,*) '       ulimit -s **** '
-!    call exit_MPI(myrank,'not enough memory to allocate arrays')
-!  endif
-!  test_mem(:) = .true.
-!  deallocate( test_mem, stat=ier)
-!  if(ier /= 0) call exit_MPI(myrank,'error to allocate arrays')
-!  call sync_all()
 
   allocate( xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
   if( ier /= 0 ) stop 'error allocating array xelm etc.'

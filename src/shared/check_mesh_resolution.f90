@@ -65,12 +65,11 @@
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
   ! courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.3
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
 
   !********************************************************************************
-  !real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
 
   logical :: has_vs_zero
   real(kind=CUSTOM_REAL),dimension(1) :: tmp_val
@@ -179,7 +178,6 @@
     pmax = avg_distance / min( vpmin,vsmin ) * NPTS_PER_WAVELENGTH
     pmax_glob = max(pmax_glob,pmax)
 
-
     ! old: based on GLL distance, i.e. on maximum ratio ( gridspacing / velocity )
     !pmax = distance_max / min( vpmin,vsmin ) * NELEM_PER_WAVELENGTH
     !pmax_glob = max(pmax_glob,pmax)
@@ -279,7 +277,6 @@
     write(IMAIN,*)
     write(IMAIN,*) 'NSPEC_AB_global_min = ',NSPEC_AB_global_min
     write(IMAIN,*) 'NSPEC_AB_global_max = ',NSPEC_AB_global_max
-    !write(IMAIN,*) 'NSPEC_AB_global_mean = ',NSPEC_AB_global_sum / float(sizeprocs)
     write(IMAIN,*) 'NSPEC_AB_global_sum = ',NSPEC_AB_global_sum
     write(IMAIN,*)
     write(IMAIN,*) 'NGLOB_AB_global_min = ',NGLOB_AB_global_min
@@ -399,12 +396,11 @@
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
   ! courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.3
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
 
   !********************************************************************************
-  !real(kind=CUSTOM_REAL),parameter :: NELEM_PER_WAVELENGTH = 1.5
 
   logical :: has_vs_zero,has_vp2_zero
   real(kind=CUSTOM_REAL),dimension(1) :: tmp_val
@@ -414,7 +410,6 @@
 
   integer:: ier
   character(len=256) :: filename,prname
-
 
   ! initializations
   if( DT <= 0.0d0) then
@@ -454,7 +449,6 @@
     tmp1(:) = 0.0
     tmp2(:) = 0.0
   endif
-
 
   ! checks courant number & minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
@@ -641,7 +635,6 @@
     write(IMAIN,*)
     write(IMAIN,*) 'NSPEC_AB_global_min = ',NSPEC_AB_global_min
     write(IMAIN,*) 'NSPEC_AB_global_max = ',NSPEC_AB_global_max
-    !write(IMAIN,*) 'NSPEC_AB_global_mean = ',NSPEC_AB_global_sum / float(sizeprocs)
     write(IMAIN,*) 'NSPEC_AB_global_sum = ',NSPEC_AB_global_sum
     write(IMAIN,*)
     write(IMAIN,*) 'NGLOB_AB_global_min = ',NGLOB_AB_global_min
@@ -880,7 +873,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
@@ -941,11 +933,9 @@
 
   end subroutine get_GLL_minmaxdistance
 
-
 !
 !-------------------------------------------------------------------------------------------------
 !
-
 
   subroutine get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
@@ -1012,3 +1002,4 @@
   enddo
 
   end subroutine get_elem_minmaxsize
+

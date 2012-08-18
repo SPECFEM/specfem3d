@@ -121,14 +121,14 @@ contains
 
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
                    if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) &
-                    stop 'ERROR : too much neighbours per element, modify the mesh.'
+                    stop 'ERROR: too many neighbours per element, modify the mesh.'
 
                    adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour &
                           + xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
 
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
                    if (xadj(nodes_elmnts(l+j*nsize))>sup_neighbour) &
-                    stop 'ERROR : too much neighbours per element, modify the mesh.'
+                    stop 'ERROR: too many neighbours per element, modify the mesh.'
                 end if
              end if
           end do
@@ -149,9 +149,7 @@ contains
 
     xadj(nspec) = nb_edges
 
-
   end subroutine mesh2dual_ncommonnodes
-
 
 
   !--------------------------------------------------
@@ -184,7 +182,6 @@ contains
        glob2loc_elmnts(num_glob) = num_loc(num_part)
        num_loc(num_part) = num_loc(num_part) + 1
     end do
-
 
   end subroutine build_glob2loc_elmnts
 

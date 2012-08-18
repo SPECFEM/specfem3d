@@ -258,9 +258,12 @@
 
   end subroutine compute_jacobian_2D_face
 
+!
+!-------------------------
+!
 
-! This subroutine recompute the 3D jacobian for one element
-! based upon 125 GLL points
+! This subroutine recompute the jacobian for one element
+! based upon the GLL points
 ! Hejun Zhu, Oct 16, 2009
 
 ! input: myrank,
@@ -303,8 +306,6 @@
   double precision:: hlagrange,hlagrange_xi,hlagrange_eta
   double precision:: jacobian
   double precision:: unx,uny,unz
-
-
 
   ! test parameters which can be deleted
   double precision:: xmesh,ymesh,zmesh

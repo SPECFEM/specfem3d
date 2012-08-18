@@ -65,8 +65,6 @@ module specfem_par
 
 ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
-  !double precision :: ORIG_LAT_TOPO,ORIG_LONG_TOPO,DEGREES_PER_CELL_TOPO
-  !character(len=100) :: topo_file
   integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! absorbing boundary arrays (for all boundaries) - keeps all infos, allowing for irregular surfaces
@@ -215,16 +213,9 @@ module specfem_par
 ! maximum speed in velocity model
   real(kind=CUSTOM_REAL):: model_speed_max
 
-!!!! NL NL REGOLITH : regolith layer for asteroid
-!!$  double precision, external :: materials_ext_mesh
-!!$  logical, dimension(:), allocatable :: ispec_is_regolith
-!!$  real(kind=CUSTOM_REAL) :: weight, jacobianl
-!!!! NL NL REGOLITH
-
   ! gravity
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: minus_deriv_gravity,minus_g
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
-
 
 ! ADJOINT parameters
 
@@ -268,7 +259,6 @@ module specfem_par
              normal_x_noise,normal_y_noise,normal_z_noise, mask_noise
 
 end module specfem_par
-
 
 !=====================================================================
 
@@ -505,9 +495,6 @@ module specfem_par_poroelastic
     C_kl, M_kl, rhob_kl, rhofb_kl, phi_kl, Bb_kl, Cb_kl, Mb_kl, mufrb_kl, &
     rhobb_kl, rhofbb_kl, phib_kl, cpI_kl, cpII_kl, cs_kl, ratio_kl
 
-  ! approximate hessian
-  !real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
-
   ! absorbing stacey wavefield parts
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_absorb_fields_poroelastic,b_absorb_fieldw_poroelastic
   integer :: b_reclen_fields,b_reclen_fieldw
@@ -538,9 +525,6 @@ module specfem_par_movie
 ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
-
-!  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
-!                                dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
 
 ! shakemovies
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
@@ -584,3 +568,4 @@ module specfem_par_movie
   logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie
+
