@@ -181,6 +181,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_coupling_poroelastic_el.o \
 	$O/compute_stacey_acoustic.o \
 	$O/compute_stacey_elastic.o \
+	$O/compute_stacey_poroelastic.o \
 	$O/compute_gradient.o \
 	$O/compute_interpolated_dva.o \
 	$O/initialize_simulation.o \

@@ -496,8 +496,8 @@ module specfem_par_poroelastic
     rhobb_kl, rhofbb_kl, phib_kl, cpI_kl, cpII_kl, cs_kl, ratio_kl
 
   ! absorbing stacey wavefield parts
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_absorb_fields_poroelastic,b_absorb_fieldw_poroelastic
-  integer :: b_reclen_fields,b_reclen_fieldw
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_absorb_fields,b_absorb_fieldw
+  integer :: b_reclen_field_poro
 
   ! for assembling backward field
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_send_vector_ext_meshs

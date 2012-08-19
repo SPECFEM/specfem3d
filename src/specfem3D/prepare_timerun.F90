@@ -701,7 +701,6 @@
       if(FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
 
     endif
-  endif
 
     ! poroelastic domain
     if( POROELASTIC_SIMULATION ) then
@@ -728,6 +727,7 @@
       if(FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
 
     endif
+  endif
 
 ! initialize Moho boundary index
   if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
@@ -850,6 +850,66 @@
 
         endif
       endif
+
+      ! poroelastic domains
+      if( POROELASTIC_SIMULATION) then
+        ! allocates wavefields for solid and fluid phases
+        allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
+
+        ! size of single record
+        b_reclen_field_poro = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
+
+        ! check integer size limit: size of b_reclen_field must fit onto an
+        ! 4-byte integer
+        if( num_abs_boundary_faces > 2147483647 / (CUSTOM_REAL * NDIM * NGLLSQUARE) ) then
+          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
+          print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
+          print*,'bit size fortran: ',bit_size(b_reclen_field_poro)
+          call exit_MPI(myrank,"error b_reclen_field_poro integer limit")
+        endif
+
+        ! total file size
+        filesize = b_reclen_field_poro
+        filesize = filesize*NSTEP
+
+        if (SIMULATION_TYPE == 3) then
+          ! opens existing files
+
+          ! uses fortran routines for reading
+          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='old',&
+          !      action='read',form='unformatted',access='direct', &
+          !      recl=b_reclen_field+2*4,iostat=ier )
+          !if( ier /= 0 ) call exit_mpi(myrank,'error opening
+          !proc***_absorb_field.bin file')
+          ! uses c routines for faster reading
+          call open_file_abs_r(0,trim(prname)//'absorb_fields.bin', &
+                              len_trim(trim(prname)//'absorb_fields.bin'), &
+                              filesize)
+          call open_file_abs_r(0,trim(prname)//'absorb_fieldw.bin', &
+                              len_trim(trim(prname)//'absorb_fieldw.bin'), &
+                              filesize)
+
+        else
+          ! opens new file
+          ! uses fortran routines for writing
+          !open(unit=IOABS,file=trim(prname)//'absorb_field.bin',status='unknown',&
+          !      form='unformatted',access='direct',&
+          !      recl=b_reclen_field+2*4,iostat=ier )
+          !if( ier /= 0 ) call exit_mpi(myrank,'error opening
+          !proc***_absorb_field.bin file')
+          ! uses c routines for faster writing (file index 0 for acoutic domain
+          ! file)
+          call open_file_abs_w(0,trim(prname)//'absorb_fields.bin', &
+                              len_trim(trim(prname)//'absorb_fields.bin'), &
+                              filesize)
+          call open_file_abs_w(0,trim(prname)//'absorb_fieldw.bin', &
+                              len_trim(trim(prname)//'absorb_fieldw.bin'), &
+                              filesize)
+
+        endif
+      endif
     else
       ! needs dummy array
       b_num_abs_boundary_faces = 1
@@ -861,6 +921,12 @@
       if( ACOUSTIC_SIMULATION ) then
         allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
         if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
+      endif
+
+      if( POROELASTIC_SIMULATION ) then
+        allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if( ier /= 0 ) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
       endif
     endif
   else ! ABSORBING_CONDITIONS
@@ -874,6 +940,12 @@
     if( ACOUSTIC_SIMULATION ) then
       allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
       if( ier /= 0 ) stop 'error allocating array b_absorb_potential'
+    endif
+
+    if( POROELASTIC_SIMULATION ) then
+      allocate(b_absorb_fields(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      allocate(b_absorb_fieldw(NDIM,NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
     endif
   endif
 

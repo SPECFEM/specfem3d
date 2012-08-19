@@ -38,7 +38,7 @@
   real(kind=CUSTOM_REAL) :: rhol,mul,kappal
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: weights_kernel
   real(kind=CUSTOM_REAL) :: rhol_s,rhol_f,rhol_bar,phil,tortl
-  real(kind=CUSTOM_REAL) :: kappal_s ! mul_s
+  real(kind=CUSTOM_REAL) :: kappal_s 
   real(kind=CUSTOM_REAL) :: kappal_f,etal_f
   real(kind=CUSTOM_REAL) :: mul_fr,kappal_fr
   real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz
@@ -147,6 +147,7 @@
       D_biot = kappal_s*(1._CUSTOM_REAL + phil*(kappal_s/kappal_f - 1._CUSTOM_REAL))
       H_biot = (kappal_s - kappal_fr)*(kappal_s - kappal_fr)/(D_biot - kappal_fr) + &
                 kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
+      B_biot = H_biot - 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
       C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
       M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
 ! Approximated velocities (no viscous dissipation)
@@ -175,9 +176,9 @@
             !at the moment suitable for constant permeability
             eta_kl(i,j,k,ispec) = - etal_f/permlxx * eta_kl(i,j,k,ispec)
             mufr_kl(i,j,k,ispec) = - 2._CUSTOM_REAL * mul_fr * mufr_kl(i,j,k,ispec)
-            B_kl(i,j,k,ispec) = - B_kl(i,j,k,ispec)
-            C_kl(i,j,k,ispec) = - C_kl(i,j,k,ispec)
-            M_kl(i,j,k,ispec) = - M_kl(i,j,k,ispec)
+            B_kl(i,j,k,ispec) = - B_biot * B_kl(i,j,k,ispec)
+            C_kl(i,j,k,ispec) = - C_biot * C_kl(i,j,k,ispec)
+            M_kl(i,j,k,ispec) = - M_biot * M_kl(i,j,k,ispec)
 
             ! density kernels
             rhob_kl(i,j,k,ispec) = rhot_kl(i,j,k,ispec) + B_kl(i,j,k,ispec) + mufr_kl(i,j,k,ispec)
@@ -382,6 +383,101 @@
     write(27) alpha_ac_kl
     close(27)
 
+  endif
+
+  ! save kernels to binary files
+  if( POROELASTIC_SIMULATION ) then
+            ! primary kernels
+    open(unit=27,file=prname(1:len_trim(prname))//'rhot_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhot_primeporo_kernel.bin'
+    write(27) rhot_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'rhof_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhof_primeporo_kernel.bin'
+    write(27) rhof_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'sm_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file sm_primeporo_kernel.bin'
+    write(27) sm_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'eta_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file eta_primeporo_kernel.bin'
+    write(27) eta_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'mufr_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file mufr_primeporo_kernel.bin'
+    write(27) mufr_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'B_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file B_primeporo_kernel.bin'
+    write(27) B_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'C_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file C_primeporo_kernel.bin'
+    write(27) C_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'M_primeporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file M_primeporo_kernel.bin'
+    write(27) M_kl
+    close(27)
+            ! density kernels
+    open(unit=27,file=prname(1:len_trim(prname))//'rhob_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhob_densityporo_kernel.bin'
+    write(27) rhob_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'rhofb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhofb_densityporo_kernel.bin'
+    write(27) rhofb_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'phi_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file phi_densityporo_kernel.bin'
+    write(27) phi_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'mufrb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file mufrb_densityporo_kernel.bin'
+    write(27) mufrb_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'Bb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file Bb_densityporo_kernel.bin'
+    write(27) Bb_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'Cb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file Cb_densityporo_kernel.bin'
+    write(27) Cb_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'Mb_densityporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file Mb_densityporo_kernel.bin'
+    write(27) Mb_kl
+    close(27)
+            ! wavespeed kernels
+    open(unit=27,file=prname(1:len_trim(prname))//'rhobb_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhobb_waveporo_kernel.bin'
+    write(27) rhobb_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'rhofbb_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file rhofbb_waveporo_kernel.bin'
+    write(27) rhofbb_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'phib_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file phib_waveporo_kernel.bin'
+    write(27) phib_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'cs_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file cs_waveporo_kernel.bin'
+    write(27) cs_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'cpI_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file cpI_waveporo_kernel.bin'
+    write(27) cpI_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'cpII_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file cpII_waveporo_kernel.bin'
+    write(27) cpII_kl
+    close(27)
+    open(unit=27,file=prname(1:len_trim(prname))//'ratio_waveporo_kernel.bin',status='unknown',form='unformatted',iostat=ier)
+    if( ier /= 0 ) stop 'error opening file ratio_waveporo_kernel.bin'
+    write(27) ratio_kl
+    close(27)
   endif
 
   ! save weights for volume integration, in order to benchmark the kernels with analytical expressions

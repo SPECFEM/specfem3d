@@ -241,9 +241,11 @@
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
- stop 'adjoint poroelastic simulation not implemented yet'
 
-! add adjoint source following elastic block by block consideration
+    ! adds adjoint source in this partitions
+    if( nadj_rec_local > 0 ) then
+
+    ! add adjoint source following elastic block by block consideration
     ! read in adjoint sources block by block (for memory consideration)
     ! e.g., in exploration experiments, both the number of receivers (nrec) and
     ! the number of time steps (NSTEP) are huge,
@@ -301,6 +303,9 @@
         if (myrank == islice_selected_rec(irec)) then
           irec_local = irec_local + 1
 
+              ispec = ispec_selected_rec(irec)
+              if( ispec_is_poroelastic(ispec) ) then
+
           ! checks if element is in phase_is_inner run
           if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
 
@@ -309,7 +314,6 @@
               do j = 1,NGLLY
                 do i = 1,NGLLX
                   iglob = ibool(i,j,k,ispec_selected_rec(irec))
-                        iglob = ibool(i,j,k,ispec)
               ! get poroelastic parameters of current local GLL
               phil = phistore(i,j,k,ispec_selected_rec(irec))
               rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
@@ -333,11 +337,12 @@
             enddo
 
           endif ! phase_is_inner
+              endif ! ispec_is_poroelastic
         endif
       enddo ! nrec
 
     endif ! it
-
+    endif ! nadj_rec_local
   endif !adjoint : if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
 
 ! note:  b_displ() is read in after Newmark time scheme, thus
