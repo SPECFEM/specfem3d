@@ -224,20 +224,18 @@
       else
         b_Usolidnorm = maxval(sqrt(b_displ(1,:)**2 + b_displ(2,:)**2 + b_displ(3,:)**2))
       endif
-    else
-      if( ACOUSTIC_SIMULATION ) then
+    endif
+    if( ACOUSTIC_SIMULATION ) then
         ! way 2
         if(GPU_MODE) then
           call get_norm_acoustic_from_device(b_Usolidnorm,Mesh_pointer,3)
         else
           b_Usolidnorm = maxval(abs(b_potential_dot_dot_acoustic(:)))
         endif
-      endif
-    else
-      if( POROELASTIC_SIMULATION ) then
+    endif
+    if( POROELASTIC_SIMULATION ) then
         b_Usolidnorm = maxval(sqrt(b_displs_poroelastic(1,:)**2 + b_displs_poroelastic(2,:)**2 + &
                                  b_displs_poroelastic(3,:)**2))
-      endif
     endif
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
