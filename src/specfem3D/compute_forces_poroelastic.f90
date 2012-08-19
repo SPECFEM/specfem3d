@@ -49,8 +49,6 @@ subroutine compute_forces_poroelastic()
       phase_is_inner = .true.
     endif
 
-!Note: Contrary to the elastic & acoustic case, the absorbing implementation is within compute_forces
-!due to the number of material properties which were needed
 
     if( .NOT. GPU_MODE ) then
 ! solid phase
@@ -87,10 +85,8 @@ subroutine compute_forces_poroelastic()
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
 
-
     ! adjoint simulations: backward/reconstructed wavefield
     if( SIMULATION_TYPE == 3 ) then
-stop 'adjoint poroelastic simulation not fully implemented yet'
 ! solid phase
 
     call compute_forces_solid( iphase, &
@@ -130,6 +126,20 @@ stop 'adjoint poroelastic simulation not fully implemented yet'
       ! on GPU
 stop 'GPU for poroelastic simulation not implemented'
     endif ! GPU_MODE
+
+! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
+    if(ABSORBING_CONDITIONS) &
+      call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                        abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces, &
+                        velocs_poroelastic,velocw_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+                        rhoarraystore,phistore,tortstore, &
+                        ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
+                        NSTEP,it,NGLOB_ADJOINT,b_accels_poroelastic,b_accelw_poroelastic, &
+                        b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
+                        b_absorb_fieldw)
 
 ! acoustic coupling
     if( ACOUSTIC_SIMULATION ) then
@@ -251,14 +261,13 @@ stop 'GPU for poroelastic simulation not implemented'
                         b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
       endif !adjoint
 
-    endif
-
     !! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
     !! DK DK May 2009: has a different number of spectral elements and therefore
     !! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
     !! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
     !! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
 
+    endif
   enddo
 
 ! solid phase
@@ -317,8 +326,6 @@ stop 'GPU for poroelastic simulation not implemented'
 ! fluid phase
   if (SIMULATION_TYPE == 3) b_velocw_poroelastic(:,:) = b_velocw_poroelastic(:,:) + &
                                b_deltatover2*b_accelw_poroelastic(:,:)
-
-
 
 ! elastic coupling
     if( ELASTIC_SIMULATION ) &
