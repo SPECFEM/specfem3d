@@ -38,7 +38,7 @@
   integer :: ispec,nspec,nglob,iface_id
 
 ! face corner locations
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
 
 ! index array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -47,7 +47,7 @@
   real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
 
 ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord_face,ycoord_face,zcoord_face
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord_face,ycoord_face,zcoord_face
   real(kind=CUSTOM_REAL) :: midpoint_faces(NDIM,6),midpoint(NDIM),midpoint_distances(6)
 
 ! corners indices of reference cube faces
@@ -87,7 +87,7 @@
 
 ! gets face midpoint by its corners
   midpoint(:) = 0.0
-  do icorner=1,NGNOD2D
+  do icorner=1,NGNOD2D_FOUR_CORNERS
     midpoint(1) = midpoint(1) + xcoord(icorner)
     midpoint(2) = midpoint(2) + ycoord(icorner)
     midpoint(3) = midpoint(3) + zcoord(icorner)
@@ -97,12 +97,12 @@
 ! determines element face by minimum distance of midpoints
   midpoint_faces(:,:) = 0.0
   do ifa=1,6
+
     ! face corners
-    do icorner = 1,NGNOD2D
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       i = iface_all_corner_ijk(1,icorner,ifa)
       j = iface_all_corner_ijk(2,icorner,ifa)
       k = iface_all_corner_ijk(3,icorner,ifa)
-      !print*,'corner:',i,j,k,ispec
 
       ! coordinates
       iglob = ibool(i,j,k,ispec)
@@ -115,6 +115,7 @@
       midpoint_faces(2,ifa) =  midpoint_faces(2,ifa) + ycoord_face(icorner)
       midpoint_faces(3,ifa) =  midpoint_faces(3,ifa) + zcoord_face(icorner)
     enddo
+
     midpoint_faces(:,ifa) = midpoint_faces(:,ifa) / 4.0
 
     ! distance
@@ -134,7 +135,7 @@
     print*,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
           (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2
     ! corner locations
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       i = iface_all_corner_ijk(1,icorner,iloc(1))
       j = iface_all_corner_ijk(2,icorner,iloc(1))
       k = iface_all_corner_ijk(3,icorner,iloc(1))
@@ -287,7 +288,7 @@ end subroutine get_element_face_gll_indices
   integer :: ispec,iface,nspec,nglob
 
 ! face corner locations
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
 
 ! index array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -382,7 +383,7 @@ end subroutine get_element_face_gll_indices
   integer :: ispec,iface,nspec,nglob
 
 ! face corner locations
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
 
 ! index array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -479,22 +480,22 @@ end subroutine get_element_face_gll_indices
   integer,intent(in) :: ispec,iface_ref,nspec,nglob
 
   ! face corner locations
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D),intent(out) :: xcoord,ycoord,zcoord
-  integer,dimension(NGNOD2D),intent(out):: iglob_corners_ref
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS),intent(out) :: xcoord,ycoord,zcoord
+  integer,dimension(NGNOD2D_FOUR_CORNERS),intent(out):: iglob_corners_ref
 
   ! index array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   ! global point locations
   real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
 
-  ! assumes NGNOD2D == 4
+  ! assumes NGNOD2D_FOUR_CORNERS == 4
   integer,dimension(3,4,6) :: iface_all_corner_ijk
 
   ! local parameters
   integer :: icorner,i,j,k
 
   ! loops over corners
-  do icorner = 1,NGNOD2D
+  do icorner = 1,NGNOD2D_FOUR_CORNERS
     i = iface_all_corner_ijk(1,icorner,iface_ref)
     j = iface_all_corner_ijk(2,icorner,iface_ref)
     k = iface_all_corner_ijk(3,icorner,iface_ref)

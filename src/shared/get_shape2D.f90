@@ -46,13 +46,17 @@
 ! location of the nodes of the 2D quadrilateral elements
   double precision xi,eta
   double precision xi_map,eta_map
+  double precision l1xi,l2xi,l3xi,l1eta,l2eta,l3eta
+  double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta
 
 ! for checking the 2D shape functions
   double precision sumshape,sumdershapexi,sumdershapeeta
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes')
+  if(NGNOD /= 8 .and. NGNOD /= 27) call exit_MPI(myrank,'elements should have 8 or 27 control nodes')
+  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
+
+  if(NGNOD2D == 4) then
 
 ! generate the 2D shape functions and their derivatives (4 nodes)
   do i=1,NGLLA
@@ -87,6 +91,79 @@
 
     enddo
   enddo
+
+  else
+
+! generate the 2D shape functions and their derivatives (9 nodes)
+  do i=1,NGLLA
+
+  xi=xigll(i)
+
+  l1xi=HALF*xi*(xi-ONE)
+  l2xi=ONE-xi**2
+  l3xi=HALF*xi*(xi+ONE)
+
+  l1pxi=xi-HALF
+  l2pxi=-TWO*xi
+  l3pxi=xi+HALF
+
+  do j=1,NGLLB
+
+    eta=yigll(j)
+
+    l1eta=HALF*eta*(eta-ONE)
+    l2eta=ONE-eta**2
+    l3eta=HALF*eta*(eta+ONE)
+
+    l1peta=eta-HALF
+    l2peta=-TWO*eta
+    l3peta=eta+HALF
+
+!   corner nodes
+
+    shape2D(1,i,j)=l1xi*l1eta
+    shape2D(2,i,j)=l3xi*l1eta
+    shape2D(3,i,j)=l3xi*l3eta
+    shape2D(4,i,j)=l1xi*l3eta
+
+    dershape2D(1,1,i,j)=l1pxi*l1eta
+    dershape2D(1,2,i,j)=l3pxi*l1eta
+    dershape2D(1,3,i,j)=l3pxi*l3eta
+    dershape2D(1,4,i,j)=l1pxi*l3eta
+
+    dershape2D(2,1,i,j)=l1xi*l1peta
+    dershape2D(2,2,i,j)=l3xi*l1peta
+    dershape2D(2,3,i,j)=l3xi*l3peta
+    dershape2D(2,4,i,j)=l1xi*l3peta
+
+!   midside nodes
+
+    shape2D(5,i,j)=l2xi*l1eta
+    shape2D(6,i,j)=l3xi*l2eta
+    shape2D(7,i,j)=l2xi*l3eta
+    shape2D(8,i,j)=l1xi*l2eta
+
+    dershape2D(1,5,i,j)=l2pxi*l1eta
+    dershape2D(1,6,i,j)=l3pxi*l2eta
+    dershape2D(1,7,i,j)=l2pxi*l3eta
+    dershape2D(1,8,i,j)=l1pxi*l2eta
+
+    dershape2D(2,5,i,j)=l2xi*l1peta
+    dershape2D(2,6,i,j)=l3xi*l2peta
+    dershape2D(2,7,i,j)=l2xi*l3peta
+    dershape2D(2,8,i,j)=l1xi*l2peta
+
+!   center node
+
+    shape2D(9,i,j)=l2xi*l2eta
+
+    dershape2D(1,9,i,j)=l2pxi*l2eta
+    dershape2D(2,9,i,j)=l2xi*l2peta
+
+    enddo
+  enddo
+
+  endif
 
 ! check the 2D shape functions
   do i=1,NGLLA

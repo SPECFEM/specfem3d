@@ -157,7 +157,7 @@
 
 ! 3D shape functions for given, single xi/eta/gamma location
 
-  subroutine get_shape3D_single(myrank,shape3D,xi,eta,gamma)
+  subroutine eval_shape3D_single(myrank,shape3D,xi,eta,gamma)
 
   implicit none
 
@@ -210,13 +210,13 @@
   ! sum of derivative of shape functions should be zero
   if(abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error single shape functions')
 
-  end subroutine get_shape3D_single
+  end subroutine eval_shape3D_single
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+  subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
                         ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
   implicit none
@@ -265,5 +265,5 @@
   yelm(8)=ystore(ibool(1,NGLLY,NGLLZ,ispec))
   zelm(8)=zstore(ibool(1,NGLLY,NGLLZ,ispec))
 
-  end subroutine get_shape3D_element_corners
+  end subroutine eval_shape3D_element_corners
 
