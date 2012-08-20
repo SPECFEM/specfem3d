@@ -171,7 +171,7 @@
     npointot,myrank,LOCAL_PATH, &
     nnodes_ext_mesh,nelmnts_ext_mesh, &
     nodes_coords_ext_mesh, elmnts_ext_mesh, &
-    max_static_memory_size, mat_ext_mesh, materials_ext_mesh, &
+    max_memory_size, mat_ext_mesh, materials_ext_mesh, &
     nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
     num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
     my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
@@ -192,8 +192,8 @@
   implicit none
 
 ! local parameters
-! static memory size needed by the solver
-  double precision :: static_memory_size
+! memory size needed by the solver
+  double precision :: memory_size
   real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
 
 ! initializes arrays
@@ -339,11 +339,11 @@
     call crm_save_moho()
   endif
 
-! computes the approximate amount of static memory needed to run the solver
+! computes the approximate amount of memory needed to run the solver
   call sync_all()
   call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
-                  OCEANS,static_memory_size)
-  call max_all_dp(static_memory_size, max_static_memory_size)
+                  OCEANS,memory_size)
+  call max_all_dp(memory_size, max_memory_size)
 
 ! checks the mesh, stability and resolved period
   call sync_all()

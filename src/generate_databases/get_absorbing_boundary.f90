@@ -73,19 +73,9 @@
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   integer:: ijk_face(3,NGLLX,NGLLY)
 
-  ! corner locations for faces
-  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
-
   ! face corner locations
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
-  integer  :: ispec,ispec2D,icorner,ier,iabs,iface,igll,i,j,igllfree,ifree
-
-! allocate temporary flag array
-  allocate(iboun(6,nspec), &
-          xcoord_iboun(NGNOD2D,6,nspec), &
-          ycoord_iboun(NGNOD2D,6,nspec), &
-          zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
-  if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
+  integer  :: ispec,ispec2D,icorner,iabs,iface,igll,i,j,igllfree,ifree
 
 ! sets flag in array iboun for elements with an absorbing boundary faces
   iboun(:,:) = .false.
@@ -100,7 +90,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_xmin(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_xmin(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_xmin(icorner,ispec2D))
@@ -159,7 +149,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_xmax(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_xmax(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_xmax(icorner,ispec2D))
@@ -217,7 +207,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_ymin(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_ymin(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_ymin(icorner,ispec2D))
@@ -275,7 +265,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_ymax(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_ymax(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_ymax(icorner,ispec2D))
@@ -333,7 +323,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_bottom(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_bottom(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_bottom(icorner,ispec2D))
@@ -393,7 +383,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D
+    do icorner=1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_top(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_top(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_top(icorner,ispec2D))

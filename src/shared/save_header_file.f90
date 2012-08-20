@@ -28,7 +28,7 @@
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
              ATTENUATION,ANISOTROPY,NSTEP,DT, &
-             SIMULATION_TYPE,static_memory_size,nfaces_surface_glob_ext_mesh)
+             SIMULATION_TYPE,memory_size,nfaces_surface_glob_ext_mesh)
 
   implicit none
 
@@ -40,7 +40,7 @@
 
   double precision DT
 
-  double precision :: static_memory_size
+  double precision :: memory_size
 
   character(len=256) HEADER_FILE
 
@@ -110,12 +110,10 @@
   write(IOUT,*) '! approximate least memory needed by the solver:'
   write(IOUT,*) '! ----------------------------------------------'
   write(IOUT,*) '!'
-  write(IOUT,*) '! size of static arrays for the biggest slice = ',static_memory_size/1048576.d0,' MB'
-  write(IOUT,*) '!                                             = ',static_memory_size/1073741824.d0,' GB'
+  write(IOUT,*) '! size of arrays for the largest slice = ',memory_size/1048576.d0,' MB'
+  write(IOUT,*) '!                                      = ',memory_size/1073741824.d0,' GB'
   write(IOUT,*) '!'
-  write(IOUT,*) '!   (should be below to 80% of 1.5 GB = 1.2 GB on pangu'
-  write(IOUT,*) '!    at Caltech, and below and typically equal to 85% of 2 GB = 1.7 GB'
-  write(IOUT,*) '!    on Marenostrum in Barcelona)'
+  write(IOUT,*) '!   (should be below 90% or so of the amount of memory available per processor core'
   write(IOUT,*) '!   (if significantly more, the job will not run by lack of memory)'
   write(IOUT,*) '!   (if significantly less, you waste a significant amount of memory)'
   write(IOUT,*) '!'
