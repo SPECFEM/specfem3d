@@ -131,9 +131,9 @@
         do ipoin = 1, 4
           iglob = faces_surface_ext_mesh(ipoin,ispec2D)
           ! x,y,z coordinates
-          store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
-          store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = zstore(iglob)
+          store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = xstore(iglob)
+          store_val_y_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = ystore(iglob)
+          store_val_z_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = zstore(iglob)
         enddo
       endif
     enddo
@@ -195,22 +195,22 @@
 
       enddo
     else
-      ! low-resolution: only corner points outputted
+      ! low-resolution: only corner points are output
       do ipoin = 1, 4
         iglob = faces_surface_ext_mesh(ipoin,ispec2D)
         ! saves norm of displacement,velocity and acceleration vector
         if( ispec_is_elastic(ispec) ) then
           ! norm of displacement
-          store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
-                max(store_val_ux_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
+          store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
+                max(store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
                 sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2))
           ! norm of velocity
-          store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
-                max(store_val_uy_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
+          store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
+                max(store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
                 sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
           ! norm of acceleration
-          store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = &
-                max(store_val_uz_external_mesh(NGNOD2D*(ispec2D-1)+ipoin), &
+          store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
+                max(store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
                 sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
         endif
 
@@ -219,7 +219,7 @@
           ! sets velocity vector with maximum norm of wavefield values
           call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
                                   displ_element,veloc_element,accel_element, &
-                                  NGNOD2D)
+                                  NGNOD2D_FOUR_CORNERS)
         endif
       enddo
     endif
@@ -318,20 +318,20 @@
           store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
             max(store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin), &
                 sqrt(displ_element(1,i,j,k)**2 &
-                    + displ_element(2,i,j,k)**2 &
-                    + displ_element(3,i,j,k)**2))
+                   + displ_element(2,i,j,k)**2 &
+                   + displ_element(3,i,j,k)**2))
           ! norm of velocity
           store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
             max(store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin), &
                 sqrt(veloc_element(1,i,j,k)**2 &
-                    + veloc_element(2,i,j,k)**2 &
-                    + veloc_element(3,i,j,k)**2))
+                   + veloc_element(2,i,j,k)**2 &
+                   + veloc_element(3,i,j,k)**2))
           ! norm of acceleration
           store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
             max(store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin), &
                 sqrt(accel_element(1,i,j,k)**2 &
-                    + accel_element(2,i,j,k)**2 &
-                    + accel_element(3,i,j,k)**2))
+                   + accel_element(2,i,j,k)**2 &
+                   + accel_element(3,i,j,k)**2))
           ! not really needed, but could be used to check...
           is_done = .true.
           return
@@ -377,9 +377,9 @@
         do ipoin = 1, 4
           iglob = faces_surface_ext_mesh(ipoin,ispec2D)
           ! x,y,z coordinates
-          store_val_x_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = xstore(iglob)
-          store_val_y_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGNOD2D*(ispec2D-1)+ipoin) = zstore(iglob)
+          store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = xstore(iglob)
+          store_val_y_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = ystore(iglob)
+          store_val_z_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = zstore(iglob)
         enddo
       endif
     enddo
@@ -423,7 +423,7 @@
         ! puts displ/velocity values into storage array
         call wmo_get_vel_vector(ispec,ispec2D,ipoin,iglob, &
                                 val_element, &
-                                NGNOD2D)
+                                NGNOD2D_FOUR_CORNERS)
       enddo
     endif
   enddo
@@ -603,7 +603,7 @@
         jmax = maxval( free_surface_ijk(2,:,iface) )
         kmin = minval( free_surface_ijk(3,:,iface) )
         kmax = maxval( free_surface_ijk(3,:,iface) )
-        do iloc = 1, NGNOD2D
+        do iloc = 1, NGNOD2D_FOUR_CORNERS
           ipoin = ipoin + 1
           ! corner points
           if( imin == imax ) then
@@ -669,7 +669,7 @@
       jmax = maxval( free_surface_ijk(2,:,iface) )
       kmin = minval( free_surface_ijk(3,:,iface) )
       kmax = maxval( free_surface_ijk(3,:,iface) )
-      do iloc = 1, NGNOD2D
+      do iloc = 1, NGNOD2D_FOUR_CORNERS
         ipoin = ipoin + 1
         ! corner points
         if( imin == imax ) then
@@ -845,7 +845,7 @@
       jmax = maxval( free_surface_ijk(2,:,iface) )
       kmin = minval( free_surface_ijk(3,:,iface) )
       kmax = maxval( free_surface_ijk(3,:,iface) )
-      do iloc = 1, NGNOD2D
+      do iloc = 1, NGNOD2D_FOUR_CORNERS
         ipoin = ipoin + 1
         ! corner points
         if( imin == imax ) then

@@ -960,8 +960,8 @@
 
   ! corners indices of reference cube faces
   ! shapes of arrays below
-  integer,dimension(2),parameter :: corner_shape = (/3,NGNOD/)
-  integer,dimension(3,NGNOD),parameter :: corner_ijk = &
+  integer,dimension(2),parameter :: corner_shape = (/3,NGNOD_EIGHT_CORNERS/)
+  integer,dimension(3,NGNOD_EIGHT_CORNERS),parameter :: corner_ijk = &
     reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ, &
       NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),corner_shape)
 
@@ -970,7 +970,7 @@
   elemsize_max = -HUGEVAL
 
   ! loops over corners
-  do icorner=1,NGNOD
+  do icorner=1,NGNOD_EIGHT_CORNERS
     i = corner_ijk(1,icorner)
     j = corner_ijk(2,icorner)
     k = corner_ijk(3,icorner)
@@ -981,7 +981,7 @@
     z0 = zstore(iglob_a)
 
     ! loops over all other corners
-    do jcorner = icorner+1,NGNOD
+    do jcorner = icorner+1,NGNOD_EIGHT_CORNERS
       i = corner_ijk(1,jcorner)
       j = corner_ijk(2,jcorner)
       k = corner_ijk(3,jcorner)

@@ -45,9 +45,9 @@
   integer NER_BOTTOM_MOHO,NER_MOHO_16,NER_16_BASEMENT,NER_BASEMENT_SEDIM
 
 ! topology of the elements
-  integer iaddx(NGNOD)
-  integer iaddy(NGNOD)
-  integer iaddz(NGNOD)
+  integer iaddx(NGNOD_EIGHT_CORNERS)
+  integer iaddy(NGNOD_EIGHT_CORNERS)
+  integer iaddz(NGNOD_EIGHT_CORNERS)
 
 ! **************
 
