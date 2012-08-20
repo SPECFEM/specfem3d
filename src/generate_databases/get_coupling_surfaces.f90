@@ -173,7 +173,7 @@
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   real(kind=CUSTOM_REAL),dimension(:,:,:),allocatable :: tmp_normal
@@ -182,7 +182,7 @@
   integer,dimension(:,:,:),allocatable :: tmp_ijk
   integer,dimension(:),allocatable :: tmp_ispec
 
-  integer,dimension(NGNOD2D) :: iglob_corners_ref
+  integer,dimension(NGNOD2D_FOUR_CORNERS) :: iglob_corners_ref
   integer :: ispec,i,j,igll,ier
   integer :: inum,iface_ref
 
@@ -347,7 +347,7 @@
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   real(kind=CUSTOM_REAL),dimension(:,:,:),allocatable :: tmp_normal
@@ -356,7 +356,7 @@
   integer,dimension(:,:,:),allocatable :: tmp_ijk
   integer,dimension(:),allocatable :: tmp_ispec
 
-  integer,dimension(NGNOD2D) :: iglob_corners_ref
+  integer,dimension(NGNOD2D_FOUR_CORNERS) :: iglob_corners_ref
   integer :: ispec,i,j,igll,ier
   integer :: inum,iface_ref
 
@@ -512,7 +512,7 @@
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   real(kind=CUSTOM_REAL),dimension(:,:,:),allocatable :: tmp_normal
@@ -521,7 +521,7 @@
   integer,dimension(:,:,:),allocatable :: tmp_ijk,tmp_ijk_el
   integer,dimension(:),allocatable :: tmp_ispec,tmp_ispec_el
 
-  integer,dimension(NGNOD2D) :: iglob_corners_ref,iglob_corners_ref_el
+  integer,dimension(NGNOD2D_FOUR_CORNERS) :: iglob_corners_ref,iglob_corners_ref_el
   integer :: ispec,i,j,k,igll,ier
   integer :: ispec_el,ispec_ref_el
   integer :: inum,iface_ref,iface_ref_el,iface_el,icorner
@@ -596,7 +596,7 @@
             if(ispec_is_elastic(ispec_el))then
               do iface_el=6,1,-1
                 ! takes indices of corners of reference face
-                do icorner = 1,NGNOD2D
+                do icorner = 1,NGNOD2D_FOUR_CORNERS
                   i = iface_all_corner_ijk(1,icorner,iface_el)
                   j = iface_all_corner_ijk(2,icorner,iface_el)
                   k = iface_all_corner_ijk(3,icorner,iface_el)

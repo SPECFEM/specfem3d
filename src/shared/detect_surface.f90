@@ -260,8 +260,8 @@
   real(kind=CUSTOM_REAL),dimension(6) :: midpoint_faces_x,midpoint_faces_y, &
                                          midpoint_faces_z
   real(kind=CUSTOM_REAL),dimension(6) :: midpoint_dist_x,midpoint_dist_y,midpoint_dist_z
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord_face,ycoord_face,zcoord_face
-  real(kind=CUSTOM_REAL) :: mindist,normal(NDIM)
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord_face,ycoord_face,zcoord_face
+  real(kind=CUSTOM_REAL) :: min_dist,normal(NDIM)
   integer, dimension(:), allocatable :: valence_external_mesh
 
   integer :: ispec,i,j,k,iglob,ier,count
@@ -293,10 +293,10 @@
   if( ier /= 0 ) stop 'error allocate valence array'
 
 ! an estimation of the minimum distance between global points (for an element width)
-  mindist = minval( (xstore(ibool(1,3,3,:)) - xstore(ibool(NGLLX,3,3,:)))**2 &
+  min_dist = minval( (xstore(ibool(1,3,3,:)) - xstore(ibool(NGLLX,3,3,:)))**2 &
                   + (ystore(ibool(1,3,3,:)) - ystore(ibool(NGLLX,3,3,:)))**2 &
                   + (zstore(ibool(1,3,3,:)) - zstore(ibool(NGLLX,3,3,:)))**2 )
-  mindist = sqrt(mindist)
+  min_dist = sqrt(min_dist)
 
 ! initialize surface indices
   ispec_is_surface_external_mesh(:) = .false.
@@ -312,19 +312,19 @@
           iglob = ibool(i,j,k,ispec)
 
           ! x cross-section
-          if( abs( xstore(iglob) - x_section ) < 0.2*mindist ) then
+          if( abs( xstore(iglob) - x_section ) < 0.2*min_dist ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
           endif
 
           ! y cross-section
-          if( abs( ystore(iglob) - y_section ) < 0.2*mindist ) then
+          if( abs( ystore(iglob) - y_section ) < 0.2*min_dist ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
           endif
 
           ! z cross-section
-          if( abs( zstore(iglob) - z_section ) < 0.2*mindist ) then
+          if( abs( zstore(iglob) - z_section ) < 0.2*min_dist ) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
           endif
@@ -391,17 +391,19 @@
     if( ispec_has_points(ispec) ) then
 
       ! an estimation of the element width
-      mindist = sqrt((xstore(ibool(1,3,3,ispec)) - xstore(ibool(NGLLX,3,3,ispec)))**2 &
-                  + (ystore(ibool(1,3,3,ispec)) - ystore(ibool(NGLLX,3,3,ispec)))**2 &
-                  + (zstore(ibool(1,3,3,ispec)) - zstore(ibool(NGLLX,3,3,ispec)))**2 )
+      min_dist = sqrt((xstore(ibool(1,3,3,ispec)) - xstore(ibool(NGLLX,3,3,ispec)))**2 &
+                   + (ystore(ibool(1,3,3,ispec)) - ystore(ibool(NGLLX,3,3,ispec)))**2 &
+                   + (zstore(ibool(1,3,3,ispec)) - zstore(ibool(NGLLX,3,3,ispec)))**2 )
 
       ! determines element face by minimum distance of midpoints
       midpoint_faces_x(:) = 0.0
       midpoint_faces_y(:) = 0.0
       midpoint_faces_z(:) = 0.0
+
       do iface=1,6
+
         ! face corners
-        do icorner = 1,NGNOD2D
+        do icorner = 1,NGNOD2D_FOUR_CORNERS
           i = iface_all_corner_ijk(1,icorner,iface)
           j = iface_all_corner_ijk(2,icorner,iface)
           k = iface_all_corner_ijk(3,icorner,iface)
@@ -416,8 +418,8 @@
           midpoint_faces_x(iface) =  midpoint_faces_x(iface) + xcoord_face(icorner)
           midpoint_faces_y(iface) =  midpoint_faces_y(iface) + ycoord_face(icorner)
           midpoint_faces_z(iface) =  midpoint_faces_z(iface) + zcoord_face(icorner)
-
         enddo
+
         midpoint_faces_x(iface) = midpoint_faces_x(iface) / 4.0
         midpoint_faces_y(iface) = midpoint_faces_y(iface) / 4.0
         midpoint_faces_z(iface) = midpoint_faces_z(iface) / 4.0
@@ -438,7 +440,7 @@
         i = iface_midpoint_ijk(1,iface)
         j = iface_midpoint_ijk(2,iface)
         k = iface_midpoint_ijk(3,iface)
-        if( midpoint_dist_x(iface) < 0.5*mindist .and. &
+        if( midpoint_dist_x(iface) < 0.5*min_dist .and. &
            valence_external_mesh(ibool(i,j,k,ispec)) /= -1 ) then
           ! checks face normal points in similar direction as cross-section normal
           if( abs(normal(1)) > 0.6 ) then
@@ -454,7 +456,7 @@
         i = iface_midpoint_ijk(1,iface)
         j = iface_midpoint_ijk(2,iface)
         k = iface_midpoint_ijk(3,iface)
-        if( midpoint_dist_y(iface) < 0.5*mindist .and. &
+        if( midpoint_dist_y(iface) < 0.5*min_dist .and. &
            valence_external_mesh(ibool(i,j,k,ispec)) /= -1) then
           ! checks face normal points in similar direction as cross-section normal
           if( abs(normal(2)) > 0.6 ) then
@@ -470,7 +472,7 @@
         i = iface_midpoint_ijk(1,iface)
         j = iface_midpoint_ijk(2,iface)
         k = iface_midpoint_ijk(3,iface)
-        if( midpoint_dist_z(iface) < 0.5*mindist .and. &
+        if( midpoint_dist_z(iface) < 0.5*min_dist .and. &
            valence_external_mesh(ibool(i,j,k,ispec)) /= -1) then
           ! checks face normal points in similar direction as cross-section normal
           if( abs(normal(3)) > 0.6 ) then
@@ -695,7 +697,7 @@
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
 
 !local parameters
-  real(kind=CUSTOM_REAL) :: mindist,distance
+  real(kind=CUSTOM_REAL) :: min_dist,distance
   integer, dimension(:), allocatable :: valence_external_mesh
   integer :: ispec,i,j,k,iglob,ier,count
   real(kind=CUSTOM_REAL),parameter :: TOLERANCE_DISTANCE = 0.9
@@ -711,11 +713,11 @@
   num_iglob_image_surface = 0
 
 ! an estimation of the minimum distance between global points
-  mindist = minval( (xstore(ibool(1,1,1,:)) - xstore(ibool(2,1,1,:)))**2 &
-                  + (ystore(ibool(1,1,1,:)) - ystore(ibool(2,1,1,:)))**2 &
-                  + (zstore(ibool(1,1,1,:)) - zstore(ibool(2,1,1,:)))**2 )
-  mindist = sqrt(mindist)
-  distance = TOLERANCE_DISTANCE*mindist
+  min_dist = minval( (xstore(ibool(1,1,1,:)) - xstore(ibool(2,1,1,:)))**2 &
+                   + (ystore(ibool(1,1,1,:)) - ystore(ibool(2,1,1,:)))**2 &
+                   + (zstore(ibool(1,1,1,:)) - zstore(ibool(2,1,1,:)))**2 )
+  min_dist = sqrt(min_dist)
+  distance = TOLERANCE_DISTANCE*min_dist
 
 ! sets valence value to one corresponding to process rank  for points on cross-sections
   do ispec = 1, nspec

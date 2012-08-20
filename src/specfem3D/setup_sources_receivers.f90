@@ -829,7 +829,7 @@
       ! gets element ancor nodes
       if( myrank == islice_selected_source(isource) ) then
         ! find the coordinates of the eight corner nodes of the element
-        call get_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
                         ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
       endif
@@ -859,7 +859,7 @@
           etal = eta_source(isource)
           gammal = gamma_source(isource)
         endif
-        call get_shape3D_single(myrank,shape3D,xil,etal,gammal)
+        call eval_shape3D_single(myrank,shape3D,xil,etal,gammal)
 
         ! interpolates source locations
         xmesh = 0.0
@@ -883,7 +883,7 @@
 
     ! find the coordinates of the eight corner nodes of the element
     if( myrank == islice_selected_rec(irec) ) then
-      call get_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
                       ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
     ! master collects corner locations
@@ -904,7 +904,7 @@
       xil = xi_receiver(irec)
       etal = eta_receiver(irec)
       gammal = gamma_receiver(irec)
-      call get_shape3D_single(myrank,shape3D,xil,etal,gammal)
+      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal)
 
       ! interpolates receiver locations
       xmesh = 0.0
