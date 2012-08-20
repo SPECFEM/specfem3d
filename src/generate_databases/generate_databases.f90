@@ -233,8 +233,8 @@
 ! parameters deduced from parameters read from file
   integer :: NPROC
 
-! static memory size that will be needed by the solver
-  double precision :: max_static_memory_size,max_static_memory_size_request
+! memory size that will be needed by the solver
+  double precision :: max_memory_size,max_memory_size_request
 
 ! this for all the regions
   integer NSPEC_AB,NGLOB_AB
@@ -828,7 +828,7 @@
 
   subroutine gd_setup_mesh
 
-! mesh creation for static solver
+! mesh creation for solver
 
   use generate_databases_par
   implicit none
@@ -850,9 +850,9 @@
                         nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
                         nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-                        max_static_memory_size_request)
+                        max_memory_size_request)
 
-  max_static_memory_size = max_static_memory_size_request
+  max_memory_size = max_memory_size_request
 
 ! make sure everybody is synchronized
   call sync_all()
@@ -976,7 +976,7 @@
   if( myrank == 0 ) then
     call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
                ATTENUATION,ANISOTROPY,NSTEP,DT, &
-               SIMULATION_TYPE,max_static_memory_size,nfaces_surface_glob_ext_mesh)
+               SIMULATION_TYPE,max_memory_size,nfaces_surface_glob_ext_mesh)
   endif
 
 ! elapsed time since beginning of mesh generation

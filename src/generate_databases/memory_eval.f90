@@ -27,10 +27,10 @@
 ! United States and French Government Sponsorship Acknowledged.
 
 
-! compute the approximate amount of static memory needed to run the solver
+! compute the approximate amount of memory needed to run the solver
 
  subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
-                        OCEANS,static_memory_size)
+                        OCEANS,memory_size)
 
   use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic
 
@@ -43,67 +43,67 @@
   integer, intent(in) :: max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh
   logical, intent(in) :: OCEANS
   ! output
-  double precision, intent(out) :: static_memory_size
+  double precision, intent(out) :: memory_size
   ! local parameters
   logical :: ACOUSTIC_SIMULATION,ELASTIC_SIMULATION
 
-  static_memory_size = 0.d0
+  memory_size = 0.d0
 
 ! add size of each set of arrays multiplied by the number of such arrays
 
   ! see: initialize_simulation.f90
   ! ibool
-  static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(SIZE_INTEGER)
+  memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(SIZE_INTEGER)
 
   ! xix,xiy,xiz,
   ! etax,etay,etaz,
   ! gammax,gammay,gammaz,jacobian
-  static_memory_size = static_memory_size + 10.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  memory_size = memory_size + 10.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
 
   ! xstore,ystore,zstore
-  static_memory_size = static_memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
+  memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
 
   ! kappastore,mustore
-  static_memory_size = static_memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  memory_size = memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
 
   ! ispec_acoustic,ispec_elastic,ispec_is_poroelastic (logical)
-  static_memory_size = static_memory_size + 3.d0*NSPEC_AB*dble(SIZE_LOGICAL)
+  memory_size = memory_size + 3.d0*NSPEC_AB*dble(SIZE_LOGICAL)
 
   ! see: read_mesh_databases.f90
   ! acoustic arrays
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if( ACOUSTIC_SIMULATION ) then
     ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
-    static_memory_size = static_memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
     ! rmass_acoustic
-    static_memory_size = static_memory_size + NGLOB_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
     ! rhostore
-    static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
   endif
 
   ! elastic arrays
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if( ELASTIC_SIMULATION ) then
     ! displacement,velocity,acceleration
-    static_memory_size = static_memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
 
     ! rmass
-    static_memory_size = static_memory_size + NGLOB_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
 
     ! rho_vp,rho_vs
-    static_memory_size = static_memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
 
     ! qmu_attenaution_store
-    static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
 
     ! c11store,...c66store
-    static_memory_size = static_memory_size + 21.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_ANISO*dble(CUSTOM_REAL)
+    memory_size = memory_size + 21.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_ANISO*dble(CUSTOM_REAL)
 
     if (OCEANS ) then
       ! rmass_ocean_load
-      static_memory_size = static_memory_size + NGLOB_AB*dble(CUSTOM_REAL)
+      memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
       ! updated_dof_ocean_load
-      static_memory_size = static_memory_size + NGLOB_AB*dble(SIZE_LOGICAL)
+      memory_size = memory_size + NGLOB_AB*dble(SIZE_LOGICAL)
     endif
   endif
 
@@ -113,23 +113,23 @@
 
   ! MPI interfaces
   ! my_neighbours_ext_mesh,nibool_interfaces_ext_mesh
-  static_memory_size = static_memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! ibool_interfaces_ext_mesh
-  static_memory_size = static_memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  memory_size = memory_size + max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! MPI communications
   ! buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh
-  static_memory_size = static_memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+  memory_size = memory_size + 2.d0*dble(NDIM)*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
 
   ! buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh
-  static_memory_size = static_memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
+  memory_size = memory_size + 2.d0*max_nibool_interfaces_ext_mesh*num_interfaces_ext_mesh*dble(CUSTOM_REAL)
 
   ! request_send_vector_ext_mesh,request_recv_vector_ext_mesh,request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh
-  static_memory_size = static_memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
+  memory_size = memory_size + 4.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! ispec_is_inner
-  static_memory_size = static_memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
+  memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
 
   ! skipping phase_ispec_inner_acoustic
   ! skipping phase_ispec_inner_elastic
@@ -149,13 +149,13 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-! compute the approximate amount of static memory needed to run the mesher
+! compute the approximate amount of memory needed to run the mesher
 
  subroutine memory_eval_mesher(myrank,nspec,npointot,nnodes_ext_mesh, &
                               nelmnts_ext_mesh,nmat_ext_mesh,num_interfaces_ext_mesh, &
                               max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
                               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
-                              static_memory_size_request)
+                              memory_size_request)
 
   implicit none
 
@@ -166,13 +166,13 @@
            max_interface_size_ext_mesh,nspec2D_xmin,nspec2D_xmax, &
            nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top
 
-  double precision,intent(inout) :: static_memory_size_request
+  double precision,intent(inout) :: memory_size_request
 
   ! local parameters
-  integer :: static_memory_size
+  integer :: memory_size
 
   ! memory usage, in generate_database() routine so far
-  static_memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
+  memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
         + NDIM*nnodes_ext_mesh*8 + NGNOD*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
         + 5*nmat_ext_mesh*8 + 3*num_interfaces_ext_mesh &
         + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
@@ -181,7 +181,7 @@
         + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20
 
   ! memory usage, in create_regions_mesh_ext() routine requested approximately
-  static_memory_size_request =   &
+  memory_size_request =   &
         + 3*NGNOD*8 + NGLLX*NGLLY*NGLLZ*nspec*4 + 6*nspec*1 + 6*NGLLX*8 &
         + NGNOD*NGLLX*NGLLY*NGLLZ*8 + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*8 &
         + 4*NGNOD2D*NGLLY*NGLLZ*8 + 4*NDIM2D*NGNOD2D*NGLLX*NGLLY*8 &
@@ -194,10 +194,10 @@
   if(myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  minimum memory used so far     : ', &
-                  static_memory_size / 1024. / 1024., &
+                  memory_size / 1024. / 1024., &
                    'MB per process'
     write(IMAIN,*) '  minimum total memory requested : ', &
-                  (static_memory_size+static_memory_size_request)/1024./1024., &
+                  (memory_size+memory_size_request)/1024./1024., &
                    'MB per process'
     write(IMAIN,*)
   endif

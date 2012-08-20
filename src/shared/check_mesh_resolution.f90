@@ -167,7 +167,7 @@
     ! average distance between GLL points within this element
     avg_distance = elemsize_max / ( NGLLX - 1 )  ! since NGLLX = NGLLY = NGLLZ
 
-    ! biggest possible minimum period such that number of points per minimum wavelength
+    ! largest possible minimum period such that number of points per minimum wavelength
     ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
     !
     ! note: obviously, this estimation depends on the choice of points per wavelength
@@ -507,7 +507,7 @@
     ! average distance between GLL points within this element
     avg_distance = elemsize_max / ( NGLLX - 1 )  ! since NGLLX = NGLLY = NGLLZ
 
-    ! biggest possible minimum period such that number of points per minimum wavelength
+    ! largest possible minimum period such that number of points per minimum wavelength
     ! npts = ( min(vpmin,vp2min,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
     !
     ! note: obviously, this estimation depends on the choice of points per wavelength

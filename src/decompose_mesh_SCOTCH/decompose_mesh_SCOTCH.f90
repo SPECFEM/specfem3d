@@ -244,7 +244,7 @@ module decompose_mesh_SCOTCH
     if( count_def_mat > 0 .and. maxval(mat(1,:)) > count_def_mat ) then
       print*,'error material definitions:'
       print*,'  materials associated in materials_file:',maxval(mat(1,:))
-      print*,'  bigger than defined materials in nummaterial_velocity_file:',count_def_mat
+      print*,'  larger than defined materials in nummaterial_velocity_file:',count_def_mat
       stop 'error materials'
     endif
     allocate(mat_prop(16,count_def_mat),stat=ier)
