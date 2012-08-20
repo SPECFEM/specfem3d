@@ -317,6 +317,11 @@ subroutine PML_set_firstlayer()
   integer,dimension(3,NGNOD),parameter :: ielem_corner_ijk = &
        reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ, &
               NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),(/3,NGNOD/))
+
+!! DK DK August 2012: added this when I added support for 27-node elements in the rest of the code
+  if(NGNOD /= 8) &
+    stop 'the preliminary PML detection code of Daniel Peter currently works for 8-node bricks only; should be made more general'
+
   ! temporary arrays
   allocate(temp_is_pml_elem(NSPEC_AB), &
           temp_ispec_pml_normal(NDIM,NSPEC_AB),stat=ier)
