@@ -188,10 +188,10 @@ else
  ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
  
  #daniel: scotch bundle
- # uses bundled scotch: current version 5.1.11
+ # uses bundled scotch: current version 5.1.12b
  USE_BUNDLED_SCOTCH=1
 
- SCOTCH_DIR="scotch_5.1.11"
+ SCOTCH_DIR="scotch_5.1.12b"
  SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
  SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
 
@@ -454,7 +454,7 @@ AC_CONFIG_FILES([
 	src/generate_databases/Makefile
 	src/shared/constants.h
 	src/shared/precision.h
-	src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc
+	src/decompose_mesh_SCOTCH/scotch_5.1.12b/src/Makefile.inc
 	src/check_mesh_quality_CUBIT_Abaqus/Makefile
 ])
 AC_OUTPUT

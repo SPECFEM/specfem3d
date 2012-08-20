@@ -6281,10 +6281,10 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 
  #daniel: scotch bundle
- # uses bundled scotch: current version 5.1.11
+ # uses bundled scotch: current version 5.1.12b
  USE_BUNDLED_SCOTCH=1
 
- SCOTCH_DIR="scotch_5.1.11"
+ SCOTCH_DIR="scotch_5.1.12b"
  SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
  SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
 
@@ -6894,7 +6894,7 @@ fi
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files Makefile src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
+ac_config_files="$ac_config_files Makefile src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h src/decompose_mesh_SCOTCH/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh_SCOTCH/scotch_5.1.12b/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -7623,7 +7623,7 @@ do
     "src/generate_databases/Makefile") CONFIG_FILES="$CONFIG_FILES src/generate_databases/Makefile" ;;
     "src/shared/constants.h") CONFIG_FILES="$CONFIG_FILES src/shared/constants.h" ;;
     "src/shared/precision.h") CONFIG_FILES="$CONFIG_FILES src/shared/precision.h" ;;
-    "src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES src/decompose_mesh_SCOTCH/scotch_5.1.11/src/Makefile.inc" ;;
+    "src/decompose_mesh_SCOTCH/scotch_5.1.12b/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES src/decompose_mesh_SCOTCH/scotch_5.1.12b/src/Makefile.inc" ;;
     "src/check_mesh_quality_CUBIT_Abaqus/Makefile") CONFIG_FILES="$CONFIG_FILES src/check_mesh_quality_CUBIT_Abaqus/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
