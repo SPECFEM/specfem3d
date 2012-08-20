@@ -516,8 +516,9 @@
   if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
   ! checks number of nodes for hexahedra and quadrilaterals
-  if(NGNOD /= 8) call exit_MPI(myrank,'number of control nodes must be 8')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 points should have NGNOD2D = 4')
+  ! curvature (i.e., HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
+  if(NGNOD /= NGNOD_EIGHT_CORNERS) call exit_MPI(myrank,'number of control nodes must be 8 in our internal mesher')
+  if(NGNOD2D /= NGNOD2D_FOUR_CORNERS) call exit_MPI(myrank,'elements should have NGNOD2D = 4 in our internal mesher')
 
   ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')

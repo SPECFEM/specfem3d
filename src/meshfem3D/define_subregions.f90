@@ -42,9 +42,9 @@
     integer num_material
 
 ! topology of the elements
-    integer iaddx(NGNOD)
-    integer iaddy(NGNOD)
-    integer iaddz(NGNOD)
+    integer iaddx(NGNOD_EIGHT_CORNERS)
+    integer iaddy(NGNOD_EIGHT_CORNERS)
+    integer iaddz(NGNOD_EIGHT_CORNERS)
     integer ner_layer(nblayers)
 
 !  definition of the different regions of the model in the mesh (nx,ny,nz)
@@ -110,9 +110,9 @@
     integer ndoublings
 
 ! topology of the elements
-    integer iaddx(NGNOD)
-    integer iaddy(NGNOD)
-    integer iaddz(NGNOD)
+    integer iaddx(NGNOD_EIGHT_CORNERS)
+    integer iaddy(NGNOD_EIGHT_CORNERS)
+    integer iaddz(NGNOD_EIGHT_CORNERS)
     integer ner_layer(nblayers)
     integer ner_doublings(2)
 

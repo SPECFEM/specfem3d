@@ -101,13 +101,13 @@ contains
     integer ner_layer(nblayers)
 
     ! topology of the elements
-    integer iaddx(NGNOD)
-    integer iaddy(NGNOD)
-    integer iaddz(NGNOD)
+    integer iaddx(NGNOD_EIGHT_CORNERS)
+    integer iaddy(NGNOD_EIGHT_CORNERS)
+    integer iaddz(NGNOD_EIGHT_CORNERS)
 
-    double precision xelm(NGNOD)
-    double precision yelm(NGNOD)
-    double precision zelm(NGNOD)
+    double precision xelm(NGNOD_EIGHT_CORNERS)
+    double precision yelm(NGNOD_EIGHT_CORNERS)
+    double precision zelm(NGNOD_EIGHT_CORNERS)
 
     ! boundary locator
     logical, dimension(:,:), allocatable :: iboun
@@ -266,8 +266,8 @@ contains
 
               ! Regular subregion case
 
-              ! loop over the NGNOD nodes
-              do ia=1,NGNOD
+              ! loop over the NGNOD_EIGHT_CORNERS nodes
+              do ia=1,NGNOD_EIGHT_CORNERS
                 ! define topological coordinates of this mesh point
                 ioffset_x = ix+iax*iaddx(ia)
                 ioffset_y = iy+iay*iaddy(ia)

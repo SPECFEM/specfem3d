@@ -518,7 +518,7 @@ module specfem_par_movie
 
 ! parameter module for movies/shakemovies
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
 
   implicit none
 
@@ -557,7 +557,7 @@ module specfem_par_movie
   integer :: nfaces_surface_ext_mesh,nfaces_surface_ext_mesh_points
   integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_em_points
   ! face corner indices
-  integer :: iorderi(NGNOD2D),iorderj(NGNOD2D)
+  integer :: iorderi(NGNOD2D_FOUR_CORNERS),iorderj(NGNOD2D_FOUR_CORNERS)
 
 ! movie parameters
   double precision :: HDUR_MOVIE

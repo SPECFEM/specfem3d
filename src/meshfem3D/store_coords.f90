@@ -32,7 +32,7 @@
 
   integer ispec,nspec
 
-  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
 
   double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
 

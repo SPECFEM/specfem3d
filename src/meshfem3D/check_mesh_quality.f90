@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-! read a 2D or 3D CUBIT mesh file and display statistics about mesh quality;
+! read a 3D CUBIT mesh file and display statistics about mesh quality;
 ! and create an OpenDX file showing a given range of elements or a single element
 
 
@@ -50,7 +50,7 @@
   integer :: NSPEC
 
   double precision, dimension(NGLOB) :: x,y,z
-  integer, dimension(NGNOD,NSPEC) :: ibool
+  integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
 
   logical :: CREATE_VTK_FILES
   character(len=256) prname
@@ -231,14 +231,9 @@
   write(IMAIN,*) '*** computed using VP_MAX = ',VP_MAX
   write(IMAIN,*) '***'
 
-  ! max stability CFL value is different in 2D and in 3D
-  if(NGNOD == 8) then
-     max_CFL_stability_limit = 0.48d0
-  else if(NGNOD == 4) then
-     max_CFL_stability_limit = 0.68d0
-  else
-     stop 'NGNOD must be 4 or 8'
-  endif
+  ! max stability CFL value
+!! DK DK we could probably increase this, now that the Stacey conditions have been fixed
+  max_CFL_stability_limit = 0.55d0 !! DK DK increased this    0.48d0
 
   if(stability_max_MPI >= max_CFL_stability_limit) then
      write(IMAIN,*) '*********************************************'
@@ -396,9 +391,9 @@
 
   double precision, dimension(NGLOB) :: x,y,z
 
-  integer, dimension(NGNOD,NSPEC) :: ibool
+  integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
 
-  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
 
   double precision vectorA_x,vectorA_y,vectorA_z
   double precision vectorB_x,vectorB_y,vectorB_z
@@ -417,7 +412,7 @@
   integer faces_topo(6,6)
 
   ! store the corners of this element for the skewness routine
-  do i = 1,NGNOD
+  do i = 1,NGNOD_EIGHT_CORNERS
      xelm(i) = x(ibool(i,ispec))
      yelm(i) = y(ibool(i,ispec))
      zelm(i) = z(ibool(i,ispec))

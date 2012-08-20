@@ -50,9 +50,8 @@
   ! counters to keep track of number of elements on each of the boundaries
   integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
 
-  ! check that the parameter file is correct
-  if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes')
+  ! check that the parameter is correct
+  if(NGNOD2D_FOUR_CORNERS /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
 
   ! initializes
   ispecb1 = 0
@@ -171,10 +170,10 @@
   real(kind=CUSTOM_REAL) normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM)
   real(kind=CUSTOM_REAL) normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP)
 
-  double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
-  double precision dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ)
-  double precision dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY)
-  double precision dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY)
+  double precision dershape2D_x(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLY,NGLLZ)
+  double precision dershape2D_y(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX,NGLLZ)
+  double precision dershape2D_bottom(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX,NGLLY)
+  double precision dershape2D_top(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX,NGLLY)
 
 ! global element numbering
   integer ispec
@@ -182,11 +181,10 @@
 ! counters to keep track of number of elements on each of the boundaries
   integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
 
-  double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
+  double precision xelm(NGNOD2D_FOUR_CORNERS),yelm(NGNOD2D_FOUR_CORNERS),zelm(NGNOD2D_FOUR_CORNERS)
 
-! check that the parameter file is correct
-  if(NGNOD /= 8) call exit_MPI(myrank,'elements should have 8 control nodes')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes')
+  ! check that the parameter is correct
+  if(NGNOD2D_FOUR_CORNERS /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
 
   ispecb1 = 0
   ispecb2 = 0
@@ -380,8 +378,8 @@
 
   integer ispecb,NGLLA,NGLLB,NSPEC2DMAX_AB,myrank
 
-  double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
-  double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
+  double precision xelm(NGNOD2D_FOUR_CORNERS),yelm(NGNOD2D_FOUR_CORNERS),zelm(NGNOD2D_FOUR_CORNERS)
+  double precision dershape2D(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLA,NGLLB)
 
   real(kind=CUSTOM_REAL) jacobian2D(NGLLA,NGLLB,NSPEC2DMAX_AB)
   real(kind=CUSTOM_REAL) normal(3,NGLLA,NGLLB,NSPEC2DMAX_AB)
@@ -399,7 +397,7 @@
     yeta=ZERO
     zxi=ZERO
     zeta=ZERO
-    do ia=1,NGNOD2D
+    do ia=1,NGNOD2D_FOUR_CORNERS
       xxi=xxi+dershape2D(1,ia,i,j)*xelm(ia)
       xeta=xeta+dershape2D(2,ia,i,j)*xelm(ia)
       yxi=yxi+dershape2D(1,ia,i,j)*yelm(ia)

@@ -113,7 +113,7 @@
 !!!! NL NL
 
   ! order of points representing the 2D square element
-  integer,dimension(NGNOD2D_AVS_DX),parameter :: iorder = (/1,3,2,4/)
+  integer,dimension(NGNOD2D_FOUR_CORNERS_AVS_DX),parameter :: iorder = (/1,3,2,4/)
 
 
 ! ************** PROGRAM STARTS HERE **************
@@ -145,7 +145,7 @@
   if(USE_HIGHRES_FOR_MOVIES) then
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGLLSQUARE
   else
-     ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_AVS_DX
+     ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_FOUR_CORNERS_AVS_DX
   endif
   print*,'  moviedata element surfaces: ',NSPEC_SURFACE_EXT_MESH
   print*,'  moviedata total elements all: ',ilocnum
@@ -250,7 +250,7 @@
   endif
 
   ! maximum theoretical number of points at the surface
-  npointot = NGNOD2D_AVS_DX * nspectot_AVS_max
+  npointot = NGNOD2D_FOUR_CORNERS_AVS_DX * nspectot_AVS_max
 
   ! allocate arrays for sorting routine
   allocate(iglob(npointot),loc(npointot), &
@@ -407,8 +407,8 @@
 
           do j = 1,NGLLY-1
             do i = 1,NGLLX-1
-              ieoff = NGNOD2D_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
-              do ilocnum = 1,NGNOD2D_AVS_DX
+              ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
+              do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
 
                 if(ilocnum == 1) then
                   xp(ieoff+ilocnum) = dble(x(i,j))
@@ -446,10 +446,10 @@
         else
           ! low-resolution (only spectral element corners)
           ispec = ispec + 1
-          ieoff = NGNOD2D_AVS_DX*(ispec-1)
+          ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
 
           ! four points for each element
-          do i = 1,NGNOD2D_AVS_DX
+          do i = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
 
             ! accounts for different ordering of square points
             ilocnum = iorder(i)
@@ -657,9 +657,9 @@
         ! output list of points
         mask_point = .false.
         do ispec=1,nspectot_AVS_max
-          ieoff = NGNOD2D_AVS_DX*(ispec-1)
+          ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
           ! four points for each element
-          do ilocnum = 1,NGNOD2D_AVS_DX
+          do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
             if(.not. mask_point(ibool_number)) then
               call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
@@ -676,9 +676,9 @@
         mask_point = .false.
         ipoin = 0
         do ispec=1,nspectot_AVS_max
-          ieoff = NGNOD2D_AVS_DX*(ispec-1)
+          ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
           ! four points for each element
-          do ilocnum = 1,NGNOD2D_AVS_DX
+          do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
             if(.not. mask_point(ibool_number)) then
               ipoin = ipoin + 1
@@ -699,7 +699,7 @@
 
         ! output list of elements
         do ispec=1,nspectot_AVS_max
-          ieoff = NGNOD2D_AVS_DX*(ispec-1)
+          ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
           ! four points for each element
           ibool_number1 = iglob(ieoff + 1)
           ibool_number2 = iglob(ieoff + 2)
@@ -728,9 +728,9 @@
         ! output data values
         mask_point = .false.
         do ispec=1,nspectot_AVS_max
-          ieoff = NGNOD2D_AVS_DX*(ispec-1)
+          ieoff = NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
           ! four points for each element
-          do ilocnum = 1,NGNOD2D_AVS_DX
+          do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
             if(.not. mask_point(ibool_number)) then
               if(USE_OPENDX) then
@@ -851,8 +851,8 @@ enddo ! it
 
 ! establish initial pointers
   do ispec=1,nspec
-    ieoff=NGNOD2D_AVS_DX*(ispec-1)
-    do ilocnum=1,NGNOD2D_AVS_DX
+    ieoff=NGNOD2D_FOUR_CORNERS_AVS_DX*(ispec-1)
+    do ilocnum=1,NGNOD2D_FOUR_CORNERS_AVS_DX
       loc(ilocnum+ieoff)=ilocnum+ieoff
     enddo
   enddo

@@ -638,7 +638,6 @@ subroutine crm_ext_setup_jacobian(myrank, &
   zstore(:,:,:,:) = 0.d0
 
   do ispec = 1, nspec
-    !call get_xyzelm(xelm, yelm, zelm, ispec, elmnts_ext_mesh, nodes_coords_ext_mesh, nspec, nnodes_ext_mesh)
     do ia = 1,NGNOD
       xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
       yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
