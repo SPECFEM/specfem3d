@@ -15,8 +15,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 4000
-DT                              = 0.01
+NSTEP                           = 4500
+DT                              = 0.005
 
 # models:
 # available options are:

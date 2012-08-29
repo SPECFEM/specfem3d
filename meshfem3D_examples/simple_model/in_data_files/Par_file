@@ -36,10 +36,10 @@ ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
 # absorbing boundary conditions for a regional simulation
-ABSORBING_CONDITIONS            = .true.
+ABSORBING_CONDITIONS            = .false.
 
 # save AVS or OpenDX movies
-MOVIE_SURFACE                   = .true.
+MOVIE_SURFACE                   = .false.
 MOVIE_VOLUME                    = .false.
 NTSTEP_BETWEEN_FRAMES           = 200
 CREATE_SHAKEMAP                 = .false.
@@ -54,7 +54,7 @@ SAVE_MESH_FILES                 = .true.
 LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 500
+NTSTEP_BETWEEN_OUTPUT_INFO      = 100
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000

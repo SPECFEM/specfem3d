@@ -33,45 +33,36 @@ rm -rf in_out_files/DATABASES_MPI/*
 mkdir -p in_data_files
 mkdir -p in_data_files/meshfem3D_files/
 
-cp Mesh_Par_file in_data_files/meshfem3D_files/
-cp interface*.dat in_data_files/meshfem3D_files/
-
-cp Par_file in_data_files/
-cp CMTSOLUTION in_data_files/
-cp STATIONS in_data_files/
-
 # compiles executables in root directory
 cd ../../../
-make > tmp.log
+make 
 make combine_vol_data
 cd $currentdir
 
 # links executables
-cd bin/
-ln -s ../../../../bin/xmeshfem3D
-ln -s ../../../../bin/xgenerate_databases
-ln -s ../../../../bin/xspecfem3D
-ln -s ../../../../bin/xcombine_vol_data
-cd ../
+rm -f bin/*
+cp ../../../bin/* bin/
+if [ ! -e bin/xspecfem3D ]; then echo "compilation failed, please check..."; exit 1; fi
+
+# stores setup
+cp in_data_files/meshfem3D_files/Mesh_Par_file in_out_files/OUTPUT_FILES/
+cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
+cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
 
 # decomposes mesh
 echo
-echo "  meshing..."
+echo "meshing..."
 echo
 cd bin/
 mpirun -np $NPROC ./xmeshfem3D
 cd ../
 mv in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
 
-# stores setup
-cp -r in_data_files/meshfem3D_files/ in_out_files/OUTPUT_FILES/
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
 
 # runs database generation
 echo
-echo "  running database generation..."
+echo "running database generation..."
 echo
 cd bin/
 mpirun -np $NPROC ./xgenerate_databases
@@ -82,7 +73,7 @@ cd ../
 
 # runs simulation
 echo
-echo "  running solver..."
+echo "running solver..."
 echo
 cd bin/
 mpirun -np $NPROC ./xspecfem3D

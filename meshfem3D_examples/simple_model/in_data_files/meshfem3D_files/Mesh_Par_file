@@ -30,8 +30,8 @@ NZ_DOUGLING_1                   = 11
 NZ_DOUGLING_2                   = 0
 
 # create mesh files for visualisation or further checking
-CREATE_ABAQUS_FILES             = .true.
-CREATE_DX_FILES                 = .true.
+CREATE_ABAQUS_FILES             = .false.
+CREATE_DX_FILES                 = .false.
 CREATE_VTK_FILES                = .false.
 
 # path to store the databases files
