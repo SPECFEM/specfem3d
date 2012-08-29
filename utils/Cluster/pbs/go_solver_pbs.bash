@@ -32,6 +32,7 @@ cp go_solver_pbs.bash in_out_files/OUTPUT_FILES/
 cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
 cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
 cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp src/shared/constants.h in_out_files/OUTPUT_FILES/
 
 # save a complete copy of source files
 #rm -rf in_out_files/OUTPUT_FILES/src
