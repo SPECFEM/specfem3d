@@ -31,24 +31,230 @@
 
 typedef float realw;  // type of "working" variables
 
+
 /* ----------------------------------------------------------------------------------------------- */
 
-// setters for these const arrays (very ugly hack, but will have to do)
+// CONSTANT arrays setup
 
-// elastic
-void setConst_hprime_xx(realw* array,Mesh* mp);
-void setConst_hprime_yy(realw* array,Mesh* mp);
-void setConst_hprime_zz(realw* array,Mesh* mp);
+/* ----------------------------------------------------------------------------------------------- */
 
-void setConst_hprimewgll_xx(realw* array,Mesh* mp);
-void setConst_hprimewgll_yy(realw* array,Mesh* mp);
-void setConst_hprimewgll_zz(realw* array,Mesh* mp);
+/* note:
+ constant arrays when used in compute_forces_acoustic_cuda.cu routines stay zero,
+ constant declaration and cudaMemcpyToSymbol would have to be in the same file...
 
-void setConst_wgllwgll_xy(realw* array,Mesh* mp);
-void setConst_wgllwgll_xz(realw* array, Mesh* mp);
-void setConst_wgllwgll_yz(realw* array, Mesh* mp);
+ extern keyword doesn't work for __constant__ declarations.
 
-void setConst_wgll_cube(realw* array, Mesh* mp);
+ also:
+ cudaMemcpyToSymbol("deviceCaseParams", caseParams, sizeof(CaseParams));
+ ..
+ and compile with -arch=sm_20
+
+ see also: http://stackoverflow.com/questions/4008031/how-to-use-cuda-constant-memory-in-a-programmer-pleasant-way
+ doesn't seem to work.
+
+ we could keep arrays separated for acoustic and elastic routines...
+
+ for now, we store pointers with cudaGetSymbolAddress() function calls.
+
+ */
+
+// cuda constant arrays
+//
+// note: we use definition __device__ to use global memory rather than constant memory registers
+//          to avoid over-loading registers; this should help increasing the occupancy on the GPU
+
+__device__ realw d_hprime_xx[NGLL2];
+//__device__ realw d_hprime_yy[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+//__device__ realw d_hprime_zz[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+
+__device__ realw d_hprimewgll_xx[NGLL2];
+//__device__ realw d_hprimewgll_yy[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+//__device__ realw d_hprimewgll_zz[NGLL2]; // only needed if NGLLX != NGLLY != NGLLZ
+
+__device__ realw d_wgllwgll_xy[NGLL2];
+__device__ realw d_wgllwgll_xz[NGLL2];
+__device__ realw d_wgllwgll_yz[NGLL2];
+
+__device__ realw d_wgll_cube[NGLL3]; // needed only for gravity case
+
+
+void setConst_hprime_xx(realw* array,Mesh* mp)
+{
+
+  cudaError_t err = cudaMemcpyToSymbol(d_hprime_xx, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_hprime_xx: %s\n", cudaGetErrorString(err));
+    fprintf(stderr, "The problem is maybe -arch sm_13 instead of -arch sm_11 in the Makefile, please doublecheck\n");
+    exit(1);
+  }
+
+  err = cudaGetSymbolAddress((void**)&(mp->d_hprime_xx),"d_hprime_xx");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_hprime_xx: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+}
+
+// void setConst_hprime_yy(realw* array,Mesh* mp)
+// {
+
+//   cudaError_t err = cudaMemcpyToSymbol(d_hprime_yy, array, NGLL2*sizeof(realw));
+//   if (err != cudaSuccess)
+//   {
+//     fprintf(stderr, "Error in setConst_hprime_yy: %s\n", cudaGetErrorString(err));
+//     fprintf(stderr, "The problem is maybe -arch sm_13 instead of -arch sm_11 in the Makefile, please doublecheck\n");
+//     exit(1);
+//   }
+
+//   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_yy),"d_hprime_yy");
+//   if(err != cudaSuccess) {
+//     fprintf(stderr, "Error with d_hprime_yy: %s\n", cudaGetErrorString(err));
+//     exit(1);
+//   }
+// }
+
+// void setConst_hprime_zz(realw* array,Mesh* mp)
+// {
+
+//   cudaError_t err = cudaMemcpyToSymbol(d_hprime_zz, array, NGLL2*sizeof(realw));
+//   if (err != cudaSuccess)
+//   {
+//     fprintf(stderr, "Error in setConst_hprime_zz: %s\n", cudaGetErrorString(err));
+//     fprintf(stderr, "The problem is maybe -arch sm_13 instead of -arch sm_11 in the Makefile, please doublecheck\n");
+//     exit(1);
+//   }
+
+//   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_zz),"d_hprime_zz");
+//   if(err != cudaSuccess) {
+//     fprintf(stderr, "Error with d_hprime_zz: %s\n", cudaGetErrorString(err));
+//     exit(1);
+//   }
+// }
+
+
+void setConst_hprimewgll_xx(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_xx, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_hprimewgll_xx: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_xx),"d_hprimewgll_xx");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+}
+
+/*
+// only needed if NGLLX != NGLLY != NGLLZ
+void setConst_hprimewgll_yy(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_yy, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_hprimewgll_yy: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_yy),"d_hprimewgll_yy");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_hprimewgll_yy: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+}
+*/
+
+/*
+// only needed if NGLLX != NGLLY != NGLLZ
+void setConst_hprimewgll_zz(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_zz, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_hprimewgll_zz: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_zz),"d_hprimewgll_zz");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_hprimewgll_zz: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+}
+*/
+
+void setConst_wgllwgll_xy(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_xy, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_wgllwgll_xy: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgllwgll_xy = d_wgllwgll_xy;
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xy),"d_wgllwgll_xy");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+}
+
+void setConst_wgllwgll_xz(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_xz, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in  setConst_wgllwgll_xz: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgllwgll_xz = d_wgllwgll_xz;
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xz),"d_wgllwgll_xz");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+}
+
+void setConst_wgllwgll_yz(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_yz, array, NGLL2*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_wgllwgll_yz: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgllwgll_yz = d_wgllwgll_yz;
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_yz),"d_wgllwgll_yz");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+}
+
+void setConst_wgll_cube(realw* array,Mesh* mp)
+{
+  cudaError_t err = cudaMemcpyToSymbol(d_wgll_cube, array, NGLL3*sizeof(realw));
+  if (err != cudaSuccess)
+  {
+    fprintf(stderr, "Error in setConst_wgll_cube: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+  //mp->d_wgll_cube = d_wgll_cube;
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgll_cube),"d_wgll_cube");
+  if(err != cudaSuccess) {
+    fprintf(stderr, "Error with d_wgll_cube: %s\n", cudaGetErrorString(err));
+    exit(1);
+  }
+
+}
+
 
 /* ----------------------------------------------------------------------------------------------- */
 

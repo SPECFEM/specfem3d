@@ -136,7 +136,7 @@ program combine_surf_data
 
   ! open paraview output mesh file
   mesh_file = trim(outdir) // '/' // trim(filename)//'.surf'
-  call open_file(trim(mesh_file)//char(0))
+  call open_file_create(trim(mesh_file)//char(0))
 
 !  nspec = NSPEC_AB
 !  nglob = NGLOB_AB

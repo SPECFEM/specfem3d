@@ -167,10 +167,12 @@
   ! loops over components
   do icomp = 1, NDIM
 
-    filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
+    filename = OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
     open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ios)
-    if (ios /= 0) cycle ! cycles to next file
-    !if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//'does not exist')
+    ! cycles to next file (this might be more error prone)
+    !if (ios /= 0) cycle
+    ! requires adjoint files to exist (users will have to be more careful in setting up adjoint runs)
+    if (ios /= 0) call exit_MPI(myrank, ' file '//trim(filename)//' does not exist - required for adjoint runs')
 
     ! reads in adjoint source trace
     !! skip unused blocks

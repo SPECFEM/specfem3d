@@ -121,31 +121,45 @@
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
   ! sums acoustic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,acoustic_flag, &
+  if( ACOUSTIC_SIMULATION ) then
+    call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
                         my_neighbours_ext_mesh)
-  ! sums elastic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,elastic_flag, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
-                        my_neighbours_ext_mesh)
-  ! sums poroelastic flags
-  call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,poroelastic_flag, &
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
-                        my_neighbours_ext_mesh)
+  endif
 
+  ! sums elastic flags
+  if( ELASTIC_SIMULATION ) then
+    call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,elastic_flag, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        my_neighbours_ext_mesh)
+  endif
+
+  ! sums poroelastic flags
+  if( POROELASTIC_SIMULATION ) then
+    call assemble_MPI_scalar_i_ext_mesh(NPROC,nglob_dummy,poroelastic_flag, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        my_neighbours_ext_mesh)
+  endif
 
   ! determines common faces between different domains
+
   ! acoustic - elastic domain coupling
-  call get_coupling_surfaces_ac_el(myrank,nspec,ibool,elastic_flag)
+  if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
+    call get_coupling_surfaces_ac_el(myrank,nspec,ibool,elastic_flag)
+  endif
 
   ! acoustic - poroelastic domain coupling
-  call get_coupling_surfaces_ac_poro(myrank,nspec,ibool,acoustic_flag)
+  if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+    call get_coupling_surfaces_ac_poro(myrank,nspec,ibool,acoustic_flag)
+  endif
 
   ! elastic - poroelastic domain coupling
-  call get_coupling_surfaces_el_poro(myrank,nspec,ibool,elastic_flag)
+  if( ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+    call get_coupling_surfaces_el_poro(myrank,nspec,ibool,elastic_flag)
+  endif
 
   ! frees temporary arrays
   deallocate(acoustic_flag,elastic_flag,poroelastic_flag)
@@ -181,9 +195,10 @@
   integer :: ijk_face(3,NGLLX,NGLLY)
   integer,dimension(:,:,:),allocatable :: tmp_ijk
   integer,dimension(:),allocatable :: tmp_ispec
+  logical, dimension(:), allocatable :: mask_ibool
 
   integer,dimension(NGNOD2D_FOUR_CORNERS) :: iglob_corners_ref
-  integer :: ispec,i,j,igll,ier
+  integer :: ispec,i,j,k,igll,ier,iglob,iglob_midpoint
   integer :: inum,iface_ref
 
   ! corners indices of reference cube faces
@@ -205,7 +220,7 @@
                  iface5_corner_ijk,iface6_corner_ijk /),(/3,4,6/))   ! all faces
   ! midpoint indices for each face (xmin,xmax,ymin,ymax,zmin,zmax)
   integer,dimension(3,6),parameter :: iface_all_midpointijk = &
-             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
+             reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))
 
   ! allocates temporary arrays
   allocate(tmp_normal(NDIM,NGLLSQUARE,nspec*6),stat=ier)
@@ -220,6 +235,10 @@
   tmp_ijk(:,:,:) = 0
   tmp_normal(:,:,:) = 0.0
   tmp_jacobian2Dw(:,:) = 0.0
+
+  allocate(mask_ibool(nglob_dummy),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array mask_ibool'
+  mask_ibool(:) = .false.
 
   ! loops over all element faces and
   ! counts number of coupling faces between acoustic and elastic elements
@@ -244,25 +263,38 @@
                                 iface_all_corner_ijk)
 
         ! checks if face is has an elastic side
+        ! note: this check also returns true if layer is only 1 element thick and face points are in touch with elastic elements,
+        !       but faces are actually between acoustic elements;
+        !       we therefore check again the midpoints and reset them once counted
         if( elastic_flag( iglob_corners_ref(1) ) >= 1 .and. &
            elastic_flag( iglob_corners_ref(2) ) >= 1 .and. &
            elastic_flag( iglob_corners_ref(3) ) >= 1 .and. &
            elastic_flag( iglob_corners_ref(4) ) >= 1) then
 
+          ! reference midpoint on face (used to avoid redundant face counting)
+          i = iface_all_midpointijk(1,iface_ref)
+          j = iface_all_midpointijk(2,iface_ref)
+          k = iface_all_midpointijk(3,iface_ref)
+          iglob_midpoint = ibool(i,j,k,ispec)
+
           ! gets face GLL points i,j,k indices from element face
           call get_element_face_gll_indices(iface_ref,ijk_face,NGLLX,NGLLY)
 
-          ! gets face GLL 2Djacobian, weighted from element face
-          call get_jacobian_boundary_face(myrank,nspec, &
+          ! checks if points on this face are masked already
+          if( .not. mask_ibool(iglob_midpoint) .and. &
+              (elastic_flag(iglob_midpoint) >= 1) ) then
+
+            ! gets face GLL 2Djacobian, weighted from element face
+            call get_jacobian_boundary_face(myrank,nspec, &
                     xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                     ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
 
-          ! normal convention: points away from acoustic, reference element
-          !                                switch normal direction if necessary
-          do j=1,NGLLY
-            do i=1,NGLLX
+            ! normal convention: points away from acoustic, reference element
+            !                                switch normal direction if necessary
+            do j=1,NGLLY
+              do i=1,NGLLX
                 ! directs normals such that they point outwards of element
                 call get_element_face_normal(ispec,iface_ref,xcoord,ycoord,zcoord, &
                                             ibool,nspec,nglob_dummy, &
@@ -272,26 +304,39 @@
                 ! otherwise switch direction
                 ! note: this should not happen, since we only loop over acoustic elements
                 if( ispec_is_elastic(ispec) ) stop 'error acoustic-elastic coupling surface'
+              enddo
             enddo
-          enddo
 
-          ! stores informations about this face
-          inum = inum + 1
-          tmp_ispec(inum) = ispec
-          igll = 0
-          do j=1,NGLLY
-            do i=1,NGLLX
-              ! adds all gll points on this face
-              igll = igll + 1
+            ! stores informations about this face
+            inum = inum + 1
+            tmp_ispec(inum) = ispec
+            igll = 0
+            do j=1,NGLLY
+              do i=1,NGLLX
+                ! adds all gll points on this face
+                igll = igll + 1
 
-              ! do we need to store local i,j,k,ispec info? or only global indices iglob?
-              tmp_ijk(:,igll,inum) = ijk_face(:,i,j)
+                ! do we need to store local i,j,k,ispec info? or only global indices iglob?
+                tmp_ijk(:,igll,inum) = ijk_face(:,i,j)
 
-              ! stores weighted jacobian and normals
-              tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
-              tmp_normal(:,igll,inum) = normal_face(:,i,j)
+                ! stores weighted jacobian and normals
+                tmp_jacobian2Dw(igll,inum) = jacobian2Dw_face(i,j)
+                tmp_normal(:,igll,inum) = normal_face(:,i,j)
+
+                ! masks global points ( to avoid redundant counting of faces)
+                iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+                mask_ibool(iglob) = .true.
+              enddo
             enddo
-          enddo
+          else
+            ! assumes to be already collected by lower rank process, masks face points
+            do j=1,NGLLY
+              do i=1,NGLLX
+                iglob = ibool(ijk_face(1,i,j),ijk_face(2,i,j),ijk_face(3,i,j),ispec)
+                mask_ibool(iglob) = .true.
+              enddo
+            enddo
+          endif ! mask_ibool
         endif ! elastic_flag
       enddo ! iface_ref
     endif ! ispec_is_acoustic
@@ -322,6 +367,8 @@
   if( myrank == 0 ) then
     write(IMAIN,*) '     acoustic-elastic coupling    : total number of faces = ',inum
   endif
+
+  deallocate(mask_ibool)
 
   end subroutine get_coupling_surfaces_ac_el
 

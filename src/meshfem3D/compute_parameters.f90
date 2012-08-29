@@ -112,15 +112,15 @@
      NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
 
      ! theoretical number of Gauss-Lobatto points in radial direction
-     NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+     NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ_M-1)+1
 
      ! 2-D addressing and buffers for summation between slices
      ! we add one to number of points because of the flag after the last point
-     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
-     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY_M*NGLLZ_M + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX_M*NGLLZ_M + 1
 
      ! exact number of global points
-     NGLOB_AB = (NEX_PER_PROC_XI*(NGLLX-1)+1) * (NEX_PER_PROC_ETA*(NGLLY-1)+1) * (NER*(NGLLZ-1)+1)
+     NGLOB_AB = (NEX_PER_PROC_XI*(NGLLX_M-1)+1) * (NEX_PER_PROC_ETA*(NGLLY_M-1)+1) * (NER*(NGLLZ_M-1)+1)
 
      !
      !--- case of a non-regular mesh with mesh doublings
@@ -200,28 +200,31 @@
      NSPEC2DMAX_YMIN_YMAX = NSPEC2D_B_XI
 
      ! theoretical number of Gauss-Lobatto points in radial direction
-     !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+     !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ_M-1)+1
 
      ! 2-D addressing and buffers for summation between slices
      ! we add one to number of points because of the flag after the last point
-     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
-     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY_M*NGLLZ_M + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX_M*NGLLZ_M + 1
 
      ! exact number of global points
 
      ! case of the doubling regions
 
-     NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/4)*(NEX_PER_PROC_ETA/4)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
-          - ((NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4) + (NEX_PER_PROC_ETA/4-1)*(NEX_PER_PROC_XI/4)) * (8*NGLLX**2-11*NGLLX+4)&
-          + (NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4-1)*(NGLLX+1)
+     NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/4)*(NEX_PER_PROC_ETA/4)*(32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13) &
+          - ((NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4) &
+          + (NEX_PER_PROC_ETA/4-1)*(NEX_PER_PROC_XI/4)) * (8*NGLLX_M**2-11*NGLLX_M+4) &
+          + (NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4-1)*(NGLLX_M+1)
 
-     ! NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/2)*(NEX_PER_PROC_ETA/2)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
-     !  - ((NEX_PER_PROC_XI/2-1)*(NEX_PER_PROC_ETA/2) + (NEX_PER_PROC_ETA/2-1)*(NEX_PER_PROC_XI/2)) * (8*NGLLX**2-11*NGLLX+4)&
-     !  + (NEX_PER_PROC_XI/2-1)*(NEX_PER_PROC_ETA/2-1)*NGLLX
+     ! NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/2)*(NEX_PER_PROC_ETA/2)*(32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13) &
+     !  - ((NEX_PER_PROC_XI/2-1)*(NEX_PER_PROC_ETA/2) &
+     !  + (NEX_PER_PROC_ETA/2-1)*(NEX_PER_PROC_XI/2)) * (8*NGLLX_M**2-11*NGLLX_M+4)&
+     !  + (NEX_PER_PROC_XI/2-1)*(NEX_PER_PROC_ETA/2-1)*NGLLX_M
 
-     ! NGLOB_DOUBLING_2 =(NEX_PER_PROC_XI/8)*(NEX_PER_PROC_ETA/8)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
-     !  - ((NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8) + (NEX_PER_PROC_ETA/8-1)*(NEX_PER_PROC_XI/8)) * (8*NGLLX**2-11*NGLLX+4)&
-     !  + (NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8-1)*NGLLX
+     ! NGLOB_DOUBLING_2 =(NEX_PER_PROC_XI/8)*(NEX_PER_PROC_ETA/8)*(32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13) &
+     !  - ((NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8) &
+     !  + (NEX_PER_PROC_ETA/8-1)*(NEX_PER_PROC_XI/8)) * (8*NGLLX_M**2-11*NGLLX_M+4)&
+     !  + (NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8-1)*NGLLX_M
 
      NGLOB_DOUBLING = NGLOB_DOUBLING_1 !+ NGLOB_DOUBLING_2
 
@@ -319,25 +322,27 @@
      !print*,'nspec minmax:',NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_yMAX
 
      ! theoretical number of Gauss-Lobatto points in radial direction
-     !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ-1)+1
+     !  NPOIN1D_RADIAL_BEDROCK = NSPEC1D_RADIAL_BEDROCK*(NGLLZ_M-1)+1
 
      ! 2-D addressing and buffers for summation between slices
      ! we add one to number of points because of the flag after the last point
-     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY*NGLLZ + 1
-     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX*NGLLZ + 1
+     NPOIN2DMAX_XMIN_XMAX = NSPEC2DMAX_XMIN_XMAX*NGLLY_M*NGLLZ_M + 1
+     NPOIN2DMAX_YMIN_YMAX = NSPEC2DMAX_YMIN_YMAX*NGLLX_M*NGLLZ_M + 1
 
 
      ! exact number of global points
 
      ! case of the doubling regions
 
-     NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/8)*(NEX_PER_PROC_ETA/8)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
-          - ((NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8) + (NEX_PER_PROC_ETA/8-1)*(NEX_PER_PROC_XI/8)) * (8*NGLLX**2-11*NGLLX+4)&
-          + (NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8-1)*(NGLLX+1)
+     NGLOB_DOUBLING_1 = (NEX_PER_PROC_XI/8)*(NEX_PER_PROC_ETA/8)*(32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13) &
+          - ((NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8) &
+          + (NEX_PER_PROC_ETA/8-1)*(NEX_PER_PROC_XI/8)) * (8*NGLLX_M**2-11*NGLLX_M+4)&
+          + (NEX_PER_PROC_XI/8-1)*(NEX_PER_PROC_ETA/8-1)*(NGLLX_M+1)
 
-     NGLOB_DOUBLING_2 = (NEX_PER_PROC_XI/4)*(NEX_PER_PROC_ETA/4)*(32*NGLLX**3 - 70*NGLLX**2 + 52*NGLLX - 13) &
-          - ((NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4) + (NEX_PER_PROC_ETA/4-1)*(NEX_PER_PROC_XI/4)) * (8*NGLLX**2-11*NGLLX+4)&
-          + (NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4-1)*(NGLLX+1)
+     NGLOB_DOUBLING_2 = (NEX_PER_PROC_XI/4)*(NEX_PER_PROC_ETA/4)*(32*NGLLX_M**3 - 70*NGLLX_M**2 + 52*NGLLX_M - 13) &
+          - ((NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4) &
+          + (NEX_PER_PROC_ETA/4-1)*(NEX_PER_PROC_XI/4)) * (8*NGLLX_M**2-11*NGLLX_M+4)&
+          + (NEX_PER_PROC_XI/4-1)*(NEX_PER_PROC_ETA/4-1)*(NGLLX_M+1)
 
      NGLOB_DOUBLING = NGLOB_DOUBLING_1 + NGLOB_DOUBLING_2
 

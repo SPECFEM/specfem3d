@@ -188,10 +188,10 @@ else
  ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
  
  #daniel: scotch bundle
- # uses bundled scotch: current version 5.1.12b
+ # uses bundled scotch: current version pointed to by symbolic link scotch/
  USE_BUNDLED_SCOTCH=1
 
- SCOTCH_DIR="scotch_5.1.12b"
+ SCOTCH_DIR="scotch"
  SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
  SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
 
@@ -199,20 +199,20 @@ else
  # will only be compiled once (no recompilation) when calling make
  #
  builddir=`pwd`
- cd src/decompose_mesh_SCOTCH/
+ cd src/decompose_mesh_SCOTCH/${SCOTCH_DIR}/
 
- if test ! -f "${SCOTCH_DIR}/src/scotch/Makefile.org"; then
+ if test ! -f "src/scotch/Makefile.org"; then
 
   # no Makefile backup files yet
   # modifies Makefiles once
 
   # creates backup copies of original Makefiles
   # src/scotch/
-  cp ${SCOTCH_DIR}/src/scotch/Makefile ${SCOTCH_DIR}/src/scotch/Makefile.org
+  cp src/scotch/Makefile src/scotch/Makefile.org
   # src/libscotch/
-  cp ${SCOTCH_DIR}/src/libscotch/Makefile ${SCOTCH_DIR}/src/libscotch/Makefile.org
+  cp src/libscotch/Makefile src/libscotch/Makefile.org
   # src/libscotchmetis/
-  cp ${SCOTCH_DIR}/src/libscotchmetis/Makefile ${SCOTCH_DIR}/src/libscotchmetis/Makefile.org
+  cp src/libscotchmetis/Makefile src/libscotchmetis/Makefile.org
 
  fi
 
@@ -296,9 +296,9 @@ install				: \$(bindir)/acpl\$(EXE) \$(bindir)/amk_ccc\$(EXE) \\
 _ACEOF
 
   # avoids lines between 98 to 101, containig install lines, and replaces them
-  awk '{if(NR<98)print $0}' ${SCOTCH_DIR}/src/scotch/Makefile.org > ${SCOTCH_DIR}/src/scotch/Makefile
-  cat conftmp.scotch.cmd >> ${SCOTCH_DIR}/src/scotch/Makefile
-  awk '{if(NR>101)print $0}' ${SCOTCH_DIR}/src/scotch/Makefile.org >> ${SCOTCH_DIR}/src/scotch/Makefile
+  awk '{if(NR<98)print $0}' src/scotch/Makefile.org > src/scotch/Makefile
+  cat conftmp.scotch.cmd >> src/scotch/Makefile
+  awk '{if(NR>101)print $0}' src/scotch/Makefile.org >> src/scotch/Makefile
   rm -f conftmp.scotch.cmd
 
   # replacement text in the default libscotch Makefile
@@ -322,18 +322,18 @@ install				: \$(libdir)/libscotch\$(LIB) \$(libdir)/libscotcherr\$(LIB) \\
 _ACEOF
 
   # avoids lines between 71 to 73, containig install lines, and replaces them
-  awk '{if(NR<71)print $0}' ${SCOTCH_DIR}/src/libscotch/Makefile.org > ${SCOTCH_DIR}/src/libscotch/Makefile
-  cat conftmp.libscotch.cmd >> ${SCOTCH_DIR}/src/libscotch/Makefile
-  awk '{if(NR>73)print $0}' ${SCOTCH_DIR}/src/libscotch/Makefile.org >> ${SCOTCH_DIR}/src/libscotch/Makefile
+  awk '{if(NR<71)print $0}' src/libscotch/Makefile.org > src/libscotch/Makefile
+  cat conftmp.libscotch.cmd >> src/libscotch/Makefile
+  awk '{if(NR>73)print $0}' src/libscotch/Makefile.org >> src/libscotch/Makefile
   rm -f conftmp.libscotch.cmd
 
   # replaces single scotch line in Makefiles
   # src/scotch/
-  sed -i "s/^scotch.*clean/scotch     : /" ${SCOTCH_DIR}/src/scotch/Makefile
+  sed -i "s/^scotch.*clean/scotch     : /" src/scotch/Makefile
   # src/libscotch/
-  sed -i "s/^scotch.*clean/scotch     : /" ${SCOTCH_DIR}/src/libscotch/Makefile
+  sed -i "s/^scotch.*clean/scotch     : /" src/libscotch/Makefile
   # src/libscotchmetis/
-  sed -i "s/^scotch.*clean/scotch     : /" ${SCOTCH_DIR}/src/libscotchmetis/Makefile
+  sed -i "s/^scotch.*clean/scotch     : /" src/libscotchmetis/Makefile
 
  cd $builddir
 
@@ -454,7 +454,7 @@ AC_CONFIG_FILES([
 	src/generate_databases/Makefile
 	src/shared/constants.h
 	src/shared/precision.h
-	src/decompose_mesh_SCOTCH/scotch_5.1.12b/src/Makefile.inc
+	src/decompose_mesh_SCOTCH/scotch/src/Makefile.inc
 	src/check_mesh_quality_CUBIT_Abaqus/Makefile
 ])
 AC_OUTPUT

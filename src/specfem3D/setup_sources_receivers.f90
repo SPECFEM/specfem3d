@@ -56,6 +56,9 @@
     write(IMAIN,*)
   endif
 
+  ! synchronizes processes
+  call sync_all()
+
   end subroutine setup_sources_receivers
 
 !
@@ -343,7 +346,7 @@
 
 ! reads in station file
   if (SIMULATION_TYPE == 1) then
-     call get_value_string(rec_filename, 'solver.STATIONS', &
+    call get_value_string(rec_filename, 'solver.STATIONS', &
           IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS')
     call get_value_string(filtered_rec_filename, 'solver.STATIONS_FILTERED', &
          IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'STATIONS_FILTERED')
@@ -779,7 +782,6 @@
       call exit_MPI(myrank,'problem when dispatching the receivers')
     endif
   endif
-
 
   end subroutine setup_receivers_precompute_intp
 

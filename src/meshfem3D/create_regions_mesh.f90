@@ -71,9 +71,9 @@ contains
     double precision ygrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
     double precision zgrid(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
-    double precision, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xstore,ystore,zstore
+    double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore,ystore,zstore
 
-    integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+    integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
 
     character(len=256) LOCAL_PATH
 
@@ -163,7 +163,7 @@ contains
     call create_name_database(prname,myrank,LOCAL_PATH)
 
     ! flag indicating whether point is in the sediments
-    allocate(flag_sediments(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    allocate(flag_sediments(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array flag_sediments'
     allocate(not_fully_in_bedrock(nspec),stat=ier)
     if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
@@ -359,11 +359,11 @@ contains
 
     ! puts x,y,z locations into 1D arrays
     do ispec=1,nspec
-       ieoff = NGLLCUBE*(ispec-1)
+       ieoff = NGLLCUBE_M*(ispec-1)
        ilocnum = 0
-       do k=1,NGLLZ
-          do j=1,NGLLY
-             do i=1,NGLLX
+       do k=1,NGLLZ_M
+          do j=1,NGLLY_M
+             do i=1,NGLLX_M
                 ilocnum = ilocnum + 1
                 xp(ilocnum+ieoff) = xstore(i,j,k,ispec)
                 yp(ilocnum+ieoff) = ystore(i,j,k,ispec)
@@ -391,11 +391,11 @@ contains
     ibool(:,:,:,:) = 0
 
     do ispec=1,nspec
-       ieoff = NGLLCUBE*(ispec-1)
+       ieoff = NGLLCUBE_M*(ispec-1)
        ilocnum = 0
-       do k=1,NGLLZ
-          do j=1,NGLLY
-             do i=1,NGLLX
+       do k=1,NGLLZ_M
+          do j=1,NGLLY_M
+             do i=1,NGLLX_M
                 ilocnum = ilocnum + 1
                 ibool(i,j,k,ispec) = iglob(ilocnum+ieoff)
                 nodes_coords(iglob(ilocnum+ieoff),1) = xstore(i,j,k,ispec)

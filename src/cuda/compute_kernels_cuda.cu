@@ -249,9 +249,7 @@ __device__ void compute_gradient_kernel(int ijk,
                                         int ispec,
                                         realw* scalar_field,
                                         realw* vector_field_element,
-                                        realw* hprime_xx,
-                                        realw* hprime_yy,
-                                        realw* hprime_zz,
+                                        realw* d_hprime_xx,
                                         realw* d_xix,
                                         realw* d_xiy,
                                         realw* d_xiz,
@@ -280,7 +278,7 @@ __device__ void compute_gradient_kernel(int ijk,
   // derivative along x
   temp1l = 0.f;
   for( l=0; l<NGLLX;l++){
-    hp1 = hprime_xx[l*NGLLX+I];
+    hp1 = d_hprime_xx[l*NGLLX+I];
     offset1 = K*NGLL2+J*NGLLX+l;
     temp1l += scalar_field[offset1]*hp1;
   }
@@ -288,7 +286,8 @@ __device__ void compute_gradient_kernel(int ijk,
   // derivative along y
   temp2l = 0.f;
   for( l=0; l<NGLLX;l++){
-    hp2 = hprime_yy[l*NGLLX+J];
+    // assumes hprime_xx == hprime_yy
+    hp2 = d_hprime_xx[l*NGLLX+J];
     offset2 = K*NGLL2+l*NGLLX+I;
     temp2l += scalar_field[offset2]*hp2;
   }
@@ -296,10 +295,10 @@ __device__ void compute_gradient_kernel(int ijk,
   // derivative along z
   temp3l = 0.f;
   for( l=0; l<NGLLX;l++){
-    hp3 = hprime_zz[l*NGLLX+K];
+    // assumes hprime_xx == hprime_zz
+    hp3 = d_hprime_xx[l*NGLLX+K];
     offset3 = l*NGLL2+J*NGLLX+I;
     temp3l += scalar_field[offset3]*hp3;
-
   }
 
   offset = ispec*NGLL3_ALIGN + ijk;
@@ -334,9 +333,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                                                 int* ibool,
                                                 realw* rhostore,
                                                 realw* kappastore,
-                                                realw* hprime_xx,
-                                                realw* hprime_yy,
-                                                realw* hprime_zz,
+                                                realw* d_hprime_xx,
                                                 realw* d_xix,
                                                 realw* d_xiy,
                                                 realw* d_xiz,
@@ -388,13 +385,13 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
 
       // displacement vector from backward field
       compute_gradient_kernel(ijk,ispec,scalar_field_displ,b_displ_elm,
-                              hprime_xx,hprime_yy,hprime_zz,
+                              d_hprime_xx,
                               d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                               rhol,gravity);
 
       // acceleration vector
       compute_gradient_kernel(ijk,ispec,scalar_field_accel,accel_elm,
-                              hprime_xx,hprime_yy,hprime_zz,
+                              d_hprime_xx,
                               d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                               rhol,gravity);
 
@@ -442,8 +439,6 @@ TRACE("compute_kernels_acoustic_cuda");
                                                     mp->d_rhostore,
                                                     mp->d_kappastore,
                                                     mp->d_hprime_xx,
-                                                    mp->d_hprime_yy,
-                                                    mp->d_hprime_zz,
                                                     mp->d_xix,
                                                     mp->d_xiy,
                                                     mp->d_xiz,
@@ -508,9 +503,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                                                    realw* potential_dot_dot_acoustic,
                                                    realw* b_potential_dot_dot_acoustic,
                                                    realw* rhostore,
-                                                   realw* hprime_xx,
-                                                   realw* hprime_yy,
-                                                   realw* hprime_zz,
+                                                   realw* d_hprime_xx,
                                                    realw* d_xix,
                                                    realw* d_xiy,
                                                    realw* d_xiz,
@@ -559,14 +552,14 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
       // acceleration vector
       compute_gradient_kernel(ijk,ispec,
                               scalar_field_accel,accel_elm,
-                              hprime_xx,hprime_yy,hprime_zz,
+                              d_hprime_xx,
                               d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                               rhol,gravity);
 
       // acceleration vector from backward field
       compute_gradient_kernel(ijk,ispec,
                               scalar_field_b_accel,b_accel_elm,
-                              hprime_xx,hprime_yy,hprime_zz,
+                              d_hprime_xx,
                               d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                               rhol,gravity);
       // approximates hessian
@@ -621,8 +614,6 @@ void FC_FUNC_(compute_kernels_hess_cuda,
                                                          mp->d_b_potential_dot_dot_acoustic,
                                                          mp->d_rhostore,
                                                          mp->d_hprime_xx,
-                                                         mp->d_hprime_yy,
-                                                         mp->d_hprime_zz,
                                                          mp->d_xix,
                                                          mp->d_xiy,
                                                          mp->d_xiz,

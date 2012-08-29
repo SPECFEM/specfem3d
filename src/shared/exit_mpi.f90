@@ -61,10 +61,11 @@
   end subroutine exit_MPI
 
 !
-!----
+!-------------------------------------------------------------------------------------------------
 !
 
 ! version without rank number printed in the error message
+
   subroutine exit_MPI_without_rank(error_msg)
 
   implicit none
@@ -80,4 +81,31 @@
   call stop_all()
 
   end subroutine exit_MPI_without_rank
+
+
+!-------------------------------------------------------------------------------------------------
+!
+! I/O wrapper function
+!
+!-------------------------------------------------------------------------------------------------
+
+  subroutine flush_IMAIN()
+
+  implicit none
+
+  include "constants.h"
+
+  ! only master process writes out to main output file
+  ! file I/O in fortran is buffered by default
+  !
+  ! note: Fortran2003 includes a FLUSH statement
+  !          which is implemented by most compilers by now
+  !
+  ! otherwise:
+  !   a) comment out the line below
+  !   b) try to use instead: call flush(IMAIN)
+
+  flush(IMAIN)
+
+  end subroutine flush_IMAIN
 

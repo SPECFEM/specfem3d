@@ -32,6 +32,15 @@
 !----------- do not modify anything below -------------
 !------------------------------------------------------
 
+
+! number of GLL points not set in the mesher, do not modify this value
+  integer, parameter :: NGLLX_M = 2
+  integer, parameter :: NGLLY_M = NGLLX_M
+  integer, parameter :: NGLLZ_M = NGLLX_M
+
+! number of points per spectral element
+  integer, parameter :: NGLLCUBE_M = NGLLX_M * NGLLY_M * NGLLZ_M
+
 ! define flag for elements
   integer, parameter :: IFLAG_ONE_LAYER_TOPOGRAPHY = 1
   integer, parameter :: IFLAG_BASEMENT_TOPO = 2

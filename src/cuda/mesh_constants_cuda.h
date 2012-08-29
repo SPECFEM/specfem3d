@@ -71,7 +71,7 @@
 #endif
 
 // error checking after cuda function calls
-//#define ENABLE_VERY_SLOW_ERROR_CHECKING
+#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
 // maximum function
 #define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
@@ -83,7 +83,6 @@ void print_CUDA_error_if_any(cudaError_t err, int num);
 void pause_for_debugger(int pause);
 void exit_on_cuda_error(char* kernel_name);
 void exit_on_error(char* info);
-//void get_blocks_xy(int num_blocks,int* num_blocks_x,int* num_blocks_y);
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -107,16 +106,20 @@ void exit_on_error(char* info);
 // number of standard linear solids
 #define N_SLS 3
 
-//typedef float real;   // type of variables passed into function
-typedef float realw;  // type of "working" variables
+/* ----------------------------------------------------------------------------------------------- */
 
-// double precision temporary variables leads to 10% performance
-// decrease in Kernel_2_impl (not very much..)
-typedef float reald;
+// type of "working" variables: see also CUSTOM_REAL
+// double precision temporary variables leads to 10% performance decrease
+// in Kernel_2_impl (not very much..)
+typedef float realw;
+
+/* ----------------------------------------------------------------------------------------------- */
 
 // (optional) pre-processing directive used in kernels: if defined check that it is also set in src/shared/constants.h:
 // leads up to ~ 5% performance increase
 //#define USE_MESH_COLORING_GPU
+
+/* ----------------------------------------------------------------------------------------------- */
 
 // Texture memory usage:
 // requires CUDA version >= 4.0, see check below
@@ -135,10 +138,18 @@ typedef float reald;
 #undef USE_TEXTURES_CONSTANTS
 #endif
 
+#ifdef USE_TEXTURES_FIELDS
+#pragma message ("\nCompiling with: USE_TEXTURES_FIELDS enabled\n")
+#endif
+#ifdef USE_TEXTURES_CONSTANTS
+#pragma message ("\nCompiling with: USE_TEXTURES_CONSTANTS enabled\n")
+#endif
 
 // (optional) unrolling loops
 // leads up to ~1% performance increase
 //#define MANUALLY_UNROLLED_LOOPS
+
+/* ----------------------------------------------------------------------------------------------- */
 
 // cuda kernel block size for updating displacements/potential (newmark time scheme)
 // current hardware: 128 is slightly faster than 256 ( ~ 4%)
@@ -181,6 +192,10 @@ typedef struct mesh_ {
   int myrank;
   int NPROC;
 
+  // ------------------------------------------------------------------ //
+  // GLL points & weights
+  // ------------------------------------------------------------------ //
+
   // interpolators
   realw* d_xix; realw* d_xiy; realw* d_xiz;
   realw* d_etax; realw* d_etay; realw* d_etaz;
@@ -199,10 +214,22 @@ typedef struct mesh_ {
   int use_mesh_coloring_gpu;
 
   // pointers to constant memory arrays
-  realw* d_hprime_xx; realw* d_hprime_yy; realw* d_hprime_zz;
-  realw* d_hprimewgll_xx; realw* d_hprimewgll_yy; realw* d_hprimewgll_zz;
+  realw* d_hprime_xx;
+  //realw* d_hprime_yy; // only needed if NGLLX != NGLLY != NGLLZ
+  //realw* d_hprime_zz; // only needed if NGLLX != NGLLY != NGLLZ
+
+  realw* d_hprimewgll_xx;
+  //realw* d_hprimewgll_yy; // only needed if NGLLX != NGLLY != NGLLZ
+  //realw* d_hprimewgll_zz; // only needed if NGLLX != NGLLY != NGLLZ
+
   realw* d_wgllwgll_xy; realw* d_wgllwgll_xz; realw* d_wgllwgll_yz;
   realw* d_wgll_cube;
+
+#ifdef USE_TEXTURES_CONSTANTS
+  const textureReference* d_hprime_xx_tex_ptr;
+  realw* d_hprime_xx_tex;
+#endif
+
 
   // A buffer for mpi-send/recv, which is duplicated in fortran but is
   // allocated with pinned memory to facilitate asynchronus device <->
@@ -240,9 +267,11 @@ typedef struct mesh_ {
   // backward/reconstructed elastic wavefield
   realw* d_b_displ; realw* d_b_veloc; realw* d_b_accel;
 
+#ifdef USE_TEXTURES_FIELDS
   // Texture references for fast non-coalesced scattered access
   const textureReference* d_displ_tex_ref_ptr;
   const textureReference* d_accel_tex_ref_ptr;
+#endif
 
   // elastic elements
   int* d_ispec_is_elastic;

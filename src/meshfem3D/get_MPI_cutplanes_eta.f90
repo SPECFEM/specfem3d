@@ -42,11 +42,11 @@
 
   logical iMPIcut_eta(2,nspec)
 
-  integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+  integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
 
-  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
-  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
-  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
+  double precision xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  double precision ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  double precision zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
 
 ! logical mask used to create arrays iboolleft_eta and iboolright_eta
   integer npointot
@@ -93,8 +93,8 @@
 
 ! loop on all the points in that 2-D element, including edges
   iy = 1
-  do ix=1,NGLLX
-      do iz=1,NGLLZ
+  do ix=1,NGLLX_M
+      do iz=1,NGLLZ_M
 
 ! select point, if not already selected
   if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
@@ -145,9 +145,9 @@
     ispecc2=ispecc2+1
 
 ! loop on all the points in that 2-D element, including edges
-  iy = NGLLY
-  do ix=1,NGLLX
-      do iz=1,NGLLZ
+  iy = NGLLY_M
+  do ix=1,NGLLX_M
+      do iz=1,NGLLZ_M
 
 ! select point, if not already selected
   if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then

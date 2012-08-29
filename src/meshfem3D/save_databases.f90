@@ -52,7 +52,7 @@
   integer addressing(0:NPROC_XI-1,0:NPROC_ETA-1)
 
   ! arrays with the mesh
-  integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+  integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
   integer true_material_num(nspec)
@@ -123,28 +123,28 @@
   write(IIN_database) 6,NSPEC2D_TOP
 
   do i=1,nspec2D_xmin
-     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY,1,ibelm_xmin(i)),&
-          ibool(1,1,NGLLZ,ibelm_xmin(i)),ibool(1,NGLLY,NGLLZ,ibelm_xmin(i))
+     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)),&
+          ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
   end do
   do i=1,nspec2D_xmax
-     write(IIN_database) ibelm_xmax(i),ibool(NGLLX,1,1,ibelm_xmax(i)),ibool(NGLLX,NGLLY,1,ibelm_xmax(i)), &
-          ibool(NGLLX,1,NGLLZ,ibelm_xmax(i)),ibool(NGLLX,NGLLY,NGLLZ,ibelm_xmax(i))
+     write(IIN_database) ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), &
+          ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
   end do
   do i=1,nspec2D_ymin
-     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX,1,1,ibelm_ymin(i)),&
-          ibool(1,1,NGLLZ,ibelm_ymin(i)),ibool(NGLLX,1,NGLLZ,ibelm_ymin(i))
+     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)),&
+          ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
   end do
   do i=1,nspec2D_ymax
-     write(IIN_database) ibelm_ymax(i),ibool(NGLLX,NGLLY,1,ibelm_ymax(i)),ibool(1,NGLLY,1,ibelm_ymax(i)), &
-          ibool(NGLLX,NGLLY,NGLLZ,ibelm_ymax(i)),ibool(1,NGLLY,NGLLZ,ibelm_ymax(i))
+     write(IIN_database) ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),ibool(1,NGLLY_M,1,ibelm_ymax(i)), &
+          ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
   end do
   do i=1,NSPEC2D_BOTTOM
-     write(IIN_database) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX,1,1,ibelm_bottom(i)), &
-          ibool(NGLLX,NGLLY,1,ibelm_bottom(i)),ibool(1,NGLLY,1,ibelm_bottom(i))
+     write(IIN_database) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX_M,1,1,ibelm_bottom(i)), &
+          ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i)),ibool(1,NGLLY_M,1,ibelm_bottom(i))
   end do
   do i=1,NSPEC2D_TOP
-     write(IIN_database) ibelm_top(i),ibool(1,1,NGLLZ,ibelm_top(i)),ibool(NGLLX,1,NGLLZ,ibelm_top(i)), &
-          ibool(NGLLX,NGLLY,NGLLZ,ibelm_top(i)),ibool(1,NGLLY,NGLLZ,ibelm_top(i))
+     write(IIN_database) ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)), &
+          ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
   end do
 
   ! MPI Interfaces

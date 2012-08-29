@@ -917,7 +917,5 @@ module decompose_mesh_SCOTCH
 
   end subroutine write_mesh_databases
 
-!end program pre_meshfem3D
-
 end module decompose_mesh_SCOTCH
 

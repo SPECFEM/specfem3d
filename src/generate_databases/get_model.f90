@@ -31,7 +31,9 @@
                         ANISOTROPY)
 
   use generate_databases_par,only: IMODEL
+
   use create_regions_mesh_ext_par
+
   implicit none
 
 
@@ -311,6 +313,10 @@
         tCPU = (10.0-ispec/(nspec/10.0))/ispec/(nspec/10.0)*tCPU
         write(IMAIN,*) "    ",ispec/(nspec/10) * 10," %", &
                       " time remaining:", tCPU,"s"
+
+        ! flushes file buffer for main output file (IMAIN)
+        call flush_IMAIN()
+
       endif
     endif
   enddo
@@ -340,6 +346,11 @@
       stop 'error material domain index element'
     endif
   enddo
+
+  ! sets simulation domain flags
+  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
+  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
+  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   end subroutine get_model
 

@@ -198,7 +198,7 @@
   else
     ! open paraview output mesh file
     mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
-    call open_file(trim(mesh_file)//char(0))
+    call open_file_create(trim(mesh_file)//char(0))
   endif
 
   ! counts total number of points (all slices)

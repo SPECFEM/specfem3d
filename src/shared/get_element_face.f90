@@ -300,7 +300,7 @@ end subroutine get_element_face_gll_indices
   real(kind=CUSTOM_REAL),dimension(NDIM) :: normal
 
 ! local parameters
-  real(kind=CUSTOM_REAL) :: face_n(3),tmp,v_tmp(3)
+  real(kind=CUSTOM_REAL) :: face_n(NDIM),tmp,v_tmp(NDIM)
   integer :: iglob
 
 ! determines initial orientation given by three corners on the face
@@ -344,19 +344,24 @@ end subroutine get_element_face_gll_indices
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
 
   ! makes sure normal points outwards, that is points away from this additional corner and scalarproduct is negative
-  if( tmp > 0.0 ) then
+  if( tmp > 0.0_CUSTOM_REAL ) then
     face_n(:) = - face_n(:)
   endif
 
-! in case given normal has zero length, sets it to computed face normal
-  if( ( normal(1)**2 + normal(2)**2 + normal(3)**2 ) < TINYVAL ) then
+  ! in case given normal has zero length, sets it to computed face normal
+  ! note: to avoid floating-point exception we use dble()
+  !         values of normal(:) could be very small, almost zero, and lead to underflow
+  !tmp = normal(1)*normal(1) + normal(2)*normal(2) + normal(3)*normal(3)
+  tmp = sngl(dble(normal(1))**2 + dble(normal(2))**2 + dble(normal(3))**2)
+  if( tmp < TINYVAL ) then
     normal(:) = face_n(:)
     return
   endif
 
-! otherwise determines orientation of normal and flips direction such that normal points outwards
+  ! otherwise determines orientation of normal and flips direction such that normal points outwards
+
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
-  if( tmp < 0.0 ) then
+  if( tmp < 0.0_CUSTOM_REAL ) then
     !swap
     normal(:) = - normal(:)
   endif

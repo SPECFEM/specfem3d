@@ -48,6 +48,7 @@
 
   implicit none
 
+  integer :: iphase
   integer :: NSPEC_AB,NGLOB_AB
 
 ! adjoint simulations
@@ -91,7 +92,6 @@
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
 !  logical,dimension(NSPEC_AB) :: ispec_is_elastic
-  integer :: iphase
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
   integer, dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
 

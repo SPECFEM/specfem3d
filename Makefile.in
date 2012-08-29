@@ -71,7 +71,15 @@ RANLIB = ranlib
 
 default: $(DEFAULT)
 
-all: default
+all: default \
+	xconvolve_source_timefunction \
+	xcombine_vol_data \
+	xcombine_surf_data \
+	xsmooth_vol_data \
+	xsum_kernels \
+	xmodel_update \
+	xcheck_mesh_quality_CUBIT_Abaqus \
+	$(EMPTY_MACRO)
 
 required: bin lib obj
 

@@ -38,8 +38,6 @@ program pre_meshfem3D
   integer :: i
   character(len=256) :: arg(3)
 
-!  include './constants_decompose_mesh_SCOTCH.h'
-
 ! check usage
   do i=1,3
     call getarg(i,arg(i))
