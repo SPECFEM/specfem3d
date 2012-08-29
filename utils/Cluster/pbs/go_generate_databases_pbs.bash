@@ -47,3 +47,10 @@ cd bin/
 mpiexec -np $numnodes ./xgenerate_databases
 
 echo "done "
+
+# per instructions in manual, view low-res mesh with these commands (replace 143 with nproc-1):
+# > make xcombine_vol_data
+# > cd bin/
+# > ./xcombine_vol_data 0 143 vs ../in_out_files/DATABASES_MPI/ ../in_out_files/OUTPUT_FILES 0
+# > cd ../in_out_files/OUTPUT_FILES
+# > paraview &
