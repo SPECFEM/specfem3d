@@ -143,7 +143,13 @@
      if(distmax > distance_max) ispec_max_edge_length = ispec
      if(equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
 
-     if( CREATE_VTK_FILES ) tmp1(ispec) = equiangle_skewness
+     if( CREATE_VTK_FILES ) then
+        if(CUSTOM_REAL == SIZE_REAL) then
+          tmp1(ispec) = sngl(equiangle_skewness)
+        else
+          tmp1(ispec) = equiangle_skewness
+        endif
+     endif
 
      ! compute minimum and maximum of quality numbers
      equiangle_skewness_min = min(equiangle_skewness_min,equiangle_skewness)
@@ -385,24 +391,24 @@
 
   include "constants.h"
 
-  integer :: true_NGLLX = 5
-
-  integer :: iface,icorner,ispec,NSPEC,NGLOB,i
+  integer :: NSPEC,NGLOB
 
   double precision, dimension(NGLOB) :: x,y,z
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC) :: ibool
-
-  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
-
-  double precision vectorA_x,vectorA_y,vectorA_z
-  double precision vectorB_x,vectorB_y,vectorB_z
-  double precision norm_A,norm_B,angle_vectors
-  double precision distmin,distmax,dist,dist1,dist2,dist3,dist4
-  double precision equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
+  integer :: ispec
 
   ! for stability
-  double precision :: stability,VP_MAX,dt_suggested
+  double precision :: VP_MAX,dt_suggested
+  double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
+  double precision :: stability,distmin,distmax
+
+  ! local parameters
+  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
+  double precision :: vectorA_x,vectorA_y,vectorA_z
+  double precision :: vectorB_x,vectorB_y,vectorB_z
+  double precision :: norm_A,norm_B,angle_vectors
+  double precision :: dist,dist1,dist2,dist3,dist4
 
   ! maximum polynomial degree for which we can compute the stability condition
   integer, parameter :: NGLL_MAX_STABILITY = 15
@@ -410,6 +416,10 @@
 
   ! topology of faces of cube for skewness
   integer faces_topo(6,6)
+  integer :: iface,icorner,i
+
+  integer,parameter :: true_NGLLX = 5
+
 
   ! store the corners of this element for the skewness routine
   do i = 1,NGNOD_EIGHT_CORNERS
@@ -420,6 +430,7 @@
 
   ! define percentage of smallest distance between GLL points for NGLL points
   ! percentages were computed by calling the GLL points routine for each degree
+  percent_GLL(1) = 100.d0
   percent_GLL(2) = 100.d0
   percent_GLL(3) = 50.d0
   percent_GLL(4) = 27.639320225002102d0
@@ -439,7 +450,7 @@
   percent_GLL(:) = percent_GLL(:) / 100.d0
 
   ! check that the degree is not above the threshold for list of percentages
-  if(NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
+  if(NGLLX_M > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
   ! define topology of faces of cube for skewness
 
@@ -536,5 +547,5 @@
   dist4 = sqrt((xelm(7) - xelm(2))**2 + (yelm(7) - yelm(2))**2 + (zelm(7) - zelm(2))**2)
   diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
 
-end subroutine create_mesh_quality_data_3D
+  end subroutine create_mesh_quality_data_3D
 

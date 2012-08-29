@@ -39,7 +39,7 @@
 
 #include "config.h"
 #include "mesh_constants_cuda.h"
-#include "prepare_constants_cuda.h"
+//#include "prepare_constants_cuda.h"
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -243,37 +243,6 @@ void FC_FUNC_(output_free_device_memory,
   output_free_memory(*myrank,info);
 }
 
-/* ----------------------------------------------------------------------------------------------- */
-
-/*
- void show_free_memory(char* info_str) {
-
- // show memory usage of GPU
- int myrank;
- #ifdef WITH_MPI
- MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
- #else
- myrank = 0;
- #endif
- double free_db,used_db,total_db;
-
- get_free_memory(&free_db,&used_db,&total_db);
-
- printf("%d: @%s GPU memory usage: used = %f MB, free = %f MB, total = %f MB\n", myrank, info_str,
- used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
-
- }
- */
-
-/*
- extern "C"
- void FC_FUNC_(show_free_device_memory,
- SHOW_FREE_DEVICE_MEMORY)() {
- TRACE("show_free_device_memory");
-
- show_free_memory("from fortran");
- }
- */
 
 /* ----------------------------------------------------------------------------------------------- */
 

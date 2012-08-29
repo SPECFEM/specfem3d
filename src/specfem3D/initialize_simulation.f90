@@ -189,6 +189,9 @@
           ispec_is_elastic(NSPEC_AB), &
           ispec_is_poroelastic(NSPEC_AB),stat=ier)
   if( ier /= 0 ) stop 'error allocating arrays for material flags'
+  ispec_is_acoustic(:) = .false.
+  ispec_is_elastic(:) = .false.
+  ispec_is_poroelastic(:) = .false.
 
   ! initializes adjoint simulations
   call initialize_simulation_adjoint()

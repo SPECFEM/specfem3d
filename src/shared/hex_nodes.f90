@@ -72,91 +72,95 @@
 
   if(NGNOD == 27) then
 
-! midside nodes (nodes located in the middle of an edge)
+    ! midside nodes (nodes located in the middle of an edge)
 
-  iaddx(9) = 1
-  iaddy(9) = 0
-  iaddz(9) = 0
+    iaddx(9) = 1
+    iaddy(9) = 0
+    iaddz(9) = 0
 
-  iaddx(10) = 2
-  iaddy(10) = 1
-  iaddz(10) = 0
+    iaddx(10) = 2
+    iaddy(10) = 1
+    iaddz(10) = 0
 
-  iaddx(11) = 1
-  iaddy(11) = 2
-  iaddz(11) = 0
+    iaddx(11) = 1
+    iaddy(11) = 2
+    iaddz(11) = 0
 
-  iaddx(12) = 0
-  iaddy(12) = 1
-  iaddz(12) = 0
+    iaddx(12) = 0
+    iaddy(12) = 1
+    iaddz(12) = 0
 
-  iaddx(13) = 0
-  iaddy(13) = 0
-  iaddz(13) = 1
+    iaddx(13) = 0
+    iaddy(13) = 0
+    iaddz(13) = 1
 
-  iaddx(14) = 2
-  iaddy(14) = 0
-  iaddz(14) = 1
+    iaddx(14) = 2
+    iaddy(14) = 0
+    iaddz(14) = 1
 
-  iaddx(15) = 2
-  iaddy(15) = 2
-  iaddz(15) = 1
+    iaddx(15) = 2
+    iaddy(15) = 2
+    iaddz(15) = 1
 
-  iaddx(16) = 0
-  iaddy(16) = 2
-  iaddz(16) = 1
+    iaddx(16) = 0
+    iaddy(16) = 2
+    iaddz(16) = 1
 
-  iaddx(17) = 1
-  iaddy(17) = 0
-  iaddz(17) = 2
+    iaddx(17) = 1
+    iaddy(17) = 0
+    iaddz(17) = 2
 
-  iaddx(18) = 2
-  iaddy(18) = 1
-  iaddz(18) = 2
+    iaddx(18) = 2
+    iaddy(18) = 1
+    iaddz(18) = 2
 
-  iaddx(19) = 1
-  iaddy(19) = 2
-  iaddz(19) = 2
+    iaddx(19) = 1
+    iaddy(19) = 2
+    iaddz(19) = 2
 
-  iaddx(20) = 0
-  iaddy(20) = 1
-  iaddz(20) = 2
+    iaddx(20) = 0
+    iaddy(20) = 1
+    iaddz(20) = 2
 
-! side center nodes (nodes located in the middle of a face)
+    ! side center nodes (nodes located in the middle of a face)
 
-  iaddx(21) = 1
-  iaddy(21) = 1
-  iaddz(21) = 0
+    iaddx(21) = 1
+    iaddy(21) = 1
+    iaddz(21) = 0
 
-  iaddx(22) = 1
-  iaddy(22) = 0
-  iaddz(22) = 1
+    iaddx(22) = 1
+    iaddy(22) = 0
+    iaddz(22) = 1
 
-  iaddx(23) = 2
-  iaddy(23) = 1
-  iaddz(23) = 1
+    iaddx(23) = 2
+    iaddy(23) = 1
+    iaddz(23) = 1
 
-  iaddx(24) = 1
-  iaddy(24) = 2
-  iaddz(24) = 1
+    iaddx(24) = 1
+    iaddy(24) = 2
+    iaddz(24) = 1
 
-  iaddx(25) = 0
-  iaddy(25) = 1
-  iaddz(25) = 1
+    iaddx(25) = 0
+    iaddy(25) = 1
+    iaddz(25) = 1
 
-  iaddx(26) = 1
-  iaddy(26) = 1
-  iaddz(26) = 2
+    iaddx(26) = 1
+    iaddy(26) = 1
+    iaddz(26) = 2
 
-! center node (barycenter of the eight corners)
+    ! center node (barycenter of the eight corners)
 
-  iaddx(27) = 1
-  iaddy(27) = 1
-  iaddz(27) = 1
+    iaddx(27) = 1
+    iaddy(27) = 1
+    iaddz(27) = 1
 
   endif
 
   end subroutine usual_hex_nodes
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -203,6 +207,10 @@
 
   end subroutine unusual_hex_nodes1
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
   implicit none
@@ -247,6 +255,10 @@
   iaddz(8)=2
 
   end subroutine unusual_hex_nodes1p
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine unusual_hex_nodes2(iaddx,iaddy,iaddz)
 
@@ -293,6 +305,10 @@
 
   end subroutine unusual_hex_nodes2
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine unusual_hex_nodes2p(iaddx,iaddy,iaddz)
 
   implicit none
@@ -337,6 +353,10 @@
   iaddz(8)=2
 
   end subroutine unusual_hex_nodes2p
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
@@ -383,6 +403,10 @@
 
   end subroutine unusual_hex_nodes3
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
   implicit none
@@ -427,6 +451,10 @@
   iaddz(8)=2
 
   end subroutine unusual_hex_nodes4
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
@@ -473,6 +501,10 @@
 
   end subroutine unusual_hex_nodes4p
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine unusual_hex_nodes6(iaddx,iaddy,iaddz)
 
   implicit none
@@ -517,6 +549,10 @@
   iaddz(8)=2
 
   end subroutine unusual_hex_nodes6
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine unusual_hex_nodes6p(iaddx,iaddy,iaddz)
 

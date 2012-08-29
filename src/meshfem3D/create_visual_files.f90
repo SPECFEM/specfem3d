@@ -47,7 +47,7 @@
 
 ! arrays with the mesh
   integer true_material_num(nspec)
-  integer ibool(NGLLX,NGLLY,NGLLZ,nspec)
+  integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
 !  ---------------

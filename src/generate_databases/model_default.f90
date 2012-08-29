@@ -71,7 +71,7 @@
     ! or from nummaterial_poroelastic_file for poroelastic (too many arguments for cubit)
 
     ! material domain_id
-    idomain_id = materials_ext_mesh(6,imaterial_id)
+    idomain_id = nint(materials_ext_mesh(6,imaterial_id))
 
     select case( idomain_id )
 
@@ -91,7 +91,7 @@
       qmu_atten = materials_ext_mesh(4,imaterial_id)
 
       ! anisotropy
-      iflag_aniso = materials_ext_mesh(5,imaterial_id)
+      iflag_aniso = nint(materials_ext_mesh(5,imaterial_id))
 
     case( IDOMAIN_POROELASTIC )
       ! poroelastic
@@ -143,8 +143,9 @@
     vp = materials_ext_mesh(2,iflag)
     vs = materials_ext_mesh(3,iflag)
     qmu_atten = materials_ext_mesh(4,iflag)
-    iflag_aniso = materials_ext_mesh(5,iflag)
-    idomain_id = materials_ext_mesh(6,iflag)
+
+    iflag_aniso = nint(materials_ext_mesh(5,iflag))
+    idomain_id = nint(materials_ext_mesh(6,iflag))
 
   else if ( imaterial_def == 2 ) then
 

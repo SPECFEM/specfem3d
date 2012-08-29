@@ -121,10 +121,10 @@
 
   ! interpolate elevation at current point
   target_elevation = &
-        itopo_bathy(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-        itopo_bathy(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-        itopo_bathy(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-        itopo_bathy(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
+        itopo_bathy(icornerlong,icornerlat) * (1.0_CUSTOM_REAL-ratio_xi)*(1.0_CUSTOM_REAL-ratio_eta) + &
+        itopo_bathy(icornerlong+1,icornerlat) * ratio_xi*(1.0_CUSTOM_REAL-ratio_eta) + &
+        itopo_bathy(icornerlong+1,icornerlat+1) * ratio_xi*ratio_eta + &
+        itopo_bathy(icornerlong,icornerlat+1) * (1.0_CUSTOM_REAL-ratio_xi)*ratio_eta
 
   end subroutine get_topo_bathy_elevation
 

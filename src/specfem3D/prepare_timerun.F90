@@ -83,9 +83,6 @@
   call prepare_timerun_OpenMP()
 #endif
 
-  ! synchronize all the processes
-  call sync_all()
-
   ! elapsed time since beginning of preparation
   if(myrank == 0) then
     tCPU = wtime() - time_start
@@ -100,10 +97,16 @@
     write(IMAIN,*) 'start time:',sngl(-t0),' seconds'
     write(IMAIN,*)
 
+    ! flushes file buffer for main output file (IMAIN)
+    call flush_IMAIN()
+
     !daniel debug: time estimation
     ! elastic elements: time per element t_per_element = 1.40789368e-05 s
     ! total time = nspec * nstep * t_per_element
   endif
+
+  ! synchronize all the processes
+  call sync_all()
 
   end subroutine prepare_timerun
 
@@ -263,9 +266,6 @@
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
 
   endif
-
-  !debug
-  !if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
   end subroutine prepare_timerun_mass_matrices
 
@@ -1048,8 +1048,8 @@
                                   kappastore, mustore,ibool, &
                                   num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
                                   nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &
-                                  hprime_xx, hprime_yy, hprime_zz, &
-                                  hprimewgll_xx, hprimewgll_yy, hprimewgll_zz, &
+                                  hprime_xx, &
+                                  hprimewgll_xx, &
                                   wgllwgll_xy, wgllwgll_xz, wgllwgll_yz, &
                                   ABSORBING_CONDITIONS, &
                                   abs_boundary_ispec, abs_boundary_ijk, &

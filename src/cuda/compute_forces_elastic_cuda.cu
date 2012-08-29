@@ -35,27 +35,16 @@
 
 #include "config.h"
 #include "mesh_constants_cuda.h"
-// #include "epik_user.h"
 
-//  cuda constant arrays
-__device__ realw d_hprime_xx[NGLL2];
 
-// only needed if NGLLX != NGLLY != NGLLZ
-// __device__ realw d_hprime_yy[NGLL2];
-// __device__ realw d_hprime_zz[NGLL2];
-__device__ realw d_hprimewgll_xx[NGLL2];
-__device__ realw d_hprimewgll_yy[NGLL2];
-__device__ realw d_hprimewgll_zz[NGLL2];
-__device__ realw d_wgllwgll_xy[NGLL2];
-__device__ realw d_wgllwgll_xz[NGLL2];
-__device__ realw d_wgllwgll_yz[NGLL2];
+#ifdef USE_TEXTURES_FIELDS
+texture<realw, cudaTextureType1D, cudaReadModeElementType> d_displ_tex;
+texture<realw, cudaTextureType1D, cudaReadModeElementType> d_accel_tex;
+#endif
 
-__constant__ realw d_wgll_cube[NGLL3]; // needed only for gravity case
-
-//daniel: todo - check if necessary...
-// prototype for the fortran function to do non-blocking mpi send
-//extern "C"
-//void assemble_mpi_vector_send_cuda_(void*,void*,void*,void*,void*,void*,void*,void*,void*); // {};
+#ifdef USE_TEXTURES_CONSTANTS
+texture<realw, cudaTextureType1D, cudaReadModeElementType> d_hprime_xx_tex;
+#endif
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -471,15 +460,15 @@ __device__ void compute_element_att_stress(int tx,int working_element,int NSPEC,
                                            realw* R_xy,
                                            realw* R_xz,
                                            realw* R_yz,
-                                           reald* sigma_xx,
-                                           reald* sigma_yy,
-                                           reald* sigma_zz,
-                                           reald* sigma_xy,
-                                           reald* sigma_xz,
-                                           reald* sigma_yz) {
+                                           realw* sigma_xx,
+                                           realw* sigma_yy,
+                                           realw* sigma_zz,
+                                           realw* sigma_xy,
+                                           realw* sigma_xz,
+                                           realw* sigma_yz) {
 
   int i_sls,offset_sls;
-  reald R_xx_val,R_yy_val;
+  realw R_xx_val,R_yy_val;
 
   for(i_sls = 0; i_sls < N_SLS; i_sls++){
     // index
@@ -509,16 +498,16 @@ __device__ void compute_element_att_memory(int tx,int working_element,int NSPEC,
                                           realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
                                           realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
                                           realw* epsilondev_xz,realw* epsilondev_yz,
-                                          reald epsilondev_xx_loc,reald epsilondev_yy_loc,reald epsilondev_xy_loc,
-                                          reald epsilondev_xz_loc,reald epsilondev_yz_loc
+                                          realw epsilondev_xx_loc,realw epsilondev_yy_loc,realw epsilondev_xy_loc,
+                                          realw epsilondev_xz_loc,realw epsilondev_yz_loc
                                           ){
 
   int i_sls;
   int ijk_ispec;
   int offset_sls,offset_align,offset_common;
-  reald mul;
-  reald alphaval_loc,betaval_loc,gammaval_loc;
-  reald factor_loc,Sn,Snp1;
+  realw mul;
+  realw alphaval_loc,betaval_loc,gammaval_loc;
+  realw factor_loc,Sn,Snp1;
 
   // indices
   offset_align = tx + NGLL3_PADDED * working_element;
@@ -584,25 +573,25 @@ __device__ void compute_element_gravity(int tx,int working_element,
                                         realw* d_minus_deriv_gravity,
                                         realw* d_rhostore,
                                         realw* wgll_cube,
-                                        reald jacobianl,
-                                        reald* s_dummyx_loc,
-                                        reald* s_dummyy_loc,
-                                        reald* s_dummyz_loc,
-                                        reald* sigma_xx,
-                                        reald* sigma_yy,
-                                        reald* sigma_xz,
-                                        reald* sigma_yz,
-                                        reald* rho_s_H1,
-                                        reald* rho_s_H2,
-                                        reald* rho_s_H3){
+                                        realw jacobianl,
+                                        realw* s_dummyx_loc,
+                                        realw* s_dummyy_loc,
+                                        realw* s_dummyz_loc,
+                                        realw* sigma_xx,
+                                        realw* sigma_yy,
+                                        realw* sigma_xz,
+                                        realw* sigma_yz,
+                                        realw* rho_s_H1,
+                                        realw* rho_s_H2,
+                                        realw* rho_s_H3){
 
   int iglob;
-  reald minus_g,minus_dg;
-  reald rhol;
-  reald gzl; // gxl,gyl,
-  reald sx_l,sy_l,sz_l;
-  reald Hxxl,Hyyl,Hzzl; //,Hxyl,Hxzl,Hyzl;
-  reald factor;
+  realw minus_g,minus_dg;
+  realw rhol;
+  realw gzl; // gxl,gyl,
+  realw sx_l,sy_l,sz_l;
+  realw Hxxl,Hyyl,Hzzl; //,Hxyl,Hxzl,Hyzl;
+  realw factor;
 
   // compute non-symmetric terms for gravity
 
@@ -672,17 +661,11 @@ __device__ void compute_element_gravity(int tx,int working_element,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// double precision temporary variables leads to 10% performance
-// decrease in Kernel_2_impl (not very much..)
-//typedef realw reald;
-#ifdef USE_TEXTURES_FIELDS
-texture<realw, cudaTextureType1D, cudaReadModeElementType> d_displ_tex;
-texture<realw, cudaTextureType1D, cudaReadModeElementType> d_accel_tex;
-#endif
+// KERNEL 2
+//
+// for elastic domains
 
-#ifdef USE_TEXTURES_CONSTANTS
-texture<realw, cudaTextureType1D, cudaReadModeElementType> d_hprime_xx_tex;
-#endif
+/* ----------------------------------------------------------------------------------------------- */
 
 __global__ void Kernel_2_impl(int nb_blocks_to_compute,
                               int NGLOB,
@@ -694,6 +677,9 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
                               realw* d_xix, realw* d_xiy, realw* d_xiz,
                               realw* d_etax, realw* d_etay, realw* d_etaz,
                               realw* d_gammax, realw* d_gammay, realw* d_gammaz,
+                              realw* d_hprime_xx,
+                              realw* d_hprimewgll_xx,
+                              realw* d_wgllwgll_xy,realw* d_wgllwgll_xz,realw* d_wgllwgll_yz,
                               realw* d_kappav, realw* d_muv,
                               int COMPUTE_AND_STORE_STRAIN,
                               realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
@@ -738,9 +724,6 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
   /* int bx = blockIdx.x; */
   int tx = threadIdx.x;
 
-  //const int NGLLX = 5;
-  // const int NGLL2 = 25;
-  //const int NGLL3 = NGLL3;
   const int NGLL3_ALIGN = NGLL3_PADDED;
 
   int K = (tx/NGLL2);
@@ -751,461 +734,481 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
   int iglob = 0;
   int working_element;
 
-  reald tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
-  reald xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
-  reald duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl;
-  reald duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
-  reald duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
-  reald fac1,fac2,fac3,lambdal,mul,lambdalplus2mul,kappal;
-  reald sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
-  reald epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
-  reald c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66;
-  reald sum_terms1,sum_terms2,sum_terms3;
+  realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
+  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
+  realw duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl;
+  realw duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl;
+  realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
+
+  realw fac1,fac2,fac3,lambdal,mul,lambdalplus2mul,kappal;
+  realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
+  realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
+
+  realw c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66;
+  realw sum_terms1,sum_terms2,sum_terms3;
 
   // gravity variables
-  reald sigma_yx,sigma_zx,sigma_zy;
-  reald rho_s_H1,rho_s_H2,rho_s_H3;
+  realw sigma_yx,sigma_zx,sigma_zy;
+  realw rho_s_H1,rho_s_H2,rho_s_H3;
 
 #ifndef MANUALLY_UNROLLED_LOOPS
-    int l;
-    realw hp1,hp2,hp3;
+  int l;
+  realw hp1,hp2,hp3;
 #endif
 
-    __shared__ reald s_dummyx_loc[NGLL3];
-    __shared__ reald s_dummyy_loc[NGLL3];
-    __shared__ reald s_dummyz_loc[NGLL3];
+  __shared__ realw s_dummyx_loc[NGLL3];
+  __shared__ realw s_dummyy_loc[NGLL3];
+  __shared__ realw s_dummyz_loc[NGLL3];
 
-    __shared__ reald s_tempx1[NGLL3];
-    __shared__ reald s_tempx2[NGLL3];
-    __shared__ reald s_tempx3[NGLL3];
-    __shared__ reald s_tempy1[NGLL3];
-    __shared__ reald s_tempy2[NGLL3];
-    __shared__ reald s_tempy3[NGLL3];
-    __shared__ reald s_tempz1[NGLL3];
-    __shared__ reald s_tempz2[NGLL3];
-    __shared__ reald s_tempz3[NGLL3];
+  __shared__ realw s_tempx1[NGLL3];
+  __shared__ realw s_tempx2[NGLL3];
+  __shared__ realw s_tempx3[NGLL3];
+  __shared__ realw s_tempy1[NGLL3];
+  __shared__ realw s_tempy2[NGLL3];
+  __shared__ realw s_tempy3[NGLL3];
+  __shared__ realw s_tempz1[NGLL3];
+  __shared__ realw s_tempz2[NGLL3];
+  __shared__ realw s_tempz3[NGLL3];
 
-    __shared__ reald sh_hprime_xx[NGLL2];
+  __shared__ realw sh_hprime_xx[NGLL2];
 
 // use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
 // because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
-    active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
+  active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
 
 // copy from global memory to shared memory
 // each thread writes one of the NGLL^3 = 125 data points
-    if (active) {
+  if (active) {
 
 #ifdef USE_MESH_COLORING_GPU
-      working_element = bx;
+    working_element = bx;
 #else
-      //mesh coloring
-      if( use_mesh_coloring_gpu ){
-        working_element = bx;
-      }else{
-        // iphase-1 and working_element-1 for Fortran->C array conventions
-        working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)]-1;
-      }
+    //mesh coloring
+    if( use_mesh_coloring_gpu ){
+      working_element = bx;
+    }else{
+      // iphase-1 and working_element-1 for Fortran->C array conventions
+      working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)]-1;
+    }
 #endif
 
-      // iglob = d_ibool[working_element*NGLL3_ALIGN + tx]-1;
-      iglob = d_ibool[working_element*NGLL3 + tx]-1;
+    // iglob = d_ibool[working_element*NGLL3_ALIGN + tx]-1;
+    iglob = d_ibool[working_element*NGLL3 + tx]-1;
 
 #ifdef USE_TEXTURES_FIELDS
-      s_dummyx_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3);
-      s_dummyy_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 1);
-      s_dummyz_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 2);
+    s_dummyx_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3);
+    s_dummyy_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 1);
+    s_dummyz_loc[tx] = tex1Dfetch(d_displ_tex, iglob*3 + 2);
 #else
-      // changing iglob indexing to match fortran row changes fast style
-      s_dummyx_loc[tx] = d_displ[iglob*3];
-      s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
-      s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
+    // changing iglob indexing to match fortran row changes fast style
+    s_dummyx_loc[tx] = d_displ[iglob*3];
+    s_dummyy_loc[tx] = d_displ[iglob*3 + 1];
+    s_dummyz_loc[tx] = d_displ[iglob*3 + 2];
 #endif
-    }
+  }
 
-    if (tx < NGLL2) {
-      #ifdef USE_TEXTURES_CONSTANTS
-      sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
-      #else
-      sh_hprime_xx[tx] = d_hprime_xx[tx];
-      #endif
-    }
+  if (tx < NGLL2) {
+    #ifdef USE_TEXTURES_CONSTANTS
+    sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
+    #else
+    sh_hprime_xx[tx] = d_hprime_xx[tx];
+    #endif
+  }
 
 // synchronize all the threads (one thread for each of the NGLL grid points of the
 // current spectral element) because we need the whole element to be ready in order
 // to be able to compute the matrix products along cut planes of the 3D element below
-    __syncthreads();
+  __syncthreads();
 
-    if (active) {
+  if (active) {
 
 #ifndef MANUALLY_UNROLLED_LOOPS
 
-      tempx1l = 0.f;
-      tempx2l = 0.f;
-      tempx3l = 0.f;
+    tempx1l = 0.f;
+    tempx2l = 0.f;
+    tempx3l = 0.f;
 
-      tempy1l = 0.f;
-      tempy2l = 0.f;
-      tempy3l = 0.f;
+    tempy1l = 0.f;
+    tempy2l = 0.f;
+    tempy3l = 0.f;
 
-      tempz1l = 0.f;
-      tempz2l = 0.f;
-      tempz3l = 0.f;
+    tempz1l = 0.f;
+    tempz2l = 0.f;
+    tempz3l = 0.f;
 
-      for (l=0;l<NGLLX;l++) {
-          hp1 = sh_hprime_xx[l*NGLLX+I];
-          offset = K*NGLL2+J*NGLLX+l;
-          tempx1l += s_dummyx_loc[offset]*hp1;
-          tempy1l += s_dummyy_loc[offset]*hp1;
-          tempz1l += s_dummyz_loc[offset]*hp1;
+    for (l=0;l<NGLLX;l++) {
+        hp1 = sh_hprime_xx[l*NGLLX+I];
+        offset = K*NGLL2+J*NGLLX+l;
+        tempx1l += s_dummyx_loc[offset]*hp1;
+        tempy1l += s_dummyy_loc[offset]*hp1;
+        tempz1l += s_dummyz_loc[offset]*hp1;
 
-          hp2 = sh_hprime_xx[l*NGLLX+J];
-          offset = K*NGLL2+l*NGLLX+I;
-          tempx2l += s_dummyx_loc[offset]*hp2;
-          tempy2l += s_dummyy_loc[offset]*hp2;
-          tempz2l += s_dummyz_loc[offset]*hp2;
+        //assumes that hprime_xx = hprime_yy = hprime_zz
+        hp2 = sh_hprime_xx[l*NGLLX+J];
+        offset = K*NGLL2+l*NGLLX+I;
+        tempx2l += s_dummyx_loc[offset]*hp2;
+        tempy2l += s_dummyy_loc[offset]*hp2;
+        tempz2l += s_dummyz_loc[offset]*hp2;
 
-          hp3 = sh_hprime_xx[l*NGLLX+K];
-          offset = l*NGLL2+J*NGLLX+I;
-          tempx3l += s_dummyx_loc[offset]*hp3;
-          tempy3l += s_dummyy_loc[offset]*hp3;
-          tempz3l += s_dummyz_loc[offset]*hp3;
+        hp3 = sh_hprime_xx[l*NGLLX+K];
+        offset = l*NGLL2+J*NGLLX+I;
+        tempx3l += s_dummyx_loc[offset]*hp3;
+        tempy3l += s_dummyy_loc[offset]*hp3;
+        tempz3l += s_dummyz_loc[offset]*hp3;
 
-      }
+    }
 #else
 
-      tempx1l = s_dummyx_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-              + s_dummyx_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-              + s_dummyx_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-              + s_dummyx_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-              + s_dummyx_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
+    tempx1l = s_dummyx_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
+            + s_dummyx_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
+            + s_dummyx_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
+            + s_dummyx_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
+            + s_dummyx_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
 
-      tempy1l = s_dummyy_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-              + s_dummyy_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-              + s_dummyy_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-              + s_dummyy_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-              + s_dummyy_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
+    tempy1l = s_dummyy_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
+            + s_dummyy_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
+            + s_dummyy_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
+            + s_dummyy_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
+            + s_dummyy_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
 
-      tempz1l = s_dummyz_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-              + s_dummyz_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-              + s_dummyz_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-              + s_dummyz_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-              + s_dummyz_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
+    tempz1l = s_dummyz_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
+            + s_dummyz_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
+            + s_dummyz_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
+            + s_dummyz_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
+            + s_dummyz_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
 
-      tempx2l = s_dummyx_loc[K*NGLL2+I]*d_hprime_xx[J]
-              + s_dummyx_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-              + s_dummyx_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-              + s_dummyx_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-              + s_dummyx_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
+    tempx2l = s_dummyx_loc[K*NGLL2+I]*d_hprime_xx[J]
+            + s_dummyx_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
+            + s_dummyx_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
+            + s_dummyx_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
+            + s_dummyx_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
 
-      tempy2l = s_dummyy_loc[K*NGLL2+I]*d_hprime_xx[J]
-              + s_dummyy_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-              + s_dummyy_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-              + s_dummyy_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-              + s_dummyy_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
+    tempy2l = s_dummyy_loc[K*NGLL2+I]*d_hprime_xx[J]
+            + s_dummyy_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
+            + s_dummyy_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
+            + s_dummyy_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
+            + s_dummyy_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
 
-      tempz2l = s_dummyz_loc[K*NGLL2+I]*d_hprime_xx[J]
-              + s_dummyz_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-              + s_dummyz_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-              + s_dummyz_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-              + s_dummyz_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
+    tempz2l = s_dummyz_loc[K*NGLL2+I]*d_hprime_xx[J]
+            + s_dummyz_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
+            + s_dummyz_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
+            + s_dummyz_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
+            + s_dummyz_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
 
-      tempx3l = s_dummyx_loc[J*NGLLX+I]*d_hprime_xx[K]
-              + s_dummyx_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-              + s_dummyx_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-              + s_dummyx_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-              + s_dummyx_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
+    tempx3l = s_dummyx_loc[J*NGLLX+I]*d_hprime_xx[K]
+            + s_dummyx_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
+            + s_dummyx_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
+            + s_dummyx_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
+            + s_dummyx_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
 
-      tempy3l = s_dummyy_loc[J*NGLLX+I]*d_hprime_xx[K]
-              + s_dummyy_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-              + s_dummyy_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-              + s_dummyy_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-              + s_dummyy_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
+    tempy3l = s_dummyy_loc[J*NGLLX+I]*d_hprime_xx[K]
+            + s_dummyy_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
+            + s_dummyy_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
+            + s_dummyy_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
+            + s_dummyy_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
 
-      tempz3l = s_dummyz_loc[J*NGLLX+I]*d_hprime_xx[K]
-              + s_dummyz_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-              + s_dummyz_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-              + s_dummyz_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-              + s_dummyz_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
+    tempz3l = s_dummyz_loc[J*NGLLX+I]*d_hprime_xx[K]
+            + s_dummyz_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
+            + s_dummyz_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
+            + s_dummyz_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
+            + s_dummyz_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
 
 #endif
 
 // compute derivatives of ux, uy and uz with respect to x, y and z
-      offset = working_element*NGLL3_ALIGN + tx;
+    offset = working_element*NGLL3_ALIGN + tx;
 
-      xixl = d_xix[offset];
-      xiyl = d_xiy[offset];
-      xizl = d_xiz[offset];
-      etaxl = d_etax[offset];
-      etayl = d_etay[offset];
-      etazl = d_etaz[offset];
-      gammaxl = d_gammax[offset];
-      gammayl = d_gammay[offset];
-      gammazl = d_gammaz[offset];
+    xixl = d_xix[offset];
+    xiyl = d_xiy[offset];
+    xizl = d_xiz[offset];
+    etaxl = d_etax[offset];
+    etayl = d_etay[offset];
+    etazl = d_etaz[offset];
+    gammaxl = d_gammax[offset];
+    gammayl = d_gammay[offset];
+    gammazl = d_gammaz[offset];
 
-      duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-      duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-      duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
+    duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
+    duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
+    duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
 
-      duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-      duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-      duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
+    duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
+    duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
+    duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
 
-      duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-      duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-      duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
+    duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
+    duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
+    duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
 
-      // precompute some sums to save CPU time
-      duxdxl_plus_duydyl = duxdxl + duydyl;
-      duxdxl_plus_duzdzl = duxdxl + duzdzl;
-      duydyl_plus_duzdzl = duydyl + duzdzl;
-      duxdyl_plus_duydxl = duxdyl + duydxl;
-      duzdxl_plus_duxdzl = duzdxl + duxdzl;
-      duzdyl_plus_duydzl = duzdyl + duydzl;
+    // precompute some sums to save CPU time
+    duxdxl_plus_duydyl = duxdxl + duydyl;
+    duxdxl_plus_duzdzl = duxdxl + duzdzl;
+    duydyl_plus_duzdzl = duydyl + duzdzl;
+    duxdyl_plus_duydxl = duxdyl + duydxl;
+    duzdxl_plus_duxdzl = duzdxl + duxdzl;
+    duzdyl_plus_duydzl = duzdyl + duydzl;
 
-      // computes deviatoric strain attenuation and/or for kernel calculations
-      if(COMPUTE_AND_STORE_STRAIN) {
-        realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
-        /*
-        epsilondev_xx[offset] = duxdxl - templ;
-        epsilondev_yy[offset] = duydyl - templ;
-        epsilondev_xy[offset] = 0.5f * duxdyl_plus_duydxl;
-        epsilondev_xz[offset] = 0.5f * duzdxl_plus_duxdzl;
-        epsilondev_yz[offset] = 0.5f * duzdyl_plus_duydzl;
-              */
-        // local storage: stresses at this current time step
-        epsilondev_xx_loc = duxdxl - templ;
-        epsilondev_yy_loc = duydyl - templ;
-        epsilondev_xy_loc = 0.5f * duxdyl_plus_duydxl;
-        epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl;
-        epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl;
+    // computes deviatoric strain attenuation and/or for kernel calculations
+    if(COMPUTE_AND_STORE_STRAIN) {
+      realw templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+      /*
+      epsilondev_xx[offset] = duxdxl - templ;
+      epsilondev_yy[offset] = duydyl - templ;
+      epsilondev_xy[offset] = 0.5f * duxdyl_plus_duydxl;
+      epsilondev_xz[offset] = 0.5f * duzdxl_plus_duxdzl;
+      epsilondev_yz[offset] = 0.5f * duzdyl_plus_duydzl;
+            */
+      // local storage: stresses at this current time step
+      epsilondev_xx_loc = duxdxl - templ;
+      epsilondev_yy_loc = duydyl - templ;
+      epsilondev_xy_loc = 0.5f * duxdyl_plus_duydxl;
+      epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl;
+      epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl;
 
-        if(SIMULATION_TYPE == 3) {
-          epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-        }
+      if(SIMULATION_TYPE == 3) {
+        epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
       }
-
-      // compute elements with an elastic isotropic rheology
-      kappal = d_kappav[offset];
-      mul = d_muv[offset];
-
-      // attenuation
-      if(ATTENUATION){
-        // use unrelaxed parameters if attenuation
-        mul  = mul * one_minus_sum_beta[tx+working_element*NGLL3]; // (i,j,k,ispec)
-      }
-
-      // full anisotropic case, stress calculations
-      if(ANISOTROPY){
-
-        c11 = d_c11store[offset];
-        c12 = d_c12store[offset];
-        c13 = d_c13store[offset];
-        c14 = d_c14store[offset];
-        c15 = d_c15store[offset];
-        c16 = d_c16store[offset];
-        c22 = d_c22store[offset];
-        c23 = d_c23store[offset];
-        c24 = d_c24store[offset];
-        c25 = d_c25store[offset];
-        c26 = d_c26store[offset];
-        c33 = d_c33store[offset];
-        c34 = d_c34store[offset];
-        c35 = d_c35store[offset];
-        c36 = d_c36store[offset];
-        c44 = d_c44store[offset];
-        c45 = d_c45store[offset];
-        c46 = d_c46store[offset];
-        c55 = d_c55store[offset];
-        c56 = d_c56store[offset];
-        c66 = d_c66store[offset];
-
-        sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl +
-                   c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl;
-        sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl +
-                   c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl;
-        sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl +
-                   c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl;
-        sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl +
-                   c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl;
-        sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl +
-                   c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl;
-        sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl +
-                   c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl;
-
-      }else{
-
-        // isotropic case
-
-        lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
-        lambdal = lambdalplus2mul - 2.0f * mul;
-
-        // compute the six components of the stress tensor sigma
-        sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl;
-        sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl;
-        sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl;
-
-        sigma_xy = mul*duxdyl_plus_duydxl;
-        sigma_xz = mul*duzdxl_plus_duxdzl;
-        sigma_yz = mul*duzdyl_plus_duydzl;
-      }
-
-      if(ATTENUATION){
-        // subtracts memory variables if attenuation
-        compute_element_att_stress(tx,working_element,NSPEC,
-                                   R_xx,R_yy,R_xy,R_xz,R_yz,
-                                   &sigma_xx,&sigma_yy,&sigma_zz,&sigma_xy,&sigma_xz,&sigma_yz);
-      }
-
-      jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)-xiyl*(etaxl*gammazl-etazl*gammaxl)+xizl*(etaxl*gammayl-etayl*gammaxl));
-
-      // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
-      sigma_yx = sigma_xy;
-      sigma_zx = sigma_xz;
-      sigma_zy = sigma_yz;
-
-      if( gravity ){
-        //  computes non-symmetric terms for gravity
-        compute_element_gravity(tx,working_element,d_ibool,d_minus_g,d_minus_deriv_gravity,
-                                d_rhostore,wgll_cube,jacobianl,
-                                s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,
-                                &sigma_xx,&sigma_yy,&sigma_xz,&sigma_yz,
-                                &rho_s_H1,&rho_s_H2,&rho_s_H3);
-      }
-
-      // form dot product with test vector, non-symmetric form
-      s_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
-      s_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
-      s_tempz1[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl);
-
-      s_tempx2[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl);
-      s_tempy2[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl);
-      s_tempz2[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl);
-
-      s_tempx3[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl);
-      s_tempy3[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl);
-      s_tempz3[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl);
-
     }
+
+    // compute elements with an elastic isotropic rheology
+    kappal = d_kappav[offset];
+    mul = d_muv[offset];
+
+    // attenuation
+    if(ATTENUATION){
+      // use unrelaxed parameters if attenuation
+      mul  = mul * one_minus_sum_beta[tx+working_element*NGLL3]; // (i,j,k,ispec)
+    }
+
+    // full anisotropic case, stress calculations
+    if(ANISOTROPY){
+
+      c11 = d_c11store[offset];
+      c12 = d_c12store[offset];
+      c13 = d_c13store[offset];
+      c14 = d_c14store[offset];
+      c15 = d_c15store[offset];
+      c16 = d_c16store[offset];
+      c22 = d_c22store[offset];
+      c23 = d_c23store[offset];
+      c24 = d_c24store[offset];
+      c25 = d_c25store[offset];
+      c26 = d_c26store[offset];
+      c33 = d_c33store[offset];
+      c34 = d_c34store[offset];
+      c35 = d_c35store[offset];
+      c36 = d_c36store[offset];
+      c44 = d_c44store[offset];
+      c45 = d_c45store[offset];
+      c46 = d_c46store[offset];
+      c55 = d_c55store[offset];
+      c56 = d_c56store[offset];
+      c66 = d_c66store[offset];
+
+      sigma_xx = c11*duxdxl + c16*duxdyl_plus_duydxl + c12*duydyl +
+                 c15*duzdxl_plus_duxdzl + c14*duzdyl_plus_duydzl + c13*duzdzl;
+      sigma_yy = c12*duxdxl + c26*duxdyl_plus_duydxl + c22*duydyl +
+                 c25*duzdxl_plus_duxdzl + c24*duzdyl_plus_duydzl + c23*duzdzl;
+      sigma_zz = c13*duxdxl + c36*duxdyl_plus_duydxl + c23*duydyl +
+                 c35*duzdxl_plus_duxdzl + c34*duzdyl_plus_duydzl + c33*duzdzl;
+      sigma_xy = c16*duxdxl + c66*duxdyl_plus_duydxl + c26*duydyl +
+                 c56*duzdxl_plus_duxdzl + c46*duzdyl_plus_duydzl + c36*duzdzl;
+      sigma_xz = c15*duxdxl + c56*duxdyl_plus_duydxl + c25*duydyl +
+                 c55*duzdxl_plus_duxdzl + c45*duzdyl_plus_duydzl + c35*duzdzl;
+      sigma_yz = c14*duxdxl + c46*duxdyl_plus_duydxl + c24*duydyl +
+                 c45*duzdxl_plus_duxdzl + c44*duzdyl_plus_duydzl + c34*duzdzl;
+
+    }else{
+
+      // isotropic case
+
+      lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
+      lambdal = lambdalplus2mul - 2.0f * mul;
+
+      // compute the six components of the stress tensor sigma
+      sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl;
+      sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl;
+      sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl;
+
+      sigma_xy = mul*duxdyl_plus_duydxl;
+      sigma_xz = mul*duzdxl_plus_duxdzl;
+      sigma_yz = mul*duzdyl_plus_duydzl;
+    }
+
+    if(ATTENUATION){
+      // subtracts memory variables if attenuation
+      compute_element_att_stress(tx,working_element,NSPEC,
+                                 R_xx,R_yy,R_xy,R_xz,R_yz,
+                                 &sigma_xx,&sigma_yy,&sigma_zz,&sigma_xy,&sigma_xz,&sigma_yz);
+    }
+
+    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)-xiyl*(etaxl*gammazl-etazl*gammaxl)+xizl*(etaxl*gammayl-etayl*gammaxl));
+
+    // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
+    sigma_yx = sigma_xy;
+    sigma_zx = sigma_xz;
+    sigma_zy = sigma_yz;
+
+    if( gravity ){
+      //  computes non-symmetric terms for gravity
+      compute_element_gravity(tx,working_element,d_ibool,d_minus_g,d_minus_deriv_gravity,
+                              d_rhostore,wgll_cube,jacobianl,
+                              s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,
+                              &sigma_xx,&sigma_yy,&sigma_xz,&sigma_yz,
+                              &rho_s_H1,&rho_s_H2,&rho_s_H3);
+    }
+
+    // form dot product with test vector, non-symmetric form
+    s_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
+    s_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
+    s_tempz1[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl);
+
+    s_tempx2[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl);
+    s_tempy2[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl);
+    s_tempz2[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl);
+
+    s_tempx3[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl);
+    s_tempy3[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl);
+    s_tempz3[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl);
+
+  }
 
 // synchronize all the threads (one thread for each of the NGLL grid points of the
 // current spectral element) because we need the whole element to be ready in order
 // to be able to compute the matrix products along cut planes of the 3D element below
-    __syncthreads();
+  __syncthreads();
 
-    if (active) {
+  if (active) {
 
 #ifndef MANUALLY_UNROLLED_LOOPS
 
-      tempx1l = 0.f;
-      tempy1l = 0.f;
-      tempz1l = 0.f;
+    tempx1l = 0.f;
+    tempy1l = 0.f;
+    tempz1l = 0.f;
 
-      tempx2l = 0.f;
-      tempy2l = 0.f;
-      tempz2l = 0.f;
+    tempx2l = 0.f;
+    tempy2l = 0.f;
+    tempz2l = 0.f;
 
-      tempx3l = 0.f;
-      tempy3l = 0.f;
-      tempz3l = 0.f;
+    tempx3l = 0.f;
+    tempy3l = 0.f;
+    tempz3l = 0.f;
 
-      for (l=0;l<NGLLX;l++) {
+    for (l=0;l<NGLLX;l++) {
 
-        fac1 = d_hprimewgll_xx[I*NGLLX+l];
-        offset = K*NGLL2+J*NGLLX+l;
-        tempx1l += s_tempx1[offset]*fac1;
-        tempy1l += s_tempy1[offset]*fac1;
-        tempz1l += s_tempz1[offset]*fac1;
+      fac1 = d_hprimewgll_xx[I*NGLLX+l];
+      offset = K*NGLL2+J*NGLLX+l;
+      tempx1l += s_tempx1[offset]*fac1;
+      tempy1l += s_tempy1[offset]*fac1;
+      tempz1l += s_tempz1[offset]*fac1;
 
-        fac2 = d_hprimewgll_yy[J*NGLLX+l];
-        offset = K*NGLL2+l*NGLLX+I;
-        tempx2l += s_tempx2[offset]*fac2;
-        tempy2l += s_tempy2[offset]*fac2;
-        tempz2l += s_tempz2[offset]*fac2;
+      // assumes hprimewgll_xx == hprimewgll_yy == hprimewgll_zz
+      fac2 = d_hprimewgll_xx[J*NGLLX+l];
+      offset = K*NGLL2+l*NGLLX+I;
+      tempx2l += s_tempx2[offset]*fac2;
+      tempy2l += s_tempy2[offset]*fac2;
+      tempz2l += s_tempz2[offset]*fac2;
 
-        fac3 = d_hprimewgll_zz[K*NGLLX+l];
-        offset = l*NGLL2+J*NGLLX+I;
-        tempx3l += s_tempx3[offset]*fac3;
-        tempy3l += s_tempy3[offset]*fac3;
-        tempz3l += s_tempz3[offset]*fac3;
+      fac3 = d_hprimewgll_xx[K*NGLLX+l];
+      offset = l*NGLL2+J*NGLLX+I;
+      tempx3l += s_tempx3[offset]*fac3;
+      tempy3l += s_tempy3[offset]*fac3;
+      tempz3l += s_tempz3[offset]*fac3;
 
-      }
+    }
 #else
 
-      tempx1l = s_tempx1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-              + s_tempx1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-              + s_tempx1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-              + s_tempx1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-              + s_tempx1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
+    tempx1l = s_tempx1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
+            + s_tempx1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
+            + s_tempx1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
+            + s_tempx1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
+            + s_tempx1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
 
-      tempy1l = s_tempy1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-              + s_tempy1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-              + s_tempy1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-              + s_tempy1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-              + s_tempy1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
+    tempy1l = s_tempy1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
+            + s_tempy1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
+            + s_tempy1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
+            + s_tempy1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
+            + s_tempy1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
 
-      tempz1l = s_tempz1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-              + s_tempz1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-              + s_tempz1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-              + s_tempz1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-              + s_tempz1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
+    tempz1l = s_tempz1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
+            + s_tempz1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
+            + s_tempz1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
+            + s_tempz1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
+            + s_tempz1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
 
-      tempx2l = s_tempx2[K*NGLL2+I]*d_hprimewgll_yy[J*NGLLX]
-              + s_tempx2[K*NGLL2+NGLLX+I]*d_hprimewgll_yy[J*NGLLX+1]
-              + s_tempx2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+2]
-              + s_tempx2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+3]
-              + s_tempx2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+4];
+    tempx2l = s_tempx2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
+            + s_tempx2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
+            + s_tempx2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
+            + s_tempx2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
+            + s_tempx2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
 
-      tempy2l = s_tempy2[K*NGLL2+I]*d_hprimewgll_yy[J*NGLLX]
-              + s_tempy2[K*NGLL2+NGLLX+I]*d_hprimewgll_yy[J*NGLLX+1]
-              + s_tempy2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+2]
-              + s_tempy2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+3]
-              + s_tempy2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+4];
+    tempy2l = s_tempy2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
+            + s_tempy2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
+            + s_tempy2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
+            + s_tempy2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
+            + s_tempy2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
 
-      tempz2l = s_tempz2[K*NGLL2+I]*d_hprimewgll_yy[J*NGLLX]
-              + s_tempz2[K*NGLL2+NGLLX+I]*d_hprimewgll_yy[J*NGLLX+1]
-              + s_tempz2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+2]
-              + s_tempz2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+3]
-              + s_tempz2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_yy[J*NGLLX+4];
+    tempz2l = s_tempz2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
+            + s_tempz2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
+            + s_tempz2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
+            + s_tempz2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
+            + s_tempz2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
 
-      tempx3l = s_tempx3[J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX]
-              + s_tempx3[NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+1]
-              + s_tempx3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+2]
-              + s_tempx3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+3]
-              + s_tempx3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+4];
+    tempx3l = s_tempx3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
+            + s_tempx3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
+            + s_tempx3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
+            + s_tempx3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
+            + s_tempx3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
 
-      tempy3l = s_tempy3[J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX]
-              + s_tempy3[NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+1]
-              + s_tempy3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+2]
-              + s_tempy3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+3]
-              + s_tempy3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+4];
+    tempy3l = s_tempy3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
+            + s_tempy3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
+            + s_tempy3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
+            + s_tempy3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
+            + s_tempy3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
 
-      tempz3l = s_tempz3[J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX]
-              + s_tempz3[NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+1]
-              + s_tempz3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+2]
-              + s_tempz3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+3]
-              + s_tempz3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_zz[K*NGLLX+4];
+    tempz3l = s_tempz3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
+            + s_tempz3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
+            + s_tempz3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
+            + s_tempz3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
+            + s_tempz3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
 
 #endif
 
-      fac1 = d_wgllwgll_yz[K*NGLLX+J];
-      fac2 = d_wgllwgll_xz[K*NGLLX+I];
-      fac3 = d_wgllwgll_xy[J*NGLLX+I];
+    fac1 = d_wgllwgll_yz[K*NGLLX+J];
+    fac2 = d_wgllwgll_xz[K*NGLLX+I];
+    fac3 = d_wgllwgll_xy[J*NGLLX+I];
 
-      sum_terms1 = - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l);
-      sum_terms2 = - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l);
-      sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
+    sum_terms1 = - (fac1*tempx1l + fac2*tempx2l + fac3*tempx3l);
+    sum_terms2 = - (fac1*tempy1l + fac2*tempy2l + fac3*tempy3l);
+    sum_terms3 = - (fac1*tempz1l + fac2*tempz2l + fac3*tempz3l);
 
-      // adds gravity term
-      if( gravity ){
-        sum_terms1 += rho_s_H1;
-        sum_terms2 += rho_s_H2;
-        sum_terms3 += rho_s_H3;
-      }
+    // adds gravity term
+    if( gravity ){
+      sum_terms1 += rho_s_H1;
+      sum_terms2 += rho_s_H2;
+      sum_terms3 += rho_s_H3;
+    }
 
 
 #ifdef USE_MESH_COLORING_GPU
-      // no atomic operation needed, colors don't share global points between elements
+    // no atomic operation needed, colors don't share global points between elements
 
+#ifdef USE_TEXTURES_FIELDS
+    d_accel[iglob*3]     = tex1Dfetch(d_accel_tex, iglob*3) + sum_terms1;
+    d_accel[iglob*3 + 1] = tex1Dfetch(d_accel_tex, iglob*3 + 1) + sum_terms2;
+    d_accel[iglob*3 + 2] = tex1Dfetch(d_accel_tex, iglob*3 + 2) + sum_terms3;
+#else
+    d_accel[iglob*3]     += sum_terms1;
+    d_accel[iglob*3 + 1] += sum_terms2;
+    d_accel[iglob*3 + 2] += sum_terms3;
+#endif // USE_TEXTURES_FIELDS
+
+#else // MESH_COLORING
+
+    //mesh coloring
+    if( use_mesh_coloring_gpu ){
+
+      // no atomic operation needed, colors don't share global points between elements
 #ifdef USE_TEXTURES_FIELDS
       d_accel[iglob*3]     = tex1Dfetch(d_accel_tex, iglob*3) + sum_terms1;
       d_accel[iglob*3 + 1] = tex1Dfetch(d_accel_tex, iglob*3 + 1) + sum_terms2;
@@ -1216,64 +1219,46 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
       d_accel[iglob*3 + 2] += sum_terms3;
 #endif // USE_TEXTURES_FIELDS
 
-#else // MESH_COLORING
-      //mesh coloring
-      if( use_mesh_coloring_gpu ){
+    }
+    else {
 
-        // no atomic operation needed, colors don't share global points between elements
-        // d_accel[iglob*3]     += sum_terms1;
-        // d_accel[iglob*3 + 1] += sum_terms2;
-        // d_accel[iglob*3 + 2] += sum_terms3;
-#ifdef USE_TEXTURES_FIELDS
-        d_accel[iglob*3]     = tex1Dfetch(d_accel_tex, iglob*3) + sum_terms1;
-        d_accel[iglob*3 + 1] = tex1Dfetch(d_accel_tex, iglob*3 + 1) + sum_terms2;
-        d_accel[iglob*3 + 2] = tex1Dfetch(d_accel_tex, iglob*3 + 2) + sum_terms3;
-#else
-        d_accel[iglob*3]     += sum_terms1;
-        d_accel[iglob*3 + 1] += sum_terms2;
-        d_accel[iglob*3 + 2] += sum_terms3;
-#endif // USE_TEXTURES_FIELDS
+      // for testing purposes only: w/out atomic updates
+      //d_accel[iglob*3] -= (0.00000001f*tempx1l + 0.00000001f*tempx2l + 0.00000001f*tempx3l);
+      //d_accel[iglob*3 + 1] -= (0.00000001f*tempy1l + 0.00000001f*tempy2l + 0.00000001f*tempy3l);
+      //d_accel[iglob*3 + 2] -= (0.00000001f*tempz1l + 0.00000001f*tempz2l + 0.00000001f*tempz3l);
 
-      }
-      else {
+      atomicAdd(&d_accel[iglob*3], sum_terms1);
+      atomicAdd(&d_accel[iglob*3+1], sum_terms2);
+      atomicAdd(&d_accel[iglob*3+2], sum_terms3);
 
-        // for testing purposes only: w/out atomic updates
-        //d_accel[iglob*3] -= (0.00000001f*tempx1l + 0.00000001f*tempx2l + 0.00000001f*tempx3l);
-        //d_accel[iglob*3 + 1] -= (0.00000001f*tempy1l + 0.00000001f*tempy2l + 0.00000001f*tempy3l);
-        //d_accel[iglob*3 + 2] -= (0.00000001f*tempz1l + 0.00000001f*tempz2l + 0.00000001f*tempz3l);
-
-        atomicAdd(&d_accel[iglob*3], sum_terms1);
-        atomicAdd(&d_accel[iglob*3+1], sum_terms2);
-        atomicAdd(&d_accel[iglob*3+2], sum_terms3);
-
-      } // if(use_mesh_coloring_gpu)
+    } // if(use_mesh_coloring_gpu)
 
 #endif // MESH_COLORING
 
 
-      // update memory variables based upon the Runge-Kutta scheme
-      if( ATTENUATION ){
-        compute_element_att_memory(tx,working_element,NSPEC,
-                                  d_muv,
-                                  factor_common,alphaval,betaval,gammaval,
-                                  R_xx,R_yy,R_xy,R_xz,R_yz,
-                                  epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,
-                                  epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc);
-      }
+    // update memory variables based upon the Runge-Kutta scheme
+    if( ATTENUATION ){
+      compute_element_att_memory(tx,working_element,NSPEC,
+                                d_muv,
+                                factor_common,alphaval,betaval,gammaval,
+                                R_xx,R_yy,R_xy,R_xz,R_yz,
+                                epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,
+                                epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc);
+    }
 
-      // save deviatoric strain for Runge-Kutta scheme
-      if( COMPUTE_AND_STORE_STRAIN ){
-        int ijk_ispec = tx + working_element*NGLL3;
+    // save deviatoric strain for Runge-Kutta scheme
+    if( COMPUTE_AND_STORE_STRAIN ){
+      int ijk_ispec = tx + working_element*NGLL3;
 
-        // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
-        epsilondev_xx[ijk_ispec] = epsilondev_xx_loc;
-        epsilondev_yy[ijk_ispec] = epsilondev_yy_loc;
-        epsilondev_xy[ijk_ispec] = epsilondev_xy_loc;
-        epsilondev_xz[ijk_ispec] = epsilondev_xz_loc;
-        epsilondev_yz[ijk_ispec] = epsilondev_yz_loc;
-      }
+      // fortran: epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
+      epsilondev_xx[ijk_ispec] = epsilondev_xx_loc;
+      epsilondev_yy[ijk_ispec] = epsilondev_yy_loc;
+      epsilondev_xy[ijk_ispec] = epsilondev_xy_loc;
+      epsilondev_xz[ijk_ispec] = epsilondev_xz_loc;
+      epsilondev_yz[ijk_ispec] = epsilondev_yz_loc;
+    }
 
-    } // if(active)
+  } // if(active)
 
 } // kernel_2_impl()
 
@@ -1368,112 +1353,118 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,
   // cudaEventRecord( start, 0 );
 
   Kernel_2_impl<<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                  mp->NGLOB_AB,
-                                  d_ibool,
-                                  mp->d_phase_ispec_inner_elastic,
-                                  mp->num_phase_ispec_elastic,
-                                  d_iphase,
-                                  mp->use_mesh_coloring_gpu,
-                                  mp->d_displ, mp->d_accel,
-                                  d_xix, d_xiy, d_xiz,
-                                  d_etax, d_etay, d_etaz,
-                                  d_gammax, d_gammay, d_gammaz,
-                                  d_kappav, d_muv,
-                                  COMPUTE_AND_STORE_STRAIN,
-                                  d_epsilondev_xx,
-                                  d_epsilondev_yy,
-                                  d_epsilondev_xy,
-                                  d_epsilondev_xz,
-                                  d_epsilondev_yz,
-                                  d_epsilon_trace_over_3,
-                                  SIMULATION_TYPE,
-                                  ATTENUATION,mp->NSPEC_AB,
-                                  d_one_minus_sum_beta,
-                                  d_factor_common,
-                                  d_R_xx,d_R_yy,d_R_xy,d_R_xz,d_R_yz,
-                                  mp->d_alphaval,mp->d_betaval,mp->d_gammaval,
-                                  ANISOTROPY,
-                                  d_c11store,
-                                  d_c12store,
-                                  d_c13store,
-                                  d_c14store,
-                                  d_c15store,
-                                  d_c16store,
-                                  d_c22store,
-                                  d_c23store,
-                                  d_c24store,
-                                  d_c25store,
-                                  d_c26store,
-                                  d_c33store,
-                                  d_c34store,
-                                  d_c35store,
-                                  d_c36store,
-                                  d_c44store,
-                                  d_c45store,
-                                  d_c46store,
-                                  d_c55store,
-                                  d_c56store,
-                                  d_c66store,
-                                  mp->gravity,
-                                  mp->d_minus_g,
-                                  mp->d_minus_deriv_gravity,
-                                  d_rhostore,
-                                  mp->d_wgll_cube);
+                                                        mp->NGLOB_AB,
+                                                        d_ibool,
+                                                        mp->d_phase_ispec_inner_elastic,
+                                                        mp->num_phase_ispec_elastic,
+                                                        d_iphase,
+                                                        mp->use_mesh_coloring_gpu,
+                                                        mp->d_displ, mp->d_accel,
+                                                        d_xix, d_xiy, d_xiz,
+                                                        d_etax, d_etay, d_etaz,
+                                                        d_gammax, d_gammay, d_gammaz,
+                                                        mp->d_hprime_xx,
+                                                        mp->d_hprimewgll_xx,
+                                                        mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                        d_kappav, d_muv,
+                                                        COMPUTE_AND_STORE_STRAIN,
+                                                        d_epsilondev_xx,
+                                                        d_epsilondev_yy,
+                                                        d_epsilondev_xy,
+                                                        d_epsilondev_xz,
+                                                        d_epsilondev_yz,
+                                                        d_epsilon_trace_over_3,
+                                                        SIMULATION_TYPE,
+                                                        ATTENUATION,mp->NSPEC_AB,
+                                                        d_one_minus_sum_beta,
+                                                        d_factor_common,
+                                                        d_R_xx,d_R_yy,d_R_xy,d_R_xz,d_R_yz,
+                                                        mp->d_alphaval,mp->d_betaval,mp->d_gammaval,
+                                                        ANISOTROPY,
+                                                        d_c11store,
+                                                        d_c12store,
+                                                        d_c13store,
+                                                        d_c14store,
+                                                        d_c15store,
+                                                        d_c16store,
+                                                        d_c22store,
+                                                        d_c23store,
+                                                        d_c24store,
+                                                        d_c25store,
+                                                        d_c26store,
+                                                        d_c33store,
+                                                        d_c34store,
+                                                        d_c35store,
+                                                        d_c36store,
+                                                        d_c44store,
+                                                        d_c45store,
+                                                        d_c46store,
+                                                        d_c55store,
+                                                        d_c56store,
+                                                        d_c66store,
+                                                        mp->gravity,
+                                                        mp->d_minus_g,
+                                                        mp->d_minus_deriv_gravity,
+                                                        d_rhostore,
+                                                        mp->d_wgll_cube);
 
 
   if(SIMULATION_TYPE == 3) {
     Kernel_2_impl<<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                     mp->NGLOB_AB,
-                                     d_ibool,
-                                     mp->d_phase_ispec_inner_elastic,
-                                     mp->num_phase_ispec_elastic,
-                                     d_iphase,
-                                     mp->use_mesh_coloring_gpu,
-                                     mp->d_b_displ, mp->d_b_accel,
-                                     d_xix, d_xiy, d_xiz,
-                                     d_etax, d_etay, d_etaz,
-                                     d_gammax, d_gammay, d_gammaz,
-                                     d_kappav, d_muv,
-                                     COMPUTE_AND_STORE_STRAIN,
-                                     d_b_epsilondev_xx,
-                                     d_b_epsilondev_yy,
-                                     d_b_epsilondev_xy,
-                                     d_b_epsilondev_xz,
-                                     d_b_epsilondev_yz,
-                                     d_b_epsilon_trace_over_3,
-                                     SIMULATION_TYPE,
-                                     ATTENUATION,mp->NSPEC_AB,
-                                     d_one_minus_sum_beta,
-                                     d_factor_common,
-                                     d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
-                                     mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
-                                     ANISOTROPY,
-                                     d_c11store,
-                                     d_c12store,
-                                     d_c13store,
-                                     d_c14store,
-                                     d_c15store,
-                                     d_c16store,
-                                     d_c22store,
-                                     d_c23store,
-                                     d_c24store,
-                                     d_c25store,
-                                     d_c26store,
-                                     d_c33store,
-                                     d_c34store,
-                                     d_c35store,
-                                     d_c36store,
-                                     d_c44store,
-                                     d_c45store,
-                                     d_c46store,
-                                     d_c55store,
-                                     d_c56store,
-                                     d_c66store,
-                                     mp->gravity,
-                                     mp->d_minus_g,
-                                     mp->d_minus_deriv_gravity,
-                                     d_rhostore,
-                                     mp->d_wgll_cube);
+                                                           mp->NGLOB_AB,
+                                                           d_ibool,
+                                                           mp->d_phase_ispec_inner_elastic,
+                                                           mp->num_phase_ispec_elastic,
+                                                           d_iphase,
+                                                           mp->use_mesh_coloring_gpu,
+                                                           mp->d_b_displ, mp->d_b_accel,
+                                                           d_xix, d_xiy, d_xiz,
+                                                           d_etax, d_etay, d_etaz,
+                                                           d_gammax, d_gammay, d_gammaz,
+                                                           mp->d_hprime_xx,
+                                                           mp->d_hprimewgll_xx,
+                                                           mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                           d_kappav, d_muv,
+                                                           COMPUTE_AND_STORE_STRAIN,
+                                                           d_b_epsilondev_xx,
+                                                           d_b_epsilondev_yy,
+                                                           d_b_epsilondev_xy,
+                                                           d_b_epsilondev_xz,
+                                                           d_b_epsilondev_yz,
+                                                           d_b_epsilon_trace_over_3,
+                                                           SIMULATION_TYPE,
+                                                           ATTENUATION,mp->NSPEC_AB,
+                                                           d_one_minus_sum_beta,
+                                                           d_factor_common,
+                                                           d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
+                                                           mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
+                                                           ANISOTROPY,
+                                                           d_c11store,
+                                                           d_c12store,
+                                                           d_c13store,
+                                                           d_c14store,
+                                                           d_c15store,
+                                                           d_c16store,
+                                                           d_c22store,
+                                                           d_c23store,
+                                                           d_c24store,
+                                                           d_c25store,
+                                                           d_c26store,
+                                                           d_c33store,
+                                                           d_c34store,
+                                                           d_c35store,
+                                                           d_c36store,
+                                                           d_c44store,
+                                                           d_c45store,
+                                                           d_c46store,
+                                                           d_c55store,
+                                                           d_c56store,
+                                                           d_c66store,
+                                                           mp->gravity,
+                                                           mp->d_minus_g,
+                                                           mp->d_minus_deriv_gravity,
+                                                           d_rhostore,
+                                                           mp->d_wgll_cube);
   }
 
   // cudaEventRecord( stop, 0 );
@@ -1708,35 +1699,6 @@ void FC_FUNC_(compute_forces_elastic_cuda,
              mp->d_c66store,
              mp->d_rhostore);
   }
-
-  //daniel: todo - check with routine sync_copy_from_device below...
-//  // Wait until async-memcpy of outer elements is finished and start MPI.
-//  if(*iphase==2) {
-//    cudaStreamSynchronize(mp->copy_stream);
-//
-//    // There have been problems using the pinned-memory with MPI, so
-//    // we copy the buffer into a non-pinned region.
-//    memcpy(mp->send_buffer,mp->h_send_accel_buffer,
-//           mp->size_mpi_buffer*sizeof(float));
-//
-//    // memory copy is now finished, so non-blocking MPI send can proceed
-//    // MPI based halo exchange
-//
-//    assemble_mpi_vector_send_cuda_(&(mp->NPROCS),
-//                                   mp->send_buffer, /* "regular" memory */
-//                                   // mp->h_send_accel_buffer, /* pinned memory **CRASH** */
-//                                   mp->buffer_recv_vector_ext_mesh,
-//                                   &mp->num_interfaces_ext_mesh,
-//                                   &mp->max_nibool_interfaces_ext_mesh,
-//                                   mp->nibool_interfaces_ext_mesh,
-//                                   mp->my_neighbours_ext_mesh,
-//                                   mp->request_send_vector_ext_mesh,
-//                                   mp->request_recv_vector_ext_mesh);
-//
-//    // Decided to keep launching kernels and to wait for MPI & do memcpy while other kernels launch.
-//    // cudaDeviceSynchronize();
-//  }
-
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -1868,17 +1830,23 @@ TRACE("kernel_3_a_cuda");
    // check whether we can update accel and veloc, or only accel at this point
    if( *OCEANS == 0 ){
      // updates both, accel and veloc
-     kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc, mp->d_accel, size, deltatover2, mp->d_rmass);
+     kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
+                                                                   mp->d_accel,
+                                                                   size, deltatover2, mp->d_rmass);
 
      if(SIMULATION_TYPE == 3) {
-       kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc, mp->d_b_accel, size, b_deltatover2,mp->d_rmass);
+       kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc,
+                                                                     mp->d_b_accel,
+                                                                     size, b_deltatover2,mp->d_rmass);
      }
    }else{
      // updates only accel
-     kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_accel, size, mp->d_rmass);
+     kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_accel,
+                                                                         size, mp->d_rmass);
 
      if(SIMULATION_TYPE == 3) {
-       kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_accel, size, mp->d_rmass);
+       kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_accel,
+                                                                           size, mp->d_rmass);
      }
    }
 
@@ -1919,10 +1887,14 @@ void FC_FUNC_(kernel_3_b_cuda,
   dim3 threads(blocksize,1,1);
 
   // updates only veloc at this point
-  kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,mp->d_accel,size,deltatover2);
+  kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
+                                                                      mp->d_accel,
+                                                                      size,deltatover2);
 
   if(SIMULATION_TYPE == 3) {
-    kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc,mp->d_b_accel,size,b_deltatover2);
+    kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc,
+                                                                        mp->d_b_accel,
+                                                                        size,b_deltatover2);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -2063,201 +2035,4 @@ void FC_FUNC_(elastic_ocean_load_cuda,
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("elastic_ocean_load_cuda");
 #endif
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-/* note:
- constant arrays when used in compute_forces_acoustic_cuda.cu routines stay zero,
- constant declaration and cudaMemcpyToSymbol would have to be in the same file...
-
- extern keyword doesn't work for __constant__ declarations.
-
- also:
- cudaMemcpyToSymbol("deviceCaseParams", caseParams, sizeof(CaseParams));
- ..
- and compile with -arch=sm_20
-
- see also: http://stackoverflow.com/questions/4008031/how-to-use-cuda-constant-memory-in-a-programmer-pleasant-way
- doesn't seem to work.
-
- we could keep arrays separated for acoustic and elastic routines...
-
- for now, we store pointers with cudaGetSymbolAddress() function calls.
-
- */
-
-
-// constant arrays
-
-void setConst_hprime_xx(realw* array,Mesh* mp)
-{
-
-  cudaError_t err = cudaMemcpyToSymbol(d_hprime_xx, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_hprime_xx: %s\n", cudaGetErrorString(err));
-    fprintf(stderr, "The problem is maybe -arch sm_13 instead of -arch sm_11 in the Makefile, please doublecheck\n");
-    exit(1);
-  }
-
-  err = cudaGetSymbolAddress((void**)&(mp->d_hprime_xx),"d_hprime_xx");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_hprime_xx: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-}
-
-// void setConst_hprime_yy(realw* array,Mesh* mp)
-// {
-
-//   cudaError_t err = cudaMemcpyToSymbol(d_hprime_yy, array, NGLL2*sizeof(realw));
-//   if (err != cudaSuccess)
-//   {
-//     fprintf(stderr, "Error in setConst_hprime_yy: %s\n", cudaGetErrorString(err));
-//     fprintf(stderr, "The problem is maybe -arch sm_13 instead of -arch sm_11 in the Makefile, please doublecheck\n");
-//     exit(1);
-//   }
-
-//   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_yy),"d_hprime_yy");
-//   if(err != cudaSuccess) {
-//     fprintf(stderr, "Error with d_hprime_yy: %s\n", cudaGetErrorString(err));
-//     exit(1);
-//   }
-// }
-
-// void setConst_hprime_zz(realw* array,Mesh* mp)
-// {
-
-//   cudaError_t err = cudaMemcpyToSymbol(d_hprime_zz, array, NGLL2*sizeof(realw));
-//   if (err != cudaSuccess)
-//   {
-//     fprintf(stderr, "Error in setConst_hprime_zz: %s\n", cudaGetErrorString(err));
-//     fprintf(stderr, "The problem is maybe -arch sm_13 instead of -arch sm_11 in the Makefile, please doublecheck\n");
-//     exit(1);
-//   }
-
-//   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_zz),"d_hprime_zz");
-//   if(err != cudaSuccess) {
-//     fprintf(stderr, "Error with d_hprime_zz: %s\n", cudaGetErrorString(err));
-//     exit(1);
-//   }
-// }
-
-
-void setConst_hprimewgll_xx(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_xx, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_hprimewgll_xx: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
-  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_xx),"d_hprimewgll_xx");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-}
-
-void setConst_hprimewgll_yy(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_yy, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_hprimewgll_yy: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
-  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_yy),"d_hprimewgll_yy");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_hprimewgll_yy: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-}
-
-void setConst_hprimewgll_zz(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_hprimewgll_zz, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_hprimewgll_zz: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
-  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_zz),"d_hprimewgll_zz");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_hprimewgll_zz: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-}
-
-void setConst_wgllwgll_xy(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_xy, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_wgllwgll_xy: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-  //mp->d_wgllwgll_xy = d_wgllwgll_xy;
-  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xy),"d_wgllwgll_xy");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
-}
-
-void setConst_wgllwgll_xz(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_xz, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in  setConst_wgllwgll_xz: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-  //mp->d_wgllwgll_xz = d_wgllwgll_xz;
-  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xz),"d_wgllwgll_xz");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
-}
-
-void setConst_wgllwgll_yz(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_wgllwgll_yz, array, NGLL2*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_wgllwgll_yz: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-  //mp->d_wgllwgll_yz = d_wgllwgll_yz;
-  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_yz),"d_wgllwgll_yz");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
-}
-
-void setConst_wgll_cube(realw* array,Mesh* mp)
-{
-  cudaError_t err = cudaMemcpyToSymbol(d_wgll_cube, array, NGLL3*sizeof(realw));
-  if (err != cudaSuccess)
-  {
-    fprintf(stderr, "Error in setConst_wgll_cube: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-  //mp->d_wgll_cube = d_wgll_cube;
-  err = cudaGetSymbolAddress((void**)&(mp->d_wgll_cube),"d_wgll_cube");
-  if(err != cudaSuccess) {
-    fprintf(stderr, "Error with d_wgll_cube: %s\n", cudaGetErrorString(err));
-    exit(1);
-  }
-
 }

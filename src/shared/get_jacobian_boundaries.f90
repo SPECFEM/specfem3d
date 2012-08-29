@@ -36,16 +36,16 @@
 
   include "constants.h"
 
-  integer nspec,myrank,nglob
+  integer :: nspec,myrank,nglob
 
 ! arrays with the mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-  real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
+  real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
 ! face information
   integer :: iface,ispec,NGLLA,NGLLB
-  real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
-  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL), dimension(NGLLA,NGLLB) :: jacobian2Dw_face
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLA,NGLLB) :: normal_face
 
   double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
   double precision dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ)
@@ -186,8 +186,9 @@
 
   end subroutine get_jacobian_boundary_face
 
-
-! -------------------------------------------------------
+!
+! ------------------------------------------------------------------------------------------------
+!
 
   subroutine compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                                 dershape2D,wgllwgll, &
@@ -204,10 +205,10 @@
 
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
   double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)
-  double precision wgllwgll(NGLLA,NGLLB)
+  double precision, dimension(NGLLA,NGLLB) :: wgllwgll
 
-  real(kind=CUSTOM_REAL) jacobian2Dw_face(NGLLA,NGLLB)
-  real(kind=CUSTOM_REAL) normal_face(NDIM,NGLLA,NGLLB)
+  real(kind=CUSTOM_REAL), dimension(NGLLA,NGLLB) :: jacobian2Dw_face
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLA,NGLLB) :: normal_face
 
   integer i,j,ia
   double precision xxi,xeta,yxi,yeta,zxi,zeta
@@ -216,42 +217,73 @@
   do j=1,NGLLB
     do i=1,NGLLA
 
-    xxi=ZERO
-    xeta=ZERO
-    yxi=ZERO
-    yeta=ZERO
-    zxi=ZERO
-    zeta=ZERO
-    do ia=1,NGNOD2D
-      xxi=xxi+dershape2D(1,ia,i,j)*xelm(ia)
-      xeta=xeta+dershape2D(2,ia,i,j)*xelm(ia)
-      yxi=yxi+dershape2D(1,ia,i,j)*yelm(ia)
-      yeta=yeta+dershape2D(2,ia,i,j)*yelm(ia)
-      zxi=zxi+dershape2D(1,ia,i,j)*zelm(ia)
-      zeta=zeta+dershape2D(2,ia,i,j)*zelm(ia)
-    enddo
+      xxi=ZERO
+      xeta=ZERO
+      yxi=ZERO
+      yeta=ZERO
+      zxi=ZERO
+      zeta=ZERO
+      do ia=1,NGNOD2D
+        xxi=xxi+dershape2D(1,ia,i,j)*xelm(ia)
+        xeta=xeta+dershape2D(2,ia,i,j)*xelm(ia)
+        yxi=yxi+dershape2D(1,ia,i,j)*yelm(ia)
+        yeta=yeta+dershape2D(2,ia,i,j)*yelm(ia)
+        zxi=zxi+dershape2D(1,ia,i,j)*zelm(ia)
+        zeta=zeta+dershape2D(2,ia,i,j)*zelm(ia)
+      enddo
 
-!   calculate the unnormalized normal to the boundary
-    unx=yxi*zeta-yeta*zxi
-    uny=zxi*xeta-zeta*xxi
-    unz=xxi*yeta-xeta*yxi
-    jacobian=dsqrt(unx**2+uny**2+unz**2)
-    if(jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+      !   calculate the unnormalized normal to the boundary
+      unx=yxi*zeta-yeta*zxi
+      uny=zxi*xeta-zeta*xxi
+      unz=xxi*yeta-xeta*yxi
+      jacobian=dsqrt(unx*unx+uny*uny+unz*unz)
+      if(jacobian <= ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
-!   normalize normal vector and store weighted surface jacobian
+      !   normalize normal vector and store weighted surface jacobian
 
-! distinguish if single or double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
-      jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
-      normal_face(1,i,j)=sngl(unx/jacobian)
-      normal_face(2,i,j)=sngl(uny/jacobian)
-      normal_face(3,i,j)=sngl(unz/jacobian)
-    else
-      jacobian2Dw_face(i,j) = jacobian * wgllwgll(i,j)
-      normal_face(1,i,j)=unx/jacobian
-      normal_face(2,i,j)=uny/jacobian
-      normal_face(3,i,j)=unz/jacobian
-    endif
+      ! distinguish if single or double precision for reals
+      if(CUSTOM_REAL == SIZE_REAL) then
+        jacobian2Dw_face(i,j) = sngl(jacobian * wgllwgll(i,j) )
+        normal_face(1,i,j)=sngl(unx/jacobian)
+        normal_face(2,i,j)=sngl(uny/jacobian)
+        normal_face(3,i,j)=sngl(unz/jacobian)
+      else
+        jacobian2Dw_face(i,j) = jacobian * wgllwgll(i,j)
+        normal_face(1,i,j)=unx/jacobian
+        normal_face(2,i,j)=uny/jacobian
+        normal_face(3,i,j)=unz/jacobian
+      endif
+
+      !debug
+      ! note: normal values could be almost zero and lead to underflow errors
+      !if(FIX_UNDERFLOW_PROBLEM) then
+      !  if( abs(normal_face(1,i,j)) < VERYSMALLVAL ) &
+      !    normal_face(1,i,j) = sign(1.0_CUSTOM_REAL,normal_face(1,i,j)) * VERYSMALLVAL
+      !  if( abs(normal_face(2,i,j)) < VERYSMALLVAL ) &
+      !    normal_face(2,i,j) = sign(1.0_CUSTOM_REAL,normal_face(2,i,j)) * VERYSMALLVAL
+      !  if( abs(normal_face(3,i,j)) < VERYSMALLVAL ) &
+      !    normal_face(3,i,j) = sign(1.0_CUSTOM_REAL,normal_face(3,i,j)) * VERYSMALLVAL
+      !endif
+      ! re-calculates length of normal (might have rounding errors)
+      !jacobian = sqrt(dble(normal_face(1,i,j))**2 + dble(normal_face(2,i,j))**2 + dble(normal_face(3,i,j))**2)
+      !if( abs(jacobian - 1.d0) > TINYVAL ) then
+      !  if(jacobian <= ZERO) call exit_MPI(myrank,'normal length undefined')
+      !  ! re-normalizes
+      !  normal_face(:,i,j) = normal_face(:,i,j) / jacobian
+      !endif
+      !debug
+      !if( isNan(normal_face(1,i,j)) ) then
+      !  print*,'error normal_face 1:',normal_face(:,i,j)
+      !  stop 'error normal_face'
+      !endif
+      !if( isNan(normal_face(2,i,j)) ) then
+      !  print*,'error normal_face 2:',normal_face(:,i,j)
+      !  stop 'error normal_face'
+      !endif
+      !if( isNan(normal_face(3,i,j)) ) then
+      !  print*,'error normal_face 3:',normal_face(:,i,j)
+      !  stop 'error normal_face'
+      !endif
 
     enddo
   enddo

@@ -129,14 +129,14 @@
                  vfx=velocw(1,iglob)
                  vfy=velocw(2,iglob)
                  vfz=velocw(3,iglob)
-                 
+
                  ! gets properties
                  phil = phistore(i,j,k,ispec)
                  tortl = tortstore(i,j,k,ispec)
                  rhol_s = rhoarraystore(1,i,j,k,ispec)
                  rhol_f = rhoarraystore(2,i,j,k,ispec)
                  rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
- 
+
                  ! gets associated normal
                  nx = abs_boundary_normal(1,igll,iface)
                  ny = abs_boundary_normal(2,igll,iface)

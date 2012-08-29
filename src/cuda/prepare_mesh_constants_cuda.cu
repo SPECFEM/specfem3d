@@ -41,6 +41,47 @@
 #include "mesh_constants_cuda.h"
 #include "prepare_constants_cuda.h"
 
+/* ----------------------------------------------------------------------------------------------- */
+
+// helper functions
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+// copies integer array from CPU host to GPU device
+void copy_todevice_int(void** d_array_addr_ptr,int* h_array,int size){
+  TRACE("copy_todevice_int");
+
+  // allocates memory on GPU
+  //
+  // note: cudaMalloc uses a double-pointer, such that it can return an error code in case it fails
+  //          we thus pass the address to the pointer above (as void double-pointer) to have it
+  //          pointing to the correct pointer of the array here
+  print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int)),
+                          12001);
+
+  // copies values onto GPU
+  //
+  // note: cudaMemcpy uses the pointer to the array, we thus re-cast the value of
+  //          the double-pointer above to have the correct pointer to the array
+  print_CUDA_error_if_any(cudaMemcpy((int*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice),
+                          12002);
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// copies integer array from CPU host to GPU device
+void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
+  TRACE("copy_todevice_realw");
+
+  // allocates memory on GPU
+  print_CUDA_error_if_any(cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw)),
+                          22001);
+  // copies values onto GPU
+  print_CUDA_error_if_any(cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice),
+                          22002);
+}
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -62,8 +103,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* max_nibool_interfaces_ext_mesh,
                                         int* h_nibool_interfaces_ext_mesh,
                                         int* h_ibool_interfaces_ext_mesh,
-                                        realw* h_hprime_xx,realw* h_hprime_yy,realw* h_hprime_zz,
-                                        realw* h_hprimewgll_xx,realw* h_hprimewgll_yy,realw* h_hprimewgll_zz,
+                                        realw* h_hprime_xx,
+                                        realw* h_hprimewgll_xx,
                                         realw* h_wgllwgll_xy,realw* h_wgllwgll_xz,realw* h_wgllwgll_yz,
                                         int* ABSORBING_CONDITIONS,
                                         int* h_abs_boundary_ispec, int* h_abs_boundary_ijk,
@@ -78,8 +119,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* h_ispec_selected_source,
                                         int* h_number_receiver_global,
                                         int* h_ispec_selected_rec,
-                                        int* nrec_f,
-                                        int* nrec_local_f,
+                                        int* nrec,int* nrec_local,
                                         int* SIMULATION_TYPE,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
@@ -116,12 +156,13 @@ TRACE("prepare_constants_device");
 
   // sets constant arrays
   setConst_hprime_xx(h_hprime_xx,mp);
-  // only needed if NGLLX != NGLLY != NGLLZ
-  // setConst_hprime_yy(h_hprime_yy,mp);
-  // setConst_hprime_zz(h_hprime_zz,mp);
+  // setConst_hprime_yy(h_hprime_yy,mp); // only needed if NGLLX != NGLLY != NGLLZ
+  // setConst_hprime_zz(h_hprime_zz,mp); // only needed if NGLLX != NGLLY != NGLLZ
+
   setConst_hprimewgll_xx(h_hprimewgll_xx,mp);
-  setConst_hprimewgll_yy(h_hprimewgll_yy,mp);
-  setConst_hprimewgll_zz(h_hprimewgll_zz,mp);
+  //setConst_hprimewgll_yy(h_hprimewgll_yy,mp); // only needed if NGLLX != NGLLY != NGLLZ
+  //setConst_hprimewgll_zz(h_hprimewgll_zz,mp); // only needed if NGLLX != NGLLY != NGLLZ
+
   setConst_wgllwgll_xy(h_wgllwgll_xy,mp);
   setConst_wgllwgll_xz(h_wgllwgll_xz,mp);
   setConst_wgllwgll_yz(h_wgllwgll_yz,mp);
@@ -182,25 +223,34 @@ TRACE("prepare_constants_device");
   }
 
   // global indexing
-  print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool,size_padded*sizeof(int)),1021);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_ibool, h_ibool,
-                                     NGLL3*(mp->NSPEC_AB)*sizeof(int),cudaMemcpyHostToDevice),1022);
+  copy_todevice_int((void**)&mp->d_ibool,h_ibool,NGLL3*(mp->NSPEC_AB));
+
+  //print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool,size_padded*sizeof(int)),1021);
+  //print_CUDA_error_if_any(cudaMemcpy(mp->d_ibool, h_ibool,
+  //                                  NGLL3*(mp->NSPEC_AB)*sizeof(int),cudaMemcpyHostToDevice),1022);
 
 
   // prepare interprocess-edge exchange information
   mp->num_interfaces_ext_mesh = *num_interfaces_ext_mesh;
   mp->max_nibool_interfaces_ext_mesh = *max_nibool_interfaces_ext_mesh;
   if( mp->num_interfaces_ext_mesh > 0 ){
-    print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_nibool_interfaces_ext_mesh,
-                                       (mp->num_interfaces_ext_mesh)*sizeof(int)),1201);
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_nibool_interfaces_ext_mesh,h_nibool_interfaces_ext_mesh,
-                                       (mp->num_interfaces_ext_mesh)*sizeof(int),cudaMemcpyHostToDevice),1202);
 
-    print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool_interfaces_ext_mesh,
-                                       (mp->num_interfaces_ext_mesh)*(mp->max_nibool_interfaces_ext_mesh)*sizeof(int)),1203);
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_ibool_interfaces_ext_mesh,h_ibool_interfaces_ext_mesh,
-                                       (mp->num_interfaces_ext_mesh)*(mp->max_nibool_interfaces_ext_mesh)*sizeof(int),
-                                       cudaMemcpyHostToDevice),1204);
+    copy_todevice_int((void**)&mp->d_nibool_interfaces_ext_mesh,h_nibool_interfaces_ext_mesh,
+                      mp->num_interfaces_ext_mesh);
+
+    //print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_nibool_interfaces_ext_mesh,
+    //                                   (mp->num_interfaces_ext_mesh)*sizeof(int)),1201);
+    //print_CUDA_error_if_any(cudaMemcpy(mp->d_nibool_interfaces_ext_mesh,h_nibool_interfaces_ext_mesh,
+    //                                   (mp->num_interfaces_ext_mesh)*sizeof(int),cudaMemcpyHostToDevice),1202);
+
+    copy_todevice_int((void**)&mp->d_ibool_interfaces_ext_mesh,h_ibool_interfaces_ext_mesh,
+                      (mp->num_interfaces_ext_mesh)*(mp->max_nibool_interfaces_ext_mesh));
+
+    //print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool_interfaces_ext_mesh,
+    //                                   (mp->num_interfaces_ext_mesh)*(mp->max_nibool_interfaces_ext_mesh)*sizeof(int)),1203);
+    //print_CUDA_error_if_any(cudaMemcpy(mp->d_ibool_interfaces_ext_mesh,h_ibool_interfaces_ext_mesh,
+    //                                   (mp->num_interfaces_ext_mesh)*(mp->max_nibool_interfaces_ext_mesh)*sizeof(int),
+    //                                   cudaMemcpyHostToDevice),1204);
   }
 
   // Allocate pinned mpi-buffers.
@@ -275,41 +325,26 @@ TRACE("prepare_constants_device");
   mp->nsources_local = *nsources_local_f;
   if (*SIMULATION_TYPE == 1  || *SIMULATION_TYPE == 3){
     // not needed in case of pure adjoint simulations (SIMULATION_TYPE == 2)
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_sourcearrays,
-                                       sizeof(realw)* *NSOURCES*3*NGLL3),1301);
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_sourcearrays, h_sourcearrays,
-                                       sizeof(realw)* *NSOURCES*3*NGLL3,cudaMemcpyHostToDevice),1302);
+    copy_todevice_realw((void**)&mp->d_sourcearrays,h_sourcearrays,(*NSOURCES)*NDIM*NGLL3);
 
+    // buffer for source time function values
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_stf_pre_compute,
                                        *NSOURCES*sizeof(double)),1303);
   }
-
-  print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_islice_selected_source,
-                                     sizeof(int) * *NSOURCES),1401);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_islice_selected_source, h_islice_selected_source,
-                                     sizeof(int)* *NSOURCES,cudaMemcpyHostToDevice),1402);
-
-  print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_ispec_selected_source,
-                                     sizeof(int)* *NSOURCES),1403);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_ispec_selected_source, h_ispec_selected_source,
-                                     sizeof(int)* *NSOURCES,cudaMemcpyHostToDevice),1404);
+  copy_todevice_int((void**)&mp->d_islice_selected_source,h_islice_selected_source,(*NSOURCES));
+  copy_todevice_int((void**)&mp->d_ispec_selected_source,h_ispec_selected_source,(*NSOURCES));
 
 
   // receiver stations
-  int nrec = *nrec_f; // total number of receivers
-  mp->nrec_local = *nrec_local_f; // number of receiver located in this partition
-  //int nrec_local = *nrec_local_f;
+  mp->nrec_local = *nrec_local; // number of receiver located in this partition
   // note that:
   // size(number_receiver_global) = nrec_local
   // size(ispec_selected_rec) = nrec
   if( mp->nrec_local > 0 ){
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_number_receiver_global),mp->nrec_local*sizeof(int)),1);
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_number_receiver_global,h_number_receiver_global,
-                                     mp->nrec_local*sizeof(int),cudaMemcpyHostToDevice),1512);
+    copy_todevice_int((void**)&mp->d_number_receiver_global,h_number_receiver_global,mp->nrec_local);
   }
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_ispec_selected_rec),nrec*sizeof(int)),1513);
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_ispec_selected_rec,h_ispec_selected_rec,
-                                     nrec*sizeof(int),cudaMemcpyHostToDevice),1514);
+  copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
+
 
 #ifdef USE_MESH_COLORING_GPU
   mp->use_mesh_coloring_gpu = 1;

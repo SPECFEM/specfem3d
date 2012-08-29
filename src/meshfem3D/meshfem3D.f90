@@ -761,19 +761,19 @@
   nspec = NSPEC_AB
 
 ! compute maximum number of points
-  npointot = nspec * NGLLCUBE
+  npointot = nspec * NGLLCUBE_M
 
 ! make sure everybody is synchronized
   call sync_all()
 
 ! use dynamic allocation to allocate memory for arrays
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibool'
-  allocate(xstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
   if( ier /= 0 ) stop 'error allocating array xstore'
-  allocate(ystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ystore'
-  allocate(zstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
   ! exit if there is not enough memory to allocate all the arrays
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 

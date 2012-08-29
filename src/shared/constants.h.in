@@ -292,10 +292,6 @@
 ! dimension of the boundaries of the slices
   integer, parameter :: NDIM2D = 2
 
-! for vectorization of loops
-  integer, parameter :: NGLLSQUARE_NDIM = NGLLSQUARE * NDIM
-  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
-
 ! this to only take the corners (i.e. extract a QUAD4 or HEX8 in some routines even if we use higher-order elements)
   integer, parameter :: NGNOD_EIGHT_CORNERS = 8
   integer, parameter :: NGNOD2D_FOUR_CORNERS = 4

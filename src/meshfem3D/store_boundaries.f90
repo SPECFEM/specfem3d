@@ -152,28 +152,28 @@
 
   logical iboun(6,nspec)
 
-  double precision xstore(NGLLX,NGLLY,NGLLZ,nspec)
-  double precision ystore(NGLLX,NGLLY,NGLLZ,nspec)
-  double precision zstore(NGLLX,NGLLY,NGLLZ,nspec)
+  double precision xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  double precision ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+  double precision zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
 
-  real(kind=CUSTOM_REAL) jacobian2D_xmin(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_xmax(NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_ymin(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_ymax(NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) jacobian2D_bottom(NGLLX,NGLLY,NSPEC2D_BOTTOM)
-  real(kind=CUSTOM_REAL) jacobian2D_top(NGLLX,NGLLY,NSPEC2D_TOP)
+  real(kind=CUSTOM_REAL) jacobian2D_xmin(NGLLY_M,NGLLZ_M,NSPEC2DMAX_XMIN_XMAX)
+  real(kind=CUSTOM_REAL) jacobian2D_xmax(NGLLY_M,NGLLZ_M,NSPEC2DMAX_XMIN_XMAX)
+  real(kind=CUSTOM_REAL) jacobian2D_ymin(NGLLX_M,NGLLZ_M,NSPEC2DMAX_YMIN_YMAX)
+  real(kind=CUSTOM_REAL) jacobian2D_ymax(NGLLX_M,NGLLZ_M,NSPEC2DMAX_YMIN_YMAX)
+  real(kind=CUSTOM_REAL) jacobian2D_bottom(NGLLX_M,NGLLY_M,NSPEC2D_BOTTOM)
+  real(kind=CUSTOM_REAL) jacobian2D_top(NGLLX_M,NGLLY_M,NSPEC2D_TOP)
 
-  real(kind=CUSTOM_REAL) normal_xmin(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) normal_xmax(NDIM,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
-  real(kind=CUSTOM_REAL) normal_ymin(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) normal_ymax(NDIM,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
-  real(kind=CUSTOM_REAL) normal_bottom(NDIM,NGLLX,NGLLY,NSPEC2D_BOTTOM)
-  real(kind=CUSTOM_REAL) normal_top(NDIM,NGLLX,NGLLY,NSPEC2D_TOP)
+  real(kind=CUSTOM_REAL) normal_xmin(NDIM,NGLLY_M,NGLLZ_M,NSPEC2DMAX_XMIN_XMAX)
+  real(kind=CUSTOM_REAL) normal_xmax(NDIM,NGLLY_M,NGLLZ_M,NSPEC2DMAX_XMIN_XMAX)
+  real(kind=CUSTOM_REAL) normal_ymin(NDIM,NGLLX_M,NGLLZ_M,NSPEC2DMAX_YMIN_YMAX)
+  real(kind=CUSTOM_REAL) normal_ymax(NDIM,NGLLX_M,NGLLZ_M,NSPEC2DMAX_YMIN_YMAX)
+  real(kind=CUSTOM_REAL) normal_bottom(NDIM,NGLLX_M,NGLLY_M,NSPEC2D_BOTTOM)
+  real(kind=CUSTOM_REAL) normal_top(NDIM,NGLLX_M,NGLLY_M,NSPEC2D_TOP)
 
-  double precision dershape2D_x(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLY,NGLLZ)
-  double precision dershape2D_y(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX,NGLLZ)
-  double precision dershape2D_bottom(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX,NGLLY)
-  double precision dershape2D_top(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX,NGLLY)
+  double precision dershape2D_x(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLY_M,NGLLZ_M)
+  double precision dershape2D_y(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX_M,NGLLZ_M)
+  double precision dershape2D_bottom(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX_M,NGLLY_M)
+  double precision dershape2D_top(NDIM2D,NGNOD2D_FOUR_CORNERS,NGLLX_M,NGLLY_M)
 
 ! global element numbering
   integer ispec
@@ -208,18 +208,18 @@
     xelm(1)=xstore(1,1,1,ispec)
     yelm(1)=ystore(1,1,1,ispec)
     zelm(1)=zstore(1,1,1,ispec)
-    xelm(2)=xstore(1,NGLLY,1,ispec)
-    yelm(2)=ystore(1,NGLLY,1,ispec)
-    zelm(2)=zstore(1,NGLLY,1,ispec)
-    xelm(3)=xstore(1,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(1,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(1,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(1,1,NGLLZ,ispec)
-    yelm(4)=ystore(1,1,NGLLZ,ispec)
-    zelm(4)=zstore(1,1,NGLLZ,ispec)
+    xelm(2)=xstore(1,NGLLY_M,1,ispec)
+    yelm(2)=ystore(1,NGLLY_M,1,ispec)
+    zelm(2)=zstore(1,NGLLY_M,1,ispec)
+    xelm(3)=xstore(1,NGLLY_M,NGLLZ_M,ispec)
+    yelm(3)=ystore(1,NGLLY_M,NGLLZ_M,ispec)
+    zelm(3)=zstore(1,NGLLY_M,NGLLZ_M,ispec)
+    xelm(4)=xstore(1,1,NGLLZ_M,ispec)
+    yelm(4)=ystore(1,1,NGLLZ_M,ispec)
+    zelm(4)=zstore(1,1,NGLLZ_M,ispec)
 
     call compute_jacobian_2D(myrank,ispecb1,xelm,yelm,zelm,dershape2D_x, &
-                  jacobian2D_xmin,normal_xmin,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
+                  jacobian2D_xmin,normal_xmin,NGLLY_M,NGLLZ_M,NSPEC2DMAX_XMIN_XMAX)
 
   endif
 
@@ -231,21 +231,21 @@
     ibelm_xmax(ispecb2)=ispec
 
 !   specify the 4 nodes for the 2-D boundary element
-    xelm(1)=xstore(NGLLX,1,1,ispec)
-    yelm(1)=ystore(NGLLX,1,1,ispec)
-    zelm(1)=zstore(NGLLX,1,1,ispec)
-    xelm(2)=xstore(NGLLX,NGLLY,1,ispec)
-    yelm(2)=ystore(NGLLX,NGLLY,1,ispec)
-    zelm(2)=zstore(NGLLX,NGLLY,1,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(NGLLX,1,NGLLZ,ispec)
-    yelm(4)=ystore(NGLLX,1,NGLLZ,ispec)
-    zelm(4)=zstore(NGLLX,1,NGLLZ,ispec)
+    xelm(1)=xstore(NGLLX_M,1,1,ispec)
+    yelm(1)=ystore(NGLLX_M,1,1,ispec)
+    zelm(1)=zstore(NGLLX_M,1,1,ispec)
+    xelm(2)=xstore(NGLLX_M,NGLLY_M,1,ispec)
+    yelm(2)=ystore(NGLLX_M,NGLLY_M,1,ispec)
+    zelm(2)=zstore(NGLLX_M,NGLLY_M,1,ispec)
+    xelm(3)=xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    yelm(3)=ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    zelm(3)=zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    xelm(4)=xstore(NGLLX_M,1,NGLLZ_M,ispec)
+    yelm(4)=ystore(NGLLX_M,1,NGLLZ_M,ispec)
+    zelm(4)=zstore(NGLLX_M,1,NGLLZ_M,ispec)
 
     call compute_jacobian_2D(myrank,ispecb2,xelm,yelm,zelm,dershape2D_x, &
-                  jacobian2D_xmax,normal_xmax,NGLLY,NGLLZ,NSPEC2DMAX_XMIN_XMAX)
+                  jacobian2D_xmax,normal_xmax,NGLLY_M,NGLLZ_M,NSPEC2DMAX_XMIN_XMAX)
 
   endif
 
@@ -260,18 +260,18 @@
     xelm(1)=xstore(1,1,1,ispec)
     yelm(1)=ystore(1,1,1,ispec)
     zelm(1)=zstore(1,1,1,ispec)
-    xelm(2)=xstore(NGLLX,1,1,ispec)
-    yelm(2)=ystore(NGLLX,1,1,ispec)
-    zelm(2)=zstore(NGLLX,1,1,ispec)
-    xelm(3)=xstore(NGLLX,1,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,1,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,1,NGLLZ,ispec)
-    xelm(4)=xstore(1,1,NGLLZ,ispec)
-    yelm(4)=ystore(1,1,NGLLZ,ispec)
-    zelm(4)=zstore(1,1,NGLLZ,ispec)
+    xelm(2)=xstore(NGLLX_M,1,1,ispec)
+    yelm(2)=ystore(NGLLX_M,1,1,ispec)
+    zelm(2)=zstore(NGLLX_M,1,1,ispec)
+    xelm(3)=xstore(NGLLX_M,1,NGLLZ_M,ispec)
+    yelm(3)=ystore(NGLLX_M,1,NGLLZ_M,ispec)
+    zelm(3)=zstore(NGLLX_M,1,NGLLZ_M,ispec)
+    xelm(4)=xstore(1,1,NGLLZ_M,ispec)
+    yelm(4)=ystore(1,1,NGLLZ_M,ispec)
+    zelm(4)=zstore(1,1,NGLLZ_M,ispec)
 
     call compute_jacobian_2D(myrank,ispecb3,xelm,yelm,zelm,dershape2D_y, &
-                  jacobian2D_ymin,normal_ymin,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
+                  jacobian2D_ymin,normal_ymin,NGLLX_M,NGLLZ_M,NSPEC2DMAX_YMIN_YMAX)
 
   endif
 
@@ -283,21 +283,21 @@
     ibelm_ymax(ispecb4)=ispec
 
 !   specify the 4 nodes for the 2-D boundary element
-    xelm(1)=xstore(1,NGLLY,1,ispec)
-    yelm(1)=ystore(1,NGLLY,1,ispec)
-    zelm(1)=zstore(1,NGLLY,1,ispec)
-    xelm(2)=xstore(NGLLX,NGLLY,1,ispec)
-    yelm(2)=ystore(NGLLX,NGLLY,1,ispec)
-    zelm(2)=zstore(NGLLX,NGLLY,1,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec)
-    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec)
-    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
+    xelm(1)=xstore(1,NGLLY_M,1,ispec)
+    yelm(1)=ystore(1,NGLLY_M,1,ispec)
+    zelm(1)=zstore(1,NGLLY_M,1,ispec)
+    xelm(2)=xstore(NGLLX_M,NGLLY_M,1,ispec)
+    yelm(2)=ystore(NGLLX_M,NGLLY_M,1,ispec)
+    zelm(2)=zstore(NGLLX_M,NGLLY_M,1,ispec)
+    xelm(3)=xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    yelm(3)=ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    zelm(3)=zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    xelm(4)=xstore(1,NGLLY_M,NGLLZ_M,ispec)
+    yelm(4)=ystore(1,NGLLY_M,NGLLZ_M,ispec)
+    zelm(4)=zstore(1,NGLLY_M,NGLLZ_M,ispec)
 
     call compute_jacobian_2D(myrank,ispecb4,xelm,yelm,zelm,dershape2D_y, &
-                  jacobian2D_ymax,normal_ymax,NGLLX,NGLLZ,NSPEC2DMAX_YMIN_YMAX)
+                  jacobian2D_ymax,normal_ymax,NGLLX_M,NGLLZ_M,NSPEC2DMAX_YMIN_YMAX)
 
   endif
 
@@ -311,18 +311,18 @@
     xelm(1)=xstore(1,1,1,ispec)
     yelm(1)=ystore(1,1,1,ispec)
     zelm(1)=zstore(1,1,1,ispec)
-    xelm(2)=xstore(NGLLX,1,1,ispec)
-    yelm(2)=ystore(NGLLX,1,1,ispec)
-    zelm(2)=zstore(NGLLX,1,1,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,1,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,1,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,1,ispec)
-    xelm(4)=xstore(1,NGLLY,1,ispec)
-    yelm(4)=ystore(1,NGLLY,1,ispec)
-    zelm(4)=zstore(1,NGLLY,1,ispec)
+    xelm(2)=xstore(NGLLX_M,1,1,ispec)
+    yelm(2)=ystore(NGLLX_M,1,1,ispec)
+    zelm(2)=zstore(NGLLX_M,1,1,ispec)
+    xelm(3)=xstore(NGLLX_M,NGLLY_M,1,ispec)
+    yelm(3)=ystore(NGLLX_M,NGLLY_M,1,ispec)
+    zelm(3)=zstore(NGLLX_M,NGLLY_M,1,ispec)
+    xelm(4)=xstore(1,NGLLY_M,1,ispec)
+    yelm(4)=ystore(1,NGLLY_M,1,ispec)
+    zelm(4)=zstore(1,NGLLY_M,1,ispec)
 
     call compute_jacobian_2D(myrank,ispecb5,xelm,yelm,zelm,dershape2D_bottom, &
-                  jacobian2D_bottom,normal_bottom,NGLLX,NGLLY,NSPEC2D_BOTTOM)
+                  jacobian2D_bottom,normal_bottom,NGLLX_M,NGLLY_M,NSPEC2D_BOTTOM)
 
   endif
 
@@ -333,21 +333,21 @@
     ispecb6=ispecb6+1
     ibelm_top(ispecb6)=ispec
 
-    xelm(1)=xstore(1,1,NGLLZ,ispec)
-    yelm(1)=ystore(1,1,NGLLZ,ispec)
-    zelm(1)=zstore(1,1,NGLLZ,ispec)
-    xelm(2)=xstore(NGLLX,1,NGLLZ,ispec)
-    yelm(2)=ystore(NGLLX,1,NGLLZ,ispec)
-    zelm(2)=zstore(NGLLX,1,NGLLZ,ispec)
-    xelm(3)=xstore(NGLLX,NGLLY,NGLLZ,ispec)
-    yelm(3)=ystore(NGLLX,NGLLY,NGLLZ,ispec)
-    zelm(3)=zstore(NGLLX,NGLLY,NGLLZ,ispec)
-    xelm(4)=xstore(1,NGLLY,NGLLZ,ispec)
-    yelm(4)=ystore(1,NGLLY,NGLLZ,ispec)
-    zelm(4)=zstore(1,NGLLY,NGLLZ,ispec)
+    xelm(1)=xstore(1,1,NGLLZ_M,ispec)
+    yelm(1)=ystore(1,1,NGLLZ_M,ispec)
+    zelm(1)=zstore(1,1,NGLLZ_M,ispec)
+    xelm(2)=xstore(NGLLX_M,1,NGLLZ_M,ispec)
+    yelm(2)=ystore(NGLLX_M,1,NGLLZ_M,ispec)
+    zelm(2)=zstore(NGLLX_M,1,NGLLZ_M,ispec)
+    xelm(3)=xstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    yelm(3)=ystore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    zelm(3)=zstore(NGLLX_M,NGLLY_M,NGLLZ_M,ispec)
+    xelm(4)=xstore(1,NGLLY_M,NGLLZ_M,ispec)
+    yelm(4)=ystore(1,NGLLY_M,NGLLZ_M,ispec)
+    zelm(4)=zstore(1,NGLLY_M,NGLLZ_M,ispec)
 
     call compute_jacobian_2D(myrank,ispecb6,xelm,yelm,zelm,dershape2D_top, &
-                  jacobian2D_top,normal_top,NGLLX,NGLLY,NSPEC2D_TOP)
+                  jacobian2D_top,normal_top,NGLLX_M,NGLLY_M,NSPEC2D_TOP)
 
   endif
 

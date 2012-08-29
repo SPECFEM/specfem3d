@@ -66,24 +66,24 @@
   integer, dimension(4,NSPEC2D_TOP)  :: nodes_ibelm_top
 
 ! local parameters
-  logical, dimension(:,:),allocatable :: iboun   ! pll
-
   ! (assumes NGLLX=NGLLY=NGLLZ)
-  real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
-  real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: jacobian2Dw_face
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY) :: normal_face
+  real(kind=CUSTOM_REAL), dimension(NDIM) :: lnormal
+
   integer:: ijk_face(3,NGLLX,NGLLY)
 
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   integer  :: ispec,ispec2D,icorner,iabs,iface,igll,i,j,igllfree,ifree
 
-! sets flag in array iboun for elements with an absorbing boundary faces
-  iboun(:,:) = .false.
-
-! abs face counter
+  ! abs face counter
   iabs = 0
 
   ! xmin
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   do ispec2D = 1, nspec2D_xmin
     ! sets element
     ispec = ibelm_xmin(ispec2D)
@@ -102,8 +102,6 @@
                             xstore_dummy,ystore_dummy,zstore_dummy, &
                             iface)
 
-    iboun(iface,ispec) = .true.
-
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
 
@@ -118,10 +116,12 @@
     ! switch normal direction if necessary
     do j=1,NGLLZ
       do i=1,NGLLX
-          call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                       ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
 
@@ -143,6 +143,9 @@
   enddo ! nspec2D_xmin
 
   ! xmax
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   do ispec2D = 1, nspec2D_xmax
     ! sets element
     ispec = ibelm_xmax(ispec2D)
@@ -160,7 +163,6 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
-    iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -176,10 +178,12 @@
     ! switch normal direction if necessary
     do j=1,NGLLZ
       do i=1,NGLLX
-          call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                       ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
 
@@ -201,6 +205,9 @@
   enddo
 
   ! ymin
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   do ispec2D = 1, nspec2D_ymin
     ! sets element
     ispec = ibelm_ymin(ispec2D)
@@ -218,7 +225,6 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
-    iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -234,10 +240,12 @@
     ! switch normal direction if necessary
     do j=1,NGLLZ
       do i=1,NGLLY
-          call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                       ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
 
@@ -259,6 +267,9 @@
   enddo
 
   ! ymax
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   do ispec2D = 1, nspec2D_ymax
     ! sets element
     ispec = ibelm_ymax(ispec2D)
@@ -276,7 +287,6 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
-    iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -292,10 +302,12 @@
     ! switch normal direction if necessary
     do j=1,NGLLZ
       do i=1,NGLLY
-          call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                       ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
 
@@ -317,6 +329,9 @@
   enddo
 
   ! bottom
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   do ispec2D = 1, NSPEC2D_BOTTOM
     ! sets element
     ispec = ibelm_bottom(ispec2D)
@@ -334,7 +349,6 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
-    iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -350,10 +364,12 @@
     ! switch normal direction if necessary
     do j=1,NGLLY
       do i=1,NGLLX
-          call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                       ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
 
@@ -375,6 +391,9 @@
   enddo
 
   ! top
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   ! free surface face counter
   ifree = 0
   do ispec2D = 1, NSPEC2D_TOP
@@ -394,7 +413,6 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface )
-    iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -410,10 +428,12 @@
     ! switch normal direction if necessary
     do j=1,NGLLY
       do i=1,NGLLX
-          call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
                                       ibool,nspec,nglob_dummy, &
                                       xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      normal_face(:,i,j) )
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
       enddo
     enddo
 
@@ -470,7 +490,7 @@
     endif
   enddo
 
-! checks counters
+  ! checks counters
   if( ifree /= num_free_surface_faces ) then
     print*,'error number of free surface faces:',ifree,num_free_surface_faces
     stop 'error number of free surface faces'

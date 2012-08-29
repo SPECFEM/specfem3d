@@ -391,7 +391,7 @@
     allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
   endif
 
-  if( ANISOTROPY ) then
+  if( ELASTIC_SIMULATION .and. ANISOTROPY ) then
     read(27) c11store
     read(27) c12store
     read(27) c13store
@@ -743,6 +743,7 @@
   ! ADJOINT moho
   ! moho boundary
   if( ELASTIC_SIMULATION ) then
+    ! always needed to be allocated for routine arguments
     allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
     if( ier /= 0 ) stop 'error allocating array is_moho_top etc.'
 
@@ -812,6 +813,7 @@
       NSPEC2D_MOHO = 1
     endif
 
+    ! always needed to be allocated for routine arguments
     allocate( dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
              dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
              b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &

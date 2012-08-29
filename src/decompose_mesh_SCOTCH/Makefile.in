@@ -73,7 +73,7 @@ O = ../../obj/dec
 ####
 
 # default targets for the Pyrized version
-DEFAULT = scotch xdecompose_mesh_SCOTCH
+DEFAULT = xscotch xdecompose_mesh_SCOTCH
 
 
 default: $(DEFAULT)
@@ -97,7 +97,7 @@ DEC_OBJECTS = $O/part_decompose_mesh_SCOTCH.o \
 @COND_PYRE_FALSE@
 
 
-scotch:
+xscotch:
 ifeq (@USE_BUNDLED_SCOTCH@,1)
 	(echo "Using bundled Scotch")
 	(cd @SCOTCH_DIR@/src; make)

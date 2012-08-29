@@ -133,7 +133,6 @@ subroutine PML_initialize()
   use PML_par_acoustic
   use constants,only: FIX_UNDERFLOW_PROBLEM,VERYSMALLVAL,IMAIN,&
                       NGLLX,NGLLY,NGLLZ,TINYVAL
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION
   implicit none
 
   ! local parameters
@@ -487,7 +486,7 @@ subroutine PML_determine_interfacePoints()
   use PML_par
   use PML_par_acoustic
   use constants,only: NGLLX,NGLLY,NGLLZ
-  use specfem_par_acoustic,only: ispec_is_acoustic,ACOUSTIC_SIMULATION
+  use specfem_par_acoustic,only: ispec_is_acoustic
   implicit none
 
   ! local parameters
@@ -563,7 +562,7 @@ subroutine PML_get_width()
 
 ! calculates PML width for statistics
 
-  use specfem_par,only: abs_boundary_ispec,abs_boundary_normal,abs_boundary_ijk,&
+  use specfem_par,only: abs_boundary_ispec,abs_boundary_ijk,&
                         num_abs_boundary_faces,&
                         ibool,xstore,ystore,zstore,myrank, &
                         NGLOB_AB
@@ -849,7 +848,7 @@ subroutine PML_add_layer()
 
   use PML_par
   use specfem_par,only: NSPEC_AB,NGLOB_AB, &
-                        abs_boundary_ispec,abs_boundary_normal,num_abs_boundary_faces,&
+                        abs_boundary_ispec,num_abs_boundary_faces,&
                         ibool,myrank,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
@@ -1005,11 +1004,7 @@ subroutine PML_update_normals(ilayer)
 ! updates normal's directions for elements in PML region
 
   use PML_par
-  use specfem_par,only: NSPEC_AB,NGLOB_AB, &
-                        ibool,myrank,&
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh,NPROC
+  use specfem_par,only: NSPEC_AB,NGLOB_AB,ibool,myrank
   use constants,only: NGNOD2D,NGLLX,NGLLY,NGLLZ
   implicit none
   integer :: ilayer

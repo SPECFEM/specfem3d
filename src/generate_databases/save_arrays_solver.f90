@@ -52,19 +52,11 @@
   logical :: ANISOTROPY
 
   ! local parameters
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
-  integer,dimension(:),allocatable :: v_tmp_i
-
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
   integer :: max_nibool_interfaces_ext_mesh
 
   integer :: ier,i
   character(len=256) :: filename
-
-  integer, dimension(:), allocatable :: iglob_tmp
-  integer :: j,inum
-
-  logical,parameter :: DEBUG = .false.
 
   ! saves mesh file proc***_external_mesh.bin
   filename = prname(1:len_trim(prname))//'external_mesh.bin'
@@ -202,7 +194,7 @@
   endif
 
 ! anisotropy
-  if( ANISOTROPY ) then
+  if( ELASTIC_SIMULATION .and. ANISOTROPY ) then
     write(IOUT) c11store
     write(IOUT) c12store
     write(IOUT) c13store
@@ -261,276 +253,300 @@
 
   close(IOUT)
 
-
-! stores arrays in binary files
+  ! stores arrays in binary files
   if( SAVE_MESH_FILES ) then
+    call save_arrays_solver_files(nspec,nglob,ibool)
 
-    ! mesh arrays used for example in combine_vol_data.f90
-    !--- x coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file x.bin'
-    write(27) xstore_dummy
-    close(27)
-
-    !--- y coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file y.bin'
-    write(27) ystore_dummy
-    close(27)
-
-    !--- z coordinate
-    open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file z.bin'
-    write(27) zstore_dummy
-    close(27)
-
-    ! ibool
-    open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file ibool.bin'
-    write(27) ibool
-    close(27)
-
-    allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
-
-    ! vp (for checking the mesh and model)
-    !minimum = minval( abs(rho_vp) )
-    !if( minimum(1) /= 0.0 ) then
-    !  v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-    !else
-    !  v_tmp = 0.0
+    ! debug: saves 1. MPI interface
+    !if( num_interfaces_ext_mesh >= 1 ) then
+    !  filename = prname(1:len_trim(prname))//'MPI_1_points'
+    !  call write_VTK_data_points(nglob, &
+    !                    xstore_dummy,ystore_dummy,zstore_dummy, &
+    !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
+    !                    nibool_interfaces_ext_mesh(1), &
+    !                    filename)
     !endif
-    v_tmp = 0.0
-    where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
-    open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file vp.bin'
-    write(27) v_tmp
-    close(27)
+  endif
 
-    ! VTK file output
-    ! vp values
-    filename = prname(1:len_trim(prname))//'vp'
-    call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp,filename)
-
-
-    ! vs (for checking the mesh and model)
-    !minimum = minval( abs(rho_vs) )
-    !if( minimum(1) /= 0.0 ) then
-    !  v_tmp = mustore / rho_vs
-    !else
-    !  v_tmp = 0.0
-    !endif
-    v_tmp = 0.0
-    where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
-    open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file vs.bin'
-    write(27) v_tmp
-    close(27)
-
-    ! VTK file output
-    ! vs values
-    filename = prname(1:len_trim(prname))//'vs'
-    call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp,filename)
-
-    ! outputs density model for check
-    v_tmp = 0.0
-    where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
-    open(unit=27,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening file rho.bin'
-    write(27) v_tmp
-    close(27)
-
-    ! VTK file output
-    ! saves attenuation flag assigned on each gll point into a vtk file
-    filename = prname(1:len_trim(prname))//'attenuation'
-    call write_VTK_data_gll_cr(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        qmu_attenuation_store,filename)
-
-    deallocate(v_tmp)
-
-    ! VTK file output
-    if( DEBUG ) then
-      ! acoustic-elastic domains
-      if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
-        ! saves points on acoustic-elastic coupling interface
-        allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-        inum = 0
-        iglob_tmp(:) = 0
-        do i=1,num_coupling_ac_el_faces
-          do j=1,NGLLSQUARE
-            inum = inum+1
-            iglob_tmp(inum) = ibool(coupling_ac_el_ijk(1,j,i), &
-                                    coupling_ac_el_ijk(2,j,i), &
-                                    coupling_ac_el_ijk(3,j,i), &
-                                    coupling_ac_el_ispec(i) )
-          enddo
-        enddo
-        filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
-        call write_VTK_data_points(nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy, &
-                          iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
-                          filename)
-
-        ! saves acoustic/elastic flag
-        allocate(v_tmp_i(nspec),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array v_tmp_i'
-        do i=1,nspec
-          if( ispec_is_acoustic(i) ) then
-            v_tmp_i(i) = 1
-          else if( ispec_is_elastic(i) ) then
-            v_tmp_i(i) = 2
-          else
-            v_tmp_i(i) = 0
-          endif
-        enddo
-        filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
-        call write_VTK_data_elem_i(nspec,nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                          v_tmp_i,filename)
-
-        deallocate(iglob_tmp,v_tmp_i)
-      endif
-
-      ! saves free surface points
-      if( num_free_surface_faces > 0 ) then
-        ! saves free surface interface points
-        allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-        inum = 0
-        iglob_tmp(:) = 0
-        do i=1,num_free_surface_faces
-          do j=1,NGLLSQUARE
-            inum = inum+1
-            iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
-                                    free_surface_ijk(2,j,i), &
-                                    free_surface_ijk(3,j,i), &
-                                    free_surface_ispec(i) )
-          enddo
-        enddo
-        filename = prname(1:len_trim(prname))//'free_surface'
-        call write_VTK_data_points(nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy, &
-                          iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
-                          filename)
-
-        deallocate(iglob_tmp)
-      endif
-
-      ! debug: saves 1. MPI interface
-      !if( num_interfaces_ext_mesh >= 1 ) then
-      !  filename = prname(1:len_trim(prname))//'MPI_1_points'
-      !  call write_VTK_data_points(nglob, &
-      !                    xstore_dummy,ystore_dummy,zstore_dummy, &
-      !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-      !                    nibool_interfaces_ext_mesh(1), &
-      !                    filename)
-      !endif
-
-      ! acoustic-poroelastic domains
-      if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
-        ! saves points on acoustic-poroelastic coupling interface
-        allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_po_faces),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-        inum = 0
-        iglob_tmp(:) = 0
-        do i=1,num_coupling_ac_po_faces
-          do j=1,NGLLSQUARE
-            inum = inum+1
-            iglob_tmp(inum) = ibool(coupling_ac_po_ijk(1,j,i), &
-                                    coupling_ac_po_ijk(2,j,i), &
-                                    coupling_ac_po_ijk(3,j,i), &
-                                    coupling_ac_po_ispec(i) )
-          enddo
-        enddo
-        filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
-        call write_VTK_data_points(nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy, &
-                          iglob_tmp,NGLLSQUARE*num_coupling_ac_po_faces, &
-                          filename)
-
-        ! saves acoustic/poroelastic flag
-        allocate(v_tmp_i(nspec),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array v_tmp_i'
-        do i=1,nspec
-          if( ispec_is_acoustic(i) ) then
-            v_tmp_i(i) = 1
-          else if( ispec_is_poroelastic(i) ) then
-            v_tmp_i(i) = 2
-          else
-            v_tmp_i(i) = 0
-          endif
-        enddo
-        filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
-        call write_VTK_data_elem_i(nspec,nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                          v_tmp_i,filename)
-
-      deallocate(v_tmp_i,iglob_tmp)
-      endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
-
-      ! elastic-poroelastic domains
-      if( ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
-        ! saves points on elastic-poroelastic coupling interface
-        allocate( iglob_tmp(NGLLSQUARE*num_coupling_el_po_faces),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array iglob_tmp'
-        inum = 0
-        iglob_tmp(:) = 0
-        do i=1,num_coupling_el_po_faces
-          do j=1,NGLLSQUARE
-            inum = inum+1
-            iglob_tmp(inum) = ibool(coupling_el_po_ijk(1,j,i), &
-                                    coupling_el_po_ijk(2,j,i), &
-                                    coupling_el_po_ijk(3,j,i), &
-                                    coupling_el_po_ispec(i) )
-          enddo
-        enddo
-        filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
-        call write_VTK_data_points(nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy, &
-                          iglob_tmp,NGLLSQUARE*num_coupling_el_po_faces, &
-                          filename)
-
-        ! saves elastic/poroelastic flag
-        allocate(v_tmp_i(nspec),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array v_tmp_i'
-        do i=1,nspec
-          if( ispec_is_elastic(i) ) then
-            v_tmp_i(i) = 1
-          else if( ispec_is_poroelastic(i) ) then
-            v_tmp_i(i) = 2
-          else
-            v_tmp_i(i) = 0
-          endif
-        enddo
-        filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
-        call write_VTK_data_elem_i(nspec,nglob, &
-                          xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                          v_tmp_i,filename)
-
-      deallocate(v_tmp_i,iglob_tmp)
-      endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
-
-      !debug: saves 1. MPI interface
-      !if( num_interfaces_ext_mesh >= 1 ) then
-      !  filename = prname(1:len_trim(prname))//'MPI_1_points'
-      !  call write_VTK_data_points(nglob, &
-      !                    xstore_dummy,ystore_dummy,zstore_dummy, &
-      !                    ibool_interfaces_ext_mesh_dummy(1:nibool_interfaces_ext_mesh(1),1), &
-      !                    nibool_interfaces_ext_mesh(1), &
-      !                    filename)
-      !endif
-    endif ! DEBUG
-
-  endif ! SAVE_MESH_FILES
-
-! cleanup
+  ! cleanup
   deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
-
 
   end subroutine save_arrays_solver_ext_mesh
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+  subroutine save_arrays_solver_files(nspec,nglob,ibool)
+
+  use create_regions_mesh_ext_par
+
+  implicit none
+
+  integer :: nspec,nglob
+  ! mesh coordinates
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
+  integer,dimension(:),allocatable :: v_tmp_i
+  integer :: ier,i
+  integer, dimension(:), allocatable :: iglob_tmp
+  integer :: j,inum
+  character(len=256) :: filename
+
+  logical,parameter :: DEBUG = .true.
+
+  ! mesh arrays used for example in combine_vol_data.f90
+  !--- x coordinate
+  open(unit=27,file=prname(1:len_trim(prname))//'x.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file x.bin'
+  write(27) xstore_dummy
+  close(27)
+
+  !--- y coordinate
+  open(unit=27,file=prname(1:len_trim(prname))//'y.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file y.bin'
+  write(27) ystore_dummy
+  close(27)
+
+  !--- z coordinate
+  open(unit=27,file=prname(1:len_trim(prname))//'z.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file z.bin'
+  write(27) zstore_dummy
+  close(27)
+
+  ! ibool
+  open(unit=27,file=prname(1:len_trim(prname))//'ibool.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file ibool.bin'
+  write(27) ibool
+  close(27)
+
+  allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if( ier /= 0 ) stop 'error allocating array '
+
+  ! vp (for checking the mesh and model)
+  !minimum = minval( abs(rho_vp) )
+  !if( minimum(1) /= 0.0 ) then
+  !  v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+  !else
+  !  v_tmp = 0.0
+  !endif
+  v_tmp = 0.0
+  where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = (FOUR_THIRDS * mustore + kappastore) / rho_vp
+  open(unit=27,file=prname(1:len_trim(prname))//'vp.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file vp.bin'
+  write(27) v_tmp
+  close(27)
+
+  ! VTK file output
+  ! vp values
+  filename = prname(1:len_trim(prname))//'vp'
+  call write_VTK_data_gll_cr(nspec,nglob, &
+                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                      v_tmp,filename)
+
+
+  ! vs (for checking the mesh and model)
+  !minimum = minval( abs(rho_vs) )
+  !if( minimum(1) /= 0.0 ) then
+  !  v_tmp = mustore / rho_vs
+  !else
+  !  v_tmp = 0.0
+  !endif
+  v_tmp = 0.0
+  where( rho_vs /= 0._CUSTOM_REAL )  v_tmp = mustore / rho_vs
+  open(unit=27,file=prname(1:len_trim(prname))//'vs.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file vs.bin'
+  write(27) v_tmp
+  close(27)
+
+  ! VTK file output
+  ! vs values
+  filename = prname(1:len_trim(prname))//'vs'
+  call write_VTK_data_gll_cr(nspec,nglob, &
+                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                      v_tmp,filename)
+
+  ! outputs density model for check
+  v_tmp = 0.0
+  where( rho_vp /= 0._CUSTOM_REAL ) v_tmp = rho_vp**2 / (FOUR_THIRDS * mustore + kappastore)
+  open(unit=27,file=prname(1:len_trim(prname))//'rho.bin',status='unknown',form='unformatted',iostat=ier)
+  if( ier /= 0 ) stop 'error opening file rho.bin'
+  write(27) v_tmp
+  close(27)
+
+  ! VTK file output
+  ! saves attenuation flag assigned on each gll point into a vtk file
+  filename = prname(1:len_trim(prname))//'attenuation'
+  call write_VTK_data_gll_cr(nspec,nglob, &
+                      xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                      qmu_attenuation_store,filename)
+
+  deallocate(v_tmp)
+
+  ! VTK file output
+  if( DEBUG ) then
+
+    ! saves free surface points
+    if( num_free_surface_faces > 0 ) then
+      ! saves free surface interface points
+      allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+      inum = 0
+      iglob_tmp(:) = 0
+      do i=1,num_free_surface_faces
+        do j=1,NGLLSQUARE
+          inum = inum+1
+          iglob_tmp(inum) = ibool(free_surface_ijk(1,j,i), &
+                                  free_surface_ijk(2,j,i), &
+                                  free_surface_ijk(3,j,i), &
+                                  free_surface_ispec(i) )
+        enddo
+      enddo
+      filename = prname(1:len_trim(prname))//'free_surface'
+      call write_VTK_data_points(nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        iglob_tmp,NGLLSQUARE*num_free_surface_faces, &
+                        filename)
+
+      deallocate(iglob_tmp)
+    endif
+
+    ! acoustic-elastic domains
+    if( ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
+      ! saves points on acoustic-elastic coupling interface
+      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+      inum = 0
+      iglob_tmp(:) = 0
+      do i=1,num_coupling_ac_el_faces
+        do j=1,NGLLSQUARE
+          inum = inum+1
+          iglob_tmp(inum) = ibool(coupling_ac_el_ijk(1,j,i), &
+                                  coupling_ac_el_ijk(2,j,i), &
+                                  coupling_ac_el_ijk(3,j,i), &
+                                  coupling_ac_el_ispec(i) )
+        enddo
+      enddo
+      filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
+      call write_VTK_data_points(nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
+                        filename)
+
+      ! saves acoustic/elastic flag
+      allocate(v_tmp_i(nspec),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
+      do i=1,nspec
+        if( ispec_is_acoustic(i) ) then
+          v_tmp_i(i) = 1
+        else if( ispec_is_elastic(i) ) then
+          v_tmp_i(i) = 2
+        else
+          v_tmp_i(i) = 0
+        endif
+      enddo
+      filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
+      call write_VTK_data_elem_i(nspec,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        v_tmp_i,filename)
+
+      deallocate(iglob_tmp,v_tmp_i)
+    endif
+
+    ! acoustic-poroelastic domains
+    if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+      ! saves points on acoustic-poroelastic coupling interface
+      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_po_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+      inum = 0
+      iglob_tmp(:) = 0
+      do i=1,num_coupling_ac_po_faces
+        do j=1,NGLLSQUARE
+          inum = inum+1
+          iglob_tmp(inum) = ibool(coupling_ac_po_ijk(1,j,i), &
+                                  coupling_ac_po_ijk(2,j,i), &
+                                  coupling_ac_po_ijk(3,j,i), &
+                                  coupling_ac_po_ispec(i) )
+        enddo
+      enddo
+      filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
+      call write_VTK_data_points(nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        iglob_tmp,NGLLSQUARE*num_coupling_ac_po_faces, &
+                        filename)
+
+      ! saves acoustic/poroelastic flag
+      allocate(v_tmp_i(nspec),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
+      do i=1,nspec
+        if( ispec_is_acoustic(i) ) then
+          v_tmp_i(i) = 1
+        else if( ispec_is_poroelastic(i) ) then
+          v_tmp_i(i) = 2
+        else
+          v_tmp_i(i) = 0
+        endif
+      enddo
+      filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
+      call write_VTK_data_elem_i(nspec,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        v_tmp_i,filename)
+
+      deallocate(v_tmp_i,iglob_tmp)
+    endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
+
+    ! elastic-poroelastic domains
+    if( ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION ) then
+      ! saves points on elastic-poroelastic coupling interface
+      allocate( iglob_tmp(NGLLSQUARE*num_coupling_el_po_faces),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array iglob_tmp'
+      inum = 0
+      iglob_tmp(:) = 0
+      do i=1,num_coupling_el_po_faces
+        do j=1,NGLLSQUARE
+          inum = inum+1
+          iglob_tmp(inum) = ibool(coupling_el_po_ijk(1,j,i), &
+                                  coupling_el_po_ijk(2,j,i), &
+                                  coupling_el_po_ijk(3,j,i), &
+                                  coupling_el_po_ispec(i) )
+        enddo
+      enddo
+      filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
+      call write_VTK_data_points(nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy, &
+                        iglob_tmp,NGLLSQUARE*num_coupling_el_po_faces, &
+                        filename)
+
+      ! saves elastic/poroelastic flag
+      allocate(v_tmp_i(nspec),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array v_tmp_i'
+      do i=1,nspec
+        if( ispec_is_elastic(i) ) then
+          v_tmp_i(i) = 1
+        else if( ispec_is_poroelastic(i) ) then
+          v_tmp_i(i) = 2
+        else
+          v_tmp_i(i) = 0
+        endif
+      enddo
+      filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
+      call write_VTK_data_elem_i(nspec,nglob, &
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                        v_tmp_i,filename)
+
+      deallocate(v_tmp_i,iglob_tmp)
+    endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
+
+!    ! saves material flag assigned for each spectral element into a vtk file
+!    prname_file = prname(1:len_trim(prname))//'material_flag'
+!    allocate(elem_flag(nspec))
+!    elem_flag(:) = mat_ext_mesh(1,:)
+!    call write_VTK_data_elem_i(nspec,nglob_dummy, &
+!            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+!            elem_flag,prname_file)
+!    deallocate(elem_flag)
+!  endif
+
+  endif ! DEBUG
+
+  end subroutine save_arrays_solver_files

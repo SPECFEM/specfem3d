@@ -334,6 +334,7 @@
 
 ! define percentage of smallest distance between GLL points for NGLL points
 ! percentages were computed by calling the GLL points routine for each degree
+  percent_GLL(1) = 100.d0
   percent_GLL(2) = 100.d0
   percent_GLL(3) = 50.d0
   percent_GLL(4) = 27.639320225002102d0

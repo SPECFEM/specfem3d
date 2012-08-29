@@ -37,7 +37,8 @@ FLAGS_CHECK = @FLAGS_CHECK@
 FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
 
-SHARED = ../shared
+SHARED = ../shared/
+
 # E : executables directory
 E = ../../bin
 # O : objects directory
@@ -65,34 +66,35 @@ ARFLAGS = cru
 RANLIB = ranlib
 
 libgendatabases_a_OBJECTS = \
-	$O/generate_databases.o \
-	$O/create_regions_mesh.o \
-	$O/assemble_MPI_scalar.o \
+	$O/generate_databases_par.o \
+	$O/assemble_MPI_scalar.shared.o \
 	$O/calc_jacobian.o \
-	$O/check_mesh_resolution.o \
-	$O/multiply_arrays_source.o \
-	$O/create_name_database.o \
+	$O/check_mesh_resolution.shared.o \
+	$O/create_name_database.shared.o \
 	$O/create_mass_matrices.o \
-	$O/create_serial_name_database.o \
-	$O/define_derivation_matrices.o \
-	$O/detect_surface.o \
-	$O/exit_mpi.o \
+	$O/create_regions_mesh.o \
+	$O/create_serial_name_database.shared.o \
+	$O/define_derivation_matrices.shared.o \
+	$O/detect_surface.shared.o \
+	$O/exit_mpi.shared.o \
+	$O/finalize_databases.o \
+	$O/generate_databases.o \
 	$O/get_absorbing_boundary.o \
-	$O/get_attenuation_model.o \
-	$O/get_cmt.o \
+	$O/get_attenuation_model.shared.o \
+	$O/get_cmt.shared.o \
 	$O/get_coupling_surfaces.o \
-	$O/get_element_face.o \
+	$O/get_element_face.shared.o \
 	$O/get_global.o \
-	$O/get_jacobian_boundaries.o \
+	$O/get_jacobian_boundaries.shared.o \
 	$O/get_model.o \
 	$O/get_MPI.o \
 	$O/get_perm_color.o \
-	$O/get_shape2D.o \
-	$O/get_shape3D.o \
-	$O/get_value_parameters.o \
-	$O/gll_library.o \
-	$O/hex_nodes.o \
-	$O/lagrange_poly.o \
+	$O/get_shape2D.shared.o \
+	$O/get_shape3D.shared.o \
+	$O/get_value_parameters.shared.o \
+	$O/gll_library.shared.o \
+	$O/hex_nodes.shared.o \
+	$O/lagrange_poly.shared.o \
 	$O/model_1d_cascadia.o \
 	$O/model_1d_prem.o \
 	$O/model_1d_socal.o \
@@ -103,18 +105,22 @@ libgendatabases_a_OBJECTS = \
 	$O/model_gll.o \
 	$O/model_salton_trough.o \
 	$O/model_tomography.o \
-	$O/netlib_specfun_erf.o \
-	$O/param_reader.o \
-	$O/prepare_assemble_MPI.o \
-	$O/read_topo_bathy_file.o \
-	$O/read_parameter_file.o \
-	$O/read_value_parameters.o \
-	$O/recompute_jacobian.o \
+	$O/netlib_specfun_erf.shared.o \
+	$O/param_reader.cc.o \
+	$O/prepare_assemble_MPI.shared.o \
+	$O/program_generate_databases.o \
+	$O/read_topo_bathy_file.shared.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_partition_files.o \
+	$O/read_value_parameters.shared.o \
+	$O/recompute_jacobian.shared.o \
 	$O/save_arrays_solver.o \
-	$O/save_header_file.o \
-	$O/sort_array_coordinates.o \
-	$O/utm_geo.o \
-	$O/write_VTK_data.o \
+	$O/save_header_file.shared.o \
+	$O/setup_color_perm.o \
+	$O/setup_mesh.o \
+	$O/sort_array_coordinates.shared.o \
+	$O/utm_geo.shared.o \
+	$O/write_VTK_data.shared.o \
 	$O/memory_eval.o \
 	$(EMPTY_MACRO)
 
@@ -126,8 +132,7 @@ libgendatabases_a_OBJECTS = \
 LIBGENDATABASES = $L/libgendatabases.a
 
 # objects for the pure Fortran version
-@COND_PYRE_FALSE@XGENERATE_DATABASES_OBJECTS = $O/program_generate_databases.o $(LIBGENDATABASES)
-@COND_PYRE_FALSE@XGENDATABASES_OBJECTS = $(LIBGENDATABASES)
+@COND_PYRE_FALSE@XGENERATE_DATABASES_OBJECTS = $(LIBGENDATABASES)
 
 ####
 #### targets
@@ -186,209 +191,38 @@ $L/libgendatabases.a: $(libgendatabases_a_OBJECTS)
 ####
 
 ###
-### optimized flags (not dependent on values from mesher anymore)
+### not optimized flags (not dependent on values from mesher anymore)
 ###
 
+$O/%.o: %.f90 $(SHARED)constants.h
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
-$O/assemble_MPI_scalar.o:  ${SHARED}/constants.h ${SHARED}/assemble_MPI_scalar.f90
-	${FCCOMPILE_NO_CHECK} -c -o $O/assemble_MPI_scalar.o ${SHARED}/assemble_MPI_scalar.f90
+$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
+###
+### C compilation
+###
+
+force_ftz.o: $(SHARED)force_ftz.c ../../config.h
+	${CC} -c $(CPPFLAGS) $(CFLAGS) -I../.. -o $O/force_ftz.o $(SHARED)force_ftz.c
+
+$O/%.cc.o: $(SHARED)%.c ../../config.h
+	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ $(SHARED)$< -I../../
 
 ###
 ### MPI compilation without optimization
 ###
 
-$O/parallel.o:  ${SHARED}/constants.h ${SHARED}/parallel.f90
-	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o ${SHARED}/parallel.f90
+$O/parallel.o: $(SHARED)constants.h $(SHARED)parallel.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/parallel.o $(SHARED)parallel.f90
 
 
 ###
 ### serial compilation without optimization
 ###
-$O/serial.o:  ${SHARED}/constants.h ${SHARED}/serial.f90
-	${FCCOMPILE_CHECK} -c -o $O/serial.o ${SHARED}/serial.f90
 
-###
-### model files
-###
-$O/model_1d_prem.o:  ${SHARED}/constants.h model_1d_prem.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_1d_prem.o model_1d_prem.f90
+$O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
+	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
 
-$O/model_1d_cascadia.o:  ${SHARED}/constants.h model_1d_cascadia.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_1d_cascadia.o model_1d_cascadia.f90
-
-$O/model_1d_socal.o:  ${SHARED}/constants.h model_1d_socal.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_1d_socal.o model_1d_socal.f90
-
-$O/model_aniso.o:  ${SHARED}/constants.h model_aniso.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_aniso.o model_aniso.f90
-
-$O/model_default.o:  ${SHARED}/constants.h model_default.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_default.o model_default.f90
-
-$O/model_external_values.o:  ${SHARED}/constants.h model_external_values.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_external_values.o model_external_values.f90
-
-$O/model_ipati.o:  ${SHARED}/constants.h model_ipati.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_ipati.o model_ipati.f90
-
-$O/model_gll.o:  ${SHARED}/constants.h model_gll.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_gll.o model_gll.f90
-
-$O/model_salton_trough.o:  ${SHARED}/constants.h model_salton_trough.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_salton_trough.o model_salton_trough.f90
-
-$O/model_tomography.o:  ${SHARED}/constants.h model_tomography.f90
-	${FCCOMPILE_CHECK} -c -o $O/model_tomography.o model_tomography.f90
-
-
-###
-### program files
-###
-$O/program_generate_databases.o: program_generate_databases.f90
-	${FCCOMPILE_CHECK} -c -o $O/program_generate_databases.o program_generate_databases.f90
-
-$O/generate_databases.o:  ${SHARED}/constants.h generate_databases.f90
-	${FCCOMPILE_CHECK} -c -o $O/generate_databases.o generate_databases.f90
-
-$O/memory_eval.o:  ${SHARED}/constants.h memory_eval.f90
-	${FCCOMPILE_CHECK} -c -o $O/memory_eval.o memory_eval.f90
-
-$O/exit_mpi.o:  ${SHARED}/constants.h ${SHARED}/exit_mpi.f90
-	${FCCOMPILE_CHECK} -c -o $O/exit_mpi.o ${SHARED}/exit_mpi.f90
-
-$O/convolve_source_timefunction.o: ${SHARED}/convolve_source_timefunction.f90
-	${FCCOMPILE_CHECK} -c -o $O/convolve_source_timefunction.o ${SHARED}/convolve_source_timefunction.f90
-
-$O/save_header_file.o:  ${SHARED}/constants.h ${SHARED}/save_header_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/save_header_file.o ${SHARED}/save_header_file.f90
-
-$O/read_parameter_file.o:  ${SHARED}/constants.h ${SHARED}/read_parameter_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_parameter_file.o ${SHARED}/read_parameter_file.f90
-
-$O/read_value_parameters.o:  ${SHARED}/constants.h ${SHARED}/read_value_parameters.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_value_parameters.o ${SHARED}/read_value_parameters.f90
-
-$O/get_value_parameters.o:  ${SHARED}/constants.h ${SHARED}/get_value_parameters.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_value_parameters.o ${SHARED}/get_value_parameters.f90
-
-$O/utm_geo.o:  ${SHARED}/constants.h ${SHARED}/utm_geo.f90
-	${FCCOMPILE_CHECK} -c -o $O/utm_geo.o ${SHARED}/utm_geo.f90
-
-$O/calc_jacobian.o:  ${SHARED}/constants.h calc_jacobian.f90
-	${FCCOMPILE_CHECK} -c -o $O/calc_jacobian.o calc_jacobian.f90
-
-$O/check_mesh_resolution.o:  ${SHARED}/constants.h ${SHARED}/check_mesh_resolution.f90
-	${FCCOMPILE_CHECK} -c -o $O/check_mesh_resolution.o ${SHARED}/check_mesh_resolution.f90
-
-$O/detect_surface.o:  ${SHARED}/constants.h ${SHARED}/detect_surface.f90
-	${FCCOMPILE_CHECK} -c -o $O/detect_surface.o ${SHARED}/detect_surface.f90
-
-$O/gll_library.o:  ${SHARED}/constants.h ${SHARED}/gll_library.f90
-	${FCCOMPILE_CHECK} -c -o $O/gll_library.o ${SHARED}/gll_library.f90
-
-$O/get_jacobian_boundaries.o:  ${SHARED}/constants.h ${SHARED}/get_jacobian_boundaries.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_jacobian_boundaries.o ${SHARED}/get_jacobian_boundaries.f90
-
-$O/get_flags_boundaries.o:  ${SHARED}/constants.h get_flags_boundaries.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_flags_boundaries.o get_flags_boundaries.f90
-
-$O/get_cmt.o:  ${SHARED}/constants.h ${SHARED}/get_cmt.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o ${SHARED}/get_cmt.f90
-
-$O/create_movie_shakemap_AVS_DX_GMT.o:  ${SHARED}/constants.h ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 $(OUTPUT)/surface_from_mesher.h
-	${FCCOMPILE_CHECK} -c -o $O/create_movie_shakemap_AVS_DX_GMT.o ${SHARED}/create_movie_shakemap_AVS_DX_GMT.f90 -I$(OUTPUT)
-
-$O/get_element_face.o:  ${SHARED}/constants.h ${SHARED}/get_element_face.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_element_face.o ${SHARED}/get_element_face.f90
-
-$O/get_global.o:  ${SHARED}/constants.h get_global.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
-
-$O/write_VTK_data.o:  ${SHARED}/constants.h ${SHARED}/write_VTK_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/write_VTK_data.o ${SHARED}/write_VTK_data.f90
-
-$O/get_shape3D.o:  ${SHARED}/constants.h ${SHARED}/get_shape3D.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_shape3D.o ${SHARED}/get_shape3D.f90
-
-$O/get_shape2D.o:  ${SHARED}/constants.h ${SHARED}/get_shape2D.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_shape2D.o ${SHARED}/get_shape2D.f90
-
-$O/hex_nodes.o:  ${SHARED}/constants.h ${SHARED}/hex_nodes.f90
-	${FCCOMPILE_CHECK} -c -o $O/hex_nodes.o ${SHARED}/hex_nodes.f90
-
-$O/netlib_specfun_erf.o: ${SHARED}/netlib_specfun_erf.f90
-	${FCCOMPILE_CHECK} -c -o $O/netlib_specfun_erf.o ${SHARED}/netlib_specfun_erf.f90
-
-$O/sort_array_coordinates.o:  ${SHARED}/constants.h ${SHARED}/sort_array_coordinates.f90
-	${FCCOMPILE_CHECK} -c -o $O/sort_array_coordinates.o ${SHARED}/sort_array_coordinates.f90
-
-$O/save_arrays_solver.o:  ${SHARED}/constants.h save_arrays_solver.f90
-	${FCCOMPILE_CHECK} -c -o $O/save_arrays_solver.o save_arrays_solver.f90
-
-$O/read_topo_bathy_file.o:  ${SHARED}/constants.h ${SHARED}/read_topo_bathy_file.f90
-	${FCCOMPILE_CHECK} -c -o $O/read_topo_bathy_file.o ${SHARED}/read_topo_bathy_file.f90
-
-$O/lagrange_poly.o:  ${SHARED}/constants.h ${SHARED}/lagrange_poly.f90
-	${FCCOMPILE_CHECK} -c -o $O/lagrange_poly.o ${SHARED}/lagrange_poly.f90
-
-$O/recompute_jacobian.o:  ${SHARED}/constants.h ${SHARED}/recompute_jacobian.f90
-	${FCCOMPILE_CHECK} -c -o $O/recompute_jacobian.o ${SHARED}/recompute_jacobian.f90
-
-$O/create_regions_mesh.o:  ${SHARED}/constants.h create_regions_mesh.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_regions_mesh.o create_regions_mesh.f90
-
-$O/create_mass_matrices.o:  ${SHARED}/constants.h create_mass_matrices.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_mass_matrices.o create_mass_matrices.f90
-
-$O/get_absorbing_boundary.o:  ${SHARED}/constants.h get_absorbing_boundary.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_absorbing_boundary.o get_absorbing_boundary.f90
-
-$O/get_coupling_surfaces.o:  ${SHARED}/constants.h get_coupling_surfaces.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_coupling_surfaces.o get_coupling_surfaces.f90
-
-$O/get_model.o:  ${SHARED}/constants.h get_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_model.o get_model.f90
-
-$O/get_MPI.o:  ${SHARED}/constants.h get_MPI.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_MPI.o get_MPI.f90
-
-$O/get_perm_color.o:  ${SHARED}/constants.h get_perm_color.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_perm_color.o get_perm_color.f90
-
-$O/create_name_database.o:  ${SHARED}/constants.h ${SHARED}/create_name_database.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_name_database.o ${SHARED}/create_name_database.f90
-
-$O/create_serial_name_database.o:  ${SHARED}/constants.h ${SHARED}/create_serial_name_database.f90
-	${FCCOMPILE_CHECK} -c -o $O/create_serial_name_database.o ${SHARED}/create_serial_name_database.f90
-
-$O/define_derivation_matrices.o:  ${SHARED}/constants.h ${SHARED}/define_derivation_matrices.f90
-	${FCCOMPILE_CHECK} -c -o $O/define_derivation_matrices.o ${SHARED}/define_derivation_matrices.f90
-
-$O/multiply_arrays_source.o:  ${SHARED}/constants.h ${SHARED}/multiply_arrays_source.f90
-	${FCCOMPILE_CHECK} -c -o $O/multiply_arrays_source.o ${SHARED}/multiply_arrays_source.f90
-
-$O/get_attenuation_model.o:  ${SHARED}/constants.h ${SHARED}/get_attenuation_model.f90
-	${FCCOMPILE_CHECK} -c -o $O/get_attenuation_model.o ${SHARED}/get_attenuation_model.f90
-
-$O/combine_vol_data.o:  ${SHARED}/constants.h ${SHARED}/combine_vol_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_vol_data.o ${SHARED}/combine_vol_data.f90
-
-$O/combine_surf_data.o:  ${SHARED}/constants.h ${SHARED}/combine_surf_data.f90
-	${FCCOMPILE_CHECK} -c -o $O/combine_surf_data.o ${SHARED}/combine_surf_data.f90
-
-$O/prepare_assemble_MPI.o:  ${SHARED}/constants.h ${SHARED}/prepare_assemble_MPI.f90
-	${FCCOMPILE_CHECK} -c -o $O/prepare_assemble_MPI.o ${SHARED}/prepare_assemble_MPI.f90
-
-
-
-###
-### C files below
-###
-
-$O/param_reader.o: ${SHARED}/param_reader.c
-	${CC} -c $(CFLAGS) -o $O/param_reader.o ${SHARED}/param_reader.c -I../../
-
-#$O/write_c_binary.o: ${SHARED}/write_c_binary.c
-#	${CC} -c $(CFLAGS) -o $O/write_c_binary.o ${SHARED}/write_c_binary.c -I../../
 

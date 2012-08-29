@@ -185,7 +185,7 @@
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
   ! opens STATIONS file
-  open(unit=1,file=trim(rec_filename),status='old',action='read',iostat=ios)
+  open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ios)
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
   ! get the base pathname for output files
@@ -198,10 +198,10 @@
     if ( SU_station_file_exists ) then
       ! all processes read in stations names from STATIONS file
       do irec=1,nrec
-        read(1,*,iostat=ios) station_name(irec),network_name(irec),llat,llon,lele,lbur
+        read(IIN,*,iostat=ios) station_name(irec),network_name(irec),llat,llon,lele,lbur
         if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
       enddo
-      close(1)
+      close(IIN)
       ! master reads in available station information
       if( myrank == 0 ) then
         open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
@@ -284,7 +284,7 @@
   ! loop on all the stations
   do irec=1,nrec
 
-    read(1,*,iostat=ios) station_name(irec),network_name(irec), &
+    read(IIN,*,iostat=ios) station_name(irec),network_name(irec), &
                           stlat(irec),stlon(irec),stele(irec),stbur(irec)
 
     if (ios /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
@@ -650,7 +650,7 @@
   enddo
 
   ! close receiver file
-  close(1)
+  close(IIN)
 
 ! ****************************************
 ! find the best (xi,eta,gamma) for each receiver
@@ -815,7 +815,6 @@
         enddo
      enddo
   endif
-  call sync_all()
 
   ! this is executed by main process only
   if(myrank == 0) then
@@ -953,8 +952,6 @@
   call bcast_all_dp(xi_receiver,nrec)
   call bcast_all_dp(eta_receiver,nrec)
   call bcast_all_dp(gamma_receiver,nrec)
-  ! synchronize all the processes to make sure everybody has finished
-  call sync_all()
 
   ! deallocate arrays
   deallocate(stlat)
@@ -982,6 +979,9 @@
   deallocate(y_found_all)
   deallocate(z_found_all)
   deallocate(final_distance_all)
+
+  ! synchronize all the processes to make sure everybody has finished
+  call sync_all()
 
   end subroutine locate_receivers
 
