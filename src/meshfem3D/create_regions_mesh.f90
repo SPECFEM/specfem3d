@@ -73,9 +73,9 @@ contains
 
     double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore,ystore,zstore
 
-    integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
+    integer,dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: ibool
 
-    character(len=256) LOCAL_PATH
+    character(len=256) :: LOCAL_PATH
 
     ! auxiliary variables to generate the mesh
     !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nodes_coords
@@ -85,7 +85,7 @@ contains
     integer iax,iay,iar
     integer isubregion,nsubregions,doubling_index,nmeshregions
     integer imaterial_number
-    integer true_material_num(nspec)
+    integer, dimension(nspec) :: true_material_num
     integer, dimension(:,:,:), allocatable :: material_num
     !integer material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA)
 
@@ -156,6 +156,8 @@ contains
     logical, dimension(NSPEC_DOUBLING_SUPERBRICK,6) :: iboun_sb
     integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
     double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
+
+    logical, parameter :: DEBUG = .true.
 
     ! **************
 
@@ -380,8 +382,61 @@ contains
     ! note: if mesh squeezes elements such that we can't distinguish two close-by mesh points anymore
     !          the total number of mesh points might have changed
     if(nglob /= NGLOB_AB) then
-       print*,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
-       call exit_MPI(myrank,'incorrect global number, please check mesh input parameters')
+      ! user output
+      print*,'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
+      if(myrank == 0 ) then
+        write(IMAIN,*)
+        write(IMAIN,*) 'error nglob: sorted value ',nglob,'differs from pre-computed ',NGLOB_AB
+        write(IMAIN,*)
+        write(IMAIN,*) 'writing out problematic mesh: mesh_debug.vtk'
+        write(IMAIN,*) 'please check your mesh setup...'
+      endif
+      ! debug file output
+      ! vtk file format output
+      open(66,file=prname(1:len_trim(prname))//'mesh_debug.vtk',status='unknown')
+      write(66,'(a)') '# vtk DataFile Version 3.1'
+      write(66,'(a)') 'material model VTK file'
+      write(66,'(a)') 'ASCII'
+      write(66,'(a)') 'DATASET UNSTRUCTURED_GRID'
+      write(66, '(a,i12,a)') 'POINTS ', nspec*NGLLX_M*NGLLY_M*NGLLZ_M, ' float'
+      ilocnum = 0
+      ibool(:,:,:,:) = 0
+      do ispec=1,nspec
+        do k=1,NGLLZ_M
+          do j=1,NGLLY_M
+            do i=1,NGLLX_M
+              ilocnum = ilocnum + 1
+              ibool(i,j,k,ispec) = ilocnum
+              write(66,*) xstore(i,j,k,ispec),ystore(i,j,k,ispec),zstore(i,j,k,ispec)
+            enddo
+          enddo
+        enddo
+      enddo
+      write(66,*)
+      ! note: indices for vtk start at 0
+      write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+      do ispec=1,nspec
+        write(66,'(9i12)') 8, &
+              ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1,&
+              ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
+      enddo
+      ibool(:,:,:,:) = 0
+      write(66,*)
+      ! type: hexahedrons
+      write(66,'(a,i12)') "CELL_TYPES ",nspec
+      write(66,*) (12,ispec=1,nspec)
+      write(66,*)
+      write(66,'(a,i12)') "CELL_DATA ",nspec
+      write(66,'(a)') "SCALARS elem_val float"
+      write(66,'(a)') "LOOKUP_TABLE default"
+      do ispec = 1,nspec
+        write(66,*) true_material_num(ispec)
+      enddo
+      write(66,*) ""
+      close(66)
+
+      ! stop mesher
+      call exit_MPI(myrank,'incorrect global number, please check mesh input parameters')
     end if
 
     ! put in classical format

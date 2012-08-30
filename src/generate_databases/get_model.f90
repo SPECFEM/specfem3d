@@ -85,12 +85,10 @@
   !debug
   !print*,"nundefMat_ext_mesh:",nundefMat_ext_mesh
 
-! prepares tomography model if needed for elements with undefined material definitions
-  ! TODO: Max -- somehow this code is breaking when I try to run
-  ! Piero's PREM
-  ! if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
-  ! call model_tomography_broadcast(myrank)
-  ! endif
+  ! prepares tomography model if needed for elements with undefined material definitions
+  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+    call model_tomography_broadcast(myrank)
+  endif
 
   ! prepares external model values if needed
   select case( IMODEL )

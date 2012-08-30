@@ -34,12 +34,12 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  module tomography
+  module tomography_par
 
   include "constants.h"
 
   ! for external tomography:
-  ! file must be in ../in_data/files/ directory
+  ! file must be in ../in_data_files/ directory
   ! (regular spaced, xyz-block file in ascii)
 
   character (len=80) :: TOMO_FILENAME = 'tomography_model.xyz'
@@ -59,13 +59,18 @@
   ! min/max statistics
   double precision :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
 
-  end module tomography
+  ! process rank
+  integer :: myrank_tomo
+
+  end module tomography_par
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
   subroutine model_tomography_broadcast(myrank)
+
+  use tomography_par, only: myrank_tomo
 
   implicit none
 
@@ -89,6 +94,9 @@
   !endif
   !call bcast_all_cr(vp_tomography,size(vp_tomography))
 
+  ! stores rank
+  myrank_tomo = myrank
+
   end subroutine model_tomography_broadcast
 
 !
@@ -105,7 +113,7 @@
 ! this could be problematic for example if the tomographic regions have different resolution
 ! leading to a waste of memory and cpu time in the partitioning process
 
-  use tomography
+  use tomography_par
 
   implicit none
 
@@ -115,6 +123,7 @@
   real(kind=CUSTOM_REAL) :: x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
   integer :: irecord,ier
   character(len=256):: filename
+  character(len=256):: string_read
 
   !TOMO_FILENAME='DATA/veryfast_tomography_abruzzo_complete.xyz'
   ! probably the simple position for the filename is the constat.h
@@ -124,15 +133,34 @@
   ! it is a possible solution )
   !  magnoni 1/12/09
   filename = IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//trim(TOMO_FILENAME)
+
+  ! user output
+  if( myrank == 0 ) then
+    write(IMAIN,*) '     tomography model : ',trim(filename)
+  endif
+
+  ! opens file for reading
   open(unit=27,file=trim(filename),status='old',action='read',iostat=ier)
   if( ier /= 0 ) call exit_MPI(myrank,'error reading tomography file')
 
   ! reads in model dimensions
-  read(27,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
-  read(27,*) SPACING_X, SPACING_Y, SPACING_Z
-  read(27,*) NX, NY, NZ
-  read(27,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
+  !read(27,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
+  call tomo_read_next_line(27,string_read)
+  read(string_read,*) ORIG_X, ORIG_Y, ORIG_Z, END_X, END_Y, END_Z
 
+  !read(27,*) SPACING_X, SPACING_Y, SPACING_Z
+  call tomo_read_next_line(27,string_read)
+  read(string_read,*) SPACING_X, SPACING_Y, SPACING_Z
+
+  !read(27,*) NX, NY, NZ
+  call tomo_read_next_line(27,string_read)
+  read(string_read,*) NX, NY, NZ
+
+  !read(27,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
+  call tomo_read_next_line(27,string_read)
+  read(string_read,*) VP_MIN, VP_MAX, VS_MIN, VS_MAX, RHO_MIN, RHO_MAX
+
+  ! total number of element records
   nrecord = NX*NY*NZ
 
   ! allocates model records
@@ -142,8 +170,19 @@
           z_tomography(1:nrecord),stat=ier)
   if(ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
+  ! first record
+  !read(27,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+  call tomo_read_next_line(27,string_read)
+  read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
+
+  ! stores record values
+  vp_tomography(1) = vp_tomo
+  vs_tomography(1) = vs_tomo
+  rho_tomography(1) = rho_tomo
+  z_tomography(1) = z_tomo
+
   ! reads in record sections
-  do irecord = 1,nrecord
+  do irecord = 2,nrecord
     read(27,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
 
     ! stores record values
@@ -156,10 +195,48 @@
 
   ! user output
   if( myrank == 0 ) then
-    write(IMAIN,*) '     tomography model: ',trim(TOMO_FILENAME)
+    write(IMAIN,*) '     number of records: ',nrecord
   endif
 
   end subroutine read_model_tomography
+
+!--------------------
+
+  subroutine tomo_read_next_line(unit_in,string_read)
+
+  implicit none
+
+  integer :: unit_in
+  character(len=256) :: string_read
+
+  integer :: ios
+
+  do
+    read(unit=unit_in,fmt="(a256)",iostat=ios) string_read
+    if(ios /= 0) stop 'error while reading tomography file'
+
+    ! suppress leading white spaces, if any
+    string_read = adjustl(string_read)
+
+    ! suppress trailing carriage return (ASCII code 13) if any (e.g. if input text file coming from Windows/DOS)
+    if(index(string_read,achar(13)) > 0) string_read = string_read(1:index(string_read,achar(13))-1)
+
+    ! exit loop when we find the first line that is not a comment or a white line
+    if(len_trim(string_read) == 0) cycle
+    if(string_read(1:1) /= '#') exit
+  enddo
+
+  ! suppress trailing white spaces, if any
+  string_read = string_read(1:len_trim(string_read))
+
+  ! suppress trailing comments, if any
+  if(index(string_read,'#') > 0) string_read = string_read(1:index(string_read,'#')-1)
+
+  ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
+  string_read = adjustl(string_read)
+  string_read = string_read(1:len_trim(string_read))
+
+  end subroutine tomo_read_next_line
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -168,14 +245,9 @@
 
   subroutine model_tomography(xmesh,ymesh,zmesh,rho_final,vp_final,vs_final,qmu_atten)
 
-  use tomography
+  use tomography_par
 
   implicit none
-
-  !integer, intent(in) :: NX,NY,NZ
-  !real(kind=CUSTOM_REAL), dimension(1:NX*NY*NZ), intent(in) :: vp_tomography,vs_tomography,rho_tomography,z_tomography
-  !double precision, intent(in) :: ORIG_X,ORIG_Y,ORIG_Z,SPACING_X,SPACING_Y,SPACING_Z
-  !double precision, intent(in) :: VP_MIN,VS_MIN,RHO_MIN,VP_MAX,VS_MAX,RHO_MAX
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
@@ -243,6 +315,14 @@
   p6 = (ix+1)+(iy+1)*NX+(iz+1)*(NX*NY)
   p7 = ix+(iy+1)*NX+(iz+1)*(NX*NY)
 
+  if(p0 < 0 .or. p1 < 0 .or. p2 < 0 .or. p3 < 0 .or. p4 < 0 .or. p5 < 0 .or. p6 < 0 .or. p7 < 0) then
+    print*,'error rank ',myrank_tomo
+    print*,'corner index:',p0,p1,p2,p3,p4,p5,p6,p7
+    print*,'location:',sngl(xmesh),sngl(ymesh),sngl(zmesh)
+    print*,'origin  :',sngl(ORIG_X),sngl(ORIG_Y),sngl(ORIG_Z)
+    call exit_MPI(myrank_tomo,'error corner index in tomography routine')
+  endif
+
   if(z_tomography(p4+1) == z_tomography(p0+1)) then
           gamma_interp_z1 = 1.d0
       else
@@ -294,10 +374,10 @@
           gamma_interp_z4 = 0.d0
   endif
 
-  gamma_interp_z5 = 1. - gamma_interp_z1
-  gamma_interp_z6 = 1. - gamma_interp_z2
-  gamma_interp_z7 = 1. - gamma_interp_z3
-  gamma_interp_z8 = 1. - gamma_interp_z4
+  gamma_interp_z5 = 1.d0 - gamma_interp_z1
+  gamma_interp_z6 = 1.d0 - gamma_interp_z2
+  gamma_interp_z7 = 1.d0 - gamma_interp_z3
+  gamma_interp_z8 = 1.d0 - gamma_interp_z4
 
   vp1 = vp_tomography(p0+1)
   vp2 = vp_tomography(p1+1)
