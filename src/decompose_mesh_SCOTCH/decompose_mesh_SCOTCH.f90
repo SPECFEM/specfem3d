@@ -679,6 +679,8 @@ module decompose_mesh_SCOTCH
     ! gets materials id associations
     allocate(num_material(1:nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array num_material'
+    ! note: num_material can be negative for tomographic material elements
+    !       (which are counted then as elastic elements)
     num_material(:) = mat(1,:)
 
     ! in case of acoustic/elastic/poro simulation, weights elements accordingly

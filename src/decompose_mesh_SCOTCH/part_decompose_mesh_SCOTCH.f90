@@ -1274,17 +1274,23 @@ contains
 
     ! sets weights for elements
     do el = 0, nspec-1
+      ! note: num_material index can be negative for tomographic material definitions
       ! acoustic element (cheap)
-      if ( is_acoustic(num_material(el+1)) ) then
-        elmnts_load(el+1) = elmnts_load(el+1)*ACOUSTIC_LOAD
-      endif
-      ! elastic element (expensive)
-      if ( is_elastic(num_material(el+1)) ) then
+      if( num_material(el+1) > 0 ) then
+        if ( is_acoustic(num_material(el+1)) ) then
+          elmnts_load(el+1) = elmnts_load(el+1)*ACOUSTIC_LOAD
+        endif
+        ! elastic element (expensive)
+        if ( is_elastic(num_material(el+1)) ) then
+          elmnts_load(el+1) = elmnts_load(el+1)*ELASTIC_LOAD
+        endif
+        ! poroelastic element (very expensive)
+        if ( is_poroelastic(num_material(el+1)) ) then
+          elmnts_load(el+1) = elmnts_load(el+1)*POROELASTIC_LOAD
+        endif
+      else
+        ! tomographic materials count as elastic
         elmnts_load(el+1) = elmnts_load(el+1)*ELASTIC_LOAD
-      endif
-      ! poroelastic element (very expensive)
-      if ( is_poroelastic(num_material(el+1)) ) then
-        elmnts_load(el+1) = elmnts_load(el+1)*POROELASTIC_LOAD
       endif
     enddo
 
@@ -1363,13 +1369,17 @@ contains
     ! counts coupled elements
     nfaces_coupled = 0
     do el = 0, nspec-1
-       if ( is_poroelastic(num_material(el+1)) ) then
+      if( num_material(el+1) > 0 ) then
+        if ( is_poroelastic(num_material(el+1)) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
-             if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
+            if(num_material(adjncy(el_adj)+1) > 0 ) then
+              if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
                 nfaces_coupled = nfaces_coupled + 1
-             endif
+              endif
+            endif
           enddo
-       endif
+        endif
+      endif
     enddo
 
     ! coupled elements
@@ -1380,15 +1390,19 @@ contains
     ! stores elements indices
     nfaces_coupled = 0
     do el = 0, nspec-1
-       if ( is_poroelastic(num_material(el+1)) ) then
+      if( num_material(el+1) > 0 ) then
+        if ( is_poroelastic(num_material(el+1)) ) then
           do el_adj = xadj(el), xadj(el+1) - 1
-             if ( is_elastic(num_material(adjncy(el_adj)+1)) ) then
+            if( num_material(adjncy(el_adj)+1) > 0 ) then
+              if ( is_elastic(abs(num_material(adjncy(el_adj)+1))) ) then
                 nfaces_coupled = nfaces_coupled + 1
                 faces_coupled(1,nfaces_coupled) = el
                 faces_coupled(2,nfaces_coupled) = adjncy(el_adj)
-             endif
+              endif
+            endif
           enddo
-       endif
+        endif
+      endif
     enddo
 
     ! puts coupled elements into same partition
