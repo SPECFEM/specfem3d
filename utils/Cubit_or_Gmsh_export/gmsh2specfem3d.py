@@ -7,6 +7,11 @@
 #       Centrale Marseille, France, July 2012
 #
 #     Based on Paul Cristini's equivalent script for 2D meshes
+#
+# For now it can only handle volumes meshed with hexahedra and boundaries meshed with quadrangles
+# (boundary 3D elements must have four nodes on the boundary).
+# I tested it with the "homogeneous_halfspace" example provided in the distribution.
+#
 #--------------------------------------------------------------
 #
 #     /!\ IMPORTANT REMARKS /!\
