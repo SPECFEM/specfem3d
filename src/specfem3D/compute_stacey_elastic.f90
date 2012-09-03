@@ -166,7 +166,7 @@
     ! GPU_MODE == .true.
     if( num_abs_boundary_faces > 0 ) &
       call compute_stacey_elastic_cuda(Mesh_pointer,phase_is_inner, &
-                                      SIMULATION_TYPE,SAVE_FORWARD,b_absorb_field)
+                                       SAVE_FORWARD,b_absorb_field)
   endif
 
   ! adjoint simulations: stores absorbed wavefield part

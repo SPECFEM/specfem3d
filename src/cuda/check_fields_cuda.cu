@@ -752,8 +752,7 @@ __global__ void get_maximum_kernel(realw* array, int size, realw* d_max){
 extern "C"
 void FC_FUNC_(get_norm_acoustic_from_device,
               GET_NORM_ACOUSTIC_FROM_DEVICE)(realw* norm,
-                                                  long* Mesh_pointer_f,
-                                                  int* SIMULATION_TYPE) {
+                                             long* Mesh_pointer_f) {
 
 TRACE("get_norm_acoustic_from_device");
   //double start_time = get_time();
@@ -816,9 +815,9 @@ TRACE("get_norm_acoustic_from_device");
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if(*SIMULATION_TYPE == 1 ){
+  if(mp->simulation_type == 1 ){
     get_maximum_kernel<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
-  }else if(*SIMULATION_TYPE == 3 ){
+  }else if(mp->simulation_type == 3 ){
     get_maximum_kernel<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
   }
 
@@ -925,8 +924,7 @@ __global__ void get_maximum_vector_kernel(realw* array, int size, realw* d_max){
 extern "C"
 void FC_FUNC_(get_norm_elastic_from_device,
               GET_NORM_ELASTIC_FROM_DEVICE)(realw* norm,
-                                            long* Mesh_pointer_f,
-                                            int* SIMULATION_TYPE) {
+                                            long* Mesh_pointer_f) {
 
   TRACE("get_norm_elastic_from_device");
   //double start_time = get_time();
@@ -957,9 +955,9 @@ void FC_FUNC_(get_norm_elastic_from_device,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if(*SIMULATION_TYPE == 1 ){
+  if(mp->simulation_type == 1 ){
     get_maximum_vector_kernel<<<grid,threads>>>(mp->d_displ,size,d_max);
-  }else if(*SIMULATION_TYPE == 3 ){
+  }else if(mp->simulation_type == 3 ){
     get_maximum_vector_kernel<<<grid,threads>>>(mp->d_b_displ,size,d_max);
   }
 

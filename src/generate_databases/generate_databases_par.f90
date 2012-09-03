@@ -177,6 +177,11 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
 
+! mass matrix contributions
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
+  integer :: nglob_xy
+
 ! ocean load
   integer :: NGLOB_OCEAN
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load

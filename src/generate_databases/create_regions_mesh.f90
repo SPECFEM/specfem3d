@@ -46,11 +46,10 @@
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
     nodes_ibelm_bottom,nodes_ibelm_top, &
     SAVE_MESH_FILES, &
-    ANISOTROPY,NPROC,OCEANS,TOPOGRAPHY, &
+    ANISOTROPY,NPROC,OCEANS, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
-    UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-    NX_TOPO,NY_TOPO,itopo_bathy, &
     nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho
+
   use create_regions_mesh_ext_par
   implicit none
 
@@ -176,15 +175,6 @@
   endif
   call create_mass_matrices(nglob_dummy,nspec,ibool)
 
-! creates ocean load mass matrix
-  call sync_all()
-  if( myrank == 0) then
-    write(IMAIN,*) '  ...creating ocean load mass matrix '
-  endif
-  call create_mass_matrices_ocean_load(nglob_dummy,nspec,ibool,OCEANS,TOPOGRAPHY, &
-                                      UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                                      NX_TOPO,NY_TOPO,itopo_bathy)
-
 ! saves the binary mesh files
   call sync_all()
   if( myrank == 0) then
@@ -232,8 +222,7 @@
                           ispec_is_elastic,min_resolved_period,prname)
   endif
 
-! cleanup
-  if( .not. SAVE_MOHO_MESH ) deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
+  ! cleanup
   deallocate(xixstore,xiystore,xizstore,&
               etaxstore,etaystore,etazstore,&
               gammaxstore,gammaystore,gammazstore)
@@ -241,6 +230,22 @@
   deallocate(kappastore,mustore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
+
+  if( .not. SAVE_MOHO_MESH ) then
+    deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
+  endif
+
+  if( ELASTIC_SIMULATION ) then
+    deallocate(rmass)
+    deallocate(rmassx,rmassy,rmassz)
+  endif
+  if( ACOUSTIC_SIMULATION) then
+    deallocate(rmass_acoustic)
+    deallocate(rmassz_acoustic)
+  endif
+  if( POROELASTIC_SIMULATION) then
+    deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
+  endif
 
 end subroutine create_regions_mesh
 

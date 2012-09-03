@@ -103,7 +103,7 @@
   use specfem_par,only: NGLOB_AB,NSPEC_AB,ibool,xstore,ystore,zstore,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-                        ibool_interfaces_ext_mesh,prname
+                        ibool_interfaces_ext_mesh !,prname
   use constants,only: HUGEVAL,NGLLX,NGLLY,NGLLZ
   implicit none
   ! local parameters
@@ -816,7 +816,7 @@
   subroutine get_iglob_vp(iglob,ispec,vp)
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
-  use specfem_par,only: mustore,kappastore,ibool,myrank,NSPEC_AB
+  use specfem_par,only: mustore,kappastore,ibool,myrank
   use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,rhostore
   use specfem_par_elastic,only: ELASTIC_SIMULATION,rho_vp
   implicit none
@@ -857,7 +857,7 @@
                                 rhostore,ispec_is_acoustic, &
                                 b_potential_acoustic,b_potential_dot_acoustic
   use specfem_par_elastic,only: ELASTIC_SIMULATION,displ,veloc, &
-                                ispec_is_elastic,b_displ,b_veloc
+                                ispec_is_elastic ! ,b_displ,b_veloc
   use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,SIMULATION_TYPE,GRAVITY

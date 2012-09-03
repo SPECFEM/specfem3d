@@ -428,3 +428,5 @@
   integer, parameter :: IMODEL_SALTON_TROUGH    = 8
   integer, parameter :: IMODEL_1D_PREM_PB       = 9
   integer, parameter :: IMODEL_IPATI            = 10
+  integer, parameter :: IMODEL_IPATI_WATER      = 11
+

@@ -297,6 +297,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
 ! Stacey
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs
 
   ! anisotropic
@@ -381,6 +382,7 @@ module specfem_par_acoustic
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
 
 ! acoustic-elastic coupling surface
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: coupling_ac_el_normal

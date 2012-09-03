@@ -117,15 +117,13 @@ extern "C"
 void FC_FUNC_(compute_coupling_ac_el_cuda,
               COMPUTE_COUPLING_AC_EL_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
-                                           int* num_coupling_ac_el_facesf,
-                                           int* SIMULATION_TYPEf) {
+                                           int* num_coupling_ac_el_facesf) {
   TRACE("compute_coupling_ac_el_cuda");
   //double start_time = get_time();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
   int phase_is_inner            = *phase_is_innerf;
   int num_coupling_ac_el_faces  = *num_coupling_ac_el_facesf;
-  int SIMULATION_TYPE           = *SIMULATION_TYPEf;
 
   // way 1: exact blocksize to match NGLLSQUARE
   int blocksize = NGLL2;
@@ -152,7 +150,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
                                                        phase_is_inner);
 
   //  adjoint simulations
-  if (SIMULATION_TYPE == 3 ){
+  if (mp->simulation_type == 3 ){
     compute_coupling_acoustic_el_kernel<<<grid,threads>>>(mp->d_b_displ,
                                                           mp->d_b_potential_dot_dot_acoustic,
                                                           num_coupling_ac_el_faces,
@@ -279,15 +277,13 @@ extern "C"
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
-                                           int* num_coupling_ac_el_facesf,
-                                           int* SIMULATION_TYPEf) {
+                                           int* num_coupling_ac_el_facesf) {
   TRACE("compute_coupling_el_ac_cuda");
   //double start_time = get_time();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
   int phase_is_inner            = *phase_is_innerf;
   int num_coupling_ac_el_faces  = *num_coupling_ac_el_facesf;
-  int SIMULATION_TYPE           = *SIMULATION_TYPEf;
 
   // way 1: exact blocksize to match NGLLSQUARE
   int blocksize = 25;
@@ -319,7 +315,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
                                                        mp->d_displ);
 
   //  adjoint simulations
-  if (SIMULATION_TYPE == 3 ){
+  if (mp->simulation_type == 3 ){
     compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,
                                                          mp->d_b_accel,
                                                          num_coupling_ac_el_faces,
@@ -343,3 +339,136 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
   exit_on_cuda_error("compute_coupling_el_ac_cuda");
 #endif
 }
+
+/* ----------------------------------------------------------------------------------------------- */
+
+/* OCEANS load on free surface */
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+__global__ void compute_coupling_ocean_cuda_kernel(realw* accel,
+                                               realw* rmassx,realw* rmassy,realw* rmassz,
+                                               realw* rmass_ocean_load,
+                                               int num_free_surface_faces,
+                                               int* free_surface_ispec,
+                                               int* free_surface_ijk,
+                                               realw* free_surface_normal,
+                                               int* ibool,
+                                               int* updated_dof_ocean_load) {
+  // gets spectral element face id
+  int igll = threadIdx.x ;  //  threadIdx.y*blockDim.x will be always = 0 for thread block (25,1,1)
+  int iface = blockIdx.x + gridDim.x*blockIdx.y;
+  realw nx,ny,nz;
+  realw force_normal_comp;
+
+  // for all faces on free surface
+  if( iface < num_free_surface_faces ){
+
+    int ispec = free_surface_ispec[iface]-1;
+
+    // gets global point index
+    int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1; // (1,igll,iface)
+    int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
+    int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
+
+    int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1;
+
+    //if(igll == 0 ) printf("igll %d %d %d %d\n",igll,i,j,k,iglob);
+
+    // only update this global point once
+
+    // daniel: TODO - there might be better ways to implement a mutex like below,
+    //            and find a workaround to not use the temporary update array.
+    //            atomicExch: returns the old value, i.e. 0 indicates that we still have to do this point
+
+    if( atomicExch(&updated_dof_ocean_load[iglob],1) == 0){
+
+      // get normal
+      nx = free_surface_normal[INDEX3(NDIM,NGLL2,0,igll,iface)]; //(1,igll,iface)
+      ny = free_surface_normal[INDEX3(NDIM,NGLL2,1,igll,iface)];
+      nz = free_surface_normal[INDEX3(NDIM,NGLL2,2,igll,iface)];
+
+      // make updated component of right-hand side
+      // we divide by rmass() which is 1 / M
+      // we use the total force which includes the Coriolis term above
+      force_normal_comp = accel[iglob*3]*nx / rmassx[iglob]
+                          + accel[iglob*3+1]*ny / rmassy[iglob]
+                          + accel[iglob*3+2]*nz / rmassz[iglob];
+
+      // probably wouldn't need atomicAdd anymore, but just to be sure...
+      atomicAdd(&accel[iglob*3],   + (rmass_ocean_load[iglob] - rmassx[iglob]) * force_normal_comp * nx);
+      atomicAdd(&accel[iglob*3+1], + (rmass_ocean_load[iglob] - rmassy[iglob]) * force_normal_comp * ny);
+      atomicAdd(&accel[iglob*3+2], + (rmass_ocean_load[iglob] - rmassz[iglob]) * force_normal_comp * nz);
+    }
+  }
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(compute_coupling_ocean_cuda,
+              COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer_f) {
+
+  TRACE("compute_coupling_ocean_cuda");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
+
+  // checks if anything to do
+  if( mp->num_free_surface_faces == 0 ) return;
+
+  // block sizes: exact blocksize to match NGLLSQUARE
+  int blocksize = NGLL2;
+
+  int num_blocks_x = mp->num_free_surface_faces;
+  int num_blocks_y = 1;
+  while(num_blocks_x > 65535) {
+    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
+    num_blocks_y = num_blocks_y*2;
+  }
+
+  dim3 grid(num_blocks_x,num_blocks_y);
+  dim3 threads(blocksize,1,1);
+
+
+  // initializes temporary array to zero
+  print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
+                                     sizeof(int)*mp->NGLOB_AB),88501);
+
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  exit_on_cuda_error("before kernel compute_coupling_ocean_cuda");
+#endif
+
+  compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
+                                                   mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
+                                                   mp->d_rmass_ocean_load,
+                                                   mp->num_free_surface_faces,
+                                                   mp->d_free_surface_ispec,
+                                                   mp->d_free_surface_ijk,
+                                                   mp->d_free_surface_normal,
+                                                   mp->d_ibool,
+                                                   mp->d_updated_dof_ocean_load);
+  // for backward/reconstructed potentials
+  if(mp->simulation_type == 3) {
+    // re-initializes array
+    print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
+                                       sizeof(int)*mp->NGLOB_AB),88502);
+
+    compute_coupling_ocean_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel,
+                                                     mp->d_rmassx,mp->d_rmassy,mp->d_rmassz,
+                                                     mp->d_rmass_ocean_load,
+                                                     mp->num_free_surface_faces,
+                                                     mp->d_free_surface_ispec,
+                                                     mp->d_free_surface_ijk,
+                                                     mp->d_free_surface_normal,
+                                                     mp->d_ibool,
+                                                     mp->d_updated_dof_ocean_load);
+
+  }
+
+
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  exit_on_cuda_error("compute_coupling_ocean_cuda");
+#endif
+}
+

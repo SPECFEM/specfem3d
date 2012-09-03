@@ -827,47 +827,47 @@ program model_update
 
   rmass_new(:) = 0._CUSTOM_REAL
 
+  ! note: this does not update the absorbing boundary contributions to the mass matrix
+  ! elastic mass matrix
   do ispec=1,nspec
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-          iglob = ibool(i,j,k,ispec)
+    if( ispec_is_elastic(ispec) ) then
+      do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
+            iglob = ibool(i,j,k,ispec)
 
-          weight = wxgll(i)*wygll(j)*wzgll(k)
-          jacobianl = jacobianstore(i,j,k,ispec)
+            weight = wxgll(i)*wygll(j)*wzgll(k)
+            jacobianl = jacobianstore(i,j,k,ispec)
 
-          if( myrank == 0) then
-            print*, 'weight', weight
-            print*, 'jacobianl', jacobianl
-          endif
+            if( myrank == 0) then
+              print*, 'weight', weight
+              print*, 'jacobianl', jacobianl
+            endif
 
-! elastic mass matrix
-          if( ispec_is_elastic(ispec) ) then
             if(CUSTOM_REAL == SIZE_REAL) then
               rmass_new(iglob) = rmass_new(iglob) + &
-                    sngl( dble(jacobianl) * weight * dble(rhostore_new(i,j,k,ispec)) )
+                      sngl( dble(jacobianl) * weight * dble(rhostore_new(i,j,k,ispec)) )
             else
-               rmass_new(iglob) = rmass_new(iglob) + &
-                    jacobianl * weight * rhostore_new(i,j,k,ispec)
+              rmass_new(iglob) = rmass_new(iglob) + &
+                      jacobianl * weight * rhostore_new(i,j,k,ispec)
             endif
-          endif
+          enddo
         enddo
       enddo
-    enddo
+    endif
   enddo ! nspec
 
 
   call sync_all()
 
-
+  ! dummy allocations, arrays are not needed since the update here only works for elastic models
   allocate(rmass_acoustic_new(NGLOB))
   allocate(rmass_solid_poroelastic_new(NGLOB))
   allocate(rmass_fluid_poroelastic_new(NGLOB))
   rmass_acoustic_new = 0._CUSTOM_REAL
   rmass_solid_poroelastic_new = 0._CUSTOM_REAL
   rmass_fluid_poroelastic_new = 0._CUSTOM_REAL
-
-
+  
   !-------- attenuation -------
 
   ! read the proc*attenuation.vtk for the old model in LOCAL_PATH and store qmu_attenuation_store
@@ -979,8 +979,6 @@ program model_update
                         abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
                         free_surface_normal,free_surface_jacobian2Dw, &
                         free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
-                        coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                        coupling_ac_el_ijk,coupling_ac_el_ispec,num_coupling_ac_el_faces, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         prname_new,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &

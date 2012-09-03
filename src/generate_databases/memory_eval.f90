@@ -88,7 +88,7 @@
     memory_size = memory_size + 3.d0*dble(NDIM)*NGLOB_AB*dble(CUSTOM_REAL)
 
     ! rmass
-    memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + 3*NGLOB_AB*dble(CUSTOM_REAL)
 
     ! rho_vp,rho_vs
     memory_size = memory_size + 2.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)

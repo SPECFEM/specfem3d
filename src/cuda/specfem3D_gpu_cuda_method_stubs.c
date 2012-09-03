@@ -79,13 +79,11 @@ void FC_FUNC_(get_max_accel,
 
 void FC_FUNC_(get_norm_acoustic_from_device,
               GET_NORM_ACOUSTIC_FROM_DEVICE)(realw* norm,
-                                                  long* Mesh_pointer_f,
-                                                  int* SIMULATION_TYPE) {}
+                                             long* Mesh_pointer_f) {}
 
 void FC_FUNC_(get_norm_elastic_from_device,
               GET_NORM_ELASTIC_FROM_DEVICE)(realw* norm,
-                                            long* Mesh_pointer_f,
-                                            int* SIMULATION_TYPE) {}
+                                            long* Mesh_pointer_f) {}
 
 
 //
@@ -96,7 +94,6 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
               COMPUTE_ADD_SOURCES_AC_CUDA)(long* Mesh_pointer_f,
                                                  int* phase_is_innerf,
                                                  int* NSOURCESf,
-                                                 int* SIMULATION_TYPEf,
                                                  double* h_stf_pre_compute,
                                                  int* myrankf) {}
 
@@ -104,7 +101,6 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
               COMPUTE_ADD_SOURCES_AC_s3_CUDA)(long* Mesh_pointer_f,
                                                       int* phase_is_innerf,
                                                       int* NSOURCESf,
-                                                      int* SIMULATION_TYPEf,
                                                       double* h_stf_pre_compute,
                                                       int* myrankf) {}
 
@@ -170,14 +166,15 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
 void FC_FUNC_(compute_coupling_ac_el_cuda,
               COMPUTE_COUPLING_AC_EL_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
-                                           int* num_coupling_ac_el_facesf,
-                                           int* SIMULATION_TYPEf) {}
+                                           int* num_coupling_ac_el_facesf) {}
 
 void FC_FUNC_(compute_coupling_el_ac_cuda,
               COMPUTE_COUPLING_EL_AC_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
-                                           int* num_coupling_ac_el_facesf,
-                                           int* SIMULATION_TYPEf) {}
+                                           int* num_coupling_ac_el_facesf) {}
+
+void FC_FUNC_(compute_coupling_ocean_cuda,
+              COMPUTE_COUPLING_OCEAN_CUDA)(long* Mesh_pointer_f) {}
 
 
 //
@@ -211,25 +208,11 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer_f,
                                             int* iphase,
                                             int* nspec_outer_acoustic,
-                                            int* nspec_inner_acoustic,
-                                            int* SIMULATION_TYPE) {}
-
-void FC_FUNC_(kernel_3_a_acoustic_cuda,KERNEL_3_ACOUSTIC_CUDA)(
-                             long* Mesh_pointer,
-                             int* size_F,
-                             int* SIMULATION_TYPE) {}
-
-void FC_FUNC_(kernel_3_b_acoustic_cuda,KERNEL_3_ACOUSTIC_CUDA)(
-                                                             long* Mesh_pointer,
-                                                             int* size_F,
-                                                             realw* deltatover2_F,
-                                                             int* SIMULATION_TYPE,
-                                                             realw* b_deltatover2_F) {}
+                                            int* nspec_inner_acoustic) {}
 
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
               ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer_f,
-                                                  int* SIMULATION_TYPE,
-                                                  int* ABSORB_FREE_SURFACE) {}
+                                               int* ABSORB_FREE_SURFACE) {}
 
 
 //
@@ -278,7 +261,6 @@ void FC_FUNC_(compute_forces_elastic_cuda,
                                            int* iphase,
                                            int* nspec_outer_elastic,
                                            int* nspec_inner_elastic,
-                                           int* SIMULATION_TYPE,
                                            int* COMPUTE_AND_STORE_STRAIN,
                                            int* ATTENUATION,
                                            int* ANISOTROPY) {}
@@ -287,25 +269,6 @@ void FC_FUNC_(sync_copy_from_device,
               SYNC_copy_FROM_DEVICE)(long* Mesh_pointer_f,
                                      int* iphase,
                                      realw* send_buffer) {}
-
-void FC_FUNC_(kernel_3_a_cuda,
-              KERNEL_3_A_CUDA)(long* Mesh_pointer,
-                               int* size_F,
-                               realw* deltatover2_F,
-                               int* SIMULATION_TYPE_f,
-                               realw* b_deltatover2_F,
-                               int* OCEANS) {}
-
-void FC_FUNC_(kernel_3_b_cuda,
-              KERNEL_3_B_CUDA)(long* Mesh_pointer,
-                             int* size_F,
-                             realw* deltatover2_F,
-                             int* SIMULATION_TYPE_f,
-                             realw* b_deltatover2_F) {}
-
-void FC_FUNC_(elastic_ocean_load_cuda,
-              ELASTIC_OCEAN_LOAD_CUDA)(long* Mesh_pointer_f,
-                                       int* SIMULATION_TYPE) {}
 
 
 //
@@ -338,12 +301,10 @@ void FC_FUNC_(compute_kernels_hess_cuda,
 //
 
 void FC_FUNC_(compute_stacey_acoustic_cuda,
-              COMPUTE_STACEY_ACOUSTIC_CUDA)(
-                                    long* Mesh_pointer_f,
-                                    int* phase_is_innerf,
-                                    int* SIMULATION_TYPEf,
-                                    int* SAVE_FORWARDf,
-                                    realw* h_b_absorb_potential) {}
+              COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer_f,
+                                            int* phase_is_innerf,
+                                            int* SAVE_FORWARDf,
+                                            realw* h_b_absorb_potential) {}
 
 
 //
@@ -353,7 +314,6 @@ void FC_FUNC_(compute_stacey_acoustic_cuda,
 void FC_FUNC_(compute_stacey_elastic_cuda,
               COMPUTE_STACEY_ELASTIC_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
-                                           int* SIMULATION_TYPEf,
                                            int* SAVE_FORWARDf,
                                            realw* h_b_absorb_field) {}
 
@@ -375,14 +335,13 @@ void FC_FUNC_(initialize_cuda_device,
 
 void FC_FUNC_(it_update_displacement_cuda,
               IT_UPDATE_DISPLACMENT_CUDA)(long* Mesh_pointer_f,
-                                                 int* size_F,
-                                                 realw* deltat_F,
-                                                 realw* deltatsqover2_F,
-                                                 realw* deltatover2_F,
-                                                 int* SIMULATION_TYPE,
-                                                 realw* b_deltat_F,
-                                                 realw* b_deltatsqover2_F,
-                                                 realw* b_deltatover2_F) {}
+                                          int* size_F,
+                                          realw* deltat_F,
+                                          realw* deltatsqover2_F,
+                                          realw* deltatover2_F,
+                                          realw* b_deltat_F,
+                                          realw* b_deltatsqover2_F,
+                                          realw* b_deltatover2_F) {}
 
 void FC_FUNC_(it_update_displacement_ac_cuda,
               it_update_displacement_ac_cuda)(long* Mesh_pointer_f,
@@ -390,10 +349,32 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
                                                realw* deltat_F,
                                                realw* deltatsqover2_F,
                                                realw* deltatover2_F,
-                                               int* SIMULATION_TYPE,
                                                realw* b_deltat_F,
                                                realw* b_deltatsqover2_F,
                                                realw* b_deltatover2_F) {}
+
+void FC_FUNC_(kernel_3_a_cuda,
+              KERNEL_3_A_CUDA)(long* Mesh_pointer,
+                               int* size_F,
+                               realw* deltatover2_F,
+                               realw* b_deltatover2_F,
+                               int* OCEANS) {}
+
+void FC_FUNC_(kernel_3_b_cuda,
+              KERNEL_3_B_CUDA)(long* Mesh_pointer,
+                             int* size_F,
+                             realw* deltatover2_F,
+                             realw* b_deltatover2_F) {}
+
+void FC_FUNC_(kernel_3_a_acoustic_cuda,KERNEL_3_ACOUSTIC_CUDA)(
+                             long* Mesh_pointer,
+                             int* size_F) {}
+
+void FC_FUNC_(kernel_3_b_acoustic_cuda,KERNEL_3_ACOUSTIC_CUDA)(
+                                                             long* Mesh_pointer,
+                                                             int* size_F,
+                                                             realw* deltatover2_F,
+                                                             realw* b_deltatover2_F) {}
 
 
 //
@@ -475,7 +456,6 @@ void FC_FUNC_(prepare_fields_acoustic_device,
                                               int* num_free_surface_faces,
                                               int* free_surface_ispec,
                                               int* free_surface_ijk,
-                                              int* ABSORBING_CONDITIONS,
                                               int* b_reclen_potential,
                                               realw* b_absorb_potential,
                                               int* ELASTIC_SIMULATION,
@@ -490,22 +470,22 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 
 void FC_FUNC_(prepare_fields_acoustic_adj_dev,
               PREPARE_FIELDS_ACOUSTIC_ADJ_DEV)(long* Mesh_pointer_f,
-                                              int* SIMULATION_TYPE,
                                               int* APPROXIMATE_HESS_KL) {}
 
 void FC_FUNC_(prepare_fields_elastic_device,
               PREPARE_FIELDS_ELASTIC_DEVICE)(long* Mesh_pointer_f,
                                              int* size,
-                                             realw* rmass,
+                                             realw* rmassx,
+                                             realw* rmassy,
+                                             realw* rmassz,
                                              realw* rho_vp,
                                              realw* rho_vs,
                                              int* num_phase_ispec_elastic,
                                              int* phase_ispec_inner_elastic,
                                              int* ispec_is_elastic,
-                                             int* ABSORBING_CONDITIONS,
                                              realw* h_b_absorb_field,
                                              int* h_b_reclen_field,
-                                             int* SIMULATION_TYPE,int* SAVE_FORWARD,
+                                             int* SAVE_FORWARD,
                                              int* COMPUTE_AND_STORE_STRAIN,
                                              realw* epsilondev_xx,realw* epsilondev_yy,realw* epsilondev_xy,
                                              realw* epsilondev_xz,realw* epsilondev_yz,
@@ -551,7 +531,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
 void FC_FUNC_(prepare_fields_elastic_adj_dev,
               PREPARE_FIELDS_ELASTIC_ADJ_DEV)(long* Mesh_pointer_f,
                                              int* size,
-                                             int* SIMULATION_TYPE,
                                              int* COMPUTE_AND_STORE_STRAIN,
                                              realw* epsilon_trace_over_3,
                                              realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
@@ -578,7 +557,6 @@ void FC_FUNC_(prepare_fields_noise_device,
                                            int* free_surface_ispec,
                                            int* free_surface_ijk,
                                            int* num_free_surface_faces,
-                                           int* SIMULATION_TYPE,
                                            int* NOISE_TOMOGRAPHY,
                                            int* NSTEP,
                                            realw* noise_sourcearray,
@@ -602,7 +580,6 @@ void FC_FUNC_(prepare_seismogram_fields,
 
 void FC_FUNC_(prepare_cleanup_device,
               PREPARE_CLEANUP_DEVICE)(long* Mesh_pointer_f,
-                                      int* SIMULATION_TYPE,
                                       int* SAVE_FORWARD,
                                       int* ACOUSTIC_SIMULATION,
                                       int* ELASTIC_SIMULATION,
@@ -774,7 +751,6 @@ void FC_FUNC_(transfer_kernels_hess_ac_tohost,
 void FC_FUNC_(transfer_seismograms_el_from_d,
               TRANSFER_SEISMOGRAMS_EL_FROM_D)(int* nrec_local,
                                               long* Mesh_pointer_f,
-                                              int* SIMULATION_TYPEf,
                                               realw* seismograms_d,
                                               realw* seismograms_v,
                                               realw* seismograms_a,
@@ -785,7 +761,7 @@ void FC_FUNC_(transfer_station_el_from_device,
                                                    realw* b_displ, realw* b_veloc, realw* b_accel,
                                                    long* Mesh_pointer_f,int* number_receiver_global,
                                                    int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* ibool,int* SIMULATION_TYPEf) {}
+                                                   int* ibool) {}
 
 void FC_FUNC_(transfer_station_ac_from_device,
               TRANSFER_STATION_AC_FROM_DEVICE)(
@@ -799,6 +775,5 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* number_receiver_global,
                                                 int* ispec_selected_rec,
                                                 int* ispec_selected_source,
-                                                int* ibool,
-                                                int* SIMULATION_TYPEf) {}
+                                                int* ibool) {}
 

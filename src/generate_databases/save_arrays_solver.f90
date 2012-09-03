@@ -91,30 +91,23 @@
   write(IOUT) ispec_is_poroelastic
 
 ! acoustic
-! all processes will have acoustic_simulation set if any flag is .true. somewhere
-  call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if( ACOUSTIC_SIMULATION ) then
     write(IOUT) rmass_acoustic
     write(IOUT) rhostore
   endif
 
 ! elastic
-  call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if( ELASTIC_SIMULATION ) then
     write(IOUT) rmass
-
     if( OCEANS) then
       write(IOUT) rmass_ocean_load
     endif
-
     !pll Stacey
     write(IOUT) rho_vp
     write(IOUT) rho_vs
-
   endif
 
 ! poroelastic
-  call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
   if( POROELASTIC_SIMULATION ) then
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
@@ -136,6 +129,15 @@
     write(IOUT) abs_boundary_ijk
     write(IOUT) abs_boundary_jacobian2Dw
     write(IOUT) abs_boundary_normal
+    ! store mass matrix contributions
+    if(ELASTIC_SIMULATION) then
+     write(IOUT) rmassx
+     write(IOUT) rmassy
+     write(IOUT) rmassz
+    endif
+    if(ACOUSTIC_SIMULATION) then
+      write(IOUT) rmassz_acoustic
+    endif
   endif
 
 ! free surface

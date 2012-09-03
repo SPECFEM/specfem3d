@@ -538,7 +538,6 @@ __global__ void Kernel_2_acoustic_impl(int nb_blocks_to_compute,
 /* ----------------------------------------------------------------------------------------------- */
 
 void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
-                       int SIMULATION_TYPE,
                        int* d_ibool,
                        realw* d_xix,
                        realw* d_xiy,
@@ -599,7 +598,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                         d_kappastore,
                                                         mp->d_wgll_cube);
 
-  if(SIMULATION_TYPE == 3) {
+  if(mp->simulation_type == 3) {
     Kernel_2_acoustic_impl<<< grid_2, threads_2, 0, 0 >>>(nb_blocks_to_compute,
                                                           mp->NGLOB_AB,
                                                           d_ibool,
@@ -647,8 +646,7 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
               COMPUTE_FORCES_ACOUSTIC_CUDA)(long* Mesh_pointer_f,
                                             int* iphase,
                                             int* nspec_outer_acoustic,
-                                            int* nspec_inner_acoustic,
-                                            int* SIMULATION_TYPE) {
+                                            int* nspec_inner_acoustic) {
 
   TRACE("compute_forces_acoustic_cuda");
   //double start_time = get_time();
@@ -700,7 +698,6 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
       nb_blocks_to_compute = mp->h_num_elem_colors_acoustic[icolor];
 
       Kernel_2_acoustic(nb_blocks_to_compute,mp,*iphase,
-                         *SIMULATION_TYPE,
                          mp->d_ibool + color_offset_nonpadded,
                          mp->d_xix + color_offset,
                          mp->d_xiy + color_offset,
@@ -724,7 +721,6 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
 
     // no mesh coloring: uses atomic updates
     Kernel_2_acoustic(num_elements, mp, *iphase,
-                      *SIMULATION_TYPE,
                       mp->d_ibool,
                       mp->d_xix,
                       mp->d_xiy,
@@ -739,129 +735,6 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
                       mp->d_kappastore);
 
   }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-/* KERNEL 3 */
-
-/* ----------------------------------------------------------------------------------------------- */
-
-
-__global__ void kernel_3_a_acoustic_cuda_device(realw* potential_dot_dot_acoustic,
-                                                int size,
-                                                realw* rmass_acoustic) {
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-
-  /* because of block and grid sizing problems, there is a small */
-  /* amount of buffer at the end of the calculation */
-  if(id < size) {
-    // multiplies pressure with the inverse of the mass matrix
-    potential_dot_dot_acoustic[id] = potential_dot_dot_acoustic[id]*rmass_acoustic[id];
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_b_acoustic_cuda_device(realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                int size,
-                                                realw deltatover2,
-                                                realw* rmass_acoustic) {
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-
-  /* because of block and grid sizing problems, there is a small */
-  /* amount of buffer at the end of the calculation */
-  if(id < size) {
-    // Newmark time scheme: corrector term
-    potential_dot_acoustic[id] = potential_dot_acoustic[id] + deltatover2*potential_dot_dot_acoustic[id];
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(kernel_3_a_acoustic_cuda,KERNEL_3_ACOUSTIC_CUDA)(
-                             long* Mesh_pointer,
-                             int* size_F,
-                             int* SIMULATION_TYPE) {
-
-TRACE("kernel_3_a_acoustic_cuda");
-
-   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
-   int size = *size_F;
-
-   int blocksize = BLOCKSIZE_KERNEL3;
-   int size_padded = ((int)ceil(((double)size)/((double)blocksize)))*blocksize;
-   int num_blocks_x = size_padded/blocksize;
-   int num_blocks_y = 1;
-   while(num_blocks_x > 65535) {
-     num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-     num_blocks_y = num_blocks_y*2;
-   }
-   dim3 grid(num_blocks_x,num_blocks_y);
-   dim3 threads(blocksize,1,1);
-
-   kernel_3_a_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_dot_acoustic,
-                                                       size,
-                                                       mp->d_rmass_acoustic);
-
-   if(*SIMULATION_TYPE == 3) {
-     kernel_3_a_acoustic_cuda_device<<< grid, threads>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                         size,
-                                                         mp->d_rmass_acoustic);
-   }
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 a");
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(kernel_3_b_acoustic_cuda,KERNEL_3_ACOUSTIC_CUDA)(
-                                                             long* Mesh_pointer,
-                                                             int* size_F,
-                                                             realw* deltatover2_F,
-                                                             int* SIMULATION_TYPE,
-                                                             realw* b_deltatover2_F) {
-
-TRACE("kernel_3_b_acoustic_cuda");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
-  int size = *size_F;
-  realw deltatover2 = *deltatover2_F;
-  realw b_deltatover2 = *b_deltatover2_F;
-
-  int blocksize = BLOCKSIZE_KERNEL3;
-  int size_padded = ((int)ceil(((double)size)/((double)blocksize)))*blocksize;
-  int num_blocks_x = size_padded/blocksize;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
-
-  kernel_3_b_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
-                                                    mp->d_potential_dot_dot_acoustic,
-                                                    size, deltatover2,
-                                                    mp->d_rmass_acoustic);
-
-  if(*SIMULATION_TYPE == 3) {
-    kernel_3_b_acoustic_cuda_device<<< grid, threads>>>(mp->d_b_potential_dot_acoustic,
-                                                      mp->d_b_potential_dot_dot_acoustic,
-                                                      size, b_deltatover2,
-                                                      mp->d_rmass_acoustic);
-  }
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 b");
-#endif
 }
 
 
@@ -915,8 +788,7 @@ __global__ void enforce_free_surface_cuda_kernel(
 extern "C"
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
               ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer_f,
-                                                  int* SIMULATION_TYPE,
-                                                  int* ABSORB_FREE_SURFACE) {
+                                               int* ABSORB_FREE_SURFACE) {
 
 TRACE("acoustic_enforce_free_surf_cuda");
 
@@ -947,7 +819,7 @@ TRACE("acoustic_enforce_free_surf_cuda");
                                                        mp->d_ibool,
                                                        mp->d_ispec_is_acoustic);
     // for backward/reconstructed potentials
-    if(*SIMULATION_TYPE == 3) {
+    if(mp->simulation_type == 3) {
       enforce_free_surface_cuda_kernel<<<grid,threads>>>(mp->d_b_potential_acoustic,
                                                          mp->d_b_potential_dot_acoustic,
                                                          mp->d_b_potential_dot_dot_acoustic,

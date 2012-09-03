@@ -55,11 +55,10 @@
       if( ACOUSTIC_SIMULATION ) then
         ! only copy corresponding elements to CPU host
         ! timing: Elapsed time: 5.230904e-04
-        call transfer_station_ac_from_device( &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+        call transfer_station_ac_from_device(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         Mesh_pointer,number_receiver_global, &
-                        ispec_selected_rec,ispec_selected_source,ibool,SIMULATION_TYPE)
+                        ispec_selected_rec,ispec_selected_source,ibool)
 
         ! alternative: transfers whole fields
         ! timing: Elapsed time: 4.138947e-03
@@ -71,7 +70,6 @@
       if( ELASTIC_SIMULATION ) then
          if(USE_CUDA_SEISMOGRAMS) then
             call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
-                                               SIMULATION_TYPE,&
                                                seismograms_d,seismograms_v,seismograms_a,&
                                                it)
          else
@@ -79,7 +77,7 @@
                                                 b_displ,b_veloc,b_accel, &
                                                 Mesh_pointer,number_receiver_global, &
                                                 ispec_selected_rec,ispec_selected_source, &
-                                                ibool,SIMULATION_TYPE)
+                                                ibool)
          endif
         ! alternative: transfers whole fields
         !  call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)

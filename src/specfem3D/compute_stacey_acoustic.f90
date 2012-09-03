@@ -147,7 +147,7 @@
     ! GPU_MODE == .true.
     if( num_abs_boundary_faces > 0 ) &
       call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner, &
-                                       SIMULATION_TYPE,SAVE_FORWARD,b_absorb_potential)
+                                        SAVE_FORWARD,b_absorb_potential)
 
   endif
 

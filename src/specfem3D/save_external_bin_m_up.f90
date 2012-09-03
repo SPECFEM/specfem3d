@@ -45,9 +45,6 @@
                     free_surface_normal,free_surface_jacobian2Dw, &
                     free_surface_ijk,free_surface_ispec, &
                     num_free_surface_faces, &
-                    coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
-                    coupling_ac_el_ijk,coupling_ac_el_ispec, &
-                    num_coupling_ac_el_faces, &
                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                     prname,SAVE_MESH_FILES, &
@@ -58,6 +55,24 @@
                     c55store,c56store,c66store, &
                     ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic)
 
+  use specfem_par,only: &
+    ispec_is_inner
+
+  use specfem_par_elastic,only: &
+    rmassx,rmassy,rmassz, &
+    nspec_inner_elastic,nspec_outer_elastic,num_phase_ispec_elastic,phase_ispec_inner_elastic, &
+    num_colors_outer_elastic,num_colors_inner_elastic,num_elem_colors_elastic
+
+  use specfem_par_acoustic,only: &
+    rmassz_acoustic,num_coupling_ac_po_faces, &
+    num_coupling_ac_el_faces,coupling_ac_el_ijk,coupling_ac_el_ispec, &
+    nspec_inner_acoustic,nspec_outer_acoustic,num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
+    num_colors_outer_acoustic,num_colors_inner_acoustic,num_elem_colors_acoustic
+
+  use specfem_par_poroelastic,only: &
+    num_coupling_el_po_faces, &
+    nspec_inner_poroelastic,nspec_outer_poroelastic,num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic
+    
   implicit none
 
   include "constants.h"
@@ -76,6 +91,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rhostore,kappastore,mustore
   real(kind=CUSTOM_REAL), dimension(nglob) :: rmass,rmass_acoustic, &
             rmass_solid_poroelastic,rmass_fluid_poroelastic
+
 ! ocean load
   logical :: OCEANS
   integer :: NGLOB_OCEAN
@@ -98,13 +114,6 @@
   real(kind=CUSTOM_REAL) :: free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces)
   integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
   integer :: free_surface_ispec(num_free_surface_faces)
-
-! acoustic-elastic coupling surface
-  integer :: num_coupling_ac_el_faces
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces)
-  real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
-  integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
 ! MPI interfaces
   integer :: num_interfaces_ext_mesh
@@ -192,7 +201,6 @@
     !pll Stacey
     write(IOUT) rho_vp
     write(IOUT) rho_vs
-
   endif
 
 ! poroelastic
@@ -200,39 +208,65 @@
   if( POROELASTIC_SIMULATION ) then
     write(IOUT) rmass_solid_poroelastic
     write(IOUT) rmass_fluid_poroelastic
+    stop 'model update with poroelastic domains not supported yet'
   endif
 
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
-  write(IOUT) abs_boundary_ispec
-  write(IOUT) abs_boundary_ijk
-  write(IOUT) abs_boundary_jacobian2Dw
-  write(IOUT) abs_boundary_normal
-
+  if(num_abs_boundary_faces > 0 ) then
+    write(IOUT) abs_boundary_ispec
+    write(IOUT) abs_boundary_ijk
+    write(IOUT) abs_boundary_jacobian2Dw
+    write(IOUT) abs_boundary_normal
+    ! store mass matrix contributions
+    if(ELASTIC_SIMULATION) then
+     write(IOUT) rmassx
+     write(IOUT) rmassy
+     write(IOUT) rmassz
+    endif
+    if(ACOUSTIC_SIMULATION) then
+      write(IOUT) rmassz_acoustic
+    endif
+  endif
+  
 ! free surface
   write(IOUT) num_free_surface_faces
-  write(IOUT) free_surface_ispec
-  write(IOUT) free_surface_ijk
-  write(IOUT) free_surface_jacobian2Dw
-  write(IOUT) free_surface_normal
+  if( num_free_surface_faces > 0 ) then
+    write(IOUT) free_surface_ispec
+    write(IOUT) free_surface_ijk
+    write(IOUT) free_surface_jacobian2Dw
+    write(IOUT) free_surface_normal
+  endif
 
 ! acoustic-elastic coupling surface
   write(IOUT) num_coupling_ac_el_faces
-  write(IOUT) coupling_ac_el_ispec
-  write(IOUT) coupling_ac_el_ijk
-  write(IOUT) coupling_ac_el_jacobian2Dw
-  write(IOUT) coupling_ac_el_normal
+  if( num_coupling_ac_el_faces > 0 ) then
+    stop 'coupling ac_po not updated yet'
+  endif
+
+! acoustic-poroelastic coupling surface
+  write(IOUT) num_coupling_ac_po_faces
+  if( num_coupling_ac_po_faces > 0 ) then
+    stop 'coupling ac_po not updated yet'
+  endif
+
+! elastic-poroelastic coupling surface
+  write(IOUT) num_coupling_el_po_faces
+  if( num_coupling_el_po_faces > 0 ) then
+    stop 'coupling ac_po not updated yet'
+  endif
 
 !MPI interfaces
   write(IOUT) num_interfaces_ext_mesh
-  write(IOUT) max_nibool_interfaces_ext_mesh  !magnoni
-  write(IOUT) my_neighbours_ext_mesh
-  write(IOUT) nibool_interfaces_ext_mesh  !magnoni
-  write(IOUT) ibool_interfaces_ext_mesh   !magnoni
-
+  if( num_interfaces_ext_mesh > 0 ) then
+    write(IOUT) max_nibool_interfaces_ext_mesh
+    write(IOUT) my_neighbours_ext_mesh
+    write(IOUT) nibool_interfaces_ext_mesh
+    write(IOUT) ibool_interfaces_ext_mesh   !magnoni
+  endif
 
 ! anisotropy
-  if( ANISOTROPY ) then
+  if( ELASTIC_SIMULATION .and. ANISOTROPY ) then
     write(IOUT) c11store
     write(IOUT) c12store
     write(IOUT) c13store
@@ -254,6 +288,39 @@
     write(IOUT) c55store
     write(IOUT) c56store
     write(IOUT) c66store
+  endif
+
+! inner/outer elements
+  write(IOUT) ispec_is_inner
+
+  if( ACOUSTIC_SIMULATION ) then
+    write(IOUT) nspec_inner_acoustic,nspec_outer_acoustic
+    write(IOUT) num_phase_ispec_acoustic
+    if(num_phase_ispec_acoustic > 0 ) write(IOUT) phase_ispec_inner_acoustic
+  endif
+
+  if( ELASTIC_SIMULATION ) then
+    write(IOUT) nspec_inner_elastic,nspec_outer_elastic
+    write(IOUT) num_phase_ispec_elastic
+    if(num_phase_ispec_elastic > 0 ) write(IOUT) phase_ispec_inner_elastic
+  endif
+
+  if( POROELASTIC_SIMULATION ) then
+    write(IOUT) nspec_inner_poroelastic,nspec_outer_poroelastic
+    write(IOUT) num_phase_ispec_poroelastic
+    if(num_phase_ispec_poroelastic > 0 ) write(IOUT) phase_ispec_inner_poroelastic
+  endif
+
+  ! mesh coloring
+  if( USE_MESH_COLORING_GPU ) then
+    if( ACOUSTIC_SIMULATION ) then
+      write(IOUT) num_colors_outer_acoustic,num_colors_inner_acoustic
+      write(IOUT) num_elem_colors_acoustic
+    endif
+    if( ELASTIC_SIMULATION ) then
+      write(IOUT) num_colors_outer_elastic,num_colors_inner_elastic
+      write(IOUT) num_elem_colors_elastic
+    endif
   endif
 
   close(IOUT)
