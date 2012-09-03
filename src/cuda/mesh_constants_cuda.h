@@ -192,6 +192,13 @@ typedef struct mesh_ {
   int myrank;
   int NPROC;
 
+  // constants
+  int simulation_type;
+  int use_mesh_coloring_gpu;
+  int absorbing_conditions;
+  int gravity;
+
+
   // ------------------------------------------------------------------ //
   // GLL points & weights
   // ------------------------------------------------------------------ //
@@ -209,9 +216,6 @@ typedef struct mesh_ {
 
   // inner / outer elements
   int* d_ispec_is_inner;
-
-  // mesh coloring
-  int use_mesh_coloring_gpu;
 
   // pointers to constant memory arrays
   realw* d_hprime_xx;
@@ -285,7 +289,9 @@ typedef struct mesh_ {
   int num_colors_outer_elastic,num_colors_inner_elastic;
   int nspec_elastic;
 
-  realw* d_rmass;
+  realw* d_rmassx;
+  realw* d_rmassy;
+  realw* d_rmassz;
 
   // mpi buffer
   realw* d_send_accel_buffer;
@@ -481,7 +487,6 @@ typedef struct mesh_ {
   realw* d_coupling_ac_el_jacobian2Dw;
 
   // gravity
-  int gravity;
   realw* d_minus_deriv_gravity;
   realw* d_minus_g;
 

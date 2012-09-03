@@ -132,7 +132,6 @@ extern "C"
 void FC_FUNC_(compute_stacey_elastic_cuda,
               COMPUTE_STACEY_ELASTIC_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
-                                           int* SIMULATION_TYPEf,
                                            int* SAVE_FORWARDf,
                                            realw* h_b_absorb_field) {
 
@@ -144,7 +143,6 @@ TRACE("compute_stacey_elastic_cuda");
   if( mp->d_num_abs_boundary_faces == 0 ) return;
 
   int phase_is_inner    = *phase_is_innerf;
-  int SIMULATION_TYPE   = *SIMULATION_TYPEf;
   int SAVE_FORWARD      = *SAVE_FORWARDf;
 
   // way 1
@@ -165,7 +163,7 @@ TRACE("compute_stacey_elastic_cuda");
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  if(SIMULATION_TYPE == 3 && mp->d_num_abs_boundary_faces > 0) {
+  if(mp->simulation_type == 3 && mp->d_num_abs_boundary_faces > 0) {
     // The read is done in fortran
     print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_field,h_b_absorb_field,
                                        mp->d_b_reclen_field,cudaMemcpyHostToDevice),7700);
@@ -187,7 +185,8 @@ TRACE("compute_stacey_elastic_cuda");
                                                   mp->d_ispec_is_inner,
                                                   mp->d_ispec_is_elastic,
                                                   phase_is_inner,
-                                                  SIMULATION_TYPE,SAVE_FORWARD,
+                                                  mp->simulation_type,
+                                                  SAVE_FORWARD,
                                                   mp->d_num_abs_boundary_faces,
                                                   mp->d_b_accel,
                                                   mp->d_b_absorb_field);
@@ -197,10 +196,10 @@ TRACE("compute_stacey_elastic_cuda");
 #endif
 
   // ! adjoint simulations: stores absorbed wavefield part
-  // if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
+  // if (mp->simulation_type == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) &
   //   write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
 
-  if(SIMULATION_TYPE == 1 && SAVE_FORWARD && mp->d_num_abs_boundary_faces > 0 ) {
+  if(mp->simulation_type == 1 && SAVE_FORWARD && mp->d_num_abs_boundary_faces > 0 ) {
     print_CUDA_error_if_any(cudaMemcpy(h_b_absorb_field,mp->d_b_absorb_field,
                                        mp->d_b_reclen_field,cudaMemcpyDeviceToHost),7701);
     // The write is done in fortran

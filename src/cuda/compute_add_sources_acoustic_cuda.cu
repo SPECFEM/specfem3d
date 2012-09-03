@@ -99,7 +99,6 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
               COMPUTE_ADD_SOURCES_AC_CUDA)(long* Mesh_pointer_f,
                                                  int* phase_is_innerf,
                                                  int* NSOURCESf,
-                                                 int* SIMULATION_TYPEf,
                                                  double* h_stf_pre_compute,
                                                  int* myrankf) {
 
@@ -153,7 +152,6 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
               COMPUTE_ADD_SOURCES_AC_s3_CUDA)(long* Mesh_pointer_f,
                                                       int* phase_is_innerf,
                                                       int* NSOURCESf,
-                                                      int* SIMULATION_TYPEf,
                                                       double* h_stf_pre_compute,
                                                       int* myrankf) {
 

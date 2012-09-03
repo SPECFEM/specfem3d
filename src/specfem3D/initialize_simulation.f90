@@ -116,6 +116,8 @@
     write(IMAIN,'(a)',advance='yes') '  external'
     case( IMODEL_IPATI )
     write(IMAIN,'(a)',advance='yes') '  ipati'
+    case( IMODEL_IPATI_WATER )
+    write(IMAIN,'(a)',advance='yes') '  ipati_water'
     end select
 
     write(IMAIN,*)

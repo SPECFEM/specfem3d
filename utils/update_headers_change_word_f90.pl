@@ -16,7 +16,7 @@
 # in the code (which is dangerous, but really easier to program...)
 #
 
-@objects = `ls ../src/*/*.f90 ../src/*/*.F90 ../src/*/*.c ../src/*/*.cu ../src/*/*.h.in ../src/*/*.h`;
+@objects = `ls src/*/*.f90 src/*/*.F90 src/*/*.c src/*/*.cu src/*/*.h.in src/*/*.h`;
 
 foreach $name (@objects) {
   chop $name;

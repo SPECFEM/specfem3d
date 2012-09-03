@@ -219,6 +219,14 @@
 
   ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
+
+    ! adds contributions
+    if( ABSORBING_CONDITIONS ) then
+      rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
+      ! not needed anymore
+      deallocate(rmassz_acoustic)
+    endif
+
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
@@ -231,21 +239,52 @@
   endif
 
   if(ELASTIC_SIMULATION) then
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass, &
+
+    ! switches to three-component mass matrix
+    if( ABSORBING_CONDITIONS ) then
+      ! adds boundary contributions
+      rmassx(:) = rmass(:) + rmassx(:)
+      rmassy(:) = rmass(:) + rmassy(:)
+      rmassz(:) = rmass(:) + rmassz(:)
+    else
+      rmassx(:) = rmass(:)
+      rmassy(:) = rmass(:)
+      rmassz(:) = rmass(:)
+    endif
+    ! not needed anymore
+    deallocate(rmass)
+
+    ! assemble mass matrix
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmassx, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmassy, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmassz, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
-    where(rmass <= 0._CUSTOM_REAL) rmass = 1._CUSTOM_REAL
-    rmass(:) = 1._CUSTOM_REAL / rmass(:)
+    where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
+    where(rmassy <= 0._CUSTOM_REAL) rmassy = 1._CUSTOM_REAL
+    where(rmassz <= 0._CUSTOM_REAL) rmassz = 1._CUSTOM_REAL
+    rmassx(:) = 1._CUSTOM_REAL / rmassx(:)
+    rmassy(:) = 1._CUSTOM_REAL / rmassy(:)
+    rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
 
+    ! ocean load
     if(OCEANS ) then
-      if( minval(rmass_ocean_load(:)) <= 0._CUSTOM_REAL) &
-        call exit_MPI(myrank,'negative ocean load mass matrix term')
-      rmass_ocean_load(:) = 1. / rmass_ocean_load(:)
+      call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_ocean_load, &
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                        my_neighbours_ext_mesh)
+      where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
+      rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
-
   endif
 
   if(POROELASTIC_SIMULATION) then
@@ -1077,7 +1116,7 @@
                                   ispec_is_acoustic, &
                                   NOISE_TOMOGRAPHY,num_free_surface_faces, &
                                   free_surface_ispec,free_surface_ijk, &
-                                  ABSORBING_CONDITIONS,b_reclen_potential,b_absorb_potential, &
+                                  b_reclen_potential,b_absorb_potential, &
                                   ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
                                   coupling_ac_el_ispec,coupling_ac_el_ijk, &
                                   coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
@@ -1086,19 +1125,19 @@
 
     if( SIMULATION_TYPE == 3 ) &
       call prepare_fields_acoustic_adj_dev(Mesh_pointer, &
-                                  SIMULATION_TYPE, &
-                                  APPROXIMATE_HESS_KL)
+                                           APPROXIMATE_HESS_KL)
 
   endif
 
   ! prepares fields on GPU for elastic simulations
   if( ELASTIC_SIMULATION ) then
     call prepare_fields_elastic_device(Mesh_pointer, NDIM*NGLOB_AB, &
-                                  rmass,rho_vp,rho_vs, &
+                                  rmassx,rmassy,rmassz, &
+                                  rho_vp,rho_vs, &
                                   num_phase_ispec_elastic,phase_ispec_inner_elastic, &
                                   ispec_is_elastic, &
-                                  ABSORBING_CONDITIONS,b_absorb_field,b_reclen_field, &
-                                  SIMULATION_TYPE,SAVE_FORWARD, &
+                                  b_absorb_field,b_reclen_field, &
+                                  SAVE_FORWARD, &
                                   COMPUTE_AND_STORE_STRAIN, &
                                   epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                   epsilondev_xz,epsilondev_yz, &
@@ -1122,7 +1161,6 @@
 
     if( SIMULATION_TYPE == 3 ) &
       call prepare_fields_elastic_adj_dev(Mesh_pointer, NDIM*NGLOB_AB, &
-                                  SIMULATION_TYPE, &
                                   COMPUTE_AND_STORE_STRAIN, &
                                   epsilon_trace_over_3, &
                                   b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
@@ -1155,7 +1193,7 @@
                                   free_surface_ispec, &
                                   free_surface_ijk, &
                                   num_free_surface_faces, &
-                                  SIMULATION_TYPE,NOISE_TOMOGRAPHY, &
+                                  NOISE_TOMOGRAPHY, &
                                   NSTEP,noise_sourcearray, &
                                   normal_x_noise,normal_y_noise,normal_z_noise, &
                                   mask_noise,free_surface_jacobian2Dw)

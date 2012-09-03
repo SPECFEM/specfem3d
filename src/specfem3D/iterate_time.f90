@@ -416,8 +416,8 @@
     else
       ! on GPU
       call it_update_displacement_ac_cuda(Mesh_pointer, NGLOB_AB, &
-                                        deltat, deltatsqover2, deltatover2, &
-                                        SIMULATION_TYPE, b_deltat, b_deltatsqover2, b_deltatover2)
+                                          deltat, deltatsqover2, deltatover2, &
+                                          b_deltat, b_deltatsqover2, b_deltatover2)
     endif
 
     ! time marching potentials
@@ -457,7 +457,7 @@
       ! on GPU
       ! Includes SIM_TYPE 1 & 3 (for noise tomography)
       call it_update_displacement_cuda(Mesh_pointer, size(displ), deltat, deltatsqover2,&
-             deltatover2, SIMULATION_TYPE, b_deltat, b_deltatsqover2, b_deltatover2)
+                                       deltatover2, b_deltat, b_deltatsqover2, b_deltatover2)
     endif
   endif
 
@@ -821,7 +821,7 @@
 
   ! frees allocated memory on GPU
   call prepare_cleanup_device(Mesh_pointer, &
-                              SIMULATION_TYPE,SAVE_FORWARD, &
+                              SAVE_FORWARD, &
                               ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
                               ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
                               ATTENUATION,ANISOTROPY,OCEANS, &

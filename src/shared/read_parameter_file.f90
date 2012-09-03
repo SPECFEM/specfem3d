@@ -254,6 +254,8 @@
     IMODEL = IMODEL_USER_EXTERNAL
   case( 'ipati' )
     IMODEL = IMODEL_IPATI
+  case( 'ipati_water' )
+    IMODEL = IMODEL_IPATI_WATER
   case( 'gll' )
     IMODEL = IMODEL_GLL
   case( 'salton_trough')
@@ -270,8 +272,8 @@
   end select
 
   ! check
-  if( IMODEL == IMODEL_IPATI ) then
-    if( USE_RICKER_IPATI .eqv. .false. ) stop 'please set USE_RICKER_IPATI to true in shared/constants.h and recompile'
+  if( IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER ) then
+    if( USE_RICKER_IPATI .eqv. .false. ) stop 'please set USE_RICKER_IPATI to .true. in shared/constants.h and recompile'
   endif
 
   end subroutine read_parameter_file

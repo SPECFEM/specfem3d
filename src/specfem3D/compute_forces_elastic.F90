@@ -124,7 +124,6 @@ subroutine compute_forces_elastic()
       call compute_forces_elastic_cuda(Mesh_pointer, iphase, &
                                       nspec_outer_elastic, &
                                       nspec_inner_elastic, &
-                                      SIMULATION_TYPE, &
                                       COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY)
 
       if(phase_is_inner .eqv. .true.) then
@@ -203,7 +202,7 @@ subroutine compute_forces_elastic()
         else
           ! on GPU
           call compute_coupling_el_ac_cuda(Mesh_pointer,phase_is_inner, &
-                                          num_coupling_ac_el_faces,SIMULATION_TYPE)
+                                           num_coupling_ac_el_faces)
         endif ! GPU_MODE
       endif ! num_coupling_ac_el_faces
     endif
@@ -329,30 +328,31 @@ subroutine compute_forces_elastic()
 
  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
  if(.NOT. GPU_MODE) then
-    accel(1,:) = accel(1,:)*rmass(:)
-    accel(2,:) = accel(2,:)*rmass(:)
-    accel(3,:) = accel(3,:)*rmass(:)
+    accel(1,:) = accel(1,:)*rmassx(:)
+    accel(2,:) = accel(2,:)*rmassy(:)
+    accel(3,:) = accel(3,:)*rmassz(:)
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) then
-       b_accel(1,:) = b_accel(1,:)*rmass(:)
-       b_accel(2,:) = b_accel(2,:)*rmass(:)
-       b_accel(3,:) = b_accel(3,:)*rmass(:)
+       b_accel(1,:) = b_accel(1,:)*rmassx(:)
+       b_accel(2,:) = b_accel(2,:)*rmassy(:)
+       b_accel(3,:) = b_accel(3,:)*rmassz(:)
     endif !adjoint
  else ! GPU_MODE == 1
-    call kernel_3_a_cuda(Mesh_pointer, NGLOB_AB, deltatover2,SIMULATION_TYPE,b_deltatover2,OCEANS)
+    call kernel_3_a_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2,OCEANS)
  endif
 
 ! updates acceleration with ocean load term
   if(OCEANS) then
     if( .NOT. GPU_MODE ) then
-      call elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
-                        ibool,rmass,rmass_ocean_load,accel, &
-                        free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,SIMULATION_TYPE, &
-                        NGLOB_ADJOINT,b_accel)
+      call compute_coupling_ocean(NSPEC_AB,NGLOB_AB, &
+                                  ibool,rmassx,rmassy,rmassz, &
+                                  rmass_ocean_load,accel, &
+                                  free_surface_normal,free_surface_ijk,free_surface_ispec, &
+                                  num_free_surface_faces,SIMULATION_TYPE, &
+                                  NGLOB_ADJOINT,b_accel)
     else
       ! on GPU
-      call elastic_ocean_load_cuda(Mesh_pointer,SIMULATION_TYPE)
+      call compute_coupling_ocean_cuda(Mesh_pointer)
     endif
   endif
 
@@ -378,114 +378,12 @@ subroutine compute_forces_elastic()
      ! adjoint simulations
      if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
   else ! GPU_MODE == 1
-    if( OCEANS ) call kernel_3_b_cuda(Mesh_pointer, NGLOB_AB, deltatover2,SIMULATION_TYPE,b_deltatover2)
+    if( OCEANS ) call kernel_3_b_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2)
   endif
 
 
 end subroutine compute_forces_elastic
 
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-subroutine elastic_ocean_load(NSPEC_AB,NGLOB_AB, &
-                        ibool,rmass,rmass_ocean_load,accel, &
-                        free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                        num_free_surface_faces,SIMULATION_TYPE, &
-                        NGLOB_ADJOINT,b_accel)
-
-! updates acceleration with ocean load term:
-! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
-! assuming incompressible fluid column above bathymetry ocean bottom
-
-  implicit none
-
-  include 'constants.h'
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(inout) :: accel
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: rmass,rmass_ocean_load
-
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
-
-  ! free surface
-  integer :: num_free_surface_faces
-  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
-  integer :: free_surface_ispec(num_free_surface_faces)
-
-  ! adjoint simulations
-  integer :: SIMULATION_TYPE,NGLOB_ADJOINT
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
-
-! local parameters
-  real(kind=CUSTOM_REAL) :: nx,ny,nz
-  real(kind=CUSTOM_REAL) :: additional_term,force_normal_comp
-  integer :: i,j,k,ispec,iglob
-  integer :: igll,iface
-  logical,dimension(NGLOB_AB) :: updated_dof_ocean_load
-  ! adjoint locals
-  real(kind=CUSTOM_REAL) :: b_additional_term,b_force_normal_comp
-
-  !   initialize the updates
-  updated_dof_ocean_load(:) = .false.
-
-  ! for surface elements exactly at the top of the model (ocean bottom)
-  do iface = 1,num_free_surface_faces
-
-    ispec = free_surface_ispec(iface)
-    do igll = 1, NGLLSQUARE
-      i = free_surface_ijk(1,igll,iface)
-      j = free_surface_ijk(2,igll,iface)
-      k = free_surface_ijk(3,igll,iface)
-
-      ! get global point number
-      iglob = ibool(i,j,k,ispec)
-
-      ! only update once
-      if(.not. updated_dof_ocean_load(iglob)) then
-
-        ! get normal
-        nx = free_surface_normal(1,igll,iface)
-        ny = free_surface_normal(2,igll,iface)
-        nz = free_surface_normal(3,igll,iface)
-
-        ! make updated component of right-hand side
-        ! we divide by rmass() which is 1 / M
-        ! we use the total force which includes the Coriolis term above
-        force_normal_comp = ( accel(1,iglob)*nx + &
-                              accel(2,iglob)*ny + &
-                              accel(3,iglob)*nz ) / rmass(iglob)
-
-        additional_term = (rmass_ocean_load(iglob) - rmass(iglob)) * force_normal_comp
-
-        accel(1,iglob) = accel(1,iglob) + additional_term * nx
-        accel(2,iglob) = accel(2,iglob) + additional_term * ny
-        accel(3,iglob) = accel(3,iglob) + additional_term * nz
-
-        ! adjoint simulations
-        if (SIMULATION_TYPE == 3) then
-          b_force_normal_comp = ( b_accel(1,iglob)*nx + &
-                                  b_accel(2,iglob)*ny + &
-                                  b_accel(3,iglob)*nz) / rmass(iglob)
-          b_additional_term = (rmass_ocean_load(iglob) - rmass(iglob)) * b_force_normal_comp
-
-          b_accel(1,iglob) = b_accel(1,iglob) + b_additional_term * nx
-          b_accel(2,iglob) = b_accel(2,iglob) + b_additional_term * ny
-          b_accel(3,iglob) = b_accel(3,iglob) + b_additional_term * nz
-        endif !adjoint
-
-        ! done with this point
-        updated_dof_ocean_load(iglob) = .true.
-
-      endif
-
-    enddo ! igll
-  enddo ! iface
-
-end subroutine elastic_ocean_load
 
 !
 !-------------------------------------------------------------------------------------------------

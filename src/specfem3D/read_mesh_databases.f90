@@ -95,6 +95,12 @@
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
+
+    ! initializes mass matrix contribution
+    allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rmassz_acoustic'
+    rmassz_acoustic(:) = 0._CUSTOM_REAL
+
     allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rhostore'
 
@@ -120,8 +126,20 @@
       allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array accel_adj_coupling'
     endif
+
+    ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass'
+    ! initializes mass matrix contributions
+    allocate(rmassx(NGLOB_AB), &
+             rmassy(NGLOB_AB), &
+             rmassz(NGLOB_AB), &
+             stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rmassx,rmassy,rmassz'
+    rmassx(:) = 0._CUSTOM_REAL
+    rmassy(:) = 0._CUSTOM_REAL
+    rmassz(:) = 0._CUSTOM_REAL
+
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
@@ -312,6 +330,15 @@
     read(27) abs_boundary_ijk
     read(27) abs_boundary_jacobian2Dw
     read(27) abs_boundary_normal
+    ! reads mass matrix contributions on boundaries
+    if( ELASTIC_SIMULATION ) then
+      read(27) rmassx
+      read(27) rmassy
+      read(27) rmassz
+    endif
+    if( ACOUSTIC_SIMULATION ) then
+      read(27) rmassz_acoustic
+    endif
   endif
 
   ! free surface

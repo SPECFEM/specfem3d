@@ -38,17 +38,12 @@
   character(len=256) procname,final_LOCAL_PATH
   integer :: irec_local,irec
 
-  ! headers
-  integer,parameter :: nheader=240      ! 240 bytes
-!! DK DK  integer(kind=2) :: i2head(nheader/2)  ! 2-byte-integer
-  integer(kind=4) :: i4head(nheader/4)  ! 4-byte-integer
-!! DK DK  equivalence (i2head,i4head)    ! share the same 240-byte-memory
-
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   double precision :: x_found_source,y_found_source,z_found_source
 
   real(kind=4),dimension(:),allocatable :: rtmpseis
-  integer :: ier
+  real :: dx
+  integer :: i,ier
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
   if( ier /= 0 ) stop 'error allocating array x_found y_found z_found'
@@ -83,87 +78,141 @@
 
   ! write seismograms (dx)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dx_SU' ,&
-      form='unformatted', access='direct', recl=240+4*NSTEP, iostat=ier)
+      status='unknown', access='direct', recl=4, iostat=ier)
+
   if( ier /= 0 ) stop 'error opening ***_dx_SU file'
 
+  ! receiver interval
+  if( nrec > 1) then
+    dx = SNGL(x_found(2)-x_found(1))
+  else
+    dx = 0.0
+  endif
+
+
   do irec_local = 1,nrec_local
-   irec = number_receiver_global(irec_local)
-   i4head(1)  =irec
-   i4head(11) =z_found(irec)
-   i4head(13) =z_found_source
-   i4head(19) =x_found_source !utm_x_source(1)
-   i4head(20) =y_found_source !utm_y_source(1)
-   i4head(21) =x_found(irec)  !stutm_x(irec)
-   i4head(22) =y_found(irec)  !stutm_y(irec)
-!! DK DK   i2head(58) =NSTEP
-!! DK DK   i2head(59) =DT*1.0d6
-!! DK DK almost all modern processors are little-endian, thus we do not need an equivalence statement any more
-!! DK DK (some compilers give a warning message for the equivalent statement that we used to have above)
-   i4head(58/2) = NSTEP + 65536*int(DT*1.0d6)
+    irec = number_receiver_global(irec_local)
 
-   ! convert to real 4-byte
-   rtmpseis(1:NSTEP) = seismograms_d(1,irec_local,1:NSTEP)
+    ! write section header
+    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
+                          x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
 
-   ! write record
-   write(IOUT_SU,rec=irec_local) i4head, rtmpseis
+    ! convert trace to real 4-byte
+    if( CUSTOM_REAL == SIZE_REAL) then
+      rtmpseis(1:NSTEP) = seismograms_d(1,irec_local,1:NSTEP)
+    else
+      rtmpseis(1:NSTEP) = sngl(seismograms_d(1,irec_local,1:NSTEP))
+    endif
+    do i=1,NSTEP
+      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
+    enddo
+
   enddo
   close(IOUT_SU)
 
   ! write seismograms (dy)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dy_SU' ,&
-      form='unformatted', access='direct', recl=240+4*NSTEP, iostat=ier)
+      status='unknown', access='direct', recl=4, iostat=ier)
+
   if( ier /= 0 ) stop 'error opening ***_dy_SU file'
 
   do irec_local = 1,nrec_local
-   irec = number_receiver_global(irec_local)
-   i4head(1)  =irec
-   i4head(11) =z_found(irec)
-   i4head(13) =z_found_source
-   i4head(19) =x_found_source !utm_x_source(1)
-   i4head(20) =y_found_source !utm_y_source(1)
-   i4head(21) =x_found(irec)  !stutm_x(irec)
-   i4head(22) =y_found(irec)  !stutm_y(irec)
-!! DK DK   i2head(58) =NSTEP
-!! DK DK   i2head(59) =DT*1.0d6
-!! DK DK almost all modern processors are little-endian, thus we do not need an equivalence statement any more
-!! DK DK (some compilers give a warning message for the equivalent statement that we used to have above)
-   i4head(58/2) = NSTEP + 65536*int(DT*1.0d6)
+    irec = number_receiver_global(irec_local)
 
-   ! convert to real 4-byte
-   rtmpseis(1:NSTEP) = seismograms_d(2,irec_local,1:NSTEP)
+    ! write section header
+    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
+                         x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
 
-   ! write record
-   write(IOUT_SU,rec=irec_local) i4head, rtmpseis
+    ! convert trace to real 4-byte
+    if( CUSTOM_REAL == SIZE_REAL) then
+      rtmpseis(1:NSTEP) = seismograms_d(2,irec_local,1:NSTEP)
+    else
+      rtmpseis(1:NSTEP) = sngl(seismograms_d(2,irec_local,1:NSTEP))
+    endif
+    do i=1,NSTEP
+      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
+    enddo
   enddo
   close(IOUT_SU)
 
   ! write seismograms (dz)
   open(unit=IOUT_SU, file=trim(adjustl(final_LOCAL_PATH))//trim(adjustl(procname))//'_dz_SU' ,&
-      form='unformatted', access='direct', recl=240+4*NSTEP, iostat=ier)
+      status='unknown', access='direct', recl=4, iostat=ier)
+
   if( ier /= 0 ) stop 'error opening ***_dz_SU file'
 
   do irec_local = 1,nrec_local
-   irec = number_receiver_global(irec_local)
-   i4head(1)  =irec
-   i4head(11) =z_found(irec)
-   i4head(13) =z_found_source
-   i4head(19) =x_found_source !utm_x_source(1)
-   i4head(20) =y_found_source !utm_y_source(1)
-   i4head(21) =x_found(irec)  !stutm_x(irec)
-   i4head(22) =y_found(irec)  !stutm_y(irec)
-!! DK DK   i2head(58) =NSTEP
-!! DK DK   i2head(59) =DT*1.0d6
-!! DK DK almost all modern processors are little-endian, thus we do not need an equivalence statement any more
-!! DK DK (some compilers give a warning message for the equivalent statement that we used to have above)
-   i4head(58/2) = NSTEP + 65536*int(DT*1.0d6)
+    irec = number_receiver_global(irec_local)
 
-   ! convert to real 4-byte
-   rtmpseis(1:NSTEP) = seismograms_d(3,irec_local,1:NSTEP)
+    ! write section header
+    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
+                         x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
 
-   ! write record
-   write(IOUT_SU,rec=irec_local) i4head, rtmpseis
+    ! convert trace to real 4-byte
+    if( CUSTOM_REAL == SIZE_REAL) then
+      rtmpseis(1:NSTEP) = seismograms_d(3,irec_local,1:NSTEP)
+    else
+      rtmpseis(1:NSTEP) = sngl(seismograms_d(3,irec_local,1:NSTEP))
+    endif
+    do i=1,NSTEP
+      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
+    enddo
+
   enddo
   close(IOUT_SU)
 
   end subroutine write_output_SU
+
+!
+!------------------------------------------------------------------------------------------------------
+!
+
+  subroutine write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
+                             x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: irec_local,irec,nrec
+  integer :: NSTEP
+  double precision :: x_found,y_found,z_found
+  double precision :: x_found_source,y_found_source,z_found_source
+  double precision :: DT
+  real :: dx
+
+  ! local parameters
+  integer(kind=2) :: header2(2)
+
+  ! write SU headers (refer to Seismic Unix for details)
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+1)  irec                          ! receiver ID
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+10) NINT(x_found-x_found_source)  ! offset
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+11) NINT(z_found)
+
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+13) NINT(z_found_source)                ! source location
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+19) NINT(x_found_source)                ! source location
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+20) NINT(y_found_source)                ! source location
+
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+21) NINT(x_found)           ! receiver location xr
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+22) NINT(y_found)           ! receiver location zr
+
+  if (nrec>1) write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+48) dx ! receiver interval
+
+  ! time steps
+  header2(1)=0  ! dummy
+  header2(2)=NSTEP
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+29) header2
+
+  ! time increment
+  if( NINT(DT*1.0d6) < 65536 ) then
+    header2(1)=NINT(DT*1.0d6)  ! deltat (unit: 10^{-6} second)
+  else if( NINT(DT*1.0d3) < 65536 ) then
+    header2(1)=NINT(DT*1.0d3)  ! deltat (unit: 10^{-3} second)
+  else
+    header2(1)=NINT(DT)  ! deltat (unit: 10^{0} second)
+  endif
+  header2(2)=0  ! dummy
+  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+30) header2
+
+  end subroutine write_SU_header
 

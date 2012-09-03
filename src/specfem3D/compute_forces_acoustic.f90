@@ -81,7 +81,7 @@ subroutine compute_forces_acoustic()
                         num_free_surface_faces,ispec_is_acoustic)
   else
     ! on GPU
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,SIMULATION_TYPE,ABSORB_FREE_SURFACE)
+    call acoustic_enforce_free_surf_cuda(Mesh_pointer,ABSORB_FREE_SURFACE)
   endif
 
   if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
@@ -148,8 +148,7 @@ subroutine compute_forces_acoustic()
       ! on GPU
       ! includes code for SIMULATION_TYPE==3
       call compute_forces_acoustic_cuda(Mesh_pointer, iphase, &
-                                      nspec_outer_acoustic, nspec_inner_acoustic, &
-                                      SIMULATION_TYPE)
+                                        nspec_outer_acoustic, nspec_inner_acoustic)
     endif
 
     if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
@@ -253,7 +252,7 @@ subroutine compute_forces_acoustic()
         else
           ! on GPU
           call compute_coupling_ac_el_cuda(Mesh_pointer,phase_is_inner, &
-                                              num_coupling_ac_el_faces,SIMULATION_TYPE)
+                                              num_coupling_ac_el_faces)
         endif ! GPU_MODE
       endif
     endif
@@ -401,7 +400,7 @@ subroutine compute_forces_acoustic()
       b_potential_dot_dot_acoustic(:) = b_potential_dot_dot_acoustic(:) * rmass_acoustic(:)
   else
     ! on GPU
-    call kernel_3_a_acoustic_cuda(Mesh_pointer,NGLOB_AB,SIMULATION_TYPE)
+    call kernel_3_a_acoustic_cuda(Mesh_pointer,NGLOB_AB)
   endif
 
 
@@ -448,7 +447,7 @@ subroutine compute_forces_acoustic()
       b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + b_deltatover2*b_potential_dot_dot_acoustic(:)
   else
     ! on GPU
-    call kernel_3_b_acoustic_cuda(Mesh_pointer,NGLOB_AB,deltatover2,SIMULATION_TYPE,b_deltatover2)
+    call kernel_3_b_acoustic_cuda(Mesh_pointer,NGLOB_AB,deltatover2,b_deltatover2)
   endif
 
   ! updates potential_dot_acoustic and potential_dot_dot_acoustic inside PML region for plotting seismograms/movies
@@ -497,7 +496,7 @@ subroutine compute_forces_acoustic()
                         num_free_surface_faces,ispec_is_acoustic)
   else
     ! on GPU
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,SIMULATION_TYPE,ABSORB_FREE_SURFACE)
+    call acoustic_enforce_free_surf_cuda(Mesh_pointer,ABSORB_FREE_SURFACE)
   endif
 
 

@@ -160,7 +160,6 @@ void FC_FUNC_(transfer_boundary_from_device_a,
 
   if( mp->size_mpi_buffer > 0 ){
 
-//daniel: todo - check below with this...
     int blocksize = BLOCKSIZE_TRANSFER;
     int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
     int num_blocks_x = size_padded/blocksize;
@@ -171,20 +170,6 @@ void FC_FUNC_(transfer_boundary_from_device_a,
     }
     dim3 grid(num_blocks_x,num_blocks_y);
     dim3 threads(blocksize,1,1);
-
-/*
-//daniel: todo - check originally used...
-  int num_blocks_x = *nspec_outer_elastic;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
-
-  int blocksize = NGLL3_PADDED;
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
-*/
 
     prepare_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,mp->d_send_accel_buffer,
                                                                           mp->num_interfaces_ext_mesh,
@@ -200,9 +185,6 @@ void FC_FUNC_(transfer_boundary_from_device_a,
 
     cudaMemcpyAsync(mp->h_send_accel_buffer,mp->d_send_accel_buffer,
                   mp->size_mpi_buffer*sizeof(realw),cudaMemcpyDeviceToHost,mp->copy_stream);
-    // cudaMemcpyAsync(mp->h_send_accel_buffer,mp->d_send_accel_buffer,
-    // 3* mp->max_nibool_interfaces_ext_mesh* mp->num_interfaces_ext_mesh*sizeof(realw),
-    // cudaMemcpyDeviceToHost,mp->compute_stream);
   }
 }
 
@@ -1265,7 +1247,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
 /* ----------------------------------------------------------------------------------------------- */
 
 void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,
-              int COMPUTE_AND_STORE_STRAIN,int SIMULATION_TYPE,
+              int COMPUTE_AND_STORE_STRAIN,
               int ATTENUATION,int ANISOTROPY,
               int* d_ibool,
               realw* d_xix,
@@ -1374,7 +1356,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,
                                                         d_epsilondev_xz,
                                                         d_epsilondev_yz,
                                                         d_epsilon_trace_over_3,
-                                                        SIMULATION_TYPE,
+                                                        mp->simulation_type,
                                                         ATTENUATION,mp->NSPEC_AB,
                                                         d_one_minus_sum_beta,
                                                         d_factor_common,
@@ -1409,7 +1391,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,
                                                         mp->d_wgll_cube);
 
 
-  if(SIMULATION_TYPE == 3) {
+  if(mp->simulation_type == 3) {
     Kernel_2_impl<<< grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                            mp->NGLOB_AB,
                                                            d_ibool,
@@ -1432,7 +1414,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,
                                                            d_b_epsilondev_xz,
                                                            d_b_epsilondev_yz,
                                                            d_b_epsilon_trace_over_3,
-                                                           SIMULATION_TYPE,
+                                                           mp->simulation_type,
                                                            ATTENUATION,mp->NSPEC_AB,
                                                            d_one_minus_sum_beta,
                                                            d_factor_common,
@@ -1490,7 +1472,6 @@ void FC_FUNC_(compute_forces_elastic_cuda,
                                            int* iphase,
                                            int* nspec_outer_elastic,
                                            int* nspec_inner_elastic,
-                                           int* SIMULATION_TYPE,
                                            int* COMPUTE_AND_STORE_STRAIN,
                                            int* ATTENUATION,
                                            int* ANISOTROPY) {
@@ -1556,7 +1537,7 @@ void FC_FUNC_(compute_forces_elastic_cuda,
       //}
 
       Kernel_2(nb_blocks_to_compute,mp,*iphase,
-               *COMPUTE_AND_STORE_STRAIN,*SIMULATION_TYPE,
+               *COMPUTE_AND_STORE_STRAIN,
                *ATTENUATION,*ANISOTROPY,
                mp->d_ibool + color_offset_nonpadded,
                mp->d_xix + color_offset,
@@ -1638,7 +1619,7 @@ void FC_FUNC_(compute_forces_elastic_cuda,
     // no mesh coloring: uses atomic updates
 
     Kernel_2(num_elements,mp,*iphase,
-             *COMPUTE_AND_STORE_STRAIN,*SIMULATION_TYPE,
+             *COMPUTE_AND_STORE_STRAIN,
              *ATTENUATION,*ANISOTROPY,
              mp->d_ibool,
              mp->d_xix,
@@ -1703,7 +1684,6 @@ void FC_FUNC_(compute_forces_elastic_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-//daniel: todo - use this instead above call to fortran routine to avoid compilation problems
 extern "C"
 void FC_FUNC_(sync_copy_from_device,
               SYNC_copy_FROM_DEVICE)(long* Mesh_pointer_f,
@@ -1729,310 +1709,3 @@ void FC_FUNC_(sync_copy_from_device,
   // memory copy is now finished, so non-blocking MPI send can proceed
 }
 
-/* ----------------------------------------------------------------------------------------------- */
-
-// KERNEL 3
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_cuda_device(realw* veloc,
-                                     realw* accel, int size,
-                                     realw deltatover2,
-                                     realw* rmass) {
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-
-  /* because of block and grid sizing problems, there is a small */
-  /* amount of buffer at the end of the calculation */
-  if(id < size) {
-    realw new_accel = accel[id] * rmass[id / 3];
-    veloc[id] += deltatover2 * new_accel;
-    accel[id] = new_accel;
-/*
-    accel[3*id] = accel[3*id]*rmass[id];
-    accel[3*id+1] = accel[3*id+1]*rmass[id];
-    accel[3*id+2] = accel[3*id+2]*rmass[id];
-
-    veloc[3*id] = veloc[3*id] + deltatover2*accel[3*id];
-    veloc[3*id+1] = veloc[3*id+1] + deltatover2*accel[3*id+1];
-    veloc[3*id+2] = veloc[3*id+2] + deltatover2*accel[3*id+2];
-*/
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_accel_cuda_device(realw* accel,
-                                           int size,
-                                           realw* rmass) {
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-
-  /* because of block and grid sizing problems, there is a small */
-  /* amount of buffer at the end of the calculation */
-  if(id < size) {
-    accel[id] *= rmass[id / 3];
-/*
-    accel[3*id] = accel[3*id]*rmass[id];
-    accel[3*id+1] = accel[3*id+1]*rmass[id];
-    accel[3*id+2] = accel[3*id+2]*rmass[id];
-*/
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void kernel_3_veloc_cuda_device(realw* veloc,
-                                           realw* accel,
-                                           int size,
-                                           realw deltatover2) {
-  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
-
-  /* because of block and grid sizing problems, there is a small */
-  /* amount of buffer at the end of the calculation */
-  if(id < size) {
-    veloc[3*id] = veloc[3*id] + deltatover2*accel[3*id];
-    veloc[3*id+1] = veloc[3*id+1] + deltatover2*accel[3*id+1];
-    veloc[3*id+2] = veloc[3*id+2] + deltatover2*accel[3*id+2];
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(kernel_3_a_cuda,
-              KERNEL_3_A_CUDA)(long* Mesh_pointer,
-                               int* size_F,
-                               realw* deltatover2_F,
-                               int* SIMULATION_TYPE_f,
-                               realw* b_deltatover2_F,
-                               int* OCEANS) {
-TRACE("kernel_3_a_cuda");
-
-   Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
-   //int size = *size_F;
-   int size = *size_F * 3;
-   int SIMULATION_TYPE = *SIMULATION_TYPE_f;
-   realw deltatover2 = *deltatover2_F;
-   realw b_deltatover2 = *b_deltatover2_F;
-
-   int blocksize = BLOCKSIZE_KERNEL3;
-   int size_padded = ((int)ceil(((double)size)/((double)blocksize)))*blocksize;
-
-   int num_blocks_x = size_padded/blocksize;
-   int num_blocks_y = 1;
-   while(num_blocks_x > 65535) {
-     num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-     num_blocks_y = num_blocks_y*2;
-   }
-
-   dim3 grid(num_blocks_x,num_blocks_y);
-   dim3 threads(blocksize,1,1);
-
-   // check whether we can update accel and veloc, or only accel at this point
-   if( *OCEANS == 0 ){
-     // updates both, accel and veloc
-     kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
-                                                                   mp->d_accel,
-                                                                   size, deltatover2, mp->d_rmass);
-
-     if(SIMULATION_TYPE == 3) {
-       kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc,
-                                                                     mp->d_b_accel,
-                                                                     size, b_deltatover2,mp->d_rmass);
-     }
-   }else{
-     // updates only accel
-     kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_accel,
-                                                                         size, mp->d_rmass);
-
-     if(SIMULATION_TYPE == 3) {
-       kernel_3_accel_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_accel,
-                                                                           size, mp->d_rmass);
-     }
-   }
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-   //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 a");
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(kernel_3_b_cuda,
-              KERNEL_3_B_CUDA)(long* Mesh_pointer,
-                             int* size_F,
-                             realw* deltatover2_F,
-                             int* SIMULATION_TYPE_f,
-                             realw* b_deltatover2_F) {
-  TRACE("kernel_3_b_cuda");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
-  int size = *size_F;
-  int SIMULATION_TYPE = *SIMULATION_TYPE_f;
-  realw deltatover2 = *deltatover2_F;
-  realw b_deltatover2 = *b_deltatover2_F;
-
-  int blocksize = BLOCKSIZE_KERNEL3;
-  int size_padded = ((int)ceil(((double)size)/((double)blocksize)))*blocksize;
-
-  int num_blocks_x = size_padded/blocksize;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
-
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
-
-  // updates only veloc at this point
-  kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
-                                                                      mp->d_accel,
-                                                                      size,deltatover2);
-
-  if(SIMULATION_TYPE == 3) {
-    kernel_3_veloc_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_b_veloc,
-                                                                        mp->d_b_accel,
-                                                                        size,b_deltatover2);
-  }
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //printf("checking updatedispl_kernel launch...with %dx%d blocks\n",num_blocks_x,num_blocks_y);
-  exit_on_cuda_error("after kernel 3 b");
-#endif
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-/* OCEANS load on free surface */
-
-/* ----------------------------------------------------------------------------------------------- */
-
-
-__global__ void elastic_ocean_load_cuda_kernel(realw* accel,
-                                               realw* rmass,
-                                               realw* rmass_ocean_load,
-                                               int num_free_surface_faces,
-                                               int* free_surface_ispec,
-                                               int* free_surface_ijk,
-                                               realw* free_surface_normal,
-                                               int* ibool,
-                                               int* updated_dof_ocean_load) {
-  // gets spectral element face id
-  int igll = threadIdx.x ;  //  threadIdx.y*blockDim.x will be always = 0 for thread block (25,1,1)
-  int iface = blockIdx.x + gridDim.x*blockIdx.y;
-  realw nx,ny,nz;
-  realw force_normal_comp,additional_term;
-
-  // for all faces on free surface
-  if( iface < num_free_surface_faces ){
-
-    int ispec = free_surface_ispec[iface]-1;
-
-    // gets global point index
-    int i = free_surface_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)] - 1; // (1,igll,iface)
-    int j = free_surface_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)] - 1;
-    int k = free_surface_ijk[INDEX3(NDIM,NGLL2,2,igll,iface)] - 1;
-
-    int iglob = ibool[INDEX4(5,5,5,i,j,k,ispec)] - 1;
-
-    //if(igll == 0 ) printf("igll %d %d %d %d\n",igll,i,j,k,iglob);
-
-    // only update this global point once
-
-    // daniel: TODO - there might be better ways to implement a mutex like below,
-    //            and find a workaround to not use the temporary update array.
-    //            atomicExch: returns the old value, i.e. 0 indicates that we still have to do this point
-
-    if( atomicExch(&updated_dof_ocean_load[iglob],1) == 0){
-
-      // get normal
-      nx = free_surface_normal[INDEX3(NDIM,NGLL2,0,igll,iface)]; //(1,igll,iface)
-      ny = free_surface_normal[INDEX3(NDIM,NGLL2,1,igll,iface)];
-      nz = free_surface_normal[INDEX3(NDIM,NGLL2,2,igll,iface)];
-
-      // make updated component of right-hand side
-      // we divide by rmass() which is 1 / M
-      // we use the total force which includes the Coriolis term above
-      force_normal_comp = ( accel[iglob*3]*nx + accel[iglob*3+1]*ny + accel[iglob*3+2]*nz ) / rmass[iglob];
-
-      additional_term = (rmass_ocean_load[iglob] - rmass[iglob]) * force_normal_comp;
-
-      // probably wouldn't need atomicAdd anymore, but just to be sure...
-      atomicAdd(&accel[iglob*3], + additional_term * nx);
-      atomicAdd(&accel[iglob*3+1], + additional_term * ny);
-      atomicAdd(&accel[iglob*3+2], + additional_term * nz);
-    }
-  }
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(elastic_ocean_load_cuda,
-              ELASTIC_OCEAN_LOAD_CUDA)(long* Mesh_pointer_f,
-                                       int* SIMULATION_TYPE) {
-
-  TRACE("elastic_ocean_load_cuda");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
-
-  // checks if anything to do
-  if( mp->num_free_surface_faces == 0 ) return;
-
-  // block sizes: exact blocksize to match NGLLSQUARE
-  int blocksize = NGLL2;
-
-  int num_blocks_x = mp->num_free_surface_faces;
-  int num_blocks_y = 1;
-  while(num_blocks_x > 65535) {
-    num_blocks_x = (int) ceil(num_blocks_x*0.5f);
-    num_blocks_y = num_blocks_y*2;
-  }
-
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
-
-
-  // initializes temporary array to zero
-  print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
-                                     sizeof(int)*mp->NGLOB_AB),88501);
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("before kernel elastic_ocean_load_cuda");
-#endif
-
-  elastic_ocean_load_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
-                                                   mp->d_rmass,
-                                                   mp->d_rmass_ocean_load,
-                                                   mp->num_free_surface_faces,
-                                                   mp->d_free_surface_ispec,
-                                                   mp->d_free_surface_ijk,
-                                                   mp->d_free_surface_normal,
-                                                   mp->d_ibool,
-                                                   mp->d_updated_dof_ocean_load);
-  // for backward/reconstructed potentials
-  if(*SIMULATION_TYPE == 3) {
-    // re-initializes array
-    print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,
-                                       sizeof(int)*mp->NGLOB_AB),88502);
-
-    elastic_ocean_load_cuda_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel,
-                                                     mp->d_rmass,
-                                                     mp->d_rmass_ocean_load,
-                                                     mp->num_free_surface_faces,
-                                                     mp->d_free_surface_ispec,
-                                                     mp->d_free_surface_ijk,
-                                                     mp->d_free_surface_normal,
-                                                     mp->d_ibool,
-                                                     mp->d_updated_dof_ocean_load);
-
-  }
-
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("elastic_ocean_load_cuda");
-#endif
-}

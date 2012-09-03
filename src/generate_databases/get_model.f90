@@ -346,6 +346,7 @@
   enddo
 
   ! sets simulation domain flags
+  ! all processes will have e.g. acoustic_simulation flag set if any flag is .true. somewhere
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
@@ -409,7 +410,7 @@
   ! selects chosen velocity model
   select case( IMODEL )
 
-  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI )
+  case( IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER )
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                           undef_mat_prop,nundefMat_ext_mesh, &
@@ -485,7 +486,9 @@
 ! reads in material parameters from external binary files
 
   use generate_databases_par,only: IMODEL
+
   use create_regions_mesh_ext_par
+
   implicit none
 
   ! number of spectral elements in each block
@@ -505,9 +508,15 @@
     ! import the model from files in SPECFEM format
     ! note that those those files should be saved in LOCAL_PATH
     call model_gll(myrank,nspec,LOCAL_PATH)
+
   case( IMODEL_IPATI )
     ! import the model from modified files in SPECFEM format
     call model_ipati(myrank,nspec,LOCAL_PATH)
+
+  case( IMODEL_IPATI_WATER )
+    ! import the model from modified files in SPECFEM format
+    call model_ipati_water(myrank,nspec,LOCAL_PATH)
+
   end select
 
   end subroutine get_model_binaries

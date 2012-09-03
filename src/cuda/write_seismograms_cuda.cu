@@ -195,7 +195,6 @@ extern "C"
 void FC_FUNC_(transfer_seismograms_el_from_d,
               TRANSFER_SEISMOGRAMS_EL_FROM_D)(int* nrec_local,
                                               long* Mesh_pointer_f,
-                                              int* SIMULATION_TYPEf,
                                               realw* seismograms_d,
                                               realw* seismograms_v,
                                               realw* seismograms_a,
@@ -345,16 +344,15 @@ void FC_FUNC_(transfer_station_el_from_device,
                                                    realw* b_displ, realw* b_veloc, realw* b_accel,
                                                    long* Mesh_pointer_f,int* number_receiver_global,
                                                    int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* ibool,int* SIMULATION_TYPEf) {
+                                                   int* ibool) {
 TRACE("transfer_station_el_from_device");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
+
   // checks if anything to do
   if( mp->nrec_local == 0 ) return;
 
-  int SIMULATION_TYPE = *SIMULATION_TYPEf;
-
-  if(SIMULATION_TYPE == 1) {
+  if(mp->simulation_type == 1) {
     transfer_field_from_device(mp,mp->d_displ,displ, number_receiver_global,
              mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
     transfer_field_from_device(mp,mp->d_veloc,veloc, number_receiver_global,
@@ -362,7 +360,7 @@ TRACE("transfer_station_el_from_device");
     transfer_field_from_device(mp,mp->d_accel,accel, number_receiver_global,
              mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
   }
-  else if(SIMULATION_TYPE == 2) {
+  else if(mp->simulation_type == 2) {
     transfer_field_from_device(mp,mp->d_displ,displ, number_receiver_global,
              mp->d_ispec_selected_source, ispec_selected_source, ibool);
     transfer_field_from_device(mp,mp->d_veloc,veloc, number_receiver_global,
@@ -370,7 +368,7 @@ TRACE("transfer_station_el_from_device");
     transfer_field_from_device(mp,mp->d_accel,accel, number_receiver_global,
              mp->d_ispec_selected_source, ispec_selected_source, ibool);
   }
-  else if(SIMULATION_TYPE == 3) {
+  else if(mp->simulation_type == 3) {
     transfer_field_from_device(mp,mp->d_b_displ,b_displ, number_receiver_global,
              mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
     transfer_field_from_device(mp,mp->d_b_veloc,b_veloc, number_receiver_global,
@@ -420,7 +418,7 @@ TRACE("transfer_field_acoustic_from_device");
   int irec_local,irec,ispec,iglob,j;
 
   // checks if anything to do
-  if( mp->nrec_local == 0 ) return;
+  if( mp->nrec_local < 1 ) return;
 
   // sets up kernel dimensions
   int blocksize = NGLL3;
@@ -442,8 +440,12 @@ TRACE("transfer_field_acoustic_from_device");
                                                                          d_potential);
 
 
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  exit_on_cuda_error("transfer_field_acoustic_from_device kernel");
+#endif
+
   print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_potential,mp->d_station_seismo_potential,
-                                     mp->nrec_local*NGLL3*sizeof(realw),cudaMemcpyDeviceToHost),500);
+                                     mp->nrec_local*NGLL3*sizeof(realw),cudaMemcpyDeviceToHost),55000);
 
   //printf("copy local receivers: %i \n",mp->nrec_local);
 
@@ -483,19 +485,17 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* number_receiver_global,
                                                 int* ispec_selected_rec,
                                                 int* ispec_selected_source,
-                                                int* ibool,
-                                                int* SIMULATION_TYPEf) {
+                                                int* ibool) {
 
 TRACE("transfer_station_ac_from_device");
   //double start_time = get_time();
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
+
   // checks if anything to do
   if( mp->nrec_local == 0 ) return;
 
-  int SIMULATION_TYPE = *SIMULATION_TYPEf;
-
-  if(SIMULATION_TYPE == 1) {
+  if(mp->simulation_type == 1) {
     transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
@@ -506,7 +506,7 @@ TRACE("transfer_station_ac_from_device");
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, ibool);
   }
-  else if(SIMULATION_TYPE == 2) {
+  else if(mp->simulation_type == 2) {
     transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
                                         number_receiver_global,
                                         mp->d_ispec_selected_source, ispec_selected_source, ibool);
@@ -517,7 +517,7 @@ TRACE("transfer_station_ac_from_device");
                                         number_receiver_global,
                                         mp->d_ispec_selected_source, ispec_selected_source, ibool);
   }
-  else if(SIMULATION_TYPE == 3) {
+  else if(mp->simulation_type == 3) {
     transfer_field_acoustic_from_device(mp,mp->d_b_potential_acoustic,b_potential_acoustic,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, ibool);

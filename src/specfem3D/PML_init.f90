@@ -127,7 +127,6 @@ end subroutine PML_damping_profile_l
 subroutine PML_initialize()
 
   use specfem_par,only: NGLOB_AB,NSPEC_AB,myrank, &
-                        ibool,xstore,ystore,zstore,&
                         model_speed_max,hdur
   use PML_par
   use PML_par_acoustic
@@ -303,9 +302,9 @@ subroutine PML_set_firstlayer()
 ! sets ispec occurrences for first element layer in PML region based on absorbing boundary elements
 
   use PML_par
-  use specfem_par,only: NSPEC_AB,NGLOB_AB, &
+  use specfem_par,only: NSPEC_AB, &
                         abs_boundary_ispec,abs_boundary_normal,num_abs_boundary_faces,&
-                        abs_boundary_ijk,ibool,myrank
+                        abs_boundary_ijk,ibool
   use constants,only: NDIM,TINYVAL,NGNOD,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
   implicit none
   ! local parameters
@@ -479,14 +478,13 @@ subroutine PML_determine_interfacePoints()
 
 ! finds global interface points of PML region to "regular" domain
 
-  use specfem_par,only: ibool,myrank,NGLOB_AB,NSPEC_AB, &
+  use specfem_par,only: ibool,NGLOB_AB,NSPEC_AB, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh,NPROC
   use PML_par
   use PML_par_acoustic
   use constants,only: NGLLX,NGLLY,NGLLZ
-  use specfem_par_acoustic,only: ispec_is_acoustic
   implicit none
 
   ! local parameters
@@ -848,7 +846,6 @@ subroutine PML_add_layer()
 
   use PML_par
   use specfem_par,only: NSPEC_AB,NGLOB_AB, &
-                        abs_boundary_ispec,num_abs_boundary_faces,&
                         ibool,myrank,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &

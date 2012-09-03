@@ -140,6 +140,18 @@
     endif
   endif
 
+  ! frees dynamically allocated memory
+
+  ! mass matrices
+  if( ELASTIC_SIMULATION ) then
+    deallocate(rmassx)
+    deallocate(rmassy)
+    deallocate(rmassz)
+  endif
+  if( ACOUSTIC_SIMULATION ) then
+    deallocate(rmass_acoustic)
+  endif
+
 ! close the main output file
   if(myrank == 0) then
     write(IMAIN,*)
