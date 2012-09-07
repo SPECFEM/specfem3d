@@ -661,6 +661,8 @@
   character(len=1) component
   character(len=256) sisname,clean_LOCAL_PATH,final_LOCAL_PATH
 
+  component = 'd'
+
   do irec_local = 1,nrec_local
 
     ! get global number of that receiver

@@ -384,15 +384,9 @@
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
         ! assembles mass matrix on global points
-        if(CUSTOM_REAL == SIZE_REAL) then
-          rmassx(iglob) = rmassx(iglob) + sngl(tx*jacobianw)
-          rmassy(iglob) = rmassy(iglob) + sngl(ty*jacobianw)
-          rmassz(iglob) = rmassz(iglob) + sngl(tz*jacobianw)
-        else
-          rmassx(iglob) = rmassx(iglob) + tx*jacobianw
-          rmassy(iglob) = rmassy(iglob) + ty*jacobianw
-          rmassz(iglob) = rmassz(iglob) + tz*jacobianw
-        endif
+        rmassx(iglob) = rmassx(iglob) + tx*jacobianw
+        rmassy(iglob) = rmassy(iglob) + ty*jacobianw
+        rmassz(iglob) = rmassz(iglob) + tz*jacobianw
       enddo
     endif ! elastic
 
@@ -415,11 +409,7 @@
         ! C * DT/2 contribution
         sn = deltatover2/rho_vp(i,j,k,ispec)
 
-        if(CUSTOM_REAL == SIZE_REAL) then
-          rmassz_acoustic(iglob) = rmassz_acoustic(iglob) + sngl(jacobianw*sn)
-        else
-          rmassz_acoustic(iglob) = rmassz_acoustic(iglob) + jacobianw*sn
-        endif
+        rmassz_acoustic(iglob) = rmassz_acoustic(iglob) + jacobianw*sn
       enddo
     endif ! acoustic
   enddo
