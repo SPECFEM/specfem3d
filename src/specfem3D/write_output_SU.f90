@@ -98,11 +98,7 @@
                           x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
 
     ! convert trace to real 4-byte
-    if( CUSTOM_REAL == SIZE_REAL) then
-      rtmpseis(1:NSTEP) = seismograms_d(1,irec_local,1:NSTEP)
-    else
-      rtmpseis(1:NSTEP) = sngl(seismograms_d(1,irec_local,1:NSTEP))
-    endif
+    rtmpseis(1:NSTEP) = seismograms_d(1,irec_local,1:NSTEP)
     do i=1,NSTEP
       write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
     enddo
@@ -124,11 +120,7 @@
                          x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
 
     ! convert trace to real 4-byte
-    if( CUSTOM_REAL == SIZE_REAL) then
-      rtmpseis(1:NSTEP) = seismograms_d(2,irec_local,1:NSTEP)
-    else
-      rtmpseis(1:NSTEP) = sngl(seismograms_d(2,irec_local,1:NSTEP))
-    endif
+    rtmpseis(1:NSTEP) = seismograms_d(2,irec_local,1:NSTEP)
     do i=1,NSTEP
       write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
     enddo
@@ -149,11 +141,7 @@
                          x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
 
     ! convert trace to real 4-byte
-    if( CUSTOM_REAL == SIZE_REAL) then
-      rtmpseis(1:NSTEP) = seismograms_d(3,irec_local,1:NSTEP)
-    else
-      rtmpseis(1:NSTEP) = sngl(seismograms_d(3,irec_local,1:NSTEP))
-    endif
+    rtmpseis(1:NSTEP) = seismograms_d(3,irec_local,1:NSTEP)
     do i=1,NSTEP
       write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
     enddo

@@ -196,7 +196,6 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/prepare_timerun.o \
 	$O/program_specfem3D.o \
 	$O/read_mesh_databases.o \
-	$O/read_topography_bathymetry.o \
 	$O/save_adjoint_kernels.o \
 	$O/setup_GLL_points.o \
 	$O/setup_movie_meshes.o \
