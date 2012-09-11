@@ -112,6 +112,184 @@ put a flag to choose between a Ricker source and a Heaviside source when a force
 
 Feedback from Qinya: I think this is a great idea. In the past, we always had multiple versions of the same specfem code, just to be able to run point force sources. We can add a parameter `SOURCE_TYPE' in Par file, which is = 0 for moment-tensor source ( reads CMTSOLUTION, and assumes Heavside/err as source time function), and = 1 for point force source (and read something like PNTSOLUTION, including force location, direction, time shift and half duration). Now there is no standard stf to use for point force, but Heavside function does not seem to be a good idea because it will produce a static offset on all seismograms, which is not desirable. On the other hand, I don't see why Richer wavelet (2nd order derivative of Gaussian) is necessary better than Gaussian itself. One way to give user the freedom of choice is to put the stf info also in the PNTSOLUTION.
 
+Subject: Re: [CIG-SEISMO] simulation of seismic wave propagation excited by a	force
+Date: Tue, 11 Sep 2012 18:01:38 +0200
+From: Dimitri Komatitsch
+To: Yingzi Ying
+
+Dear Yingzi,
+
+You are right, in the current code there is no option in the Par_file to 
+use a point source, but we added this to the todo list right before the 
+summer and thus we should/will definitely do it. It is easy to do: just 
+add the Ricker wavelet to the accel() vector (which is in fact a force 
+vector before we divide it by the mass matrix), to the component you 
+want (vertical or horizontal) and you are all set.
+
+Joseph, could you maybe do it? below are a few lines from one of my test 
+codes, in which I do just that; let us cut and paste these lines in 
+SPECFEM3D (it is just a matter of selecting the right grid point; which 
+we already do for a CMT source, thus we could add a force instead of a 
+CMT at that location; the only difference being that the CMT source is 
+added to all the points of a given spectral element, while a force 
+vector should be added to a single point).
+
+Let me talk to Joseph tomorrow to see if we can release a patch of the 
+source code soon.
+
+I also cc Yang to see if he has already done that in a local version at 
+Princeton maybe (for instance to model a force for some of his oil 
+industry simulations in foothill regions?).
+
+Another difficulty is if the location of the force does not correspond 
+to a grid point; then there are two options:
+
+- select the closest grid point; i.e. slightly change the location of 
+the source (can be done automatically by the code)
+
+- use Christina Morency's way of adding a force source between grid 
+points; I think I remember she did that in the 2D code, but I am not 
+sure how; thus I cc her.
+
+(that second option would be better, if Christina can confirm that it 
+works fine)
+
+Best wishes,
+Dimitri.
+
+==================================================================
+
+! ipoinsource is the global grid point at which we add the source
+! "3" means a vertical force (i.e. we add the force to the vertical
+! component of the force vector, which is later divided by the mass
+! matrix to get the acceleration vector)
+! factor_force is the norm of the force vector to add
+! ricker(t) is the Ricker wavelet at time t = (it-1)*deltat
+
+  accel(3,ipoinsource) = accel(3,ipoinsource) - factor_force * ricker(t)
+
+==================================================================
+
+On 09/11/2012 12:59 PM, Yingzi Ying wrote:
+> Hi all,
+>
+> I am trying to use specfem3d to simulate waves excited by a vertical
+> force with user-defined source forms such as ricker wavelet.
+>
+> I tried to do it through adjoint simulation by setting 'SIMULATION_TYPE
+> = 2' and put source position at STATIONS_ADJOINT and receivers at
+> CMTSOLUTION. But I failed.
+>
+> Does anyone have an idea or suggestion how to do active simulations with
+> specfem3d?
+>
+> Thanks in advance.
+>
+> Best regards,
+> Yingzi
+>
+
+
+-------- Original Message --------
+Subject: Re: force in SPECFEM3D
+Date: Wed, 18 Jul 2012 23:50:19 +0200
+From: Dimitri Komatitsch
+To:  Carl Tape,  daniel peter
+
+Hi all,
+
+Yes, let us definitely add it and make it an option in the Par_file.
+This will be very useful also in the case of non destructive testing of 
+materials (in which case the source is almost always a set of forces).
+
+What probably exists is a routine to add a force at a GLL grid point 
+(which is easy to do). If we also want to have an option to model a 
+source located somewhere between grid points, then I guess we will need 
+to see how the discrete source term looks like (I think Daniel once told 
+me that Christina had done it in the 2D code; probably summing the 
+Lagrange interpolants at all the GLL points of the element? (as we do 
+for receivers located between grid points?).
+
+Thanks,
+Dimitri.
+
+On 07/18/2012 11:01 PM, Jeroen Tromp wrote:
+> Hi Daniel:
+>
+> The adjoint source involves a "force", so the necessary code exists. But
+> it can't hurt to explicitly allow a source that is a force rather than a
+> moment tensor.
+>
+> Best regards,
+>
+> Jeroen
+>
+> On 7/18/12 8:56 PM, Carl Tape wrote:
+>> Hi Daniel, Dimitri, Jeroen--
+>>
+>> I am continuing some benchmark simulations for static offsets in
+>> SPECFEM3D: 0-D, 1-D, 3-D models. One of the applications is to make a
+>> Green's function database similar to what is used in GPS inversions of
+>> fault slip. This means using a source that is a force, not a moment
+>> tensor. This is easy in the 2D code (elastic force option), but it
+>> doesn't appear to be present in the 3D code. Can you confirm? Is that
+>> something we want? (It seems like it.)
+>>
+>> Thanks,
+>> Carl
+
+-------- Original Message --------
+Subject: Re: force in SPECFEM3D
+Date: Thu, 19 Jul 2012 02:15:05 +0200
+From: Dimitri Komatitsch
+To: Carl Tape, daniel peter
+CC: Jeroen Tromp
+
+Hi Carl and Daniel,
+
+Yes, I think that would be very useful;
+and we should also put these parameters in the input file (Par_file) 
+rather than in constants.h, so that users do not need to recompile the code.
+
+Thanks,
+Best wishes,
+
+Dimitri.
+
+On 07/19/2012 01:06 AM, Carl Tape wrote:
+> Hi Daniel,
+>
+> Great. This is it:
+>
+>    integer, parameter :: COMPONENT_FORCE_SOURCE = 3  ! takes direction
+> in comp E/N/Z = 1/2/3
+>
+> But perhaps we can generalize this to specify a unit vector that
+> doesn't have to be normalized, like
+>
+>   COMPONENT_FORCE_SOURCE_X = 1
+>   COMPONENT_FORCE_SOURCE_Y = -2
+>   COMPONENT_FORCE_SOURCE_Z = -1
+>
+> Then in the code we could normalize (one less thing to worry about).
+> This would be closer to the 2D code (which takes and angle), and it
+> would allow for computing Green's functions on fault with arbitrary
+> orientation.
+>
+> Let me know what you think.
+>
+> Thanks,
+> Carl
+>
+> On Wed, Jul 18, 2012 at 2:45 PM, daniel peter<dpeter@princeton.edu>  wrote:
+>> Hi Carl
+>>
+>> there is such an option in the constants.h file for the 3D codes (you will have to set the flag, something like "USE_POINT_FORCE" and direction, and then recompile the code).
+>>
+>> I'll see what we could put into the manual as well.
+>>
+>> Best wishes
+>> Daniel
 
 ------------------------------------------------
 PT-SCOTCH:
