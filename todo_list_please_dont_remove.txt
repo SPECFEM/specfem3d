@@ -104,6 +104,46 @@ Par_file modifications:
 - suggestion 05:
 ----------------
 
+Subject: Re: [CIG-SEISMO] simulation of seismic wave propagation excited by a	force
+Date: Tue, 11 Sep 2012 18:34:21 +0200
+From: Dimitri Komatitsch
+To: Christina Morency
+CC: Yang Luo, Yingzi Ying
+
+Hi Christina and Yang, Hi all,
+
+OK, great. This is excellent news.
+
+So let us just move this "USE_FORCE_POINT_SOURCE" flag from
+setup/constants.h.in to DATA/Par_file, and let us mention it in the manual.
+
+Jo, could you please do that and commit the changes?
+
+Thank you,
+Dimitri.
+
+On 09/11/2012 06:17 PM, Christina Morency wrote:
+> Hi Dimitri,
+> 
+> Yes, I can confirm what Yang is saying, it is already in the package,
+> with interpolation if the source is not located on a GLL point (as it is
+> indeed done in the 2D btw).
+> 
+> Christina
+> 
+> On 09/11/2012 09:14 AM, Yang Luo wrote:
+>> I think Daniel (or someone else) has already copied necessary lines from old package.
+>>
+>> There is an option "USE_FORCE_POINT_SOURCE" in constant.h, which allows one to use a point force
+>> (which Yingzi already figured out, or maybe it's already in the manual)
+>>    logical, parameter :: USE_FORCE_POINT_SOURCE = .false.
+>>    double precision, parameter :: FACTOR_FORCE_SOURCE = 1.d15
+>>    integer, parameter :: COMPONENT_FORCE_SOURCE = 3  ! takes direction in comp E/N/Z = 1/2/3
+>>
+>> Interpolation is included, if the point force is not located exactly on a GLL point.
+
+=================
+
 add an option to use a point force source in SPECFEM3D instead of a CMTSOLUTION; some users need that (very classical for instance
 in non destructive testing) and it is easy to do; the only thing to decide is what convention to use in DATA/Par_file: add a flag
 for that?
