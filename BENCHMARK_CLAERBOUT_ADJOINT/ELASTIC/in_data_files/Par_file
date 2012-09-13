@@ -61,6 +61,14 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # interval in time steps for reading adjoint traces
 NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at the same time
 
+# use a force source located exactly at a grid point instead of a CMTSOLUTION source
+# this can be useful e.g. for oil industry foothills simulations or asteroid simulations
+# in which the source is a vertical force, normal force, impact etc.
+USE_FORCE_POINT_SOURCE          = .false.
+FACTOR_FORCE_SOURCE             = 1.d15
+# direction in comp E/N/Z = 1/2/3
+COMPONENT_FORCE_SOURCE          = 3
+
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
