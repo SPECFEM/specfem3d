@@ -38,16 +38,17 @@
                  PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                 num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+                 USE_FORCE_POINT_SOURCE,COMPONENT_FORCE_SOURCE)
 
   implicit none
 
   include "constants.h"
 
   integer NPROC,UTM_PROJECTION_ZONE
-  integer NSPEC_AB,NGLOB_AB,NSOURCES
+  integer NSPEC_AB,NGLOB_AB,NSOURCES,COMPONENT_FORCE_SOURCE
 
-  logical PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
+  logical PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
 
   double precision DT
 
@@ -162,7 +163,7 @@
 
   ! read all the sources (note: each process reads the source file)
   call get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
-              DT,NSOURCES,min_tshift_cmt_original)
+              DT,NSOURCES,min_tshift_cmt_original,USE_FORCE_POINT_SOURCE)
 
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)

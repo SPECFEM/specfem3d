@@ -41,7 +41,8 @@
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        pm1_source_encoding,nsources_local
+                        pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
+                        FACTOR_FORCE_SOURCE
   implicit none
 
   include "constants.h"

@@ -116,7 +116,8 @@
           PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+          num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
+          USE_FORCE_POINT_SOURCE,COMPONENT_FORCE_SOURCE)
 
   if(abs(minval(tshift_cmt)) > TINYVAL) call exit_MPI(myrank,'one tshift_cmt must be zero, others must be positive')
 
