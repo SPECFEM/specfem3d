@@ -198,13 +198,6 @@
 ! no lagrange interpolation on seismograms (we take the value on one NGLL point)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
-! use a force source located exactly at a grid point instead of a CMTSOLUTION source
-! this can be useful e.g. for oil industry foothills simulations or asteroid simulations
-! in which the source is a vertical force, normal force, impact etc.
-  logical, parameter :: USE_FORCE_POINT_SOURCE = .false.
-  double precision, parameter :: FACTOR_FORCE_SOURCE = 1.d15
-  integer, parameter :: COMPONENT_FORCE_SOURCE = 3  ! takes direction in comp E/N/Z = 1/2/3
-
 ! set to use a Ricker source time function instead of a gaussian
   logical, parameter :: USE_RICKER_IPATI = .false.
 

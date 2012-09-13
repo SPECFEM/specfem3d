@@ -25,7 +25,7 @@
 !=====================================================================
 
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
-                    DT,NSOURCES,min_tshift_cmt_original)
+                    DT,NSOURCES,min_tshift_cmt_original,USE_FORCE_POINT_SOURCE)
 
   implicit none
 
@@ -35,6 +35,7 @@
 
   integer, intent(in) :: NSOURCES
   double precision, intent(in) :: DT
+  logical, intent(in) :: USE_FORCE_POINT_SOURCE
 
   integer, intent(out) :: yr,jda,ho,mi
   double precision, intent(out) :: sec,min_tshift_cmt_original

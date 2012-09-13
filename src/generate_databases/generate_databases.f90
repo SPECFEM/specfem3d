@@ -261,7 +261,9 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
+                        COMPONENT_FORCE_SOURCE,IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -394,6 +396,12 @@
     endif
 
     write(IMAIN,*)
+    if(USE_FORCE_POINT_SOURCE) then
+       write(IMAIN,*) 'using a force point source instead of a CMTSOLUTION source'
+    else
+       write(IMAIN,*) 'using a CMTSOLUTION source'
+       write(IMAIN,*)
+    endif
 
   endif
 

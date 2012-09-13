@@ -45,7 +45,8 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
-                        nsources_local
+                        nsources_local,USE_FORCE_POINT_SOURCE, &
+                        FACTOR_FORCE_SOURCE,COMPONENT_FORCE_SOURCE
 
   implicit none
 

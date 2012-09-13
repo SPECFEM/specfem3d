@@ -46,7 +46,9 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,IMODEL)
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
+                        COMPONENT_FORCE_SOURCE,IMODEL)
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)

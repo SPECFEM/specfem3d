@@ -154,6 +154,11 @@ module specfem_par
   double precision, external :: wtime
   double precision :: time_start
 
+! parameters for a force source located exactly at a grid point
+  logical :: USE_FORCE_POINT_SOURCE
+  double precision :: FACTOR_FORCE_SOURCE
+  integer :: COMPONENT_FORCE_SOURCE
+
 ! parameters
   integer :: SIMULATION_TYPE
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
