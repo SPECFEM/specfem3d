@@ -32,7 +32,7 @@
                         rhoarraystore,phistore,tortstore,&
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        xi_source,eta_source,gamma_source,nu_source, &
+                        xi_source,eta_source,gamma_source, &
                         hdur,hdur_gaussian,tshift_cmt,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -42,7 +42,8 @@
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
-                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE,COMPONENT_FORCE_SOURCE
+                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE
+
   implicit none
 
   include "constants.h"
@@ -66,7 +67,6 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source
   double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
@@ -154,19 +154,32 @@
               endif
 
               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
+              stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
               !stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
-              ! we use a force in a single direction along one of the components:
-              !  x/y/z or E/N/Z-direction would correspond to 1/2/3 = COMPONENT_FORCE_SOURCE
-              ! e.g. nu_source(:,3) here would be a source normal to the surface (z-direction).
+              ! add the inclined force source array 
               ! the source is applied to both solid and fluid phase: bulk source.
+
+              ! distinguish between single and double precision for reals
+              if(CUSTOM_REAL == SIZE_REAL) then
+                 stf_used = sngl(stf)
+              else
+                 stf_used = stf
+              endif
+
+              do k=1,NGLLZ
+                 do j=1,NGLLY
+                    do i=1,NGLLX
+                       iglob = ibool(i,j,k,ispec)
 ! solid phase
-              accels(:,iglob) = accels(:,iglob)  &
-              + (1._CUSTOM_REAL - phil/tortl) * sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
+                       accels(:,iglob) = accels(:,iglob)  + &
+                            (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
 ! fluid phase
-              accelw(:,iglob) = accelw(:,iglob)  &
-              + (1._CUSTOM_REAL - rhol_f/rhol_bar) * sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
+                       accelw(:,iglob) = accelw(:,iglob)  + &
+                            (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used 
+                    enddo
+                 enddo
+              enddo
 
             else
 
@@ -402,17 +415,32 @@
 
                ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
                ! should be the same than for the forward simulation (check above)
-               stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
+               stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
-               ! e.g. we use nu_source(:,3) here if we want a source normal to the surface.
-               ! note: time step is now at NSTEP-it
+               ! add the inclined force source array 
                ! the source is applied to both solid and fluid phase: bulk source
+               ! note: time step is now at NSTEP-it
+
+               ! distinguish between single and double precision for reals
+               if(CUSTOM_REAL == SIZE_REAL) then
+                  stf_used = sngl(stf)
+               else
+                  stf_used = stf
+               endif
+
+               do k=1,NGLLZ
+                  do j=1,NGLLY
+                     do i=1,NGLLX
+                        iglob = ibool(i,j,k,ispec_selected_source(isource))
 ! solid phase
-              b_accels(:,iglob) = b_accels(:,iglob)  &
-              + (1._CUSTOM_REAL - phil/tortl) * sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
+                        b_accels(:,iglob) = b_accels(:,iglob)  + &
+                             (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
 ! fluid phase
-              b_accelw(:,iglob) = b_accelw(:,iglob)  &
-              + (1._CUSTOM_REAL - rhol_f/rhol_bar) * sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
+                        b_accelw(:,iglob) = b_accelw(:,iglob)  + &
+                             (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used
+                     enddo
+                  enddo
+               enddo
 
             else
 

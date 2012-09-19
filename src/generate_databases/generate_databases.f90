@@ -263,7 +263,8 @@
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
-                        COMPONENT_FORCE_SOURCE,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then

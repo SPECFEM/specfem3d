@@ -98,6 +98,8 @@ program smooth_vol_data
   ! for read_parameter_files
   double precision :: DT
   double precision :: HDUR_MOVIE,FACTOR_FORCE_SOURCE
+  double precision :: COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                     COMPONENT_DIR_VECT_SOURCE_Z_UP
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
@@ -109,7 +111,7 @@ program smooth_vol_data
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD
   logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH
-  integer :: COMPONENT_FORCE_SOURCE,IMODEL
+  integer :: IMODEL
 
   ! smoothing parameters
   character(len=256) :: ks_file
@@ -221,7 +223,8 @@ program smooth_vol_data
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
-                        COMPONENT_FORCE_SOURCE,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

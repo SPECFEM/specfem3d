@@ -48,7 +48,8 @@
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
-                        COMPONENT_FORCE_SOURCE,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
@@ -263,6 +264,13 @@
     ! just to be sure for now..
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
       stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
+  endif
+
+  ! inclined force source
+  if( USE_FORCE_POINT_SOURCE ) then
+     if( COMPONENT_DIR_VECT_SOURCE_E .eq. 0.d0 .and. COMPONENT_DIR_VECT_SOURCE_N .eq. 0.d0 &
+          .and. COMPONENT_DIR_VECT_SOURCE_Z_UP .eq. 0.d0 ) &
+          stop 'USE_FORCE_POINT_SOURCE requires a non null direction vector'
   endif
 
   ! exclusive movie flags

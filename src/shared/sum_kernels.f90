@@ -104,11 +104,13 @@ program sum_kernels
   ! for read_parameter_files
   double precision :: DT
   double precision :: HDUR_MOVIE,FACTOR_FORCE_SOURCE
+  double precision :: COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                     COMPONENT_DIR_VECT_SOURCE_Z_UP
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
-  integer :: COMPONENT_FORCE_SOURCE,IMODEL
+  integer :: IMODEL
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
             USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
@@ -160,7 +162,8 @@ program sum_kernels
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
-                        COMPONENT_FORCE_SOURCE,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

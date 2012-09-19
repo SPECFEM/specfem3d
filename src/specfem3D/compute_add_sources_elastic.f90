@@ -29,7 +29,7 @@
   subroutine compute_add_sources_elastic( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        xi_source,eta_source,gamma_source,nu_source, &
+                        xi_source,eta_source,gamma_source, &
                         hdur,hdur_gaussian,tshift_cmt,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -46,7 +46,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        FACTOR_FORCE_SOURCE,COMPONENT_FORCE_SOURCE
+                        FACTOR_FORCE_SOURCE
 
   implicit none
 
@@ -68,7 +68,6 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES) :: nu_source
   double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
@@ -122,21 +121,29 @@
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
 
     if(GPU_MODE) then
-      do isource = 1,NSOURCES
-        if( USE_RICKER_IPATI ) then
-          stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                                        dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
-        else
-          stf_pre_compute(isource) = comp_source_time_function( &
-                                        dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-        endif
-      enddo
-      ! only implements SIMTYPE=1 and NOISE_TOM=0
-      ! write(*,*) "fortran dt = ", dt
-      ! change dt -> DT
-      call compute_add_sources_el_cuda(Mesh_pointer, &
-                                      phase_is_inner,NSOURCES, &
-                                      stf_pre_compute, myrank)
+       if( NSOURCES > 0 ) then
+          do isource = 1,NSOURCES
+             if(USE_FORCE_POINT_SOURCE) then
+                ! precomputes source time function factor
+                stf_pre_compute(isource) = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+                     dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
+             else
+                if( USE_RICKER_IPATI ) then
+                   stf_pre_compute(isource) = comp_source_time_function_rickr( &
+                        dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
+                else
+                   stf_pre_compute(isource) = comp_source_time_function( &
+                        dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+                endif
+             endif
+          enddo
+          ! only implements SIMTYPE=1 and NOISE_TOM=0
+          ! write(*,*) "fortran dt = ", dt
+          ! change dt -> DT
+          call compute_add_sources_el_cuda(Mesh_pointer, phase_is_inner, &
+                                          NSOURCES, stf_pre_compute, myrank)
+          
+       endif
 
     else ! .NOT. GPU_MODE
 
@@ -168,15 +175,25 @@
                     !endif
 
                     ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                    stf_used = FACTOR_FORCE_SOURCE * &
-                               comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
+                    stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
-                    ! we use a force in a single direction along one of the components:
-                    !  x/y/z or E/N/Z-direction would correspond to 1/2/3 = COMPONENT_FORCE_SOURCE
-                    ! e.g. nu_source(:,3) here would be a source normal to the surface (z-direction).
-                    accel(:,iglob) = accel(:,iglob)  &
-                          + sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
+                    ! add the inclined force source array 
+                    ! distinguish between single and double precision for reals
+                    if(CUSTOM_REAL == SIZE_REAL) then
+                       stf_used = sngl(stf)
+                    else
+                       stf_used = stf
+                    endif
 
+                    do k=1,NGLLZ
+                       do j=1,NGLLY
+                          do i=1,NGLLX
+                             iglob = ibool(i,j,k,ispec)
+                             accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
+                          enddo
+                       enddo
+                    enddo
+                         
                   else
 
                     if( USE_RICKER_IPATI) then
@@ -390,19 +407,28 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
 
-    if(GPU_MODE) then
-      do isource = 1,NSOURCES
-        if( USE_RICKER_IPATI ) then
-          stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                                      dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
-        else
-          stf_pre_compute(isource) = comp_source_time_function( &
-                                      dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-        endif
-      enddo
+     if(GPU_MODE) then
+        if( NSOURCES > 0 ) then
+           do isource = 1,NSOURCES
+              if(USE_FORCE_POINT_SOURCE) then
+                 ! precomputes source time function factors
+                 stf_pre_compute(isource) = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+                      dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
+              else
+                 if( USE_RICKER_IPATI ) then
+                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
+                         dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
+                 else
+                    stf_pre_compute(isource) = comp_source_time_function( &
+                         dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+                 endif
+              endif
+           enddo
+           ! only implements SIMTYPE=3
+           call compute_add_sources_el_s3_cuda(Mesh_pointer,stf_pre_compute, &
+                NSOURCES,phase_is_inner,myrank)
 
-      call compute_add_sources_el_s3_cuda(Mesh_pointer,stf_pre_compute, &
-                                         NSOURCES,phase_is_inner,myrank)
+        endif
 
     else ! .NOT. GPU_MODE
 
@@ -435,13 +461,24 @@
                      !endif
 
                      ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                     stf_used = FACTOR_FORCE_SOURCE * &
-                                comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
+                     stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
-                     ! e.g. we use nu_source(:,3) here if we want a source normal to the surface.
-                     ! note: time step is now at NSTEP-it
-                     b_accel(:,iglob) = b_accel(:,iglob)  &
-                          + sngl( nu_source(COMPONENT_FORCE_SOURCE,:,isource) ) * stf_used
+                    ! add the inclined force source array 
+                    ! distinguish between single and double precision for reals
+                     if(CUSTOM_REAL == SIZE_REAL) then
+                        stf_used = sngl(stf)
+                     else
+                        stf_used = stf
+                     endif
+
+                     do k=1,NGLLZ
+                        do j=1,NGLLY
+                           do i=1,NGLLX
+                              iglob = ibool(i,j,k,ispec)
+                              b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
+                           enddo
+                        enddo
+                     enddo
 
                   else
 

@@ -39,18 +39,21 @@
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                 USE_FORCE_POINT_SOURCE,COMPONENT_FORCE_SOURCE)
+                 USE_FORCE_POINT_SOURCE,COMPONENT_DIR_VECT_SOURCE_E, &
+                 COMPONENT_DIR_VECT_SOURCE_N,COMPONENT_DIR_VECT_SOURCE_Z_UP)
 
   implicit none
 
   include "constants.h"
 
   integer NPROC,UTM_PROJECTION_ZONE
-  integer NSPEC_AB,NGLOB_AB,NSOURCES,COMPONENT_FORCE_SOURCE
+  integer NSPEC_AB,NGLOB_AB,NSOURCES
 
   logical PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
 
   double precision DT
+  double precision COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
+                   COMPONENT_DIR_VECT_SOURCE_Z_UP
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
@@ -729,7 +732,9 @@
           write(IMAIN,*) '  j index of source in that element: ',nint(eta_source(isource))
           write(IMAIN,*) '  k index of source in that element: ',nint(gamma_source(isource))
           write(IMAIN,*)
-          write(IMAIN,*) '  component direction: ',COMPONENT_FORCE_SOURCE
+          write(IMAIN,*) '  component of direction vector in East direction: ',COMPONENT_DIR_VECT_SOURCE_E
+          write(IMAIN,*) '  component of direction vector in North direction: ',COMPONENT_DIR_VECT_SOURCE_N
+          write(IMAIN,*) '  component of direction vector in Vertical direction: ',COMPONENT_DIR_VECT_SOURCE_Z_UP
           write(IMAIN,*)
           write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
           write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
