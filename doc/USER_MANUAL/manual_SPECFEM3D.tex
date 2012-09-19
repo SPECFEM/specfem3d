@@ -1054,6 +1054,18 @@ directory. If a run crashes, you may still find usable (but shorter
 than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only relevant for the solver.
+\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a force source
+instead of a \texttt{CMTSOLUTION} moment-tensor source. This can be useful e.g. for oil industry 
+foothills simulations in which the source is a vertical force, normal force, 
+tilted force, or an impact etc. You will need to give the East, North and vertical components of the force vector;
+thus refer to Appendix~\ref{cha:Coordinates} for the orientation of the reference frame.
+\item [{\texttt{FACTOR\_FORCE\_SOURCE}}] This parameter specifies the magnitude of the force source.
+\item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_E}}] This parameter specifies the East component of 
+an arbitrary (non-unitary) direction vector of the force source.
+\item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_N}}] This parameter specifies the North component of 
+an arbitrary (non-unitary) direction vector of the force source.
+\item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_ZUP}}] This parameter specifies the vertical component of 
+an arbitrary (non-unitary) direction vector of the force source.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{in\_out\_files/OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
@@ -1188,7 +1200,8 @@ is the time in the first column of the output seismogram.
 %
 \begin{figure}
 \noindent \begin{centering}
-\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.eps}
+%%%\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.eps}
+\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.pdf}
 \par\end{centering}
 
 \caption{Comparison of the shape of a triangle and the Gaussian function actually
@@ -1231,7 +1244,7 @@ by the finite fault model.
 {\small }%
 \begin{figure}[H]
 \noindent \begin{centering}
-{\small \includegraphics[width=5in]{figures/source_timing.eps} }
+{\small \includegraphics[width=5in]{figures/source_timing.pdf} }
 \par\end{centering}{\small \par}
 
 \caption{Example of timing for three sources. The center of the first source
@@ -2848,7 +2861,7 @@ Seismic networks, such as the Global Seismographic Network (GSN), generally invo
 
 \begin{figure}[ht]
 \noindent \begin{centering}
-\includegraphics[scale=0.6]{figures/IRIS_band_codes.eps}
+\includegraphics[scale=0.6]{figures/IRIS_band_codes.pdf}
 \par\end{centering}
 
 \caption{The band code convention is based on the sampling rate and the response band of instruments. Please visit \texttt{www.iris.edu/manuals/SEED\_appA.htm} for further information. Grey rows show the relative band-code range in SPECFEM3D, and the band codes used to name SEM seismograms are denoted in red.}

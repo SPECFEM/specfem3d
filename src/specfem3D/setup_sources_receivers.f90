@@ -117,7 +117,8 @@
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-          USE_FORCE_POINT_SOURCE,COMPONENT_FORCE_SOURCE)
+          USE_FORCE_POINT_SOURCE,COMPONENT_DIR_VECT_SOURCE_E, &
+          COMPONENT_DIR_VECT_SOURCE_N,COMPONENT_DIR_VECT_SOURCE_Z_UP)
 
   if(abs(minval(tshift_cmt)) > TINYVAL) call exit_MPI(myrank,'one tshift_cmt must be zero, others must be positive')
 
@@ -600,7 +601,14 @@
                   endif
                   ! elastic source
                   if( ispec_is_elastic(ispec) ) then
-                    sourcearray(:,i,j,k) = nu_source(COMPONENT_FORCE_SOURCE,:,isource)
+                     ! we use an inclined force defined by its magnitude and the projections 
+                     ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
+                     sourcearray(:,i,j,k) = FACTOR_FORCE_SOURCE * &
+                          ( nu_source(1,:,isource) * COMPONENT_DIR_VECT_SOURCE_E + &
+                          nu_source(2,:,isource) * COMPONENT_DIR_VECT_SOURCE_N + &
+                          nu_source(3,:,isource) * COMPONENT_DIR_VECT_SOURCE_Z_UP ) / &
+                          sqrt( COMPONENT_DIR_VECT_SOURCE_E**2 + COMPONENT_DIR_VECT_SOURCE_N**2 + &
+                          COMPONENT_DIR_VECT_SOURCE_Z_UP**2 )
                   endif
                 endif
               enddo

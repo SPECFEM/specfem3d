@@ -140,7 +140,7 @@
         ! write(*,*) "fortran dt = ", dt
         ! change dt -> DT
         call compute_add_sources_ac_cuda(Mesh_pointer, phase_is_inner, &
-                                        NSOURCES,stf_pre_compute, myrank)
+                                        NSOURCES, stf_pre_compute, myrank)
       endif
 
     else ! .NOT. GPU_MODE
@@ -432,7 +432,6 @@
           endif
         enddo
         stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-
         ! only implements SIMTYPE=3
         call compute_add_sources_ac_s3_cuda(Mesh_pointer, phase_is_inner, &
                                            NSOURCES,stf_pre_compute, myrank)
