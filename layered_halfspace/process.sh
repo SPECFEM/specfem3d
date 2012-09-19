@@ -34,22 +34,6 @@ mkdir -p in_out_files/DATABASES_MPI
 rm -rf in_out_files/OUTPUT_FILES/*
 rm -rf in_out_files/DATABASES_MPI/*
 
-# compiles executables in root directory
-cd ../../
-
-# compiles with flag for a point force (with a ricker source time function)
-cd src/shared/
-cp constants.h constants.h.org
-sed -e "s:USE_FORCE_POINT_SOURCE.*:USE_FORCE_POINT_SOURCE = .true. :" constants.h.org > constants.h.tmp
-sed -e "s:FACTOR_FORCE_SOURCE.*:FACTOR_FORCE_SOURCE = -1.d15 :" constants.h.tmp > constants.h
-rm -f constants.h.tmp
-cd ../../
-make > tmp.log
-
-# backup & restores original file again
-cp src/shared/constants.h $currentdir/in_out_files/OUTPUT_FILES/constants.h.bak
-mv src/shared/constants.h.org src/shared/constants.h
-
 cd $currentdir
 
 # links executables

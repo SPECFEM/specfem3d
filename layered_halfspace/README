@@ -107,14 +107,6 @@ step-by-step tutorial:
 
 5. run simulation:
 
-    - modify src/shared/constants.h:
-        to use a vertical force source, with a Ricker wavelet source time function,
-        turn flag on for parameter USE_FORCE_POINT_SOURCE:
-          ...
-            logical, parameter :: USE_FORCE_POINT_SOURCE = .true.
-            double precision, parameter :: FACTOR_FORCE_SOURCE = -1.d15
-          ...
-
     - compile specfem3D:
       > make xspecfem3D
 
