@@ -68,7 +68,9 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # in which the source is a vertical force, normal force, inclined force, impact etc.
 USE_FORCE_POINT_SOURCE          = .false.
 FACTOR_FORCE_SOURCE             = 1.d15
-# components of a (non-unitary) direction vector for the force source on the E/N/Z_UP basis
+# components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis;
+# this vector is made unitary internally in the code and thus only its direction matters here;
+# its norm is ignored and the norm of the force used is FACTOR_FORCE_SOURCE times the source time function.
 COMPONENT_DIR_VECT_SOURCE_E     = 1.d0
 COMPONENT_DIR_VECT_SOURCE_N     = -2.d0
 COMPONENT_DIR_VECT_SOURCE_Z_UP  = -1.d0
