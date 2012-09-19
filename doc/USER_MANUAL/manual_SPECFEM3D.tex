@@ -1060,6 +1060,8 @@ foothills simulations in which the source is a vertical force, normal force,
 tilted force, or an impact etc. You will need to give the East, North and vertical components of an 
 arbitrary (non-unitary) direction vector of the force vector; thus refer to Appendix~\ref{cha:Coordinates} 
 for the orientation of the reference frame.
+This vector is made unitary internally in the code and thus only its direction matters here;
+its norm is ignored and the norm of the force used is \texttt{FACTOR\_FORCE\_SOURCE} times the source time function.
 \item [{\texttt{FACTOR\_FORCE\_SOURCE}}] This parameter specifies the magnitude of the force source.
 \item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_E}}] This parameter specifies the East component of 
 an arbitrary (non-unitary) direction vector of the force source.
