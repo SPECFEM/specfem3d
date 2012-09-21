@@ -788,14 +788,14 @@ __global__ void enforce_free_surface_cuda_kernel(
 extern "C"
 void FC_FUNC_(acoustic_enforce_free_surf_cuda,
               ACOUSTIC_ENFORCE_FREE_SURF_CUDA)(long* Mesh_pointer_f,
-                                               int* ABSORB_FREE_SURFACE) {
+                                               int* ABSORB_INSTEAD_OF_FREE_SURFACE) {
 
 TRACE("acoustic_enforce_free_surf_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if( *ABSORB_FREE_SURFACE == 0 ){
+  if( *ABSORB_INSTEAD_OF_FREE_SURFACE == 0 ){
 
     // does not absorb free surface, thus we enforce the potential to be zero at surface
 

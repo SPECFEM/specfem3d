@@ -34,6 +34,7 @@
 
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
+  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE
   use create_regions_mesh_ext_par
   implicit none
 
@@ -438,7 +439,7 @@
     enddo
 
     ! stores surface infos
-    if( .not. ABSORB_FREE_SURFACE ) then
+    if( .not. ABSORB_INSTEAD_OF_FREE_SURFACE ) then
       ! stores free surface
       ! sets face infos
       ifree = ifree + 1
@@ -505,8 +506,8 @@
   if( myrank == 0 ) then
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of faces = ',iabs
-    if( ABSORB_FREE_SURFACE ) then
-    write(IMAIN,*) '     absorbing boundary includes free surface'
+    if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+       write(IMAIN,*) '     absorbing boundary includes free surface'
     endif
   endif
 

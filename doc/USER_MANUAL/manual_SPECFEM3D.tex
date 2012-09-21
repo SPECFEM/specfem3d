@@ -995,6 +995,8 @@ using Olsen's empirical relation (see \citet{OlDaBr03}).
 want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
 \item [{\texttt{ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
 on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
+\item [{\texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on 
+absorbing boundary conditions on the top surface which by default constitutes a free surface of the model.
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
 Turning this option on generates large output files. See Section~\ref{sec:Movies}
@@ -1067,7 +1069,7 @@ its norm is ignored and the norm of the force used is \texttt{FACTOR\_FORCE\_SOU
 an arbitrary (non-unitary) direction vector of the force source.
 \item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_N}}] This parameter specifies the North component of 
 an arbitrary (non-unitary) direction vector of the force source.
-\item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_ZUP}}] This parameter specifies the vertical component of 
+\item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_Z\_UP}}] This parameter specifies the vertical component of 
 an arbitrary (non-unitary) direction vector of the force source.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{in\_out\_files/OUTPUT\_FILES/plot\_source\_time\_function.txt}.

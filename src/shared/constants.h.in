@@ -149,10 +149,6 @@
 !!
 !!-----------------------------------------------------------
 
-! absorb top surface
-! (defined in mesh as 'free_surface_file')
-  logical,parameter :: ABSORB_FREE_SURFACE = .false.
-
 ! absorb boundaries using a PML region
 ! (EXPERIMENTAL feature)
 ! (only acoustic domains supported...)

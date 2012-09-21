@@ -942,7 +942,7 @@ end subroutine PML_acoustic_time_corrector_s
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
+subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces, &
@@ -953,10 +953,11 @@ subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
                         chi1_dot_dot,chi2_t_dot_dot,&
                         chi3_dot_dot,chi4_dot_dot)
 
-  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,CUSTOM_REAL,ABSORB_FREE_SURFACE
+  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,CUSTOM_REAL
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
+  logical :: ABSORB_INSTEAD_OF_FREE_SURFACE
 
   ! split-potentials
   integer :: num_PML_ispec
@@ -985,7 +986,7 @@ subroutine PML_acoustic_enforce_free_srfc(NSPEC_AB,NGLOB_AB, &
   integer :: iface,igll,i,j,k,ispec,iglob,ispecPML
 
   ! checks if free surface became an absorbing boundary
-  if( ABSORB_FREE_SURFACE ) return
+  if( ABSORB_INSTEAD_OF_FREE_SURFACE ) return
 
   ! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces
