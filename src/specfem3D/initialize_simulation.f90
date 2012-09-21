@@ -49,7 +49,8 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
                         COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        IMODEL)
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
@@ -264,6 +265,9 @@
     ! just to be sure for now..
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
       stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
+  else
+    if(ABSORB_INSTEAD_OF_FREE_SURFACE) &
+      stop 'ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is true'
   endif
 
   ! inclined force source

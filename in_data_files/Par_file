@@ -38,6 +38,9 @@ GRAVITY                         = .false.
 # absorbing boundary conditions for a regional simulation
 ABSORBING_CONDITIONS            = .false.
 
+# absorbing top surface (defined in mesh as 'free_surface_file')
+ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
+
 # save AVS or OpenDX movies
 MOVIE_SURFACE                   = .false.
 MOVIE_VOLUME                    = .false.

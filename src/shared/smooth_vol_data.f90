@@ -108,7 +108,7 @@ program smooth_vol_data
             USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
-  logical :: ABSORBING_CONDITIONS,SAVE_FORWARD
+  logical :: ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH
   integer :: IMODEL
@@ -224,7 +224,8 @@ program smooth_vol_data
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
                         COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

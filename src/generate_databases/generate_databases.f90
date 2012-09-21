@@ -264,7 +264,8 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
                         COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                        COMPONENT_DIR_VECT_SOURCE_Z_UP,IMODEL)
+                        COMPONENT_DIR_VECT_SOURCE_Z_UP,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -391,9 +392,16 @@
     write(IMAIN,*)
     if(OCEANS) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
-      if( TOPOGRAPHY ) write(IMAIN,*) ' with elevation from topography file'
+      if(TOPOGRAPHY) write(IMAIN,*) ' with elevation from topography file'
     else
       write(IMAIN,*) 'no oceans'
+    endif
+
+    write(IMAIN,*)
+    if(ABSORBING_CONDITIONS) then
+      write(IMAIN,*) 'incorporating absorbing conditions'
+    else
+      write(IMAIN,*) 'no absorbing condition'
     endif
 
     write(IMAIN,*)
