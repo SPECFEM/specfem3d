@@ -35,7 +35,7 @@
 \author[Dimitri Komatitsch, Zhinan Xie]{Dimitri Komatitsch, Zhinan Xie\\
 CNRS Marseille, France}
 %
-\date{August 8, 2012}
+\date{September 22, 2012}
 
 \maketitle
 
@@ -553,7 +553,7 @@ $$A_0 \delta''(t) + A_1 \delta'(t) + A_2 \delta(t)
 + A_4 {\rm e}^{-\alpha\,t} \,t\, H(t)
 + A_5 {\rm e}^{-\alpha\,t} \,t^{2} \,H(t)$$
 with
-$$A_0 = \kappa_y \, , \, A_1 =d_x\, , \,A_2 = -\alpha d_y $$
+$$A_0 = \kappa_y \, , \, A_1 =d_y\, , \,A_2 = -\alpha d_y $$
 $$A_3= \alpha ^2 d_y , A_4= 0, A_5=0 $$
 \noindent
 Inverse FT of $\frac{s_y s_z}{s_x}$ computed using MAPLE for right-hand side:\\
@@ -670,7 +670,7 @@ or
 $$g(t) = at [  {\rm e}^{-bt} H(t) * u(t)] - a [ {\rm e}^{-bt} H(t) * (t u(t))] $$
 Then the same discrete scheme (19) can be used to compute the first and second  square brackets term on the right hand.
 %
-Also we can used to compute mathematical convolutions as following
+Also we can used to compute mathematical convolutions as following (this kind of term only appears in the 3D case)
 $$g(t) = [a {\rm e}^{-bt} t^2 H(t)] * u(t)$$
 which gives
 $$g(t) = \int_{-\infty}^{t} a {\rm e}^{-b (t-\tau)} (t-\tau)^2 H(t-\tau) u(\tau) d \tau$$
