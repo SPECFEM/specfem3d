@@ -53,8 +53,6 @@
      ABSORB_INSTEAD_OF_FREE_SURFACE_VAL = .false.
   endif
   
-  NAMELIST /MESHER/ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
-
 ! copy number of elements and points in an include file for the solver
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
        OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
@@ -127,7 +125,6 @@
   write(IOUT,*) '!   (if significantly less, you waste a significant amount of memory)'
   write(IOUT,*) '!'
   write(IOUT,*) '! check parameter to ensure the code has been compiled with the right values:'
-  write(IOUT,NML=MESHER) 
   write(IOUT,*)
   close(IOUT)
 
