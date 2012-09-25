@@ -119,7 +119,7 @@
   if(err_occurred() /= 0) return
   call read_value_logical(ABSORBING_CONDITIONS, 'solver.ABSORBING_CONDITIONS')
   if(err_occurred() /= 0) return
-  call read_value_logical(ABSORB_INSTEAD_OF_FREE_SURFACE, 'solver.ABSORB_INSTEAD_OF_FREE_SURFACE')
+  call read_value_logical(ABSORB_INSTEAD_OF_FREE_SURFACE, 'model.ABSORB_INSTEAD_OF_FREE_SURFACE')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
   if(err_occurred() /= 0) return

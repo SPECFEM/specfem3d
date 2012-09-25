@@ -218,10 +218,16 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   implicit none
 
   integer :: sizeprocs
   integer :: ier
+
+  character(len=256) HEADER_FILE
+  logical :: ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
+  
+  NAMELIST/MESHER/ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
 
   ! sizeprocs returns number of processes started
   ! (should be equal to NPROC)
@@ -266,8 +272,24 @@
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
       stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
   else
+    ! absorbing top surface
     if(ABSORB_INSTEAD_OF_FREE_SURFACE) &
       stop 'ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is true'
+  endif
+
+  ! check that the code has been compiled with the right values
+  if( myrank == 0 ) then
+     call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
+          OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
+
+     open(unit=IOUT,file=HEADER_FILE,status='old')
+     read(IOUT,NML=MESHER) 
+     close(IOUT)
+
+     if (ABSORB_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_INSTEAD_OF_FREE_SURFACE_VAL) then
+        write(IMAIN,*) 'ABSORB_INSTEAD_OF_FREE_SURFACE:',ABSORB_INSTEAD_OF_FREE_SURFACE,ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
+        call exit_MPI(myrank,'error in compiled parameters ABSORB_INSTEAD_OF_FREE_SURFACE, please recompile solver')
+     endif
   endif
 
   ! inclined force source

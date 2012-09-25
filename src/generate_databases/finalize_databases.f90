@@ -101,7 +101,7 @@
 ! copy number of elements and points in an include file for the solver
   if( myrank == 0 ) then
     call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
-               ATTENUATION,ANISOTROPY,NSTEP,DT, &
+               ATTENUATION,ANISOTROPY,NSTEP,DT,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                SIMULATION_TYPE,max_memory_size,nfaces_surface_glob_ext_mesh)
   endif
 
