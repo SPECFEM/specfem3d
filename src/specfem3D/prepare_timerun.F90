@@ -100,9 +100,16 @@
     ! flushes file buffer for main output file (IMAIN)
     call flush_IMAIN()
 
-    !daniel debug: time estimation
-    ! elastic elements: time per element t_per_element = 1.40789368e-05 s
-    ! total time = nspec * nstep * t_per_element
+    !daniel debug: total time estimation
+    !  average time per element per time step:
+    !     elastic elements    ~ dt = 1.40789368e-05 s
+    !
+    !  total time per time step:
+    !     T_total = dt * nspec
+    !
+    !  total time using nproc processes (slices) for NSTEP time steps: 
+    !     T_simulation = T_total * NSTEP / nproc
+    
   endif
 
   ! synchronize all the processes
