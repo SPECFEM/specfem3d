@@ -27,7 +27,7 @@
 ! save header file OUTPUT_FILES/values_from_mesher.h
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
-             ATTENUATION,ANISOTROPY,NSTEP,DT, &
+             ATTENUATION,ANISOTROPY,NSTEP,DT,ABSORB_INSTEAD_OF_FREE_SURFACE, &
              SIMULATION_TYPE,memory_size,nfaces_surface_glob_ext_mesh)
 
   implicit none
@@ -37,6 +37,7 @@
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
 
   logical ATTENUATION,ANISOTROPY
+  logical ABSORB_INSTEAD_OF_FREE_SURFACE, ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
 
   double precision DT
 
@@ -45,6 +46,14 @@
   character(len=256) HEADER_FILE
 
   integer :: nfaces_surface_glob_ext_mesh
+
+  if(ABSORB_INSTEAD_OF_FREE_SURFACE) then
+     ABSORB_INSTEAD_OF_FREE_SURFACE_VAL = .true.
+  else
+     ABSORB_INSTEAD_OF_FREE_SURFACE_VAL = .false.
+  endif
+  
+  NAMELIST /MESHER/ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
 
 ! copy number of elements and points in an include file for the solver
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
@@ -117,6 +126,8 @@
   write(IOUT,*) '!   (if significantly more, the job will not run by lack of memory)'
   write(IOUT,*) '!   (if significantly less, you waste a significant amount of memory)'
   write(IOUT,*) '!'
+  write(IOUT,*) '! check parameter to ensure the code has been compiled with the right values:'
+  write(IOUT,NML=MESHER) 
   write(IOUT,*)
   close(IOUT)
 
