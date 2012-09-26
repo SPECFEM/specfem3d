@@ -166,7 +166,7 @@ generate_databases: xgenerate_databases
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xgenerate_databases $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xgenerate_databases -Xlinker --start-group $(XGENERATE_DATABASES_OBJECTS) --end-group $(COND_MPI_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 
