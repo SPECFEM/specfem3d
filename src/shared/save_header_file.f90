@@ -37,22 +37,22 @@
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
 
   logical ATTENUATION,ANISOTROPY
-  logical ABSORB_INSTEAD_OF_FREE_SURFACE, ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
+  logical ABSORB_INSTEAD_OF_FREE_SURFACE, ABSORB_FREE_SURFACE_VAL
 
-  double precision DT
-
-  double precision :: memory_size
+  double precision DT, memory_size
 
   character(len=256) HEADER_FILE
 
-  integer :: nfaces_surface_glob_ext_mesh
-
-  if(ABSORB_INSTEAD_OF_FREE_SURFACE) then
-     ABSORB_INSTEAD_OF_FREE_SURFACE_VAL = .true.
-  else
-     ABSORB_INSTEAD_OF_FREE_SURFACE_VAL = .false.
-  endif
+  integer nfaces_surface_glob_ext_mesh
   
+  NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL
+
+  if (ABSORB_INSTEAD_OF_FREE_SURFACE) then
+      ABSORB_FREE_SURFACE_VAL = .true.
+  else
+      ABSORB_FREE_SURFACE_VAL = .false.
+  endif 
+
 ! copy number of elements and points in an include file for the solver
   call get_value_string(HEADER_FILE, 'solver.HEADER_FILE', &
        OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
@@ -125,6 +125,7 @@
   write(IOUT,*) '!   (if significantly less, you waste a significant amount of memory)'
   write(IOUT,*) '!'
   write(IOUT,*) '! check parameter to ensure the code has been compiled with the right values:'
+  write(IOUT,NML=MESHER) 
   write(IOUT,*)
   close(IOUT)
 

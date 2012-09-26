@@ -224,10 +224,10 @@
   integer :: sizeprocs
   integer :: ier
 
-  character(len=256) HEADER_FILE
-  logical :: ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
-  
-  NAMELIST/MESHER/ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
+  character(len=256) :: HEADER_FILE
+  logical :: ABSORB_FREE_SURFACE_VAL
+
+  NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL
 
   ! sizeprocs returns number of processes started
   ! (should be equal to NPROC)
@@ -286,8 +286,8 @@
      read(IOUT,NML=MESHER) 
      close(IOUT)
 
-     if (ABSORB_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_INSTEAD_OF_FREE_SURFACE_VAL) then
-        write(IMAIN,*) 'ABSORB_INSTEAD_OF_FREE_SURFACE:',ABSORB_INSTEAD_OF_FREE_SURFACE,ABSORB_INSTEAD_OF_FREE_SURFACE_VAL
+     if (ABSORB_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
+        write(IMAIN,*) 'ABSORB_INSTEAD_OF_FREE_SURFACE:',ABSORB_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
         call exit_MPI(myrank,'error in compiled parameters ABSORB_INSTEAD_OF_FREE_SURFACE, please recompile solver')
      endif
   endif
