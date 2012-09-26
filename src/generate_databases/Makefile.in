@@ -108,7 +108,6 @@ libgendatabases_a_OBJECTS = \
 	$O/netlib_specfun_erf.shared.o \
 	$O/param_reader.cc.o \
 	$O/prepare_assemble_MPI.shared.o \
-	$O/program_generate_databases.o \
 	$O/read_topo_bathy_file.shared.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_partition_files.o \
@@ -124,6 +123,7 @@ libgendatabases_a_OBJECTS = \
 	$O/memory_eval.o \
 	$(EMPTY_MACRO)
 
+KEEP_MAIN_PROGRAM_SEPARATE = $O/program_generate_databases.o
 
 # objects toggled between the parallel and serial version
 @COND_MPI_TRUE@COND_MPI_OBJECTS = $O/parallel.o
@@ -165,8 +165,8 @@ generate_databases: xgenerate_databases
 ####
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xgenerate_databases -Xlinker --start-group $(XGENERATE_DATABASES_OBJECTS) --end-group $(COND_MPI_OBJECTS) $(MPILIBS)
+@COND_PYRE_FALSE@xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS) $(COND_MPI_OBJECTS) $(KEEP_MAIN_PROGRAM_SEPARATE)
+@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xgenerate_databases $(KEEP_MAIN_PROGRAM_SEPARATE) $(COND_MPI_OBJECTS) $(XGENERATE_DATABASES_OBJECTS) $(MPILIBS)
 @COND_PYRE_FALSE@
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 
@@ -225,4 +225,6 @@ $O/parallel.o: $(SHARED)constants.h $(SHARED)parallel.f90
 $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
 
+$O/program_generate_databases.o: $(SHARED)constants.h program_generate_databases.f90
+	${FCCOMPILE_CHECK} -c -o $O/program_generate_databases.o program_generate_databases.f90
 
