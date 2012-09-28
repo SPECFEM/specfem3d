@@ -84,6 +84,7 @@ libgendatabases_a_OBJECTS = \
 	$O/get_cmt.shared.o \
 	$O/get_coupling_surfaces.o \
 	$O/get_element_face.shared.o \
+	$O/get_force.shared.o \
 	$O/get_global.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_model.o \

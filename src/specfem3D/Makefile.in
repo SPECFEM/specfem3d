@@ -109,6 +109,7 @@ libspecfem_a_OBJECTS = \
 	$O/get_attenuation_model.shared.o \
 	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
+	$O/get_force.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/get_value_parameters.shared.o \

@@ -46,7 +46,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        FACTOR_FORCE_SOURCE
+                        factor_force_source
 
   implicit none
 
@@ -125,7 +125,7 @@
           do isource = 1,NSOURCES
              if(USE_FORCE_POINT_SOURCE) then
                 ! precomputes source time function factor
-                stf_pre_compute(isource) = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+                stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
                      dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
              else
                 if( USE_RICKER_IPATI ) then
@@ -412,7 +412,7 @@
            do isource = 1,NSOURCES
               if(USE_FORCE_POINT_SOURCE) then
                  ! precomputes source time function factors
-                 stf_pre_compute(isource) = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+                 stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
                       dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
               else
                  if( USE_RICKER_IPATI ) then

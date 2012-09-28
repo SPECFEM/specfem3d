@@ -156,10 +156,10 @@ module specfem_par
 
 ! parameters for a force source located exactly at a grid point
   logical :: USE_FORCE_POINT_SOURCE
-  double precision :: FACTOR_FORCE_SOURCE
-  double precision :: COMPONENT_DIR_VECT_SOURCE_E
-  double precision :: COMPONENT_DIR_VECT_SOURCE_N
-  double precision :: COMPONENT_DIR_VECT_SOURCE_Z_UP
+  double precision, dimension(:), allocatable :: factor_force_source
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_E
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_N
+  double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
 
 ! parameters
   integer :: SIMULATION_TYPE

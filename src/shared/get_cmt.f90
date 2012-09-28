@@ -25,7 +25,7 @@
 !=====================================================================
 
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
-                    DT,NSOURCES,min_tshift_cmt_original,USE_FORCE_POINT_SOURCE)
+                    DT,NSOURCES,min_tshift_cmt_original)
 
   implicit none
 
@@ -35,7 +35,6 @@
 
   integer, intent(in) :: NSOURCES
   double precision, intent(in) :: DT
-  logical, intent(in) :: USE_FORCE_POINT_SOURCE
 
   integer, intent(out) :: yr,jda,ho,mi
   double precision, intent(out) :: sec,min_tshift_cmt_original
@@ -133,17 +132,9 @@
     read(string(5:len_trim(string)),*) moment_tensor(6,isource)
 
     ! checks half-duration
-    if( USE_FORCE_POINT_SOURCE ) then
-      ! half-duration is the dominant frequency of the source
-      ! point forces use a Ricker source time function
-      ! null half-duration indicates a very low-frequency source
-      ! (see constants.h: TINYVAL = 1.d-9 )
-      if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
-    else
-      ! null half-duration indicates a Heaviside
-      ! replace with very short error function
-      if( hdur(isource) < 5. * DT ) hdur(isource) = 5. * DT
-    endif
+    ! null half-duration indicates a Heaviside
+    ! replace with very short error function
+    if( hdur(isource) < 5. * DT ) hdur(isource) = 5. * DT
 
   enddo
 

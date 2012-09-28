@@ -103,9 +103,7 @@ program sum_kernels
 
   ! for read_parameter_files
   double precision :: DT
-  double precision :: HDUR_MOVIE,FACTOR_FORCE_SOURCE
-  double precision :: COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                     COMPONENT_DIR_VECT_SOURCE_Z_UP
+  double precision :: HDUR_MOVIE
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
@@ -161,9 +159,7 @@ program sum_kernels
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
-                        COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                        COMPONENT_DIR_VECT_SOURCE_Z_UP,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                         IMODEL)
 
   ! checks if number of MPI process as specified

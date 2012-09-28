@@ -341,6 +341,7 @@
 
 ! number of lines per source in CMTSOLUTION file
   integer, parameter :: NLINES_PER_CMTSOLUTION_SOURCE = 13
+  integer, parameter :: NLINES_PER_FORCESOLUTION_SOURCE = 9
 
 ! number of iterations to solve the system for xi and eta
   integer, parameter :: NUM_ITER = 4

@@ -32,9 +32,7 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
                         SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE,COMPONENT_DIR_VECT_SOURCE_E, &
-                        COMPONENT_DIR_VECT_SOURCE_N,COMPONENT_DIR_VECT_SOURCE_Z_UP, &
-                        ABSORB_INSTEAD_OF_FREE_SURFACE,IMODEL)
+                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE,IMODEL)
 
   implicit none
 
@@ -45,16 +43,14 @@
   integer NOISE_TOMOGRAPHY
   integer IMODEL
 
-  double precision DT,HDUR_MOVIE,FACTOR_FORCE_SOURCE
-  double precision COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N
-  double precision COMPONENT_DIR_VECT_SOURCE_Z_UP
+  double precision DT,HDUR_MOVIE
 
   logical ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
   logical USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE
 
-  character(len=256) LOCAL_PATH,CMTSOLUTION
+  character(len=256) LOCAL_PATH,CMTSOLUTION,FORCESOLUTION
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
@@ -147,14 +143,6 @@
   if(err_occurred() /= 0) return
   call read_value_logical(USE_FORCE_POINT_SOURCE, 'solver.USE_FORCE_POINT_SOURCE')
   if(err_occurred() /= 0) return
-  call read_value_double_precision(FACTOR_FORCE_SOURCE, 'solver.FACTOR_FORCE_SOURCE')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(COMPONENT_DIR_VECT_SOURCE_E, 'solver.COMPONENT_DIR_VECT_SOURCE_E')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(COMPONENT_DIR_VECT_SOURCE_N, 'solver.COMPONENT_DIR_VECT_SOURCE_N')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(COMPONENT_DIR_VECT_SOURCE_Z_UP, 'solver.COMPONENT_DIR_VECT_SOURCE_Z_UP')
-  if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
 
@@ -190,53 +178,77 @@
     endif
   endif
 
-  ! compute the total number of sources in the CMTSOLUTION file
-  ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-  call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION',&
-       IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
+  if (USE_FORCE_POINT_SOURCE) then
+     ! compute the total number of sources in the FORCESOLUTION file
+     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
+     call get_value_string(FORCESOLUTION, 'solver.FORCESOLUTION',&
+          IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'FORCESOLUTION')
 
-  open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
-  if(ios /= 0) stop 'error opening CMTSOLUTION file'
+     open(unit=21,file=trim(FORCESOLUTION),iostat=ios,status='old',action='read')
+     if(ios /= 0) stop 'error opening FORCESOLUTION file'
 
-  icounter = 0
-  do while(ios == 0)
-    read(21,"(a)",iostat=ios) dummystring
-    if(ios == 0) icounter = icounter + 1
-  enddo
-  close(21)
+     icounter = 0
+     do while(ios == 0)
+        read(21,"(a)",iostat=ios) dummystring
+        if(ios == 0) icounter = icounter + 1
+     enddo
+     close(21)
 
-  if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-    stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+     if(mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
+          stop 'total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
 
-  NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-  if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
+     NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
+     if(NSOURCES < 1) stop 'need at least one source in FORCESOLUTION file'
 
-  ! compute the minimum value of hdur in CMTSOLUTION file
-  open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
-  minval_hdur = HUGEVAL
-  do isource = 1,NSOURCES
+  else
+     ! compute the total number of sources in the CMTSOLUTION file
+     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
+     call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION',&
+          IN_DATA_FILES_PATH(1:len_trim(IN_DATA_FILES_PATH))//'CMTSOLUTION')
 
-    ! skip other information
-    do idummy = 1,3
-      read(21,"(a)") dummystring
-    enddo
+     open(unit=21,file=trim(CMTSOLUTION),iostat=ios,status='old',action='read')
+     if(ios /= 0) stop 'error opening CMTSOLUTION file'
 
-    ! read half duration and compute minimum
-    read(21,"(a)") dummystring
-    read(dummystring(15:len_trim(dummystring)),*) hdur
-    minval_hdur = min(minval_hdur,hdur)
+     icounter = 0
+     do while(ios == 0)
+        read(21,"(a)",iostat=ios) dummystring
+        if(ios == 0) icounter = icounter + 1
+     enddo
+     close(21)
 
-    ! skip other information
-    do idummy = 1,9
-      read(21,"(a)") dummystring
-    enddo
+     if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+          stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
 
-  enddo
-  close(21)
+     NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
+     if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
 
-  ! one cannot use a Heaviside source for the movies
-  if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-    stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
+     ! compute the minimum value of hdur in CMTSOLUTION file
+     open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
+     minval_hdur = HUGEVAL
+     do isource = 1,NSOURCES
+
+        ! skip other information
+        do idummy = 1,3
+           read(21,"(a)") dummystring
+        enddo
+
+        ! read half duration and compute minimum
+        read(21,"(a)") dummystring
+        read(dummystring(15:len_trim(dummystring)),*) hdur
+        minval_hdur = min(minval_hdur,hdur)
+
+        ! skip other information
+        do idummy = 1,9
+           read(21,"(a)") dummystring
+        enddo
+
+     enddo
+     close(21)
+
+     ! one cannot use a Heaviside source for the movies
+     if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
+          stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
+  endif       
 
   ! converts all string characters to lowercase
   irange = iachar('a') - iachar('A')
