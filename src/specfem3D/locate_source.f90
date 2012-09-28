@@ -39,8 +39,8 @@
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                 USE_FORCE_POINT_SOURCE,COMPONENT_DIR_VECT_SOURCE_E, &
-                 COMPONENT_DIR_VECT_SOURCE_N,COMPONENT_DIR_VECT_SOURCE_Z_UP)
+                 USE_FORCE_POINT_SOURCE,factor_force_source,comp_dir_vect_source_E, &
+                 comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
   implicit none
 
@@ -52,8 +52,6 @@
   logical PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
 
   double precision DT
-  double precision COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                   COMPONENT_DIR_VECT_SOURCE_Z_UP
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
@@ -136,7 +134,12 @@
   double precision, dimension(3,3,NSOURCES) :: nu_source
 
   double precision, dimension(NSOURCES) :: lat,long,depth
-  double precision moment_tensor(6,NSOURCES)
+
+  double precision, dimension(NSOURCES) :: factor_force_source 
+  double precision, dimension(NSOURCES) :: comp_dir_vect_source_E
+  double precision, dimension(NSOURCES) :: comp_dir_vect_source_N
+  double precision, dimension(NSOURCES) :: comp_dir_vect_source_Z_UP
+  double precision, dimension(6,NSOURCES) ::  moment_tensor
 
   character(len=256) OUTPUT_FILES
 
@@ -165,8 +168,13 @@
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
   ! read all the sources (note: each process reads the source file)
-  call get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
-              DT,NSOURCES,min_tshift_cmt_original,USE_FORCE_POINT_SOURCE)
+  if (USE_FORCE_POINT_SOURCE) then
+     call get_force(tshift_cmt,hdur,lat,long,depth,NSOURCES,min_tshift_cmt_original,factor_force_source, &
+                   comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+  else
+     call get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
+                 DT,NSOURCES,min_tshift_cmt_original)
+  endif
 
   ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
@@ -732,9 +740,9 @@
           write(IMAIN,*) '  j index of source in that element: ',nint(eta_source(isource))
           write(IMAIN,*) '  k index of source in that element: ',nint(gamma_source(isource))
           write(IMAIN,*)
-          write(IMAIN,*) '  component of direction vector in East direction: ',COMPONENT_DIR_VECT_SOURCE_E
-          write(IMAIN,*) '  component of direction vector in North direction: ',COMPONENT_DIR_VECT_SOURCE_N
-          write(IMAIN,*) '  component of direction vector in Vertical direction: ',COMPONENT_DIR_VECT_SOURCE_Z_UP
+          write(IMAIN,*) '  component of direction vector in East direction: ',comp_dir_vect_source_E(isource)
+          write(IMAIN,*) '  component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
+          write(IMAIN,*) '  component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
           write(IMAIN,*)
           write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
           write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)

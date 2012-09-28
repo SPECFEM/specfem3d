@@ -47,9 +47,7 @@
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,FACTOR_FORCE_SOURCE, &
-                        COMPONENT_DIR_VECT_SOURCE_E,COMPONENT_DIR_VECT_SOURCE_N, &
-                        COMPONENT_DIR_VECT_SOURCE_Z_UP,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                         IMODEL)
 
   ! GPU_MODE is in par_file
@@ -290,13 +288,6 @@
         write(IMAIN,*) 'ABSORB_INSTEAD_OF_FREE_SURFACE:',ABSORB_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
         call exit_MPI(myrank,'error in compiled parameters ABSORB_INSTEAD_OF_FREE_SURFACE, please recompile solver')
      endif
-  endif
-
-  ! inclined force source
-  if( USE_FORCE_POINT_SOURCE ) then
-     if( COMPONENT_DIR_VECT_SOURCE_E .eq. 0.d0 .and. COMPONENT_DIR_VECT_SOURCE_N .eq. 0.d0 &
-          .and. COMPONENT_DIR_VECT_SOURCE_Z_UP .eq. 0.d0 ) &
-          stop 'USE_FORCE_POINT_SOURCE requires a non null direction vector'
   endif
 
   ! exclusive movie flags

@@ -42,7 +42,7 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        FACTOR_FORCE_SOURCE
+                        factor_force_source
   implicit none
 
   include "constants.h"
@@ -123,7 +123,7 @@
         do isource = 1,NSOURCES
           if(USE_FORCE_POINT_SOURCE) then
             ! precomputes source time function factor
-            stf_pre_compute(isource) = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+            stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
                   dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
           else
             if( USE_RICKER_IPATI ) then
@@ -175,7 +175,7 @@
 
                 ! we use nu_source(:,3) here because we want a source normal to the surface.
                 ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                stf_used = FACTOR_FORCE_SOURCE * &
+                stf_used = factor_force_source(isource) * &
                            comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
 
@@ -419,7 +419,7 @@
         do isource = 1,NSOURCES
           if(USE_FORCE_POINT_SOURCE) then
             ! precomputes source time function factors
-            stf_pre_compute(isource) = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+            stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
                   dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
           else
             if( USE_RICKER_IPATI ) then
@@ -472,7 +472,7 @@
 
                 ! we use nu_source(:,3) here because we want a source normal to the surface.
                 ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                stf_used = FACTOR_FORCE_SOURCE * comp_source_time_function_rickr( &
+                stf_used = factor_force_source(isource) * comp_source_time_function_rickr( &
                                         dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
                 ! source encoding

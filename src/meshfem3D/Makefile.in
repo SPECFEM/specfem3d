@@ -221,6 +221,9 @@ $O/get_MPI_cutplanes_eta.o: ${SHARED}constants.h get_MPI_cutplanes_eta.f90
 $O/get_cmt.o: ${SHARED}constants.h get_cmt.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_cmt.o get_cmt.f90
 
+$O/get_force.o: ${SHARED}constants.h get_force.f90
+	${FCCOMPILE_CHECK} -c -o $O/get_force.o get_force.f90
+
 $O/get_global.o: ${SHARED}constants.h get_global.f90
 	${FCCOMPILE_CHECK} -c -o $O/get_global.o get_global.f90
 

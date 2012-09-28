@@ -1056,14 +1056,14 @@ directory. If a run crashes, you may still find usable (but shorter
 than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only relevant for the solver.
-\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a force source
+\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a \texttt{FORCESOLUTION} force source
 instead of a \texttt{CMTSOLUTION} moment-tensor source. This can be useful e.g. for oil industry 
 foothills simulations in which the source is a vertical force, normal force, 
 tilted force, or an impact etc. You will need to give the East, North and vertical components of an 
 arbitrary (non-unitary) direction vector of the force vector; thus refer to Appendix~\ref{cha:Coordinates} 
 for the orientation of the reference frame.
 This vector is made unitary internally in the code and thus only its direction matters here;
-its norm is ignored and the norm of the force used is \texttt{FACTOR\_FORCE\_SOURCE} times the source time function.
+its norm is ignored and the norm of the force used is the factor force source times the source time function.
 \item [{\texttt{FACTOR\_FORCE\_SOURCE}}] This parameter specifies the magnitude of the force source.
 \item [{\texttt{COMPONENT\_DIR\_VECT\_SOURCE\_E}}] This parameter specifies the East component of 
 an arbitrary (non-unitary) direction vector of the force source.
@@ -1112,7 +1112,7 @@ to run:
 \begin{description}
 \item [{\texttt{Par\_file}}] the main parameter file which was discussed in detail in the previous
 Chapter~\ref{cha:Creating-Distributed-Databases},
-\item [{\texttt{CMTSOLUTION}}] the earthquake source parameter file, and
+\item [{\texttt{CMTSOLUTION}} or {\texttt{FORCESOLUTION}}] the earthquake source parameter file or the force source parameter file or, and
 \item [{\texttt{STATIONS}}] the stations file.
 \end{description}
 
@@ -1247,6 +1247,23 @@ simulations it is usually not advisable to use a zero half duration
 and convolve afterwards, since the half duration is generally fixed
 by the finite fault model.
 
+\vspace{1cm}
+
+\noindent The \texttt{FORCESOLUTION} should be edited in the following way:
+
+\begin{itemize}
+\item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
+will not run otherwise.) The time shift parameter would simply apply
+an overall time shift to the synthetics, something that can be done
+in the post-processing (see Section \ref{sec:Process-data-and-syn}).
+\item Set the latitude, longitude, depth of the source in geographical
+  coordinates.
+\item Set the magnitude of the force source.
+\item Set the components of a (non-unitary) direction vector for the
+  force source in the East/North/Vertical basis (see Appendix A for
+  the orientation of the reference frame).
+\end{itemize}
+
 {\small }%
 \begin{figure}[H]
 \noindent \begin{centering}
@@ -1339,16 +1356,17 @@ the run will be terminated by the program. You can control the rate
 at which the timestamp files are written based upon the parameter
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO} in the \texttt{Par\_file}.
 
-Having set the \texttt{Par\_file} parameters, and having provided
-the \texttt{CMTSOLUTION} and \texttt{STATIONS} files, you are now
-ready to launch the solver! This is most easily accomplished based
-upon the \texttt{go\_solver} script (See Chapter \ref{cha:Scheduler}
-for information about running through a scheduler, e.g., LSF). You
-may need to edit the last command at the end of the script that invokes
-the \texttt{mpirun} command. The \texttt{runall} script compiles and
-runs both \texttt{xgenerate\_databases} and \texttt{xspecfem3D} in sequence. This is a safe approach that
-ensures using the correct combination of distributed database output and solver
-input.
+Having set the \texttt{Par\_file} parameters, and having provided the
+\texttt{CMTSOLUTION} (or the \texttt{FORCESOLUTION}) and
+\texttt{STATIONS} files, you are now ready to launch the solver! This
+is most easily accomplished based upon the \texttt{go\_solver} script
+(See Chapter \ref{cha:Scheduler} for information about running through
+a scheduler, e.g., LSF). You may need to edit the last command at the
+end of the script that invokes the \texttt{mpirun} command. The
+\texttt{runall} script compiles and runs both
+\texttt{xgenerate\_databases} and \texttt{xspecfem3D} in
+sequence. This is a safe approach that ensures using the correct
+combination of distributed database output and solver input.
 
 It is important to realize that the CPU and memory requirements of
 the solver are closely tied to choices about attenuation (\texttt{ATTENUATION})
@@ -1357,11 +1375,12 @@ anisotropic models). We encourage you to run a variety of simulations
 with various flags turned on or off to develop a sense for what is
 involved.
 
-For the same model, one can rerun the solver for different events
-by simply changing the \texttt{CMTSOLUTION} file, or for different
-stations by changing the \texttt{STATIONS} file. There is no need
-to rerun the \texttt{xgenerate\_databases} executable. Of course it is best to include as many stations
-as possible, since this does not add to the cost of the simulation.
+For the same model, one can rerun the solver for different events by
+simply changing the \texttt{CMTSOLUTION} or \texttt{FORCESOLUTION}
+file, or for different stations by changing the \texttt{STATIONS}
+file. There is no need to rerun the \texttt{xgenerate\_databases}
+executable. Of course it is best to include as many stations as
+possible, since this does not add to the cost of the simulation.
 
 
 \chapter{\label{cha:Adjoint-Simulations}Adjoint Simulations}
@@ -2808,11 +2827,13 @@ and the Harvard CMT convention is
 \subsection*{Source and receiver locations}
 
 The SPECFEM3D software code internally uses Cartesian coordinates.
-The given locations for sources and receiver locations thus may get converted.
-Sources and receiver locations are read in from the
-\texttt{CMTSOLUTION} and \texttt{STATIONS} file.
-Note that e.g. the \texttt{CMTSOLUTION} file denotes the location by "longitude/latitude/depth". We read in
-longitude as $x$ coordinate, latitude as $y$ coordinate.
+The given locations for sources and receiver locations thus may get
+converted.  Sources and receiver locations are read in from the
+\texttt{CMTSOLUTION} (or \texttt{FORCESOLUTION}) and \texttt{STATIONS}
+files.  Note that e.g. the \texttt{CMTSOLUTION} and
+\texttt{FORCESOLUTION} files denotes the location by
+"longitude/latitude/depth". We read in longitude as $x$ coordinate,
+latitude as $y$ coordinate.
 
 
 In case the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.false.}
@@ -2821,10 +2842,14 @@ the $x$/$y$ coordinates have to be given in degrees and are converted to Cartesi
 using a UTM conversion with the specified UTM zone.
 
 
-The value for depth (given in $km$ in \texttt{CMTSOLUTION}) or burial depth (given in $m$ in \texttt{STATIONS})
-is evaluated with respect to the surface of the mesh at the specified $x$/$y$ location to find the corresponding $z$ coordinate.
-It is possible to use this depth value directly as $z$ coordinate by
-changing the flag \texttt{USE\_SOURCES\_RECVS\_Z} to \texttt{.true.} in the file \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
+The value for depth (given in $km$ in \texttt{CMTSOLUTION} and
+\texttt{FORCESOLUTION}) or burial depth (given in $m$ in
+\texttt{STATIONS}) is evaluated with respect to the surface of the
+mesh at the specified $x$/$y$ location to find the corresponding $z$
+coordinate.  It is possible to use this depth value directly as $z$
+coordinate by changing the flag \texttt{USE\_SOURCES\_RECVS\_Z} to
+\texttt{.true.} in the file \texttt{constants.h} located in the
+\texttt{src/shared/} subdirectory.
 
 \subsection*{Seismogram outputs}
 
