@@ -66,17 +66,17 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # # 0 = read the whole adjoint sources at the same time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
-# use a force source located exactly at a grid point instead of a CMTSOLUTION source
-# this can be useful e.g. for oil industry foothills simulations or asteroid simulations
+# use a force source (or several) located exactly at a grid point instead of a CMTSOLUTION source.
+# This can be useful e.g. for oil industry foothills simulations or asteroid simulations
 # in which the source is a vertical force, normal force, inclined force, impact etc.
 USE_FORCE_POINT_SOURCE          = .false.
-FACTOR_FORCE_SOURCE             = 1.d15
-# components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis;
-# this vector is made unitary internally in the code and thus only its direction matters here;
-# its norm is ignored and the norm of the force used is FACTOR_FORCE_SOURCE times the source time function.
-COMPONENT_DIR_VECT_SOURCE_E     = 1.d0
-COMPONENT_DIR_VECT_SOURCE_N     = -2.d0
-COMPONENT_DIR_VECT_SOURCE_Z_UP  = -1.d0
+# If this flag is turned on, the FORCESOLUTION file must be edited by precising:
+# - the related time-shift parameter,
+# - the coordinates of the source,
+# - the magnitude of the force source,
+# - the components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis.
+# The direction vector is made unitary internally in the code and thus only its direction matters here;
+# its norm is ignored and the norm of the force used is the factor force source times the source time function.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
