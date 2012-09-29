@@ -41,6 +41,19 @@
 #include "mesh_constants_cuda.h"
 #include "prepare_constants_cuda.h"
 
+#ifdef USE_OLDER_CUDA4_GPU
+#else
+  #ifdef USE_TEXTURES_FIELDS
+extern texture<realw, cudaTextureType1D, cudaReadModeElementType> d_displ_tex;
+extern texture<realw, cudaTextureType1D, cudaReadModeElementType> d_accel_tex;
+  #endif
+
+  #ifdef USE_TEXTURES_CONSTANTS
+extern texture<realw, cudaTextureType1D, cudaReadModeElementType> d_hprime_xx_tex;
+  #endif
+#endif
+
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // helper functions
@@ -177,10 +190,15 @@ TRACE("prepare_constants_device");
   // in the code with with #USE_TEXTURES_FIELDS not-defined.
   #ifdef USE_TEXTURES_CONSTANTS
   {
-    const textureReference* d_hprime_xx_tex_ptr;
-    print_CUDA_error_if_any(cudaGetTextureReference(&d_hprime_xx_tex_ptr, "d_hprime_xx_tex"), 4101);
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-    print_CUDA_error_if_any(cudaBindTexture(0, d_hprime_xx_tex_ptr, mp->d_hprime_xx, &channelDesc, sizeof(realw)*(NGLL2)), 4001);
+    #ifdef USE_OLDER_CUDA4_GPU
+      const textureReference* d_hprime_xx_tex_ptr;
+      print_CUDA_error_if_any(cudaGetTextureReference(&d_hprime_xx_tex_ptr, "d_hprime_xx_tex"), 4101);
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, d_hprime_xx_tex_ptr, mp->d_hprime_xx, &channelDesc, sizeof(realw)*(NGLL2)), 4001);
+   #else
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, &d_hprime_xx, mp->d_hprime_xx, &channelDesc, sizeof(realw)*(NGLL2)), 4001);
+   #endif
   }
   #endif
 
@@ -691,15 +709,25 @@ TRACE("prepare_fields_elastic_device");
 
   #ifdef USE_TEXTURES_FIELDS
   {
-    print_CUDA_error_if_any(cudaGetTextureReference(&mp->d_displ_tex_ref_ptr, "d_displ_tex"), 4001);
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-    print_CUDA_error_if_any(cudaBindTexture(0, mp->d_displ_tex_ref_ptr, mp->d_displ, &channelDesc, sizeof(realw)*(*size)), 4001);
+    #ifdef USE_OLDER_CUDA4_GPU
+      print_CUDA_error_if_any(cudaGetTextureReference(&mp->d_displ_tex_ref_ptr, "d_displ_tex"), 4001);
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, mp->d_displ_tex_ref_ptr, mp->d_displ, &channelDesc, sizeof(realw)*(*size)), 4001);
+    #else
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, &d_displ_tex, mp->d_displ, &channelDesc, sizeof(realw)*(*size)), 4001);
+    #endif
   }
 
   {
-    print_CUDA_error_if_any(cudaGetTextureReference(&mp->d_accel_tex_ref_ptr, "d_accel_tex"), 4003);
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-    print_CUDA_error_if_any(cudaBindTexture(0, mp->d_accel_tex_ref_ptr, mp->d_accel, &channelDesc, sizeof(realw)*(*size)), 4003);
+    #ifdef USE_OLDER_CUDA4_GPU
+      print_CUDA_error_if_any(cudaGetTextureReference(&mp->d_accel_tex_ref_ptr, "d_accel_tex"), 4003);
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, mp->d_accel_tex_ref_ptr, mp->d_accel, &channelDesc, sizeof(realw)*(*size)), 4003);
+    #else
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, &d_accel_tex, mp->d_accel, &channelDesc, sizeof(realw)*(*size)), 4003);
+    #endif
   }
   #endif
 

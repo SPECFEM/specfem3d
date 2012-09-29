@@ -45,8 +45,10 @@ MPI_INC = @MPI_INC@
 @COND_CUDA_TRUE@NVCC = nvcc
 @COND_CUDA_FALSE@NVCC = @CC@
 
-@COND_CUDA_TRUE@NVCC_FLAGS = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -DCUDA -gencode=arch=compute_20,code=sm_20
+@COND_CUDA_TRUE@NVCC_FLAGS = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -dc -DCUDA -gencode=arch=compute_35,code=sm_35
+@COND_CUDA_TRUE@NVCCLINK = $(NVCC) -dlink $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -DCUDA -gencode=arch=compute_35,code=sm_35
 @COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INC) $(COND_MPI_CPPFLAGS)
+@COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
 # OpenMP
 # with configure: ./configure --with-openmp FLAGS_NO_CHECK="-openmp .." OPENMP_LIB=.. 
@@ -282,6 +284,7 @@ specfem3D: xspecfem3D
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 @COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(COND_OPENMP_OBJECTS)
+@COND_PYRE_FALSE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
 @COND_PYRE_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
 @COND_PYRE_FALSE@
 
