@@ -89,7 +89,11 @@ void setConst_hprime_xx(realw* array,Mesh* mp)
     exit(1);
   }
 
+#ifdef USE_OLDER_CUDA4_GPU
   err = cudaGetSymbolAddress((void**)&(mp->d_hprime_xx),"d_hprime_xx");
+#else
+  err = cudaGetSymbolAddress((void**)&(mp->d_hprime_xx),d_hprime_xx);
+#endif
   if(err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprime_xx: %s\n", cudaGetErrorString(err));
     exit(1);
@@ -142,7 +146,11 @@ void setConst_hprimewgll_xx(realw* array,Mesh* mp)
     exit(1);
   }
 
+#if USE_OLDER_CUDA4_GPU
   err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_xx),"d_hprimewgll_xx");
+#else
+  err = cudaGetSymbolAddress((void**)&(mp->d_hprimewgll_xx),d_hprimewgll_xx);
+#endif
   if(err != cudaSuccess) {
     fprintf(stderr, "Error with d_hprimewgll_xx: %s\n", cudaGetErrorString(err));
     exit(1);
@@ -196,7 +204,11 @@ void setConst_wgllwgll_xy(realw* array,Mesh* mp)
     exit(1);
   }
   //mp->d_wgllwgll_xy = d_wgllwgll_xy;
+#ifdef USE_OLDER_CUDA4_GPU
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xy),"d_wgllwgll_xy");
+#else
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xy),d_wgllwgll_xy);
+#endif
   if(err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_xy: %s\n", cudaGetErrorString(err));
     exit(1);
@@ -213,7 +225,11 @@ void setConst_wgllwgll_xz(realw* array,Mesh* mp)
     exit(1);
   }
   //mp->d_wgllwgll_xz = d_wgllwgll_xz;
+#if USE_OLDER_CUDA4_GPU
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xz),"d_wgllwgll_xz");
+#else
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_xz),d_wgllwgll_xz);
+#endif
   if(err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_xz: %s\n", cudaGetErrorString(err));
     exit(1);
@@ -230,7 +246,11 @@ void setConst_wgllwgll_yz(realw* array,Mesh* mp)
     exit(1);
   }
   //mp->d_wgllwgll_yz = d_wgllwgll_yz;
+#if USE_OLDER_CUDA4_GPU
   err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_yz),"d_wgllwgll_yz");
+#else
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgllwgll_yz),d_wgllwgll_yz);
+#endif
   if(err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgllwgll_yz: %s\n", cudaGetErrorString(err));
     exit(1);
@@ -247,7 +267,11 @@ void setConst_wgll_cube(realw* array,Mesh* mp)
     exit(1);
   }
   //mp->d_wgll_cube = d_wgll_cube;
+#if USE_OLDER_CUDA4_GPU
   err = cudaGetSymbolAddress((void**)&(mp->d_wgll_cube),"d_wgll_cube");
+#else
+  err = cudaGetSymbolAddress((void**)&(mp->d_wgll_cube),d_wgll_cube);
+#endif
   if(err != cudaSuccess) {
     fprintf(stderr, "Error with d_wgll_cube: %s\n", cudaGetErrorString(err));
     exit(1);
