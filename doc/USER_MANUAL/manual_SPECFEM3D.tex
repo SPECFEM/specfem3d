@@ -1200,7 +1200,7 @@ is the time in the first column of the output seismogram.
 \begin{figure}
 \noindent \begin{centering}
 %%%\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.eps}
-\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.pdf}
+\includegraphics[width=2.5in]{figures/gauss_vs_triangle_mod.pdf}
 \par\end{centering}
 
 \caption{Comparison of the shape of a triangle and the Gaussian function actually
@@ -1256,6 +1256,15 @@ in the post-processing (see Section \ref{sec:Process-data-and-syn}).
   force source in the East/North/Vertical basis (see Appendix A for
   the orientation of the reference frame).
 \end{itemize}
+
+\noindent Where  necessary, set  a \texttt{FORCESOLUTION} file  in the
+same   way   you    configure   a   \texttt{CMTSOLUTION}   file   with
+$N_{\mathrm{sources}}$   entries,  one   for   each  subevent   (i.e.,
+concatenate  $N_{\mathrm{sources}}$ \texttt{FORCESOLUTION} files  to a
+single   \texttt{FORCESOLUTION}  file).  At   least  one   entry  (not
+necessarily the first) must have a  zero time shift, and all the other
+entries must have non-negative time  shift. Each subevent can have its
+own half latitude, longitude, depth, and force parameters.
 
 {\small }%
 \begin{figure}[H]
