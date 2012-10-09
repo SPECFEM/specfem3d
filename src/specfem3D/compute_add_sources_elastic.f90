@@ -166,7 +166,7 @@
                           nint(gamma_source(isource)), &
                           ispec_selected_source(isource))
 
-                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
+                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
                     !if (it == 1 .and. myrank == 0) then
                     !  write(IMAIN,*) 'using a source of dominant frequency ',f0
@@ -189,7 +189,7 @@
                        do j=1,NGLLY
                           do i=1,NGLLX
                              iglob = ibool(i,j,k,ispec)
-                             accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
+                             accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
                           enddo
                        enddo
                     enddo
