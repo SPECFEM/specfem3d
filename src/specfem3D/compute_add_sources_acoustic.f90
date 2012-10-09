@@ -165,7 +165,7 @@
                                nint(gamma_source(isource)), &
                                ispec)
 
-                f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
+                f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
                 !if (it == 1 .and. myrank == 0) then
                 !  write(IMAIN,*) 'using a source of dominant frequency ',f0
@@ -173,14 +173,9 @@
                 !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                 !endif
 
-                ! we use nu_source(:,3) here because we want a source normal to the surface.
                 ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
                 stf_used = factor_force_source(isource) * &
                            comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
-
-
-                ! source encoding
-                stf_used = stf_used * pm1_source_encoding(isource)
 
                 ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
                 ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -474,9 +469,6 @@
                 ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
                 stf_used = factor_force_source(isource) * comp_source_time_function_rickr( &
                                         dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
-
-                ! source encoding
-                stf_used = stf_used * pm1_source_encoding(isource)
 
                 ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
                 ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
