@@ -158,6 +158,11 @@ CUDA_STUBS = \
 	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
 	$(EMPTY_MACRO)
 
+CUDA_DEVICE_OBJ = \
+        $O/cuda_device_obj.o \
+        $(EMPTY_MACRO)
+
+
 # solver objects - no statically allocated arrays anymore
 SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
@@ -284,8 +289,9 @@ specfem3D: xspecfem3D
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 @COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(COND_OPENMP_OBJECTS)
-@COND_PYRE_FALSE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(CUDA_DEVICE_OBJ) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
+@COND_PYRE_FALSE@@COND_CUDA_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
 @COND_PYRE_FALSE@
 
 convolve_source_timefunction: xconvolve_source_timefunction
