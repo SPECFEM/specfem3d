@@ -248,7 +248,7 @@
      ! one cannot use a Heaviside source for the movies
      if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
           stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
-  endif       
+  endif
 
   ! converts all string characters to lowercase
   irange = iachar('a') - iachar('A')

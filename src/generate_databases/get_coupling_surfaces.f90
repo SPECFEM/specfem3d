@@ -289,7 +289,7 @@
                     xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
+                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
             ! normal convention: points away from acoustic, reference element
             !                                switch normal direction if necessary
@@ -471,7 +471,7 @@
                     xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                     dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
+                    ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
           ! normal convention: points away from acoustic, reference element
           !                                switch normal direction if necessary
@@ -668,7 +668,7 @@
                           xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
                           dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                          ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY)
+                          ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
                   ! normal convention: points away from poroelastic, reference element
                   do j=1,NGLLY

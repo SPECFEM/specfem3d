@@ -455,7 +455,7 @@ end module user_noise_distribution
      if(NSPEC_TOP .gt. 0) then
 
         ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
-        if( NSPEC_TOP > 2147483647 / (CUSTOM_REAL * NGLLSQUARE * NDIM) ) then
+        if( NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM) ) then
            print *,'reclen of noise surface_movie needed exceeds integer 4-byte limit: ',reclen
            print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, NSPEC_TOP
            print*,'bit size fortran: ',bit_size(NSPEC_TOP)

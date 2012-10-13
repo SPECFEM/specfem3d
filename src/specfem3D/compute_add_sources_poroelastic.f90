@@ -157,7 +157,7 @@
               stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
               !stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
-              ! add the inclined force source array 
+              ! add the inclined force source array
               ! the source is applied to both solid and fluid phase: bulk source.
 
               ! distinguish between single and double precision for reals
@@ -176,7 +176,7 @@
                             (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
 ! fluid phase
                        accelw(:,iglob) = accelw(:,iglob)  + &
-                            (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used 
+                            (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used
                     enddo
                  enddo
               enddo
@@ -417,7 +417,7 @@
                ! should be the same than for the forward simulation (check above)
                stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
-               ! add the inclined force source array 
+               ! add the inclined force source array
                ! the source is applied to both solid and fluid phase: bulk source
                ! note: time step is now at NSTEP-it
 

@@ -142,7 +142,7 @@
           ! change dt -> DT
           call compute_add_sources_el_cuda(Mesh_pointer, phase_is_inner, &
                                           NSOURCES, stf_pre_compute, myrank)
-          
+
        endif
 
     else ! .NOT. GPU_MODE
@@ -177,7 +177,7 @@
                     ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
                     stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
 
-                    ! add the inclined force source array 
+                    ! add the inclined force source array
                     ! distinguish between single and double precision for reals
                     if(CUSTOM_REAL == SIZE_REAL) then
                        stf_used = sngl(stf)
@@ -193,7 +193,7 @@
                           enddo
                        enddo
                     enddo
-                         
+
                   else
 
                     if( USE_RICKER_IPATI) then
@@ -463,7 +463,7 @@
                      ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
                      stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
 
-                    ! add the inclined force source array 
+                    ! add the inclined force source array
                     ! distinguish between single and double precision for reals
                      if(CUSTOM_REAL == SIZE_REAL) then
                         stf_used = sngl(stf)

@@ -30,10 +30,10 @@ module part_decompose_mesh_SCOTCH
 
   include "../shared/constants.h"
 
-! Useful kind types
-  integer ,parameter :: short = SELECTED_INT_KIND(4), long = SELECTED_INT_KIND(18)
+! useful kind types for short integer (4 bytes) and long integers (8 bytes)
+  integer ,parameter :: short = 4, long = 8
 
-! Number of faces per element.
+! number of faces per element.
   integer, parameter  :: nfaces = 6
 
 ! acoustic-elastic-poroelastic load balancing:
@@ -95,7 +95,7 @@ contains
              connectivity = 0
              elem_base = nodes_elmnts(k+j*nsize)
              elem_target = nodes_elmnts(l+j*nsize)
-             do n = 1, NGNOD
+             do n = 1, NGNOD_EIGHT_CORNERS
                 num_node = elmnts(NGNOD*elem_base+n-1)
                 do m = 0, nnodes_elmnts(num_node)-1
                    if ( nodes_elmnts(m+num_node*nsize) == elem_target ) then
@@ -121,14 +121,14 @@ contains
 
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
                    if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) &
-                    stop 'ERROR: too many neighbours per element, modify the mesh.'
+                    stop 'ERROR: too many neighbours per element, error in the mesh or in the code.'
 
                    adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour &
                           + xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
 
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
                    if (xadj(nodes_elmnts(l+j*nsize))>sup_neighbour) &
-                    stop 'ERROR: too many neighbours per element, modify the mesh.'
+                    stop 'ERROR: too many neighbours per element, error in the mesh or in the code.'
                 end if
              end if
           end do
@@ -357,8 +357,8 @@ contains
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
                       ncommon_nodes = 0
-                      do num_node = 0, NGNOD-1
-                         do num_node_bis = 0, NGNOD-1
+                      do num_node = 0, NGNOD_EIGHT_CORNERS-1
+                         do num_node_bis = 0, NGNOD_EIGHT_CORNERS-1
                             if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
                                tab_interfaces(tab_size_interfaces(num_interface)*7 &
                                               +num_edge*7+3+ncommon_nodes) &
@@ -518,8 +518,8 @@ contains
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
                       tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
                       ncommon_nodes = 0
-                      do num_node = 0, NGNOD-1
-                         do num_node_bis = 0, NGNOD-1
+                      do num_node = 0, NGNOD_EIGHT_CORNERS-1
+                         do num_node_bis = 0, NGNOD_EIGHT_CORNERS-1
                             if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
                                tab_interfaces(tab_size_interfaces(num_interface)*7 &
                                              +num_edge*7+3+ncommon_nodes) &
@@ -963,6 +963,8 @@ contains
 
              ! format:
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
+             ! or
+             ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
              write(IIN_database) glob2loc_elmnts(i)+1, num_modele(1,i+1), &
                                   num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
           end if
@@ -1451,8 +1453,7 @@ contains
     ! partition index on each element
     integer, dimension(0:nspec-1)  :: part
 
-    ! mesh element indexing
-    ! ( elmnts(NGNOD,nspec) )
+    ! mesh element indexing ( elmnts(NGNOD,nspec) )
     integer, dimension(0:NGNOD*nspec-1)  :: elmnts
 
     ! moho surface
@@ -1509,14 +1510,14 @@ contains
 
       ! loops over all element corners
       counter = 0
-      do i=0,NGNOD-1
+      do i=0,NGNOD_EIGHT_CORNERS-1
         ! note: assumes that node indices in elmnts array are in the range from 0 to nodes-1
         inode = elmnts(el*NGNOD+i)
         if( node_is_moho(inode) ) counter = counter + 1
       enddo
 
       ! sets flag if it has a surface
-      if( counter == 4 ) is_moho(el) = .true.
+      if( counter == NGNOD2D_FOUR_CORNERS ) is_moho(el) = .true.
     enddo
 
     ! statistics output

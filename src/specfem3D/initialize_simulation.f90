@@ -281,7 +281,7 @@
           OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH))//'/values_from_mesher.h')
 
      open(unit=IOUT,file=HEADER_FILE,status='old')
-     read(IOUT,NML=MESHER) 
+     read(IOUT,NML=MESHER)
      close(IOUT)
 
      if (ABSORB_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then

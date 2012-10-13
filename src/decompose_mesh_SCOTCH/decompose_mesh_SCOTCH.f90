@@ -24,7 +24,6 @@
 !
 !=====================================================================
 
-
 module decompose_mesh_SCOTCH
 
   use part_decompose_mesh_SCOTCH
@@ -62,12 +61,12 @@ module decompose_mesh_SCOTCH
   integer  ::  ninterfaces
   integer  :: my_ninterface
 
-  integer :: nsize           ! Max number of elements that contain the same node.
+  integer :: nsize           ! max number of elements that contain the same node
   integer  :: nb_edges
 
   integer  :: ispec, inode
-  integer  :: max_neighbour         ! Real maximum number of neighbours per element
-  integer  :: sup_neighbour   ! Majoration of the maximum number of neighbours per element
+  integer  :: max_neighbour   ! real maximum number of neighbours per element
+  integer  :: sup_neighbour   ! majoration (overestimate) of the maximum number of neighbours per element
 
   integer  :: ipart, nnodes_loc, nspec_local
   integer  :: num_elmnt, num_node, num_mat
@@ -116,10 +115,13 @@ module decompose_mesh_SCOTCH
   ! reads in mesh files
   !----------------------------------------------------------------------------------------------
   subroutine read_mesh_files
+
     implicit none
+
     character(len=256)  :: line
     logical :: use_poroelastic_file
     integer(long) :: nspec_long
+    integer :: inode
 
   ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
@@ -134,7 +136,7 @@ module decompose_mesh_SCOTCH
     do inode = 1, nnodes
     ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
       read(98,*) num_node, nodes_coords(1,num_node), nodes_coords(2,num_node), nodes_coords(3,num_node)
-    end do
+    enddo
     close(98)
     print*, 'total number of nodes: '
     print*, '  nnodes = ', nnodes
@@ -148,7 +150,7 @@ module decompose_mesh_SCOTCH
     read(98,*) nspec_long
 
     ! debug check size limit
-    if( nspec_long > 2147483647 ) then
+    if( nspec_long > 2147483646 ) then
       print *,'size exceeds integer 4-byte limit: ',nspec_long
       print*,'bit size fortran: ',bit_size(nspec)
       stop 'error number of elements too large'
@@ -161,6 +163,7 @@ module decompose_mesh_SCOTCH
     if( ier /= 0 ) stop 'error allocating array elmnts'
     do ispec = 1, nspec
       ! format: # element_id  #id_node1 ... #id_node8
+      !      or # element_id  #id_node1 ... #id_node27
 
       ! note: be aware that here we can have different node ordering for a cube element;
       !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
@@ -171,12 +174,11 @@ module decompose_mesh_SCOTCH
       !          then top (positive z-direction) of element
       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
 
-      read(98,*) num_elmnt, elmnts(1,num_elmnt), elmnts(2,num_elmnt),elmnts(3,num_elmnt), elmnts(4,num_elmnt), &
-            elmnts(5,num_elmnt), elmnts(6,num_elmnt), elmnts(7,num_elmnt), elmnts(8,num_elmnt)
+      read(98,*) num_elmnt,(elmnts(inode,num_elmnt), inode=1,NGNOD)
 
       if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
 
-    end do
+    enddo
     close(98)
     print*, 'total number of spectral elements:'
     print*, '  nspec = ', nspec
@@ -193,7 +195,7 @@ module decompose_mesh_SCOTCH
       ! note: be aware that elements may not be sorted in materials_file
       read(98,*) num_mat,mat(1,num_mat)
       if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
-    end do
+    enddo
     close(98)
 
   ! TODO:
@@ -235,9 +237,9 @@ module decompose_mesh_SCOTCH
        else
           ! negative materials_id: undefined material properties yet
           count_undef_mat = count_undef_mat + 1
-       end if
+       endif
        read(98,*,iostat=ier) idummy,num_mat
-    end do
+    enddo
     close(98)
     print*, '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
     ! check with material flags
@@ -341,7 +343,7 @@ module decompose_mesh_SCOTCH
 
        endif !if(idomain_id == 1 .or. idomain_id == 2)
 
-    end do
+    enddo
 
     ! reads in undefined material properties
     rewind(98,iostat=ier) ! back to the beginning of the file
@@ -410,7 +412,7 @@ module decompose_mesh_SCOTCH
                stop "ERROR: invalid flag_up in interface definition in nummaterial_velocity_file"
          endif
        endif
-    end do
+    enddo
     if( use_poroelastic_file ) close(97)
     close(98)
 
@@ -452,7 +454,7 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
-    allocate(nodes_ibelm_xmin(4,nspec2D_xmin),stat=ier)
+    allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_xmin'
     do ispec2D = 1,nspec2D_xmin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -462,10 +464,8 @@ module decompose_mesh_SCOTCH
       !
       !          doesn't necessarily have to start on top-rear, then bottom-rear, bottom-front, and finally top-front i.e.:
       !          point 1 = (0,1,1), point 2 = (0,1,0), point 3 = (0,0,0), point 4 = (0,0,1)
-      read(98,*) ibelm_xmin(ispec2D), nodes_ibelm_xmin(1,ispec2D), nodes_ibelm_xmin(2,ispec2D), &
-            nodes_ibelm_xmin(3,ispec2D), nodes_ibelm_xmin(4,ispec2D) !! DK DK see if we need NGNOD here
-
-    end do
+      read(98,*) ibelm_xmin(ispec2D), (nodes_ibelm_xmin(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     print*, 'absorbing boundaries:'
     print*, '  nspec2D_xmin = ', nspec2D_xmin
@@ -480,13 +480,12 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_xmax'
-    allocate(nodes_ibelm_xmax(4,nspec2D_xmax),stat=ier)
+    allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_xmax'
     do ispec2D = 1,nspec2D_xmax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_xmax(ispec2D), nodes_ibelm_xmax(1,ispec2D), nodes_ibelm_xmax(2,ispec2D), &
-            nodes_ibelm_xmax(3,ispec2D), nodes_ibelm_xmax(4,ispec2D)
-    end do
+      read(98,*) ibelm_xmax(ispec2D), (nodes_ibelm_xmax(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     print*, '  nspec2D_xmax = ', nspec2D_xmax
 
@@ -500,13 +499,12 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
-    allocate(nodes_ibelm_ymin(4,nspec2D_ymin),stat=ier)
+    allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_ymin'
     do ispec2D = 1,nspec2D_ymin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_ymin(ispec2D), nodes_ibelm_ymin(1,ispec2D), nodes_ibelm_ymin(2,ispec2D),  &
-            nodes_ibelm_ymin(3,ispec2D), nodes_ibelm_ymin(4,ispec2D)
-    end do
+      read(98,*) ibelm_ymin(ispec2D), (nodes_ibelm_ymin(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     print*, '  nspec2D_ymin = ', nspec2D_ymin
 
@@ -520,13 +518,12 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_ymax'
-    allocate(nodes_ibelm_ymax(4,nspec2D_ymax),stat=ier)
+    allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_ymax'
     do ispec2D = 1,nspec2D_ymax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_ymax(ispec2D), nodes_ibelm_ymax(1,ispec2D), nodes_ibelm_ymax(2,ispec2D),  &
-            nodes_ibelm_ymax(3,ispec2D), nodes_ibelm_ymax(4,ispec2D)
-    end do
+      read(98,*) ibelm_ymax(ispec2D), (nodes_ibelm_ymax(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     print*, '  nspec2D_ymax = ', nspec2D_ymax
 
@@ -540,13 +537,12 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_bottom'
-    allocate(nodes_ibelm_bottom(4,nspec2D_bottom),stat=ier)
+    allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_bottom'
     do ispec2D = 1,nspec2D_bottom
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_bottom(ispec2D), nodes_ibelm_bottom(1,ispec2D), nodes_ibelm_bottom(2,ispec2D), &
-            nodes_ibelm_bottom(3,ispec2D), nodes_ibelm_bottom(4,ispec2D)
-    end do
+      read(98,*) ibelm_bottom(ispec2D), (nodes_ibelm_bottom(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     print*, '  nspec2D_bottom = ', nspec2D_bottom
 
@@ -560,13 +556,12 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_top(nspec2D_top),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_top'
-    allocate(nodes_ibelm_top(4,nspec2D_top),stat=ier)
+    allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_top'
     do ispec2D = 1,nspec2D_top
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_top(ispec2D), nodes_ibelm_top(1,ispec2D), nodes_ibelm_top(2,ispec2D), &
-             nodes_ibelm_top(3,ispec2D), nodes_ibelm_top(4,ispec2D)
-    end do
+      read(98,*) ibelm_top(ispec2D), (nodes_ibelm_top(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
 
@@ -580,13 +575,12 @@ module decompose_mesh_SCOTCH
     endif
     allocate(ibelm_moho(nspec2D_moho),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_moho'
-    allocate(nodes_ibelm_moho(4,nspec2D_moho),stat=ier)
+    allocate(nodes_ibelm_moho(NGNOD2D,nspec2D_moho),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_ibelm_moho'
     do ispec2D = 1,nspec2D_moho
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
-      read(98,*) ibelm_moho(ispec2D), nodes_ibelm_moho(1,ispec2D), nodes_ibelm_moho(2,ispec2D), &
-             nodes_ibelm_moho(3,ispec2D), nodes_ibelm_moho(4,ispec2D)
-    end do
+      read(98,*) ibelm_moho(ispec2D), (nodes_ibelm_moho(inode,ispec2D), inode=1,NGNOD2D)
+    enddo
     close(98)
     if( nspec2D_moho > 0 ) print*, '  nspec2D_moho = ', nspec2D_moho
 
@@ -605,29 +599,37 @@ module decompose_mesh_SCOTCH
     mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
     do ispec = 1, nspec
-      do inode = 1, NGNOD
+      do inode = 1, NGNOD_EIGHT_CORNERS
         mask_nodes_elmnts(elmnts(inode,ispec)) = .true.
         used_nodes_elmnts(elmnts(inode,ispec)) = used_nodes_elmnts(elmnts(inode,ispec)) + 1
       enddo
     enddo
-    print *, 'nodes valence: '
-    print *, '  min = ',minval(used_nodes_elmnts(:)),'max = ', maxval(used_nodes_elmnts(:))
+    print *, 'node valence:'
+    print *, '  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
     do inode = 1, nnodes
       if (.not. mask_nodes_elmnts(inode)) then
-        stop 'ERROR : nodes not used.'
+        stop 'ERROR: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
       endif
     enddo
+
+! max number of elements that contain the same node
     nsize = maxval(used_nodes_elmnts(:))
 
+! majoration (overestimate) of the maximum number of neighbours per element
+!! DK DK nfaces is a constant equal to 6 (number of faces of a cube).
+!! DK DK I have no idea how this formula works; it was designed by Nicolas Le Goff
+    sup_neighbour = NGNOD_EIGHT_CORNERS * nsize - (NGNOD_EIGHT_CORNERS + (NGNOD_EIGHT_CORNERS/2 - 1)*nfaces)
+
     ! debug check size limit
-    if( NGNOD * nsize - (NGNOD + (NGNOD/2 - 1)*nfaces) > 2147483647 ) then
-      print *,'size exceeds integer 4-byte limit: ',sup_neighbour,NGNOD,nsize,nfaces
-      print*,'bit size fortran: ',bit_size(sup_neighbour)
+!! DK DK this check will likely fail because sup_neighbour itself may become negative if going over the 4-byte integer limit;
+!! DK DK but this should never happen in practice (by far)...
+    if( sup_neighbour > 2147483646 ) then
+      print *,'size exceeds integer 4-byte limit: ',sup_neighbour,nsize
+      print *,'bit size fortran: ',bit_size(sup_neighbour)
+      stop 'ERROR: sup_neighbour is too large'
     endif
 
-    sup_neighbour = NGNOD * nsize - (NGNOD + (NGNOD/2 - 1)*nfaces)
-
-    print*, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
+    print *, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
 
   end subroutine check_valence
 
@@ -639,7 +641,7 @@ module decompose_mesh_SCOTCH
 
     implicit none
     ! local parameters
-    integer, dimension(:),allocatable  :: num_material
+    integer, dimension(:), allocatable  :: num_material
     integer :: ier
 
     ! starts from 0
@@ -658,8 +660,11 @@ module decompose_mesh_SCOTCH
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
          nodes_elmnts, max_neighbour, 1)
 
-    print*, 'mesh2dual: '
+    print*, 'mesh2dual:'
     print*, '  max_neighbour = ',max_neighbour
+
+!! DK DK Oct 2012: added this safety test
+    if(max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
 
     nb_edges = xadj(nspec+1)
 
@@ -683,10 +688,10 @@ module decompose_mesh_SCOTCH
     !       (which are counted then as elastic elements)
     num_material(:) = mat(1,:)
 
-    ! in case of acoustic/elastic/poro simulation, weights elements accordingly
+    ! in case of acoustic/elastic/poro simulation, assign different weights to elements accordingly
+!! DK DK Oct 2012: this should include CPML weights as well in the future
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                   num_material,mat_prop,undef_mat_prop)
-
 
 
     ! SCOTCH partitioning
@@ -776,7 +781,6 @@ module decompose_mesh_SCOTCH
     ! re-partitioning puts poroelastic-elastic coupled elements into same partition
     !  integer  :: nfaces_coupled
     !  integer, dimension(:,:), pointer  :: faces_coupled
-
     ! TODO: supposed to rebalance, but currently broken
     call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                      count_def_mat, num_material , mat_prop, &
@@ -803,8 +807,6 @@ module decompose_mesh_SCOTCH
                              xadj, adjncy, tab_interfaces, &
                              tab_size_interfaces, ninterfaces, &
                              nparts)
-
-
 
     !or: uncomment if you want acoustic/elastic boundaries NOT to be separated into different MPI partitions
     !call build_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
@@ -909,7 +911,7 @@ module decompose_mesh_SCOTCH
 
        close(IIN_database)
 
-    end do
+    enddo
     print*, 'partitions: '
     print*, '  num = ',nparts
     print*

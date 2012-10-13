@@ -99,15 +99,15 @@
     read(1,"(a)") string
     read(string(21:len_trim(string)),*) factor_force_source(isource)
 
-    ! read direction vector's East component 
+    ! read direction vector's East component
     read(1,"(a)") string
     read(string(29:len_trim(string)),*) comp_dir_vect_source_E(isource)
 
-    ! read direction vector's North component 
+    ! read direction vector's North component
     read(1,"(a)") string
     read(string(29:len_trim(string)),*) comp_dir_vect_source_N(isource)
 
-    ! read direction vector's vertical component 
+    ! read direction vector's vertical component
     read(1,"(a)") string
     read(string(32:len_trim(string)),*) comp_dir_vect_source_Z_UP(isource)
 
@@ -125,7 +125,7 @@
   endif
 
   do isource=1,NSOURCES
-     
+
      ! checks half-duration
      ! half-duration is the dominant frequency of the source
      ! point forces use a Ricker source time function
@@ -133,7 +133,7 @@
      ! (see constants.h: TINYVAL = 1.d-9 )
      if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
 
-     ! check (inclined) force source's direction vector 
+     ! check (inclined) force source's direction vector
      if( comp_dir_vect_source_E(isource) .eq. 0.d0 .and. comp_dir_vect_source_N(isource) .eq. 0.d0 &
           .and. comp_dir_vect_source_Z_UP(isource) .eq. 0.d0 ) &
           stop 'When using USE_FORCE_POINT_SOURCE make sure all forces have a non null direction vector'

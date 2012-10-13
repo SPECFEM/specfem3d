@@ -107,9 +107,9 @@
     !  total time per time step:
     !     T_total = dt * nspec
     !
-    !  total time using nproc processes (slices) for NSTEP time steps: 
+    !  total time using nproc processes (slices) for NSTEP time steps:
     !     T_simulation = T_total * NSTEP / nproc
-    
+
   endif
 
   ! synchronize all the processes
@@ -801,7 +801,7 @@
         b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
 
         ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
-        if( num_abs_boundary_faces > 2147483647 / (CUSTOM_REAL * NDIM * NGLLSQUARE) ) then
+        if( num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE) ) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
           print*,'bit size fortran: ',bit_size(b_reclen_field)
@@ -850,7 +850,7 @@
         b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
 
         ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
-        if( num_abs_boundary_faces > 2147483647 / (CUSTOM_REAL * NGLLSQUARE) ) then
+        if( num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE) ) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
           print*,'bit size fortran: ',bit_size(b_reclen_potential)
@@ -862,7 +862,7 @@
         filesize = filesize*NSTEP
 
         ! debug check size limit
-        !if( NSTEP > 2147483647 / b_reclen_potential ) then
+        !if( NSTEP > 2147483646 / b_reclen_potential ) then
         !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
         !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
         !  print*,'file size fortran: ',filesize
@@ -909,7 +909,7 @@
 
         ! check integer size limit: size of b_reclen_field must fit onto an
         ! 4-byte integer
-        if( num_abs_boundary_faces > 2147483647 / (CUSTOM_REAL * NDIM * NGLLSQUARE) ) then
+        if( num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE) ) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
           print*,'bit size fortran: ',bit_size(b_reclen_field_poro)
