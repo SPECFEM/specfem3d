@@ -115,9 +115,7 @@
      ! format:
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
 
-     read(IIN) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec), &
-          elmnts_ext_mesh(1,ispec), elmnts_ext_mesh(2,ispec), elmnts_ext_mesh(3,ispec), elmnts_ext_mesh(4,ispec), &
-          elmnts_ext_mesh(5,ispec), elmnts_ext_mesh(6,ispec), elmnts_ext_mesh(7,ispec), elmnts_ext_mesh(8,ispec)
+     read(IIN) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec),(elmnts_ext_mesh(j,ispec),j=1,NGNOD)
 
      ! check debug
      if( dummy_elmnt /= ispec) stop "error ispec order in materials file"
@@ -153,40 +151,40 @@
   NSPEC2D_BOTTOM = nspec2D_bottom_ext
   NSPEC2D_TOP = nspec2D_top_ext
 
-  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(4,nspec2D_xmin),stat=ier)
+  allocate(ibelm_xmin(nspec2D_xmin),nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_xmin etc.'
   do ispec2D = 1,nspec2D_xmin
-     read(IIN) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,4)
+     read(IIN) ibelm_xmin(ispec2D),(nodes_ibelm_xmin(j,ispec2D),j=1,NGNOD2D)
   end do
 
-  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(4,nspec2D_xmax),stat=ier)
+  allocate(ibelm_xmax(nspec2D_xmax),nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_xmax etc.'
   do ispec2D = 1,nspec2D_xmax
-     read(IIN) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,4)
+     read(IIN) ibelm_xmax(ispec2D),(nodes_ibelm_xmax(j,ispec2D),j=1,NGNOD2D)
   end do
 
-  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(4,nspec2D_ymin),stat=ier)
+  allocate(ibelm_ymin(nspec2D_ymin),nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_ymin'
   do ispec2D = 1,nspec2D_ymin
-     read(IIN) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,4)
+     read(IIN) ibelm_ymin(ispec2D),(nodes_ibelm_ymin(j,ispec2D),j=1,NGNOD2D)
   end do
 
-  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(4,nspec2D_ymax),stat=ier)
+  allocate(ibelm_ymax(nspec2D_ymax),nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_ymax etc.'
   do ispec2D = 1,nspec2D_ymax
-     read(IIN) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,4)
+     read(IIN) ibelm_ymax(ispec2D),(nodes_ibelm_ymax(j,ispec2D),j=1,NGNOD2D)
   end do
 
-  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(4,nspec2D_bottom_ext),stat=ier)
+  allocate(ibelm_bottom(nspec2D_bottom_ext),nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_bottom etc.'
   do ispec2D = 1,nspec2D_bottom_ext
-     read(IIN) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,4)
+     read(IIN) ibelm_bottom(ispec2D),(nodes_ibelm_bottom(j,ispec2D),j=1,NGNOD2D)
   end do
 
-  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(4,nspec2D_top_ext),stat=ier)
+  allocate(ibelm_top(nspec2D_top_ext),nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibelm_top etc.'
   do ispec2D = 1,nspec2D_top_ext
-     read(IIN) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,4)
+     read(IIN) ibelm_top(ispec2D),(nodes_ibelm_top(j,ispec2D),j=1,NGNOD2D)
   end do
 
   call sum_all_i(nspec2D_xmin,num_xmin)
@@ -269,11 +267,11 @@
     if( num_moho == 0 ) call exit_mpi(myrank,'error no moho mesh in database')
 
     ! reads in element informations
-    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext),stat=ier)
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(NGNOD2D,nspec2D_moho_ext),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_moho etc.'
     do ispec2D = 1,nspec2D_moho_ext
       ! format: #element_id #node_id1 #node_id2 #node_id3 #node_id4
-      read(IIN) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,4)
+      read(IIN) ibelm_moho(ispec2D),(nodes_ibelm_moho(j,ispec2D),j=1,NGNOD2D)
     end do
 
     ! user output
@@ -284,7 +282,7 @@
   else
     ! allocate dummy array
     nspec2D_moho_ext = 0
-    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(4,nspec2D_moho_ext),stat=ier)
+    allocate(ibelm_moho(nspec2D_moho_ext),nodes_ibelm_moho(NGNOD2D,nspec2D_moho_ext),stat=ier)
     if( ier /= 0 ) stop 'error allocating dumy array ibelm_moho etc.'
   endif
 

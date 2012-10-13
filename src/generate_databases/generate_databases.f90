@@ -333,8 +333,11 @@
   if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
     call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
-  if(NGNOD /= 8) call exit_MPI(myrank,'number of control nodes must be 8')
-  if(NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 points should have NGNOD2D = 4')
+  if(NGNOD /= 8 .and. NGNOD /= 27) call exit_MPI(myrank,'number of element control nodes must be 8 or 27')
+  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) call exit_MPI(myrank,'number of face control nodes must be 4 or 9')
+
+  if(NGNOD == 8  .and. NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 control nodes must have NGNOD2D == 4')
+  if(NGNOD == 27 .and. NGNOD2D /= 9) call exit_MPI(myrank,'elements with 27 control nodes must have NGNOD2D == 9')
 
 ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')

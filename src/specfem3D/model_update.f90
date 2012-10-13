@@ -867,7 +867,7 @@ program model_update
   rmass_acoustic_new = 0._CUSTOM_REAL
   rmass_solid_poroelastic_new = 0._CUSTOM_REAL
   rmass_fluid_poroelastic_new = 0._CUSTOM_REAL
-  
+
   !-------- attenuation -------
 
   ! read the proc*attenuation.vtk for the old model in LOCAL_PATH and store qmu_attenuation_store

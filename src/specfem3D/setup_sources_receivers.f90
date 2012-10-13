@@ -609,7 +609,7 @@
                   endif
                   ! elastic source
                   if( ispec_is_elastic(ispec) ) then
-                     ! we use an inclined force defined by its magnitude and the projections 
+                     ! we use an inclined force defined by its magnitude and the projections
                      ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
                      sourcearray(:,i,j,k) = factor_force_source(isource) * &
                           ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
@@ -878,7 +878,7 @@
           etal = eta_source(isource)
           gammal = gamma_source(isource)
         endif
-        call eval_shape3D_single(myrank,shape3D,xil,etal,gammal)
+        call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
 
         ! interpolates source locations
         xmesh = 0.0
@@ -923,7 +923,7 @@
       xil = xi_receiver(irec)
       etal = eta_receiver(irec)
       gammal = gamma_receiver(irec)
-      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal)
+      call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
 
       ! interpolates receiver locations
       xmesh = 0.0

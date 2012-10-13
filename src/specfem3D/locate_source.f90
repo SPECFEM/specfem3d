@@ -135,7 +135,7 @@
 
   double precision, dimension(NSOURCES) :: lat,long,depth
 
-  double precision, dimension(NSOURCES) :: factor_force_source 
+  double precision, dimension(NSOURCES) :: factor_force_source
   double precision, dimension(NSOURCES) :: comp_dir_vect_source_E
   double precision, dimension(NSOURCES) :: comp_dir_vect_source_N
   double precision, dimension(NSOURCES) :: comp_dir_vect_source_Z_UP

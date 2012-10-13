@@ -42,7 +42,7 @@
 
 ! spectral element indexing
 ! ( nelmnts = number of spectral elements
-!   NGNOD = number of element corners (8)
+!   NGNOD = number of element control points
 !   knods = corner indices array )
   integer, intent(in)  :: nelmnts
   integer, dimension(NGNOD,nelmnts), intent(in)  :: knods
@@ -69,7 +69,7 @@
   logical, dimension(:),allocatable  :: mask_ibool_asteroid
 
   integer  :: ixmin, ixmax, iymin, iymax, izmin, izmax
-  integer, dimension(NGNOD)  :: n
+  integer, dimension(NGNOD_EIGHT_CORNERS)  :: n
   integer  :: e1, e2, e3, e4
   integer  :: ispec,k,ix,iy,iz,ier,itype,iglob
   integer  :: npoin_interface_asteroid
@@ -92,7 +92,7 @@
       ! type of interface: (1) corner point, (2) edge, (4) face
       itype = my_interfaces(2,ispec_interface,num_interface)
       ! gets spectral element corner indices  (defines all nodes of face/edge)
-      do k = 1, NGNOD
+      do k = 1, NGNOD_EIGHT_CORNERS
          n(k) = knods(k,ispec)
       end do
 
@@ -151,7 +151,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
   include "constants.h"
 
 ! corner node indices per spectral element (8)
-  integer, dimension(NGNOD), intent(in)  :: n
+  integer, dimension(NGNOD_EIGHT_CORNERS), intent(in)  :: n
 
 ! interface type & nodes
   integer, intent(in)  :: itype, e1, e2, e3, e4

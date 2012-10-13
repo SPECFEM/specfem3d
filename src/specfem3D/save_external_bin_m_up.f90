@@ -73,7 +73,7 @@
   use specfem_par_poroelastic,only: &
     num_coupling_el_po_faces, &
     nspec_inner_poroelastic,nspec_outer_poroelastic,num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic
-    
+
   implicit none
 
   include "constants.h"
@@ -229,7 +229,7 @@
       write(IOUT) rmassz_acoustic
     endif
   endif
-  
+
 ! free surface
   write(IOUT) num_free_surface_faces
   if( num_free_surface_faces > 0 ) then

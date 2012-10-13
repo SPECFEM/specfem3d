@@ -288,6 +288,14 @@ end subroutine get_element_face_gll_indices
   integer :: ispec,iface,nspec,nglob
 
 ! face corner locations
+!! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
+!! DK DK Oct 2012: computing the normal in the case of HEX27 elements, to be more precise;
+!! DK DK Oct 2012: but the code below would be a bit difficult to modify therefore we keep
+!! DK DK Oct 2012: using NGNOD2D_FOUR_CORNERS only for now.
+!! DK DK Oct 2012: If the face is flat (for instance along an absorbing edge) then the above
+!! DK DK Oct 2012: code is still exact even for HEX27, but if there is bathymetry for instance
+!! DK DK Oct 2012: along a curved fluid-solid interface then the code below is not as precise
+!! DK DK Oct 2012: as it should for HEX27.
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
 
 ! index array
@@ -317,7 +325,7 @@ end subroutine get_element_face_gll_indices
   face_n(:) = face_n(:)/tmp
 
 ! checks that this normal direction is outwards of element:
-  ! takes additional corner out of face plane and determines scalarproduct to normal
+  ! takes additional corner out of face plane and determines scalar product (dot product) to normal
   iglob = 0
   select case( iface )
   case(1) ! opposite to xmin face
@@ -340,10 +348,10 @@ end subroutine get_element_face_gll_indices
   v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
   v_tmp(3) = zstore_dummy(iglob) - zcoord(1)
 
-  ! scalarproduct
+  ! scalar product (dot product)
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
 
-  ! makes sure normal points outwards, that is points away from this additional corner and scalarproduct is negative
+  ! makes sure normal points outwards, that is points away from this additional corner and scalar product (dot product) is negative
   if( tmp > 0.0_CUSTOM_REAL ) then
     face_n(:) = - face_n(:)
   endif
@@ -351,7 +359,6 @@ end subroutine get_element_face_gll_indices
   ! in case given normal has zero length, sets it to computed face normal
   ! note: to avoid floating-point exception we use dble()
   !         values of normal(:) could be very small, almost zero, and lead to underflow
-  !tmp = normal(1)*normal(1) + normal(2)*normal(2) + normal(3)*normal(3)
   tmp = sngl(dble(normal(1))**2 + dble(normal(2))**2 + dble(normal(3))**2)
   if( tmp < TINYVAL ) then
     normal(:) = face_n(:)
@@ -359,7 +366,6 @@ end subroutine get_element_face_gll_indices
   endif
 
   ! otherwise determines orientation of normal and flips direction such that normal points outwards
-
   tmp = face_n(1)*normal(1) + face_n(2)*normal(2) + face_n(3)*normal(3)
   if( tmp < 0.0_CUSTOM_REAL ) then
     !swap
@@ -388,6 +394,14 @@ end subroutine get_element_face_gll_indices
   integer :: ispec,iface,nspec,nglob
 
 ! face corner locations
+!! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
+!! DK DK Oct 2012: computing the normal in the case of HEX27 elements, to be more precise;
+!! DK DK Oct 2012: but the code below would be a bit difficult to modify therefore we keep
+!! DK DK Oct 2012: using NGNOD2D_FOUR_CORNERS only for now.
+!! DK DK Oct 2012: If the face is flat (for instance along an absorbing edge) then the above
+!! DK DK Oct 2012: code is still exact even for HEX27, but if there is bathymetry for instance
+!! DK DK Oct 2012: along a curved fluid-solid interface then the code below is not as precise
+!! DK DK Oct 2012: as it should for HEX27.
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
 
 ! index array
@@ -420,7 +434,7 @@ end subroutine get_element_face_gll_indices
   face_n(:) = face_n(:)/tmp
 
   ! checks that this normal direction is outwards of element:
-  ! takes additional corner out of face plane and determines scalarproduct to normal
+  ! takes additional corner out of face plane and determines scalar product (dot product) to normal
   iglob = 0
   select case( iface )
   case(1) ! opposite to xmin face
@@ -443,10 +457,10 @@ end subroutine get_element_face_gll_indices
   v_tmp(2) = ystore_dummy(iglob) - ycoord(1)
   v_tmp(3) = zstore_dummy(iglob) - zcoord(1)
 
-  ! scalarproduct
+  ! scalar product (dot product)
   tmp = v_tmp(1)*face_n(1) + v_tmp(2)*face_n(2) + v_tmp(3)*face_n(3)
 
-  ! makes sure normal points outwards, that is points away from this additional corner and scalarproduct is negative
+  ! makes sure normal points outwards, that is points away from this additional corner and scalar product (dot product) is negative
   if( tmp > 0.0 ) then
     face_n(:) = - face_n(:)
   endif
@@ -494,6 +508,14 @@ end subroutine get_element_face_gll_indices
   real(kind=CUSTOM_REAL) :: xstore_dummy(nglob),ystore_dummy(nglob),zstore_dummy(nglob)
 
   ! assumes NGNOD2D_FOUR_CORNERS == 4
+!! DK DK Oct 2012: in principle we should use NGNOD2D instead of NGNOD2D_FOUR_CORNERS when
+!! DK DK Oct 2012: computing the normal in the case of HEX27 elements, to be more precise;
+!! DK DK Oct 2012: but the code below would be a bit difficult to modify therefore we keep
+!! DK DK Oct 2012: using NGNOD2D_FOUR_CORNERS only for now.
+!! DK DK Oct 2012: If the face is flat (for instance along an absorbing edge) then the above
+!! DK DK Oct 2012: code is still exact even for HEX27, but if there is bathymetry for instance
+!! DK DK Oct 2012: along a curved fluid-solid interface then the code below is not as precise
+!! DK DK Oct 2012: as it should for HEX27.
   integer,dimension(3,4,6) :: iface_all_corner_ijk
 
   ! local parameters
