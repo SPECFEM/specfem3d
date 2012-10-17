@@ -8,7 +8,65 @@ To-do list for the different flavors of SPECFEM:
 CPML :
 ------------------------------------------------
 
-- suggestion 01:
+- suggestion 00: about adding new CPML flags and also new (or modified) movie and shakemap flags + VERCE project modifications
+----------------
+
+As discussed yesterday during our Skype call, let us make the 
+modifications below in the input Par_file of SPECFEM3D.
+NGNOD should be added and set to 8 or 27, and then when reading the 
+Par_file the code should check that it is equal to one or the other, and 
+otherwise exit with an error message.
+The code should then automatically set NGNOD2D to 4 if NGNOD == 8 and to 9 if NGNOD == 27.
+
+For the new movie flags, I suggest changing MOVIE_SURFACE and 
+EXTERNAL_MESH_MOVIE_SURFACE, which are confusing, to MOVIE_SURFACE only, 
+and then define a second (integer) parameter, called for instance 
+MOVIE_TYPE, which could be equal to 1 to show the top surface 
+(topography + oceans) only, to 2 to show all the external faces of the 
+mesh (i.e. topography + vertical edges + bottom), and so on.
+
+Let me add this to the todo list. Let us also decide who does it
+(since new flags will be needed in the Par_file for PML, I guess it will 
+be easy and better to do all the modifications at the same time).
+
+Let us also modify the code to allow for shakemaps and movies at the 
+same time, rather than having to run the code twice.
+
+> add NGNOD = 27 or 8   to the input Par_file
+>
+>
+> In the VERCE framework they ask some modifications in order to improve
+> the flexibility of the code if installed as a module....
+>
+> Move from constants.h to Par_file the flags:
+> EXTERNAL_MESH_MOVIE_SURFACE
+> EXTERNAL_MESH_CREATE_SHAKEMAP
+> OLSEN_ATTENUATION_RATIO
+>
+> Allow shakemaps and surface movies to be generated during the same run
+> (EXTERNAL_MESH_MOVIE_SURFACE and EXTERNAL_MESH_CREATE_SHAKEMAP not
+> mutually exclusive)
+>
+> We believe also that
+>
+> Explain in the manual the difference in using
+> EXTERNAL_MESH_MOVIE_SURFACE instead of MOVIE_SURFACE, or
+> EXTERNAL_MESH_CREATE_SHAKEMAP instead of CREATE_SHAKEMAP
+>
+> Possibly set the name of the tomography file in the Par_file instead
+> of hard-coding it in model_tomography.f90 or creating a separate
+> parfile
+>
+>
+> Some interesting addition will be the:
+>
+> ---- multifiles tomography
+> Piero told me that the run for turkey/europe mesh had this possibility
+> so probably it is matter to commint that files in the svn version
+>
+
+
+- suggestion 01a:
 ----------------
 
 Zhinan commits his current clean 2D C-PML code to SVN; because changes
@@ -39,6 +97,11 @@ we should explain this in the LaTeX file that you are writing now to explain the
 
 - see if CPML works with curved elements (checking the behavior with the default M2 UPPA example with topography for instance)
 
+- suggestion 01b:
+----------------
+
+Zhinan is going to try to adapt CPML in the 2D code to tilted models, to see how to do that;
+he will also try to see how many PML flags he needs.
 
 - suggestion 03:
 ----------------
