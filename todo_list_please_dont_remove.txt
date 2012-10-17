@@ -110,7 +110,8 @@ Zhinan (with the help of Jo and Daniel) implements C-PML in SPECFEM3D (in that c
 SPECFEM3D_GLOBE later if needed, but we do not need that now).
 Paul Cristini and I will then test it extensively after the summer.
 Zhinan, Daniel, Paul and Jo need to agree on a numbering convention (i.e. flags) for the different PML regions and corners (a
-binary / bit encoding technique can be used); they could use the same idea as in the convention used in 2D.
+binary / bit encoding technique can be used; see more details about this at the end of this suggestion);
+they could use the same idea as in the convention used in 2D.
 
 See (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT;
 read this from input files in the solver
@@ -119,6 +120,32 @@ See also if the current arrays called isPML() or PML() or something like that in
 be reused. They seem to correspond to an earlier attempt a few years ago that was never finished.
 
 One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, but I never implemented all the terms.
+
+The standard logical bit handling functions of Fortran are described for instance at http://www.ews.uiuc.edu/~mrgates2/docs/fortran.html
+Thus here is the standard way of using a single array for all the logical flags for CPML in Fortran:
+
+- define a single integer flag
+
+integer, dimension(nspec) :: PML_flags
+
+- clear it initially :  PML_flags(:) = 0
+
+- use for instance bit #1 for Xmin, bit #2 for Xmax , bit #3 for Ymin .... bit #6 for Zmax
+
+- thus, to indicate that an element belongs to the Xmax PML for instance, use :
+
+PML_flags(ispec) = ibset(PML_flags(ispec), 2)     ! sets bit #2 of that integer to 1
+
+- later, to test if this element belongs to the Xmax PML, use:
+
+if(bset(PML_flags(ispec), 2)) then ! test if bit #2 is equal to 1
+endif
+
+
+Pretty simple, and then a single array is needed for all the flags.
+
+(in fact, we could use this technique to group all the other logical flags of the code in a single array, to reduce memory size...)
+
 
 - suggestion 04:
 ----------------
