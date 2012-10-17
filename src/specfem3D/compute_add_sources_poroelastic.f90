@@ -33,7 +33,7 @@
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         xi_source,eta_source,gamma_source, &
-                        hdur,hdur_gaussian,tshift_cmt,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accels,b_accelw, &
@@ -67,7 +67,7 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -153,9 +153,14 @@
 !                print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
               endif
 
-              ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-              stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
-              !stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
+              ! gaussian source time function
+              !stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),f0)
+
+              if( USE_RICKER_IPATI ) then
+                 stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+              else
+                 stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),f0)
+              endif
 
               ! add the inclined force source array
               ! the source is applied to both solid and fluid phase: bulk source.
@@ -183,10 +188,10 @@
 
             else
 
-              !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+              !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
               !t0 = 1.2d0/hdur(isource)
-              !stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
-              stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+              !stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+              stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
                !     distinguish between single and double precision for reals
                if(CUSTOM_REAL == SIZE_REAL) then
@@ -413,9 +418,11 @@
                !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                !endif
 
-               ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-               ! should be the same than for the forward simulation (check above)
-               stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
+               if( USE_RICKER_IPATI ) then
+                  stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+               else
+                  stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+               endif
 
                ! add the inclined force source array
                ! the source is applied to both solid and fluid phase: bulk source
@@ -446,10 +453,10 @@
 
               ! see note above: time step corresponds now to NSTEP-it
               ! (also compare to it-1 for forward simulation)
-              !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+              !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
               !t0 = 1.2d0/hdur(isource)
-              !stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
-              stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+              !stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+              stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! distinguish between single and double precision for reals
               if(CUSTOM_REAL == SIZE_REAL) then

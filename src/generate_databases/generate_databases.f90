@@ -407,7 +407,7 @@
 
     write(IMAIN,*)
     if(USE_FORCE_POINT_SOURCE) then
-       write(IMAIN,*) 'using a force point source instead of a CMTSOLUTION source'
+       write(IMAIN,*) 'using a FORCESOLUTION source instead of a CMTSOLUTION source'
     else
        write(IMAIN,*) 'using a CMTSOLUTION source'
        write(IMAIN,*)

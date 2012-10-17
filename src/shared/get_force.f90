@@ -83,6 +83,10 @@
     read(1,"(a)") string
     read(string(12:len_trim(string)),*) t_shift(isource)
 
+    ! read half duration
+    read(1,"(a)") string
+    read(string(6:len_trim(string)),*) hdur(isource)
+
     ! read latitude
     read(1,"(a)") string
     read(string(10:len_trim(string)),*) lat(isource)
