@@ -351,6 +351,14 @@ workflow inverse schemes:
 - suggestion 21:
 ----------------
 
+Update from Dimitri, Oct 2012: after talking with many developers and users, we should definitely make the inversion tools in SPECFEM3D more standard and more user friendly. Even if there are many options to adjust when solving inverse problems, and different users currently have different tools (in Matlab, Perl, Fortran, Python and so on), sooner rather than later we should probably try to define a single tool in which all these different options could be implemented, but at least we would have a unified framework, which we could document in the manual.
+
+Currently many users complain that computing sensitivity kernels is easy with SPECFEM3D but that then it is not so easy to use them (and different people give different answers when they are asked). So far, at least the following groups have local tools: the Princeton group, the Toronto group, Carl in Alaska, Emanuele and his group at INGV, Alessia (at least for Flexwin, there are now two versions: in Fortran and in Python), and the Marseille / CNRS group. We should try to address this issue relatively quickly, because the more we wait the more these sets of tools will diverge.
+
+One thing we should do quickly for sure is make sure we maintain the current tools of SPECFEM3D inside the same directory as SPECFEM3D itself; it seems that currently everything is outside, in an "ADJOINT_TOMO" directory, which is thus not downloaded by users when they get SPECFEM3D through SVN or from the CIG tar file; which is problematic.
+
+==================
+
 Zhinan should clean and improve the tools to solve actual inverse problems once the sensitivity kernels are created by the code;
 i.e. how to efficiently solve the linear systems, what kind of tools to use, how to make them more flexible, more user friendly,
 maybe semi-automatic or at least easier to use
