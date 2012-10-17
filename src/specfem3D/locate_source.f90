@@ -30,7 +30,7 @@
 
   subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
                  xigll,yigll,zigll,NPROC, &
-                 tshift_cmt,min_tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+                 tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
@@ -64,8 +64,8 @@
 
   integer yr,jda,ho,mi
 
-  double precision tshift_cmt(NSOURCES)
-  double precision sec,min_tshift_cmt_original
+  double precision tshift_src(NSOURCES)
+  double precision sec,min_tshift_src_original
 
   integer iprocloop
 
@@ -169,11 +169,11 @@
 
   ! read all the sources (note: each process reads the source file)
   if (USE_FORCE_POINT_SOURCE) then
-     call get_force(tshift_cmt,hdur,lat,long,depth,NSOURCES,min_tshift_cmt_original,factor_force_source, &
+     call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
                    comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
   else
-     call get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
-                 DT,NSOURCES,min_tshift_cmt_original)
+     call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
+                 DT,NSOURCES,min_tshift_src_original)
   endif
 
   ! define topology of the control element
@@ -752,11 +752,14 @@
 
           ! prints frequency content for point forces
           f0 = hdur(isource)
-          t0_ricker = 1.2d0/f0
           write(IMAIN,*) '  using a source of dominant frequency ',f0
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-          write(IMAIN,*) '  t0_ricker = ',t0_ricker,'tshift_cmt = ',tshift_cmt(isource)
+          if( USE_RICKER_IPATI ) then
+             t0_ricker = 1.2d0/f0
+             write(IMAIN,*) '  t0_ricker = ',t0_ricker
+          endif
+          write(IMAIN,*) '  time shift = ',tshift_src(isource)
           write(IMAIN,*)
           write(IMAIN,*) '  half duration -> frequency: ',hdur(isource),' seconds**(-1)'
         else
@@ -772,7 +775,7 @@
           endif
           write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
         endif
-        write(IMAIN,*) '  time shift: ',tshift_cmt(isource),' seconds'
+        write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
         write(IMAIN,*)
         write(IMAIN,*) 'original (requested) position of the source:'
         write(IMAIN,*)

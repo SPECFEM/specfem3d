@@ -74,7 +74,7 @@
   use specfem_par_movie
   implicit none
 
-  double precision :: t0_acoustic,min_tshift_cmt_original
+  double precision :: t0_acoustic,min_tshift_src_original
   integer :: yr,jda,ho,mi
   integer :: isource,ispec,ier
 
@@ -90,7 +90,7 @@
           xi_source(NSOURCES), &
           eta_source(NSOURCES), &
           gamma_source(NSOURCES), &
-          tshift_cmt(NSOURCES), &
+          tshift_src(NSOURCES), &
           hdur(NSOURCES), &
           hdur_gaussian(NSOURCES), &
           utm_x_source(NSOURCES), &
@@ -104,6 +104,12 @@
           comp_dir_vect_source_N(NSOURCES), &
           comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
      if( ier /= 0 ) stop 'error allocating arrays for force point sources'
+  else
+     allocate(factor_force_source(1), &
+          comp_dir_vect_source_E(1), &
+          comp_dir_vect_source_N(1), &
+          comp_dir_vect_source_Z_UP(1),stat=ier)
+     if( ier /= 0 ) stop 'error allocating dummy FORCESOLUTION arrays'
   endif
 
   ! for source encoding (acoustic sources so far only)
@@ -116,7 +122,7 @@
 !                xi_source, eta_source & gamma_source
   call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          tshift_cmt,min_tshift_cmt_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
@@ -128,7 +134,7 @@
           USE_FORCE_POINT_SOURCE,factor_force_source,comp_dir_vect_source_E, &
           comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
 
-  if(abs(minval(tshift_cmt)) > TINYVAL) call exit_MPI(myrank,'one tshift_cmt must be zero, others must be positive')
+  if(abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
 ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
@@ -146,7 +152,7 @@
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
   !          non-zero offset at the beginning of the source time function
-  t0 = - 2.0d0 * minval(tshift_cmt(:) - hdur(:))   ! - 1.5d0 * minval(tshift_cmt-hdur)
+  t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:))   ! - 1.5d0 * minval(tshift_src-hdur)
 
   ! uses an earlier start time if source is acoustic with a gaussian source time function
   t0_acoustic = 0.0d0
@@ -155,7 +161,7 @@
       ispec = ispec_selected_source(isource)
       if( ispec_is_acoustic(ispec) ) then
         ! uses an earlier start time
-        t0_acoustic = - 3.0d0 * ( tshift_cmt(isource) - hdur(isource) )
+        t0_acoustic = - 3.0d0 * ( tshift_src(isource) - hdur(isource) )
         if(  t0_acoustic > t0 ) t0 = t0_acoustic
       endif
     endif
@@ -168,10 +174,10 @@
   ! point force sources will start depending on the frequency given by hdur
   if( USE_FORCE_POINT_SOURCE .or. USE_RICKER_IPATI ) then
     ! note: point force sources will give the dominant frequency in hdur,
-    !          thus the main period is 1/hdur.
-    !          also, these sources use a Ricker source time function instead of a gaussian.
-    !          for a Ricker source time function, a start time ~1.2 * main_period is a good choice
-    t0 = - 1.2d0 * minval(tshift_cmt(:) - 1.0d0/hdur(:))
+    !       thus the main period is 1/hdur.
+    !       also, these sources use a Ricker source time function instead of a gaussian.
+    !       for a Ricker source time function, a start time ~1.2 * main_period is a good choice
+    t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
   endif
 
   ! checks if user set USER_T0 to fix simulation start time
@@ -184,17 +190,17 @@
     ! notifies user
     if( myrank == 0 ) then
       write(IMAIN,*) 'USER_T0: ',USER_T0
-      write(IMAIN,*) 't0: ',t0,'min_tshift_cmt_original: ',min_tshift_cmt_original
+      write(IMAIN,*) 't0: ',t0,'min_tshift_src_original: ',min_tshift_src_original
       write(IMAIN,*)
     endif
 
     ! checks if automatically set t0 is too small
-    ! note: min_tshift_cmt_original can be a positive or negative time shift (minimum from all tshift)
-    if( t0 <= USER_T0 + min_tshift_cmt_original ) then
-      ! by default, tshift_cmt(:) holds relative time shifts with a minimum time shift set to zero
+    ! note: min_tshift_src_original can be a positive or negative time shift (minimum from all tshift)
+    if( t0 <= USER_T0 + min_tshift_src_original ) then
+      ! by default, tshift_src(:) holds relative time shifts with a minimum time shift set to zero
       ! re-adds (minimum) original time shift such that sources will kick in
       ! according to their absolute time shift
-      tshift_cmt(:) = tshift_cmt(:) + min_tshift_cmt_original
+      tshift_src(:) = tshift_src(:) + min_tshift_src_original
 
       ! sets new simulation start time such that
       ! simulation starts at t = - t0 = - USER_T0
@@ -211,7 +217,7 @@
       if( myrank == 0 ) then
         write(IMAIN,*) 'error: USER_T0 is too small'
         write(IMAIN,*) '       must make one of three adjustements:'
-        write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-min_tshift_cmt_original
+        write(IMAIN,*) '       - increase USER_T0 to be at least: ',t0-min_tshift_src_original
         write(IMAIN,*) '       - decrease time shift in CMTSOLUTION file'
         write(IMAIN,*) '       - decrease hdur in CMTSOLUTION file'
       endif
@@ -973,4 +979,3 @@
   endif
 
   end subroutine setup_sources_receivers_VTKfile
-

@@ -1059,10 +1059,12 @@ to avoid writing to the seismograms too often. This feature is only relevant for
 \item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a \texttt{FORCESOLUTION} force source
 instead of a \texttt{CMTSOLUTION} moment-tensor source. This can be useful e.g. for oil industry 
 foothills simulations in which the source is a vertical force, normal force, 
-tilted force, or an impact etc. You will need to give the East, North and vertical components of an 
+tilted force, or an impact etc. By default a quasi-Heaviside time function is used to represent the force point source but a Ricker 
+source time function can be computed instead by changing the value of \texttt{USE\_RICKER\_IPATI} in the main constants file 
+\texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
+Note that in the \texttt{FORCESOLUTION} file, you will need to edit the East, North and vertical components of an 
 arbitrary (non-unitary) direction vector of the force vector; thus refer to Appendix~\ref{cha:Coordinates} 
-for the orientation of the reference frame.
-This vector is made unitary internally in the code and thus only its direction matters here;
+for the orientation of the reference frame. This vector is made unitary internally in the code and thus only its direction matters here;
 its norm is ignored and the norm of the force used is the factor force source times the source time function.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{in\_out\_files/OUTPUT\_FILES/plot\_source\_time\_function.txt}.
@@ -1105,7 +1107,7 @@ to run:
 \begin{description}
 \item [{\texttt{Par\_file}}] the main parameter file which was discussed in detail in the previous
 Chapter~\ref{cha:Creating-Distributed-Databases},
-\item [{\texttt{CMTSOLUTION}} or {\texttt{FORCESOLUTION}}] the earthquake source parameter file or the force source parameter file or, and
+\item [{\texttt{CMTSOLUTION}} or {\texttt{FORCESOLUTION}}] the earthquake source parameter file or the force source parameter file, and
 \item [{\texttt{STATIONS}}] the stations file.
 \end{description}
 
@@ -1149,7 +1151,7 @@ magnitude.}
 \end{figure}
 {\small \par}
 \end{lyxcode}
-The \texttt{CMTSOLUTION} should be edited in the following way:
+The \texttt{CMTSOLUTION} file should be edited in the following way:
 
 \begin{itemize}
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
@@ -1242,13 +1244,14 @@ by the finite fault model.
 
 \vspace{1cm}
 
-\noindent The \texttt{FORCESOLUTION} should be edited in the following way:
+\noindent The \texttt{FORCESOLUTION} file should be edited in the following way:
 
 \begin{itemize}
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
+\item Set the \texttt{half duration} parameter of the source time function.
 \item Set the latitude, longitude, depth of the source in geographical
   coordinates.
 \item Set the magnitude of the force source.
@@ -1262,9 +1265,9 @@ same   way   you    configure   a   \texttt{CMTSOLUTION}   file   with
 $N_{\mathrm{sources}}$   entries,  one   for   each  subevent   (i.e.,
 concatenate  $N_{\mathrm{sources}}$ \texttt{FORCESOLUTION} files  to a
 single   \texttt{FORCESOLUTION}  file).  At   least  one   entry  (not
-necessarily the first) must have a  zero time shift, and all the other
-entries must have non-negative time  shift. Each subevent can have its
-own half latitude, longitude, depth, and force parameters.
+necessarily the first) must have a  zero \texttt{time shift}, and all the other
+entries must have non-negative \texttt{time  shift}. Each subevent can have its
+own half latitude, longitude, depth, \texttt{half duration} and force parameters.
 
 {\small }%
 \begin{figure}[H]

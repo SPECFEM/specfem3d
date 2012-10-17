@@ -30,7 +30,7 @@
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         xi_source,eta_source,gamma_source, &
-                        hdur,hdur_gaussian,tshift_cmt,dt,t0,sourcearrays, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &
@@ -68,7 +68,7 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -123,17 +123,22 @@
     if(GPU_MODE) then
        if( NSOURCES > 0 ) then
           do isource = 1,NSOURCES
+             ! precomputes source time function factor
              if(USE_FORCE_POINT_SOURCE) then
-                ! precomputes source time function factor
-                stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                     dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
+                if( USE_RICKER_IPATI ) then
+                   stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
+                        dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                else
+                   stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
+                        dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                endif
              else
                 if( USE_RICKER_IPATI ) then
                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                        dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
+                        dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                 else
                    stf_pre_compute(isource) = comp_source_time_function( &
-                        dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+                        dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                 endif
              endif
           enddo
@@ -174,8 +179,11 @@
                     !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                     !endif
 
-                    ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                    stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
+                    if( USE_RICKER_IPATI) then
+                       stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                    else
+                       stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                    endif
 
                     ! add the inclined force source array
                     ! distinguish between single and double precision for reals
@@ -197,9 +205,9 @@
                   else
 
                     if( USE_RICKER_IPATI) then
-                      stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
+                      stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                     else
-                      stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+                      stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                     endif
 
                     !     distinguish between single and double precision for reals
@@ -410,17 +418,22 @@
      if(GPU_MODE) then
         if( NSOURCES > 0 ) then
            do isource = 1,NSOURCES
+              ! precomputes source time function factors
               if(USE_FORCE_POINT_SOURCE) then
-                 ! precomputes source time function factors
-                 stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                      dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
+                 if( USE_RICKER_IPATI ) then
+                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                 else
+                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                 endif
               else
                  if( USE_RICKER_IPATI ) then
                     stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                         dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
                     stf_pre_compute(isource) = comp_source_time_function( &
-                         dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                  endif
               endif
            enddo
@@ -460,8 +473,11 @@
                      !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                      !endif
 
-                     ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                     stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
+                     if( USE_RICKER_IPATI ) then
+                        stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                     else
+                        stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                     endif
 
                     ! add the inclined force source array
                     ! distinguish between single and double precision for reals
@@ -486,10 +502,10 @@
                      ! (also compare to it-1 for forward simulation)
                      if( USE_RICKER_IPATI ) then
                        stf = comp_source_time_function_rickr( &
-                                      dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
+                                      dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                      else
                        stf = comp_source_time_function( &
-                                      dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+                                      dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                      endif
 
                      ! distinguish between single and double precision for reals

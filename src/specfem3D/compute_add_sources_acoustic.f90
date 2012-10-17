@@ -30,7 +30,7 @@
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   xi_source,eta_source,gamma_source, &
-                                  hdur,hdur_gaussian,tshift_cmt,dt,t0, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
@@ -65,7 +65,7 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_cmt
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -118,127 +118,136 @@
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
 !way 2
-    if(GPU_MODE) then
-      if( NSOURCES > 0 ) then
-        do isource = 1,NSOURCES
-          if(USE_FORCE_POINT_SOURCE) then
-            ! precomputes source time function factor
-            stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                  dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
-          else
-            if( USE_RICKER_IPATI ) then
-              stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                          dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
-            else
-              stf_pre_compute(isource) = comp_source_time_function_gauss( &
-                          dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-            endif
-          endif
-        enddo
-        stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-        ! only implements SIMTYPE=1 and NOISE_TOM=0
-        ! write(*,*) "fortran dt = ", dt
-        ! change dt -> DT
-        call compute_add_sources_ac_cuda(Mesh_pointer, phase_is_inner, &
-                                        NSOURCES, stf_pre_compute, myrank)
-      endif
-
-    else ! .NOT. GPU_MODE
-
-      ! adds acoustic sources
-      do isource = 1,NSOURCES
-
-        !   add the source (only if this proc carries the source)
-        if(myrank == islice_selected_source(isource)) then
-
-          ispec = ispec_selected_source(isource)
-
-          if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-
-            if( ispec_is_acoustic(ispec) ) then
-
+     if(GPU_MODE) then
+        if( NSOURCES > 0 ) then
+           do isource = 1,NSOURCES
+              ! precomputes source time function factor
               if(USE_FORCE_POINT_SOURCE) then
-
-                ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-                iglob = ibool(nint(xi_source(isource)), &
-                               nint(eta_source(isource)), &
-                               nint(gamma_source(isource)), &
-                               ispec)
-
-                f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
-
-                !if (it == 1 .and. myrank == 0) then
-                !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-                !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-                !endif
-
-                ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                stf_used = factor_force_source(isource) * &
-                           comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_cmt(isource),f0)
-
-                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
-
-                ! acoustic source for pressure gets divided by kappa
-                ! source contribution
-                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                  - stf_used / kappastore(nint(xi_source(isource)), &
-                                                          nint(eta_source(isource)), &
-                                                          nint(gamma_source(isource)),ispec)
-
+                 if( USE_RICKER_IPATI ) then
+                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
+                         dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                 else
+                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
+                         dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                 endif
               else
+                 if( USE_RICKER_IPATI ) then
+                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
+                         dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                 else
+                    stf_pre_compute(isource) = comp_source_time_function_gauss( &
+                         dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                 endif
+              endif
+           enddo
+           stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+           ! only implements SIMTYPE=1 and NOISE_TOM=0
+           ! write(*,*) "fortran dt = ", dt
+           ! change dt -> DT
+           call compute_add_sources_ac_cuda(Mesh_pointer, phase_is_inner, &
+                NSOURCES, stf_pre_compute, myrank)
+        endif
 
-                if( USE_RICKER_IPATI ) then
-                  stf = comp_source_time_function_rickr( &
-                                dble(it-1)*DT-t0-tshift_cmt(isource),hdur(isource))
-                else
-                  ! gaussian source time
-                  stf = comp_source_time_function_gauss( &
-                                dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-                endif
+     else ! .NOT. GPU_MODE
 
-                ! quasi-heaviside
-                !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+        ! adds acoustic sources
+        do isource = 1,NSOURCES
 
-                ! source encoding
-                stf = stf * pm1_source_encoding(isource)
+           !   add the source (only if this proc carries the source)
+           if(myrank == islice_selected_source(isource)) then
 
-                ! distinguishes between single and double precision for reals
-                if(CUSTOM_REAL == SIZE_REAL) then
-                  stf_used = sngl(stf)
-                else
-                  stf_used = stf
-                endif
+              ispec = ispec_selected_source(isource)
 
-                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+              if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-                !     add source array
-                do k=1,NGLLZ
-                  do j=1,NGLLY
-                     do i=1,NGLLX
-                        ! adds source contribution
-                        ! note: acoustic source for pressure gets divided by kappa
-                        iglob = ibool(i,j,k,ispec)
-                        potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                     enddo
-                  enddo
-                enddo
+                 if( ispec_is_acoustic(ispec) ) then
 
-              endif ! USE_FORCE_POINT_SOURCE
+                    if(USE_FORCE_POINT_SOURCE) then
 
-              stf_used_total = stf_used_total + stf_used
+                       ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
+                       iglob = ibool(nint(xi_source(isource)), &
+                            nint(eta_source(isource)), &
+                            nint(gamma_source(isource)), &
+                            ispec)
 
-            endif ! ispec_is_acoustic
-          endif ! ispec_is_inner
-        endif ! myrank
+                       f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
-      enddo ! NSOURCES
-    endif ! GPU_MODE
+                       !if (it == 1 .and. myrank == 0) then
+                       !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+                       !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+                       !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+                       !endif
+
+                       if( USE_RICKER_IPATI ) then
+                          stf_used = factor_force_source(isource) * &
+                               comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                       else
+                          stf_used = factor_force_source(isource) * &
+                               comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                       endif
+
+                       ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+                       ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+                       ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
+
+                       ! acoustic source for pressure gets divided by kappa
+                       ! source contribution
+                       potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                            - stf_used / kappastore(nint(xi_source(isource)), &
+                            nint(eta_source(isource)), &
+                            nint(gamma_source(isource)),ispec)
+
+                    else
+
+                       if( USE_RICKER_IPATI ) then
+                          stf = comp_source_time_function_rickr( &
+                               dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                       else
+                          ! gaussian source time
+                          stf = comp_source_time_function_gauss( &
+                               dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                       endif
+
+                       ! quasi-heaviside
+                       !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+
+                       ! source encoding
+                       stf = stf * pm1_source_encoding(isource)
+
+                       ! distinguishes between single and double precision for reals
+                       if(CUSTOM_REAL == SIZE_REAL) then
+                          stf_used = sngl(stf)
+                       else
+                          stf_used = stf
+                       endif
+
+                       ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+                       ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+                       ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+
+                       !     add source array
+                       do k=1,NGLLZ
+                          do j=1,NGLLY
+                             do i=1,NGLLX
+                                ! adds source contribution
+                                ! note: acoustic source for pressure gets divided by kappa
+                                iglob = ibool(i,j,k,ispec)
+                                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                                     - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                             enddo
+                          enddo
+                       enddo
+
+                    endif ! USE_FORCE_POINT_SOURCE
+
+                    stf_used_total = stf_used_total + stf_used
+
+                 endif ! ispec_is_acoustic
+              endif ! ispec_is_inner
+           endif ! myrank
+
+        enddo ! NSOURCES
+     endif ! GPU_MODE
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -408,130 +417,138 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. nsources_local > 0) then
 
-    ! on GPU
-    if(GPU_MODE) then
-      if( NSOURCES > 0 ) then
-        do isource = 1,NSOURCES
-          if(USE_FORCE_POINT_SOURCE) then
-            ! precomputes source time function factors
-            stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                  dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
-          else
-            if( USE_RICKER_IPATI ) then
-              stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                            dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
-            else
-              stf_pre_compute(isource) = comp_source_time_function_gauss( &
-                            dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-            endif
-          endif
-        enddo
-        stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-        ! only implements SIMTYPE=3
-        call compute_add_sources_ac_s3_cuda(Mesh_pointer, phase_is_inner, &
-                                           NSOURCES,stf_pre_compute, myrank)
-      endif
-
-    else ! .NOT. GPU_MODE
-
-      ! adds acoustic sources
-      do isource = 1,NSOURCES
-
-        !   add the source (only if this proc carries the source)
-        if(myrank == islice_selected_source(isource)) then
-
-          ispec = ispec_selected_source(isource)
-
-          if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-
-            if( ispec_is_acoustic(ispec) ) then
-
+     ! on GPU
+     if(GPU_MODE) then
+        if( NSOURCES > 0 ) then
+           do isource = 1,NSOURCES
+              ! precomputes source time function factors
               if(USE_FORCE_POINT_SOURCE) then
-
-                ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-                iglob = ibool(nint(xi_source(isource)), &
-                               nint(eta_source(isource)), &
-                               nint(gamma_source(isource)), &
-                               ispec)
-
-                f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-
-                !if (it == 1 .and. myrank == 0) then
-                !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-                !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-                !endif
-
-                ! gaussian source time function
-                !stf_used = comp_source_time_function(dble(it-1)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-
-                ! we use nu_source(:,3) here because we want a source normal to the surface.
-                ! This is the expression of a Ricker; should be changed according maybe to the Par_file.
-                stf_used = factor_force_source(isource) * comp_source_time_function_rickr( &
-                                        dble(NSTEP-it)*DT-t0-tshift_cmt(isource),f0)
-
-                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
-
-                ! acoustic source for pressure gets divided by kappa
-                ! source contribution
-                b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                            - stf_used / kappastore(nint(xi_source(isource)), &
-                                                 nint(eta_source(isource)), &
-                                                 nint(gamma_source(isource)),ispec)
-
+                 if( USE_RICKER_IPATI ) then
+                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                 else
+                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                 endif
               else
+                 if( USE_RICKER_IPATI ) then
+                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                 else
+                    stf_pre_compute(isource) = comp_source_time_function_gauss( &
+                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                 endif
+              endif
+           enddo
+           stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+           ! only implements SIMTYPE=3
+           call compute_add_sources_ac_s3_cuda(Mesh_pointer, phase_is_inner, &
+                NSOURCES,stf_pre_compute, myrank)
+        endif
 
-                if( USE_RICKER_IPATI ) then
-                  stf = comp_source_time_function_rickr( &
-                                  dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur(isource))
-                else
-                  ! gaussian source time
-                  stf = comp_source_time_function_gauss( &
-                                  dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
-                endif
+     else ! .NOT. GPU_MODE
 
-                ! quasi-heaviside
-                !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_cmt(isource),hdur_gaussian(isource))
+        ! adds acoustic sources
+        do isource = 1,NSOURCES
 
-                ! source encoding
-                stf = stf * pm1_source_encoding(isource)
+           !   add the source (only if this proc carries the source)
+           if(myrank == islice_selected_source(isource)) then
 
-                ! distinguishes between single and double precision for reals
-                if(CUSTOM_REAL == SIZE_REAL) then
-                  stf_used = sngl(stf)
-                else
-                  stf_used = stf
-                endif
+              ispec = ispec_selected_source(isource)
 
-                ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-                ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-                ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+              if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-                !     add source array
-                do k=1,NGLLZ
-                  do j=1,NGLLY
-                     do i=1,NGLLX
-                        ! adds source contribution
-                        ! note: acoustic source for pressure gets divided by kappa
-                        iglob = ibool(i,j,k,ispec)
-                        b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                     enddo
-                  enddo
-                enddo
+                 if( ispec_is_acoustic(ispec) ) then
 
-              endif ! USE_FORCE_POINT_SOURCE
+                    if(USE_FORCE_POINT_SOURCE) then
 
-              stf_used_total = stf_used_total + stf_used
+                       ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
+                       iglob = ibool(nint(xi_source(isource)), &
+                            nint(eta_source(isource)), &
+                            nint(gamma_source(isource)), &
+                            ispec)
 
-            endif ! ispec_is_elastic
-          endif ! ispec_is_inner
-        endif ! myrank
+                       f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
 
-      enddo ! NSOURCES
-    endif ! GPU_MODE
+                       !if (it == 1 .and. myrank == 0) then
+                       !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+                       !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+                       !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+                       !endif
+
+                       ! gaussian source time function
+                       !stf_used = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+
+                       if( USE_RICKER_IPATI ) then
+                          stf_used = factor_force_source(isource) * comp_source_time_function_rickr( &
+                               dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                       else
+                          stf_used = factor_force_source(isource) * comp_source_time_function( &
+                               dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                       endif
+
+                       ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+                       ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+                       ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
+
+                       ! acoustic source for pressure gets divided by kappa
+                       ! source contribution
+                       b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                            - stf_used / kappastore(nint(xi_source(isource)), &
+                            nint(eta_source(isource)), &
+                            nint(gamma_source(isource)),ispec)
+
+                    else
+
+                       if( USE_RICKER_IPATI ) then
+                          stf = comp_source_time_function_rickr( &
+                               dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                       else
+                          ! gaussian source time
+                          stf = comp_source_time_function_gauss( &
+                               dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                       endif
+
+                       ! quasi-heaviside
+                       !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+
+                       ! source encoding
+                       stf = stf * pm1_source_encoding(isource)
+
+                       ! distinguishes between single and double precision for reals
+                       if(CUSTOM_REAL == SIZE_REAL) then
+                          stf_used = sngl(stf)
+                       else
+                          stf_used = stf
+                       endif
+
+                       ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+                       ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+                       ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+
+                       !     add source array
+                       do k=1,NGLLZ
+                          do j=1,NGLLY
+                             do i=1,NGLLX
+                                ! adds source contribution
+                                ! note: acoustic source for pressure gets divided by kappa
+                                iglob = ibool(i,j,k,ispec)
+                                b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                                     - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                             enddo
+                          enddo
+                       enddo
+
+                    endif ! USE_FORCE_POINT_SOURCE
+
+                    stf_used_total = stf_used_total + stf_used
+
+                 endif ! ispec_is_elastic
+              endif ! ispec_is_inner
+           endif ! myrank
+
+        enddo ! NSOURCES
+     endif ! GPU_MODE
   endif
 
   ! master prints out source time function to file
