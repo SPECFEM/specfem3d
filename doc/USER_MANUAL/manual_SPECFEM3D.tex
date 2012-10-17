@@ -583,7 +583,8 @@ For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and
 \item [materials\_file] Contains the material associations for each element.
 \item [nodes\_coords\_file] Contains the point locations in Cartesian coordinates of the mesh element corners.
 \item [mesh\_file] Contains the mesh element connectivity.
-\item [free\_surface\_file] Contains the free surface connectivity.
+\item [free\_surface\_file] Contains the free surface connectivity. You should put both the surface of acoustic regions and of elastic regions in that file;
+that is, list all the element faces that constitute the surface of the model in that file.
 \item [absorbing\_surface\_file\_xmax] Contains the surface connectivity of the absorbing boundary surface at the Xmax.
 \item [absorbing\_surface\_file\_xmin] Contains the surface connectivity of the absorbing boundary surface at the Xmin.
 \item [absorbing\_surface\_file\_ymax] Contains the surface connectivity of the absorbing boundary surface at the Ymax.
@@ -995,7 +996,7 @@ using Olsen's empirical relation (see \citet{OlDaBr03}).
 want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
 \item [{\texttt{ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
 on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
-\item [{\texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on 
+\item [{\texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on
 absorbing boundary conditions on the top surface which by default constitutes a free surface of the model.
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
@@ -1057,13 +1058,13 @@ than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only relevant for the solver.
 \item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a \texttt{FORCESOLUTION} force source
-instead of a \texttt{CMTSOLUTION} moment-tensor source. This can be useful e.g. for oil industry 
-foothills simulations in which the source is a vertical force, normal force, 
-tilted force, or an impact etc. By default a quasi-Heaviside time function is used to represent the force point source but a Ricker 
-source time function can be computed instead by changing the value of \texttt{USE\_RICKER\_IPATI} in the main constants file 
+instead of a \texttt{CMTSOLUTION} moment-tensor source. This can be useful e.g. for oil industry
+foothills simulations in which the source is a vertical force, normal force,
+tilted force, or an impact etc. By default a quasi-Heaviside time function is used to represent the force point source but a Ricker
+source time function can be computed instead by changing the value of \texttt{USE\_RICKER\_IPATI} in the main constants file
 \texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
-Note that in the \texttt{FORCESOLUTION} file, you will need to edit the East, North and vertical components of an 
-arbitrary (non-unitary) direction vector of the force vector; thus refer to Appendix~\ref{cha:Coordinates} 
+Note that in the \texttt{FORCESOLUTION} file, you will need to edit the East, North and vertical components of an
+arbitrary (non-unitary) direction vector of the force vector; thus refer to Appendix~\ref{cha:Coordinates}
 for the orientation of the reference frame. This vector is made unitary internally in the code and thus only its direction matters here;
 its norm is ignored and the norm of the force used is the factor force source times the source time function.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
@@ -1119,8 +1120,8 @@ may be changed after running \texttt{xgenerate\_databases}:
 \item the simulation type control parameters: \texttt{SIMULATION\_TYPE}
 and \texttt{SAVE\_FORWARD}
 \item the time step parameters \texttt{NSTEP} and \texttt{DT}
-\item the absorbing boundary control parameter \texttt{ABSORBING\_CONDITIONS} on condition that the\\ 
-  \texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE} flag remains unmodified after running the databases generation. 
+\item the absorbing boundary control parameter \texttt{ABSORBING\_CONDITIONS} on condition that the\\
+  \texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE} flag remains unmodified after running the databases generation.
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
 and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
 \item the ShakeMap\textregistered option \texttt{CREATE\_SHAKEMAP}
