@@ -69,7 +69,8 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0      # 0 = read the whole adjoint sources at
 # in which the source is a vertical force, normal force, inclined force, impact etc.
 USE_FORCE_POINT_SOURCE          = .false.
 # If this flag is turned on, the FORCESOLUTION file must be edited by precising:
-# - the related time-shift parameter,
+# - the corresponding time-shift parameter,
+# - the half duration parameter of the source,
 # - the coordinates of the source,
 # - the magnitude of the force source,
 # - the components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis.
