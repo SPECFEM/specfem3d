@@ -11,6 +11,16 @@ CPML :
 - suggestion 00: about adding new CPML flags and also new (or modified) movie and shakemap flags + VERCE project modifications
 ----------------
 
+From Dimitri: here are two more parameters to rename and/or move from the constants.h file to the input Par_file:
+
+could you also rename "USE_RICKER_IPATI" to "USE_RICKER" or "USE_RICKER_TIME_FUNCTION" everywhere in the source code and in the input file?
+Because "Ipati" is the name of an industrial field and thus we should make the name of that parameter less specific.
+
+Let us also move that parameter from the constants.h file to the input file (Par_file), to avoid having to recompile the code 
+(see my previous email about this)
+
+================
+
 As discussed yesterday during our Skype call, let us make the 
 modifications below in the input Par_file of SPECFEM3D.
 NGNOD should be added and set to 8 or 27, and then when reading the 
