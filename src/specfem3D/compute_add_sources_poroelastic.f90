@@ -42,7 +42,7 @@
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
-                        USE_FORCE_POINT_SOURCE
+                        USE_RICKER_TIME_FUNCTION,USE_FORCE_POINT_SOURCE
 
   implicit none
 
@@ -153,10 +153,7 @@
 !                print *,'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
               endif
 
-              ! gaussian source time function
-              !stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),f0)
-
-              if( USE_RICKER_IPATI ) then
+              if( USE_RICKER_TIME_FUNCTION ) then
                  stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
               else
                  stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),f0)
@@ -418,7 +415,7 @@
                !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                !endif
 
-               if( USE_RICKER_IPATI ) then
+               if( USE_RICKER_TIME_FUNCTION ) then
                   stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
                else
                   stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)

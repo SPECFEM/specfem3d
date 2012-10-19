@@ -32,7 +32,8 @@
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
                         SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE,IMODEL)
+                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        USE_RICKER_TIME_FUNCTION,IMODEL)
 
   implicit none
 
@@ -48,7 +49,7 @@
   logical ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
-  logical USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE
+  logical USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
 
   character(len=256) LOCAL_PATH,CMTSOLUTION,FORCESOLUTION
 
@@ -142,6 +143,8 @@
   call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC')
   if(err_occurred() /= 0) return
   call read_value_logical(USE_FORCE_POINT_SOURCE, 'solver.USE_FORCE_POINT_SOURCE')
+  if(err_occurred() /= 0) return
+  call read_value_logical(USE_RICKER_TIME_FUNCTION, 'solver.USE_RICKER_TIME_FUNCTION')
   if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
@@ -302,7 +305,8 @@
 
   ! check
   if( IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER ) then
-    if( USE_RICKER_IPATI .eqv. .false. ) stop 'please set USE_RICKER_IPATI to .true. in shared/constants.h and recompile'
+    if( USE_RICKER_TIME_FUNCTION .eqv. .false. ) &
+         stop 'please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
 
   end subroutine read_parameter_file
