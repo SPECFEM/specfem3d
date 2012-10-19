@@ -42,7 +42,7 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        factor_force_source
+                        USE_RICKER_TIME_FUNCTION,factor_force_source
   implicit none
 
   include "constants.h"
@@ -123,7 +123,7 @@
            do isource = 1,NSOURCES
               ! precomputes source time function factor
               if(USE_FORCE_POINT_SOURCE) then
-                 if( USE_RICKER_IPATI ) then
+                 if( USE_RICKER_TIME_FUNCTION ) then
                     stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
                          dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                  else
@@ -131,7 +131,7 @@
                          dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                  endif
               else
-                 if( USE_RICKER_IPATI ) then
+                 if( USE_RICKER_TIME_FUNCTION ) then
                     stf_pre_compute(isource) = comp_source_time_function_rickr( &
                          dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                  else
@@ -178,7 +178,7 @@
                        !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                        !endif
 
-                       if( USE_RICKER_IPATI ) then
+                       if( USE_RICKER_TIME_FUNCTION ) then
                           stf_used = factor_force_source(isource) * &
                                comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
                        else
@@ -199,7 +199,7 @@
 
                     else
 
-                       if( USE_RICKER_IPATI ) then
+                       if( USE_RICKER_TIME_FUNCTION ) then
                           stf = comp_source_time_function_rickr( &
                                dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                        else
@@ -208,7 +208,7 @@
                                dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                        endif
 
-                       ! quasi-heaviside
+                       ! quasi-Heaviside
                        !stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
                        ! source encoding
@@ -423,7 +423,7 @@
            do isource = 1,NSOURCES
               ! precomputes source time function factors
               if(USE_FORCE_POINT_SOURCE) then
-                 if( USE_RICKER_IPATI ) then
+                 if( USE_RICKER_TIME_FUNCTION ) then
                     stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
                          dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
@@ -431,7 +431,7 @@
                          dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  endif
               else
-                 if( USE_RICKER_IPATI ) then
+                 if( USE_RICKER_TIME_FUNCTION ) then
                     stf_pre_compute(isource) = comp_source_time_function_rickr( &
                          dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
@@ -476,10 +476,7 @@
                        !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
                        !endif
 
-                       ! gaussian source time function
-                       !stf_used = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-
-                       if( USE_RICKER_IPATI ) then
+                       if( USE_RICKER_TIME_FUNCTION ) then
                           stf_used = factor_force_source(isource) * comp_source_time_function_rickr( &
                                dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
                        else
@@ -500,7 +497,7 @@
 
                     else
 
-                       if( USE_RICKER_IPATI ) then
+                       if( USE_RICKER_TIME_FUNCTION ) then
                           stf = comp_source_time_function_rickr( &
                                dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                        else
@@ -509,7 +506,7 @@
                                dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                        endif
 
-                       ! quasi-heaviside
+                       ! quasi-Heaviside
                        !stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
                        ! source encoding

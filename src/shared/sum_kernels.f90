@@ -114,7 +114,7 @@ program sum_kernels
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
-  logical :: ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION
+  logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH
 
   ! ============ program starts here =====================
@@ -160,7 +160,7 @@ program sum_kernels
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        IMODEL)
+                        USE_RICKER_TIME_FUNCTION,IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

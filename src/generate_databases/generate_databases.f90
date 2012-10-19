@@ -263,7 +263,7 @@
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        IMODEL)
+                        USE_RICKER_TIME_FUNCTION,IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -411,6 +411,19 @@
     else
        write(IMAIN,*) 'using a CMTSOLUTION source'
        write(IMAIN,*)
+    endif
+
+    write(IMAIN,*)
+    if(USE_RICKER_TIME_FUNCTION) then
+       write(IMAIN,*) 'using a Ricker source time function'
+    else
+       if(USE_FORCE_POINT_SOURCE) then
+          write(IMAIN,*) 'using a quasi-Heaviside source time function'
+          write(IMAIN,*)
+       else
+          write(IMAIN,*) 'using a Gaussian source time function'
+          write(IMAIN,*)
+       endif
     endif
 
   endif

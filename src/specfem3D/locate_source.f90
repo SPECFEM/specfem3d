@@ -35,7 +35,7 @@
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
                  UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                 PRINT_SOURCE_TIME_FUNCTION, &
+                 USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
                  num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
@@ -49,7 +49,8 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSPEC_AB,NGLOB_AB,NSOURCES
 
-  logical PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
+  logical USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  logical SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
 
   double precision DT
 
@@ -755,7 +756,7 @@
           write(IMAIN,*) '  using a source of dominant frequency ',f0
           write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
           write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-          if( USE_RICKER_IPATI ) then
+          if( USE_RICKER_TIME_FUNCTION ) then
              t0_ricker = 1.2d0/f0
              write(IMAIN,*) '  t0_ricker = ',t0_ricker
           endif

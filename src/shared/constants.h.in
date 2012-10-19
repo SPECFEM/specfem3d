@@ -194,10 +194,6 @@
 ! no lagrange interpolation on seismograms (we take the value on one NGLL point)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
-! set to use a Ricker source time function instead of a gaussian (when using CMTSOLUTION files) 
-! or a quasi-Heaviside (when using FORCESOLUTION files)     
-  logical, parameter :: USE_RICKER_IPATI = .false.
-
 ! use this t0 as earliest starting time rather than the automatically calculated one
 ! (must be positive and bigger than the automatically one to be effective;
 !  simulation will start at t = - t0)

@@ -48,7 +48,7 @@
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        IMODEL)
+                        USE_RICKER_TIME_FUNCTION,IMODEL)
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
