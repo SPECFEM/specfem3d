@@ -1,4 +1,4 @@
-# simulation input parameters
+*# simulation input parameters
 #
 # forward or adjoint simulation
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
@@ -78,6 +78,10 @@ USE_FORCE_POINT_SOURCE          = .false.
 # - the components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
+
+# set to use a Ricker source time function instead of a gaussian (when using CMTSOLUTION files) 
+# or a quasi-Heaviside (when using FORCESOLUTION files)     
+USE_RICKER_TIME_FUNCTION        = .false.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
