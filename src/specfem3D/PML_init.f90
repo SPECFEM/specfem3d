@@ -305,16 +305,16 @@ subroutine PML_set_firstlayer()
   use specfem_par,only: NSPEC_AB, &
                         abs_boundary_ispec,abs_boundary_normal,num_abs_boundary_faces,&
                         abs_boundary_ijk,ibool
-  use constants,only: NDIM,TINYVAL,NGNOD,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+  use constants,only: NDIM,TINYVAL,NGNOD,NGNOD_EIGHT_CORNERS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: temp_ispec_pml_normal
   integer,dimension(:),allocatable:: temp_is_pml_elem
   integer:: iface,count,new_elemts,ispec,icorner,igll,iglobf,ier
   integer:: i,j,k,iglobcount,iglobcorners(NGNOD)
-  integer,dimension(3,NGNOD),parameter :: ielem_corner_ijk = &
+  integer,dimension(3,NGNOD_EIGHT_CORNERS),parameter :: ielem_corner_ijk = &
        reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ, &
-              NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),(/3,NGNOD/))
+              NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),(/3,NGNOD_EIGHT_CORNERS/))
 
 !! DK DK August 2012: added this when I added support for 27-node elements in the rest of the code
   if(NGNOD /= 8) &
