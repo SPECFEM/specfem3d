@@ -615,7 +615,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   integer :: nspec2D_moho_ext
   integer, dimension(nspec2D_moho_ext) :: ibelm_moho
-  integer, dimension(4,nspec2D_moho_ext) :: nodes_ibelm_moho
+  integer, dimension(NGNOD2D,nspec2D_moho_ext) :: nodes_ibelm_moho
 
   integer :: myrank,nspec
 

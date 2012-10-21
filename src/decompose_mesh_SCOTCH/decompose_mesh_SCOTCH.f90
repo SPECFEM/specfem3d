@@ -599,7 +599,7 @@ module decompose_mesh_SCOTCH
     mask_nodes_elmnts(:) = .false.
     used_nodes_elmnts(:) = 0
     do ispec = 1, nspec
-      do inode = 1, NGNOD_EIGHT_CORNERS
+      do inode = 1, NGNOD
         mask_nodes_elmnts(elmnts(inode,ispec)) = .true.
         used_nodes_elmnts(elmnts(inode,ispec)) = used_nodes_elmnts(elmnts(inode,ispec)) + 1
       enddo

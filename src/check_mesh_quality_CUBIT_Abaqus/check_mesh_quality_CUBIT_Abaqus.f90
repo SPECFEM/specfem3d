@@ -95,7 +95,10 @@
 
   character(len=256):: line
 
-  if(NGNOD /= 4 .and. NGNOD /= 8) stop 'NGNOD should be 4 or 8'
+  if(NGNOD /= 8) then
+    print *,'error: check_mesh_quality_CUBIT_Abaqus only supports NGNOD == 8 for now'
+    stop 'thus if NGNOD == 27, just run the solver without checking the mesh with this program'
+  endif
 
   print *
   print *,'1 = output elements above a certain skewness threshold in OpenDX format'
