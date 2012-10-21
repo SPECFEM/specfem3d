@@ -42,7 +42,8 @@ be easy and better to do all the modifications at the same time).
 Let us also modify the code to allow for shakemaps and movies at the 
 same time, rather than having to run the code twice.
 
-> add NGNOD = 27 or 8   to the input Par_file
+> add NGNOD = 27 or 8   to the input Par_file (move it from shared/constants.h.in to the Par_file, since now either value can be used depending on the mesh,
+whether it is HEX8 or HEX27)
 >
 >
 > In the VERCE framework they ask some modifications in order to improve
