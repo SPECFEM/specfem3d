@@ -59,12 +59,12 @@
   integer, dimension(NSPEC2D_TOP)  :: ibelm_top
 
   ! corner node indices of boundary faces coming from CUBIT
-  integer, dimension(4,nspec2D_xmin)  :: nodes_ibelm_xmin
-  integer, dimension(4,nspec2D_xmax)  :: nodes_ibelm_xmax
-  integer, dimension(4,nspec2D_ymin)  :: nodes_ibelm_ymin
-  integer, dimension(4,nspec2D_ymax)  :: nodes_ibelm_ymax
-  integer, dimension(4,NSPEC2D_BOTTOM)  :: nodes_ibelm_bottom
-  integer, dimension(4,NSPEC2D_TOP)  :: nodes_ibelm_top
+  integer, dimension(NGNOD2D,nspec2D_xmin)  :: nodes_ibelm_xmin
+  integer, dimension(NGNOD2D,nspec2D_xmax)  :: nodes_ibelm_xmax
+  integer, dimension(NGNOD2D,nspec2D_ymin)  :: nodes_ibelm_ymin
+  integer, dimension(NGNOD2D,nspec2D_ymax)  :: nodes_ibelm_ymax
+  integer, dimension(NGNOD2D,NSPEC2D_BOTTOM)  :: nodes_ibelm_bottom
+  integer, dimension(NGNOD2D,NSPEC2D_TOP)  :: nodes_ibelm_top
 
 ! local parameters
   ! (assumes NGLLX=NGLLY=NGLLZ)

@@ -233,8 +233,8 @@
 ! auxiliary variables to generate the mesh
   integer ix,iy,ir
 
-  double precision xin,etan !,rn
-  double precision x_current,y_current !,z_top,z_bot
+  double precision xin,etan
+  double precision x_current,y_current
 
   double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
 
@@ -267,7 +267,7 @@
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
-  double precision Z_DEPTH_BLOCK !,Z_BASEMENT_SURFACE,Z_DEPTH_MOHO
+  double precision Z_DEPTH_BLOCK
   double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
   logical SUPPRESS_UTM_PROJECTION,USE_REGULAR_MESH
@@ -365,9 +365,10 @@
                           CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
-  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) then
-    stop 'must have NPROC_XI = NPROC_ETA = 1 for a serial run'
-  endif
+  if (NGNOD /= 8) stop 'error: internal mesher is limited to NGNOD == 8'
+
+  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
+    stop 'error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
 
 ! get interface data from external file to count the spectral elements along Z
   if(myrank == 0) then
@@ -384,7 +385,7 @@
 
 ! read number of interfaces
   call read_value_integer(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
-  if(number_of_interfaces < 1) stop 'not enough interfaces (minimum is 1, for topography)'
+  if(number_of_interfaces < 1) stop 'error: not enough interfaces (minimum is 1, for topography)'
 
 ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
