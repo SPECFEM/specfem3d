@@ -4,7 +4,7 @@
 ## job name and output file
 #PBS -N go_database
 #PBS -j oe
-#PBS -o in_out_files/OUTPUT_FILES/$PBS_JOBID.o
+#PBS -o OUTPUT_FILES/$PBS_JOBID.o
 
 ###########################################################
 # USER PARAMETERS
@@ -25,19 +25,19 @@ NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 # total number of nodes is the product of the values read
 numnodes=$NPROC
 
-mkdir -p in_out_files/OUTPUT_FILES
+mkdir -p OUTPUT_FILES
 
 # backup files used for this simulation
-cp go_generate_databases_pbs.bash in_out_files/OUTPUT_FILES/
-cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp go_generate_databases_pbs.bash OUTPUT_FILES/
+cp DATA/Par_file OUTPUT_FILES/
 
 # save a complete copy of source files
-#rm -rf in_out_files/OUTPUT_FILES/src
-#cp -rp ./src in_out_files/OUTPUT_FILES/
+#rm -rf OUTPUT_FILES/src
+#cp -rp ./src OUTPUT_FILES/
 
 # obtain job information
-cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
-echo "$PBS_JOBID" > in_out_files/OUTPUT_FILES/jobid
+cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
+echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
 echo starting MPI mesher on $numnodes processors
 echo " "
@@ -51,6 +51,6 @@ echo "done "
 # per instructions in manual, view low-res mesh with these commands (replace 143 with nproc-1):
 # > make xcombine_vol_data
 # > cd bin/
-# > ./xcombine_vol_data 0 143 vs ../in_out_files/DATABASES_MPI/ ../in_out_files/OUTPUT_FILES 0
-# > cd ../in_out_files/OUTPUT_FILES
+# > ./xcombine_vol_data 0 143 vs ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES 0
+# > cd ../OUTPUT_FILES
 # > paraview &

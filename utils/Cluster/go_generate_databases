@@ -15,8 +15,8 @@ set NPROC = `grep NPROC DATA/Par_file | cut -d '=' -f 2 `
 # total number of processors is the product of the values read
 @ numprocessors = $NPROC
 
-rm -r -f in_out_files/OUTPUT_FILES
-mkdir in_out_files/OUTPUT_FILES
+rm -r -f OUTPUT_FILES
+mkdir OUTPUT_FILES
 
 rm -f sources timestamp* PI* error_message* starttimeloop*
 

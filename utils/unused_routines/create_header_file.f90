@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-! create file in_out_files/OUTPUT_FILES/values_from_mesher.h based upon DATA/Par_file
+! create file OUTPUT_FILES/values_from_mesher.h based upon DATA/Par_file
 ! in order to compile the solver with the right array sizes
 
   subroutine create_header_file

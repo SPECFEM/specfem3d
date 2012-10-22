@@ -41,7 +41,7 @@ program model_update
 
   ! root file directory
   character (len=256), parameter :: &
-    ROOT_PATH = '/lscratch/users/magnoni/SPECFEM3D/trunk_update/in_out_files'
+    ROOT_PATH = '/lscratch/users/magnoni/SPECFEM3D/trunk_update/OUTPUT_FILES'
 
   ! directory where the mesh files for the NEW model will be written
   character (len=256), parameter :: &

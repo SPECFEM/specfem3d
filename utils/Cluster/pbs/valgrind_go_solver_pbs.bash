@@ -14,7 +14,7 @@
 #PBS -j oe
 
 # job output file
-#PBS -o in_out_files/OUTPUT_FILES/job.o
+#PBS -o OUTPUT_FILES/job.o
 
 ###########################################################
 # USER PARAMETERS
@@ -40,16 +40,16 @@ NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 # total number of nodes is the product of the values read
 numnodes=$NPROC
 
-mkdir -p in_out_files/OUTPUT_FILES
+mkdir -p OUTPUT_FILES
 
 # backup files used for this simulation
-cp DATA/Par_file in_out_files/OUTPUT_FILES/
-cp DATA/STATIONS in_out_files/OUTPUT_FILES/
-cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/Par_file OUTPUT_FILES/
+cp DATA/STATIONS OUTPUT_FILES/
+cp DATA/CMTSOLUTION OUTPUT_FILES/
 
 # obtain job information
-cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
-echo "$PBS_JOBID" > in_out_files/OUTPUT_FILES/jobid
+cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
+echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
 echo starting run in current directory $PWD
 cd bin/
@@ -60,7 +60,7 @@ echo " "
 sleep 2
 
 # memory leaks
-LD_PRELOAD=$PRELOAD_LIB mpiexec -np $numnodes valgrind --leak-check=full ./xspecfem3D >& ../in_out_files/OUTPUT_FILES/output.memory-leaks.log
+LD_PRELOAD=$PRELOAD_LIB mpiexec -np $numnodes valgrind --leak-check=full ./xspecfem3D >& ../OUTPUT_FILES/output.memory-leaks.log
 
 sleep 2
 echo " "
@@ -68,9 +68,9 @@ echo "run: cache misses"
 echo " "
 
 # cache misses
-LD_PRELOAD=$PRELOAD_LIB mpiexec -np $numnodes valgrind --tool=cachegrind ./xspecfem3D >& ../in_out_files/OUTPUT_FILES/output.cache-misses.log
+LD_PRELOAD=$PRELOAD_LIB mpiexec -np $numnodes valgrind --tool=cachegrind ./xspecfem3D >& ../OUTPUT_FILES/output.cache-misses.log
 
-cp cachegrind.out.* ../in_out_files/OUTPUT_FILES/
+cp cachegrind.out.* ../OUTPUT_FILES/
 
 echo " "
 echo "finished successfully"

@@ -32,9 +32,9 @@
 ! > pgf90 -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
 !
 ! specify a target (x,y) may be in UTM, not lon-lat, then run with:
-! > ./bin/xlocate_partition 70000.0 11000.0 -3000.0 ./in_out_files/DATABASES_MPI/
+! > ./bin/xlocate_partition 70000.0 11000.0 -3000.0 ./OUTPUT_FILES/DATABASES_MPI/
 !
-! this will generate the output file in_out_files/DATABASES_MPI/partition_bounds.dat
+! this will generate the output file OUTPUT_FILES/DATABASES_MPI/partition_bounds.dat
 
   program locate_partition
 
@@ -65,7 +65,7 @@
   print *
   print *,'locate partition'
   print *,'----------------------------'
-  
+
   do i = 1, 4
     call getarg(i,arg(i))
     if (i <= 4 .and. trim(arg(i)) == '') then
@@ -86,7 +86,7 @@
   print *,'in directory: ',trim(LOCAL_PATH)
   print *,'----------------------------'
   print *
-  
+
   ! open a text file to list the maximal bounds of each partition
   open(11,file=trim(LOCAL_PATH)//'partition_bounds.dat',status='unknown')
 
@@ -98,7 +98,7 @@
   total_z = 0.0
   iproc = -1
   do while( iproc < 10000000 )
-    ! starts with 0  
+    ! starts with 0
     iproc = iproc + 1
 
     ! gets number of elements and global points for this partition
@@ -106,7 +106,7 @@
     open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
           status='old',action='read',form='unformatted',iostat=ios)
     if( ios /= 0 ) exit
-    
+
     read(27,iostat=ier) NSPEC_AB
     if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) NGLOB_AB
@@ -122,11 +122,11 @@
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27,iostat=ier) xstore
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'    
+    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) ystore
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'    
+    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) zstore
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'    
+    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     close(27)
 
     print*,'partition: ',iproc
@@ -134,7 +134,7 @@
     print*,'  min/max y = ',minval(ystore),maxval(ystore)
     print*,'  min/max z = ',minval(zstore),maxval(zstore)
     print*
-    
+
     write(11,'(i10,6e18.6)') iproc,minval(xstore),maxval(xstore),minval(ystore),maxval(ystore),minval(zstore),maxval(zstore)
 
     ! gets distance to target location
@@ -154,7 +154,7 @@
     deallocate(ibool,xstore,ystore,zstore)
 
   enddo  ! all slices for points
-  
+
   close(11)
 
   ! checks
@@ -162,7 +162,7 @@
     print*,'Error: partition not found among ',iproc,'partitions searched'
     stop 'Error: partition not found'
   endif
-  
+
   ! output
   print*,'number of partitions searched: ',iproc
   print*
@@ -187,7 +187,7 @@
 
   implicit none
   include 'constants.h'
-  
+
   real(kind=CUSTOM_REAL),intent(in) :: target_x,target_y,target_z
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -205,16 +205,16 @@
   x_found = 0.0
   y_found = 0.0
   z_found = 0.0
-  
+
   do ispec=1,NSPEC_AB
     do k=1,NGLLZ
-      do j=1,NGLLY 
+      do j=1,NGLLY
         do i=1,NGLLX
           iglob = ibool(i,j,k,ispec)
           dist =  (target_x - xstore(iglob))*(target_x - xstore(iglob)) &
                 + (target_y - ystore(iglob))*(target_y - ystore(iglob)) &
-                + (target_z - zstore(iglob))*(target_z - zstore(iglob)) 
-                
+                + (target_z - zstore(iglob))*(target_z - zstore(iglob))
+
           if( dist < distance ) then
             distance = dist
             x_found = xstore(iglob)

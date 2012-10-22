@@ -34,8 +34,8 @@
 
 # default cuda libraries
 # runtime library -lcudart needed, others are optional -lcuda -lcublas
-@COND_CUDA_TRUE@CUDA_LIBS = -lcudart   
-@COND_CUDA_FALSE@CUDA_LIBS = 
+@COND_CUDA_TRUE@CUDA_LIBS = -lcudart
+@COND_CUDA_FALSE@CUDA_LIBS =
 
 CUDA_LIB_LOCATION = @CUDA_LIB@
 CUDA_LINK = $(CUDA_LIB_LOCATION) $(CUDA_LIBS)
@@ -51,9 +51,9 @@ MPI_INC = @MPI_INC@
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
 # OpenMP
-# with configure: ./configure --with-openmp FLAGS_NO_CHECK="-openmp .." OPENMP_LIB=.. 
+# with configure: ./configure --with-openmp FLAGS_NO_CHECK="-openmp .." OPENMP_LIB=..
 @COND_OPENMP_TRUE@OPENMP_LIBS = $(OPENMP_LIB)
-@COND_OPENMP_FALSE@OPENMP_LIBS = 
+@COND_OPENMP_FALSE@OPENMP_LIBS =
 @COND_OPENMP_TRUE@COND_OPENMP_FFLAGS = -DOPENMP_MODE
 @COND_OPENMP_FALSE@COND_OPENMP_FFLAGS =
 
@@ -77,7 +77,7 @@ O = ../../obj/spec
 # L : libraries directory
 L = ../../lib
 # Output files directory
-OUTPUT=../../in_out_files/OUTPUT_FILES
+OUTPUT=../../OUTPUT_FILES
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
 FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
@@ -318,7 +318,7 @@ xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_v
 	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS) $(MPILIBS)
 
 xsum_kernels: $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) 
+	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
 
 xmodel_update: $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
 	${FCLINK} -o  ${E}/xmodel_update  $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
@@ -395,7 +395,7 @@ $O/parallel.o: $(SHARED)constants.h $(SHARED)parallel.f90
 
 $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
-  
+
 $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
 	${MPIFCCOMPILE_NO_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 

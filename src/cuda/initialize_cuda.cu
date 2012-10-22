@@ -129,7 +129,7 @@ void FC_FUNC_(initialize_cuda_device,
   // outputs device infos to file
   char filename[BUFSIZ];
   FILE* fp;
-  sprintf(filename,"../in_out_files/OUTPUT_FILES/gpu_device_info_proc_%06d.txt",myrank);
+  sprintf(filename,"../OUTPUT_FILES/gpu_device_info_proc_%06d.txt",myrank);
   fp = fopen(filename,"a+");
   if (fp != NULL){
     // display device properties
