@@ -21,7 +21,7 @@ if (! -d $OUTDIR) then
    mkdir $OUTDIR
 endif
 cd $OUTDIR
-cp ../../in_data_files/CMTSOLUTION .
-cp ../../in_data_files/STATIONS .
-cp ../../in_data_files/Par_file .
+cp ../../DATA/CMTSOLUTION .
+cp ../../DATA/STATIONS .
+cp ../../DATA/Par_file .
 

@@ -18,7 +18,7 @@
 cd $PBS_O_WORKDIR
 
 # number of cores for the job
-NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 numnodes=$NPROC
 
 mkdir -p in_out_files/OUTPUT_FILES
@@ -26,8 +26,8 @@ mkdir -p in_out_files/DATABASES_MPI
 
 # backup files used for this simulation
 cp go_mesher_pbs.bash in_out_files/OUTPUT_FILES/
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/meshfem3D_files/Mesh_Par_file in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/meshfem3D_files/Mesh_Par_file in_out_files/OUTPUT_FILES/
 
 # save a complete copy of source files
 #rm -rf in_out_files/OUTPUT_FILES/src

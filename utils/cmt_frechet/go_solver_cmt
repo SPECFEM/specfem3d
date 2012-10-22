@@ -3,13 +3,13 @@
 # script to run the solver
 
 # name of the file that contains the list of machines
-set list_of_machines = `grep MACHINE_FILE in_data_files/Par_file | cut -c 27- `
-set my_local_path = `grep LOCAL_PATH in_data_files/Par_file | cut -c 27- `
+set list_of_machines = `grep MACHINE_FILE DATA/Par_file | cut -c 27- `
+set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -c 27- `
 
 # read Par_file to get total number of processors needed
 
-set NPROC_XI = `grep NPROC_XI in_data_files/Par_file | cut -c 27- `
-set NPROC_ETA = `grep NPROC_ETA in_data_files/Par_file | cut -c 27- `
+set NPROC_XI = `grep NPROC_XI DATA/Par_file | cut -c 27- `
+set NPROC_ETA = `grep NPROC_ETA DATA/Par_file | cut -c 27- `
 
 # total number of processors is product of values read
 @ numprocessors = $NPROC_XI * $NPROC_ETA

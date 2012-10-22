@@ -255,7 +255,7 @@
 !
 !  include "constants.h"
 !
-!  open(unit=IIN,file='in_data_files/Par_file',status='old',action='read')
+!  open(unit=IIN,file='DATA/Par_file',status='old',action='read')
 !
 !  end subroutine open_parameter_file
 !

@@ -17,12 +17,12 @@ remap_lsf_machines.pl in_out_files/OUTPUT_FILES/lsf_machines > in_out_files/OUTP
 shmux -M50 -Sall -c "mkdir -p /scratch/$USER/; mkdir -p $BASEMPIDIR.$LSB_JOBID" - < in_out_files/OUTPUT_FILES/machines >/dev/null
 
 # main parameter file
-sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < in_data_files/Par_file > Par_file.tmp
-mv Par_file.tmp in_data_files/Par_file
+sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < DATA/Par_file > Par_file.tmp
+mv Par_file.tmp DATA/Par_file
 
 # mesher parameter file
-sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < in_data_files/meshfem3D_files/Mesh_Par_file > Par_file.tmp
-mv Par_file.tmp in_data_files/meshfem3D_files/Mesh_Par_file
+sed -e "s:^LOCAL_PATH .*:LOCAL_PATH                      =  $BASEMPIDIR.$LSB_JOBID:" < DATA/meshfem3D_files/Mesh_Par_file > Par_file.tmp
+mv Par_file.tmp DATA/meshfem3D_files/Mesh_Par_file
 
 # run the specfem program
 current_pwd=$PWD
@@ -36,5 +36,5 @@ mpirun.lsf --gm-no-shmem --gm-copy-env ./xspecfem3D
 cd current_pwd/
 mkdir -p in_out_files/SEM
 cd in_out_files/SEM/
-collect_seismo_lsf_multi.pl ../OUTPUT_FILES/lsf_machines $current_pwd/in_data_files/Par_file
+collect_seismo_lsf_multi.pl ../OUTPUT_FILES/lsf_machines $current_pwd/DATA/Par_file
 cleanbase.pl ../OUTPUT_FILES/machines

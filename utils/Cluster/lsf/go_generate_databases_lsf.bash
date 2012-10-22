@@ -25,12 +25,12 @@ fi
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
 # total number of nodes is the product of the values read
 numnodes=$NPROC
 
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
 
 # obtain lsf job information
 cat $LSB_DJOB_HOSTFILE > in_out_files/OUTPUT_FILES/compute_nodes

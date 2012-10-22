@@ -20,7 +20,7 @@
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
 # total number of nodes is the product of the values read
 numnodes=$NPROC
@@ -28,9 +28,9 @@ numnodes=$NPROC
 mkdir -p in_out_files/OUTPUT_FILES
 
 # backup for files used for this simulation
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
 
 rm -rf in_out_files/OUTPUT_FILES/src
 cp -rp ./src in_out_files/OUTPUT_FILES/

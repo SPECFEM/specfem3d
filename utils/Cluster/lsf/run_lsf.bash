@@ -25,11 +25,11 @@ d=`date`
 echo "Finished compilation $d"
 
 # get total number of nodes needed for solver
-NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
 # compute total number of nodes needed for mesher
-NPROC_XI=`grep NPROC_XI in_data_files/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `
-NPROC_ETA=`grep NPROC_ETA in_data_files/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `
+NPROC_XI=`grep NPROC_XI DATA/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `
+NPROC_ETA=`grep NPROC_ETA DATA/meshfem3D_files/Mesh_Par_file | cut -d = -f 2 `
 # total number of nodes is the product of the values read
 numnodes=$(( $NPROC_XI * $NPROC_ETA ))
 
