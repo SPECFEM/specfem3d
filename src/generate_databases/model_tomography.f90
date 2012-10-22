@@ -39,7 +39,7 @@
   include "constants.h"
 
   ! for external tomography:
-  ! file must be in ../in_data_files/ directory
+  ! file must be in ../DATA/ directory
   ! (regular spaced, xyz-block file in ascii)
 
   character (len=80) :: TOMO_FILENAME = 'tomography_model.xyz'

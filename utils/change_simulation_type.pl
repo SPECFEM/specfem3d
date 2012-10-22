@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# this script changes the simulation_type in in_data_files/Par_file
+# this script changes the simulation_type in DATA/Par_file
 # Qinya Liu, May 2007, Caltech
 
 use Time::Local;
@@ -11,7 +11,7 @@ sub Usage{
 print STDERR <<END;
 
 Usage:   change_simulation_type.pl  [-a|-f|-b|-F]
-         Changes SIMULATION_TYPE in in_data_files/Par_file
+         Changes SIMULATION_TYPE in DATA/Par_file
          -a -- change type to run adjoint calculation(2)
          -f -- change type to run forward calculation(1)
          -b -- change type to run both simultaneously(3)
@@ -23,7 +23,7 @@ exit(1);
 @ARGV == 1 or Usage();
 if(!getopts('abfF')) {die(" check input arguments\n");}
 
-open(IN,"in_data_files/Par_file");
+open(IN,"DATA/Par_file");
 @vfm=<IN>;
 close(IN);
 
@@ -57,7 +57,7 @@ foreach $vfm (@vfm){
   }
 }
 
-open(OUT,">in_data_files/Par_file");
+open(OUT,">DATA/Par_file");
 foreach $vfm (@vfm){
   print OUT "$vfm";
 }

@@ -4,7 +4,7 @@
 #
 # copy this script into your bin/ folder and run for example:
 #
-#  ./plot_shakemap.gmt.pl ../in_data_files/ 2 ../in_data_files/CMTSOLUTION
+#  ./plot_shakemap.gmt.pl ../DATA/ 2 ../DATA/CMTSOLUTION
 #
 # will create shakemap file ../in_out_files/OUTPUT_FILES/gmt_shaking_map.ps for peak ground velocity
 

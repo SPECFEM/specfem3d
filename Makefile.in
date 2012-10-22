@@ -84,7 +84,7 @@ all: default \
 required: bin lib obj
 
 backup:
-	cp -rp src in_data_files Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
+	cp -rp src DATA Makefile go_generate_databases* go_mesher* go_solver* mymachines bak
 
 bak: backup
 

@@ -7,10 +7,10 @@
 # name of the file that contains the list of machines
 set machine_file = "mymachines"
 
-set my_local_path = `grep LOCAL_PATH in_data_files/Par_file | cut -d '=' -f 2 `
+set my_local_path = `grep LOCAL_PATH DATA/Par_file | cut -d '=' -f 2 `
 
 # compute total number of processors needed
-set NPROC = `grep NPROC in_data_files/Par_file | cut -d '=' -f 2 `
+set NPROC = `grep NPROC DATA/Par_file | cut -d '=' -f 2 `
 
 # total number of processors is the product of the values read
 @ numprocessors = $NPROC

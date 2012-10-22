@@ -89,11 +89,11 @@ $fac_max = 4;
 #   convert from movie data to gmt xyz files
 if ($tran_to_gmt) {
 
-  if (not -f "../in_data_files/Par_file") {die(" Check if ../in_data_files/Par_file exist or not\n");}
-  (@junk) = split(" ", `grep '^DT' ../in_data_files/Par_file`);
+  if (not -f "../DATA/Par_file") {die(" Check if ../DATA/Par_file exist or not\n");}
+  (@junk) = split(" ", `grep '^DT' ../DATA/Par_file`);
   $dt = $junk[2];
 
-  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' ../in_data_files/Par_file`);
+  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' ../DATA/Par_file`);
   $nframe = $junk[2];
 
   # start and end time
@@ -107,11 +107,11 @@ if ($tran_to_gmt) {
 
 } else {
 
-  if (not -f "../in_data_files/Par_file") {die(" Check if ../in_data_files/Par_file exist or not\n");}
-  (@junk) = split(" ", `grep '^DT' ../in_data_files/Par_file`);
+  if (not -f "../DATA/Par_file") {die(" Check if ../DATA/Par_file exist or not\n");}
+  (@junk) = split(" ", `grep '^DT' ../DATA/Par_file`);
   $dt = $junk[2];
 
-  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' ../in_data_files/Par_file`);
+  (@junk) = split(" ", `grep '^NTSTEP_BETWEEN_FRAMES' ../DATA/Par_file`);
   $nframe = $junk[2];
 
 }

@@ -7,7 +7,7 @@
 # bash script
 #PBS -S /bin/bash
 
-# job name 
+# job name
 #PBS -N valgrind_go_solver
 
 # joins output and error information
@@ -25,7 +25,7 @@
 # 150 CPUs ( 18*8+6 ), walltime 15 hour
 #PBS -l nodes=18:ppn=8+1:ppn=6,walltime=15:00:00
 
-# valgrind mpi library 
+# valgrind mpi library
 PRELOAD_LIB=/my_valgrind_path/valgrind/lib/valgrind/libmpiwrap-x86-linux.so
 
 ###########################################################
@@ -35,7 +35,7 @@ cd $PBS_O_WORKDIR
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
 # total number of nodes is the product of the values read
 numnodes=$NPROC
@@ -43,9 +43,9 @@ numnodes=$NPROC
 mkdir -p in_out_files/OUTPUT_FILES
 
 # backup files used for this simulation
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
 
 # obtain job information
 cat $PBS_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
