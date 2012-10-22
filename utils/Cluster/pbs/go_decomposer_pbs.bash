@@ -4,7 +4,7 @@
 ## job name and output file
 #PBS -N go_decomposer
 #PBS -j oe
-#PBS -o in_out_files/OUTPUT_FILES/$PBS_JOBID.o
+#PBS -o OUTPUT_FILES/$PBS_JOBID.o
 
 ###########################################################
 # USER PARAMETERS
@@ -29,11 +29,11 @@ echo starting decomposer for $numnodes partitions
 echo " "
 
 # save a copy
-cp go_decomposer_pbs.bash in_out_files/OUTPUT_FILES/
+cp go_decomposer_pbs.bash OUTPUT_FILES/
 
 # USER CHANGE MESH DIRECTORY
 MESHDIR=examples/homogeneous_halfspace/MESH/
 
-./bin/xdecompose_mesh_SCOTCH $numnodes $MESHDIR in_out_files/DATABASES_MPI/
+./bin/xdecompose_mesh_SCOTCH $numnodes $MESHDIR OUTPUT_FILES/DATABASES_MPI/
 
 echo "done "

@@ -2,8 +2,8 @@
 
 ## job name and output file
 #BSUB -J go_mesher
-#BSUB -o in_out_files/OUTPUT_FILES/%J.o
-#BSUB -e in_out_files/OUTPUT_FILES/%J.e
+#BSUB -o OUTPUT_FILES/%J.o
+#BSUB -e OUTPUT_FILES/%J.e
 
 ###########################################################
 # USER PARAMETERS
@@ -30,11 +30,11 @@ NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 # total number of nodes is the product of the values read
 numnodes=$NPROC
 
-cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/Par_file OUTPUT_FILES/
 
 # obtain lsf job information
-cat $LSB_DJOB_HOSTFILE > in_out_files/OUTPUT_FILES/compute_nodes
-echo "$LSB_JOBID" > in_out_files/OUTPUT_FILES/jobid
+cat $LSB_DJOB_HOSTFILE > OUTPUT_FILES/compute_nodes
+echo "$LSB_JOBID" > OUTPUT_FILES/jobid
 
 echo starting MPI mesher on $numnodes processors
 echo " "

@@ -35,7 +35,7 @@
   implicit none
 
   include "constants.h"
-  include "../../in_out_files/OUTPUT_FILES/surface_from_mesher.h"
+  include "../../OUTPUT_FILES/surface_from_mesher.h"
 
 !-------------------------------------------------------------------------------------------------
 ! user parameters

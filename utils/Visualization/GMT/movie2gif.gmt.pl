@@ -6,7 +6,7 @@
 #
 #  /movie2gif.gmt.pl -R -118.9/-117.9/33.1/34.1 -g -f 1/10 -n  -x
 #
-# will create gif files ../in_out_files/OUTPUT_FILES/gmt_movie_000***.gif
+# will create gif files ../OUTPUT_FILES/gmt_movie_000***.gif
 
 use Getopt::Std;
 
@@ -79,7 +79,7 @@ $topo_cpt = "$datalib/topo_cal_color.cpt";
 $csh_file = "movie2gif.csh";
 $big_grd_file = "$datalib/big_sc.grd";
 $bin = ".";
-$outdir = "../in_out_files/OUTPUT_FILES";
+$outdir = "../OUTPUT_FILES";
 
 $factor = 10000;
 $power = 1; #no distortion

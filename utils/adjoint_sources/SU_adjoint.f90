@@ -8,21 +8,21 @@
 ! for example, compile with:
 !  > gfortran -o ../../example/homogeneous/halfspace/bin/xSU_adjoint SU_adjoint.f90
 !
-! call in example directory example/homogeneous_halfspace/ by: 
+! call in example directory example/homogeneous_halfspace/ by:
 !  > ./bin/xSU_adjoint 4
 !
 !-------------------------------------------------------------------------------------------------
 
   module SU_adjoint_var
-    
+
   implicit none
 
   real(kind=4),dimension(:),allocatable :: syn,dat,adj
-  
+
   character(len=128) :: DATA_PATH = "./DATA/"
-  character(len=128) :: SYN_PATH = "./in_out_files/OUTPUT_FILES/"
-  character(len=128) :: ADJ_PATH = "./in_out_files/SEM/"
-  
+  character(len=128) :: SYN_PATH = "./OUTPUT_FILES/"
+  character(len=128) :: ADJ_PATH = "./OUTPUT_FILES/SEM/"
+
   end module
 
 !-------------------------------------------------------------------------------------------------
@@ -47,11 +47,11 @@
   equivalence(header2,header4)
 
   integer :: NSTEP
-  double precision :: DT  
+  double precision :: DT
 
   ! reads in file arguments
   i = 1
-  do while (1 == 1) 
+  do while (1 == 1)
     call getarg(i,arg(i))
     if (i <= 1 .and. trim(arg(i)) == '') then
       print*,'Usage: '
@@ -61,14 +61,14 @@
       stop
     endif
     if (trim(arg(i)) == '') exit
-    if (i == 1) then 
+    if (i == 1) then
       read(arg(i),*,iostat=ios) NPROC
       if (ios /= 0) stop 'Error reading NPROC'
     endif
     i = i+1
   enddo
-  
-  ! user output  
+
+  ! user output
   print*, "SU adjoint "
   print*
   print*, "number of partitions : ",NPROC
@@ -87,7 +87,7 @@
   if( ios /= 0 ) then
     print*,'error opening file: ',trim(filename)
     stop 'error opening data file'
-  endif  
+  endif
 
   ! reads in header
   read(11,rec=1,iostat=ios) r4head
@@ -103,17 +103,17 @@
   print*, "NSTEP = ",NSTEP
   print*, "DT    = ",DT
   print*
-  
+
   ! allocates arrays
   allocate(syn(NSTEP),dat(NSTEP),adj(NSTEP))
-    
+
   ! loops over all partitions
   do iproc = 0, NPROC - 1
-    
+
     ! partition name
-    write(procname,"(i4)") iproc    
+    write(procname,"(i4)") iproc
     print*,"...reading partition: ",iproc
-        
+
     ! loops over components
     do icomp = 1,3
       ! user output
@@ -125,10 +125,10 @@
       open(11,file=trim(filename),access='direct',status='old', &
             recl=240+4*NSTEP,iostat=ios)
       if( ios /= 0 ) then
-        print*,'error opening file: ',trim(filename)      
+        print*,'error opening file: ',trim(filename)
         stop 'error opening input data file '
       endif
-      
+
       ! synthetics
       filename = trim(SYN_PATH)//trim(adjustl(procname))//"_d"//compstr(icomp)//"_SU"
       open(22,file=trim(filename),access='direct',status='old', &
@@ -137,16 +137,16 @@
         print*,'error opening file: ',trim(filename)
         stop 'error opening input file '
       endif
-      
+
       ! adjoint sources
-      filename = trim(ADJ_PATH)//trim(adjustl(procname))//"_d"//compstr(icomp)//"_SU"//".adj"      
+      filename = trim(ADJ_PATH)//trim(adjustl(procname))//"_d"//compstr(icomp)//"_SU"//".adj"
       open(33,file=trim(filename),access='direct',status='unknown', &
             recl=240+4*NSTEP,iostat = ios)
       if( ios /= 0 ) then
-        print*,'error opening file: ',trim(filename)      
+        print*,'error opening file: ',trim(filename)
         stop 'error opening output file '
       endif
-      
+
       ! loops over all records
       irec=1
       do while(ios==0)
@@ -160,18 +160,18 @@
 
         ! creates adjoint trace
         call create_adjoint_trace()
-        
+
         ! writes out adjoint source
         write(33,rec=irec,iostat=ios) r4head,adj
         if (ios /= 0) cycle
-        
+
         irec=irec+1
       enddo
       close(11)
       close(22)
       close(33)
     enddo
-    
+
     ! user output
     print*, "  receivers read: ",irec
   enddo
@@ -188,10 +188,10 @@
 
   use SU_adjoint_var
   implicit none
-  
+
   ! MODIFY THIS according to your misfit function
 
   ! waveform misfit:
   adj(:) = syn(:) - dat(:)
-  
+
   end subroutine

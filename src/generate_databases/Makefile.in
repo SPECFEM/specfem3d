@@ -46,7 +46,7 @@ O = ../../obj/gen
 # L : libraries directory
 L = ../../lib
 # Output files directory
-OUTPUT=../../in_out_files/OUTPUT_FILES
+OUTPUT=../../OUTPUT_FILES
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED}
 FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) -I${SHARED}

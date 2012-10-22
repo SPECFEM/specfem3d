@@ -2,8 +2,8 @@
 
 ## job name and output file
 #BSUB -J go_solver
-#BSUB -o in_out_files/OUTPUT_FILES/%J.o
-#BSUB -e in_out_files/OUTPUT_FILES/%J.e
+#BSUB -o OUTPUT_FILES/%J.o
+#BSUB -e OUTPUT_FILES/%J.e
 
 ###########################################################
 # USER PARAMETERS
@@ -30,15 +30,15 @@ NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 # total number of nodes is the product of the values read
 numnodes=$NPROC
 
-rm -r -f in_out_files/OUTPUT_FILES
-mkdir in_out_files/OUTPUT_FILES
-cp DATA/Par_file in_out_files/OUTPUT_FILES/
-cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp DATA/STATIONS in_out_files/OUTPUT_FILES/
+rm -r -f OUTPUT_FILES
+mkdir OUTPUT_FILES
+cp DATA/Par_file OUTPUT_FILES/
+cp DATA/CMTSOLUTION OUTPUT_FILES/
+cp DATA/STATIONS OUTPUT_FILES/
 
 # obtain lsf job information
-cat $BSUB_DJOB_NODEFILE > in_out_files/OUTPUT_FILES/compute_nodes
-echo "$LSB_JOBID" > in_out_files/OUTPUT_FILES/jobid
+cat $BSUB_DJOB_NODEFILE > OUTPUT_FILES/compute_nodes
+echo "$LSB_JOBID" > OUTPUT_FILES/jobid
 
 echo starting run in current directory $PWD
 echo " "

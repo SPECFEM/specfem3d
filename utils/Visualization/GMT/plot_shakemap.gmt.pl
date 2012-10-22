@@ -6,7 +6,7 @@
 #
 #  ./plot_shakemap.gmt.pl ../DATA/ 2 ../DATA/CMTSOLUTION
 #
-# will create shakemap file ../in_out_files/OUTPUT_FILES/gmt_shaking_map.ps for peak ground velocity
+# will create shakemap file ../OUTPUT_FILES/gmt_shaking_map.ps for peak ground velocity
 
 # USERS: change this to point to SPECFEM3D/utils/lib/
 use lib '../utils/lib';
@@ -24,7 +24,7 @@ if ($type != 1 and $type != 2 and $type != 3) {die("type can only be 1,2,3\n");}
 @name = ("Displacement", "Velocity", "Acceleration");
 
 $power = 0.5;
-$file = "../in_out_files/OUTPUT_FILES/gmt_shaking_map";
+$file = "../OUTPUT_FILES/gmt_shaking_map";
 $xyz_file = "${file}.xyz";
 $grd_file = "${file}.grd";
 $cpt_file = "${file}.cpt";

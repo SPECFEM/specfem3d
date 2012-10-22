@@ -2,7 +2,7 @@
 
 # compile and run the database generator and then the solver
 
-set OUTDIR="in_out_files/OUTPUT_FILES"
+set OUTDIR="OUTPUT_FILES"
 
 sleep 1
 make clean
