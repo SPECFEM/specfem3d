@@ -128,6 +128,7 @@ Yang Luo,
 Alessia Maggi,
 Federica Magnoni,
 Roland Martin,
+Ren\'e Matzen,
 Dennis McRitchie,
 Matthias Meschede,
 Peter Messmer,
@@ -437,6 +438,80 @@ OpenMP threads, but most preferably being twice as the number of
 OpenMP threads (thus chunk size = 8 for 4 OpenMP threads etc).
 If OMP\_SCHEDULE is not set or is empty, the DO-loop will assume generic
 scheduling policy, which will slow down the job quite a bit.
+
+\section{Compiling on an IBM BlueGene}
+
+\underline{More recent installation instruction for IBM BlueGene, from October 2012:}\\
+
+\noindent
+Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK} and \texttt{FLAGS\_NO\_CHECK}:\\
+
+\noindent
+\texttt{-g -qfullpath -O2 -qsave -qstrict -qtune=qp -qarch=qp -qcache=auto -qhalt=w}\\
+\noindent
+\texttt{-qfree=f90 -qsuffix=f=f90 -qlanglvl=95pure -Wl,-relax -Q -Q+rank,swap\_all}.\\
+
+\noindent
+The most relevant are the -qarch and -qtune flags, otherwise if these flags are set to ``auto'' then they are wrongly assigned to
+the architecture of the frond-end node, which is different from that on the compute nodes.
+You will need to set these flags to the right architecture for your BlueGene compute nodes, which is not necessarily ``qp'';
+ask your system administrator.
+On some machines if is necessary to use -O2 in these flags instead of -O3 due to a compiler bug of the XLF version installed.
+We thus suggest to first try -O3, and then if the code does not compile or does not run fine then switch back to -O2.
+The debug flags (-g, -qfullpath) do not influence performance but are useful to get at least some insights in case of problems.\\
+
+\noindent
+Before running \texttt{configure}, select the XL Fortran compiler by typing \texttt{module load bgq-xl/1.0}
+or \texttt{module load bgq-xl} (another, less efficient option is to load the GNU compilers using \texttt{module load bgq-gnu/4.4.6} or similar).\\
+
+\noindent
+Then, to configure the code, for the SPECFEM3D\_GLOBE version type this:\\
+
+\noindent
+\texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}\\
+
+\noindent
+and for SPECFEM3D\_Cartesian type this:\\
+
+\noindent
+\texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}.\\
+
+\noindent
+\underline{Older installation instruction for IBM BlueGene, from 2011:}\\
+
+\noindent
+To compile the code on an IBM BlueGene, Laurent L\'eger from IDRIS, France, suggests the following: compile the code with
+
+\noindent
+\texttt{   FLAGS\_NO\_CHECK="-O3 -qsave -qstrict -qtune=auto -qarch=450d -qcache=auto \\}
+\texttt{   -qfree=f90 -qsuffix=f=f90 -g -qlanglvl=95pure -qhalt=w -Q -Q+rank,swap\_all -Wl,-relax"}
+
+\noindent
+Option "-Wl,-relax" must be added on many (but not all) BlueGene systems to be able to link the binaries \texttt{xmeshfem3D}
+and \texttt{xspecfem3D} because the final link step is done by the GNU \texttt{ld} linker even if
+one uses \texttt{FC=bgxlf90\_r, MPIFC=mpixlf90\_r} and \texttt{CC=bgxlc\_r} to create all the object files.
+On the contrary, on some BlueGene systems that use the native AIX linker option "-Wl,-relax" can lead to problems and must be suppressed from \texttt{flags.guess}.
+
+\noindent
+Also, \texttt{AR=ar, ARFLAGS=cru} and \texttt{RANLIB=ranlib} are hardwired in all \texttt{Makefile.in} files by default, but to cross-compile on BlueGene/P one needs to change
+these values to \texttt{AR=bgar, ARFLAGS=cru} and \texttt{RANLIB=bgranlib}. Thus the easiest thing to do is to modify
+all \texttt{Makefile.in} files and the \texttt{configure} script to set them automatically by \texttt{configure}.
+One then just needs to pass the right commands to the \texttt{configure} script:
+
+\noindent
+\texttt{   ./configure --prefix=/path/to/SPECFEM3DG\_SP --host=Babel --build=BGP \\}
+\texttt{      FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r AR=bgar ARFLAGS=cru \\}
+\texttt{      RANLIB=bgranlib LOCAL\_PATH\_IS\_ALSO\_GLOBAL=false}
+
+\noindent
+This trick can be useful for all hosts on which one needs to cross-compile.
+
+\noindent
+On BlueGene, one also needs to run the \texttt{xcreate\_header\_file} binary file manually rather than in the Makefile:
+
+\noindent
+   \texttt{bgrun -np 1 -mode VN -exe ./bin/xcreate\_header\_file}
+
 
 \section{Visualizing the subroutine calling tree of the source code}
 
