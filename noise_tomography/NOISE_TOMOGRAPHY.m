@@ -25,11 +25,11 @@ function [] = NOISE_TOMOGRAPHY(NSTEP,dt,Tmin,Tmax,NOISE_MODEL)
 % ATTENTION:
 % ***NEVER*** try to calculate "NSTEP" and "dt" by yourself!
 % They can be found when you compile the SPECFEM3D package,
-% with the correct in_data_files/Par_file
-% If in_data_files/Par_file is not specified for noise tomography simulations,
+% with the correct DATA/Par_file
+% If DATA/Par_file is not specified for noise tomography simulations,
 % you won't get correct values either!
 % It is highly recommended that you compile the package with the correct
-% in_data_files/Par_file you will be using
+% DATA/Par_file you will be using
 %
 %
 % Output from the example above:

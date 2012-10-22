@@ -53,9 +53,9 @@ echo
 ./bin/xdecompose_mesh_SCOTCH $NPROC MESH/ in_out_files/DATABASES_MPI/
 
 # stores setup
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/STATIONS in_out_files/OUTPUT_FILES/
 
 # runs database generation
 echo

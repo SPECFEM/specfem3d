@@ -19,9 +19,9 @@ WARNING: We do not recommend running this as a test example, due to its requirem
 1. Set up input files.
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/many_interfaces/ in_data_files/meshfem3D_files/
+   > rsync -av examples/meshfem3D_examples/many_interfaces/ DATA/meshfem3D_files/
 
-   > cd in_data_files/meshfem3D_files/
+   > cd DATA/meshfem3D_files/
    > cp Par_file CMTSOLUTION STATIONS ..
    > cd SPECFEM3D
 
@@ -30,7 +30,7 @@ WARNING: We do not recommend running this as a test example, due to its requirem
 
    - note: go_decomposer_pbs.bash is not used with the internal mesher
 
-2. compile and run internal mesher 
+2. compile and run internal mesher
 
    > make xmeshfem3D
 
@@ -49,7 +49,7 @@ WARNING: We do not recommend running this as a test example, due to its requirem
    - submit job script:
      > qsub go_generate_databases_pbs.bash
 
-     this job will take about XX minutes and will create binary mesh files, 
+     this job will take about XX minutes and will create binary mesh files,
      e.g. "proc000***_external_mesh.bin", in directory in_out_files/DATABASES_MPI/.
 
      Optional: If you have paraview, load the .vtk files (see simple_model.png).

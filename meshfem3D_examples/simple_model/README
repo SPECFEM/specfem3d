@@ -15,9 +15,9 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 1. Set up input files.
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/simple_model/ in_data_files/meshfem3D_files/
+   > rsync -av examples/meshfem3D_examples/simple_model/ DATA/meshfem3D_files/
 
-   > cd in_data_files/meshfem3D_files/
+   > cd DATA/meshfem3D_files/
    > cp Par_file CMTSOLUTION STATIONS ..
    > cd SPECFEM3D
 
@@ -26,7 +26,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
    - note: go_decomposer_pbs.bash is not used with the internal mesher
 
-2. compile and run internal mesher 
+2. compile and run internal mesher
 
    > make xmeshfem3D
 

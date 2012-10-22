@@ -24,9 +24,9 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 1. set up input files:
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/socal1D/ in_data_files/meshfem3D_files/
+   > rsync -av examples/meshfem3D_examples/socal1D/ DATA/meshfem3D_files/
 
-   > cd in_data_files/meshfem3D_files/
+   > cd DATA/meshfem3D_files/
    > cp Par_file CMTSOLUTION STATIONS ..
    > cd SPECFEM3D
 
@@ -83,9 +83,9 @@ To use the same 1D model but covering a larger region using 168 cores, follow th
 
 1. modify Mesh_Par_file:
 
-  > cd in_data_files/meshfem3D_files
+  > cd DATA/meshfem3D_files
   > cp Mesh_Par_file_168 Mesh_Par_file
-  
+
 2. modify Par_file:
 
   - open Par_file and modify NPROC: NPROC = 1 --> NPROC = 168
@@ -107,9 +107,9 @@ To run the same simulation but using 42 cores, follow these steps.
 
 1. modify Mesh_Par_file:
 
-  > cd in_data_files/meshfem3D_files
+  > cd DATA/meshfem3D_files
   > cp Mesh_Par_file_042 Mesh_Par_file
-  
+
 2. modify Par_file:
 
   - open Par_file and modify NPROC: NPROC = 168 --> NPROC = 42
@@ -126,4 +126,4 @@ To run the same simulation but using 42 cores, follow these steps.
    - simulation should take about 5 minutes.
    - seismograms will not exactly match those in REF_SEIS, since the simulation volume is different.
 
-----------------------------------------------------------------------
+---------------------------------------------------------------------

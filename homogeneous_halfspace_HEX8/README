@@ -40,10 +40,10 @@ step-by-step tutorial:
      note: you may need to adjust the commands (e.g., -q or -l)
 
 
-2. copy three input files from examples directory into SPECFEM3D/in_data_files/
+2. copy three input files from examples directory into SPECFEM3D/DATA/
 
-     > cd examples/homogeneous_halfspace/in_data_files/
-     > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+     > cd examples/homogeneous_halfspace/DATA/
+     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
 
 
 3. create mesh:
@@ -131,7 +131,7 @@ step-by-step tutorial:
       SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
 
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
-     
+
      > xmgrace examples/homogeneous_halfspace/REF_SEIS/*Z.semd &
      > xmgrace in_out_files/OUTPUT_FILES/*Z.semd &
 

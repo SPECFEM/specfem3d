@@ -9,9 +9,9 @@ step-by-step tutorial:
 
 0. run the example in the directory homogeneous_halfspace
 
-1. copy three input files from examples directory into SPECFEM3D/in_data_files/:
-     > cd examples/tomographic_model/in_data_files/
-     > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+1. copy three input files from examples directory into SPECFEM3D/DATA/:
+     > cd examples/tomographic_model/DATA/
+     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
 
 
 2. create mesh:
@@ -35,8 +35,8 @@ step-by-step tutorial:
     which creates an example model: tomography_model.xyz
     ( elastic model with a constant velocity gradient with depth)
 
-   - copy (or link) this file into directory SPECFEM3D/in_data_files/
-     > cp tomography_model.xyz ../../in_data_files/
+   - copy (or link) this file into directory SPECFEM3D/DATA/
+     > cp tomography_model.xyz ../../DATA/
 
      note: this file is read in by subroutine read_model_tomography in
         SPECFEM3D/src/generate_databases/model_tomography.f90,

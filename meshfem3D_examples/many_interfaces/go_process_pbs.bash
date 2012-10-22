@@ -42,15 +42,15 @@ mkdir -p in_out_files/DATABASES_MPI
 rm -rf in_out_files/OUTPUT_FILES/*
 rm -rf in_out_files/DATABASES_MPI/*
 
-mkdir -p in_data_files
-mkdir -p in_data_files/meshfem3D_files/
+mkdir -p DATA
+mkdir -p DATA/meshfem3D_files/
 
-cp Mesh_Par_file in_data_files/meshfem3D_files/
-cp example_*.dat in_data_files/meshfem3D_files/
+cp Mesh_Par_file DATA/meshfem3D_files/
+cp example_*.dat DATA/meshfem3D_files/
 
-cp Par_file in_data_files/
-cp CMTSOLUTION in_data_files/
-cp STATIONS in_data_files/
+cp Par_file DATA/
+cp CMTSOLUTION DATA/
+cp STATIONS DATA/
 
 # compilation of executables must have been done prior on front node
 # links executables
@@ -63,7 +63,7 @@ cd ../
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC in_data_files/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
 # total number of nodes is the product of the values read
 numnodes=$NPROC
@@ -78,9 +78,9 @@ cd ../
 mv in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
 
 # stores setup
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/STATIONS in_out_files/OUTPUT_FILES/
 
 # runs database generation
 echo

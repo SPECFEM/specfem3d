@@ -21,7 +21,7 @@ Noise Cross-Correlation Sensitivity Kernels (Tromp et al., 2010, GJI)
 **************
 
    This file                                                  ---  ./README
-   Four folders contain default input files for the example   ---  ./bin      ./DATABASES_MPI       ./in_data_files       ./NOISE_TOMOGRAPHY
+   Four folders contain default input files for the example   ---  ./bin      ./DATABASES_MPI       ./DATA       ./NOISE_TOMOGRAPHY
    Two matlab files may help you to calculate noise spectrum  ---  ./NOISE_TOMOGRAPHY.m     ./PetersonNoiseModel.m
    Job script                                                 ---  ./pre-processing.sh
    One folder shows the reference kernels                     ---  ./REF_KERNELS
@@ -51,8 +51,8 @@ Noise Cross-Correlation Sensitivity Kernels (Tromp et al., 2010, GJI)
 
          "./DATABASES_MPI" contains the four partitions for the model which you can also create by
          copying the MESH files from example '../examples/homogeneous_halfspace' and
-         run 'xdecompose_mesh_SCOTCH' as explained in the file README in '../examples/homogeneous_halfspace'        
-         
+         run 'xdecompose_mesh_SCOTCH' as explained in the file README in '../examples/homogeneous_halfspace'
+
          Refer to '../examples/homogeneous_halfspace', if you don't know how to get them from CUBIT and SCOTCH.
 
    3.2 - Source and Receivers

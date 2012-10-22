@@ -42,9 +42,9 @@ cp ../../../bin/* bin/
 if [ ! -e bin/xspecfem3D ]; then echo "compilation failed, please check..."; exit 1; fi
 
 # stores setup
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/STATIONS in_out_files/OUTPUT_FILES/
 
 # creates and decomposes mesh
 echo

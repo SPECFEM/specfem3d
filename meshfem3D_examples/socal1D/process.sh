@@ -30,12 +30,12 @@ mkdir -p in_out_files/DATABASES_MPI
 rm -rf in_out_files/OUTPUT_FILES/*
 rm -rf in_out_files/DATABASES_MPI/*
 
-mkdir -p in_data_files
-mkdir -p in_data_files/meshfem3D_files/
+mkdir -p DATA
+mkdir -p DATA/meshfem3D_files/
 
 # compiles executables in root directory
 cd ../../../
-make 
+make
 make combine_vol_data
 cd $currentdir
 
@@ -45,10 +45,10 @@ cp ../../../bin/* bin/
 if [ ! -e bin/xspecfem3D ]; then echo "compilation failed, please check..."; exit 1; fi
 
 # stores setup
-cp in_data_files/meshfem3D_files/Mesh_Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/Par_file in_out_files/OUTPUT_FILES/
-cp in_data_files/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp in_data_files/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/meshfem3D_files/Mesh_Par_file in_out_files/OUTPUT_FILES/
+cp DATA/Par_file in_out_files/OUTPUT_FILES/
+cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
+cp DATA/STATIONS in_out_files/OUTPUT_FILES/
 
 # decomposes mesh
 echo
@@ -88,7 +88,7 @@ echo `date`
 # To make a full mesh using combine_vol_data:
 # cd bin
 # xcombine_vol_data 0 0 vs ../in_out_files/DATABASES_MPI/ ../in_out_files/DATABASES_MPI/ 1
-# cd ../in_out_files/DATABASES_MPI/ 
+# cd ../in_out_files/DATABASES_MPI/
 # (check that mesh2vtu.pl is working)
 # ../../../../../utils/Visualization/Paraview/mesh2vtu.pl -i vs.mesh -o vs.vtu
 #

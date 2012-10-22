@@ -70,8 +70,8 @@ step-by-step tutorial:
       and should create a file: topo.stl
 
       note: CUBIT has limited features when using facets/STL file formats.
-            It is in general preferable to work with ACIS formats. 
-            
+            It is in general preferable to work with ACIS formats.
+
             However, using an ACIS topography file leads to a slower meshing process.
             This is why we prefer to use STL file formats here, but rely on
             a developer command (script was tested using CUBIT version 12.2).
@@ -92,10 +92,10 @@ step-by-step tutorial:
 
     - run script 'process.sh' in this example directory:
       > ./process.sh
-            
-      this script handles the following steps: 
-        - decomposes mesh files (example creates 4 partitions from mesh files given in MESH/) 
+
+      this script handles the following steps:
+        - decomposes mesh files (example creates 4 partitions from mesh files given in MESH/)
         - runs the database generation
-        - runs a single forward simulation (using the default setup files in in_data_files/)
+        - runs a single forward simulation (using the default setup files in DATA/)
 
 

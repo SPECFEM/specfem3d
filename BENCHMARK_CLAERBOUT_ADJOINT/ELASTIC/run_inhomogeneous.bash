@@ -3,9 +3,9 @@ echo
 echo `date`
 echo
 
-NSTEP=`grep NSTEP   ./in_data_files/Par_file | cut -d = -f 2 | sed 's/ //g'`
-DT=`grep       DT   ./in_data_files/Par_file | cut -d = -f 2 | sed 's/ //g'`
-NPROC=`grep NPROC   ./in_data_files/Par_file | cut -d = -f 2 `
+NSTEP=`grep NSTEP   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
+DT=`grep       DT   ./DATA/Par_file | cut -d = -f 2 | sed 's/ //g'`
+NPROC=`grep NPROC   ./DATA/Par_file | cut -d = -f 2 `
 
 #daniel:
 echo "Par_file parameters:"
@@ -27,7 +27,7 @@ echo
 #echo "NPROC=$NPROC"
 
 bin="$PWD/bin"
-in_data_files="$bin/../in_data_files"
+DATA="$bin/../DATA"
 in_out_files="$bin/../in_out_files"
 models="$bin/../models"
 SESAME="$bin/../../../../"
@@ -102,7 +102,7 @@ $MPIFC $bin/../adj_seismogram.f90 -o ./xadj > $bin/../compile.log
 $MPIFC $bin/../postprocessing.f90 -o ./xpostprocessing > $bin/../compile.log
 
 ########################### dat ########################################
-FILE="$in_data_files/Par_file"
+FILE="$DATA/Par_file"
 sed -e "s#^SIMULATION_TYPE.*#SIMULATION_TYPE = 1 #g"  < $FILE > ./tmp; mv ./tmp $FILE
 sed -e "s#^SAVE_FORWARD.*#SAVE_FORWARD = .true. #g"   < $FILE > ./tmp; mv ./tmp $FILE
 sed -e "s#^NSTEP.*#NSTEP = $NSTEP #g"                 < $FILE > ./tmp; mv ./tmp $FILE
@@ -145,7 +145,7 @@ cp $in_out_files/DATABASES_MPI/*vs.bin  $models/initial_model/
 $MPIRUN ./xadj $NSTEP $DT
 
 ########################### adj ########################################
-FILE="$in_data_files/Par_file"
+FILE="$DATA/Par_file"
 sed -e "s#^SIMULATION_TYPE.*#SIMULATION_TYPE = 3 #g"  < $FILE > ./tmp; mv ./tmp $FILE
 sed -e "s#^SAVE_FORWARD.*#SAVE_FORWARD = .false. #g"  < $FILE > ./tmp; mv ./tmp $FILE
 
@@ -155,7 +155,7 @@ $MPIRUN ./xspecfem3D
 #daniel
 cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.syn.adjoint
 
-./xpostprocessing $NSTEP $DT $NPROC 
+./xpostprocessing $NSTEP $DT $NPROC
 
 if [ "$do_setup" == "" ]; then
 
@@ -171,7 +171,7 @@ mv ./src/shared/constants.h_backup ./src/shared/constants.h
 
 fi
 
-echo 
+echo
 echo "done: `date`"
 echo
 

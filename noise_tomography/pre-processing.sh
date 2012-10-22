@@ -29,7 +29,7 @@ cd $script_dir
 # those values are default for SPECFEM3D
 bin="$script_dir/bin"
 in_out_files="$script_dir/in_out_files"
-in_data_files="$script_dir/in_data_files"
+DATA="$script_dir/DATA"
 
 # specify which kernel we want to visualize
 # since the Rayleigh wave is dominantly dependent on shear wave speed, we choose shear wave speed kernels
@@ -57,9 +57,9 @@ cp $script_dir/NOISE_TOMOGRAPHY/nu_master                $in_out_files/NOISE_TOM
 cp $script_dir/DATABASES_MPI/proc*                       $in_out_files/DATABASES_MPI/
 
 # copy simulation parameter files
-#cp $script_dir/in_data_files/Par_file*                   $in_data_files/
-#cp $script_dir/in_data_files/CMTSOLUTION                 $in_data_files/
-#cp $script_dir/in_data_files/STATIONS*                   $in_data_files/
+#cp $script_dir/DATA/Par_file*                   $DATA/
+#cp $script_dir/DATA/CMTSOLUTION                 $DATA/
+#cp $script_dir/DATA/STATIONS*                   $DATA/
 
 # copy and compile subroutine for adjoint source calculation
 #cp $script_dir/bin/adj_traveltime_filter.f90             $bin/
@@ -90,12 +90,12 @@ echo
 cp $in_out_files/NOISE_TOMOGRAPHY/irec_master_noise_contribution1  $in_out_files/NOISE_TOMOGRAPHY/irec_master_noise
 
 # step 1 of noise simulation
-cp $in_data_files/Par_file_step1                         $in_data_files/Par_file
+cp $DATA/Par_file_step1                         $DATA/Par_file
 mpirun -np 4 ./xgenerate_databases
 mpirun -np 4 ./xspecfem3D
 
 # step 2 of noise simulation
-cp $in_data_files/Par_file_step2                         $in_data_files/Par_file
+cp $DATA/Par_file_step2                         $DATA/Par_file
 mpirun -np 4 ./xspecfem3D
 mv $in_out_files/OUTPUT_FILES/X2.DB.BXZ.semd             $in_out_files/SEM/
 
@@ -117,7 +117,7 @@ awk '{print $1,0.0}' $in_out_files/SEM/X2.DB.BXZ.adj > $in_out_files/SEM/X1.DB.B
 
 
 # step 3 of noise simulation
-cp $in_data_files/Par_file_step3                         $in_data_files/Par_file
+cp $DATA/Par_file_step3                         $DATA/Par_file
 mpirun -np 4 ./xspecfem3D
 
 # store kernels
@@ -135,7 +135,7 @@ mesh2vtu.pl -i $in_out_files/OUTPUT_FILES/$kernel.mesh -o $in_out_files/NOISE_TO
 # at the end of this part, we obtain the 1st contribution of the noise sensitivity kernel, stored as:
 # $in_out_files/NOISE_TOMOGRAPHY/1st_$kernel.vtu
 
-echo 
+echo
 
 #################### second contribution ###########################################################################
 # in this part, we start noise simulations for 2nd contribution of the noise sensitivity kernels
@@ -148,11 +148,11 @@ echo
 cp $in_out_files/NOISE_TOMOGRAPHY/irec_master_noise_contribution2  $in_out_files/NOISE_TOMOGRAPHY/irec_master_noise
 
 # step 1 of noise simulation
-cp $in_data_files/Par_file_step1                         $in_data_files/Par_file
+cp $DATA/Par_file_step1                         $DATA/Par_file
 mpirun -np 4 ./xspecfem3D
 
 # step 2 of noise simulation
-cp $in_data_files/Par_file_step2                         $in_data_files/Par_file
+cp $DATA/Par_file_step2                         $DATA/Par_file
 mpirun -np 4 ./xspecfem3D
 
 # calculating adjoint source
@@ -170,7 +170,7 @@ awk '{print $1,0.0}' $in_out_files/SEM/X1.DB.BXZ.adj > $in_out_files/SEM/X2.DB.B
 
 
 # step 3 of noise simulation
-cp $in_data_files/Par_file_step3                         $in_data_files/Par_file
+cp $DATA/Par_file_step3                         $DATA/Par_file
 mpirun -np 4 ./xspecfem3D
 
 # store kernels
@@ -188,6 +188,6 @@ mesh2vtu.pl -i $in_out_files/OUTPUT_FILES/$kernel.mesh -o $in_out_files/NOISE_TO
 # $in_out_files/NOISE_TOMOGRAPHY/2nd_$kernel.vtu
 
 echo
-echo `date` 
+echo `date`
 echo "done"
 

@@ -23,7 +23,7 @@ step-by-step kernel tutorial:
      > cd /SPECFEM3D
      > ./utils/change_simulation_type.pl -F
 
-     or change manually in /SPECFEM3D/in_data_files/Par_file:
+     or change manually in /SPECFEM3D/DATA/Par_file:
      ...
      # forward or adjoint simulation
      SIMULATION_TYPE                 = 1
@@ -53,7 +53,7 @@ step-by-step kernel tutorial:
      > cd /SPECFEM3D
      > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 10. 25. 3 in_out_files/OUTPUT_FILES/X20.DB.BX*.semd
 
-     note: the traveltime adjoint source above uses the signal which arrives 
+     note: the traveltime adjoint source above uses the signal which arrives
            within a time window between 10 - 25 seconds and on the Z-component only.
 
    - make designated directory for adjoint sources:
@@ -70,7 +70,7 @@ step-by-step kernel tutorial:
    - setup adjoint stations file STATIONS_ADJOINT containing the receiver stations locations
      which will have adjoint source files in in_out_files/SEM/:
      > cd /SPECFEM3D
-     > cp examples/homogeneous_halfspace/in_data_files/STATIONS_ADJOINT in_data_files/
+     > cp examples/homogeneous_halfspace/DATA/STATIONS_ADJOINT DATA/
 
 
 3. run adjoint simulation with restored backward wavefields:
@@ -79,7 +79,7 @@ step-by-step kernel tutorial:
      > cd /SPECFEM3D
      > ./utils/change_simulation_type.pl -b
 
-     or change manually in /SPECFEM3D/in_data_files/Par_file:
+     or change manually in /SPECFEM3D/DATA/Par_file:
      # forward or adjoint simulation
      SIMULATION_TYPE                 = 3
      SAVE_FORWARD                    = .false.

@@ -11,10 +11,10 @@ step-by-step tutorial:
 
 0. run the example in the directory homogeneous_halfspace
 
-1. copy three input files from examples directory into SPECFEM3D/in_data_files/
+1. copy three input files from examples directory into SPECFEM3D/DATA/
 
-     > cd examples/waterlayered_halfspace/in_data_files/
-     > cp CMTSOLUTION Par_file STATIONS ../../../in_data_files/
+     > cd examples/waterlayered_halfspace/DATA/
+     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
 
 
 2. create mesh:

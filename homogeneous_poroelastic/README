@@ -84,7 +84,7 @@ step-by-step tutorial:
 5. run simulation:
 
    - copy three files -- Par_file CMTSOLUTION STATIONS -- from
-      SPECFEM3D/examples/homogeneous_poro/ to SPECFEM3D/in_data_files/
+      SPECFEM3D/examples/homogeneous_poro/ to SPECFEM3D/DATA/
 
    - compile specfem3D:
      > make xspecfem3D
