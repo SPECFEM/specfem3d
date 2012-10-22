@@ -8,7 +8,7 @@
 ## job name and output file
 #PBS -N go_process
 #PBS -j oe
-#PBS -o in_out_files/OUTPUT_FILES/$PBS_JOBID.o
+#PBS -o OUTPUT_FILES/$PBS_JOBID.o
 ## PBS -q test
 
 ###########################################################
@@ -36,11 +36,11 @@ echo
 
 # setup
 mkdir -p bin
-mkdir -p in_out_files/OUTPUT_FILES
-mkdir -p in_out_files/DATABASES_MPI
+mkdir -p OUTPUT_FILES
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-rm -rf in_out_files/OUTPUT_FILES/*
-rm -rf in_out_files/DATABASES_MPI/*
+rm -rf OUTPUT_FILES/*
+rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 mkdir -p DATA
 mkdir -p DATA/meshfem3D_files/
@@ -75,12 +75,12 @@ echo
 cd bin/
 mpiexec -np $numnodes ./xmeshfem3D
 cd ../
-mv in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
+mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 
 # stores setup
-cp DATA/Par_file in_out_files/OUTPUT_FILES/
-cp DATA/CMTSOLUTION in_out_files/OUTPUT_FILES/
-cp DATA/STATIONS in_out_files/OUTPUT_FILES/
+cp DATA/Par_file OUTPUT_FILES/
+cp DATA/CMTSOLUTION OUTPUT_FILES/
+cp DATA/STATIONS OUTPUT_FILES/
 
 # runs database generation
 echo
@@ -99,7 +99,7 @@ mpiexec -np $numnodes ./xspecfem3D
 cd ../
 
 echo
-echo "see results in directory: in_out_files/OUTPUT_FILES/"
+echo "see results in directory: OUTPUT_FILES/"
 echo
 echo "done"
 echo `date`

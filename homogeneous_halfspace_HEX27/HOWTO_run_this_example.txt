@@ -2,7 +2,7 @@
 To run this example on two processor cores for instance, type this (replace "2" with another value in the three lines below if you want to use more processor cores):
 
 
-./bin/xdecompose_mesh_SCOTCH 2 DATA/MESH in_out_files/DATABASES_MPI
+./bin/xdecompose_mesh_SCOTCH 2 DATA/MESH OUTPUT_FILES/DATABASES_MPI
 
 mpirun -np 2 ./bin/xgenerate_databases
 

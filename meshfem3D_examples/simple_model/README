@@ -32,7 +32,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
    > qsub go_mesher_pbs.bash
 
-   This should generate these files in in_out_files/DATABASES_MPI/:
+   This should generate these files in OUTPUT_FILES/DATABASES_MPI/:
 
    proc000000_Database
    proc000000_.dx
@@ -48,7 +48,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
    proc000003_.INP
 
    - save output file
-   > cp in_out_files/OUTPUT_FILES/output_mesher.txt in_out_files/OUTPUT_FILES/output_meshfem3D.txt
+   > cp OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 
 3. generate databases:
 
@@ -59,7 +59,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
      > qsub go_generate_databases_pbs.bash
 
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-     in directory in_out_files/DATABASES_MPI/.
+     in directory OUTPUT_FILES/DATABASES_MPI/.
 
      Optional: If you have paraview, load the .vtk files (see simple_model.png).
 
@@ -73,7 +73,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
    - the job should take about 10 minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 27 (ls -1 *semd | wc) seismogram files in the directory in_out_files/OUTPUT_FILES,
+     of 27 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
      as well as 5 timestamp****** files
 
    - view seismograms, for example, using xmgrace:

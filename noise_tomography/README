@@ -80,6 +80,6 @@ Noise Cross-Correlation Sensitivity Kernels (Tromp et al., 2010, GJI)
 4. Results
 **************
 
-   At the end of those simulations, kernel files will be saved in SPECFEM3D/in_out_files/NOISE_TOMOGRAPHY/1st/ & SPECFEM3D/in_out_files/NOISE_TOMOGRAPHY/2nd/
-   If mesh2vtu.pl works, you will have 1st_beta_kernel.vtu & 2nd_beta_kernel.vtu in SPECFEM3D/in_out_files/NOISE_TOMOGRAPHY/, which can be directly viewed in Paraview
+   At the end of those simulations, kernel files will be saved in SPECFEM3D/OUTPUT_FILES/NOISE_TOMOGRAPHY/1st/ & SPECFEM3D/OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd/
+   If mesh2vtu.pl works, you will have 1st_beta_kernel.vtu & 2nd_beta_kernel.vtu in SPECFEM3D/OUTPUT_FILES/NOISE_TOMOGRAPHY/, which can be directly viewed in Paraview
    Once you visualize them in Paraview, you should see pictures similar to those in SPECFEM3D/examples/noise_tomography/REF_KERNELS/

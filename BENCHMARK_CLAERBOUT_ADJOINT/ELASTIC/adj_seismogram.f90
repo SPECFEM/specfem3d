@@ -28,7 +28,7 @@ program adj_seismogram
 
   !!!! read NSTEP from seismograms
   !!!filename=trim(adjustl(procname))//"_dx_SU"
-  !!!open(111,file="../in_out_files/OUTPUT_FILES/"//trim(filename),access='direct',recl=240,iostat = ios)
+  !!!open(111,file="../OUTPUT_FILES/"//trim(filename),access='direct',recl=240,iostat = ios)
   !!!read(111,rec=1,iostat=ios) r4head
   !!!close(111)
   !!!header4=r4head(29)
@@ -48,123 +48,123 @@ program adj_seismogram
 ! read 'syn', 'dat' and then write 'adj'
   ! x-component
   filename=trim(adjustl(procname))//"_dx_SU"
-  open(111,file="../in_out_files/SEM/syn/"//trim(filename), &
+  open(111,file="../OUTPUT_FILES/SEM/syn/"//trim(filename), &
             status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
   if( ios /= 0 ) stop 'error opening file syn'
-  open(112,file="../in_out_files/SEM/dat/"//trim(filename), &
+  open(112,file="../OUTPUT_FILES/SEM/dat/"//trim(filename), &
             status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
   if( ios /= 0 ) stop 'error opening file dat'
-  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj", &
+  open(113,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj", &
             status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
   if( ios /= 0 ) stop 'error opening file .adj'
-  
-  irec=1
-  do while(ios==0)
-     
-     syn(:) = 0.0  
-     dat(:) = 0.0
-     
-     read(111,rec=irec,iostat=ios) r4head,syn
-     if (ios /= 0) exit
-     read(112,rec=irec,iostat=ios) r4head,dat
-     if (ios /= 0) exit
-     
-     write(113,rec=irec,iostat=ios) r4head,syn-dat
-     if (ios /= 0) exit
-     
-!daniel: outputs ascii trace
-     if( myrank == 0 .and. irec == 196 ) then
-       open(221,file="../in_out_files/SEM/syn/"//trim(filename)//".ascii",status='unknown')
-       do i=1,NSTEP
-         write(221,*) i,syn(i)
-       enddo
-       close(221)
-       open(222,file="../in_out_files/SEM/dat/"//trim(filename)//".ascii",status='unknown')
-       do i=1,NSTEP
-         write(222,*) i,dat(i)
-       enddo
-       close(222)
-       open(223,file="../in_out_files/SEM/"//trim(filename)//".adj.ascii",status='unknown')
-       do i=1,NSTEP
-         write(223,*) i,syn(i)-dat(i)
-       enddo
-       close(223)
-     endif 
-     
-     irec=irec+1
-  enddo
-  close(111)
-  close(112)
-  close(113)
-  
-  ! y-component
-  filename=trim(adjustl(procname))//"_dy_SU"
-  open(111,file="../in_out_files/SEM/syn/"//trim(filename), &
-            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file syn'
-  open(112,file="../in_out_files/SEM/dat/"//trim(filename), &
-            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file dat'
-  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj", &
-            status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file .adj'
-  
+
   irec=1
   do while(ios==0)
 
-     syn(:) = 0.0  
+     syn(:) = 0.0
      dat(:) = 0.0
-  
+
+     read(111,rec=irec,iostat=ios) r4head,syn
+     if (ios /= 0) exit
+     read(112,rec=irec,iostat=ios) r4head,dat
+     if (ios /= 0) exit
+
+     write(113,rec=irec,iostat=ios) r4head,syn-dat
+     if (ios /= 0) exit
+
+!daniel: outputs ascii trace
+     if( myrank == 0 .and. irec == 196 ) then
+       open(221,file="../OUTPUT_FILES/SEM/syn/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(221,*) i,syn(i)
+       enddo
+       close(221)
+       open(222,file="../OUTPUT_FILES/SEM/dat/"//trim(filename)//".ascii",status='unknown')
+       do i=1,NSTEP
+         write(222,*) i,dat(i)
+       enddo
+       close(222)
+       open(223,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj.ascii",status='unknown')
+       do i=1,NSTEP
+         write(223,*) i,syn(i)-dat(i)
+       enddo
+       close(223)
+     endif
+
+     irec=irec+1
+  enddo
+  close(111)
+  close(112)
+  close(113)
+
+  ! y-component
+  filename=trim(adjustl(procname))//"_dy_SU"
+  open(111,file="../OUTPUT_FILES/SEM/syn/"//trim(filename), &
+            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file syn'
+  open(112,file="../OUTPUT_FILES/SEM/dat/"//trim(filename), &
+            status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file dat'
+  open(113,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj", &
+            status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
+  if( ios /= 0 ) stop 'error opening file .adj'
+
+  irec=1
+  do while(ios==0)
+
+     syn(:) = 0.0
+     dat(:) = 0.0
+
      read(111,rec=irec,iostat=ios) r4head,syn
               if (ios /= 0) exit
      read(112,rec=irec,iostat=ios) r4head,dat
               if (ios /= 0) exit
      write(113,rec=irec,iostat=ios) r4head,syn-dat
               if (ios /= 0) exit
-              
+
 !daniel: outputs ascii trace
      if( myrank == 0 .and. irec == 196 ) then
-       open(221,file="../in_out_files/SEM/syn/"//trim(filename)//".ascii",status='unknown')
+       open(221,file="../OUTPUT_FILES/SEM/syn/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(221,*) i,syn(i)
-       enddo 
+       enddo
        close(221)
-       open(222,file="../in_out_files/SEM/dat/"//trim(filename)//".ascii",status='unknown')
+       open(222,file="../OUTPUT_FILES/SEM/dat/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(222,*) i,dat(i)
        enddo
        close(222)
-       open(223,file="../in_out_files/SEM/"//trim(filename)//".adj.ascii",status='unknown')
+       open(223,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj.ascii",status='unknown')
        do i=1,NSTEP
          write(223,*) i,syn(i)-dat(i)
        enddo
        close(223)
-     endif 
-              
-              
+     endif
+
+
      irec=irec+1
   enddo
   close(111)
   close(112)
   close(113)
-  
+
   ! z-component
   filename=trim(adjustl(procname))//"_dz_SU"
-  open(111,file="../in_out_files/SEM/syn/"//trim(filename), &
+  open(111,file="../OUTPUT_FILES/SEM/syn/"//trim(filename), &
         status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
   if( ios /= 0 ) stop 'error opening file syn'
-  open(112,file="../in_out_files/SEM/dat/"//trim(filename), &
+  open(112,file="../OUTPUT_FILES/SEM/dat/"//trim(filename), &
         status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
   if( ios /= 0 ) stop 'error opening file dat'
-  open(113,file="../in_out_files/SEM/"//trim(filename)//".adj", &
+  open(113,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj", &
         status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
   if( ios /= 0 ) stop 'error opening file .adj'
   irec=1
   do while(ios==0)
-  
-     syn(:) = 0.0  
+
+     syn(:) = 0.0
      dat(:) = 0.0
-  
+
      read(111,rec=irec,iostat=ios) r4head,syn
               if (ios /= 0) exit
      read(112,rec=irec,iostat=ios) r4head,dat
@@ -174,24 +174,24 @@ program adj_seismogram
 
 !daniel: outputs ascii trace
      if( myrank == 0 .and. irec == 196 ) then
-       open(221,file="../in_out_files/SEM/syn/"//trim(filename)//".ascii",status='unknown')
+       open(221,file="../OUTPUT_FILES/SEM/syn/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(221,*) i,syn(i)
        enddo
        close(221)
-       open(222,file="../in_out_files/SEM/dat/"//trim(filename)//".ascii",status='unknown')
+       open(222,file="../OUTPUT_FILES/SEM/dat/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(222,*) i,dat(i)
        enddo
        close(222)
-       open(223,file="../in_out_files/SEM/"//trim(filename)//".adj.ascii",status='unknown')
+       open(223,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj.ascii",status='unknown')
        do i=1,NSTEP
          write(223,*) i,syn(i)-dat(i)
        enddo
        close(223)
-     endif 
-              
-              
+     endif
+
+
      irec=irec+1
   enddo
   close(111)

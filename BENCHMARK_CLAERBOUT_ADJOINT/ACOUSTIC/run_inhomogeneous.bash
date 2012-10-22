@@ -28,7 +28,7 @@ echo
 
 bin="$PWD/bin"
 DATA="$bin/../DATA"
-in_out_files="$bin/../in_out_files"
+OUTPUT_FILES="$bin/../OUTPUT_FILES"
 models="$bin/../models"
 SESAME="$bin/../../../../"
 
@@ -49,8 +49,8 @@ echo
 echo "setting up example..."
 echo
 
-rm -rf $in_out_files $models $bin
-mkdir -p $in_out_files/DATABASES_MPI $in_out_files/OUTPUT_FILES $in_out_files/SEM/dat $in_out_files/SEM/syn
+rm -rf $OUTPUT_FILES $models $bin
+mkdir -p $OUTPUT_FILES/DATABASES_MPI $OUTPUT_FILES $OUTPUT_FILES/SEM/dat $OUTPUT_FILES/SEM/syn
 mkdir -p $models/initial_model $models/target_model $bin
 
 cd $SESAME
@@ -118,12 +118,12 @@ echo "data simulation: $MPIRUN ./xspecfem3D ..."
 $MPIRUN ./xspecfem3D
 
 #daniel
-cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.dat.forward
+cp -rp $OUTPUT_FILES $OUTPUT_FILES.dat.forward
 
-mv $in_out_files/OUTPUT_FILES/*SU $in_out_files/SEM/dat/
-cp $in_out_files/DATABASES_MPI/*rho.bin $models/target_model/
-cp $in_out_files/DATABASES_MPI/*vp.bin  $models/target_model/
-cp $in_out_files/DATABASES_MPI/*vs.bin  $models/target_model/
+mv $OUTPUT_FILES/*SU $OUTPUT_FILES/SEM/dat/
+cp $OUTPUT_FILES/DATABASES_MPI/*rho.bin $models/target_model/
+cp $OUTPUT_FILES/DATABASES_MPI/*vp.bin  $models/target_model/
+cp $OUTPUT_FILES/DATABASES_MPI/*vs.bin  $models/target_model/
 ########################### syn ########################################
 
 $MPIRUN ./xrandom_model $percent
@@ -134,12 +134,12 @@ echo "syn simulation: $MPIRUN ./xspecfem3D ..."
 $MPIRUN ./xspecfem3D
 
 #daniel
-cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.syn.forward
+cp -rp $OUTPUT_FILES $OUTPUT_FILES.syn.forward
 
-mv $in_out_files/OUTPUT_FILES/*SU $in_out_files/SEM/syn/
-cp $in_out_files/DATABASES_MPI/*rho.bin $models/initial_model/
-cp $in_out_files/DATABASES_MPI/*vp.bin  $models/initial_model/
-cp $in_out_files/DATABASES_MPI/*vs.bin  $models/initial_model/
+mv $OUTPUT_FILES/*SU $OUTPUT_FILES/SEM/syn/
+cp $OUTPUT_FILES/DATABASES_MPI/*rho.bin $models/initial_model/
+cp $OUTPUT_FILES/DATABASES_MPI/*vp.bin  $models/initial_model/
+cp $OUTPUT_FILES/DATABASES_MPI/*vs.bin  $models/initial_model/
 ########################### adj sources ################################
 
 $MPIRUN ./xadj $NSTEP $DT
@@ -153,7 +153,7 @@ echo "adj simulation: $MPIRUN ./xspecfem3D ..."
 $MPIRUN ./xspecfem3D
 
 #daniel
-cp -rp $in_out_files/OUTPUT_FILES $in_out_files/OUTPUT_FILES.syn.adjoint
+cp -rp $OUTPUT_FILES $OUTPUT_FILES.syn.adjoint
 
 ./xpostprocessing $NSTEP $DT $NPROC
 
@@ -167,7 +167,7 @@ mv ./src/specfem3D/write_seismograms.f90_backup ./src/specfem3D/write_seismogram
 
 #cd $bin/../
 #rm -f compile.log make.log
-#rm -rf $in_out_files $models $bin
+#rm -rf $OUTPUT_FILES $models $bin
 
 fi
 

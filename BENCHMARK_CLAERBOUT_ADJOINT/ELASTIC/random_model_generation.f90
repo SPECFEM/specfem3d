@@ -6,7 +6,7 @@ program random_model
 
   integer,parameter :: NGLLX=5,NGLLY=5,NGLLZ=5,IOUT=20
   integer,parameter :: CUSTOM_REAL = 4
-  character(len=512),parameter :: LOCAL_PATH='../in_out_files/DATABASES_MPI/'
+  character(len=512),parameter :: LOCAL_PATH='../OUTPUT_FILES/DATABASES_MPI/'
 
   integer :: myrank,ier,nspec,nglob,NPROC,ios
   double precision :: percent
@@ -25,7 +25,7 @@ program random_model
   !real(kind=CUSTOM_REAL) :: norm_h,norm_v,norm
   real(kind=CUSTOM_REAL),parameter :: PI = 3.1415926535897931
   integer :: i,j,k,ispec,iglob
-  
+
   call MPI_Init(ier)
   call MPI_Comm_Rank(MPI_COMM_WORLD,myrank,ier)
   call MPI_Comm_Size(MPI_COMM_WORLD,NPROC,ier)
@@ -41,7 +41,7 @@ program random_model
   if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
   read(IOUT) nspec
   read(IOUT) nglob
-  
+
   ! ibool file
   allocate(ibool(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if( ier /= 0 ) stop 'error allocating array ibool'
@@ -52,15 +52,15 @@ program random_model
   read(IOUT) xstore
   read(IOUT) ystore
   read(IOUT) zstore
-    
+
   close(IOUT)
-  
+
   ! rho
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array rho_read'
   open(unit=IOUT,file=trim(adjustl(prname))//'rho.bin',status='old',action='read',form='unformatted')
   read(IOUT) rho_read
   close(IOUT)
-  
+
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vp_read'
   open(unit=IOUT,file=trim(adjustl(prname))//'vp.bin',status='old',action='read',form='unformatted')
@@ -72,44 +72,44 @@ program random_model
   read(IOUT) vs_read
   close(IOUT)
 
-!-------------------------------------------------  
+!-------------------------------------------------
 !daniel: this will randomly perturb every GLL point in the model, thus adding like white noise to it.
 !           question: is the signal sensitive to this perturbation? or is it within numerical noise/artefacts?
 
   ! perturb model randomly
   allocate( random(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array random'
 
-  if( .false. ) then  
-    
+  if( .false. ) then
+
     CALL RANDOM_SEED()
 
     !daniel: re-initialize seed with fixed value to make successive runs repeatable
     CALL RANDOM_SEED(size=n)
     allocate(myseed(n))
-    myseed(1:n) = myrank * 75347  
+    myseed(1:n) = myrank * 75347
     CALL RANDOM_SEED(put=myseed)
 
     ! this should return the same number for repeated runs...
     !call random_number(tmpharvest)
     !print *,'seed size',n
     !print *,'random number: ',tmpharvest
-      
-    CALL RANDOM_NUMBER(random)    
-    random=random/maxval(abs(random))*2.0-1.0    
+
+    CALL RANDOM_NUMBER(random)
+    random=random/maxval(abs(random))*2.0-1.0
     rho_read=rho_read*(1.0+percent*random)
 
     CALL RANDOM_NUMBER(random)
-    random=random/maxval(abs(random))*2.0-1.0    
+    random=random/maxval(abs(random))*2.0-1.0
     vp_read= vp_read*(1.0+percent*random)
 
     CALL RANDOM_NUMBER(random)
     random=random/maxval(abs(random))*2.0-1.0
     vs_read= vs_read*(1.0+percent*random)
-    
+
   endif
-  
-  
-! adds a gaussian perturbation in the middle of the model  
+
+
+! adds a gaussian perturbation in the middle of the model
   if( .true. ) then
     ! initializes perturbations
     random(:,:,:,:) = 0.0
@@ -130,40 +130,40 @@ program random_model
     !norm_h = 2.0*PI*sigma_h**2
     !norm_v = sqrt(2.0*PI) * sigma_v
     !norm   = norm_h * norm_v
-      
-    ! sets gaussian perturbation into the middle of model: 
+
+    ! sets gaussian perturbation into the middle of model:
     ! dimension (Width x Length x Depth) : 2640.0 m x 2640.0 m x 1.44 km
     do ispec = 1,nspec
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
             ! GLL point location (given in m: dimension 2640 m x 2640 x x 1440 m)
-            iglob = ibool(i,j,k,ispec)            
+            iglob = ibool(i,j,k,ispec)
             x = xstore(iglob)
             y = ystore(iglob)
             z = zstore(iglob)
-            
+
             ! vertical distance to center: at - 500 m depth
             dist_v = sqrt( (-500.0 - z)*(-500.0 - z) )
             ! horizontal distance to center: at 1320 x 1320 m
             dist_h = sqrt( (1320.0 - x)*(1320.0 -x) + (1320.0 - y)*(1320.0 - y) )
             ! gaussian function:  values between [0,1]
-            random(i,j,k,ispec) = exp( - (dist_h*dist_h) / sigma_h2 - (dist_v*dist_v) / sigma_v2 ) 
-            
+            random(i,j,k,ispec) = exp( - (dist_h*dist_h) / sigma_h2 - (dist_v*dist_v) / sigma_v2 )
+
             !if(myrank == 0 )print*,random(i,j,k,ispec),x,y,z,dist_v,dist_h
           enddo
         enddo
       enddo
-    enddo  
+    enddo
 
     ! adds positive perturbation to model:
     !rho_read = rho_read*(1.0+percent*random)
     vp_read  = vp_read*(1.0+percent*random)
     !vs_read  = vs_read*(1.0+percent*random)
-  
+
   endif
-  
-!-------------------------------------------------  
+
+!-------------------------------------------------
 
   ! store perturbed model
   ! rho

@@ -27,7 +27,7 @@ program random_model
 
   MODELSPACE=0.0
   DATASPACE=0.0
-  
+
   irec_total = 0
   allocate(adj(NSTEP))
 
@@ -35,30 +35,30 @@ program random_model
     !!! calculate inner product in model space --- <F* F dm, dm>
     ! processors name
     write(prname,'(a,i6.6,a)') 'proc',myrank,'_'
-    
+
     print*,'  ',trim(prname)
-    
+
     ! nspec & nglob
-    open(unit=IOUT,file='../in_out_files/DATABASES_MPI/'//trim(adjustl(prname))//'external_mesh.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'external_mesh.bin',status='old',action='read',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
     read(IOUT) nspec
     read(IOUT) nglob
     close(IOUT)
-    
+
     ! weights
     allocate(weights(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array weights'
-    open(unit=IOUT,file='../in_out_files/DATABASES_MPI/'//trim(adjustl(prname))//'weights_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'weights_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) weights
     close(IOUT)
-    
-    ! kernels    
+
+    ! kernels
     allocate(krhop(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array krhop'
-    open(unit=IOUT,file='../in_out_files/DATABASES_MPI/'//trim(adjustl(prname))//'rhop_acoustic_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'rhop_acoustic_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) krhop
     close(IOUT)
 
     allocate(kalpha(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array kalpha'
-    open(unit=IOUT,file='../in_out_files/DATABASES_MPI/'//trim(adjustl(prname))//'alpha_acoustic_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
+    open(unit=IOUT,file='../OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'alpha_acoustic_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) kalpha
     close(IOUT)
 
@@ -94,32 +94,32 @@ program random_model
                sum(weights*(-kalpha)*(vp-vp0)/vp0)
 
     deallocate(rho,rho0,vp,vp0,vs,vs0,weights,krhop,kalpha,kbeta)
-    
-    
+
+
     !!! calculate inner product in data space --- <F dm, F dm>
     write(procname,"(i4)") myrank
     filename=trim(adjustl(procname))//"_dx_SU"
-    open(111,file="../in_out_files/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
     if( ios /= 0 ) stop 'error opening adjoint trace'
     print*,'  ',trim(adjustl(filename))//".adj"
-    
+
     irec=1
-    do while(ios==0)    
+    do while(ios==0)
        adj(:) = 0.0
-       
-       read(111,rec=irec,iostat=ios) r4head,adj       
+
+       read(111,rec=irec,iostat=ios) r4head,adj
        if (ios /= 0) exit
-       
+
        DATASPACE=DATASPACE+sum(adj(:)*adj(:))*DT
-       
+
        irec=irec+1
     enddo
     close(111)
     irec_total = irec_total + irec
-    
+
 !elastic case
 !    filename=trim(adjustl(procname))//"_dy_SU"
-!    open(111,file="../in_out_files/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+!    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
 !    if( ios /= 0 ) stop 'error opening adjoint trace'
 !    print*,'  ',trim(adjustl(filename))//".adj"
 !
@@ -137,7 +137,7 @@ program random_model
 !    close(111)
 !
 !    filename=trim(adjustl(procname))//"_dz_SU"
-!    open(111,file="../in_out_files/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
+!    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
 !    if( ios /= 0 ) stop 'error opening adjoint trace'
 !    print*,'  ',trim(adjustl(filename))//".adj"
 !

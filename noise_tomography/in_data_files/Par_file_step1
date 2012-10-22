@@ -2,7 +2,7 @@
 #
 # forward or adjoint simulation
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
-SIMULATION_TYPE                 = 1   
+SIMULATION_TYPE                 = 1
 # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
 NOISE_TOMOGRAPHY                = 1
 SAVE_FORWARD                    = .true.
@@ -22,9 +22,9 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # models:
 # available options are:
 #   default (model parameters described by mesh properties)
-# 1D models available are: 
+# 1D models available are:
 #   1d_prem,1d_socal,1d_cascadia
-# 3D models available are: 
+# 3D models available are:
 #   aniso,external,gll,salton_trough,tomo
 MODEL                           = default
 
@@ -52,7 +52,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .false.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
+LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
@@ -63,6 +63,6 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
-# set to true to use GPUs 
+# set to true to use GPUs
 GPU_MODE                        = .false.
 

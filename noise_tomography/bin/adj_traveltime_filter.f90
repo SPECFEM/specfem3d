@@ -45,7 +45,7 @@ data  freq_high / 0.2d0 /
 
 nfreq=size(freq_low)
 
-file_misfit = '../in_out_files/SEM/misfit_traveltime_delay'
+file_misfit = '../OUTPUT_FILES/SEM/misfit_traveltime_delay'
 open(unit=1111,file=trim(file_misfit),status='unknown')
 
 DELT=dt*1.0d3
@@ -53,7 +53,7 @@ adj=0.0d0
 misfit_traveltime = 0.0d0
 !!!! loading data and synthetics !!!!
 do irec = 1,nrec
-   file_data         = '../in_out_files/SEM/X2.DB.BXZ.semd'
+   file_data         = '../OUTPUT_FILES/SEM/X2.DB.BXZ.semd'
    open(unit=1001,file=trim(file_data),status='old',action='read')
    do itime = 1,nstep
            read(1001,*) t(itime),data_origin(nstep-itime+1,irec)  ! the reversed seismogram involves $C^\alpha\beta(t)=C^\beta\alpha(-t)$
@@ -150,13 +150,13 @@ do irec = 1,nrec
    end do  !do ifreq=1,nfreq
 
    !!!! output !!!!
-   file_adj_BXZ      = '../in_out_files/SEM/adj_sources_contribution1'
+   file_adj_BXZ      = '../OUTPUT_FILES/SEM/adj_sources_contribution1'
    open(unit=1002,file=trim(file_adj_BXZ),status='unknown')
    do itime = 1,nstep
       write(1002,*) t(itime), adj(nstep-itime+1,irec)
    end do
    close(1002)
-   file_adj_zeros      = '../in_out_files/SEM/adj_sources_contribution2'
+   file_adj_zeros      = '../OUTPUT_FILES/SEM/adj_sources_contribution2'
    open(unit=1002,file=trim(file_adj_zeros),status='unknown')
    do itime = 1,nstep
       write(1002,*) t(itime), adj(itime,irec)
@@ -168,7 +168,7 @@ enddo  !do irec=1,nrec
 
 close(1111)
 
-file_misfit = '../in_out_files/SEM/misfit_traveltime'
+file_misfit = '../OUTPUT_FILES/SEM/misfit_traveltime'
 open(unit=1001,file=trim(file_misfit),status='unknown')
 write(1001,*) misfit_traveltime, traveltime_delay
 close(1001)

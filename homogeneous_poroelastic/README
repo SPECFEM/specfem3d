@@ -59,10 +59,10 @@ step-by-step tutorial:
 
    - run decomposer in directory
      (example assumes 16 partitions with mesh files in ../examples/homogeneous_poro/MESH/)
-     > ./bin/xdecompose_mesh_SCOTCH 16 ../examples/homogeneous_poro/MESH/ ../in_out_files/DATABASES_MPI/
+     > ./bin/xdecompose_mesh_SCOTCH 16 ../examples/homogeneous_poro/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
 
-     this creates mesh partitions "proc000***_Database" in directory in_out_files/DATABASES_MPI/.
-     (you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
+     (you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")
 
 
 4. generate databases:
@@ -78,7 +78,7 @@ step-by-step tutorial:
      > bsub < go_generate_databases_lsf.bash
 
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-     in directory in_out_files/DATABASES_MPI/.
+     in directory OUTPUT_FILES/DATABASES_MPI/.
 
 
 5. run simulation:
@@ -102,7 +102,7 @@ step-by-step tutorial:
      as well as 3 timestamp****** files
 
 
-6. plot your output seismograms in SPECFEM3D/in_out_files/OUTPUT_FILES/
+6. plot your output seismograms in SPECFEM3D/OUTPUT_FILES/
    using xmgrace for example.
 
 ===========================================================

@@ -82,14 +82,14 @@ step-by-step tutorial:
      note: this script will need to be tailored to your cluster, e.g.,
      > bsub < go_decomposer_lsf.bash
 
-     this creates mesh partitions "proc000***_Database" in directory in_out_files/DATABASES_MPI/.
-     the output file in_out_files/OUTPUT_FILES/*.o contains information on the partitioning
+     this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
+     the output file OUTPUT_FILES/*.o contains information on the partitioning
 
      note 1: the program xdecompose_mesh_SCOTCH is a serial program (runs on 1 core)
      note 2: for small jobs (like this one), you can simply launch the job on
              the local node from directory SPECFEM3D:
 
-     > ./bin/xdecompose_mesh_SCOTCH 4 examples/homogeneous_halfspace/MESH/ in_out_files/DATABASES_MPI/
+     > ./bin/xdecompose_mesh_SCOTCH 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 
 5. generate databases:
@@ -104,7 +104,7 @@ step-by-step tutorial:
      > bsub < go_generate_databases_lsf.bash
 
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-     in directory in_out_files/DATABASES_MPI/.
+     in directory OUTPUT_FILES/DATABASES_MPI/.
 
 
 6. run simulation:
@@ -119,11 +119,11 @@ step-by-step tutorial:
              > bsub < go_solver_lsf.bash
      note 2: the simulation runs on 4 cores and should take about 5 minutes,
              and you can track the progress with the timestamp files
-             generated in in_out_files/OUTPUT_FILES/
+             generated in OUTPUT_FILES/
 
    - the job should take a couple minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 18 (ls -1 *semd | wc) seismogram files in the directory in_out_files/OUTPUT_FILES,
+     of 18 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
      as well as 3 timestamp****** files
 
 
@@ -133,7 +133,7 @@ step-by-step tutorial:
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
 
      > xmgrace examples/homogeneous_halfspace/REF_SEIS/*Z.semd &
-     > xmgrace in_out_files/OUTPUT_FILES/*Z.semd &
+     > xmgrace OUTPUT_FILES/*Z.semd &
 
    - option 2: generate ps files using gnuplot:
 
@@ -157,7 +157,7 @@ step-by-step tutorial:
          gnuplot> replot
          gnuplot> quit
 
-     - copy gnuplot script X1-50.BXZ.gnuplot to in_out_files/OUTPUT_FILES/
+     - copy gnuplot script X1-50.BXZ.gnuplot to OUTPUT_FILES/
      - execute same commands as above
      - you should see the same image as generated from the reference seismograms
 

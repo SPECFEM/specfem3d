@@ -39,7 +39,7 @@ step-by-step tutorial:
       > qsub go_decomposer_pbs.bash
 
       which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
-      you can then specify "../in_out_files/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
+      you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
 
 
 4. generate databases:
@@ -51,7 +51,7 @@ step-by-step tutorial:
       > qsub go_generate_databases_pbs.bash
 
       this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-      in directory in_out_files/DATABASES_MPI/.
+      in directory OUTPUT_FILES/DATABASES_MPI/.
       (note: if execution fails due to memory shortage - most likely fails when calling routine to
            create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
 
@@ -65,6 +65,6 @@ step-by-step tutorial:
       > qsub go_solver_pbs.bash
 
     note: simulation will take about 1 h 45 minutes and generate
-    3 sets (semd,semv,sema) of 9 seismogram files in in_out_files/OUTPUT_FILES,
+    3 sets (semd,semv,sema) of 9 seismogram files in OUTPUT_FILES,
     as well as 10 timestamp****** files
 

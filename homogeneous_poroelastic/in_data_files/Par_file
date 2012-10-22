@@ -2,9 +2,9 @@
 #
 # forward or adjoint simulation
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
-SIMULATION_TYPE                 = 1   
+SIMULATION_TYPE                 = 1
 # 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
-NOISE_TOMOGRAPHY                = 0   
+NOISE_TOMOGRAPHY                = 0
 SAVE_FORWARD                    = .true.
 
 # UTM projection parameters
@@ -21,9 +21,9 @@ DT                              = 5.d-5 #0.5d-3
 # models:
 # available options are:
 #   default (model parameters described by mesh properties)
-# 1D models available are: 
+# 1D models available are:
 #   1d_prem,1d_socal,1d_cascadia
-# 3D models available are: 
+# 3D models available are:
 #   aniso,external,gll,salton_trough,tomo
 MODEL                           = default
 
@@ -54,7 +54,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ../in_out_files/DATABASES_MPI
+LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 250
@@ -79,12 +79,12 @@ USE_FORCE_POINT_SOURCE          = .false.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
 
-# set to use a Ricker source time function instead of a gaussian (when using CMTSOLUTION files) 
-# or a quasi-Heaviside (when using FORCESOLUTION files)     
+# set to use a Ricker source time function instead of a gaussian (when using CMTSOLUTION files)
+# or a quasi-Heaviside (when using FORCESOLUTION files)
 USE_RICKER_TIME_FUNCTION        = .false.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
-# set to true to use GPUs 
+# set to true to use GPUs
 GPU_MODE                        = .false.
