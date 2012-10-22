@@ -15,12 +15,12 @@
 /bin/rm -rf *.tit >  /dev/null
 /bin/rm -rf *.spl >  /dev/null
 
-pdflatex manual_SPECFEM3D
-bibtex manual_SPECFEM3D
-pdflatex manual_SPECFEM3D
-pdflatex manual_SPECFEM3D
-pdflatex manual_SPECFEM3D
-pdflatex manual_SPECFEM3D
+pdflatex manual_SPECFEM3D_Cartesian
+bibtex manual_SPECFEM3D_Cartesian
+pdflatex manual_SPECFEM3D_Cartesian
+pdflatex manual_SPECFEM3D_Cartesian
+pdflatex manual_SPECFEM3D_Cartesian
+pdflatex manual_SPECFEM3D_Cartesian
 
 /bin/rm -rf *.dvi >  /dev/null
 /bin/rm -rf *.log >  /dev/null
