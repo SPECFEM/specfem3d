@@ -215,7 +215,7 @@ It will also use the PT-SCOTCH parallel library for mesh partitioning.\\
 SPECFEM3D Cartesian includes coupled fluid-solid domains and
 adjoint capabilities, which enables one to address seismological inverse problems, but for linear rheologies only so far.
 To accommodate visco-plastic or non-linear rheologies, the reader can refer to
-the \href{http://geoelse.stru.polimi.it/}{GeoELSE} software package \citep{CaGa97,StPaIg09,ChMoTsBaKrKaStKr10}.
+the \href{http://geoelse.stru.polimi.it/}{GeoELSE} software package \citep{CaGa97,StPaIg09}.
 
 \section{Citation}
 
@@ -465,16 +465,10 @@ Before running \texttt{configure}, select the XL Fortran compiler by typing \tex
 or \texttt{module load bgq-xl} (another, less efficient option is to load the GNU compilers using \texttt{module load bgq-gnu/4.4.6} or similar).\\
 
 \noindent
-Then, to configure the code, for the SPECFEM3D\_GLOBE version type this:\\
+Then, to configure the code, type this:\\
 
 \noindent
 \texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}\\
-
-\noindent
-and for SPECFEM3D\_Cartesian type this:\\
-
-\noindent
-\texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}.\\
 
 \noindent
 \underline{Older installation instruction for IBM BlueGene, from 2011:}\\
@@ -2792,7 +2786,10 @@ The directory containing utilities for tomographic inversion using SPECFEM3D Car
                    (requires pre-computed "event kernels")
 \end{verbatim}
 %
-This directory also contains a brief \verb+README+ file indicating the role of the three subdirectories, \verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+. The components for making the model update are there; however, there are no explicit rules for computing the model update, just as with any optimization problem. There are options for computing a conjugate gradient step, as well as a source subspace projection step. The workflow could use substantial ``stitching together,'' and we welcome suggestions; undoubtedly, the tomographic inversion procedure will improve with time. {\bf This is a work in progress.}
+This directory also contains a brief \verb+README+ file indicating the role of the three subdirectories, \verb+flexwin+ \citep{Maggi2009}, \verb+measure_adj+, and \verb+iterate_adj+. The components for making the model update are there; however, there are no explicit rules for computing the model update, just as with any optimization problem. There are options for computing a conjugate gradient step, as well as a source subspace projection step.
+The workflow could use substantial ``stitching together,'' and we welcome suggestions;
+undoubtedly, the tomographic inversion procedure will improve with time.
+{\bf This is a work in progress.}
 
 The best single file to read is probably: \verb+ADJOINT_TOMO/iterate_adj/cluster/README+.
 
