@@ -42,13 +42,13 @@ step-by-step tutorial:
 
 2. copy three input files from examples directory into SPECFEM3D/DATA/
 
-     > cd examples/homogeneous_halfspace/DATA/
-     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
+     > cd examples/homogeneous_halfspace_HEX8/DATA/
+     > cp * ../../../DATA/
 
 
 3. create mesh:
 
-   - from the directory SPECFEM3D/examples/homogeneous_halfspace,
+   - from the directory SPECFEM3D/examples/homogeneous_halfspace_HEX8,
      open the cubit GUI:
 
      > claro (or cubit)
@@ -106,6 +106,7 @@ step-by-step tutorial:
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory OUTPUT_FILES/DATABASES_MPI/.
 
+     optional: load vtk files (e.g., vs) into paraview and check them out
 
 6. run simulation:
 
@@ -128,16 +129,16 @@ step-by-step tutorial:
 
 
 7. check with 6 reference seismograms in
-      SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
+      SPECFEM3D/examples/homogeneous_halfspace_HEX8/REF_SEIS/
 
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
 
-     > xmgrace examples/homogeneous_halfspace/REF_SEIS/*Z.semd &
+     > xmgrace examples/homogeneous_halfspace_HEX8/REF_SEIS/*Z.semd &
      > xmgrace OUTPUT_FILES/*Z.semd &
 
    - option 2: generate ps files using gnuplot:
 
-     > cd SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS
+     > cd SPECFEM3D/examples/homogeneous_halfspace_HEX8/REF_SEIS
      > gnuplot
 
          gnuplot> load "X1-50.BXZ.gnuplot"
