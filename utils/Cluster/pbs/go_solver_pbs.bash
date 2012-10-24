@@ -49,5 +49,7 @@ sleep 2
 cd bin/
 mpiexec -np $numnodes ./xspecfem3D
 
+cp ../DATA/STATIONS_FILTERED ../OUTPUT_FILES/
+
 echo "finished successfully"
 
