@@ -39,9 +39,12 @@ module part_decompose_mesh_SCOTCH
 ! acoustic-elastic-poroelastic load balancing:
 ! assumes that elastic at least ~4 times more expensive than acoustic
 ! assumes that poroelastic at least ~8 times more expensive than acoustic
-  integer, parameter :: ACOUSTIC_LOAD = 1
-  integer, parameter :: ELASTIC_LOAD = 4
-  integer, parameter :: POROELASTIC_LOAD = 8
+!! DK DK since loads can only be integer numbers in domain decomposition packages
+!! DK DK for internal reasons (integer arithmetic produces no roundoff), to take
+!! DK DK into account decimal values here we multiply all values by 10, since only ratios between loads matter
+  integer, parameter :: ACOUSTIC_LOAD = 10     ! is in reality 1.0
+  integer, parameter :: ELASTIC_LOAD = 41      ! is in reality 4.1
+  integer, parameter :: POROELASTIC_LOAD = 81  ! is in reality 8.1
 
 contains
 

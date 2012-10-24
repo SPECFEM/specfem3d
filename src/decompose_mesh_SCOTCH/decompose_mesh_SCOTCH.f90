@@ -678,9 +678,6 @@ module decompose_mesh_SCOTCH
     allocate(elmnts_load(1:nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array elmnts_load'
 
-    ! uniform load
-    elmnts_load(:) = 1
-
     ! gets materials id associations
     allocate(num_material(1:nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array num_material'
@@ -688,8 +685,10 @@ module decompose_mesh_SCOTCH
     !       (which are counted then as elastic elements)
     num_material(:) = mat(1,:)
 
+    ! uniform load by default, and then
     ! in case of acoustic/elastic/poro simulation, assign different weights to elements accordingly
 !! DK DK Oct 2012: this should include CPML weights as well in the future
+    elmnts_load(:) = 1
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                   num_material,mat_prop,undef_mat_prop)
 
