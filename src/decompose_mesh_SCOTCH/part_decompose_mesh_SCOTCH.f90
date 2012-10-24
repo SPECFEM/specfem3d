@@ -1342,20 +1342,14 @@ contains
       ! note: num_material index can be negative for tomographic material definitions
       ! acoustic element (cheap)
       if( num_material(el+1) > 0 ) then
-        if ( is_acoustic(num_material(el+1)) ) then
-          elmnts_load(el+1) = elmnts_load(el+1)*ACOUSTIC_LOAD
-        endif
+        if (is_acoustic(num_material(el+1))) elmnts_load(el+1) = ACOUSTIC_LOAD
         ! elastic element (expensive)
-        if ( is_elastic(num_material(el+1)) ) then
-          elmnts_load(el+1) = elmnts_load(el+1)*ELASTIC_LOAD
-        endif
+        if (is_elastic(num_material(el+1))) elmnts_load(el+1) = ELASTIC_LOAD
         ! poroelastic element (very expensive)
-        if ( is_poroelastic(num_material(el+1)) ) then
-          elmnts_load(el+1) = elmnts_load(el+1)*POROELASTIC_LOAD
-        endif
+        if (is_poroelastic(num_material(el+1))) elmnts_load(el+1) = POROELASTIC_LOAD
       else
         ! tomographic materials count as elastic
-        elmnts_load(el+1) = elmnts_load(el+1)*ELASTIC_LOAD
+        elmnts_load(el+1) = ELASTIC_LOAD
       endif
     enddo
 

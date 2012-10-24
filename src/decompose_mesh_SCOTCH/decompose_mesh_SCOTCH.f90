@@ -685,10 +685,10 @@ module decompose_mesh_SCOTCH
     !       (which are counted then as elastic elements)
     num_material(:) = mat(1,:)
 
-    ! uniform load by default, and then
-    ! in case of acoustic/elastic/poro simulation, assign different weights to elements accordingly
 !! DK DK Oct 2012: this should include CPML weights as well in the future
-    elmnts_load(:) = 1
+    ! uniform load by default
+    elmnts_load(:) = ACOUSTIC_LOAD
+    ! then in case of acoustic/elastic/poro simulation, assign different weights to elements accordingly
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                   num_material,mat_prop,undef_mat_prop)
 
