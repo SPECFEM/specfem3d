@@ -27,15 +27,15 @@ echo "   setting up example..."
 echo
 
 mkdir -p bin
-mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-rm -rf OUTPUT_FILES/*
+rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 # compiles executables in root directory
 cd ../../
-make >& $currentdir/tmp.log
+make clean
+make > $currentdir/tmp.log
 cd $currentdir
 
 # links executables

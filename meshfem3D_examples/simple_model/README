@@ -15,11 +15,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 1. Set up input files.
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/simple_model/ DATA/meshfem3D_files/
-
-   > cd DATA/meshfem3D_files/
-   > cp Par_file CMTSOLUTION STATIONS ..
-   > cd SPECFEM3D
+   > rsync -av examples/meshfem3D_examples/simple_model/DATA DATA
 
    - adapt the submission scripts for the appropriate queues and number of cores:
      go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
@@ -29,7 +25,6 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 2. compile and run internal mesher
 
    > make xmeshfem3D
-
    > qsub go_mesher_pbs.bash
 
    This should generate these files in OUTPUT_FILES/DATABASES_MPI/:
@@ -52,23 +47,19 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
 3. generate databases:
 
-   - compile generate_databases in directory SPECFEM3D/:
+   - compile and run generate_databases in directory SPECFEM3D/:
      > make xgenerate_databases
-
-   - submit job script:
      > qsub go_generate_databases_pbs.bash
 
      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
      in directory OUTPUT_FILES/DATABASES_MPI/.
 
-     Optional: If you have paraview, load the .vtk files (see simple_model.png).
+     optional: If you have paraview, load the .vtk files (see simple_model.png).
 
 4. run simulation:
 
-   - compile specfem3D:
+   - compile and run specfem3D:
      > make xspecfem3D
-
-   - submit job script:
      > qsub go_solver_pbs.bash
 
    - the job should take about 10 minutes

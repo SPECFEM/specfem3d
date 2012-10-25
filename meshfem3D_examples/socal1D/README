@@ -24,24 +24,19 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 1. set up input files:
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/socal1D/ DATA/meshfem3D_files/
-
-   > cd DATA/meshfem3D_files/
-   > cp Par_file CMTSOLUTION STATIONS ..
-   > cd SPECFEM3D
+   > rsync -av examples/meshfem3D_examples/socal1D/DATA/ DATA
 
    - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
      go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash
 
    - note: go_decomposer_pbs.bash is not used with the internal mesher
 
-2. generate internal mesh:
+2. compile and run internal mesher
 
-   - compile and run meshfem3D:
     > make xmeshfem3D
     > qsub go_mesher_pbs.bash
 
-    this should generate these files in OUTPUT_FILES/DATABASES_MPI/:
+    - this should generate these files in OUTPUT_FILES/DATABASES_MPI/:
 
     proc000000_Database
     proc000000_.dx
@@ -52,7 +47,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
 
 3. generate databases:
 
-   - compile and run generate_databases:
+   - compile and run generate_databases in directory SPECFEM3D/:
      > make xgenerate_databases
      > qsub go_generate_databases_pbs.bash
 

@@ -57,19 +57,15 @@ step-by-step tutorial:
 
 5. generate databases:
 
-   - compile generate_databases from SPECFEM3D/ :
+   - compile and run generate_databases in directory SPECFEM3D/:
      > make xgenerate_databases
-
-   - submit job script
      > qsub go_generate_databases_pbs.bash
 
 
 6. run simulation:
 
-   - compile specfem3D:
+   - compile and run specfem3D:
      > make xspecfem3D
-
-   - submit job script:
      > qsub go_solver_pbs.bash
 
      the simulation will take about 10 minutes

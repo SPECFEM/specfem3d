@@ -29,7 +29,6 @@ WARNING: We do not recommend running this as a test example, due to its requirem
 2. compile and run internal mesher
 
    > make xmeshfem3D
-
    > qsub go_mesher_pbs.bash
 
    - this should generate "proc000***_Database" files in OUTPUT_FILES/DATABASES_MPI/.
@@ -39,23 +38,19 @@ WARNING: We do not recommend running this as a test example, due to its requirem
 
 3. generate databases:
 
-   - compile generate_databases in directory SPECFEM3D/:
+   - compile and run generate_databases in directory SPECFEM3D/:
      > make xgenerate_databases
-
-   - submit job script:
      > qsub go_generate_databases_pbs.bash
 
-     this job will take about XX minutes and will create binary mesh files,
-     e.g. "proc000***_external_mesh.bin", in directory OUTPUT_FILES/DATABASES_MPI/.
+     this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
+     in directory OUTPUT_FILES/DATABASES_MPI/.
 
-     Optional: If you have paraview, load the .vtk files (see simple_model.png).
+     optional: If you have paraview, load the .vtk files (see simple_model.png).
 
 4. run simulation:
 
-   - compile specfem3D:
+   - compile and run specfem3D:
      > make xspecfem3D
-
-   - submit job script:
      > qsub go_solver_pbs.bash
 
    - the job should take about 70 minutes

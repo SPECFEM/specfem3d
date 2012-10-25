@@ -15,14 +15,11 @@ echo
 echo "(will take about 3 h 30 min)"
 echo
 
-
-# return to the main SPECFEM3D directory
+# compile the package in root directory
 cd ../../
-
-# compile the package
-make > tmp.log
-make combine_vol_data >> tmp.log
-
+make clean
+make > $script_dir/tmp.log
+make combine_vol_data >> $script_dir/tmp.log
 cd $script_dir
 
 # specify directories for executables, input files and output files
@@ -190,4 +187,3 @@ mesh2vtu.pl -i $OUTPUT_FILES/$kernel.mesh -o $OUTPUT_FILES/NOISE_TOMOGRAPHY/2nd_
 echo
 echo `date`
 echo "done"
-

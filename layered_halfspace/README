@@ -107,10 +107,8 @@ step-by-step tutorial:
 
 5. run simulation:
 
-    - compile specfem3D:
+    - compile and run specfem3D:
       > make xspecfem3D
-
-    - submit job script:
       > qsub go_solver_pbs.bash
 
     note: simulation will take about 25 minutes and generate

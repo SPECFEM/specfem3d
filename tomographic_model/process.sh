@@ -27,10 +27,9 @@ echo "   setting up example..."
 echo
 
 mkdir -p bin
-mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-rm -rf OUTPUT_FILES/*
+rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 # sets up tomography model file
@@ -40,7 +39,8 @@ echo
 
 # compiles executables in root directory
 cd ../../
-make > tmp.log
+make clean
+make > $currentdir/tmp.log
 cd $currentdir
 
 # links executables
@@ -51,16 +51,16 @@ cp ../../../bin/xgenerate_databases ./
 cp ../../../bin/xspecfem3D ./
 cd ../
 
+# stores setup
+cp DATA/Par_file OUTPUT_FILES/
+cp DATA/CMTSOLUTION OUTPUT_FILES/
+cp DATA/STATIONS OUTPUT_FILES/
+
 # decomposes mesh
 echo
 echo "  decomposing mesh..."
 echo
 ./bin/xdecompose_mesh_SCOTCH $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
-
-# stores setup
-cp DATA/Par_file OUTPUT_FILES/
-cp DATA/CMTSOLUTION OUTPUT_FILES/
-cp DATA/STATIONS OUTPUT_FILES/
 
 # runs database generation
 echo

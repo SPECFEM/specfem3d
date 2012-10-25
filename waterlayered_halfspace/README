@@ -6,7 +6,6 @@ This example creates a layered model as in example layered_halfspace/
 with a water layer on top and an elastic layer below, using CUBIT.
 It then runs a forward simulation which couples acoustic & elastic waves.
 
-
 step-by-step tutorial:
 
 0. run the example in the directory homogeneous_halfspace
@@ -44,10 +43,8 @@ step-by-step tutorial:
 
 4. generate databases:
 
-    - compile generate_databases:
+    - compile and run generate_databases in directory SPECFEM3D/:
       > make xgenerate_databases
-
-    - submit job script:
       > qsub go_generate_databases_pbs.bash
 
       this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
@@ -58,10 +55,8 @@ step-by-step tutorial:
 
 5. run simulation:
 
-    - compile specfem3D:
+    - compile and run specfem3D:
       > make xspecfem3D
-
-    - submit job script:
       > qsub go_solver_pbs.bash
 
     note: simulation will take about 1 h 45 minutes and generate

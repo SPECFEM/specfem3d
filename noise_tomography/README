@@ -56,9 +56,9 @@ Noise Cross-Correlation Sensitivity Kernels (Tromp et al., 2010, GJI)
          Refer to '../examples/homogeneous_halfspace', if you don't know how to get them from CUBIT and SCOTCH.
 
    3.2 - Source and Receivers
-         Since NO earthquakes are allowed for noise simulations, we have a ZERO moment tensor in "./in_data_file/CMTSOLUTION"
+         Since NO earthquakes are allowed for noise simulations, we have a ZERO moment tensor in "./DATA/CMTSOLUTION"
          As for receivers, instead of having a lot of stations in '../examples/homogeneous_halfspace',
-         we have only two receivers in "./in_data_file/STATIONS" and "./in_data_file/STATIONS_ADJOINT"
+         we have only two receivers in "./DATA/STATIONS" and "./DATA/STATIONS_ADJOINT"
 
    3.3 - Noise statistics
          "./NOISE_TOMOGRAPHY" contains:

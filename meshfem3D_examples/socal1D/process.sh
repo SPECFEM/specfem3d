@@ -32,7 +32,7 @@ rm -rf OUTPUT_FILES/DATABASES_MPI/*
 # compiles executables in root directory
 cd ../../../
 make clean
-make
+make > $currentdir/tmp.log
 #make combine_vol_data
 cd $currentdir
 
