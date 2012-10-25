@@ -30,6 +30,8 @@
                           xstore,ystore,zstore, &
                           xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
 
+  use generate_databases_par, only: NGNOD 
+
   implicit none
 
   include "constants.h"

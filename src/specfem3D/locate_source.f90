@@ -28,8 +28,8 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore, &
-                 xigll,yigll,zigll,NPROC, &
+  subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
+                 xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
                  tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
@@ -47,7 +47,7 @@
   include "constants.h"
 
   integer NPROC,UTM_PROJECTION_ZONE
-  integer NSPEC_AB,NGLOB_AB,NSOURCES
+  integer NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
 
   logical USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
@@ -178,7 +178,7 @@
   endif
 
   ! define topology of the control element
-  call usual_hex_nodes(iaddx,iaddy,iaddz)
+  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
   ! get MPI starting time
   time_start = wtime()
@@ -564,7 +564,7 @@
 
         ! recompute jacobian for the new point
         call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
         ! compute distance to target location
         dx = - (x - x_target_source)
@@ -594,7 +594,7 @@
 
       ! compute final coordinates of point found
       call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
       ! store xi,eta,gamma and x,y,z of point found
       ! note: xi/eta/gamma will be in range [-1,1]

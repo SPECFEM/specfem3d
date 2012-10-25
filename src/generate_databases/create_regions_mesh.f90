@@ -95,12 +95,12 @@
     write(IMAIN,*) '  ...preparing MPI interfaces '
   endif
   call get_MPI(myrank,nglob_dummy,nspec,ibool, &
-                        nelmnts_ext_mesh,elmnts_ext_mesh, &
-                        my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
-                        ibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh, &
-                        num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
-                        my_neighbours_ext_mesh,NPROC)
+              nelmnts_ext_mesh,elmnts_ext_mesh, &
+              my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+              ibool_interfaces_ext_mesh, &
+              nibool_interfaces_ext_mesh, &
+              num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
+              my_neighbours_ext_mesh)
 
 ! sets up absorbing/free surface boundaries
   call sync_all()
@@ -257,7 +257,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
-  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE
+  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 
@@ -423,6 +423,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,&
                         elmnts_ext_mesh,nelmnts_ext_mesh)
 
+  use generate_databases_par, only: NGNOD,NGNOD2D 
   use create_regions_mesh_ext_par
   implicit none
 
@@ -453,13 +454,13 @@ subroutine crm_ext_setup_jacobian(myrank, &
   if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
 
 ! get the 3-D shape functions
-  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll)
+  call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
 ! get the 2-D shape functions
-  call get_shape2D(myrank,shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ)
-  call get_shape2D(myrank,shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ)
-  call get_shape2D(myrank,shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY)
-  call get_shape2D(myrank,shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY)
+  call get_shape2D(myrank,shape2D_x,dershape2D_x,yigll,zigll,NGLLY,NGLLZ,NGNOD,NGNOD2D)
+  call get_shape2D(myrank,shape2D_y,dershape2D_y,xigll,zigll,NGLLX,NGLLZ,NGNOD,NGNOD2D)
+  call get_shape2D(myrank,shape2D_bottom,dershape2D_bottom,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
+  call get_shape2D(myrank,shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY,NGNOD,NGNOD2D)
 
 ! 2D weights
   do j=1,NGLLY
@@ -610,12 +611,13 @@ subroutine crm_ext_setup_indexing(ibool, &
                         nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
 
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 
   integer :: nspec2D_moho_ext
   integer, dimension(nspec2D_moho_ext) :: ibelm_moho
-  integer, dimension(NGNOD2D,nspec2D_moho_ext) :: nodes_ibelm_moho
+  integer, dimension(NGNOD2D_FOUR_CORNERS,nspec2D_moho_ext) :: nodes_ibelm_moho
 
   integer :: myrank,nspec
 

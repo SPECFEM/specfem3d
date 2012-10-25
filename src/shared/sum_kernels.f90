@@ -105,7 +105,7 @@ program sum_kernels
   double precision :: DT
   double precision :: HDUR_MOVIE
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
-            UTM_PROJECTION_ZONE,SIMULATION_TYPE
+            UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO
   integer :: IMODEL
@@ -150,7 +150,7 @@ program sum_kernels
   endif
 
   ! needs local_path for mesh files
-  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
                         OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &

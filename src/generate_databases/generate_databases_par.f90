@@ -56,7 +56,7 @@
 
 ! parameters read from parameter file
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
-  integer :: NSOURCES
+  integer :: NSOURCES,NGNOD,NGNOD2D
 
   double precision :: DT,HDUR_MOVIE
 

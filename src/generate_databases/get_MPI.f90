@@ -30,14 +30,15 @@
                     ibool_interfaces_ext_mesh, &
                     nibool_interfaces_ext_mesh, &
                     num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                    my_neighbours_ext_mesh,NPROC)
+                    my_neighbours_ext_mesh)
 
 ! sets up the MPI interface for communication between partitions
-
+  use generate_databases_par, only: NPROC,NGNOD 
   use create_regions_mesh_ext_par
+
   implicit none
 
-  integer :: myrank,nglob,nspec,NPROC
+  integer :: myrank,nglob,nspec
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
@@ -89,7 +90,7 @@
                             num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
                             my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh )
+                            nibool_interfaces_ext_mesh,NGNOD )
 
   allocate(nibool_interfaces_ext_mesh_true(num_interfaces_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array nibool_interfaces_ext_mesh_true'

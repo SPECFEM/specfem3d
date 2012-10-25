@@ -302,10 +302,10 @@ subroutine PML_set_firstlayer()
 ! sets ispec occurrences for first element layer in PML region based on absorbing boundary elements
 
   use PML_par
-  use specfem_par,only: NSPEC_AB, &
+  use specfem_par,only: NSPEC_AB,NGNOD, &
                         abs_boundary_ispec,abs_boundary_normal,num_abs_boundary_faces,&
                         abs_boundary_ijk,ibool
-  use constants,only: NDIM,TINYVAL,NGNOD,NGNOD_EIGHT_CORNERS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+  use constants,only: NDIM,TINYVAL,NGNOD_EIGHT_CORNERS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable:: temp_ispec_pml_normal
@@ -317,7 +317,7 @@ subroutine PML_set_firstlayer()
               NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),(/3,NGNOD_EIGHT_CORNERS/))
 
 !! DK DK August 2012: added this when I added support for 27-node elements in the rest of the code
-  if(NGNOD /= 8) &
+  if(NGNOD /= NGNOD_EIGHT_CORNERS) &
     stop 'the preliminary PML detection code of Daniel Peter currently works for 8-node bricks only; should be made more general'
 
   ! temporary arrays
@@ -849,8 +849,8 @@ subroutine PML_add_layer()
                         ibool,myrank,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh,NPROC
-  use constants,only: NDIM,TINYVAL,NGLLX,NGLLY,NGLLZ,NGNOD2D
+                        my_neighbours_ext_mesh,NPROC,NGNOD2D
+  use constants,only: NDIM,TINYVAL,NGLLX,NGLLY,NGLLZ
   implicit none
 
   ! local parameters
@@ -1001,8 +1001,8 @@ subroutine PML_update_normals(ilayer)
 ! updates normal's directions for elements in PML region
 
   use PML_par
-  use specfem_par,only: NSPEC_AB,NGLOB_AB,ibool,myrank
-  use constants,only: NGNOD2D,NGLLX,NGLLY,NGLLZ
+  use specfem_par,only: NSPEC_AB,NGLOB_AB,ibool,myrank,NGNOD2D
+  use constants,only: NGLLX,NGLLY,NGLLZ
   implicit none
   integer :: ilayer
 

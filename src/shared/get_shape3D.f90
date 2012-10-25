@@ -26,13 +26,13 @@
 
 ! 3D shape functions for 8-node element
 
-  subroutine get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll)
+  subroutine get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
   implicit none
 
   include "constants.h"
 
-  integer myrank
+  integer NGNOD,myrank
 
 ! Gauss-Lobatto-Legendre points of integration
   double precision xigll(NGLLX)
@@ -45,7 +45,7 @@
 
   integer i,j,k,ia
 
-! location of the nodes of the 3D quadrilateral elements
+! location of the nodes of the 3D hexahedra elements
   double precision xi,eta,gamma
   double precision ra1,ra2,rb1,rb2,rc1,rc2
 
@@ -55,7 +55,8 @@
   double precision, parameter :: ONE_EIGHTH = 0.125d0
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) call exit_MPI(myrank,'elements should have 8 or 27 control nodes')
+  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+       call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
 
 ! ***
 ! *** create 3D shape functions and jacobian
@@ -70,7 +71,7 @@
   gamma = zigll(k)
 
 !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
-  if(NGNOD == 8) then
+  if(NGNOD == NGNOD_EIGHT_CORNERS) then
 
   ra1 = one + xi
   ra2 = one - xi
@@ -119,8 +120,8 @@
 
     else
 
-    ! note: put further initialization for ngnod == 27 into subroutine
-    !       to avoid compilation errors in case ngnod == 8
+    ! note: put further initialization for NGNOD == 27 into subroutine
+    !       to avoid compilation errors in case NGNOD == 8
       call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
     endif
@@ -166,16 +167,16 @@
 
 ! 3D shape functions for given, single xi/eta/gamma location
 
-  subroutine eval_shape3D_single(myrank,shape3D,xi,eta,gamma,NGNOD_value)
+  subroutine eval_shape3D_single(myrank,shape3D,xi,eta,gamma,NGNOD)
 
   implicit none
 
   include "constants.h"
 
-  integer :: myrank,NGNOD_value
+  integer :: myrank,NGNOD
 
   ! 3D shape functions
-  double precision :: shape3D(NGNOD_value)
+  double precision :: shape3D(NGNOD)
 
   ! location
   double precision :: xi,eta,gamma
@@ -188,12 +189,13 @@
   integer :: ia
 
 ! check that the parameter file is correct
-  if(NGNOD_value /= 8 .and. NGNOD_value /= 27) call exit_MPI(myrank,'elements should have 8 or 27 control nodes')
+  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+       call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
 
   ! shape functions
 
 !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
-  if(NGNOD_value == 8) then
+  if(NGNOD == NGNOD_EIGHT_CORNERS) then
 
     ra1 = one + xi
     ra2 = one - xi
@@ -266,7 +268,7 @@
 
   ! check the shape functions
   sumshape = ZERO
-  do ia=1,NGNOD_value
+  do ia=1,NGNOD
     sumshape = sumshape + shape3D(ia)
   enddo
 
@@ -281,7 +283,7 @@
 !
 
   subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
-                        ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
+       ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
   implicit none
 
@@ -290,7 +292,7 @@
   integer :: ispec
   integer :: NSPEC_AB,NGLOB_AB
 
-  real(kind=CUSTOM_REAL),dimension(NGNOD),intent(out) :: xelm,yelm,zelm
+  real(kind=CUSTOM_REAL),dimension(NGNOD_EIGHT_CORNERS),intent(out) :: xelm,yelm,zelm
 
   ! mesh coordinates
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: xstore,ystore,zstore
@@ -337,19 +339,19 @@
 
 !--- case of a 3D 27-node element
 
-  subroutine get_shape3D_27(NGNOD_value,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+  subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
 
   implicit none
 
   include "constants.h"
 
-  integer :: NGNOD_value,i,j,k
+  integer :: NGNOD,i,j,k
 
 ! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD_value,NGLLX,NGLLY,NGLLZ)
-  double precision dershape3D(NDIM,NGNOD_value,NGLLX,NGLLY,NGLLZ)
+  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
-! location of the nodes of the 3D quadrilateral elements
+! location of the nodes of the 3D hexahedra elements
   double precision xi,eta,gamma
   double precision l1xi,l2xi,l3xi,l1eta,l2eta,l3eta,l1gamma,l2gamma,l3gamma
   double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta,l1pgamma,l2pgamma,l3pgamma

@@ -30,8 +30,12 @@ module part_decompose_mesh_SCOTCH
 
   include "../shared/constants.h"
 
+! Control nodes for volume and surface elements
+  integer, parameter :: NGNOD = 8
+  integer, parameter :: NGNOD2D = 4 
+
 ! useful kind types for short integer (4 bytes) and long integers (8 bytes)
-  integer ,parameter :: short = 4, long = 8
+  integer, parameter :: short = 4, long = 8
 
 ! number of faces per element.
   integer, parameter  :: nfaces = 6

@@ -157,6 +157,8 @@
                               nspec2D_ymin,nspec2D_ymax,nspec2D_bottom,nspec2D_top, &
                               memory_size_request)
 
+  use generate_databases_par, only: NGNOD,NGNOD2D 
+
   implicit none
 
   include "constants.h"

@@ -18,6 +18,13 @@ NPROC                           = 4
 NSTEP                           = 1000
 DT                              = 0.05
 
+# number of nodes for 2D and 3D shape functions for hexahedra
+# we use either 8-node mesh elements (bricks) or 27-node elements.
+# If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported)
+# CUBIT does not support HEX27 elements either (it can generate them, but they are flat, i.e. identical to HEX8).
+# To generate HEX27 elements with curvature properly taken into account, you can use Gmsh http://geuz.org/gmsh/
+NGNOD 	      	    	     	= 8
+
 # models:
 # available options are:
 #   default (model parameters described by mesh properties)
@@ -69,7 +76,6 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # use a force source (or several) located exactly at a grid point instead of a CMTSOLUTION source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
 # in which the source is a vertical force, normal force, inclined force, impact etc.
-USE_FORCE_POINT_SOURCE          = .false.
 # If this flag is turned on, the FORCESOLUTION file must be edited by precising:
 # - the corresponding time-shift parameter,
 # - the half duration parameter of the source,
@@ -78,6 +84,7 @@ USE_FORCE_POINT_SOURCE          = .false.
 # - the components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
+USE_FORCE_POINT_SOURCE          = .false.
 
 # set to use a Ricker source time function instead of a gaussian (when using CMTSOLUTION files)
 # or a quasi-Heaviside (when using FORCESOLUTION files)

@@ -29,7 +29,7 @@
                                    ninterface, max_interface_size, &
                                    my_nelmnts_neighbours, my_interfaces, &
                                    ibool_interfaces_asteroid, &
-                                   nibool_interfaces_asteroid )
+                                   nibool_interfaces_asteroid,NGNOD )
 
 ! returns: ibool_interfaces_asteroid with the global indices (as defined in ibool)
 !              nibool_interfaces_asteroid with the number of points in ibool_interfaces_asteroid
@@ -44,7 +44,7 @@
 ! ( nelmnts = number of spectral elements
 !   NGNOD = number of element control points
 !   knods = corner indices array )
-  integer, intent(in)  :: nelmnts
+  integer, intent(in)  :: NGNOD,nelmnts
   integer, dimension(NGNOD,nelmnts), intent(in)  :: knods
 
 ! global number of points

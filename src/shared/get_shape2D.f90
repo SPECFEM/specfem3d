@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  subroutine get_shape2D(myrank,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
+  subroutine get_shape2D(myrank,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB,NGNOD,NGNOD2D)
 
   implicit none
 
@@ -32,7 +32,7 @@
 
 ! generic routine that accepts any polynomial degree in each direction
 
-  integer NGLLA,NGLLB,myrank
+  integer NGLLA,NGLLB,NGNOD,NGNOD2D,myrank
 
   double precision xigll(NGLLA)
   double precision yigll(NGLLB)
@@ -51,10 +51,12 @@
   double precision sumshape,sumdershapexi,sumdershapeeta
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) call exit_MPI(myrank,'elements should have 8 or 27 control nodes')
-  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
+  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+       call exit_MPI(myrank,'volume elements should have 8 or 27 control nodes')
+  if(NGNOD2D /= NGNOD2D_FOUR_CORNERS .and. NGNOD2D /= NGNOD2D_NINE_CORNERS) &
+       call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
-  if(NGNOD2D == 4) then
+  if(NGNOD2D == NGNOD2D_FOUR_CORNERS) then
 
     ! generate the 2D shape functions and their derivatives (4 nodes)
     do i=1,NGLLA
@@ -94,7 +96,7 @@
 
     ! note: put further initialization for ngnod2d == 9 into subroutine
     !       to avoid compilation errors in case ngnod2d == 4
-    call get_shape2D_9(NGNOD2D,NDIM2D,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
+    call get_shape2D_9(NGNOD2D,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
 
   endif
 
@@ -133,13 +135,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_shape2D_9(ngnod2d,ndim2d,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
+  subroutine get_shape2D_9(NGNOD2D,shape2D,dershape2D,xigll,yigll,NGLLA,NGLLB)
 
   implicit none
 
+  include "constants.h"
+
 ! generic routine that accepts any polynomial degree in each direction
 
-  integer :: ngnod2d,ndim2d
+  integer :: NGNOD2D
   integer :: NGLLA,NGLLB
 
   double precision xigll(NGLLA)
@@ -156,12 +160,8 @@
   double precision l1xi,l2xi,l3xi,l1eta,l2eta,l3eta
   double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta
 
-  double precision,parameter :: HALF  = 0.5d0
-  double precision,parameter :: ONE   = 1.0d0
-  double precision,parameter :: TWO   = 2.0d0
-
   ! check that the parameter file is correct
-  if( ngnod2d /= 9) stop 'surface elements should have 9 control nodes'
+  if( NGNOD2D /= NGNOD2D_NINE_CORNERS) stop 'surface elements should have 9 control nodes'
 
   ! generate the 2D shape functions and their derivatives (9 nodes)
   do i=1,NGLLA

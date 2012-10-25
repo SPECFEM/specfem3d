@@ -27,7 +27,7 @@
 !----
 !---- locate_receivers finds the correct position of the receivers
 !----
-  subroutine locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
+  subroutine locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
                  xstore,ystore,zstore,xigll,yigll,zigll,rec_filename, &
                  nrec,islice_selected_rec,ispec_selected_rec, &
                  xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
@@ -41,7 +41,7 @@
   include "constants.h"
 
   integer :: myrank
-  integer :: NSPEC_AB,NGLOB_AB
+  integer :: NSPEC_AB,NGLOB_AB,NGNOD
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
@@ -182,7 +182,7 @@
   endif
 
   ! define topology of the control element
-  call usual_hex_nodes(iaddx,iaddy,iaddz)
+  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
   ! opens STATIONS file
   open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ios)
@@ -718,7 +718,7 @@
 
         ! recompute jacobian for the new point
         call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
         ! compute distance to target location
         dx = - (x - x_target(irec))
@@ -756,7 +756,7 @@
 
       ! compute final coordinates of point found
       call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
       ! store xi,eta and x,y,z of point found
       xi_receiver(irec) = xi

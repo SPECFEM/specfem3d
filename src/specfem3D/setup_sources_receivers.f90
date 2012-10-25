@@ -120,7 +120,7 @@
 !
 ! returns:  islice_selected_source & ispec_selected_source,
 !                xi_source, eta_source & gamma_source
-  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB, &
+  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
           tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
@@ -407,7 +407,7 @@
   if( ier /= 0 ) stop 'error allocating arrays for receivers'
 
 ! locate receivers in the mesh
-  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB, &
+  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
             xstore,ystore,zstore,xigll,yigll,zigll,filtered_rec_filename, &
             nrec,islice_selected_rec,ispec_selected_rec, &
             xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
