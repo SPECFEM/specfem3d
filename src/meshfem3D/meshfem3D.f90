@@ -365,8 +365,6 @@
                           CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
-  if (NGNOD /= 8) stop 'error: internal mesher is limited to NGNOD == 8'
-
   if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
     stop 'error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
 
@@ -508,18 +506,18 @@
     write(IMAIN,*) 'There is a total of ',NPROC,' slices'
 
     write(IMAIN,*)
-    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
-    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
+    write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD_EIGHT_CORNERS,' control nodes'
+    write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D_FOUR_CORNERS,' control nodes'
+    write(IMAIN,*) 'Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher'
     write(IMAIN,*)
   endif
 
+  ! check that the constants.h file is correct
+  if(NGNOD_EIGHT_CORNERS /= 8) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
+  if(NGNOD2D_FOUR_CORNERS /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
+
   ! check that reals are either 4 or 8 bytes
   if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
-
-  ! checks number of nodes for hexahedra and quadrilaterals
-  ! curvature (i.e., HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
-  if(NGNOD /= NGNOD_EIGHT_CORNERS) call exit_MPI(myrank,'number of control nodes must be 8 in our internal mesher')
-  if(NGNOD2D /= NGNOD2D_FOUR_CORNERS) call exit_MPI(myrank,'elements should have NGNOD2D = 4 in our internal mesher')
 
   ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')

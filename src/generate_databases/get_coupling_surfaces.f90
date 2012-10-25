@@ -174,6 +174,7 @@
 
 ! determines coupling surface for acoustic-elastic domains
 
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 
@@ -381,6 +382,7 @@
 
 ! determines coupling surface for acoustic-poroelastic domains
 
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 
@@ -546,6 +548,7 @@
 
 ! determines coupling surface for elastic-poroelastic domains
 
+  use generate_databases_par, only: NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 

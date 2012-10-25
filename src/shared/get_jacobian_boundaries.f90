@@ -28,7 +28,7 @@
                         xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
-                        ispec,iface,jacobian2Dw_face,normal_face,NGLLA,NGLLB,NGNOD2D_value)
+                        ispec,iface,jacobian2Dw_face,normal_face,NGLLA,NGLLB,NGNOD2D)
 
 ! returns jacobian2Dw_face and normal_face (pointing outwards of element)
 
@@ -47,11 +47,11 @@
   real(kind=CUSTOM_REAL), dimension(NGLLA,NGLLB) :: jacobian2Dw_face
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLA,NGLLB) :: normal_face
 
-  integer :: NGNOD2D_value
-  double precision dershape2D_x(NDIM2D,NGNOD2D_value,NGLLY,NGLLZ)
-  double precision dershape2D_y(NDIM2D,NGNOD2D_value,NGLLX,NGLLZ)
-  double precision dershape2D_bottom(NDIM2D,NGNOD2D_value,NGLLX,NGLLY)
-  double precision dershape2D_top(NDIM2D,NGNOD2D_value,NGLLX,NGLLY)
+  integer :: NGNOD2D
+  double precision dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ)
+  double precision dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ)
+  double precision dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY)
+  double precision dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY)
 
   double precision, dimension(NGLLX,NGLLY) :: wgllwgll_xy
   double precision, dimension(NGLLX,NGLLZ) :: wgllwgll_xz
@@ -59,10 +59,11 @@
 
 ! local parameters
 ! face corners
-  double precision xelm(NGNOD2D_value),yelm(NGNOD2D_value),zelm(NGNOD2D_value)
+  double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
 
 ! check that the parameter file is correct
-  if(NGNOD2D_value /= 4 .and. NGNOD2D_value /= 9) call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
+  if(NGNOD2D /= NGNOD2D_FOUR_CORNERS .and. NGNOD2D /= NGNOD2D_NINE_CORNERS) &
+       call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
   select case ( iface )
   ! on reference face: xmin
@@ -80,7 +81,7 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D_value == 9) then
+    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
           xelm(5)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
           yelm(5)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
           zelm(5)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
@@ -100,7 +101,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_x,wgllwgll_yz, &
-                  jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
 ! on boundary: xmax
   case(2)
@@ -117,7 +118,7 @@
     yelm(4)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
 
-    if(NGNOD2D_value == 9) then
+    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
           xelm(5)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
           yelm(5)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
           zelm(5)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
@@ -137,7 +138,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_x,wgllwgll_yz, &
-                  jacobian2Dw_face,normal_face,NGLLY,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
 
 ! on boundary: ymin
   case(3)
@@ -154,7 +155,7 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D_value == 9) then
+    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
@@ -174,7 +175,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_y,wgllwgll_xz, &
-                  jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
 ! on boundary: ymax
   case(4)
@@ -191,7 +192,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D_value == 9) then
+    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
@@ -211,7 +212,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_y, wgllwgll_xz, &
-                  jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
 
 ! on boundary: bottom
@@ -229,7 +230,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
 
-    if(NGNOD2D_value == 9) then
+    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
@@ -249,7 +250,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
                   dershape2D_bottom,wgllwgll_xy, &
-                  jacobian2Dw_face,normal_face,NGLLX,NGLLY)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
 ! on boundary: top
   case(6)
@@ -266,7 +267,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D_value == 9) then
+    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
@@ -286,7 +287,7 @@
 
     call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
                   dershape2D_top, wgllwgll_xy, &
-                  jacobian2Dw_face,normal_face,NGLLX,NGLLY)
+                  jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
   case default
     stop 'error 2D jacobian'
@@ -300,7 +301,7 @@
 
   subroutine compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                                 dershape2D,wgllwgll, &
-                                jacobian2Dw_face,normal_face,NGLLA,NGLLB)
+                                jacobian2Dw_face,normal_face,NGLLA,NGLLB,NGNOD2D)
 
   implicit none
 
@@ -309,7 +310,7 @@
 ! generic routine that accepts any polynomial degree in each direction
 ! returns 2D jacobian and normal for this face only
 
-  integer NGLLA,NGLLB,myrank
+  integer NGLLA,NGLLB,NGNOD2D,myrank
 
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
   double precision dershape2D(NDIM2D,NGNOD2D,NGLLA,NGLLB)

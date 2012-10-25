@@ -103,8 +103,6 @@
      write(IMAIN,*) 'start computing the minimum and maximum edge size'
   end if
 
-  if(NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
-
   ! ************* compute min and max of skewness and ratios ******************
 
   ! erase minimum and maximum of quality numbers

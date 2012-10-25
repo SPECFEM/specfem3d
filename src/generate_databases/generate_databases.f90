@@ -253,7 +253,7 @@
   implicit none
 
 ! reads Par_file
-  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
                         OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
@@ -300,7 +300,12 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Shape functions defined by NGNOD = ',NGNOD,' control nodes'
     write(IMAIN,*) 'Surface shape functions defined by NGNOD2D = ',NGNOD2D,' control nodes'
+    write(IMAIN,*) 'Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher'
     write(IMAIN,*)
+
+! check that the constants.h file is correct
+    if(NGNOD /= 8 ) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
+    if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
 
     write(IMAIN,'(a)',advance='no') ' velocity model: '
     select case(IMODEL)
@@ -332,12 +337,6 @@
 ! check that reals are either 4 or 8 bytes
   if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
     call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
-
-  if(NGNOD /= 8 .and. NGNOD /= 27) call exit_MPI(myrank,'number of element control nodes must be 8 or 27')
-  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) call exit_MPI(myrank,'number of face control nodes must be 4 or 9')
-
-  if(NGNOD == 8  .and. NGNOD2D /= 4) call exit_MPI(myrank,'elements with 8 control nodes must have NGNOD2D == 4')
-  if(NGNOD == 27 .and. NGNOD2D /= 9) call exit_MPI(myrank,'elements with 27 control nodes must have NGNOD2D == 9')
 
 ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')

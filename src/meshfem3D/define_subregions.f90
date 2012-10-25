@@ -59,7 +59,7 @@
     idummy = ner_layer(1)
 ! **************
 
-     call usual_hex_nodes(iaddx,iaddy,iaddz)
+     call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
 
 
      ix1=2*(subregions(isubregion,1) - iproc_xi*NEX_PER_PROC_XI - 1)
@@ -129,7 +129,7 @@
 !
   if(USE_REGULAR_MESH) then
 
-     call usual_hex_nodes(iaddx,iaddy,iaddz)
+     call usual_hex_nodes(NGNOD_EIGHT_CORNERS,iaddx,iaddy,iaddz)
 
 
      ix1=0

@@ -164,7 +164,7 @@ module specfem_par
 ! parameters
   integer :: SIMULATION_TYPE
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
-  integer :: IMODEL
+  integer :: IMODEL,NGNOD,NGNOD2D
 
   double precision :: DT
 

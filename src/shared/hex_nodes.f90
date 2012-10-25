@@ -24,18 +24,20 @@
 !
 !=====================================================================
 
-  subroutine usual_hex_nodes(iaddx,iaddy,iaddz)
+  subroutine usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
   implicit none
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer :: NGNOD
+  integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
+  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+       stop 'volume elements should have 8 or 27 control nodes'
 
 ! corner nodes
   iaddx(1)=0
@@ -70,10 +72,10 @@
   iaddy(8)=2
   iaddz(8)=2
 
-  if(NGNOD == 27) then
+  if(NGNOD == NGNOD_TWENTY_SEVEN_CORNERS) then
 
     ! note: put further initialization into subroutine to avoid compilation errors
-    !       in case ngnod == 8
+    !       in case NGNOD == 8
     call usual_hex_nodes_27(NGNOD,iaddx,iaddy,iaddz)
 
   endif
@@ -84,12 +86,12 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine usual_hex_nodes_27(ngnod,iaddx,iaddy,iaddz)
+  subroutine usual_hex_nodes_27(NGNOD,iaddx,iaddy,iaddz)
 
   implicit none
 
-  integer :: ngnod
-  integer,dimension(ngnod) :: iaddx,iaddy,iaddz
+  integer :: NGNOD
+  integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -187,7 +189,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -236,7 +238,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -285,7 +287,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -334,7 +336,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -383,7 +385,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -432,7 +434,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -481,7 +483,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -530,7 +532,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -579,7 +581,7 @@
 
   include "constants.h"
 
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer, dimension(NGNOD_EIGHT_CORNERS) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 

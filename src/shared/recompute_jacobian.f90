@@ -27,7 +27,7 @@
 ! recompute 3D jacobian at a given point for a 8-node element
 
   subroutine recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
 
   implicit none
 
@@ -35,6 +35,8 @@
 
   double precision x,y,z,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
   double precision xi,eta,gamma,jacobian
+
+  integer NGNOD
 
 ! coordinates of the control points
   double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
@@ -56,9 +58,9 @@
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) stop 'elements should have 8 or 27 control nodes'
-
-  if(NGNOD == 8) then
+  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+       stop 'elements should have 8 or 27 control nodes'
+  if(NGNOD == NGNOD_EIGHT_CORNERS) then
 
 ! ***
 ! *** create the 3D shape functions and the Jacobian for an 8-node element

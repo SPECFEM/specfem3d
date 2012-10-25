@@ -50,9 +50,6 @@
   ! counters to keep track of number of elements on each of the boundaries
   integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
 
-  ! check that the parameter file is correct
-  if(NGNOD2D_FOUR_CORNERS /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
-
   ! initializes
   ispecb1 = 0
   ispecb2 = 0
@@ -182,9 +179,6 @@
   integer ispecb1,ispecb2,ispecb3,ispecb4,ispecb5,ispecb6
 
   double precision xelm(NGNOD2D_FOUR_CORNERS),yelm(NGNOD2D_FOUR_CORNERS),zelm(NGNOD2D_FOUR_CORNERS)
-
-  ! check that the parameter file is correct
-  if(NGNOD2D_FOUR_CORNERS /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
 
   ispecb1 = 0
   ispecb2 = 0

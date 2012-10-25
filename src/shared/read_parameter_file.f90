@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  subroutine read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT, &
+  subroutine read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
                         OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
@@ -41,7 +41,7 @@
 
   integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
-  integer NOISE_TOMOGRAPHY
+  integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D
   integer IMODEL
 
   double precision DT,HDUR_MOVIE
@@ -100,6 +100,10 @@
   call read_value_double_precision(DT, 'solver.DT')
   if(err_occurred() /= 0) return
 
+  ! number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
+  call read_value_integer(NGNOD, 'solver.NGNOD')
+  if(err_occurred() /= 0) return
+
   ! define the velocity model
   call read_value_string(MODEL, 'model.MODEL')
   if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file: MODEL'
@@ -151,6 +155,16 @@
 
   ! close parameter file
   call close_parameter_file()
+
+  ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
+  ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
+  if ( NGNOD == NGNOD_EIGHT_CORNERS ) then
+     NGNOD2D = NGNOD2D_FOUR_CORNERS
+  else if ( NGNOD == NGNOD_TWENTY_SEVEN_CORNERS ) then
+     NGNOD2D = NGNOD2D_NINE_CORNERS
+  else if ( NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS ) then 
+     stop 'elements should have 8 or 27 control nodes, please modify Par_file and recompile solver'
+  endif
 
   ! noise simulations:
   ! double the number of time steps, if running noise simulations (+/- branches)
