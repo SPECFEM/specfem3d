@@ -161,9 +161,9 @@
 !
 ! MPI v. 2.0 "Sesame" (Spectral ElementS on Any MEsh), November 2010:
 ! Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
-! Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
+! Daniel Peter, Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
 ! and Emanuele Casarotti, INGV Roma, Italy:
-!  support for CUBIT meshes decomposed by SCOTCH, METIS or ZOLTAN;
+!  support for CUBIT meshes decomposed by SCOTCH;
 !  much faster solver using Michel Deville's inlined matrix products.
 !
 ! MPI v. 1.4 Dimitri Komatitsch, University of Pau, Qinya Liu and others, Caltech, September 2006:

@@ -108,7 +108,8 @@ Version 2.1}
 \maketitle
 
 \section*{Authors}
-The SPECFEM3D Cartesian package was first developed by Dimitri Komatitsch and Jeroen Tromp at Harvard University and Caltech, USA, starting in 1998, based on earlier work by Dimitri Komatitsch and Jean-Pierre Vilotte at Institut de Physique du Globe (IPGP) in Paris, France from 1995 to 1997.\\
+The SPECFEM3D Cartesian package was first developed by Dimitri Komatitsch and Jean-Pierre Vilotte at Institut de Physique du Globe (IPGP) in Paris, France 
+from 1995 to 1997 and then by Dimitri Komatitsch and Jeroen Tromp at Harvard University and Caltech, USA, starting in 1998.
 
 Since then it has been developed and maintained by a development team: in alphabetical order,
 Piero Basini,
@@ -117,6 +118,7 @@ Ebru Bozda\u{g},
 Emanuele Casarotti,
 Joseph Charles,
 Min Chen,
+Dominik G\"oddeke,
 Vala Hj\"orleifsd\'ottir,
 Sue Kientz,
 Dimitri Komatitsch,
@@ -142,9 +144,9 @@ Anne Sieminski,
 Leif Strand,
 Carl Tape,
 Jeroen Tromp,
+Jean-Pierre Vilotte,
 Zhinan Xie,
 Hejun Zhu.\\
-%\toall{add full list of developers here and update the AUTHORS file accordingly}
 
 The cover graphic of the manual was created
 by Santiago Lombeyda from Caltech's Center for Advanced Computing Research (CACR) \urlwithparentheses{http://www.cacr.caltech.edu}. \\
@@ -226,7 +228,7 @@ of the following articles:
 
 \item [Numerical simulations in general] ~\\
 Forward and adjoint simulations are described in detail in \cite{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,KoGoErMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
-Additional aspects dealing with adjoint simulations are described in
+Additional aspects of adjoint simulations are described in
 \cite{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoHjLiZhPeBoMcFrTrHu10,PeKoLuMaLeCaLeMaLiBlNiBaTr11}.
 Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores is shown for instance in
 \cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11},
@@ -339,9 +341,8 @@ Note that we use CUBIT to create meshes of hexahedra, but other packages can be 
 
 The SCOTCH library \citep{PeRo96}
 provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
-Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
-A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
-In case no SCOTCH libraries can be found on the system, the configuration will bundle this version for compilation.
+Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
+In case no SCOTCH libraries can be found on the system, the configuration will bundle the version provided with the source code for compilation.
 The path to an existing SCOTCH installation can to be set explicitly with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-dir=/opt/scotch
@@ -449,7 +450,7 @@ Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK} and \textt
 \noindent
 \texttt{-g -qfullpath -O2 -qsave -qstrict -qtune=qp -qarch=qp -qcache=auto -qhalt=w}\\
 \noindent
-\texttt{-qfree=f90 -qsuffix=f=f90 -qlanglvl=95pure -Wl,-relax -Q -Q+rank,swap\_all}.\\
+\texttt{-qfree=f90 -qsuffix=f=f90 -qlanglvl=95pure -Q -Q+rank,swap\_all -Wl,-relax}\\
 
 \noindent
 The most relevant are the -qarch and -qtune flags, otherwise if these flags are set to ``auto'' then they are wrongly assigned to
@@ -711,8 +712,7 @@ An efficient partitioning is important because it leverages the overall running 
 It amounts to balance the number of elements in each slice while minimizing the communication costs
 resulting from the placement of adjacent elements on different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the SCOTCH library \citep{PeRo96},
 which provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
-Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}. It is more recent than METIS, actively maintained and performs better in many cases.
-A recent version of its source code is provided in directory \texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
+Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
 \\
 
 In most cases, the configuration with \texttt{./configure~FC=ifort} should be sufficient.
@@ -2828,7 +2828,7 @@ to Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu} or to the CIG Compu
 \addcontentsline{toc}{chapter}{Copyright}
 \chapter*{Copyright}
 
-Main authors: Dimitri Komatitsch and Jeroen Tromp
+Main historical authors: Dimitri Komatitsch and Jeroen Tromp
 
 Princeton University, USA, and CNRS / INRIA / University of Pau, France
 
@@ -2846,9 +2846,9 @@ better CFL stability for the Stacey absorbing conditions. \\
 
  MPI v. 2.0, November 2010:
  Dimitri Komatitsch, Nicolas Le Goff, Roland Martin and Pieyre Le Loher, University of Pau, France,
- Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
+ Daniel Peter, Jeroen Tromp and the Princeton group of developers, Princeton University, USA,
  and Emanuele Casarotti, INGV Roma, Italy:
-  support for CUBIT meshes decomposed by SCOTCH, METIS or ZOLTAN;
+  support for CUBIT meshes decomposed by SCOTCH;
   much faster solver using Michel Deville's inlined matrix products.\\
 
  MPI v. 1.4 Dimitri Komatitsch, University of Pau, Qinya Liu and others, Caltech, September 2006:
