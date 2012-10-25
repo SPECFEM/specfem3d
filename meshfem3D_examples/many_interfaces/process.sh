@@ -24,26 +24,15 @@ echo "   setting up example..."
 echo
 
 mkdir -p bin
-mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-rm -rf OUTPUT_FILES/*
+rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
-
-mkdir -p DATA
-mkdir -p DATA/meshfem3D_files/
-
-cp Mesh_Par_file DATA/meshfem3D_files/
-cp example_*.dat DATA/meshfem3D_files/
-
-cp Par_file DATA/
-cp CMTSOLUTION DATA/
-cp STATIONS DATA/
-
 
 # compiles executables in root directory
 cd ../../../
-make > tmp.log
+make clean
+make > $currentdir/tmp.log
 cd $currentdir
 
 # links executables
@@ -53,19 +42,20 @@ ln -s ../../../../bin/xgenerate_databases
 ln -s ../../../../bin/xspecfem3D
 cd ../
 
+# stores setup
+cp DATA/meshfem3D_files/Mesh_Par_file OUTPUT_FILES/
+cp DATA/Par_file OUTPUT_FILES/
+cp DATA/CMTSOLUTION OUTPUT_FILES/
+cp DATA/STATIONS OUTPUT_FILES/
+
 # decomposes mesh
 echo
-echo "  meshing..."
+echo "running mesher..."
 echo
 cd bin/
 mpirun -np $NPROC ./xmeshfem3D
 cd ../
 mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
-
-# stores setup
-cp DATA/Par_file OUTPUT_FILES/
-cp DATA/CMTSOLUTION OUTPUT_FILES/
-cp DATA/STATIONS OUTPUT_FILES/
 
 # runs database generation
 echo

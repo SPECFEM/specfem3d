@@ -24,12 +24,10 @@ echo "   setting up example..."
 echo
 
 mkdir -p bin
-mkdir -p OUTPUT_FILES/
-mkdir -p DATABASES_MPI
+mkdir -p OUTPUT_FILES/DATABASES_MPI
 
 rm -f OUTPUT_FILES/*
-rm -rf DATABASES_MPI/*
-
+rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 # compiles executables in root directory
 cd ../../../
@@ -43,9 +41,9 @@ cp ../../../bin/* bin/
 if [ ! -e bin/xspecfem3D ]; then echo "compilation failed, please check..."; exit 1; fi
 
 # stores setup
+cp DATA/meshfem3D_files/Mesh_Par_file OUTPUT_FILES/
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
-cp DATA/FORCESOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
 # creates and decomposes mesh

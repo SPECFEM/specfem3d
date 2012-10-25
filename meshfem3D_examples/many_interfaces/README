@@ -19,11 +19,7 @@ WARNING: We do not recommend running this as a test example, due to its requirem
 1. Set up input files.
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/many_interfaces/ DATA/meshfem3D_files/
-
-   > cd DATA/meshfem3D_files/
-   > cp Par_file CMTSOLUTION STATIONS ..
-   > cd SPECFEM3D
+   > rsync -av examples/meshfem3D_examples/many_interfaces/DATA DATA
 
    - adapt the submission scripts for the appropriate queues and number of cores:
      go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash

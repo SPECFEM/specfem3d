@@ -34,23 +34,11 @@ echo
 echo "   setting up example..."
 echo
 
-# setup
 mkdir -p bin
-mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-rm -rf OUTPUT_FILES/*
+rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
-
-mkdir -p DATA
-mkdir -p DATA/meshfem3D_files/
-
-cp Mesh_Par_file DATA/meshfem3D_files/
-cp example_*.dat DATA/meshfem3D_files/
-
-cp Par_file DATA/
-cp CMTSOLUTION DATA/
-cp STATIONS DATA/
 
 # compilation of executables must have been done prior on front node
 # links executables
@@ -80,6 +68,7 @@ mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
+cp DATA/FORCESOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
 # runs database generation

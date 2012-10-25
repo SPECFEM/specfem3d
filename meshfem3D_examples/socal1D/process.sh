@@ -24,19 +24,16 @@ echo "   setting up example..."
 echo
 
 mkdir -p bin
-mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
 
-rm -rf OUTPUT_FILES/*
+rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
-
-mkdir -p DATA
-mkdir -p DATA/meshfem3D_files/
 
 # compiles executables in root directory
 cd ../../../
+make clean
 make
-make combine_vol_data
+#make combine_vol_data
 cd $currentdir
 
 # links executables
@@ -52,7 +49,7 @@ cp DATA/STATIONS OUTPUT_FILES/
 
 # decomposes mesh
 echo
-echo "meshing..."
+echo "running mesher..."
 echo
 cd bin/
 mpirun -np $NPROC ./xmeshfem3D
