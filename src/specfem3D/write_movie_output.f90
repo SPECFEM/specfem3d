@@ -37,52 +37,49 @@
   ! gets resulting array values onto CPU
   if(GPU_MODE .and. &
     ( &
-      EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
       CREATE_SHAKEMAP .or. &
       ( MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
       ( MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
       ( PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) &
      ) ) then
     ! acoustic domains
-    if( ACOUSTIC_SIMULATION ) then
+    if ( ACOUSTIC_SIMULATION ) then
       ! transfers whole fields
       call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
                 potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
     endif
     ! elastic domains
-    if( ELASTIC_SIMULATION ) then
+    if ( ELASTIC_SIMULATION ) then
       ! transfers whole fields
       call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
     endif
   endif
 
-  ! shakemap creation
-  if (EXTERNAL_MESH_CREATE_SHAKEMAP) then
-    call wmo_create_shakemap_em()
-  endif
-
-  ! movie file creation
-  if(EXTERNAL_MESH_MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call wmo_create_movie_surface_em()
-  endif
-
   ! saves MOVIE on the SURFACE
-  if(MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    call wmo_movie_surface_output_o()
+  if (MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+     if (MOVIE_TYPE == 1) then
+        call wmo_movie_surface_output_o()
+     else if (MOVIE_TYPE == 2) then
+        call wmo_create_movie_surface_em()
+     endif
   endif
 
   ! computes SHAKING INTENSITY MAP
-  if(CREATE_SHAKEMAP) then
-    call wmo_create_shakemap_o()
+  if (CREATE_SHAKEMAP) then
+     if (MOVIE_TYPE == 1) then
+        call wmo_create_shakemap_o()
+     else if (MOVIE_TYPE == 2) then
+        call wmo_create_shakemap_em()
+     endif
   endif
 
   ! saves MOVIE in full 3D MESH
-  if(MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+  if (MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
     call wmo_movie_volume_output()
   endif
 
   ! creates cross-section GIF image
-  if(PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0 ) then
+  if (PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0 ) then
     call write_PNM_GIF_create_image()
   endif
 

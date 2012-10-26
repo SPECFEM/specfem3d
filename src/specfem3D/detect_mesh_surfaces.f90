@@ -41,8 +41,7 @@
   if( ier /= 0 ) stop 'error allocating array for mesh surface'
 
 ! determines model surface
-  if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. &
-      EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) then
+  if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. MOVIE_TYPE == 2) then
 
     ! returns surface points/elements
     ! in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh and
@@ -59,8 +58,7 @@
   endif
 
 ! takes cross-section surfaces instead
-  if( (EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP) &
-     .and. PLOT_CROSS_SECTIONS ) then
+  if( MOVIE_TYPE == 2 .and. PLOT_CROSS_SECTIONS ) then
     call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
@@ -89,10 +87,7 @@
   endif
 
 ! handles movies and shakemaps
-  if( EXTERNAL_MESH_MOVIE_SURFACE .or. &
-     EXTERNAL_MESH_CREATE_SHAKEMAP .or. &
-     MOVIE_SURFACE .or. &
-     CREATE_SHAKEMAP ) then
+  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
     call setup_movie_meshes()
   endif
 

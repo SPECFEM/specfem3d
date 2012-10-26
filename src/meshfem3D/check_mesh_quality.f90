@@ -94,6 +94,22 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: tmp1
   integer:: ier,ipoin
 
+  ! parameters read from parameter file
+  integer NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE,SIMULATION_TYPE
+  integer NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+          USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NGNOD,NGNOD2D
+  double precision DT
+  double precision HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
+  logical ATTENUATION,USE_OLSEN_ATTENUATION, &
+          OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
+  logical ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
+  logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  character(len=256) LOCAL_PATH
+  integer NPROC
+  integer MOVIE_TYPE,IMODEL
+
 
   if (myrank == 0) then
      write(IMAIN,*) '**************************'
@@ -102,6 +118,21 @@
      write(IMAIN,*)
      write(IMAIN,*) 'start computing the minimum and maximum edge size'
   end if
+
+  ! read the parameter file
+  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
+
+  if(NGNOD /= 8) stop 'error: check_mesh_quality only supports NGNOD == 8 for now'
 
   ! ************* compute min and max of skewness and ratios ******************
 

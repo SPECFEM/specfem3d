@@ -26,7 +26,7 @@
 
 ! read values from parameter file, ignoring white lines and comments
 
-  subroutine read_value_integer(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_integer_mesh(iunit,ignore_junk,value_to_read, name)
 
   implicit none
 
@@ -41,11 +41,11 @@
   call read_next_line(iunit,ignore_junk,string_read)
   read(string_read,*) value_to_read
 
-  end subroutine read_value_integer
+  end subroutine read_value_integer_mesh
 
 !--------------------
 
-  subroutine read_value_double_precision(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_dble_precision_mesh(iunit,ignore_junk,value_to_read, name)
 
   implicit none
 
@@ -60,11 +60,11 @@
   call read_next_line(iunit,ignore_junk,string_read)
   read(string_read,*) value_to_read
 
-  end subroutine read_value_double_precision
+  end subroutine read_value_dble_precision_mesh
 
 !--------------------
 
-  subroutine read_value_logical(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_logical_mesh(iunit,ignore_junk,value_to_read, name)
 
   implicit none
 
@@ -79,11 +79,11 @@
   call read_next_line(iunit,ignore_junk,string_read)
   read(string_read,*) value_to_read
 
-  end subroutine read_value_logical
+  end subroutine read_value_logical_mesh
 
 !--------------------
 
-  subroutine read_value_string(iunit,ignore_junk,value_to_read, name)
+  subroutine read_value_string_mesh(iunit,ignore_junk,value_to_read, name)
 
   implicit none
 
@@ -98,7 +98,7 @@
   call read_next_line(iunit,ignore_junk,string_read)
   value_to_read = string_read
 
-  end subroutine read_value_string
+  end subroutine read_value_string_mesh
 
 !--------------------
 
@@ -121,7 +121,7 @@
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read)
   read(string_read,*) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
              orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface
-  call read_value_string(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP')
+  call read_value_string_mesh(iunit,DONT_IGNORE_JUNK,interface_top_file,'INTERFACE_TOP')
   end subroutine read_interface_parameters
 
 !--------------------
@@ -212,32 +212,32 @@
 
 !--------------------
 
-  subroutine open_parameter_file
+  subroutine open_parameter_file_mesh
 
   include "constants.h"
 
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
        //'Mesh_Par_file',status='old',action='read')
 
-  end subroutine open_parameter_file
+  end subroutine open_parameter_file_mesh
 
 !--------------------
 
-  subroutine close_parameter_file
+  subroutine close_parameter_file_mesh
 
   include "constants.h"
 
   close(IIN)
 
-  end subroutine close_parameter_file
+  end subroutine close_parameter_file_mesh
 
 !--------------------
 
-  integer function err_occurred()
+  integer function err_occurred_mesh()
 
-  err_occurred = 0
+  err_occurred_mesh = 0
 
-  end function err_occurred
+  end function err_occurred_mesh
 
 !--------------------
 

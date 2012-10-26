@@ -955,7 +955,7 @@ program model_update
   endif
 
   if( ATTENUATION ) then
-    call get_attenuation_model(myrank,NSPEC,USE_OLSEN_ATTENUATION, &
+    call get_attenuation_model(myrank,NSPEC,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                           mustore_new,rho_vs_new,qmu_attenuation_store, &
                           ispec_is_elastic,min_resolved_period,prname_new)
   endif

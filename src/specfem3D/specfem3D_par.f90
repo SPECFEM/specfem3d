@@ -166,7 +166,7 @@ module specfem_par
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer :: IMODEL,NGNOD,NGNOD2D
 
-  double precision :: DT
+  double precision :: DT,OLSEN_ATTENUATION_RATIO
 
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,ANISOTROPY, &
@@ -573,10 +573,9 @@ module specfem_par_movie
 
 ! movie parameters
   double precision :: HDUR_MOVIE
-  integer :: NTSTEP_BETWEEN_FRAMES
+  integer :: NTSTEP_BETWEEN_FRAMES,MOVIE_TYPE
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
             USE_HIGHRES_FOR_MOVIES
-
   logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie

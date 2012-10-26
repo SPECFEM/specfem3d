@@ -210,13 +210,9 @@
 !!
 !!-----------------------------------------------------------
 
-! shakemaps and movies can not be generated during the same run. Mutually exclusive.
-  logical, parameter :: EXTERNAL_MESH_MOVIE_SURFACE = .false.
-  logical, parameter :: EXTERNAL_MESH_CREATE_SHAKEMAP = .false.
-
 ! plots VTK cross-section planes instead of model surface
 ! (EXPERIMENTAL feature)
-! (requires EXTERNAL_MESH_MOVIE_SURFACE set to true)
+! (requires MOVIE_SURFACE set to .true. in Par_file)
   logical, parameter :: PLOT_CROSS_SECTIONS = .false.
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_X = 67000.0
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0
@@ -274,10 +270,6 @@
   integer, parameter :: NGNOD_EIGHT_CORNERS = 8
   integer, parameter :: NGNOD2D_FOUR_CORNERS = 4
 
-! this to deal with curvature (i.e. HEX27 elements)
-  integer, parameter :: NGNOD_TWENTY_SEVEN_CORNERS = 27
-  integer, parameter :: NGNOD2D_NINE_CORNERS = 9
-
 ! number of points in each AVS or OpenDX quadrangular cell for movies
   integer, parameter :: NGNOD2D_FOUR_CORNERS_AVS_DX = NGNOD2D_FOUR_CORNERS
 
@@ -293,9 +285,6 @@
 
 ! tiny real value declared independently of the machine
   real(kind=CUSTOM_REAL), parameter :: TINYVAL_SNGL = 1.e-25_CUSTOM_REAL
-
-! Olsen's constant for Q_mu = constant * v_s attenuation rule
-  real, parameter :: OLSEN_ATTENUATION_RATIO = 0.05
 
 ! number of standard linear solids in parallel for attenuation
   integer, parameter :: N_SLS = 3

@@ -46,7 +46,7 @@
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
     nodes_ibelm_bottom,nodes_ibelm_top, &
     SAVE_MESH_FILES, &
-    ANISOTROPY,NPROC,OCEANS, &
+    ANISOTROPY,NPROC,OCEANS,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
     nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho
 
@@ -217,9 +217,9 @@
 
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
-    call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION, &
-                          mustore,rho_vs,qmu_attenuation_store, &
-                          ispec_is_elastic,min_resolved_period,prname)
+    call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
+                              mustore,rho_vs,qmu_attenuation_store, &
+                              ispec_is_elastic,min_resolved_period,prname)
   endif
 
   ! cleanup
@@ -617,7 +617,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   integer :: nspec2D_moho_ext
   integer, dimension(nspec2D_moho_ext) :: ibelm_moho
-  integer, dimension(NGNOD2D_FOUR_CORNERS,nspec2D_moho_ext) :: nodes_ibelm_moho
+  integer, dimension(NGNOD2D,nspec2D_moho_ext) :: nodes_ibelm_moho
 
   integer :: myrank,nspec
 

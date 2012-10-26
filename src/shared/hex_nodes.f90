@@ -36,7 +36,7 @@
 ! define the topology of the hexahedral elements
 
 ! check that the parameter file is correct
-  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+  if(NGNOD /= 8 .and. NGNOD /= 27) &
        stop 'volume elements should have 8 or 27 control nodes'
 
 ! corner nodes
@@ -72,7 +72,7 @@
   iaddy(8)=2
   iaddz(8)=2
 
-  if(NGNOD == NGNOD_TWENTY_SEVEN_CORNERS) then
+  if(NGNOD == 27) then
 
     ! note: put further initialization into subroutine to avoid compilation errors
     !       in case NGNOD == 8
