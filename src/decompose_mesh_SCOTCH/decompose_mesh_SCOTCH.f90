@@ -109,6 +109,22 @@ module decompose_mesh_SCOTCH
 
   integer, parameter :: IIN_database = 15
 
+! for read_parameter_files
+  double precision :: DT
+  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
+  integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
+            UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D
+  integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
+  integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,MOVIE_TYPE
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+            USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
+            OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
+  logical :: ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
+  logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  character(len=256) LOCAL_PATH
+  integer :: IMODEL
+
   contains
 
   !----------------------------------------------------------------------------------------------
@@ -658,7 +674,7 @@ module decompose_mesh_SCOTCH
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
 
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
-         nodes_elmnts, max_neighbour, 1)
+         nodes_elmnts, max_neighbour, 1, NGNOD)
 
     print*, 'mesh2dual:'
     print*, '  max_neighbour = ',max_neighbour
@@ -784,14 +800,14 @@ module decompose_mesh_SCOTCH
     call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                      count_def_mat, num_material , mat_prop, &
                      sup_neighbour, nsize, &
-                     nparts, part)
+                     nparts, part, NGNOD)
 
     deallocate(num_material)
 
     ! re-partitioning puts moho-surface coupled elements into same partition
     call moho_surface_repartitioning (nspec, nnodes, elmnts, &
                      sup_neighbour, nsize, nparts, part, &
-                     nspec2D_moho,ibelm_moho,nodes_ibelm_moho )
+                     nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
     ! local number of each element for each partition
     call build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
@@ -803,15 +819,15 @@ module decompose_mesh_SCOTCH
     ! mpi interfaces
     ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
     call build_interfaces(nspec, sup_neighbour, part, elmnts, &
-                             xadj, adjncy, tab_interfaces, &
-                             tab_size_interfaces, ninterfaces, &
-                             nparts)
+                         xadj, adjncy, tab_interfaces, &
+                         tab_size_interfaces, ninterfaces, &
+                         nparts, NGNOD)
 
     !or: uncomment if you want acoustic/elastic boundaries NOT to be separated into different MPI partitions
     !call build_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
     !                          xadj, adjncy, tab_interfaces, &
     !                          tab_size_interfaces, ninterfaces, &
-    !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts)
+    !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts, NGNOD)
 
   end subroutine scotch_partitioning
 
@@ -881,7 +897,7 @@ module decompose_mesh_SCOTCH
                                   nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
                                   nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
        ! gets number of MPI interfaces
        call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
@@ -906,7 +922,7 @@ module decompose_mesh_SCOTCH
        call write_moho_surface_database(IIN_database, ipart, nspec, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, &
-                                  nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
+                                  nspec2D_moho, ibelm_moho,nodes_ibelm_moho, NGNOD2D)
 
        close(IIN_database)
 

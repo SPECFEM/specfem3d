@@ -30,7 +30,19 @@ program pre_meshfem3D
                                   read_mesh_files, &
                                   check_valence, &
                                   scotch_partitioning, &
-                                  write_mesh_databases
+                                  write_mesh_databases, &
+                                  DT, HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,NPROC, &
+                                  NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
+                                  UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D, &
+                                  NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                                  NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,MOVIE_TYPE, &
+                                  MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                                  USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION, &
+                                  ATTENUATION,USE_OLSEN_ATTENUATION, &
+                                  OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE, &
+                                  ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                                  ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+                                  LOCAL_PATH,IMODEL
 
 ! daniel: ifort
 !  USE IFPORT,only: getarg
@@ -56,6 +68,19 @@ program pre_meshfem3D
   read(arg(1),*) nparts
   localpath_name = arg(2)
   outputpath_name = arg(3)
+
+ ! needs local_path for mesh files
+  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
+                          UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                          ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                          OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                          MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                          NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                          SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                          NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                          NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                          USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                          USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()
