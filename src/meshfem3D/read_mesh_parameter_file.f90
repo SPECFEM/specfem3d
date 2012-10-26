@@ -27,7 +27,7 @@
 module readParFile
 contains
 
-  subroutine read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+  subroutine read_mesh_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
                                 UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
                                 NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
                                 LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
@@ -60,7 +60,7 @@ contains
 
 !  character(len=256) dummystring
   integer ierr
-  integer, external :: err_occurred
+  integer, external :: err_occurred_mesh
 
 ! subregions parameters
   integer NSUBREGIONS
@@ -82,36 +82,35 @@ contains
 
   integer i,ireg,imat,idoubl
 
-! open parameter file
-  open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
-       //'Mesh_Par_file',status='old',action='read')
+! open parameter file Mesh_Par_file
+  call open_parameter_file_mesh()
 
-  call read_value_double_precision(IIN,IGNORE_JUNK,LATITUDE_MIN, 'mesher.LATITUDE_MIN')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(IIN,IGNORE_JUNK,LATITUDE_MAX, 'mesher.LATITUDE_MAX')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(IIN,IGNORE_JUNK,LONGITUDE_MIN, 'mesher.LONGITUDE_MIN')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(IIN,IGNORE_JUNK,LONGITUDE_MAX, 'mesher.LONGITUDE_MAX')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(IIN,IGNORE_JUNK,DEPTH_BLOCK_KM, 'mesher.DEPTH_BLOCK_KM')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
-  if(err_occurred() /= 0) return
-  call read_value_logical(IIN,IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
-  if(err_occurred() /= 0) return
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'mesher.LATITUDE_MIN')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MAX, 'mesher.LATITUDE_MAX')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MIN, 'mesher.LONGITUDE_MIN')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LONGITUDE_MAX, 'mesher.LONGITUDE_MAX')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,DEPTH_BLOCK_KM, 'mesher.DEPTH_BLOCK_KM')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,UTM_PROJECTION_ZONE, 'mesher.UTM_PROJECTION_ZONE')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,SUPPRESS_UTM_PROJECTION, 'mesher.SUPPRESS_UTM_PROJECTION')
+  if(err_occurred_mesh() /= 0) return
 
-  call read_value_string(IIN,IGNORE_JUNK,INTERFACES_FILE, 'mesher.INTERFACES_FILE')
-  if(err_occurred() /= 0) return
+  call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'mesher.INTERFACES_FILE')
+  if(err_occurred_mesh() /= 0) return
 
-  call read_value_integer(IIN,IGNORE_JUNK,NEX_XI, 'mesher.NEX_XI')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,NEX_ETA, 'mesher.NEX_ETA')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,NPROC_XI, 'mesher.NPROC_XI')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,NPROC_ETA, 'mesher.NPROC_ETA')
-  if(err_occurred() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'mesher.NEX_XI')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'mesher.NEX_ETA')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_XI, 'mesher.NPROC_XI')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_ETA, 'mesher.NPROC_ETA')
+  if(err_occurred_mesh() /= 0) return
 
 
 ! convert model size to UTM coordinates and depth of mesh to meters
@@ -129,14 +128,14 @@ contains
   NEX_MAX = max(NEX_XI,NEX_ETA)
   UTM_MAX = max(UTM_Y_MAX-UTM_Y_MIN, UTM_X_MAX-UTM_X_MIN)/1000.0 ! in KM
 
-  call read_value_logical(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'mesher.USE_REGULAR_MESH')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,NDOUBLINGS, 'mesher.NDOUBLINGS')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,ner_doublings(1), 'mesher.NZ_DOUGLING_1')
-  if(err_occurred() /= 0) return
-  call read_value_integer(IIN,IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
-  if(err_occurred() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'mesher.USE_REGULAR_MESH')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'mesher.NDOUBLINGS')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(1), 'mesher.NZ_DOUGLING_1')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,ner_doublings(2), 'mesher.NZ_DOUGLING_2')
+  if(err_occurred_mesh() /= 0) return
 
   if(ner_doublings(1) < ner_doublings(2) .and. NDOUBLINGS == 2) then
     idoubl = ner_doublings(1)
@@ -146,20 +145,20 @@ contains
 
 
 
-  call read_value_logical(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
-  if(err_occurred() /= 0) return
-  call read_value_logical(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'mesher.CREATE_DX_FILES')
-  if(err_occurred() /= 0) return
-  call read_value_logical(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'mesher.CREATE_VTK_FILES')
-  if(err_occurred() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'mesher.CREATE_ABAQUS_FILES')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_DX_FILES, 'mesher.CREATE_DX_FILES')
+  if(err_occurred_mesh() /= 0) return
+  call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'mesher.CREATE_VTK_FILES')
+  if(err_occurred_mesh() /= 0) return
 
 ! file in which we store the databases
-  call read_value_string(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')
-  if(err_occurred() /= 0) return
+  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH')
+  if(err_occurred_mesh() /= 0) return
 
 ! read number of materials
-  call read_value_integer(IIN,IGNORE_JUNK,NMATERIALS, 'mesher.NMATERIALS')
-  if(err_occurred() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'mesher.NMATERIALS')
+  if(err_occurred_mesh() /= 0) return
 
 ! read materials properties
   allocate(material_properties(NMATERIALS,6),stat=ierr)
@@ -178,8 +177,8 @@ contains
   end do
 
 ! read number of subregions
-  call read_value_integer(IIN,IGNORE_JUNK,NSUBREGIONS, 'mesher.NSUBREGIONS')
-  if(err_occurred() /= 0) return
+  call read_value_integer_mesh(IIN,IGNORE_JUNK,NSUBREGIONS, 'mesher.NSUBREGIONS')
+  if(err_occurred_mesh() /= 0) return
 
 ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ierr)
@@ -203,8 +202,8 @@ contains
   end do
 
 ! close parameter file
-  close(IIN)
+  call close_parameter_file_mesh()
 
-  end subroutine read_parameter_file
+  end subroutine read_mesh_parameter_file
 
 end module readParFile

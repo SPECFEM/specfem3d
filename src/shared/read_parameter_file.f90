@@ -27,13 +27,13 @@
   subroutine read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
                         SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,IMODEL)
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
 
   implicit none
 
@@ -41,10 +41,10 @@
 
   integer NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE, NTSTEP_BETWEEN_READ_ADJSRC
   integer NSOURCES,NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,UTM_PROJECTION_ZONE
-  integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D
+  integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
   integer IMODEL
 
-  double precision DT,HDUR_MOVIE
+  double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
 
   logical ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
@@ -122,17 +122,21 @@
   if(err_occurred() /= 0) return
   call read_value_logical(ABSORB_INSTEAD_OF_FREE_SURFACE, 'model.ABSORB_INSTEAD_OF_FREE_SURFACE')
   if(err_occurred() /= 0) return
+  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'model.OLSEN_ATTENUATION_RATIO')
+  if(err_occurred() /= 0) return
+  call read_value_integer(MOVIE_TYPE, 'solver.MOVIE_TYPE')
+  if(err_occurred() /= 0) return
+  call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP')
+  if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_VOLUME, 'solver.MOVIE_VOLUME')
   if(err_occurred() /= 0) return
-  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'solver.NTSTEP_BETWEEN_FRAMES')
-  if(err_occurred() /= 0) return
-  call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP')
-  if(err_occurred() /= 0) return
   call read_value_logical(SAVE_DISPLACEMENT, 'solver.SAVE_DISPLACEMENT')
   if(err_occurred() /= 0) return
   call read_value_logical(USE_HIGHRES_FOR_MOVIES, 'solver.USE_HIGHRES_FOR_MOVIES')
+  if(err_occurred() /= 0) return
+  call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'solver.NTSTEP_BETWEEN_FRAMES')
   if(err_occurred() /= 0) return
   call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
   if(err_occurred() /= 0) return
@@ -158,12 +162,17 @@
 
   ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
   ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
-  if ( NGNOD == NGNOD_EIGHT_CORNERS ) then
-     NGNOD2D = NGNOD2D_FOUR_CORNERS
-  else if ( NGNOD == NGNOD_TWENTY_SEVEN_CORNERS ) then
-     NGNOD2D = NGNOD2D_NINE_CORNERS
-  else if ( NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS ) then 
-     stop 'elements should have 8 or 27 control nodes, please modify Par_file and recompile solver'
+  if ( NGNOD == 8 ) then
+     NGNOD2D = 4
+  else if ( NGNOD == 27 ) then
+     NGNOD2D = 9
+  else if ( NGNOD /= 8 .and. NGNOD /= 27 ) then 
+     stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
+  endif
+
+  ! checks the MOVIE_TYPE parameter
+  if ( MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2 ) then
+     stop 'error: MOVIE_TYPE must be either 1 or 2'
   endif
 
   ! noise simulations:
@@ -183,16 +192,9 @@
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if ( NOISE_TOMOGRAPHY /= 0 ) then
+    MOVIE_TYPE = 1
     MOVIE_SURFACE = .true.
-    CREATE_SHAKEMAP = .false.           ! CREATE_SHAKEMAP and MOVIE_SURFACE cannot be both .true.
     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
-    ! since there are several flags involving surface movies, check compatability
-    if ( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
-        print*, 'error: when running noise simulations ( NOISE_TOMOGRAPHY /= 0 ),'
-        print*, '       we can NOT use EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP'
-        print*, '       change EXTERNAL_MESH_MOVIE_SURFACE & EXTERNAL_MESH_CREATE_SHAKEMAP in constant.h'
-        stop 'incompatible NOISE_TOMOGRAPHY, EXTERNAL_MESH_MOVIE_SURFACE, EXTERNAL_MESH_CREATE_SHAKEMAP'
-    endif
   endif
 
   if (USE_FORCE_POINT_SOURCE) then

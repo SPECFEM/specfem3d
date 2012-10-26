@@ -62,7 +62,7 @@
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
 
 ! check that the parameter file is correct
-  if(NGNOD2D /= NGNOD2D_FOUR_CORNERS .and. NGNOD2D /= NGNOD2D_NINE_CORNERS) &
+  if(NGNOD2D /= 4 .and. NGNOD2D /= 9) &
        call exit_MPI(myrank,'surface elements should have 4 or 9 control nodes')
 
   select case ( iface )
@@ -81,7 +81,7 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
+    if(NGNOD2D == 9) then
           xelm(5)=xstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
           yelm(5)=ystore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
           zelm(5)=zstore_dummy( ibool(1,(NGLLY+1)/2,1,ispec) )
@@ -118,7 +118,7 @@
     yelm(4)=ystore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(NGLLX,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
+    if(NGNOD2D == 9) then
           xelm(5)=xstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
           yelm(5)=ystore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
           zelm(5)=zstore_dummy( ibool(NGLLX,(NGLLY+1)/2,1,ispec) )
@@ -155,7 +155,7 @@
     yelm(4)=ystore_dummy( ibool(1,1,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,1,NGLLZ,ispec) )
 
-    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
+    if(NGNOD2D == 9) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
@@ -192,7 +192,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
+    if(NGNOD2D == 9) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,NGLLY,1,ispec) )
@@ -230,7 +230,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,1,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,1,ispec) )
 
-    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
+    if(NGNOD2D == 9) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,1,ispec) )
@@ -267,7 +267,7 @@
     yelm(4)=ystore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
     zelm(4)=zstore_dummy( ibool(1,NGLLY,NGLLZ,ispec) )
 
-    if(NGNOD2D == NGNOD2D_NINE_CORNERS) then
+    if(NGNOD2D == 9) then
           xelm(5)=xstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
           yelm(5)=ystore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )
           zelm(5)=zstore_dummy( ibool((NGLLX+1)/2,1,NGLLZ,ispec) )

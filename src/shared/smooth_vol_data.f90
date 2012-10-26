@@ -97,7 +97,7 @@ program smooth_vol_data
 
   ! for read_parameter_files
   double precision :: DT
-  double precision :: HDUR_MOVIE
+  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
@@ -109,7 +109,7 @@ program smooth_vol_data
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH
-  integer :: IMODEL
+  integer :: MOVIE_TYPE,IMODEL
 
   ! smoothing parameters
   character(len=256) :: ks_file
@@ -214,14 +214,14 @@ program smooth_vol_data
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,IMODEL)
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then

@@ -127,7 +127,7 @@
   endif
 
 ! stores global indices of GLL points on the surface to array faces_surface_ext_mesh
-  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
+  if( MOVIE_TYPE == 2 ) then
 
     allocate( faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh),stat=ier)
     if( ier /= 0 ) stop 'error allocating array faces_surface_ext_mesh_ispec'
@@ -266,7 +266,7 @@
       print*,'error number of movie faces: ',nfaces_surface_ext_mesh,nfaces_org
       call exit_mpi(myrank,'error number of faces')
     endif
-  endif
+  endif ! MOVIE_TYPE == 2
 
   ! user output
   if (myrank == 0) then

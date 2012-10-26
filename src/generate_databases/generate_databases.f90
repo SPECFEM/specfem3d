@@ -256,14 +256,14 @@
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,IMODEL)
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -304,8 +304,9 @@
     write(IMAIN,*)
 
 ! check that the constants.h file is correct
-    if(NGNOD /= 8 ) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
-    if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
+    if ( NGNOD /= 8 .and. NGNOD /= 27 ) then 
+       stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
+    endif
 
     write(IMAIN,'(a)',advance='no') ' velocity model: '
     select case(IMODEL)
@@ -341,25 +342,13 @@
 ! for the number of standard linear solids for attenuation
   if(N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
 
-  ! exclusive movie flags
-  if( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) then
-    MOVIE_SURFACE = .false.
-    CREATE_SHAKEMAP = .false.
-  endif
-
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if ( NOISE_TOMOGRAPHY /= 0 ) then
+    MOVIE_TYPE = 1
     MOVIE_SURFACE = .true.
-    CREATE_SHAKEMAP = .false.
-    if( ( EXTERNAL_MESH_MOVIE_SURFACE .or. EXTERNAL_MESH_CREATE_SHAKEMAP ) .and. myrank == 0 ) then
-        write(IMAIN,*) 'error: when running noise simulations ( NOISE_TOMOGRAPHY /= 0 ),'
-        write(IMAIN,*) '       we can NOT use EXTERNAL_MESH_MOVIE_SURFACE or EXTERNAL_MESH_CREATE_SHAKEMAP'
-        write(IMAIN,*) '       change EXTERNAL_MESH_MOVIE_SURFACE & EXTERNAL_MESH_CREATE_SHAKEMAP in constant.h'
-        call exit_MPI(myrank,'incompatible NOISE_TOMOGRAPHY, EXTERNAL_MESH_MOVIE_SURFACE, EXTERNAL_MESH_CREATE_SHAKEMAP')
-    endif
+    USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
   endif
-
 
   if(myrank == 0) then
 

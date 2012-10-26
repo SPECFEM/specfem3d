@@ -58,9 +58,9 @@
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= NGNOD_EIGHT_CORNERS .and. NGNOD /= NGNOD_TWENTY_SEVEN_CORNERS) &
+  if(NGNOD /= 8 .and. NGNOD /= 27) &
        stop 'elements should have 8 or 27 control nodes'
-  if(NGNOD == NGNOD_EIGHT_CORNERS) then
+  if(NGNOD == 8) then
 
 ! ***
 ! *** create the 3D shape functions and the Jacobian for an 8-node element

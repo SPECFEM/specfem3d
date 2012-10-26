@@ -25,7 +25,7 @@
 !=====================================================================
 
 
-  subroutine get_attenuation_model_olsen( vs_val, Q_mu )
+  subroutine get_attenuation_model_olsen(vs_val,Q_mu,OLSEN_ATTENUATION_RATIO)
 
 ! uses scaling rule similar to Olsen et al. (2003) to determine attenuation medium
 !
@@ -42,6 +42,7 @@
 
   real(kind=CUSTOM_REAL) :: vs_val
   double precision :: Q_mu
+  double precision :: OLSEN_ATTENUATION_RATIO
 
   !local parameters
   integer :: int_Q_mu
@@ -111,9 +112,9 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION, &
-                          mustore,rho_vs,qmu_attenuation_store, &
-                          ispec_is_elastic,min_resolved_period,prname)
+  subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
+                                  mustore,rho_vs,qmu_attenuation_store, &
+                                  ispec_is_elastic,min_resolved_period,prname)
 
 ! precalculates attenuation arrays and stores arrays into files
 
@@ -121,6 +122,7 @@
 
   include "constants.h"
 
+  double precision :: OLSEN_ATTENUATION_RATIO
   integer :: myrank,nspec
   logical :: USE_OLSEN_ATTENUATION
 
@@ -203,7 +205,7 @@
           if(USE_OLSEN_ATTENUATION) then
             ! use scaling rule similar to Olsen et al. (2003)
             vs_val = mustore(i,j,k,ispec) / rho_vs(i,j,k,ispec)
-            call get_attenuation_model_olsen( vs_val, Q_mu )
+            call get_attenuation_model_olsen(vs_val,Q_mu,OLSEN_ATTENUATION_RATIO)
           else
             ! takes Q set in (CUBIT) mesh
             Q_mu = qmu_attenuation_store(i,j,k,ispec)

@@ -263,7 +263,7 @@
 ! addressing for all the slices
   integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
 
-! parameters read from parameter file
+! parameters read from mesh parameter file
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE
 
   double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
@@ -329,6 +329,20 @@
 ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
   double precision , dimension(:,:), pointer :: material_properties
 
+  ! parameters read from parameter file
+  integer NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
+  integer NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
+  logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+          USE_HIGHRES_FOR_MOVIES
+  integer NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NGNOD,NGNOD2D
+  double precision DT
+  double precision HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
+  logical ATTENUATION,USE_OLSEN_ATTENUATION, &
+          OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
+  logical ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
+  logical ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  integer MOVIE_TYPE,IMODEL
+
 ! ************** PROGRAM STARTS HERE **************
 
 ! sizeprocs returns number of processes started (should be equal to NPROC).
@@ -356,8 +370,22 @@
     write(IMAIN,*)
   endif
 
- ! nullify(subregions,material_properties)
-  call read_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
+! read the parameter file
+  call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                        ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
+                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                        MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
+                        NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
+                        SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
+                        NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
+
+! read the mesh parameter file
+! nullify(subregions,material_properties)
+  call read_mesh_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
                           UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
                           NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
                           LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
@@ -382,7 +410,7 @@
   max_npy_interface  = -1
 
 ! read number of interfaces
-  call read_value_integer(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
   if(number_of_interfaces < 1) stop 'error: not enough interfaces (minimum is 1, for topography)'
 
 ! loop on all the interfaces
@@ -407,7 +435,7 @@
   do ilayer = 1,number_of_layers
 
 ! read number of spectral elements in vertical direction in this layer
-    call read_value_integer(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
+    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER')
     if(ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
 
   enddo
@@ -513,8 +541,8 @@
   endif
 
   ! check that the constants.h file is correct
-  if(NGNOD_EIGHT_CORNERS /= 8) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
-  if(NGNOD2D_FOUR_CORNERS /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
+  if(NGNOD /= 8) call exit_MPI(myrank,'volume elements should have 8 control nodes in our internal mesher')
+  if(NGNOD2D /= 4) call exit_MPI(myrank,'surface elements should have 4 control nodes in our internal mesher')
 
   ! check that reals are either 4 or 8 bytes
   if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
@@ -601,7 +629,7 @@
   if( ier /= 0 ) stop 'error allocating array interface_top'
 
   ! read number of interfaces
-  call read_value_integer(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
+  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES')
 
   SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
   npx_interface_bottom = 2
@@ -627,7 +655,7 @@
          //interface_top_file,status='old')
     do iy=1,npy_interface_top
       do ix=1,npx_interface_top
-        call read_value_double_precision(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
+        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP')
       enddo
     enddo
     close(45)
