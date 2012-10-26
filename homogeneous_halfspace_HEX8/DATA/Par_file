@@ -38,9 +38,12 @@ MODEL                           = default
 OCEANS                          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
-USE_OLSEN_ATTENUATION           = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
+
+# Olsen's constant for Q_mu = constant * v_s attenuation rule
+USE_OLSEN_ATTENUATION           = .false.
+OLSEN_ATTENUATION_RATIO         = 0.05
 
 # absorbing boundary conditions for a regional simulation
 ABSORBING_CONDITIONS            = .false.
@@ -48,15 +51,12 @@ ABSORBING_CONDITIONS            = .false.
 # absorbing top surface (defined in mesh as 'free_surface_file')
 ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
 
-# Olsen's constant for Q_mu = constant * v_s attenuation rule
-OLSEN_ATTENUATION_RATIO         = 0.05
-
 # save AVS or OpenDX movies
 # MOVIE_TYPE = 1 to show the top surface
 # MOVIE_TYPE = 2 to show all the external faces of the mesh
-MOVIE_TYPE                      = 1
 CREATE_SHAKEMAP                 = .false.
 MOVIE_SURFACE                   = .false.
+MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
