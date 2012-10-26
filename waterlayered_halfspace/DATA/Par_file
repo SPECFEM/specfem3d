@@ -48,13 +48,19 @@ ABSORBING_CONDITIONS            = .true.
 # absorbing top surface (defined in mesh as 'free_surface_file')
 ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
 
+# Olsen's constant for Q_mu = constant * v_s attenuation rule
+OLSEN_ATTENUATION_RATIO         = 0.05
+
 # save AVS or OpenDX movies
+# MOVIE_TYPE = 1 to show the top surface
+# MOVIE_TYPE = 2 to show all the external faces of the mesh
+MOVIE_TYPE                      = 1
+CREATE_SHAKEMAP                 = .false.
 MOVIE_SURFACE                   = .false.
 MOVIE_VOLUME                    = .false.
-NTSTEP_BETWEEN_FRAMES           = 100
-CREATE_SHAKEMAP                 = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
+NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
