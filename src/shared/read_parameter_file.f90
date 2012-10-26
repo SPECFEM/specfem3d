@@ -114,21 +114,21 @@
   if(err_occurred() /= 0) return
   call read_value_logical(ATTENUATION, 'model.ATTENUATION')
   if(err_occurred() /= 0) return
+  call read_value_logical(ANISOTROPY, 'model.ANISOTROPY')
+  if(err_occurred() /= 0) return
   call read_value_logical(USE_OLSEN_ATTENUATION, 'model.USE_OLSEN_ATTENUATION')
   if(err_occurred() /= 0) return
-  call read_value_logical(ANISOTROPY, 'model.ANISOTROPY')
+  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'model.OLSEN_ATTENUATION_RATIO')
   if(err_occurred() /= 0) return
   call read_value_logical(ABSORBING_CONDITIONS, 'solver.ABSORBING_CONDITIONS')
   if(err_occurred() /= 0) return
   call read_value_logical(ABSORB_INSTEAD_OF_FREE_SURFACE, 'model.ABSORB_INSTEAD_OF_FREE_SURFACE')
   if(err_occurred() /= 0) return
-  call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'model.OLSEN_ATTENUATION_RATIO')
-  if(err_occurred() /= 0) return
-  call read_value_integer(MOVIE_TYPE, 'solver.MOVIE_TYPE')
-  if(err_occurred() /= 0) return
   call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
+  if(err_occurred() /= 0) return
+  call read_value_integer(MOVIE_TYPE, 'solver.MOVIE_TYPE')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_VOLUME, 'solver.MOVIE_VOLUME')
   if(err_occurred() /= 0) return

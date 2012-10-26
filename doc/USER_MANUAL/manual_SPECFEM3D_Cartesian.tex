@@ -1059,38 +1059,42 @@ of attenuation based upon standard linear solids.
 Please note that the Vp- and Vs-velocities of your model are given for a reference frequency.
 To change this reference frequency, you change the value of
 \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+\item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you
+want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
 \item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
 want to use the attenuation model that scaled from the S-wave speed model
 using Olsen's empirical relation (see \citet{OlDaBr03}).
-\item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you
-want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
+\item [{\texttt{OLSEN\_ATTENUATION\_RATIO}}] Determines the Olsen's constant in Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
 on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
 \item [{\texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on
 absorbing boundary conditions on the top surface which by default constitutes a free surface of the model.
+\item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
+create a ShakeMap\textregistered, i.e., a peak ground velocity map
+of the maximum absolute value of the two horizontal components of the velocity vector.
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
 Turning this option on generates large output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only relevant for the solver.
+\item [{\texttt{MOVIE\_TYPE}}] Set this flag to 1 to show the top
+  surface (tomography + oceans) only, to 2 to show all external faces
+  of the mesh (i.e. topography + vertical edges + bottom) in shakemaps and surface movies.
 \item [{\texttt{MOVIE\_VOLUME}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation in the Earth's interior.
 Turning this option on generates huge output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only relevant for the solver.
-\item [{\texttt{NTSTEP\_BETWEEN\_FRAMES}}] Determines the number of timesteps
-between movie frames. Typically you want to save a snapshot every
-100 timesteps. The smaller you make this number the more output will
-be generated! See Section~\ref{sec:Movies} for a discussion on the
-generation of movies. This feature is only relevant for the solver.
-\item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
-create a ShakeMap\textregistered, i.e., a peak ground velocity map
-of the maximum absolute value of the two horizontal components of the velocity vector.
 \item [{\texttt{SAVE\_DISPLACEMENT}}] Set this flag to \texttt{.true.}
 if you want to save the displacement instead of velocity for the movie
 frames.
 \item [{\texttt{USE\_HIGHRES\_FOR\_MOVIES}}] Set this flag to \texttt{.true.}
 if you want to save the values at all the NGLL grid points for the
 movie frames.
-\item [{\texttt{HDUR\_MOVIE}}] determines the half duration of the source time function for the movie simulations.
+\item [{\texttt{NTSTEP\_BETWEEN\_FRAMES}}] Determines the number of timesteps
+between movie frames. Typically you want to save a snapshot every
+100 timesteps. The smaller you make this number the more output will
+be generated! See Section~\ref{sec:Movies} for a discussion on the
+generation of movies. This feature is only relevant for the solver.
+\item [{\texttt{HDUR\_MOVIE}}] Determines the half duration of the source time function for the movie simulations.
 When this parameter is set to be 0, a default half duration that corresponds to the accuracy of the simulation is provided.
 Otherwise, it adds this half duration to the half duration specified in the source file \texttt{CMTSOLUTION},
 thus simulates longer periods to make the movie images look smoother.
@@ -1195,7 +1199,7 @@ and \texttt{SAVE\_FORWARD}
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
 and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
 \item the ShakeMap\textregistered option \texttt{CREATE\_SHAKEMAP}
-\item the output information parameters \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
+\item the output information parameters \texttt{MOVIE\_TYPE}, \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
 and \texttt{NTSTEP\_BETWEEN\_OUTPUT\_}~\\
 \texttt{SEISMOS}
 \item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
@@ -1942,7 +1946,7 @@ This will create VTK files for each single partition. You can then use Paraview 
 \section{\label{sec:Movies}Movies}
 
 To make a surface or volume movie of the simulation, set parameters
-\texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME}, and \texttt{NTSTEP\_BETWEEN\_FRAMES}
+\texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME}, \texttt{MOVIE\_TYPE}, and \texttt{NTSTEP\_BETWEEN\_FRAMES}
 in the \texttt{Par\_file}. Turning on the movie flags, in particular
 \texttt{MOVIE\_VOLUME}, produces large output files. \texttt{MOVIE\_VOLUME}
 files are saved in the \texttt{LOCAL\_PATH} directory, whereas \texttt{MOVIE\_SURFACE}
@@ -1974,7 +1978,7 @@ by the finite source model and set \texttt{HDUR\_MOVIE} = 0.0.
 When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
 flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{OUTPUT\_FILES} directory. There are several flags
-in the main parameter file \texttt{Par\_file} that control the output of these moviedata files
+in the main parameter file \texttt{Par\_file} that control the output of these movie data files
 (see section \ref{cha:Main-Parameter} for details):
 \texttt{\small NTSTEP\_BETWEEN\_FRAMES} to set the timesteps between frames,
 \texttt{\small SAVE\_DISPLACEMENT} to save displacement instead of velocity,
