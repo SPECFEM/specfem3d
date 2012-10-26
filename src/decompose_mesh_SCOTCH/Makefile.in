@@ -29,6 +29,8 @@
 
 # @configure_input@
 
+SHARED = ../shared/
+
 FC = @FC@
 FCFLAGS = #@FCFLAGS@
 MPIFC = @MPIFC@
@@ -37,10 +39,10 @@ FLAGS_CHECK = @FLAGS_CHECK@
 FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
 
-FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK)
-FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
-MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK)
-MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK)
+FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED}
+FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) -I${SHARED}
+MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) -I${SHARED}
+MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK) -I${SHARED}
 #@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_NO_CHECK)
 #@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
 FCLINK = $(FCCOMPILE_NO_CHECK)
@@ -87,9 +89,14 @@ decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
 #### rules for executables
 ####
 
-DEC_OBJECTS = $O/part_decompose_mesh_SCOTCH.o \
-                $O/decompose_mesh_SCOTCH.o \
-                $O/program_decompose_mesh_SCOTCH.o
+DEC_OBJECTS = \
+	$O/part_decompose_mesh_SCOTCH.o \
+	$O/decompose_mesh_SCOTCH.o \
+	$O/get_value_parameters.shared.o \
+	$O/param_reader.cc.o \
+	$O/read_parameter_file.shared.o \
+        $O/read_value_parameters.shared.o \
+        $O/program_decompose_mesh_SCOTCH.o
 
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS)
@@ -111,6 +118,12 @@ clean:
 ####
 #### rule to build each .o file below
 ####
+
+$O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
+	${FCCOMPILE_CHECK} -c -o $@ $<
+
+$O/%.cc.o: $(SHARED)%.c ../../config.h
+	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ $(SHARED)$< -I../../
 
 $O/part_decompose_mesh_SCOTCH.o: part_decompose_mesh_SCOTCH.f90
 	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)

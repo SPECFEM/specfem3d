@@ -30,10 +30,6 @@ module part_decompose_mesh_SCOTCH
 
   include "../shared/constants.h"
 
-! Control nodes for volume and surface elements
-  integer, parameter :: NGNOD = 8
-  integer, parameter :: NGNOD2D = 4 
-
 ! useful kind types for short integer (4 bytes) and long integers (8 bytes)
   integer, parameter :: short = 4, long = 8
 
@@ -58,12 +54,13 @@ contains
   subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts,&
                                     xadj, adjncy, &
                                     nnodes_elmnts, nodes_elmnts, &
-                                    max_neighbour, ncommonnodes)
+                                    max_neighbour, ncommonnodes, NGNOD)
 
     integer, intent(in)  :: nspec
     integer, intent(in)  :: nnodes
     integer, intent(in)  :: nsize
     integer, intent(in)  :: sup_neighbour
+    integer, intent(in)  :: NGNOD
     integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
 
     integer, dimension(0:nspec)  :: xadj
@@ -287,9 +284,10 @@ contains
   !--------------------------------------------------
    subroutine build_interfaces(nspec, sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
-                              nparts)
+                              nparts, NGNOD)
 
     integer, intent(in)  :: nspec
+    integer, intent(in)  :: NGNOD
     integer, intent(in) :: sup_neighbour
     integer, dimension(0:nspec-1), intent(in)  :: part
     integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
@@ -406,10 +404,11 @@ contains
    subroutine build_interfaces_no_ac_el_sep(nspec, &
                               sup_neighbour, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
-                              nb_materials, cs_material, num_material,nparts)
+                              nb_materials, cs_material, num_material,nparts,NGNOD)
 
     integer, intent(in)  :: nb_materials,nparts
     integer, intent(in)  :: nspec
+    integer, intent(in)  :: NGNOD
     integer, intent(in) :: sup_neighbour
     integer, dimension(0:nspec-1), intent(in)  :: part
     integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
@@ -650,11 +649,12 @@ contains
                         nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, &
                         nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
                         glob2loc_elmnts, glob2loc_nodes_nparts, &
-                        glob2loc_nodes_parts, glob2loc_nodes, part )
+                        glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer, intent(in)  :: nspec
+    integer, intent(in)  :: NGNOD2D
     integer, intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
       nspec2D_ymax, nspec2D_bottom, nspec2D_top
     integer, dimension(nspec2D_xmin), intent(in) :: ibelm_xmin
@@ -1193,11 +1193,12 @@ contains
   subroutine write_moho_surface_database(IIN_database, iproc, nspec, &
                         glob2loc_elmnts, glob2loc_nodes_nparts, &
                         glob2loc_nodes_parts, glob2loc_nodes, part, &
-                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
+                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD2D)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer, intent(in)  :: nspec
+    integer, intent(in)  :: NGNOD2D
 
     integer, dimension(:), pointer :: glob2loc_elmnts
     integer, dimension(:), pointer  :: glob2loc_nodes_nparts
@@ -1367,11 +1368,11 @@ contains
   subroutine poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                         nb_materials, num_material, mat_prop, &
                         sup_neighbour, nsize, &
-                        nproc, part)
+                        nproc, part, NGNOD)
 
     implicit none
 
-    integer, intent(in) :: nspec
+    integer, intent(in) :: nspec, NGNOD
     integer, intent(in) :: nnodes, nproc, nb_materials
     integer, intent(in) :: sup_neighbour
     integer, intent(in) :: nsize
@@ -1427,7 +1428,7 @@ contains
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
-                                nodes_elmnts, max_neighbour, 4)
+                                nodes_elmnts, max_neighbour, 4, NGNOD)
 
     ! counts coupled elements
     nfaces_coupled = 0
@@ -1497,7 +1498,7 @@ contains
 
   subroutine moho_surface_repartitioning (nspec, nnodes, elmnts, &
                         sup_neighbour, nsize, nproc, part, &
-                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho)
+                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
     implicit none
 
@@ -1510,6 +1511,9 @@ contains
     ! maximum number of neighours and max number of elements-that-contain-the-same-node
     integer, intent(in) :: sup_neighbour
     integer, intent(in) :: nsize
+
+    ! Control nodes for surface and volume elements
+    integer, intent(in) :: NGNOD, NGNOD2D
 
     ! partition index on each element
     integer, dimension(0:nspec-1)  :: part
@@ -1602,7 +1606,7 @@ contains
 
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
                         elmnts, xadj, adjncy, nnodes_elmnts, &
-                        nodes_elmnts, max_neighbour, 4)
+                        nodes_elmnts, max_neighbour, 4, NGNOD)
 
     ! counts coupled elements
     nfaces_coupled = 0
