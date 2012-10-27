@@ -41,7 +41,7 @@ cd $currentdir
 # links executables
 cd bin/
 rm -f ./x*
-cp ../../../bin/xdecompose_mesh_SCOTCH ./
+cp ../../../bin/xdecompose_mesh ./
 cp ../../../bin/xgenerate_databases ./
 cp ../../../bin/xspecfem3D ./
 cd ../
@@ -55,7 +55,7 @@ cp DATA/STATIONS OUTPUT_FILES/
 echo
 echo "  decomposing mesh..."
 echo
-./bin/xdecompose_mesh_SCOTCH $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
+./bin/xdecompose_mesh $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 # runs database generation
 echo

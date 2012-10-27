@@ -1,4 +1,4 @@
-[homogeneous_halfspace]$ ./bin/xdecompose_mesh_SCOTCH 4 MESH-default/ DATABASES-default/ 
+[homogeneous_halfspace]$ ./bin/xdecompose_mesh 4 MESH-default/ DATABASES-default/ 
 
 total number of nodes: 
    nnodes =        23273

@@ -3,7 +3,7 @@ To run this example on two processor cores for instance, type this (replace "2" 
 
 cd bin/
 
-./xdecompose_mesh_SCOTCH 2 ../DATA/MESH ../OUTPUT_FILES/DATABASES_MPI
+./xdecompose_mesh 2 ../DATA/MESH ../OUTPUT_FILES/DATABASES_MPI
 
 mpirun -np 2 ./xgenerate_databases
 

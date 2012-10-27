@@ -59,7 +59,7 @@ step-by-step tutorial:
 
    - run decomposer in directory
      (example assumes 16 partitions with mesh files in ../examples/homogeneous_poro/MESH/)
-     > ./bin/xdecompose_mesh_SCOTCH 16 ../examples/homogeneous_poro/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
+     > ./bin/xdecompose_mesh 16 ../examples/homogeneous_poro/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
 
      this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
      (you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH")

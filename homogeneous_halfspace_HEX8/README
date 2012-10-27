@@ -74,7 +74,7 @@ step-by-step tutorial:
 4. decompose mesh files:
 
    - compile decomposer in directory SPECFEM3D/:
-     > make xdecompose_mesh_SCOTCH
+     > make xdecompose_mesh
 
    - run decomposer:
      > qsub go_decomposer_pbs.bash
@@ -85,11 +85,11 @@ step-by-step tutorial:
      this creates mesh partitions "proc000***_Database" in directory OUTPUT_FILES/DATABASES_MPI/.
      the output file OUTPUT_FILES/*.o contains information on the partitioning
 
-     note 1: the program xdecompose_mesh_SCOTCH is a serial program (runs on 1 core)
+     note 1: the program xdecompose_mesh is a serial program (runs on 1 core)
      note 2: for small jobs (like this one), you can simply launch the job on
              the local node from directory SPECFEM3D:
 
-     > ./bin/xdecompose_mesh_SCOTCH 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
+     > ./bin/xdecompose_mesh 4 examples/homogeneous_halfspace/MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 
 5. generate databases:
