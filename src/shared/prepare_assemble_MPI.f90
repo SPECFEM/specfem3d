@@ -28,11 +28,11 @@
                                    ibool,npoin, &
                                    ninterface, max_interface_size, &
                                    my_nelmnts_neighbours, my_interfaces, &
-                                   ibool_interfaces_asteroid, &
-                                   nibool_interfaces_asteroid,NGNOD )
+                                   ibool_interfaces_ext_mesh, &
+                                   nibool_interfaces_ext_mesh,NGNOD )
 
-! returns: ibool_interfaces_asteroid with the global indices (as defined in ibool)
-!              nibool_interfaces_asteroid with the number of points in ibool_interfaces_asteroid
+! returns: ibool_interfaces_ext_mesh with the global indices (as defined in ibool)
+!              nibool_interfaces_ext_mesh with the number of points in ibool_interfaces_ext_mesh
 !
 ! for all points on the interface defined by ninterface, my_nelmnts_neighbours and my_interfaces
 
@@ -59,31 +59,31 @@
   integer, dimension(ninterface)  :: my_nelmnts_neighbours
   integer, dimension(6,max_interface_size,ninterface)  :: my_interfaces
 
-  integer, dimension(NGLLX*NGLLX*max_interface_size,ninterface) :: ibool_interfaces_asteroid
-  integer, dimension(ninterface)  :: nibool_interfaces_asteroid
+  integer, dimension(NGLLX*NGLLX*max_interface_size,ninterface) :: ibool_interfaces_ext_mesh
+  integer, dimension(ninterface)  :: nibool_interfaces_ext_mesh
 
 ! local parameters
   integer  :: num_interface
   integer  :: ispec_interface
 
-  logical, dimension(:),allocatable  :: mask_ibool_asteroid
+  logical, dimension(:),allocatable  :: mask_ibool_ext_mesh
 
   integer  :: ixmin, ixmax, iymin, iymax, izmin, izmax
   integer, dimension(NGNOD_EIGHT_CORNERS)  :: n
   integer  :: e1, e2, e3, e4
   integer  :: ispec,k,ix,iy,iz,ier,itype,iglob
-  integer  :: npoin_interface_asteroid
+  integer  :: npoin_interface_ext_mesh
 
 ! initializes
-  allocate( mask_ibool_asteroid(npoin), stat=ier); if( ier /= 0) stop 'error allocating array'
+  allocate( mask_ibool_ext_mesh(npoin), stat=ier); if( ier /= 0) stop 'error allocating array'
 
-  ibool_interfaces_asteroid(:,:) = 0
-  nibool_interfaces_asteroid(:) = 0
+  ibool_interfaces_ext_mesh(:,:) = 0
+  nibool_interfaces_ext_mesh(:) = 0
 
 ! loops over MPI interfaces
   do num_interface = 1, ninterface
-    npoin_interface_asteroid = 0
-    mask_ibool_asteroid(:) = .false.
+    npoin_interface_ext_mesh = 0
+    mask_ibool_ext_mesh(:) = .false.
 
     ! loops over number of elements on interface
     do ispec_interface = 1, my_nelmnts_neighbours(num_interface)
@@ -114,12 +114,12 @@
             iglob = ibool(ix,iy,iz,ispec)
 
             ! stores global index of point on interface
-            if(.not. mask_ibool_asteroid(iglob)) then
+            if(.not. mask_ibool_ext_mesh(iglob)) then
               ! masks point as being accounted for
-              mask_ibool_asteroid(iglob) = .true.
+              mask_ibool_ext_mesh(iglob) = .true.
               ! adds point to interface
-              npoin_interface_asteroid = npoin_interface_asteroid + 1
-              ibool_interfaces_asteroid(npoin_interface_asteroid,num_interface) = iglob
+              npoin_interface_ext_mesh = npoin_interface_ext_mesh + 1
+              ibool_interfaces_ext_mesh(npoin_interface_ext_mesh,num_interface) = iglob
             end if
           end do
         end do
@@ -128,11 +128,11 @@
     end do
 
     ! stores total number of (global) points on this MPI interface
-    nibool_interfaces_asteroid(num_interface) = npoin_interface_asteroid
+    nibool_interfaces_ext_mesh(num_interface) = npoin_interface_ext_mesh
 
   end do
 
-  deallocate( mask_ibool_asteroid )
+  deallocate( mask_ibool_ext_mesh )
 
 end subroutine prepare_assemble_MPI
 
