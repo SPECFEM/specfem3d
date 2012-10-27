@@ -190,7 +190,14 @@ module decompose_mesh
       !          then top (positive z-direction) of element
       !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
 
-      read(98,*) num_elmnt,(elmnts(inode,num_elmnt), inode=1,NGNOD)
+      read(98,*,iostat=ier) num_elmnt,(elmnts(inode,num_elmnt), inode=1,NGNOD)
+
+      if( ier /= 0 ) then
+        print *,'error while attempting to read ',NGNOD,'element data values from the mesh file'
+        if(NGNOD == 8) print *,'check if your mesh file is indeed composed of HEX8 elements'
+        if(NGNOD == 27) print *,'check if your mesh file is indeed composed of HEX27 elements'
+        stop 'error reading element data from the mesh file'
+      endif
 
       if((num_elmnt > nspec) .or. (num_elmnt < 1) )  stop "ERROR : Invalid mesh file."
 
