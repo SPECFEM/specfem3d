@@ -34,6 +34,6 @@ cp go_decomposer_pbs.bash OUTPUT_FILES/
 # USER CHANGE MESH DIRECTORY
 MESHDIR=examples/homogeneous_halfspace_HEX8/MESH/
 
-./bin/xdecompose_mesh_SCOTCH $numnodes $MESHDIR OUTPUT_FILES/DATABASES_MPI/
+./bin/xdecompose_mesh $numnodes $MESHDIR OUTPUT_FILES/DATABASES_MPI/
 
 echo "done "

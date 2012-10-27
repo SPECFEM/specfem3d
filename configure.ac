@@ -199,7 +199,7 @@ else
  # will only be compiled once (no recompilation) when calling make
  #
  builddir=`pwd`
- cd src/decompose_mesh_SCOTCH/${SCOTCH_DIR}/
+ cd src/decompose_mesh/${SCOTCH_DIR}/
 
  if test ! -f "src/scotch/Makefile.org"; then
 
@@ -449,12 +449,12 @@ AC_CONFIG_FILES([
 	src/meshfem3D/Makefile
 	src/meshfem3D/constants.h
 	src/meshfem3D/precision.h
-	src/decompose_mesh_SCOTCH/Makefile
+	src/decompose_mesh/Makefile
 	src/specfem3D/Makefile
 	src/generate_databases/Makefile
 	src/shared/constants.h
 	src/shared/precision.h
-	src/decompose_mesh_SCOTCH/scotch/src/Makefile.inc
+	src/decompose_mesh/scotch/src/Makefile.inc
 	src/check_mesh_quality_CUBIT_Abaqus/Makefile
 ])
 AC_OUTPUT

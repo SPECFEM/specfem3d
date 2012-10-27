@@ -55,7 +55,7 @@ CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 
 SCOTCH_LIBS = -L"@SCOTCH_LIBDIR@" -lscotch -lscotcherr
 ### DK DK added support for METIS as well
-#SCOTCH_LIBS = -L"@SCOTCH_LIBDIR@" -lscotch -lscotcherr -L./src/decompose_mesh_SCOTCH/metis-4.0.3 -L./metis-4.0.3 -lmetis
+#SCOTCH_LIBS = -L"@SCOTCH_LIBDIR@" -lscotch -lscotcherr -L./src/decompose_mesh/metis-4.0.3 -L./metis-4.0.3 -lmetis
 SCOTCH_INC = -I"@SCOTCH_INCLUDEDIR@"
 
 AR = ar
@@ -77,14 +77,14 @@ O = ../../obj/dec
 ####
 
 # default targets for the Pyrized version
-DEFAULT = xscotch xdecompose_mesh_SCOTCH
+DEFAULT = xscotch xdecompose_mesh
 
 
 default: $(DEFAULT)
 
 all: clean default
 
-decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
+decompose_mesh: xdecompose_mesh
 
 
 ####
@@ -92,17 +92,17 @@ decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
 ####
 
 DEC_OBJECTS = \
-	$O/part_decompose_mesh_SCOTCH.o \
-	$O/decompose_mesh_SCOTCH.o \
+	$O/part_decompose_mesh.o \
+	$O/decompose_mesh.o \
 	$O/get_value_parameters.shared.o \
 	$O/param_reader.cc.o \
 	$O/read_parameter_file.shared.o \
         $O/read_value_parameters.shared.o \
-        $O/program_decompose_mesh_SCOTCH.o
+        $O/program_decompose_mesh.o
 
 # rules for the pure Fortran version
-@COND_PYRE_FALSE@xdecompose_mesh_SCOTCH:: $(DEC_OBJECTS)
-@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh_SCOTCH $(DEC_OBJECTS) $(SCOTCH_INC)  $(SCOTCH_LIBS)
+@COND_PYRE_FALSE@xdecompose_mesh:: $(DEC_OBJECTS)
+@COND_PYRE_FALSE@	${FCLINK} -o  $E/xdecompose_mesh $(DEC_OBJECTS) $(SCOTCH_INC)  $(SCOTCH_LIBS)
 @COND_PYRE_FALSE@
 
 
@@ -116,7 +116,7 @@ endif
 
 
 clean:
-	rm -f $O/*.o *.mod  $E/xdecompose_mesh_SCOTCH
+	rm -f $O/*.o *.mod  $E/xdecompose_mesh
 ####
 #### rule to build each .o file below
 ####
@@ -127,13 +127,13 @@ $O/%.shared.o: $(SHARED)%.f90 $(SHARED)constants.h
 $O/%.cc.o: $(SHARED)%.c ../../config.h
 	${CC} -c $(CFLAGS) $(MPI_INC) -o $@ $(SHARED)$< -I../../
 
-$O/part_decompose_mesh_SCOTCH.o: part_decompose_mesh_SCOTCH.f90
-	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh_SCOTCH.o part_decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)
+$O/part_decompose_mesh.o: part_decompose_mesh.f90
+	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh.o part_decompose_mesh.f90 $(SCOTCH_INC)
 
-$O/decompose_mesh_SCOTCH.o: decompose_mesh_SCOTCH.f90 part_decompose_mesh_SCOTCH.f90 $O/part_decompose_mesh_SCOTCH.o
-	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh_SCOTCH.o decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)
+$O/decompose_mesh.o: decompose_mesh.f90 part_decompose_mesh.f90 $O/part_decompose_mesh.o
+	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh.o decompose_mesh.f90 $(SCOTCH_INC)
 
-$O/program_decompose_mesh_SCOTCH.o: program_decompose_mesh_SCOTCH.f90 $O/part_decompose_mesh_SCOTCH.o $O/decompose_mesh_SCOTCH.o
-	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh_SCOTCH.o program_decompose_mesh_SCOTCH.f90 $(SCOTCH_INC)
+$O/program_decompose_mesh.o: program_decompose_mesh.f90 $O/part_decompose_mesh.o $O/decompose_mesh.o
+	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh.o program_decompose_mesh.f90 $(SCOTCH_INC)
 
 

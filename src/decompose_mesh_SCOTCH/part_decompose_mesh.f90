@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-module part_decompose_mesh_SCOTCH
+module part_decompose_mesh
 
   implicit none
 
@@ -1663,5 +1663,5 @@ contains
 
  end subroutine moho_surface_repartitioning
 
-end module part_decompose_mesh_SCOTCH
+end module part_decompose_mesh
 
