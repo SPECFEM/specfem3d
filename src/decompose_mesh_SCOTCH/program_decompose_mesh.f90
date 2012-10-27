@@ -26,7 +26,7 @@
 
 program pre_meshfem3D
 
-  use decompose_mesh_SCOTCH,only: nparts,localpath_name, outputpath_name,&
+  use decompose_mesh,only: nparts,localpath_name, outputpath_name,&
                                   read_mesh_files, &
                                   check_valence, &
                                   scotch_partitioning, &
@@ -54,7 +54,7 @@ program pre_meshfem3D
   do i=1,3
     call getarg(i,arg(i))
     if (i <= 3 .and. trim(arg(i)) == "") then
-      print *, 'Usage: ./decompose_mesh_SCOTCH  nparts  input_directory output_directory'
+      print *, 'Usage: ./decompose_mesh  nparts  input_directory output_directory'
       print *
       print *, '  where'
       print *, '      nparts = number of partitons'

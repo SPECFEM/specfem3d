@@ -24,9 +24,9 @@
 !
 !=====================================================================
 
-module decompose_mesh_SCOTCH
+module decompose_mesh
 
-  use part_decompose_mesh_SCOTCH
+  use part_decompose_mesh
 
   implicit none
 
@@ -928,5 +928,5 @@ module decompose_mesh_SCOTCH
 
   end subroutine write_mesh_databases
 
-end module decompose_mesh_SCOTCH
+end module decompose_mesh
 

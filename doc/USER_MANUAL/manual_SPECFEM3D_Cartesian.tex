@@ -212,7 +212,7 @@ This new release of the code (version 2.1) includes support for GPU graphics car
 
 The next release of the code will include support Convolution or Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
-It will also use the PT-SCOTCH parallel library for mesh partitioning.\\
+It will also use the PT-SCOTCH parallel and threaded version of SCOTCH for mesh partitioning instead of the serial version.\\
 
 SPECFEM3D Cartesian includes coupled fluid-solid domains and
 adjoint capabilities, which enables one to address seismological inverse problems, but for linear rheologies only so far.
@@ -336,8 +336,10 @@ to the configure options of CFLAGS, FCFLAGS and LDFLAGS otherwise the compiler w
 message (for instance \texttt{``relocation truncated to fit: R\_X86\_64\_PC32 against .bss''} or something similar);
 on an IBM machine with the \texttt{xlf} and \texttt{xlc} compilers, using \texttt{-q64} is usually sufficient.\\
 
-The SPECFEM3D Cartesian software package relies on the SCOTCH library to partition meshes created with CUBIT.
 Note that we use CUBIT to create meshes of hexahedra, but other packages can be used as well, for instance GiD from \url{http://gid.cimne.upc.es} or Gmsh from \url{http://geuz.org/gmsh} \citep{GeRe09}. Even mesh creation packages that generate tetrahedra, for instance TetGen from \url{http://tetgen.berlios.de}, can be used because each tetrahedron can then easily be decomposed into four hexahedra as shown in the picture of the TetGen logo at \url{http://tetgen.berlios.de/figs/Delaunay-Voronoi-3D.gif}; while this approach does not generate hexahedra of optimal quality, it can ease mesh creation in some situations and it has been shown that the spectral-element method can very accurately handle distorted mesh elements \citep{OlSe11}.
+
+The SPECFEM3D Cartesian software package relies on the SCOTCH library to partition meshes created with CUBIT.
+METIS \citep{KaKu98a,KaKu98c,KaKu98b} can also be used instead of SCOTCH if you prefer, by editing file src/decompose\_mesh/decompose\_mesh.F90 and uncommenting the flag USE\_METIS\_INSTEAD\_OF\_SCOTCH. You will also then need to install and compile Metis version 4.0 (do *NOT* install Metis version 5.0, which has incompatible function calls) and edit \texttt{src/decompose\_mesh/Makefile.in} and uncomment the METIS link flag in that file before running \texttt{configure}.\\
 
 The SCOTCH library \citep{PeRo96}
 provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
@@ -662,7 +664,7 @@ that is, list all the element faces that constitute the surface of the model in 
 \item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom.
 \end{description}
 
-These mesh files are needed as input files for the partitioner  \texttt{xdecompose\_mesh\_SCOTCH}
+These mesh files are needed as input files for the partitioner  \texttt{xdecompose\_mesh}
 to load-balance the mesh. Please see the next section for further details.
 
 
@@ -701,7 +703,7 @@ are striving for meshes with elements with `cube-like' dimensions,
 e.g., the mesh should contain no very elongated or skewed elements.
 
 
-\subsection{Partitioning the Mesh with \texttt{xdecompose\_mesh\_SCOTCH}}
+\subsection{Partitioning the Mesh with \texttt{xdecompose\_mesh}}
 
 
 The SPECFEM3D Cartesian software package performs large scale simulations in a parallel 'Single Process Multiple Data' way.
@@ -710,7 +712,7 @@ the execution of the solver so it is referred to as a static mapping.
 
 An efficient partitioning is important because it leverages the overall running time of the application.
 It amounts to balance the number of elements in each slice while minimizing the communication costs
-resulting from the placement of adjacent elements on different processors. \texttt{decompose\_mesh\_SCOTCH} depends on the SCOTCH library \citep{PeRo96},
+resulting from the placement of adjacent elements on different processors. \texttt{decompose\_mesh} depends on the SCOTCH library \citep{PeRo96},
 which provides efficent static mapping, graph and mesh partitioning routines. SCOTCH is a free software package developed by
 Fran\c {c}ois Pellegrini et al. from LaBRI and INRIA in Bordeaux, France, downloadable from the web page \url{https://gforge.inria.fr/projects/scotch/}.
 \\
@@ -720,7 +722,7 @@ During the configuration process, the script tries to find existing SCOTCH insta
 In case your system has no pre-existing SCOTCH installation,
 we provide the source code of SCOTCH, which is released open source under the French CeCILL-C version 1 license,
 in directory
-\texttt{src/decompose\_mesh\_SCOTCH/scotch\_5.1.10b}.
+\texttt{src/decompose\_mesh/scotch\_5.1.12b}.
 This version gets bundled with the compilation of the SPECFEM3D Cartesian package if no libraries could have been found.
 If this automatic compilation of the SCOTCH libraries fails,
 please refer to file INSTALL.txt in that directory to see further details how to compile it on your system.
@@ -735,7 +737,7 @@ In the future you should be able to find more recent versions at  \url{http://ww
 \includegraphics[width=.45\textwidth]{figures/mount-partitions2.jpg}
 \par\end{centering}
 
-\caption{Example of a mesh partitioning onto four cores. Each single core partition is colored differently. The executable \texttt{xdecompose\_mesh\_SCOTCH} can equally distribute the mesh on any arbitrary number of cores.
+\caption{Example of a mesh partitioning onto four cores. Each single core partition is colored differently. The executable \texttt{xdecompose\_mesh} can equally distribute the mesh on any arbitrary number of cores.
 Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores in shown for instance in
 \cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11}.}
 
@@ -746,14 +748,14 @@ Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent 
 When you are ready to compile,
 in the main directory type
 \begin{lyxcode}
-{\small make xdecompose\_mesh\_SCOTCH}{\small \par}
+{\small make xdecompose\_mesh}{\small \par}
 \end{lyxcode}
-If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh\_SCOTCH} should be produced.
+If all paths and flags have been set correctly, the executable \texttt{bin/xdecompose\_mesh} should be produced.
 
 The partitioning is done in serial for now (in the next release we will provide a parallel version of that code),
 the synopsis is:
 \begin{lyxcode}
-./bin/xdecompose\_mesh\_SCOTCH  nparts  input\_directory output\_directory
+./bin/xdecompose\_mesh  nparts  input\_directory output\_directory
 \end{lyxcode}
 where
 \begin{itemize}
@@ -948,7 +950,7 @@ To control the quality of the mesh, check the standard output (either on the scr
 
 \chapter{\label{cha:Creating-Distributed-Databases}Creating the Distributed Databases}
 
-After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh\_SCOTCH}, the next step in the workflow is to compile
+After using \texttt{xmeshfem3D} or \texttt{xdecompose\_mesh}, the next step in the workflow is to compile
 \texttt{xgenerate\_}~\\
 \texttt{databases}. This program is going to create all the missing information needed by the SEM solver.
 
@@ -1115,7 +1117,7 @@ the executable finishes, you can log in to one of the compute nodes and view
 the contents of the \texttt{LOCAL\_PATH} directory to see the (many)
 files generated by \texttt{xgenerate\_databases}.
 Please note that the \texttt{LOCAL\_PATH} directory should already contain the output files of
-the partitioner, i.e. from \texttt{xdecompose\_mesh\_SCOTCH} or \texttt{xmeshfem3D}.
+the partitioner, i.e. from \texttt{xdecompose\_mesh} or \texttt{xmeshfem3D}.
 \item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}}] This parameter specifies
 the interval at which basic information about a run is written to
 the file system (\texttt{timestamp{*}} files in the \texttt{OUTPUT\_FILES}

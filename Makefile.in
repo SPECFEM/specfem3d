@@ -62,7 +62,7 @@ RANLIB = ranlib
 
 # default targets for the pure Fortran version
 @COND_PYRE_FALSE@DEFAULT = \
-@COND_PYRE_FALSE@	xdecompose_mesh_SCOTCH \
+@COND_PYRE_FALSE@	xdecompose_mesh \
 @COND_PYRE_FALSE@	meshfem3D \
 @COND_PYRE_FALSE@	generate_databases \
 @COND_PYRE_FALSE@	specfem3D \
@@ -91,12 +91,12 @@ bak: backup
 mesh : meshfem3D
 gen : generate_databases
 spec : specfem3D
-dec : decompose_mesh_SCOTCH
+dec : decompose_mesh
 
 generate_databases: xgenerate_databases
 specfem3D: xspecfem3D
 meshfem3D: xmeshfem3D
-decompose_mesh_SCOTCH: xdecompose_mesh_SCOTCH
+decompose_mesh: xdecompose_mesh
 convolve_source_timefunction: xconvolve_source_timefunction
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 combine_vol_data: xcombine_vol_data
@@ -139,8 +139,8 @@ xspecfem3D:  required reqspec
 xgenerate_databases:  required reqgen
 	     (cd src/generate_databases ; make generate_databases)
 
-xdecompose_mesh_SCOTCH:  required reqdec
-	     (cd src/decompose_mesh_SCOTCH ; make)
+xdecompose_mesh:  required reqdec
+	     (cd src/decompose_mesh ; make)
 
 xcreate_movie_shakemap_AVS_DX_GMT: required
 	(cd src/specfem3D ; make xcreate_movie_shakemap_AVS_DX_GMT)
@@ -179,7 +179,7 @@ help:
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
 	@echo "    xmeshfem3D"
-	@echo "    xdecompose_mesh_SCOTCH"
+	@echo "    xdecompose_mesh"
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo "    xcombine_vol_data"
