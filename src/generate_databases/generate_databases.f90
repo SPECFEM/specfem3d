@@ -304,7 +304,7 @@
     write(IMAIN,*)
 
 ! check that the constants.h file is correct
-    if ( NGNOD /= 8 .and. NGNOD /= 27 ) then 
+    if ( NGNOD /= 8 .and. NGNOD /= 27 ) then
        stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
     endif
 

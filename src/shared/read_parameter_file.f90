@@ -166,7 +166,7 @@
      NGNOD2D = 4
   else if ( NGNOD == 27 ) then
      NGNOD2D = 9
-  else if ( NGNOD /= 8 .and. NGNOD /= 27 ) then 
+  else if ( NGNOD /= 8 .and. NGNOD /= 27 ) then
      stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
   endif
 

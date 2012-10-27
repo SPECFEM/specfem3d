@@ -391,167 +391,167 @@ contains
   end subroutine build_interfaces
 
 
-  !--------------------------------------------------
-  ! build interfaces between partitions.
-  ! Two adjacent elements in distinct partitions make an entry in array tab_interfaces :
-  ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
-  ! 5/ second node, if relevant.
-
-  ! No interface between acoustic and elastic elements.
-
-  ! Elements with undefined material are considered as elastic elements.
-  !--------------------------------------------------
-   subroutine build_interfaces_no_ac_el_sep(nspec, &
-                              sup_neighbour, part, elmnts, xadj, adjncy, &
-                              tab_interfaces, tab_size_interfaces, ninterfaces, &
-                              nb_materials, cs_material, num_material,nparts,NGNOD)
-
-    integer, intent(in)  :: nb_materials,nparts
-    integer, intent(in)  :: nspec
-    integer, intent(in)  :: NGNOD
-    integer, intent(in) :: sup_neighbour
-    integer, dimension(0:nspec-1), intent(in)  :: part
-    integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
-    integer, dimension(0:nspec), intent(in)  :: xadj
-    integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
-    integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
-    integer, intent(out)  :: ninterfaces
-    integer, dimension(1:nspec), intent(in)  :: num_material
-    ! vs velocities
-    double precision, dimension(1:nb_materials), intent(in)  :: cs_material
-
-    ! local parameters
-    integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
-         num_node, num_node_bis
-    integer  :: i, j
-    logical  :: is_acoustic_el, is_acoustic_el_adj
-    integer :: ier
-
-    ! counts number of interfaces between partitions
-    ninterfaces = 0
-    do  i = 0, nparts-1
-       do j = i+1, nparts-1
-          ninterfaces = ninterfaces + 1
-       enddo
-    enddo
-
-    allocate(tab_size_interfaces(0:ninterfaces),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tab_size_interfaces'
-    tab_size_interfaces(:) = 0
-
-    num_interface = 0
-    num_edge = 0
-
-! determines acoustic/elastic elements based upon given vs velocities
-! and counts same elements for each interface
-    do num_part = 0, nparts-1
-       do num_part_bis = num_part+1, nparts-1
-          do el = 0, nspec-1
-             if ( part(el) == num_part ) then
-                ! determines whether element is acoustic or not
-                if(num_material(el+1) > 0) then
-                   if ( cs_material(num_material(el+1)) < TINYVAL) then
-                      is_acoustic_el = .true.
-                   else
-                      is_acoustic_el = .false.
-                   endif
-                else
-                   is_acoustic_el = .false.
-                endif
-                ! looks at all neighbor elements
-                do el_adj = xadj(el), xadj(el+1)-1
-                   ! determines whether neighbor element is acoustic or not
-                   if(num_material(adjncy(el_adj)+1) > 0) then
-                      if ( cs_material(num_material(adjncy(el_adj)+1)) < TINYVAL) then
-                         is_acoustic_el_adj = .true.
-                      else
-                         is_acoustic_el_adj = .false.
-                      endif
-                   else
-                      is_acoustic_el_adj = .false.
-                   endif
-                   ! adds element if neighbor element has same material acoustic/not-acoustic
-                   ! and lies in next partition
-                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
-                       (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
-                      num_edge = num_edge + 1
-                   endif
-                enddo
-             endif
-          enddo
-          ! stores number of elements at interface
-          tab_size_interfaces(num_interface+1) = tab_size_interfaces(num_interface) + num_edge
-          num_edge = 0
-          num_interface = num_interface + 1
-
-       enddo
-    enddo
-
-
-! stores element indices for elements from above search at each interface
-    num_interface = 0
-    num_edge = 0
-
-    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array tab_interfaces'
-    tab_interfaces(:) = 0
-
-    do num_part = 0, nparts-1
-       do num_part_bis = num_part+1, nparts-1
-          do el = 0, nspec-1
-             if ( part(el) == num_part ) then
-                if(num_material(el+1) > 0) then
-                   if ( cs_material(num_material(el+1)) < TINYVAL) then
-                      is_acoustic_el = .true.
-                   else
-                      is_acoustic_el = .false.
-                   endif
-                else
-                   is_acoustic_el = .false.
-                endif
-                do el_adj = xadj(el), xadj(el+1)-1
-                   if(num_material(adjncy(el_adj)+1) > 0) then
-                      if ( cs_material(num_material(adjncy(el_adj)+1)) < TINYVAL) then
-                         is_acoustic_el_adj = .true.
-                      else
-                         is_acoustic_el_adj = .false.
-                      endif
-                   else
-                      is_acoustic_el_adj = .false.
-                   endif
-                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
-                       (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
-                      tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
-                      tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
-                      ncommon_nodes = 0
-                      do num_node = 0, NGNOD_EIGHT_CORNERS-1
-                         do num_node_bis = 0, NGNOD_EIGHT_CORNERS-1
-                            if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
-                               tab_interfaces(tab_size_interfaces(num_interface)*7 &
-                                             +num_edge*7+3+ncommon_nodes) &
-                                    = elmnts(el*NGNOD+num_node)
-                               ncommon_nodes = ncommon_nodes + 1
-                            endif
-                         enddo
-                      enddo
-                      if ( ncommon_nodes > 0 ) then
-                         tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+2) = ncommon_nodes
-                      else
-                         print *, "Error while building interfaces!", ncommon_nodes
-                      endif
-                      num_edge = num_edge + 1
-                   endif
-                enddo
-             endif
-
-          enddo
-          num_edge = 0
-          num_interface = num_interface + 1
-       enddo
-    enddo
-
-  end subroutine build_interfaces_no_ac_el_sep
-
+!! DK DK Oct 2012: obsolete routine, now unused
+!
+!  !--------------------------------------------------
+!  ! build interfaces between partitions.
+!  ! Two adjacent elements in distinct partitions make an entry in array tab_interfaces :
+!  ! 1/ first element, 2/ second element, 3/ number of common nodes, 4/ first node,
+!  ! 5/ second node, if relevant.
+!
+!  ! No interface between acoustic and elastic elements.
+!
+!  ! Elements with undefined material are considered as elastic elements.
+!  !--------------------------------------------------
+!   subroutine build_interfaces_no_ac_el_sep(nspec, &
+!                              sup_neighbour, part, elmnts, xadj, adjncy, &
+!                              tab_interfaces, tab_size_interfaces, ninterfaces, &
+!                              nb_materials, cs_material, num_material,nparts)
+!
+!    integer, intent(in)  :: nb_materials,nparts
+!    integer, intent(in)  :: nspec
+!    integer, intent(in) :: sup_neighbour
+!    integer, dimension(0:nspec-1), intent(in)  :: part
+!    integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
+!    integer, dimension(0:nspec), intent(in)  :: xadj
+!    integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
+!    integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
+!    integer, intent(out)  :: ninterfaces
+!    integer, dimension(1:nspec), intent(in)  :: num_material
+!    ! vs velocities
+!    double precision, dimension(1:nb_materials), intent(in)  :: cs_material
+!
+!    ! local parameters
+!    integer  :: num_part, num_part_bis, el, el_adj, num_interface, num_edge, ncommon_nodes, &
+!         num_node, num_node_bis
+!    integer  :: i, j
+!    logical  :: is_acoustic_el, is_acoustic_el_adj
+!    integer :: ier
+!
+!    ! counts number of interfaces between partitions
+!    ninterfaces = 0
+!    do  i = 0, nparts-1
+!       do j = i+1, nparts-1
+!          ninterfaces = ninterfaces + 1
+!       enddo
+!    enddo
+!
+!    allocate(tab_size_interfaces(0:ninterfaces),stat=ier)
+!    if( ier /= 0 ) stop 'error allocating array tab_size_interfaces'
+!    tab_size_interfaces(:) = 0
+!
+!    num_interface = 0
+!    num_edge = 0
+!
+!! determines acoustic/elastic elements based upon given vs velocities
+!! and counts same elements for each interface
+!    do num_part = 0, nparts-1
+!       do num_part_bis = num_part+1, nparts-1
+!          do el = 0, nspec-1
+!             if ( part(el) == num_part ) then
+!                ! determines whether element is acoustic or not
+!                if(num_material(el+1) > 0) then
+!                   if ( cs_material(num_material(el+1)) < TINYVAL) then
+!                      is_acoustic_el = .true.
+!                   else
+!                      is_acoustic_el = .false.
+!                   endif
+!                else
+!                   is_acoustic_el = .false.
+!                endif
+!                ! looks at all neighbor elements
+!                do el_adj = xadj(el), xadj(el+1)-1
+!                   ! determines whether neighbor element is acoustic or not
+!                   if(num_material(adjncy(el_adj)+1) > 0) then
+!                      if ( cs_material(num_material(adjncy(el_adj)+1)) < TINYVAL) then
+!                         is_acoustic_el_adj = .true.
+!                      else
+!                         is_acoustic_el_adj = .false.
+!                      endif
+!                   else
+!                      is_acoustic_el_adj = .false.
+!                   endif
+!                   ! adds element if neighbor element has same material acoustic/not-acoustic
+!                   ! and lies in next partition
+!                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
+!                       (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
+!                      num_edge = num_edge + 1
+!                   endif
+!                enddo
+!             endif
+!          enddo
+!          ! stores number of elements at interface
+!          tab_size_interfaces(num_interface+1) = tab_size_interfaces(num_interface) + num_edge
+!          num_edge = 0
+!          num_interface = num_interface + 1
+!
+!       enddo
+!    enddo
+!
+!
+!! stores element indices for elements from above search at each interface
+!    num_interface = 0
+!    num_edge = 0
+!
+!    allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)),stat=ier)
+!    if( ier /= 0 ) stop 'error allocating array tab_interfaces'
+!    tab_interfaces(:) = 0
+!
+!    do num_part = 0, nparts-1
+!       do num_part_bis = num_part+1, nparts-1
+!          do el = 0, nspec-1
+!             if ( part(el) == num_part ) then
+!                if(num_material(el+1) > 0) then
+!                   if ( cs_material(num_material(el+1)) < TINYVAL) then
+!                      is_acoustic_el = .true.
+!                   else
+!                      is_acoustic_el = .false.
+!                   endif
+!                else
+!                   is_acoustic_el = .false.
+!                endif
+!                do el_adj = xadj(el), xadj(el+1)-1
+!                   if(num_material(adjncy(el_adj)+1) > 0) then
+!                      if ( cs_material(num_material(adjncy(el_adj)+1)) < TINYVAL) then
+!                         is_acoustic_el_adj = .true.
+!                      else
+!                         is_acoustic_el_adj = .false.
+!                      endif
+!                   else
+!                      is_acoustic_el_adj = .false.
+!                   endif
+!                   if ( (part(adjncy(el_adj)) == num_part_bis) .and. &
+!                       (is_acoustic_el .eqv. is_acoustic_el_adj) ) then
+!                      tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+0) = el
+!                      tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+1) = adjncy(el_adj)
+!                      ncommon_nodes = 0
+!                      do num_node = 0, NGNOD_EIGHT_CORNERS-1
+!                         do num_node_bis = 0, NGNOD_EIGHT_CORNERS-1
+!                            if ( elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis) ) then
+!                               tab_interfaces(tab_size_interfaces(num_interface)*7 &
+!                                             +num_edge*7+3+ncommon_nodes) &
+!                                    = elmnts(el*NGNOD+num_node)
+!                               ncommon_nodes = ncommon_nodes + 1
+!                            endif
+!                         enddo
+!                      enddo
+!                      if ( ncommon_nodes > 0 ) then
+!                         tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+2) = ncommon_nodes
+!                      else
+!                         print *, "Error while building interfaces!", ncommon_nodes
+!                      endif
+!                      num_edge = num_edge + 1
+!                   endif
+!                enddo
+!             endif
+!
+!          enddo
+!          num_edge = 0
+!          num_interface = num_interface + 1
+!       enddo
+!    enddo
+!
+!  end subroutine build_interfaces_no_ac_el_sep
 
 
   !--------------------------------------------------

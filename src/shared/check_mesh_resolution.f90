@@ -275,13 +275,17 @@
     write(IMAIN,*) 'minimum and maximum number of elements'
     write(IMAIN,*) 'and points in the CUBIT + SCOTCH mesh:'
     write(IMAIN,*)
-    write(IMAIN,*) 'NSPEC_AB_global_min = ',NSPEC_AB_global_min
-    write(IMAIN,*) 'NSPEC_AB_global_max = ',NSPEC_AB_global_max
-    write(IMAIN,*) 'NSPEC_AB_global_sum = ',NSPEC_AB_global_sum
+    write(IMAIN,*) 'NSPEC_global_min = ',NSPEC_AB_global_min
+    write(IMAIN,*) 'NSPEC_global_max = ',NSPEC_AB_global_max
+    write(IMAIN,*) 'NSPEC_global_max / NSPEC_global_min imbalance = ',sngl(dble(NSPEC_AB_global_max) / dble(NSPEC_AB_global_min)),&
+                      ' = ',sngl((dble(NSPEC_AB_global_max) / dble(NSPEC_AB_global_min) - 1.d0) * 100.d0),' %'
+    write(IMAIN,*) 'NSPEC_global_sum = ',NSPEC_AB_global_sum
     write(IMAIN,*)
-    write(IMAIN,*) 'NGLOB_AB_global_min = ',NGLOB_AB_global_min
-    write(IMAIN,*) 'NGLOB_AB_global_max = ',NGLOB_AB_global_max
-    write(IMAIN,*) 'NGLOB_AB_global_sum = ',NGLOB_AB_global_sum
+    write(IMAIN,*) 'NGLOB_global_min = ',NGLOB_AB_global_min
+    write(IMAIN,*) 'NGLOB_global_max = ',NGLOB_AB_global_max
+    write(IMAIN,*) 'NGLOB_global_max / NGLOB_global_min imbalance = ',sngl(dble(NGLOB_AB_global_max) / dble(NGLOB_AB_global_min)),&
+                      ' = ',sngl((dble(NGLOB_AB_global_max) / dble(NGLOB_AB_global_min) - 1.d0) * 100.d0),' %'
+    write(IMAIN,*) 'NGLOB_global_sum = ',NGLOB_AB_global_sum
     write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'Model: P velocity min,max = ',vpmin_glob,vpmax_glob
