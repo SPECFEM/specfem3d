@@ -33,7 +33,7 @@ module decompose_mesh_SCOTCH
   include 'scotchf.h'
 
 ! number of partitions
-  integer :: nparts ! e.g. 4 for partitioning for 4 CPUs or 4 processes
+  integer :: nparts
 
 ! mesh arrays
   integer :: nspec
@@ -90,7 +90,7 @@ module decompose_mesh_SCOTCH
 
   double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
-  character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
+!!!!!! character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
   integer  :: ier,idummy
 
   !pll
@@ -736,12 +736,12 @@ module decompose_mesh_SCOTCH
 
     call scotchfstratinit (scotchstrat(1), ier)
      if (ier /= 0) then
-       stop 'ERROR : MAIN : Cannot initialize strat'
+       stop 'ERROR : MAIN : Cannot initialize strategy'
     endif
 
     !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ier)
     ! if (ier /= 0) then
-    !   stop 'ERROR : MAIN : Cannot build strat'
+    !   stop 'ERROR : MAIN : Cannot build strategy'
     !endif
 
     call scotchfgraphinit (scotchgraph (1), ier)
@@ -760,14 +760,6 @@ module decompose_mesh_SCOTCH
                           elmnts_load (1), xadj (1), &
                           nb_edges, adjncy (1), &
                           adjncy (1), ier)
-
-    ! w/out element load, but adjacency array
-    !call scotchfgraphbuild (scotchgraph (1), 0, nspec, &
-    !                      xadj (1), xadj (1), &
-    !                      xadj (1), xadj (1), &
-    !                      nb_edges, adjncy (1), &
-    !                      adjncy (1), ier)
-
 
     if (ier /= 0) then
        stop 'ERROR : MAIN : Cannot build graph'
@@ -790,7 +782,7 @@ module decompose_mesh_SCOTCH
 
     call scotchfstratexit (scotchstrat(1), ier)
     if (ier /= 0) then
-       stop 'ERROR : MAIN : Cannot destroy strat'
+       stop 'ERROR : MAIN : Cannot destroy strategy'
     endif
 
     ! re-partitioning puts poroelastic-elastic coupled elements into same partition
@@ -819,15 +811,15 @@ module decompose_mesh_SCOTCH
     ! mpi interfaces
     ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
     call build_interfaces(nspec, sup_neighbour, part, elmnts, &
-                         xadj, adjncy, tab_interfaces, &
-                         tab_size_interfaces, ninterfaces, &
-                         nparts, NGNOD)
+                             xadj, adjncy, tab_interfaces, &
+                             tab_size_interfaces, ninterfaces, &
+                             nparts, NGNOD)
 
-    !or: uncomment if you want acoustic/elastic boundaries NOT to be separated into different MPI partitions
-    !call build_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
-    !                          xadj, adjncy, tab_interfaces, &
-    !                          tab_size_interfaces, ninterfaces, &
-    !                          count_def_mat, mat_prop(3,:), mat(1,:), nparts, NGNOD)
+    ! obsolete: from when we wanted acoustic/elastic boundaries NOT to be separated into different MPI partitions
+    ! call build_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
+    !                           xadj, adjncy, tab_interfaces, &
+    !                           tab_size_interfaces, ninterfaces, &
+    !                           count_def_mat, mat_prop(3,:), mat(1,:), nparts, NGNOD)
 
   end subroutine scotch_partitioning
 
@@ -922,7 +914,7 @@ module decompose_mesh_SCOTCH
        call write_moho_surface_database(IIN_database, ipart, nspec, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, &
-                                  nspec2D_moho, ibelm_moho,nodes_ibelm_moho, NGNOD2D)
+                                  nspec2D_moho, ibelm_moho, nodes_ibelm_moho, NGNOD2D)
 
        close(IIN_database)
 

@@ -33,7 +33,7 @@
                     my_neighbours_ext_mesh)
 
 ! sets up the MPI interface for communication between partitions
-  use generate_databases_par, only: NPROC,NGNOD 
+  use generate_databases_par, only: NPROC,NGNOD
   use create_regions_mesh_ext_par
 
   implicit none

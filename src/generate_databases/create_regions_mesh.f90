@@ -423,7 +423,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,&
                         elmnts_ext_mesh,nelmnts_ext_mesh)
 
-  use generate_databases_par, only: NGNOD,NGNOD2D 
+  use generate_databases_par, only: NGNOD,NGNOD2D
   use create_regions_mesh_ext_par
   implicit none
 
