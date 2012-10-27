@@ -706,7 +706,7 @@ module decompose_mesh
     elmnts_load(:) = ACOUSTIC_LOAD
     ! then in case of acoustic/elastic/poro simulation, assign different weights to elements accordingly
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                                  num_material,mat_prop,undef_mat_prop)
+                                  num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
 
     ! SCOTCH partitioning

@@ -36,14 +36,14 @@ module part_decompose_mesh
 ! number of faces per element.
   integer, parameter  :: nfaces = 6
 
-! acoustic-elastic-poroelastic load balancing:
-! assumes that elastic at least ~4 times more expensive than acoustic
-! assumes that poroelastic at least ~8 times more expensive than acoustic
+! acoustic-elastic-poroelastic as well as CPML load balancing:
+! we define here the relative cost of all types of spectral elements used in the code.
 !! DK DK since loads can only be integer numbers in domain decomposition packages
 !! DK DK for internal reasons (integer arithmetic produces no roundoff), to take
 !! DK DK into account decimal values here we multiply all values by 10, since only ratios between loads matter
   integer, parameter :: ACOUSTIC_LOAD = 10     ! is in reality 1.0
   integer, parameter :: ELASTIC_LOAD = 41      ! is in reality 4.1
+  integer, parameter :: VISCOELASTIC_LOAD = 59 ! is in reality 5.9
   integer, parameter :: POROELASTIC_LOAD = 81  ! is in reality 8.1
 
 contains
@@ -1282,7 +1282,7 @@ contains
   !--------------------------------------------------
 
   subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                                    num_material,mat_prop,undef_mat_prop)
+                                    num_material,mat_prop,undef_mat_prop,ATTENUATION)
   !
   ! note:
   !   acoustic material = domainID 1  (stored in mat_prop(6,..) )
@@ -1291,8 +1291,10 @@ contains
   !
     implicit none
 
-    integer,intent(in) :: nspec
+    integer, intent(in) :: nspec
     integer, intent(in)  :: count_def_mat,count_undef_mat
+
+    logical, intent(in) :: ATTENUATION
 
     ! load weights
     integer,dimension(1:nspec),intent(out) :: elmnts_load
@@ -1349,12 +1351,22 @@ contains
       if( num_material(el+1) > 0 ) then
         if (is_acoustic(num_material(el+1))) elmnts_load(el+1) = ACOUSTIC_LOAD
         ! elastic element (expensive)
-        if (is_elastic(num_material(el+1))) elmnts_load(el+1) = ELASTIC_LOAD
+        if (is_elastic(num_material(el+1))) then
+          if(ATTENUATION) then
+            elmnts_load(el+1) = VISCOELASTIC_LOAD
+          else
+            elmnts_load(el+1) = ELASTIC_LOAD
+          endif
+        endif
         ! poroelastic element (very expensive)
         if (is_poroelastic(num_material(el+1))) elmnts_load(el+1) = POROELASTIC_LOAD
       else
         ! tomographic materials count as elastic
-        elmnts_load(el+1) = ELASTIC_LOAD
+        if(ATTENUATION) then
+          elmnts_load(el+1) = VISCOELASTIC_LOAD
+        else
+          elmnts_load(el+1) = ELASTIC_LOAD
+        endif
       endif
     enddo
 
@@ -1362,7 +1374,7 @@ contains
 
 
   !--------------------------------------------------
-  ! Repartitioning : two coupled poroelastic/elastic elements are transfered to the same partition
+  ! Repartitioning : two coupled poroelastic/elastic elements are transferred to the same partition
   !--------------------------------------------------
 
   subroutine poro_elastic_repartitioning (nspec, nnodes, elmnts, &
@@ -1493,7 +1505,7 @@ contains
   end subroutine poro_elastic_repartitioning
 
   !--------------------------------------------------
-  ! Repartitioning : two coupled moho surface elements are transfered to the same partition
+  ! Repartitioning : two coupled moho surface elements are transferred to the same partition
   !--------------------------------------------------
 
   subroutine moho_surface_repartitioning (nspec, nnodes, elmnts, &
