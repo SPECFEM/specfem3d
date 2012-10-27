@@ -54,7 +54,7 @@ CPPFLAGS = @CPPFLAGS@ $(COND_MPI_CPPFLAGS)
 @COND_MPI_FALSE@COND_MPI_CPPFLAGS =
 
 SCOTCH_LIBS = -L"@SCOTCH_LIBDIR@" -lscotch -lscotcherr
-### DK DK added support for METIS as well
+### added support for METIS as well, thus uncomment the line below and compile METIS if you want to use it instead of SCOTCH
 #SCOTCH_LIBS = -L"@SCOTCH_LIBDIR@" -lscotch -lscotcherr -L./src/decompose_mesh/metis-4.0.3 -L./metis-4.0.3 -lmetis
 SCOTCH_INC = -I"@SCOTCH_INCLUDEDIR@"
 

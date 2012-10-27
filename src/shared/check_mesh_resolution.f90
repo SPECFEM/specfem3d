@@ -287,6 +287,11 @@
                       ' = ',sngl((dble(NGLOB_AB_global_max) / dble(NGLOB_AB_global_min) - 1.d0) * 100.d0),' %'
     write(IMAIN,*) 'NGLOB_global_sum = ',NGLOB_AB_global_sum
     write(IMAIN,*)
+    write(IMAIN,*) 'If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)'
+    write(IMAIN,*) 'in the whole mesh, then there should be no significant imbalance in the above numbers.'
+    write(IMAIN,*) 'Otherwise, it is normal to have imbalance in elements and points because the domain decomposer'
+    write(IMAIN,*) 'compensates for the different cost of different elements by partitioning them unevenly among processes.'
+    write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'Model: P velocity min,max = ',vpmin_glob,vpmax_glob
     write(IMAIN,*) 'Model: S velocity min,max = ',vsmin_glob,vsmax_glob
