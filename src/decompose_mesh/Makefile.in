@@ -130,8 +130,8 @@ $O/%.cc.o: $(SHARED)%.c ../../config.h
 $O/part_decompose_mesh.o: part_decompose_mesh.f90
 	${FCCOMPILE_CHECK} -c -o $O/part_decompose_mesh.o part_decompose_mesh.f90 $(SCOTCH_INC)
 
-$O/decompose_mesh.o: decompose_mesh.f90 part_decompose_mesh.f90 $O/part_decompose_mesh.o
-	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh.o decompose_mesh.f90 $(SCOTCH_INC)
+$O/decompose_mesh.o: decompose_mesh.F90 part_decompose_mesh.f90 $O/part_decompose_mesh.o
+	${FCCOMPILE_CHECK} -c -o $O/decompose_mesh.o decompose_mesh.F90 $(SCOTCH_INC)
 
 $O/program_decompose_mesh.o: program_decompose_mesh.f90 $O/part_decompose_mesh.o $O/decompose_mesh.o
 	${FCCOMPILE_CHECK} -c -o $O/program_decompose_mesh.o program_decompose_mesh.f90 $(SCOTCH_INC)
