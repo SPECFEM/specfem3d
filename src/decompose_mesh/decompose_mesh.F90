@@ -43,6 +43,11 @@ module decompose_mesh
 
   include 'scotchf.h'
 
+!! DK DK added this because poroelastic repartitioning routine of Christina Morency is currently broken
+! implement mesh repartitioning of poroelastic-elastic interface
+! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
+  logical, parameter :: PORO_INTERFACE_REPARTITIONING = .false.
+
 ! number of partitions
   integer :: nparts
 
@@ -849,17 +854,22 @@ module decompose_mesh
     !  integer  :: nfaces_coupled
     !  integer, dimension(:,:), pointer  :: faces_coupled
     ! TODO: supposed to rebalance, but currently broken
-    call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
-                     count_def_mat, num_material , mat_prop, &
-                     sup_neighbour, nsize, &
-                     nparts, part, NGNOD)
+!! DK DK added this because poroelastic repartitioning routine of Christina Morency is currently broken
+! implement mesh repartitioning of poroelastic-elastic interface
+! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
+    if(PORO_INTERFACE_REPARTITIONING) &
+      call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
+                       count_def_mat, num_material , mat_prop, &
+                       sup_neighbour, nsize, &
+                       nparts, part, NGNOD)
 
     deallocate(num_material)
 
     ! re-partitioning puts moho-surface coupled elements into same partition
-    call moho_surface_repartitioning (nspec, nnodes, elmnts, &
-                     sup_neighbour, nsize, nparts, part, &
-                     nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
+! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
+    if(SAVE_MOHO_MESH) call moho_surface_repartitioning (nspec, nnodes, elmnts, &
+                                        sup_neighbour, nsize, nparts, part, &
+                                        nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
