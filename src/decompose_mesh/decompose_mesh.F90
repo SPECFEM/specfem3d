@@ -24,6 +24,17 @@
 !
 !=====================================================================
 
+!! DK DK Oct 2012: this can significantly reduce the time it takes to decompose the mesh in the case of very large meshes,
+!! DK DK Oct 2012: and in principle it is safe to do that; however it is not fully tested yet
+!! DK DK Oct 2012: and thus I comment it out for now
+!!!! #define USE_TWO_CALLS_TO_mesh2dual
+
+!! DK DK added support for METIS as well, in addition to SCOTCH
+!! DK DK thus uncomment the define statement below if you want to use METIS instead of SCOTCH
+!! DK DK and then also add the path to the METIS library files in Makefile.in in this directory
+!! DK DK before running the "configure" script
+!!!! #define USE_METIS_INSTEAD_OF_SCOTCH
+
 module decompose_mesh
 
   use part_decompose_mesh
@@ -68,7 +79,7 @@ module decompose_mesh
   integer  :: max_neighbour   ! real maximum number of neighbours per element
   integer  :: sup_neighbour   ! majoration (overestimate) of the maximum number of neighbours per element
 
-  integer  :: ipart, nnodes_loc, nspec_local
+  integer  :: ipart, nnodes_loc, nspec_local,ncommonnodes
   integer  :: num_elmnt, num_node, num_mat
 
   ! boundaries
@@ -88,9 +99,15 @@ module decompose_mesh
   logical, dimension(:), allocatable :: mask_nodes_elmnts
   integer, dimension(:), allocatable :: used_nodes_elmnts
 
+#ifdef USE_METIS_INSTEAD_OF_SCOTCH
+  integer :: edgecut,wgtflag,numflag
+  integer, dimension(0:4) :: dummy_options
+  integer, dimension(1) :: dummy_array
+#else
   double precision, dimension(SCOTCH_GRAPHDIM)  :: scotchgraph
   double precision, dimension(SCOTCH_STRATDIM)  :: scotchstrat
 !!!!!! character(len=256), parameter :: scotch_strategy='b{job=t,map=t,poli=S,sep=h{pass=30}}'
+#endif
   integer  :: ier,idummy
 
   !pll
@@ -680,11 +697,28 @@ module decompose_mesh
     allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_elmnts'
 
-    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
-         nodes_elmnts, max_neighbour, 1, NGNOD)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+#ifdef USE_TWO_CALLS_TO_mesh2dual
+    ncommonnodes = NGNOD2D_FOUR_CORNERS
+#else
+    ncommonnodes = 1
+#endif
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
+         nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
+
+#ifdef USE_TWO_CALLS_TO_mesh2dual
+    print*, 'mesh2dual first call:'
+#else
     print*, 'mesh2dual:'
+#endif
     print*, '  max_neighbour = ',max_neighbour
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !! DK DK Oct 2012: added this safety test
     if(max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
@@ -715,10 +749,27 @@ module decompose_mesh
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                   num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
+#ifdef USE_METIS_INSTEAD_OF_SCOTCH
+
+    ! METIS partitioning
+
+    edgecut = 0
+    dummy_options(0:4) = 0
+    wgtflag = 2
+    numflag = 0
+!! DK DK Metis4.0 syntax
+!! DK DK we should find a way of testing the return code of this function in Fortran
+    call METIS_PartGraphKway(nspec, xadj, adjncy, elmnts_load, dummy_array, wgtflag, numflag, nparts, &
+                                  dummy_options, edgecut, part)
+    print *
+    print *,'total edgecut created by METIS = ',edgecut
+    print *
+
+#else
 
     ! SCOTCH partitioning
 
-    ! we use default strategy for partitioning, thus omit specifing explicit strategy .
+    ! we use default strategy for partitioning, thus omit specifing explicit strategy.
 
     ! workflow preferred by F. Pellegrini (SCOTCH):
     !!This comes from the fact that, in version 5.1.8, the name
@@ -735,8 +786,8 @@ module decompose_mesh
     !!(consequently, no call to SCOTCHFstratGraphMap () is
     !!required).
     !!
-    !!This will make you independent from further changes (most
-    !!probably improvements !;-)   ) in the strategy syntax.
+    !!This will make you independent from further changes
+    !!(improvements) in the strategy syntax.
     !!And you should see an improvement in performance, too,
     !!as your hand-made strategy did not make use of the
     !!multi-level framework.
@@ -792,6 +843,8 @@ module decompose_mesh
        stop 'ERROR : MAIN : Cannot destroy strategy'
     endif
 
+#endif
+
     ! re-partitioning puts poroelastic-elastic coupled elements into same partition
     !  integer  :: nfaces_coupled
     !  integer, dimension(:,:), pointer  :: faces_coupled
@@ -807,6 +860,30 @@ module decompose_mesh
     call moho_surface_repartitioning (nspec, nnodes, elmnts, &
                      sup_neighbour, nsize, nparts, part, &
                      nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+#ifdef USE_TWO_CALLS_TO_mesh2dual
+
+    ncommonnodes = 1
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
+         nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
+
+    print*, 'mesh2dual second call:'
+    print*, '  max_neighbour = ',max_neighbour
+
+!! DK DK Oct 2012: added this safety test
+    if(max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
+
+    nb_edges = xadj(nspec+1)
+
+#endif
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!! DK DK added this in Oct 2012 to see if we first do 4 and then 1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ! local number of each element for each partition
     call build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
