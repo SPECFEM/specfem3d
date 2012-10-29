@@ -34,8 +34,8 @@
 
 # default cuda libraries
 # runtime library -lcudart needed, others are optional -lcuda -lcublas
-@COND_CUDA_TRUE@CUDA_LIBS = -lcudart
-@COND_CUDA_FALSE@CUDA_LIBS =
+@COND_CUDA_TRUE@CUDA_LIBS = -lcudart   
+@COND_CUDA_FALSE@CUDA_LIBS = 
 
 CUDA_LIB_LOCATION = @CUDA_LIB@
 CUDA_LINK = $(CUDA_LIB_LOCATION) $(CUDA_LIBS)
@@ -45,15 +45,22 @@ MPI_INC = @MPI_INC@
 @COND_CUDA_TRUE@NVCC = nvcc
 @COND_CUDA_FALSE@NVCC = @CC@
 
-@COND_CUDA_TRUE@NVCC_FLAGS = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -dc -DCUDA -gencode=arch=compute_35,code=sm_35
-@COND_CUDA_TRUE@NVCCLINK = $(NVCC) -dlink $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -DCUDA -gencode=arch=compute_35,code=sm_35
+
+@COND_CUDA_TRUE@NVCC_FLAGS_BASE = $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) 
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -dc -DCUDA -gencode=arch=compute_35,code=sm_35 
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCC_FLAGS = $(NVCC_FLAGS_BASE) -DCUDA -DUSE_OLDER_CUDA4_GPU -gencode=arch=compute_20,code=sm_20 
+
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK_BASE = $(NVCC) $(CUDA_INC) $(MPI_INC) $(COND_MPI_CPPFLAGS) -DCUDA
+@COND_CUDA_TRUE@@COND_CUDA5_TRUE@NVCCLINK = $(NVCCLINK_BASE) -dlink -gencode=arch=compute_35,code=sm_35
+@COND_CUDA_TRUE@@COND_CUDA5_FALSE@NVCCLINK = $(NVCCLINK_BASE) -DUSE_OLDER_CUDA4_GPU -gencode=arch=compute_20,code=sm_20
+
 @COND_CUDA_FALSE@NVCC_FLAGS = $(MPI_INC) $(COND_MPI_CPPFLAGS)
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
 # OpenMP
-# with configure: ./configure --with-openmp FLAGS_NO_CHECK="-openmp .." OPENMP_LIB=..
+# with configure: ./configure --with-openmp FLAGS_NO_CHECK="-openmp .." OPENMP_LIB=.. 
 @COND_OPENMP_TRUE@OPENMP_LIBS = $(OPENMP_LIB)
-@COND_OPENMP_FALSE@OPENMP_LIBS =
+@COND_OPENMP_FALSE@OPENMP_LIBS = 
 @COND_OPENMP_TRUE@COND_OPENMP_FFLAGS = -DOPENMP_MODE
 @COND_OPENMP_FALSE@COND_OPENMP_FFLAGS =
 
@@ -77,7 +84,7 @@ O = ../../obj/spec
 # L : libraries directory
 L = ../../lib
 # Output files directory
-OUTPUT=../../OUTPUT_FILES
+OUTPUT=../../in_out_files/OUTPUT_FILES
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
 FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
@@ -289,8 +296,9 @@ specfem3D: xspecfem3D
 # rules for the pure Fortran version
 @COND_PYRE_FALSE@# solver also depends on values from mesher
 @COND_PYRE_FALSE@xspecfem3D: $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(COND_OPENMP_OBJECTS)
-@COND_PYRE_FALSE@@COND_CUDA_TRUE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
-@COND_PYRE_FALSE@@COND_CUDA_TRUE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(CUDA_DEVICE_OBJ) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${NVCCLINK} -o $(CUDA_DEVICE_OBJ) $(CUDA_OBJECTS)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_TRUE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(CUDA_DEVICE_OBJ) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
+@COND_PYRE_FALSE@@COND_CUDA_TRUE@@COND_CUDA5_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
 @COND_PYRE_FALSE@@COND_CUDA_FALSE@	${FCLINK} -o ${E}/xspecfem3D $(XSPECFEM_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(COND_OPENMP_OBJECTS) $(OPENMP_LIBS) $(CUDA_LINK)
 @COND_PYRE_FALSE@
 
@@ -318,7 +326,7 @@ xsmooth_vol_data: $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_v
 	${FCLINK} -o  ${E}/xsmooth_vol_data  $O/smooth_vol_data.o $O/read_parameter_file.shared.o $O/read_value_parameters.shared.o $O/get_value_parameters.shared.o $O/param_reader.cc.o $O/gll_library.shared.o $O/exit_mpi.shared.o $(COND_MPI_OBJECTS) $(MPILIBS)
 
 xsum_kernels: $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS)
+	${FCLINK} -o  ${E}/xsum_kernels  $(SUM_KERNELS_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) 
 
 xmodel_update: $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(CUDA_STUBS)
 	${FCLINK} -o  ${E}/xmodel_update  $(MODEL_UPD_OBJECTS) $(COND_MPI_OBJECTS) $(MPILIBS) $(CUDA_STUBS)
@@ -395,7 +403,7 @@ $O/parallel.o: $(SHARED)constants.h $(SHARED)parallel.f90
 
 $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
-
+  
 $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
 	${MPIFCCOMPILE_NO_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 

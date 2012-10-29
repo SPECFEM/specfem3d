@@ -50,7 +50,9 @@ AC_ARG_WITH([cuda],
         [build CUDA GPU enabled version @<:@default=no@:>@])],
     [want_cuda="$withval"],
     [want_cuda=no])
-AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" = yes])
+#AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" = yes])
+AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
+AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
 
 AC_ARG_WITH([openmp],
     [AC_HELP_STRING([--with-openmp],
