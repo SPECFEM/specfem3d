@@ -73,7 +73,7 @@
   endif
 
 ! takes number of faces for top, free surface only
-  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
+  if( MOVIE_TYPE == 1 ) then
     nfaces_surface_ext_mesh = num_free_surface_faces
     ! face corner indices
     iorderi(1) = 1

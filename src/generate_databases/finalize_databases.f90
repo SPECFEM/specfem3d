@@ -91,7 +91,7 @@
   deallocate(ibool_interfaces_ext_mesh_dummy)
 
   ! takes number of faces for top, free surface only
-  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP ) then
+  if( MOVIE_TYPE == 1 ) then
     nfaces_surface_ext_mesh = NSPEC2D_TOP
   endif
 
