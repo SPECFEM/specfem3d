@@ -538,7 +538,7 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
 
-! shakemovies
+! shakemovies and movie surface
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_external_mesh
