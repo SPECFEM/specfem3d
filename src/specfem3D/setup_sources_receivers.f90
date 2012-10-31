@@ -104,12 +104,10 @@
           comp_dir_vect_source_N(NSOURCES), &
           comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
      if( ier /= 0 ) stop 'error allocating arrays for force point sources'
-  else
-     allocate(factor_force_source(1), &
-          comp_dir_vect_source_E(1), &
-          comp_dir_vect_source_N(1), &
-          comp_dir_vect_source_Z_UP(1),stat=ier)
-     if( ier /= 0 ) stop 'error allocating dummy FORCESOLUTION arrays'
+     if (.not. USE_RICKER_TIME_FUNCTION) then
+        allocate(hdur_tiny(NSOURCES),stat=ier)
+        if( ier /= 0 ) stop 'error allocating arrays for force point sources'
+     endif
   endif
 
   ! for source encoding (acoustic sources so far only)
@@ -126,13 +124,10 @@
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-          USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+          UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,PRINT_SOURCE_TIME_FUNCTION, &
           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-          num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-          USE_FORCE_POINT_SOURCE,factor_force_source,comp_dir_vect_source_E, &
-          comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
   if(abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
@@ -148,6 +143,11 @@
 
   ! convert the half duration for triangle STF to the one for gaussian STF
   hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
+
+  ! initialize a very short (but non-zero) half duration to use a pseudo-Dirac function
+  if(USE_FORCE_POINT_SOURCE .and. .not. USE_RICKER_TIME_FUNCTION) then
+     hdur_tiny(:) = 5*DT
+  endif
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
@@ -538,17 +538,31 @@
 
   real(kind=CUSTOM_REAL) :: factor_source
   real(kind=CUSTOM_REAL) :: junk
+
   integer :: isource,ispec
   integer :: irec
-  integer :: i,j,k,iglob
+  integer :: i,j,k
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
+
   character(len=3),dimension(NDIM) :: comp
   character(len=256) :: filename
+
+  double precision :: hlagrange
+
+  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
+  double precision, dimension(NGLLX) :: hxis,hpxis
+  double precision, dimension(NGLLY) :: hetas,hpetas
+  double precision, dimension(NGLLZ) :: hgammas,hpgammas
+
+  double precision, dimension(:,:), allocatable :: hxis_store,hetas_store,hgammas_store
 
   ! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
-            sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+            sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ), &
+            hxis_store(NSOURCES,NGLLX), &
+            hetas_store(NSOURCES,NGLLY), &
+            hgammas_store(NSOURCES,NGLLZ), stat=ier)
     if( ier /= 0 ) stop 'error allocating array sourcearray'
 
     ! compute source arrays
@@ -563,77 +577,94 @@
 
         ispec = ispec_selected_source(isource)
 
-        ! elastic or poroelastic moment tensor source
-        if( ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
-          call compute_arrays_source(ispec, &
-                        xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
-                        Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        xigll,yigll,zigll,NSPEC_AB)
-        endif
+        ! compute Lagrange polynomials at the source location
+        call lagrange_any(xi_source(isource),NGLLX,xigll,hxis,hpxis)
+        call lagrange_any(eta_source(isource),NGLLY,yigll,hetas,hpetas)
+        call lagrange_any(gamma_source(isource),NGLLZ,zigll,hgammas,hpgammas)
+        
+        hxis_store(isource,:) = hxis(:)
+        hetas_store(isource,:) = hetas(:)
+        hgammas_store(isource,:) = hgammas(:)
 
-        ! acoustic case
-        if( ispec_is_acoustic(ispec) ) then
-          ! scalar moment of moment tensor values read in from CMTSOLUTION
-          ! note: M0 by Dahlen and Tromp, eq. 5.91
-          factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
-                                    + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
+        if (USE_FORCE_POINT_SOURCE) then ! use of FORCESOLUTION files 
 
-          ! scales source such that it would be equivalent to explosion source moment tensor,
-          ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
-          ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
-          factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
+           ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
 
-          ! source encoding
-          ! determines factor +/-1 depending on sign of moment tensor
-          ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
-          !   Geophysics, 74 (6), WCC177-WCC188.)
-          pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+           ! initializes source array
+           sourcearray(:,:,:,:) = 0._CUSTOM_REAL
+           sourcearrayd(:,:,:,:) = 0.d0
 
-          ! source array interpolated on all element gll points (only used for non point sources)
-          call compute_arrays_source_acoustic(xi_source(isource),eta_source(isource),gamma_source(isource),&
-                        sourcearray,xigll,yigll,zigll,factor_source)
-        endif
+           ! calculates source array for interpolated location
+           do k=1,NGLLZ
+              do j=1,NGLLY
+                 do i=1,NGLLX
+                    hlagrange = hxis_store(isource,i) * hetas_store(isource,j) * hgammas_store(isource,k)
 
-        ! point forces, initializes sourcearray, used for simplified CUDA routines
-        if(USE_FORCE_POINT_SOURCE) then
-          ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-          iglob = ibool(nint(xi_source(isource)), &
-                        nint(eta_source(isource)), &
-                        nint(gamma_source(isource)), &
-                        ispec)
-          ! sets sourcearrays
-          sourcearray(:,:,:,:) = 0.0
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                if( ibool(i,j,k,ispec) == iglob ) then
-                  ! acoustic source
-                  ! identical source array components in x,y,z-direction
-                  if( ispec_is_acoustic(ispec) ) then
-                    sourcearray(:,i,j,k) = 1.0
-                  endif
-                  ! elastic source
-                  if( ispec_is_elastic(ispec) ) then
-                     ! we use an inclined force defined by its magnitude and the projections
-                     ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
-                     sourcearray(:,i,j,k) = factor_force_source(isource) * &
-                          ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
-                          nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
-                          nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / &
-                          sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
-                          comp_dir_vect_source_Z_UP(isource)**2 )
-                  endif
-                endif
+                    ! acoustic source
+                    ! identical source array components in x,y,z-direction
+                    if( ispec_is_acoustic(ispec) ) then
+                       sourcearrayd(:,i,j,k) = hlagrange
+                    endif
+
+                    ! elastic source
+                    if( ispec_is_elastic(ispec) ) then
+                       ! we use an inclined force defined by its magnitude and the projections
+                       ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
+                       sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
+                            ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
+                            nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
+                            nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / &
+                            sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
+                            comp_dir_vect_source_Z_UP(isource)**2 )
+                    endif
+                 enddo
               enddo
-            enddo
-          enddo
-        endif
+           enddo
 
+           ! distinguish between single and double precision for reals
+           if(CUSTOM_REAL == SIZE_REAL) then
+              sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
+           else
+              sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
+           endif
+
+        else ! use of CMTSOLUTION files
+
+           ! elastic or poroelastic moment tensor source
+           if( ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
+              call compute_arrays_source(ispec,xi_source(isource),sourcearray, &
+                   Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
+                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                   hxis,hpxis,hetas,hpetas,hgammas,hpgammas,NSPEC_AB)
+           endif
+
+           ! acoustic case
+           if( ispec_is_acoustic(ispec) ) then
+              ! scalar moment of moment tensor values read in from CMTSOLUTION
+              ! note: M0 by Dahlen and Tromp, eq. 5.91
+              factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
+                   + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
+              
+              ! scales source such that it would be equivalent to explosion source moment tensor,
+              ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
+              ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
+              factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
+              
+              ! source encoding
+              ! determines factor +/-1 depending on sign of moment tensor
+              ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
+              !   Geophysics, 74 (6), WCC177-WCC188.)
+              pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+              
+              ! source array interpolated on all element gll points (only used for non point sources)
+              call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
+           endif
+
+        endif
         ! stores source excitations
         sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
-
-      endif
+        
+     endif
     enddo
   else
     ! SIMULATION_TYPE == 2
