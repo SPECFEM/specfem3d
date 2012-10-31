@@ -65,7 +65,7 @@
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
@@ -124,19 +124,19 @@
               ! precomputes source time function factor
               if(USE_FORCE_POINT_SOURCE) then
                  if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                         dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                  else
-                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
-                         dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                  endif
               else
                  if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                         dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                  else
-                    stf_pre_compute(isource) = comp_source_time_function_gauss( &
-                         dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                  endif
               endif
            enddo
@@ -179,11 +179,11 @@
                        !endif
 
                        if( USE_RICKER_TIME_FUNCTION ) then
-                          stf_used = factor_force_source(isource) * &
+                          stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
                                comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
                        else
-                          stf_used = factor_force_source(isource) * &
-                               comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                          stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
+                               comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                        endif
 
                        ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -200,12 +200,10 @@
                     else
 
                        if( USE_RICKER_TIME_FUNCTION ) then
-                          stf = comp_source_time_function_rickr( &
-                               dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                          stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                        else
                           ! gaussian source time
-                          stf = comp_source_time_function_gauss( &
-                               dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                          stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                        endif
 
                        ! quasi-Heaviside
@@ -424,19 +422,19 @@
               ! precomputes source time function factors
               if(USE_FORCE_POINT_SOURCE) then
                  if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
-                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                  endif
               else
                  if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
-                    stf_pre_compute(isource) = comp_source_time_function_gauss( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                  endif
               endif
            enddo
@@ -477,11 +475,11 @@
                        !endif
 
                        if( USE_RICKER_TIME_FUNCTION ) then
-                          stf_used = factor_force_source(isource) * comp_source_time_function_rickr( &
-                               dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                          stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
+                               comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
                        else
-                          stf_used = factor_force_source(isource) * comp_source_time_function( &
-                               dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                          stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
+                               comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                        endif
 
                        ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid

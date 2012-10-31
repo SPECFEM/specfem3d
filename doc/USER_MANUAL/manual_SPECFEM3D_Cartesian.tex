@@ -1133,19 +1133,33 @@ directory. If a run crashes, you may still find usable (but shorter
 than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only relevant for the solver.
-\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a \texttt{FORCESOLUTION} force source
-instead of a \texttt{CMTSOLUTION} moment-tensor source. This can be useful e.g. for oil industry
-foothills simulations in which the source is a vertical force, normal force,
-tilted force, or an impact etc. By default a quasi-Heaviside time function is used to represent the force point source but a Ricker
-source time function can be computed instead by changing the value of \texttt{USE\_RICKER\_IPATI} in the main constants file
-\texttt{constants.h} located in the \texttt{src/shared/} subdirectory.
-Note that in the \texttt{FORCESOLUTION} file, you will need to edit the East, North and vertical components of an
-arbitrary (non-unitary) direction vector of the force vector; thus refer to Appendix~\ref{cha:Coordinates}
-for the orientation of the reference frame. This vector is made unitary internally in the code and thus only its direction matters here;
-its norm is ignored and the norm of the force used is the factor force source times the source time function.
+\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a (tilted) \texttt{FORCESOLUTION} force 
+point source located exactly at a grid point instead of a \texttt{CMTSOLUTION} moment-tensor source. 
+When the force source does not fall exactly at a \texttt{GLL} point, the solver interpolates the force between grid points 
+using Lagrange interpolants. This can be useful e.g. for oil industry foothills simulations 
+in which the source is a vertical force, normal force, tilted force, or an impact etc. 
+Note that in the \texttt{FORCESOLUTION} file, you will need to edit
+the East, North and vertical components of an arbitrary (non-unitary)
+direction vector of the force vector; thus refer to
+Appendix~\ref{cha:Coordinates} for the orientation of the reference
+frame. This vector is made unitary internally in the solver and thus
+only its direction matters here; its norm is ignored and the norm of
+the force used is the factor force source times the source time
+function.
+\item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to 
+use a Ricker source time function instead of the source time functions set by default 
+to represent a (tilted) \texttt{FORCESOLUTION} force point source or a \texttt{CMTSOLUTION} moment-tensor source. 
+Normally, if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo) Heaviside step 
+function with a very short half duration is used for elastic cases to represent the permanent slip on the fault while 
+in the acoustic case a Gaussian source time function with a similarly short half duration is used to physically describe 
+actions within the fluid. Similarly, if a \texttt{FORCESOLUTION} force source is used, we need a source time function 
+with finite support, so a (pseudo) Dirac delta source time function (which is actually a Gaussian of very
+short half duration, i.e. hdur = 5 * DT) is used by default.
+Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
 This feature is only relevant for the solver.
+\item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 \end{description}
 
 \section{\label{sec:Choosing-the-Time-Step}Choosing the time step \texttt{DT}}
@@ -1328,7 +1342,12 @@ by the finite fault model.
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
-\item Set the \texttt{half duration} parameter of the source time function.
+\item Set the \texttt{half duration} parameter of the Ricker source
+  time function when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned
+  on in the main parameter file {\texttt{Par\_file}}. In the case the
+  solver uses a (pseudo) Dirac delta source time function to represent
+  a force point source, a very short \texttt{half duration} parameter
+  (hdur = 5 * DT) is automatically set by default.
 \item Set the latitude, longitude, depth of the source in geographical
   coordinates.
 \item Set the magnitude of the force source.

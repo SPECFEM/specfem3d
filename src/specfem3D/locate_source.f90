@@ -34,14 +34,14 @@
                  DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                  islice_selected_source,ispec_selected_source, &
                  xi_source,eta_source,gamma_source, &
-                 UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                 USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+                 UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,PRINT_SOURCE_TIME_FUNCTION, &
                  nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                  ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-                 num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                 USE_FORCE_POINT_SOURCE,factor_force_source,comp_dir_vect_source_E, &
-                 comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
+  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,factor_force_source, &
+       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
+  
   implicit none
 
   include "constants.h"
@@ -49,8 +49,8 @@
   integer NPROC,UTM_PROJECTION_ZONE
   integer NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
 
-  logical USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  logical SUPPRESS_UTM_PROJECTION,USE_FORCE_POINT_SOURCE
+  logical PRINT_SOURCE_TIME_FUNCTION
+  logical SUPPRESS_UTM_PROJECTION
 
   double precision DT
 
@@ -136,10 +136,6 @@
 
   double precision, dimension(NSOURCES) :: lat,long,depth
 
-  double precision, dimension(NSOURCES) :: factor_force_source
-  double precision, dimension(NSOURCES) :: comp_dir_vect_source_E
-  double precision, dimension(NSOURCES) :: comp_dir_vect_source_N
-  double precision, dimension(NSOURCES) :: comp_dir_vect_source_Z_UP
   double precision, dimension(6,NSOURCES) ::  moment_tensor
 
   character(len=256) OUTPUT_FILES

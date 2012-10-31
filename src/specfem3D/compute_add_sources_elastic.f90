@@ -29,7 +29,6 @@
   subroutine compute_add_sources_elastic( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        xi_source,eta_source,gamma_source, &
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -46,7 +45,7 @@
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,factor_force_source
+                        USE_RICKER_TIME_FUNCTION
 
   implicit none
 
@@ -67,12 +66,11 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
 
-  double precision, external :: comp_source_time_function,comp_source_time_function_rickr
+  double precision, external :: comp_source_time_function,comp_source_time_function_gauss,comp_source_time_function_rickr
 
   logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
@@ -90,7 +88,6 @@
     adj_sourcearrays
 
 ! local parameters
-  double precision :: f0
   double precision :: stf
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
@@ -126,19 +123,19 @@
              ! precomputes source time function factor
              if(USE_FORCE_POINT_SOURCE) then
                 if( USE_RICKER_TIME_FUNCTION ) then
-                   stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                        dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                   stf_pre_compute(isource) = &
+                        comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                 else
-                   stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
-                        dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                   stf_pre_compute(isource) = &
+                        comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                 endif
              else
                 if( USE_RICKER_TIME_FUNCTION ) then
-                   stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                        dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                   stf_pre_compute(isource) = &
+                        comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                 else
-                   stf_pre_compute(isource) = comp_source_time_function( &
-                        dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                   stf_pre_compute(isource) = &
+                        comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                 endif
              endif
           enddo
@@ -165,14 +162,7 @@
 
                   if(USE_FORCE_POINT_SOURCE) then
 
-                    ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-                    iglob = ibool(nint(xi_source(isource)), &
-                          nint(eta_source(isource)), &
-                          nint(gamma_source(isource)), &
-                          ispec_selected_source(isource))
-
-                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
-
+                    !f0 = hdur(isource) !! using hdur as a FREQUENCY
                     !if (it == 1 .and. myrank == 0) then
                     !  write(IMAIN,*) 'using a source of dominant frequency ',f0
                     !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
@@ -180,9 +170,9 @@
                     !endif
 
                     if( USE_RICKER_TIME_FUNCTION) then
-                       stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                       stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                     else
-                       stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                       stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                     endif
 
                     ! add the inclined force source array
@@ -421,19 +411,19 @@
               ! precomputes source time function factors
               if(USE_FORCE_POINT_SOURCE) then
                  if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function_rickr( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
-                    stf_pre_compute(isource) = factor_force_source(isource) * comp_source_time_function( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                  endif
               else
                  if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = comp_source_time_function_rickr( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                  else
-                    stf_pre_compute(isource) = comp_source_time_function( &
-                         dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                    stf_pre_compute(isource) = &
+                         comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
                  endif
               endif
            enddo
@@ -459,14 +449,7 @@
 
                   if(USE_FORCE_POINT_SOURCE) then
 
-                     ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-                     iglob = ibool(nint(xi_source(isource)), &
-                          nint(eta_source(isource)), &
-                          nint(gamma_source(isource)), &
-                          ispec_selected_source(isource))
-
-                     f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
-
+                     !f0 = hdur(isource) !! using hdur as a FREQUENCY 
                      !if (it == 1 .and. myrank == 0) then
                      !   write(IMAIN,*) 'using a source of dominant frequency ',f0
                      !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
@@ -474,9 +457,9 @@
                      !endif
 
                      if( USE_RICKER_TIME_FUNCTION ) then
-                        stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                        stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
                      else
-                        stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                        stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                      endif
 
                     ! add the inclined force source array

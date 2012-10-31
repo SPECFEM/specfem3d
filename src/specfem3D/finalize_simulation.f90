@@ -147,6 +147,9 @@
      deallocate(comp_dir_vect_source_E)
      deallocate(comp_dir_vect_source_N)
      deallocate(comp_dir_vect_source_Z_UP)
+     if (.not. USE_RICKER_TIME_FUNCTION) then
+       deallocate(hdur_tiny)
+    endif
   endif
 
   ! mass matrices

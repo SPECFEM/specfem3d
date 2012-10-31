@@ -24,11 +24,10 @@
 !
 !=====================================================================
 
-  subroutine compute_arrays_source(ispec_selected_source, &
-             xi_source,eta_source,gamma_source,sourcearray, &
-             Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-             xigll,yigll,zigll,nspec)
+  subroutine compute_arrays_source(ispec_selected_source,sourcearray, &
+       Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+       hxis,hpxis,hetas,hpetas,hgammas,hpgammas,nspec)
 
   implicit none
 
@@ -37,7 +36,6 @@
   integer ispec_selected_source
   integer nspec
 
-  double precision xi_source,eta_source,gamma_source
   double precision Mxx,Myy,Mzz,Mxy,Mxz,Myz
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xix,xiy,xiz,etax,etay,etaz, &
@@ -46,11 +44,6 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
 
   double precision xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
-
-! Gauss-Lobatto-Legendre points of integration and weights
-  double precision, dimension(NGLLX) :: xigll
-  double precision, dimension(NGLLY) :: yigll
-  double precision, dimension(NGLLZ) :: zigll
 
 ! source arrays
   double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
@@ -91,12 +84,7 @@
     enddo
   enddo
 
-! compute Lagrange polynomials at the source location
-  call lagrange_any(xi_source,NGLLX,xigll,hxis,hpxis)
-  call lagrange_any(eta_source,NGLLY,yigll,hetas,hpetas)
-  call lagrange_any(gamma_source,NGLLZ,zigll,hgammas,hpgammas)
-
-! calculate source array
+! calculate source array for interpolated location
   do m=1,NGLLZ
     do l=1,NGLLY
       do k=1,NGLLX
@@ -215,38 +203,26 @@ end subroutine compute_arrays_adjoint_source
 ! =======================================================================
 
 ! compute array for acoustic source
-  subroutine compute_arrays_source_acoustic(xi_source,eta_source,gamma_source,&
-                        sourcearray,xigll,yigll,zigll,factor_source)
+  subroutine compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
 
   implicit none
 
   include "constants.h"
 
-  double precision :: xi_source,eta_source,gamma_source
   real(kind=CUSTOM_REAL) :: factor_source
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
-
-! Gauss-Lobatto-Legendre points of integration and weights
-  double precision, dimension(NGLLX) :: xigll
-  double precision, dimension(NGLLY) :: yigll
-  double precision, dimension(NGLLZ) :: zigll
 
 ! local parameters
 ! source arrays
   double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
-  double precision, dimension(NGLLX) :: hxis,hpxis
-  double precision, dimension(NGLLY) :: hetas,hpetas
-  double precision, dimension(NGLLZ) :: hgammas,hpgammas
+  double precision, dimension(NGLLX) :: hxis
+  double precision, dimension(NGLLY) :: hetas
+  double precision, dimension(NGLLZ) :: hgammas
   integer :: i,j,k
 
 ! initializes
   sourcearray(:,:,:,:) = 0._CUSTOM_REAL
   sourcearrayd(:,:,:,:) = 0.d0
-
-! computes Lagrange polynomials at the source location
-  call lagrange_any(xi_source,NGLLX,xigll,hxis,hpxis)
-  call lagrange_any(eta_source,NGLLY,yigll,hetas,hpetas)
-  call lagrange_any(gamma_source,NGLLZ,zigll,hgammas,hpgammas)
 
 ! calculates source array for interpolated location
   do k=1,NGLLZ
