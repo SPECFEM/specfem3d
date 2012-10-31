@@ -79,7 +79,8 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # # 0 = read the whole adjoint sources at the same time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
-# use a force source (or several) located exactly at a grid point instead of a CMTSOLUTION source.
+# use a (tilted) FORCESOLUTION force point source (or several) located exactly at a grid point 
+# instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
 # in which the source is a vertical force, normal force, inclined force, impact etc.
 # If this flag is turned on, the FORCESOLUTION file must be edited by precising:
@@ -92,8 +93,8 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
 USE_FORCE_POINT_SOURCE          = .false.
 
-# set to use a Ricker source time function instead of a gaussian (when using CMTSOLUTION files)
-# or a quasi-Heaviside (when using FORCESOLUTION files)
+# set to true to use a Ricker source time function instead of the source time functions set by default 
+# to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .false.
 
 # print source time function
