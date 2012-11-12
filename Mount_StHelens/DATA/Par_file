@@ -41,6 +41,9 @@ ATTENUATION                     = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
+# path for external tomographic models files
+TOMOGRAPHY_PATH                 = ../DATA/tomo_files/
+
 # Olsen's constant for Q_mu = constant * v_s attenuation rule
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
