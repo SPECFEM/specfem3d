@@ -70,7 +70,7 @@
           USE_HIGHRES_FOR_MOVIES
   integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NTSTEP_BETWEEN_READ_ADJSRC
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH
 
 ! parameters deduced from parameters read from file
   integer :: NPROC

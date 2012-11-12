@@ -123,7 +123,7 @@
 
     end select
 
-  else if ( imaterial_def == 1 ) then
+ else if ( imaterial_def == 1 ) then
 
     stop 'material: interface not implemented yet'
 
@@ -152,7 +152,7 @@
     ! material definition undefined, uses definition from tomography model
 
     ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,imaterial_id)
 
     ! no anisotropy
     iflag_aniso = 0

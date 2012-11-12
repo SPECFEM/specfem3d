@@ -25,7 +25,7 @@
 !=====================================================================
 
   subroutine read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
                         OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
@@ -51,7 +51,7 @@
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
   logical USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
 
-  character(len=256) LOCAL_PATH,CMTSOLUTION,FORCESOLUTION
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
@@ -115,6 +115,8 @@
   call read_value_logical(ATTENUATION, 'model.ATTENUATION')
   if(err_occurred() /= 0) return
   call read_value_logical(ANISOTROPY, 'model.ANISOTROPY')
+  if(err_occurred() /= 0) return
+  call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH')
   if(err_occurred() /= 0) return
   call read_value_logical(USE_OLSEN_ATTENUATION, 'model.USE_OLSEN_ATTENUATION')
   if(err_occurred() /= 0) return
