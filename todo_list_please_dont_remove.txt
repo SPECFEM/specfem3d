@@ -442,18 +442,6 @@ specfem3d reader and the scotch partitioning.
 
 
 ------------------------------------------------
-sensitivity kernel output:
-------------------------------------------------
-
-- suggestion 31:
-----------------
-
-Elliott Sales de Andrade and Qinya will implement a routine to interpolate and output the sensitiviy kernels on a topologically-regular grid
-instead of the non-structured SEM grid (this can be useful for many processing packages that require a topologically-regular grid
-of points as input).
-
-
-------------------------------------------------
 databases in SPECFEM2D:
 ------------------------------------------------
 
