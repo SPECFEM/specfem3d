@@ -25,33 +25,16 @@
 !=====================================================================
 
 
-  subroutine get_model(myrank,nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
-                        materials_ext_mesh,nmat_ext_mesh, &
-                        undef_mat_prop,nundefMat_ext_mesh, &
-                        ANISOTROPY)
+  subroutine get_model(myrank)
 
-  use generate_databases_par,only: IMODEL
+  use generate_databases_par, only: IMODEL,nspec => NSPEC_AB,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
+       materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY
 
   use create_regions_mesh_ext_par
 
   implicit none
 
-
-  ! number of spectral elements in each block
-  integer :: myrank,nspec
-
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
-
-  ! external mesh
-  integer :: nelmnts_ext_mesh
-  integer :: nmat_ext_mesh,nundefMat_ext_mesh
-
-  integer, dimension(2,nelmnts_ext_mesh) :: mat_ext_mesh
-  double precision, dimension(16,nmat_ext_mesh) :: materials_ext_mesh
-  character (len=30), dimension(6,nundefMat_ext_mesh):: undef_mat_prop
-
-  ! anisotropy
-  logical :: ANISOTROPY
+  integer :: myrank
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
@@ -82,10 +65,7 @@
   ispec_is_elastic(:) = .false.
   ispec_is_poroelastic(:) = .false.
 
-  !debug
-  !print*,"nundefMat_ext_mesh:",nundefMat_ext_mesh
-
-  ! prepares tomography model if needed for elements with undefined material definitions
+  ! prepares tomographic models if needed for elements with undefined material definitions
   if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
     call model_tomography_broadcast(myrank)
   endif
@@ -162,7 +142,7 @@
           ! gets xyz coordinates of GLL point
           iglob = ibool(i,j,k,ispec)
           xmesh = xstore_dummy(iglob)
-          ymesh= ystore_dummy(iglob)
+          ymesh = ystore_dummy(iglob)
           zmesh = zstore_dummy(iglob)
 
           ! material index 1: associated material number
@@ -351,6 +331,11 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
+  ! deallocates tomographic arrays 
+  if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
+     call deallocate_tomography_files()
+  endif
+
   end subroutine get_model
 
 !
@@ -449,7 +434,7 @@
 
   case( IMODEL_TOMO )
     ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,imaterial_id)
 
   case( IMODEL_USER_EXTERNAL )
     ! user model from external routine

@@ -8,22 +8,6 @@ To-do list for the different flavors of SPECFEM:
 CPML :
 ------------------------------------------------
 
-- suggestion 00: about VERCE project modifications
-----------------
-
-> Possibly set the name of the tomography file in the Par_file instead
-> of hard-coding it in model_tomography.f90 or creating a separate
-> parfile
->
->
-> Some interesting addition will be the:
->
-> ---- multifiles tomography
-> Piero told me that the run for turkey/europe mesh had this possibility
-> so probably it is matter to commit that files in the svn version
->
-
-
 - suggestion 01a:
 ----------------
 
@@ -556,6 +540,20 @@ Feedback from Qinya: The same time scheme should be used for forward and adjoint
 DONE (MOVE ITEMS ABOVE BELOW THIS LINE WHEN THEY ARE DONE):
 -----------------------------------------------------------
 
+- suggestion 00: about VERCE project modifications
+----------------
+
+> Possibly set the name of the tomography file in the Par_file instead
+> of hard-coding it in model_tomography.f90 or creating a separate
+> parfile
+>
+>
+> Some interesting addition will be the:
+>
+> ---- multifiles tomography
+> Piero told me that the run for turkey/europe mesh had this possibility
+> so probably it is matter to commit that files in the svn version
+>
 
 -----------------------------------------------------------
 GPU related:
@@ -941,6 +939,54 @@ in the code ("allocatable" arrays will *NOT* appear, but we use no such big allo
 nm --print-size --size-sort --reverse-sort --radix=d ./bin/xspecfem3D | cut -f 2- -d ' ' | less
 
 -----------------------------------------------------------
+mesh files:
+-----------------------------------------------------------
+
+- suggestion 12:
+----------------
+
+check if file 'array_dims.txt' is used or not (it seems to be unused; it seems to have been an old file for ParaView, but let us
+doublecheck)
+
+currently each MPI slice writes its own version of that file, thus if using 1000 cores we get 1000 copies of that file; that puts a
+heavy load on shared file systems for no reason
+
+Jo and Daniel, please check if it is used (in particular in ParaView postprocessing scripts) and if not please suppress it; if it
+is used, I think only rank 0 could create it, no need to have 1000 identical copies
+
+this applies to SPECFEM3D_GLOBE; I am not sure about SPECFEM3D, please doublecheck
+
+Feedback from Qinya: I chose to output the exact nspec/nglob numbers for each slice to array_dims.txt in save_array_solver.txt, 
+    because the nspec/nglob number in values_from_mesher.h are only the maximum values for all slices. We need the exact numbers 
+    to read properly the topology/kernel binary files for combine_vol_data.f90, and generate the .mesh and .vtu files for paraview. 
+    If the new version of the code has exactly the same number of nspec/nglob number for all slices, it is no longer needed. 
+    Otherwise, I am sure there is a way around it. As long as we can get this info from other files, we can eliminate the array_dims.txt file.
+
+------------------------------------------------
+record length in SPECFEM3D_GLOBE:
+------------------------------------------------
+
+- suggestion 24:
+----------------
+
+internally in the three codes we compute a time shift t0 to shift the source and have null initial conditions, and we subtract it
+when we save the seismograms and also the source time function; that is the right thing to do, but we forgot to also add it to
+"RECORD_LENGTH_IN_MINUTES" after reading it from DATA/Par_file.
+
+As a result, the seismograms stop at RECORD_LENGTH_IN_MINUTES*60 - t0 seconds rather than the expected RECORD_LENGTH_IN_MINUTES*60
+duration.
+
+when running simulations at short periods t0 is small compared to RECORD_LENGTH_IN_MINUTES*60 and thus one hardly notices the
+problem, but the other day I ran a very long period calculation with hdur = 150 seconds and then my seismograms were 150 or 200
+seconds too short and thus I had to delete them and redo the whole simulation.
+
+Solution (easy): add t0 to RECORD_LENGTH_IN_MINUTES*60 when computing the number of time steps (NSTEPS) in the three codes
+
+Jo, could you please do that at some point? (not the first priority of course)
+
+Feedback from Qinya: This should not affect kernel calculation, as long as the same record length is used for forward and adjoint simulations.
+
+-----------------------------------------------------------
 documentation:
 -----------------------------------------------------------
 
@@ -986,53 +1032,16 @@ Another option (at least in the meantime) would be to tell users in the manual t
 Elliott Sales de Andrade will fix the configure.ac autoconf scripts in SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE.
 
 
-
------------------------------------------------------------
-mesh files:
------------------------------------------------------------
-
-- suggestion 12:
-----------------
-
-check if file 'array_dims.txt' is used or not (it seems to be unused; it seems to have been an old file for ParaView, but let us
-doublecheck)
-
-currently each MPI slice writes its own version of that file, thus if using 1000 cores we get 1000 copies of that file; that puts a
-heavy load on shared file systems for no reason
-
-Jo and Daniel, please check if it is used (in particular in ParaView postprocessing scripts) and if not please suppress it; if it
-is used, I think only rank 0 could create it, no need to have 1000 identical copies
-
-this applies to SPECFEM3D_GLOBE; I am not sure about SPECFEM3D, please doublecheck
-
-Feedback from Qinya: I chose to output the exact nspec/nglob numbers for each slice to array_dims.txt in save_array_solver.txt, 
-    because the nspec/nglob number in values_from_mesher.h are only the maximum values for all slices. We need the exact numbers 
-    to read properly the topology/kernel binary files for combine_vol_data.f90, and generate the .mesh and .vtu files for paraview. 
-    If the new version of the code has exactly the same number of nspec/nglob number for all slices, it is no longer needed. 
-    Otherwise, I am sure there is a way around it. As long as we can get this info from other files, we can eliminate the array_dims.txt file.
-
-
 ------------------------------------------------
-record length in SPECFEM3D_GLOBE:
+sensitivity kernel output:
 ------------------------------------------------
 
-- suggestion 24:
+- suggestion 31:
 ----------------
 
-internally in the three codes we compute a time shift t0 to shift the source and have null initial conditions, and we subtract it
-when we save the seismograms and also the source time function; that is the right thing to do, but we forgot to also add it to
-"RECORD_LENGTH_IN_MINUTES" after reading it from DATA/Par_file.
+Elliott Sales de Andrade and Qinya will implement a routine to interpolate and output the sensitiviy kernels 
+on a topologically-regular grid instead of the non-structured SEM grid (this can be useful for many processing 
+packages that require a topologically-regular grid of points as input).
 
-As a result, the seismograms stop at RECORD_LENGTH_IN_MINUTES*60 - t0 seconds rather than the expected RECORD_LENGTH_IN_MINUTES*60
-duration.
 
-when running simulations at short periods t0 is small compared to RECORD_LENGTH_IN_MINUTES*60 and thus one hardly notices the
-problem, but the other day I ran a very long period calculation with hdur = 150 seconds and then my seismograms were 150 or 200
-seconds too short and thus I had to delete them and redo the whole simulation.
-
-Solution (easy): add t0 to RECORD_LENGTH_IN_MINUTES*60 when computing the number of time steps (NSTEPS) in the three codes
-
-Jo, could you please do that at some point? (not the first priority of course)
-
-Feedback from Qinya: This should not affect kernel calculation, as long as the same record length is used for forward and adjoint simulations.
 

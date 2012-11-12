@@ -144,7 +144,7 @@ module decompose_mesh
             OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-  character(len=256) LOCAL_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH
   integer :: IMODEL
 
   contains
@@ -243,10 +243,6 @@ module decompose_mesh
     enddo
     close(98)
 
-  ! TODO:
-  ! must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
-    mat(2,:) = 1
-
   ! reads material definitions
   !
   ! note: format of nummaterial_velocity_file must be
@@ -255,12 +251,12 @@ module decompose_mesh
   !
   ! where
   !     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
-  !     material_id               : number of material/volume
-  !     rho                           : density
-  !     vp                             : P-velocity
-  !     vs                             : S-velocity
-  !     Q_mu                      : 0=no attenuation
-  !     anisotropy_flag        : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
+  !     material_id        : number of material/volume
+  !     rho                : density
+  !     vp                 : P-velocity
+  !     vs                 : S-velocity
+  !     Q_mu               : 0=no attenuation
+  !     anisotropy_flag    : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
   ! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id,
   ! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT
   ! cannot support more than 10 attributes
@@ -340,7 +336,7 @@ module decompose_mesh
        ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
        !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_mu #(5) anisotropy_flag
        !
-       ! reads lines unti it reaches a defined material
+       ! reads lines until it reaches a defined material
        num_mat = -1
        do while( num_mat < 0 .and. ier == 0)
          read(98,'(A256)',iostat=ier) line
@@ -400,8 +396,8 @@ module decompose_mesh
        !     #material_id_for_material_below #material_id_for_material_above
        !        example:     2  -1 interface 1 2
        !   - for tomography models
-       !    #material_domain_id #material_id (<0) #type_name (="tomography") #block_name
-       !        example:     2  -1 tomography elastic tomography_model.xyz 1
+       !    #material_domain_id #material_id(<0) #type_name (="tomography") #block_name (="elastic") #file_name
+       !        example:     2  -1 tomography elastic tomography_model.xyz 
        ! reads lines until it reaches a defined material
        num_mat = 1
        do while( num_mat >= 0 .and. ier == 0 )
@@ -420,7 +416,8 @@ module decompose_mesh
        else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
          ! line will have 6 arguments, e.g.: 2  -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-                        undef_mat_prop(3,imat),undef_mat_prop(4,imat),undef_mat_prop(5,imat)
+                        undef_mat_prop(3,imat),undef_mat_prop(4,imat)
+         undef_mat_prop(5,imat) = "0" ! dummy value
        else
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
        endif
@@ -461,9 +458,6 @@ module decompose_mesh
     if( use_poroelastic_file ) close(97)
     close(98)
 
-
-    ! TODO:
-    ! must be changed, if  mat(1,i) < 0  1 == interface , 2 == tomography
     do ispec=1,nspec
       ! get material_id
       num_mat = mat(1,ispec)

@@ -28,7 +28,7 @@
   subroutine create_regions_mesh()
 
 ! create the different regions of the mesh
-  use generate_databases_par,only: &
+  use generate_databases_par, only: &
     nspec => NSPEC_AB,nglob => NGLOB_AB, &
     ibool,xstore,ystore,zstore, &
     npointot,myrank,LOCAL_PATH, &
@@ -131,10 +131,7 @@
   if( myrank == 0) then
     write(IMAIN,*) '  ...determining velocity model'
   endif
-  call get_model(myrank,nspec,ibool,mat_ext_mesh,nelmnts_ext_mesh, &
-                        materials_ext_mesh,nmat_ext_mesh, &
-                        undef_mat_prop,nundefMat_ext_mesh, &
-                        ANISOTROPY)
+  call get_model(myrank)
 
 ! sets up acoustic-elastic-poroelastic coupling surfaces
   call sync_all()

@@ -91,9 +91,9 @@
   if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
   do imat = 1, nundefMat_ext_mesh
      ! format example tomography:
-     ! -1 tomography elastic tomography_model.xyz 1 2
+     ! e.g.: -1 tomography elastic tomography_model.xyz 1 2
      ! format example interface:
-     ! -1 interface 14 15 1 2
+     ! e.g.: -1 interface 14 15 1 2
      read(IIN) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat), undef_mat_prop(6,imat)
   end do
@@ -114,8 +114,9 @@
   do ispec = 1, nelmnts_ext_mesh
      ! format:
      ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id8
-
-     read(IIN) dummy_elmnt, mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec),(elmnts_ext_mesh(j,ispec),j=1,NGNOD)
+     ! or
+     ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
+     read(IIN) dummy_elmnt,mat_ext_mesh(1,ispec),mat_ext_mesh(2,ispec),(elmnts_ext_mesh(j,ispec),j=1,NGNOD)
 
      ! check debug
      if( dummy_elmnt /= ispec) stop "error ispec order in materials file"
