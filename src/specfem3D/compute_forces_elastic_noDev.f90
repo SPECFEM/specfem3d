@@ -25,30 +25,30 @@
 !=====================================================================
 
 subroutine compute_forces_elastic_noDev( iphase, &
-                        NSPEC_AB,NGLOB_AB,displ,accel,&
+                        NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
+                        hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool,&
-                        ATTENUATION,&
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION,deltat, &
                         one_minus_sum_beta,factor_common, &
-                        alphaval,betaval,gammaval,&
+                        alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB, &
                         R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store,&
-                        c22store,c23store,c24store,c25store,c26store,c33store,&
-                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
                         SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                         is_moho_top,is_moho_bot, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
-                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic  )
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
@@ -61,8 +61,11 @@ subroutine compute_forces_elastic_noDev( iphase, &
 
   integer :: NSPEC_AB,NGLOB_AB
 
-! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,accel
+! displacement, velocity and acceleration
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
+
+! time step
+  real(kind=CUSTOM_REAL) :: deltat
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -145,6 +148,14 @@ subroutine compute_forces_elastic_noDev( iphase, &
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
 
+  real(kind=CUSTOM_REAL) tempx1l_att,tempx2l_att,tempx3l_att
+  real(kind=CUSTOM_REAL) tempy1l_att,tempy2l_att,tempy3l_att
+  real(kind=CUSTOM_REAL) tempz1l_att,tempz2l_att,tempz3l_att
+
+  real(kind=CUSTOM_REAL) duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
+  real(kind=CUSTOM_REAL) duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att;
+  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att;
+
   ! local anisotropy parameters
   real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
@@ -219,6 +230,47 @@ subroutine compute_forces_elastic_noDev( iphase, &
             tempz3l = tempz3l + displ(3,iglob)*hp3
           enddo
 
+          if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
+             tempx1l_att = tempx1l
+             tempx2l_att = tempx2l
+             tempx3l_att = tempx3l
+
+             tempy1l_att = tempy1l
+             tempy2l_att = tempy2l
+             tempy3l_att = tempy3l
+
+             tempz1l_att = tempz1l
+             tempz2l_att = tempz2l
+             tempz3l_att = tempz3l
+
+             ! use first order Taylor expansion of displacement for local storage of stresses 
+             ! at this current time step, to fix attenuation in a consistent way
+             do l=1,NGLLX
+                hp1 = hprime_xx(i,l)
+                iglob = ibool(l,j,k,ispec)
+                tempx1l_att = tempx1l_att + deltat*veloc(1,iglob)*hp1
+                tempy1l_att = tempy1l_att + deltat*veloc(2,iglob)*hp1
+                tempz1l_att = tempz1l_att + deltat*veloc(3,iglob)*hp1
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
+                hp2 = hprime_yy(j,l)
+                iglob = ibool(i,l,k,ispec)
+                tempx2l_att = tempx2l_att + deltat*veloc(1,iglob)*hp2
+                tempy2l_att = tempy2l_att + deltat*veloc(2,iglob)*hp2
+                tempz2l_att = tempz2l_att + deltat*veloc(3,iglob)*hp2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
+                hp3 = hprime_zz(k,l)
+                iglob = ibool(i,j,l,ispec)
+                tempx3l_att = tempx3l_att + deltat*veloc(1,iglob)*hp3
+                tempy3l_att = tempy3l_att + deltat*veloc(2,iglob)*hp3
+                tempz3l_att = tempz3l_att + deltat*veloc(3,iglob)*hp3
+             enddo
+          endif
+
           ! get derivatives of ux, uy and uz with respect to x, y and z
           xixl = xix(i,j,k,ispec)
           xiyl = xiy(i,j,k,ispec)
@@ -276,15 +328,43 @@ subroutine compute_forces_elastic_noDev( iphase, &
           duzdxl_plus_duxdzl = duzdxl + duxdzl
           duzdyl_plus_duydzl = duzdyl + duydzl
 
-          ! computes deviatoric strain attenuation and/or for kernel calculations
-          if (COMPUTE_AND_STORE_STRAIN) then
-            templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-            if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
-            epsilondev_xx_loc(i,j,k) = duxdxl - templ
-            epsilondev_yy_loc(i,j,k) = duydyl - templ
-            epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
-            epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
-            epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+          if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
+             ! temporary variables used for fixing attenuation in a consistent way
+             duxdxl_att = xixl*tempx1l_att + etaxl*tempx2l_att + gammaxl*tempx3l_att
+             duxdyl_att = xiyl*tempx1l_att + etayl*tempx2l_att + gammayl*tempx3l_att
+             duxdzl_att = xizl*tempx1l_att + etazl*tempx2l_att + gammazl*tempx3l_att
+
+             duydxl_att = xixl*tempy1l_att + etaxl*tempy2l_att + gammaxl*tempy3l_att
+             duydyl_att = xiyl*tempy1l_att + etayl*tempy2l_att + gammayl*tempy3l_att
+             duydzl_att = xizl*tempy1l_att + etazl*tempy2l_att + gammazl*tempy3l_att
+
+             duzdxl_att = xixl*tempz1l_att + etaxl*tempz2l_att + gammaxl*tempz3l_att
+             duzdyl_att = xiyl*tempz1l_att + etayl*tempz2l_att + gammayl*tempz3l_att
+             duzdzl_att = xizl*tempz1l_att + etazl*tempz2l_att + gammazl*tempz3l_att
+
+             ! precompute some sums to save CPU time
+             duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att
+             duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att
+             duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
+
+             ! compute deviatoric strain
+             if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
+             epsilondev_xx_loc(i,j,k) = duxdxl_att - epsilon_trace_over_3(i,j,k,ispec)
+             epsilondev_yy_loc(i,j,k) = duydyl_att - epsilon_trace_over_3(i,j,k,ispec)
+             epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
+             epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
+             epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
+          else
+             ! computes deviatoric strain attenuation and/or for kernel calculations
+             if (COMPUTE_AND_STORE_STRAIN) then
+                templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+                if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
+                epsilondev_xx_loc(i,j,k) = duxdxl - templ
+                epsilondev_yy_loc(i,j,k) = duydyl - templ
+                epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
+                epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
+                epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+             endif
           endif
 
           kappal = kappastore(i,j,k,ispec)
