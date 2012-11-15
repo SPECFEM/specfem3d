@@ -27,13 +27,13 @@
 ! OpenMP Threaded variant by John Levesque, Max Rietmann and Olaf Schenk
 
   subroutine compute_forces_elastic_Dev_openmp(iphase ,NSPEC_AB,NGLOB_AB, &
-                             displ,accel, &
+                             displ,veloc,accel, &
                              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                              hprime_xx,hprime_xxT, &
                              hprimewgll_xx,hprimewgll_xxT, &
                              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                              kappastore,mustore,jacobian,ibool, &
-                             ATTENUATION, &
+                             ATTENUATION,deltat, &
                              one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
                              NSPEC_ATTENUATION_AB, &
                              R_xx,R_yy,R_xy,R_xz,R_yz, &
@@ -64,9 +64,11 @@
   ! Trying to pass these variables as subroutine arguments ran into
   ! problems, so we reference them from their module, making them
   ! accessible from this subroutine
-  use specfem_par_elastic, only:dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3,&
-       newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3,&
-       tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3,num_elem_colors_elastic
+  use specfem_par_elastic, only:dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3, &
+       newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3, &
+       tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3,num_elem_colors_elastic, &
+       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,tempx1_att,tempx2_att,tempx3_att, &
+       tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
 
   implicit none
 
@@ -148,6 +150,10 @@
 
   real(kind=CUSTOM_REAL) lambdal,mul,lambdalplus2mul
   real(kind=CUSTOM_REAL) kappal
+
+  real(kind=CUSTOM_REAL) duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
+  real(kind=CUSTOM_REAL) duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att;
+  real(kind=CUSTOM_REAL) duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att;
 
   integer OMP_get_thread_num
   integer OMP_GET_MAX_THREADS
@@ -246,7 +252,7 @@
           endif
        endif ! adjoint
 
-       ! stores displacment values in local array
+       ! stores displacement values in local array
        do k=1,NGLLZ
           do j=1,NGLLY
              do i=1,NGLLX
@@ -254,6 +260,18 @@
                 dummyx_loc(i,j,k,thread_id) = displ(1,iglob)
                 dummyy_loc(i,j,k,thread_id) = displ(2,iglob)
                 dummyz_loc(i,j,k,thread_id) = displ(3,iglob)
+             enddo
+          enddo
+       enddo
+
+       ! stores velocity values in local array
+       do k=1,NGLLZ
+          do j=1,NGLLY
+             do i=1,NGLLX
+                iglob = ibool(i,j,k,ispec)
+                dummyx_loc_att(i,j,k,thread_id) = veloc(1,iglob)
+                dummyy_loc_att(i,j,k,thread_id) = veloc(2,iglob)
+                dummyz_loc_att(i,j,k,thread_id) = veloc(3,iglob)
              enddo
           enddo
        enddo
@@ -335,6 +353,113 @@
           enddo
        enddo
 
+       if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
+          do j=1,m2
+             do i=1,m1
+                tempx1_att(i,j,1,thread_id) = tempx1(i,j,1,thread_id)
+                tempy1_att(i,j,1,thread_id) = tempy1(i,j,1,thread_id)
+                tempz1_att(i,j,1,thread_id) = tempz1(i,j,1,thread_id)
+             enddo
+          enddo
+
+          do j=1,m1
+             do i=1,m1
+                do k=1,NGLLX
+                   tempx2_att(i,j,k,thread_id) = tempx2(i,j,k,thread_id)
+                   tempy2_att(i,j,k,thread_id) = tempy2(i,j,k,thread_id)
+                   tempz2_att(i,j,k,thread_id) = tempz2(i,j,k,thread_id)
+                enddo
+             enddo
+          enddo
+
+          do j=1,m1
+             do i=1,m2
+                tempx3_att(i,1,j,thread_id) = tempx3(i,1,j,thread_id)
+                tempy3_att(i,1,j,thread_id) = tempy3(i,1,j,thread_id)
+                tempz3_att(i,1,j,thread_id) = tempz3(i,1,j,thread_id)
+             enddo
+          enddo
+
+          ! use first order Taylor expansion of displacement for local storage of stresses 
+          ! at this current time step, to fix attenuation in a consistent way
+          do j=1,m2
+             do i=1,m1
+                tempx1l_att(i,j,1,thread_id) = tempx1l_att(i,j,1,thread_id) + &
+                     deltat*hprime_xx(i,1)*dummyx_loc_att(1,j,1,thread_id) + &
+                     deltat*hprime_xx(i,2)*dummyx_loc_att(2,j,1,thread_id) + &
+                     deltat*hprime_xx(i,3)*dummyx_loc_att(3,j,1,thread_id) + &
+                     deltat*hprime_xx(i,4)*dummyx_loc_att(4,j,1,thread_id) + &
+                     deltat*hprime_xx(i,5)*dummyx_loc_att(5,j,1,thread_id)
+
+                tempy1l_att(i,j,1,thread_id) = tempy1l_att(i,j,1,thread_id) + &
+                     deltat*hprime_xx(i,1)*dummyy_loc_att(1,j,1,thread_id) + &
+                     deltat*hprime_xx(i,2)*dummyy_loc_att(2,j,1,thread_id) + &
+                     deltat*hprime_xx(i,3)*dummyy_loc_att(3,j,1,thread_id) + &
+                     deltat*hprime_xx(i,4)*dummyy_loc_att(4,j,1,thread_id) + &
+                     deltat*hprime_xx(i,5)*dummyy_loc_att(5,j,1,thread_id)
+
+                tempz1l_att(i,j,1,thread_id) = tempz1l_att(i,j,1,thread_id) + &
+                     deltat*hprime_xx(i,1)*dummyz_loc_att(1,j,1,thread_id) + &
+                     deltat*hprime_xx(i,2)*dummyz_loc_att(2,j,1,thread_id) + &
+                     deltat*hprime_xx(i,3)*dummyz_loc_att(3,j,1,thread_id) + &
+                     deltat*hprime_xx(i,4)*dummyz_loc_att(4,j,1,thread_id) + &
+                     deltat*hprime_xx(i,5)*dummyz_loc_att(5,j,1,thread_id)
+             enddo
+          enddo
+
+          do j=1,m1
+             do i=1,m1
+                do k=1,NGLLX
+                   tempx2l_att(i,j,k,thread_id) = tempx2l_att(i,j,k,thread_id) + &
+                        deltat*dummyx_loc_att(i,1,k,thread_id)*hprime_xxT(1,j) + &
+                        deltat*dummyx_loc_att(i,2,k,thread_id)*hprime_xxT(2,j) + &
+                        deltat*dummyx_loc_att(i,3,k,thread_id)*hprime_xxT(3,j) + &
+                        deltat*dummyx_loc_att(i,4,k,thread_id)*hprime_xxT(4,j) + &
+                        deltat*dummyx_loc_att(i,5,k,thread_id)*hprime_xxT(5,j)
+
+                   tempy2l_att(i,j,k,thread_id) = tempy2l_att(i,j,k,thread_id) + &
+                        deltat*dummyy_loc_att(i,1,k,thread_id)*hprime_xxT(1,j) + &
+                        deltat*dummyy_loc_att(i,2,k,thread_id)*hprime_xxT(2,j) + &
+                        deltat*dummyy_loc_att(i,3,k,thread_id)*hprime_xxT(3,j) + &
+                        deltat*dummyy_loc_att(i,4,k,thread_id)*hprime_xxT(4,j) + &
+                        deltat*dummyy_loc_att(i,5,k,thread_id)*hprime_xxT(5,j)
+
+                   tempz2l_att(i,j,k,thread_id) = tempz2l_att(i,j,k,thread_id) + &
+                        deltat*dummyz_loc_att(i,1,k,thread_id)*hprime_xxT(1,j) + &
+                        deltat*dummyz_loc_att(i,2,k,thread_id)*hprime_xxT(2,j) + &
+                        deltat*dummyz_loc_att(i,3,k,thread_id)*hprime_xxT(3,j) + &
+                        deltat*dummyz_loc_att(i,4,k,thread_id)*hprime_xxT(4,j) + &
+                        deltat*dummyz_loc_att(i,5,k,thread_id)*hprime_xxT(5,j)
+                enddo
+             enddo
+          enddo
+
+          do j=1,m1
+             do i=1,m2
+                tempx3l_att(i,1,j,thread_id) = tempx3l_att(i,1,j,thread_id) + &
+                     deltat*dummyx_loc_att(i,1,1,thread_id)*hprime_xxT(1,j) + &
+                     deltat*dummyx_loc_att(i,1,2,thread_id)*hprime_xxT(2,j) + &
+                     deltat*dummyx_loc_att(i,1,3,thread_id)*hprime_xxT(3,j) + &
+                     deltat*dummyx_loc_att(i,1,4,thread_id)*hprime_xxT(4,j) + &
+                     deltat*dummyx_loc_att(i,1,5,thread_id)*hprime_xxT(5,j)
+
+                tempy3l_att(i,1,j,thread_id) = tempy3l_att(i,1,j,thread_id) + &
+                     deltat*dummyy_loc_att(i,1,1,thread_id)*hprime_xxT(1,j) + &
+                     deltat*dummyy_loc_att(i,1,2,thread_id)*hprime_xxT(2,j) + &
+                     deltat*dummyy_loc_att(i,1,3,thread_id)*hprime_xxT(3,j) + &
+                     deltat*dummyy_loc_att(i,1,4,thread_id)*hprime_xxT(4,j) + &
+                     deltat*dummyy_loc_att(i,1,5,thread_id)*hprime_xxT(5,j)
+
+                tempz3l_att(i,1,j,thread_id) = tempz3l_att(i,1,j,thread_id) + &
+                     deltat*dummyz_loc_att(i,1,1,thread_id)*hprime_xxT(1,j) + &
+                     deltat*dummyz_loc_att(i,1,2,thread_id)*hprime_xxT(2,j) + &
+                     deltat*dummyz_loc_att(i,1,3,thread_id)*hprime_xxT(3,j) + &
+                     deltat*dummyz_loc_att(i,1,4,thread_id)*hprime_xxT(4,j) + &
+                     deltat*dummyz_loc_att(i,1,5,thread_id)*hprime_xxT(5,j)
+             enddo
+          endif
+       endif
+
        do k=1,NGLLZ
           do j=1,NGLLY
              do i=1,NGLLX
@@ -394,16 +519,54 @@
                 duxdyl_plus_duydxl = duxdyl + duydxl
                 duzdxl_plus_duxdzl = duzdxl + duxdzl
                 duzdyl_plus_duydzl = duzdyl + duydzl
+                
+                if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then
+                   ! temporary variables used for fixing attenuation in a consistent way
+                   duxdxl_att = xixl*tempx1l_att(i,j,k,thread_id) + etaxl*tempx2l_att(i,j,k,thread_id) + &
+                        gammaxl*tempx3l_att(i,j,k,thread_id)
+                   duxdyl_att = xiyl*tempx1l_att(i,j,k,thread_id) + etayl*tempx2l_att(i,j,k,thread_id) + &
+                        gammayl*tempx3l_att(i,j,k,thread_id)
+                   duxdzl_att = xizl*tempx1l_att(i,j,k,thread_id) + etazl*tempx2l_att(i,j,k,thread_id) + &
+                        gammazl*tempx3l_att(i,j,k,thread_id)
 
-                ! computes deviatoric strain attenuation and/or for kernel calculations
-                if (COMPUTE_AND_STORE_STRAIN) then
-                   templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-                   if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
-                   epsilondev_xx_loc(i,j,k) = duxdxl - templ
-                   epsilondev_yy_loc(i,j,k) = duydyl - templ
-                   epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
-                   epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
-                   epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+                   duydxl_att = xixl*tempy1l_att(i,j,k,thread_id) + etaxl*tempy2l_att(i,j,k,thread_id) + &
+                        gammaxl*tempy3l_att(i,j,k,thread_id)
+                   duydyl_att = xiyl*tempy1l_att(i,j,k,thread_id) + etayl*tempy2l_att(i,j,k,thread_id) + &
+                        gammayl*tempy3l_att(i,j,k,thread_id)
+                   duydzl_att = xizl*tempy1l_att(i,j,k,thread_id) + etazl*tempy2l_att(i,j,k,thread_id) + &
+                        gammazl*tempy3l_att(i,j,k,thread_id)
+
+                   duzdxl_att = xixl*tempz1l_att(i,j,k,thread_id) + etaxl*tempz2l_att(i,j,k,thread_id) + &
+                        gammaxl*tempz3l_att(i,j,k,thread_id)
+                   duzdyl_att = xiyl*tempz1l_att(i,j,k,thread_id) + etayl*tempz2l_att(i,j,k,thread_id) + &
+                        gammayl*tempz3l_att(i,j,k,thread_id)
+                   duzdzl_att = xizl*tempz1l_att(i,j,k,thread_id) + etazl*tempz2l_att(i,j,k,thread_id) + &
+                        gammazl*tempz3l_att(i,j,k,thread_id)
+
+                   ! precompute some sums to save CPU time
+                   duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att
+                   duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att
+                   duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
+
+                   ! compute deviatoric strain
+                   if( SIMULATION_TYPE == 3 ) &
+                        epsilon_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
+                   epsilondev_xx_loc(i,j,k) = duxdxl_att - epsilon_trace_over_3(i,j,k,ispec)
+                   epsilondev_yy_loc(i,j,k) = duydyl_att - epsilon_trace_over_3(i,j,k,ispec)
+                   epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
+                   epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
+                   epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
+                else
+                   ! computes deviatoric strain attenuation and/or for kernel calculations
+                   if (COMPUTE_AND_STORE_STRAIN) then
+                      templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+                      if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
+                      epsilondev_xx_loc(i,j,k) = duxdxl - templ
+                      epsilondev_yy_loc(i,j,k) = duydyl - templ
+                      epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
+                      epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl
+                      epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl
+                   endif
                 endif
 
                 kappal = kappastore(i,j,k,ispec)
@@ -760,6 +923,9 @@
   ! deallocate(dummyx_loc)
   ! deallocate(dummyy_loc)
   ! deallocate(dummyz_loc)
+  ! deallocate(dummyx_loc_att)
+  ! deallocate(dummyy_loc_att)
+  ! deallocate(dummyz_loc_att)
   ! deallocate(newtempx1)
   ! deallocate(newtempx2)
   ! deallocate(newtempx3)
@@ -778,6 +944,15 @@
   ! deallocate(tempz1)
   ! deallocate(tempz2)
   ! deallocate(tempz3)
+  ! deallocate(tempx1_att)
+  ! deallocate(tempx2_att)
+  ! deallocate(tempx3_att)
+  ! deallocate(tempy1_att)
+  ! deallocate(tempy2_att)
+  ! deallocate(tempy3_att)
+  ! deallocate(tempz1_att)
+  ! deallocate(tempz2_att)
+  ! deallocate(tempz3_att)
 
   ! accel(:,:) = accel_omp(:,:,1)
 
