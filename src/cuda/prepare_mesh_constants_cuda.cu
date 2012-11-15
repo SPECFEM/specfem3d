@@ -45,6 +45,7 @@
 #else
   #ifdef USE_TEXTURES_FIELDS
 extern texture<realw, cudaTextureType1D, cudaReadModeElementType> d_displ_tex;
+extern texture<realw, cudaTextureType1D, cudaReadModeElementType> d_veloc_tex;
 extern texture<realw, cudaTextureType1D, cudaReadModeElementType> d_accel_tex;
   #endif
 
@@ -716,6 +717,17 @@ TRACE("prepare_fields_elastic_device");
     #else
       cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
       print_CUDA_error_if_any(cudaBindTexture(0, &d_displ_tex, mp->d_displ, &channelDesc, sizeof(realw)*(*size)), 4001);
+    #endif
+  }
+
+  {
+    #ifdef USE_OLDER_CUDA4_GPU
+      print_CUDA_error_if_any(cudaGetTextureReference(&mp->d_veloc_tex_ref_ptr, "d_veloc_tex"), 4002);
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, mp->d_veloc_tex_ref_ptr, mp->d_veloc, &channelDesc, sizeof(realw)*(*size)), 4002);
+    #else
+      cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+      print_CUDA_error_if_any(cudaBindTexture(0, &d_veloc_tex, mp->d_veloc, &channelDesc, sizeof(realw)*(*size)), 4002);
     #endif
   }
 

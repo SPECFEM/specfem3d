@@ -121,7 +121,7 @@ subroutine compute_forces_elastic()
     else
       ! on GPU
       ! contains both forward SIM_TYPE==1 and backward SIM_TYPE==3 simulations
-      call compute_forces_elastic_cuda(Mesh_pointer, iphase, &
+      call compute_forces_elastic_cuda(Mesh_pointer, iphase, deltat, &
                                       nspec_outer_elastic, &
                                       nspec_inner_elastic, &
                                       COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY)

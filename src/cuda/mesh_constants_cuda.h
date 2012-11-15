@@ -274,6 +274,7 @@ typedef struct mesh_ {
 #ifdef USE_TEXTURES_FIELDS
   // Texture references for fast non-coalesced scattered access
   const textureReference* d_displ_tex_ref_ptr;
+  const textureReference* d_veloc_tex_ref_ptr;
   const textureReference* d_accel_tex_ref_ptr;
 #endif
 
