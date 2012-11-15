@@ -1279,6 +1279,9 @@
     allocate(dummyx_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(dummyy_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(dummyz_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(dummyx_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(dummyy_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(dummyz_loc_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(newtempx1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(newtempx2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(newtempx3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
@@ -1297,6 +1300,15 @@
     allocate(tempz1(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(tempz2(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
     allocate(tempz3(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempx1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempx2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempx3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempy1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempy2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempy3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempz1_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempz2_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
+    allocate(tempz3_att(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
 
     ! set num_elem_colors array in case no mesh coloring is used
     if( .not. USE_MESH_COLORING_GPU ) then
