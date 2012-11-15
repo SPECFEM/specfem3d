@@ -61,13 +61,13 @@ subroutine compute_forces_elastic()
 
       else
         ! no optimizations used
-        call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+        call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,&
+                        ATTENUATION,deltat, &
                         one_minus_sum_beta,factor_common, &
                         alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB, &
@@ -90,13 +90,13 @@ subroutine compute_forces_elastic()
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
           call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,&
-                        b_displ,b_accel, &
+                        b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,&
+                        ATTENUATION,deltat, &
                         one_minus_sum_beta,factor_common, &
                         b_alphaval,b_betaval,b_gammaval,&
                         NSPEC_ATTENUATION_AB, &
@@ -443,12 +443,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
            phase_ispec_inner_elastic,&
            num_colors_outer_elastic,num_colors_inner_elastic)
 #else
-    call compute_forces_elastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
              kappastore,mustore,jacobian,ibool, &
-             ATTENUATION, &
+             ATTENUATION,deltat, &
              one_minus_sum_beta,factor_common, &
              alphaval,betaval,gammaval, &
              NSPEC_ATTENUATION_AB, &
@@ -470,12 +470,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
 #endif
 
   case (6)
-    call compute_forces_elastic_Dev_6p(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_6p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                     hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                     kappastore,mustore,jacobian,ibool, &
-                    ATTENUATION, &
+                    ATTENUATION,deltat, &
                     one_minus_sum_beta,factor_common, &
                     alphaval,betaval,gammaval, &
                     NSPEC_ATTENUATION_AB, &
@@ -496,12 +496,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
                     phase_ispec_inner_elastic )
 
   case (7)
-    call compute_forces_elastic_Dev_7p(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_7p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                     hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                     kappastore,mustore,jacobian,ibool, &
-                    ATTENUATION, &
+                    ATTENUATION,deltat, &
                     one_minus_sum_beta,factor_common, &
                     alphaval,betaval,gammaval, &
                     NSPEC_ATTENUATION_AB, &
@@ -522,12 +522,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
                     phase_ispec_inner_elastic )
 
   case (8)
-    call compute_forces_elastic_Dev_8p(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_8p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                     hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                     kappastore,mustore,jacobian,ibool, &
-                    ATTENUATION, &
+                    ATTENUATION,deltat, &
                     one_minus_sum_beta,factor_common, &
                     alphaval,betaval,gammaval, &
                     NSPEC_ATTENUATION_AB, &
@@ -548,12 +548,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
                     phase_ispec_inner_elastic )
 
   case (9)
-    call compute_forces_elastic_Dev_9p(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_9p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                     hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                     kappastore,mustore,jacobian,ibool, &
-                    ATTENUATION, &
+                    ATTENUATION,deltat, &
                     one_minus_sum_beta,factor_common, &
                     alphaval,betaval,gammaval, &
                     NSPEC_ATTENUATION_AB, &
@@ -574,12 +574,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
                     phase_ispec_inner_elastic )
 
   case (10)
-    call compute_forces_elastic_Dev_10p(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_10p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                     hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                     kappastore,mustore,jacobian,ibool, &
-                    ATTENUATION, &
+                    ATTENUATION,deltat, &
                     one_minus_sum_beta,factor_common, &
                     alphaval,betaval,gammaval, &
                     NSPEC_ATTENUATION_AB, &
@@ -629,12 +629,12 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
 
   case (5)
     call compute_forces_elastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_accel, &
+                  b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                   wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                   kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION, &
+                  ATTENUATION,deltat, &
                   one_minus_sum_beta,factor_common, &
                   b_alphaval,b_betaval,b_gammaval, &
                   NSPEC_ATTENUATION_AB, &
@@ -656,12 +656,12 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
 
   case (6)
     call compute_forces_elastic_Dev_6p(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_accel, &
+                  b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                   wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                   kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION, &
+                  ATTENUATION,deltat, &
                   one_minus_sum_beta,factor_common, &
                   b_alphaval,b_betaval,b_gammaval, &
                   NSPEC_ATTENUATION_AB, &
@@ -683,12 +683,12 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
 
   case (7)
     call compute_forces_elastic_Dev_7p(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_accel, &
+                  b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                   wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                   kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION, &
+                  ATTENUATION,deltat, &
                   one_minus_sum_beta,factor_common, &
                   b_alphaval,b_betaval,b_gammaval, &
                   NSPEC_ATTENUATION_AB, &
@@ -710,12 +710,12 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
 
   case (8)
     call compute_forces_elastic_Dev_8p(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_accel, &
+                  b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                   wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                   kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION, &
+                  ATTENUATION,deltat, &
                   one_minus_sum_beta,factor_common, &
                   b_alphaval,b_betaval,b_gammaval, &
                   NSPEC_ATTENUATION_AB, &
@@ -737,12 +737,12 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
 
   case (9)
     call compute_forces_elastic_Dev_9p(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_accel, &
+                  b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                   wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                   kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION, &
+                  ATTENUATION,deltat, &
                   one_minus_sum_beta,factor_common, &
                   b_alphaval,b_betaval,b_gammaval, &
                   NSPEC_ATTENUATION_AB, &
@@ -764,12 +764,12 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
 
   case (10)
     call compute_forces_elastic_Dev_10p(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_accel, &
+                  b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                   wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                   kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION, &
+                  ATTENUATION,deltat, &
                   one_minus_sum_beta,factor_common, &
                   b_alphaval,b_betaval,b_gammaval, &
                   NSPEC_ATTENUATION_AB, &
