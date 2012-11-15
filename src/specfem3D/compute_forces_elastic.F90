@@ -417,12 +417,12 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
-    call compute_forces_elastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,accel, &
+    call compute_forces_elastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
            hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
            kappastore,mustore,jacobian,ibool, &
-           ATTENUATION, &
+           ATTENUATION,deltat, &
            one_minus_sum_beta,factor_common, &
            alphaval,betaval,gammaval, &
            NSPEC_ATTENUATION_AB, &
