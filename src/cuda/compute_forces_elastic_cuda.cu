@@ -39,6 +39,7 @@
 
 #ifdef USE_TEXTURES_FIELDS
 texture<realw, cudaTextureType1D, cudaReadModeElementType> d_displ_tex;
+texture<realw, cudaTextureType1D, cudaReadModeElementType> d_veloc_tex;
 texture<realw, cudaTextureType1D, cudaReadModeElementType> d_accel_tex;
 #endif
 
@@ -801,7 +802,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
   if(ATTENUATION){
     // use first order Taylor expansion of displacement for local storage of stresses 
     // at this current time step, to fix attenuation in a consistent way
-#ifdef USE_TEXTURES
+#ifdef USE_TEXTURES_FIELDS
     s_dummyx_loc_att[tx] = s_dummyx_loc[tx] + d_deltat * tex1Dfetch(d_veloc_tex, iglob);
     s_dummyy_loc_att[tx] = s_dummyy_loc[tx] + d_deltat * tex1Dfetch(d_veloc_tex, iglob + NGLOB);
     s_dummyz_loc_att[tx] = s_dummyz_loc[tx] + d_deltat * tex1Dfetch(d_veloc_tex, iglob + 2*NGLOB);

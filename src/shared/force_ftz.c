@@ -51,6 +51,7 @@
 #define FTZ_BIT 15
 #define UNDERFLOW_EXCEPTION_MASK 11
 
+#ifdef __GNUC__ // only use these features on gnu compiler
 #ifdef HAVE_XMMINTRIN
   #define FORCE_FTZ
   #include <xmmintrin.h>
@@ -58,10 +59,12 @@
   #include <emmintrin.h>
   #define FORCE_FTZ
 #endif
+#endif // __GNUC__
 
 void
 FC_FUNC_(force_ftz,FORCE_FTZ)()
 {
+#ifdef __GNUC__
 #ifdef FORCE_FTZ
   unsigned int x;
 
@@ -71,4 +74,5 @@ FC_FUNC_(force_ftz,FORCE_FTZ)()
   x |= (1 << UNDERFLOW_EXCEPTION_MASK);
   _mm_setcsr(x);
 #endif
+#endif // __GNUC__ 
 }
