@@ -84,7 +84,7 @@ O = ../../obj/spec
 # L : libraries directory
 L = ../../lib
 # Output files directory
-OUTPUT=../../in_out_files/OUTPUT_FILES
+OUTPUT=../../OUTPUT_FILES
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
 FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
