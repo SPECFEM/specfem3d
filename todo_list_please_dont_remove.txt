@@ -138,7 +138,16 @@ PT-SCOTCH:
 
 use PT-Scotch (the parallel version of SCOTCH) in SPECFEM3D instead of (or as an option in addition to) the serial version of
 SCOTCH; because decomposing very large 3D meshes on a serial machine (on a single processor core) can be a severe limitation and
-for some meshes that will be a major bottleneck
+for some meshes that will be a major bottleneck.
+
+What would need to be done is switch to PT-Scotch version 6.0 and/or to ParMETIS
+(supporting both would be easy, since the subroutine calls are very similar; in the current serial code we support both Scotch and METIS).
+
+To do that, one would need to rewrite "decompose_mesh.F90" in directory src/decompose_mesh.
+That is the only file that would need to change (in addition to part_decompose_mesh.f90, which is called by decompose_mesh.F90).
+Unfortunately that file is not very well written nor very well commented.
+Thus unfortunately that set of routines is not so easy to understand and modify.
+A bunch of things are hardwired. 
 
 
 ------------------------------------------------
