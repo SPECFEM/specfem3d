@@ -1,0 +1,14 @@
+1
+0.00134                 ! #tag #eta(damping)
+1                       ! 1 = dyn 2=kin
+1000						! NTOUT : Number of time steps
+100                                             ! NTSNAP: time interation of snapshots
+-1.0e0                                          ! V_HEALING (-1 : Healing off)
+1e-3                                            ! V_RUPT
+&BEGIN_FAULT /
+&INIT_STRESS S1=70.0e6, n1=3, S2=0.0e0,S3=-120.0e6 /
+&DIST2D shape='square', val = 78.0e6, xc = -7500.0e0, yc =0e0, zc=  -7500.0e0, l=3000.0e0 /
+&DIST2D shape='square', val = 81.6e6, xc =       0e0, yc =0e0, zc=  -7500.0e0, l=3000.0e0 /
+&DIST2D shape='square', val = 62.0e6, xc =  7500.0e0, yc =0e0, zc=  -7500.0e0, l=3000.0e0 /
+&SWF mus=10000.0e0, nmus=1, mud=0.525e0,dc=0.4e0/  
+&DIST2D	shape='rectangle', val = 0.677e0, xc =  0e0, yc =0e0, zc=  -7500.0e0, lx=30000.0e0, ly=1.0e0, lz=15000.0e0 /

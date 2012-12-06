@@ -1,0 +1,37 @@
+2
+0.00134                 ! #tag #eta(damping) FAULT A
+0.00134                 ! #tag #eta(damping) FAULT BC
+1                       ! 1 = dyn 2=kin
+100						! NTOUT : Number of time steps
+1000                                            ! NTSNAP: time interation of snapshots
+-1e0                                            ! V_HEALING (-1 : Healing off)
+1e-3                                            ! V_RUPT
+
+&BEGIN_FAULT /
+
+&INIT_STRESS S1=0.0e6,S2=0.0e0,S3=-4.78e6,n1=0,n2=3,n3=3 / 
+&DIST2D	shape='rectangle',       val = -2.16e6,  xc = 113.5e3, yc =120.0e3, zc= -19500.0e0, lx=227.0e3, ly=80.0e3, lz=30000.0e0 /
+&DIST2D shape='rectangle',       val = -2.88e6,  xc = 166521.863e0, yc =148.0e3, zc= -7962.09773e0,lx=23794.68e0, ly=24.0e3, lz=3132.628e0 / 
+&DIST2D	shape='rectangle-taper', val = -2.16e6, valh =-0.216e6,xc = 226407.564e0, yc =120.0e3, zc= -4.50e3,lx=22787.2623e0, ly=80.0e3, lz=3.0e3 /
+&DIST2D	shape='rectangle',       val =-0.478e6,  xc = 113.5e3, yc =120.0e3, zc= -15000.0e0, lx=227.0e3, ly=80.0e3, lz=30000.0e0 /
+&DIST2D	shape='rectangle',       val = -4.78e6,  xc = 113.5e3, yc =120.0e3, zc= -19500.0e0, lx=227.0e3, ly=80.0e3, lz=30000.0e0 /
+&DIST2D	shape='rectangle-taper', val = -4.78e6, valh=-0.478e6, xc = 226407.564e0, yc =120.0e3, zc= -4.50e3, lx=22787.2623e0, ly=80.0e3, lz=3.0e3 /
+
+&SWF mus=1000.0e0,mud=1000.0e0,dc=0.5e0,nmus=1,nmud=1,ndc=0 /  
+&DIST2D	shape='rectangle', val = 0.6e0,  xc = 113.5e3, yc =135.0e3, zc= -15.0e3,  lx=227.0e3, ly=50.0e3, lz=30000.0e0 /
+&DIST2D	shape='rectangle', val = 0.2e0,  xc = 113.5e3, yc =135.0e3, zc= -15.0e3,  lx=227.0e3, ly=50.0e3, lz=30000.0e0 /
+
+&BEGIN_FAULT /
+
+&INIT_STRESS S1=0.0e6,S2=0.0e0,S3=-100.0e6,n1=0,n2=3,n3=4 / 
+&DIST2D	shape='rectangle',       val = -5.69e6,  xc = 70514.4284e0, yc =120.0e3, zc=-11.25e3, lx=23382.6859e0, ly=80.0e3, lz=13.5e3 /
+&DIST2D	shape='rectangle',       val = -3.54e6,  xc = 43894.8822e0, yc =120.0e3, zc=-22.0e3, lx=29856.4065e0, ly=80.0e3, lz= 8.0e3 /  
+&DIST2D	shape='rectangle-taper', val = -5.69e6, valh=-0.569e6, xc = 82205.7714e0, yc =120.0e3, zc= -4.5e3, lx=5196.15242e0, ly=80.0e3, lz=3.0e3 /
+&DIST2D	shape='rectangle',       val =-1.238e6,  xc = 74411.5427e0, yc =120.0e3, zc= -9.0e3, lx=31176.9145e0, ly=80.0e3, lz=18.0e3 /
+&DIST2D	shape='rectangle',       val =-12.38e6,  xc = 70514.4284e0, yc =120.0e3, zc=-11.25e3, lx=23382.6859e0, ly=80.0e3, lz=13.5e3 /
+&DIST2D	shape='rectangle-taper', val =-12.38e6, valh=-1.238e6, xc = 82205.7714e0, yc =120.0e3, zc= -4.5e3, lx=5196.15242e0, ly=80.0e3, lz=3.0e3 /
+&DIST2D	shape='rectangle',       val = -9.04e6,  xc = 43894.8822e0, yc =120.0e3, zc=-22.0e3, lx=29856.4065e0, ly=80.0e3, lz= 8.0e3 /
+
+&SWF mus=1000.e0,mud=1000.0e0,dc=0.5e0,nmus=1,nmud=1,ndc=0 / 
+&DIST2D	shape='rectangle',       val =  0.6e0, xc = 60.1915e3, yc =120.0e3, zc=-13.0e3, lx=59616.98e0, ly=80.0e3, lz=26.0e3 /
+&DIST2D	shape='rectangle',       val =  0.2e0, xc = 60.1915e3, yc =120.0e3, zc=-13.0e3, lx=59616.98e0, ly=80.0e3, lz=26.0e3 /
