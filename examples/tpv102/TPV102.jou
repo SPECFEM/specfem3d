@@ -1,0 +1,43 @@
+# Surendra Nadh Somala, Caltech 2012
+
+reset
+
+set echo off
+set journal off
+
+brick x 60000 y 60000 z 30000
+move volume 1 z -15000
+webcut volume 1 with plane yplane
+
+surface 12 7 merge off
+merge tolerance 1e-3
+
+imprint all
+merge all
+
+
+
+surface all size 400
+mesh volume all
+
+
+
+
+group "upp" add node in surface 12
+group "upp" remove node with x_coord = 30000
+group "upp" remove node with x_coord = -30000
+group "upp" remove node with z_coord = -30000
+nodeset 200 group upp
+nodeset 200 move 0.01 0 0
+
+group "lowr" add node in surface 7
+group "lowr" remove node with x_coord = 30000
+group "lowr" remove node with x_coord = -30000
+group "lowr" remove node with z_coord = -30000
+nodeset 201 group lowr
+nodeset 201 move -0.01 0 0
+
+
+
+
+

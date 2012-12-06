@@ -78,6 +78,7 @@ libgendatabases_a_OBJECTS = \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
+	$O/fault_generate_databases.o \
 	$O/finalize_databases.o \
 	$O/generate_databases.o \
 	$O/get_absorbing_boundary.o \
