@@ -1,0 +1,53 @@
+
+# forward or adjoint simulation
+SIMULATION_TYPE                 = 1   # 1 = forward, 2 = adjoint, 3 = both simultaneously
+SAVE_FORWARD                    = .false.
+
+# UTM projection parameters
+UTM_PROJECTION_ZONE             = 11
+SUPPRESS_UTM_PROJECTION         = .true.
+
+# number of MPI processors 
+NPROC                           = 100 
+
+# time step parameters
+NSTEP                           = 12000
+DT                              = 0.001d0
+
+# parameters describing the model
+OCEANS                          = .false.
+ATTENUATION                     = .false.
+USE_OLSEN_ATTENUATION           = .false.
+ANISOTROPY                      = .false.
+
+# absorbing boundary conditions for a regional simulation
+ABSORBING_CONDITIONS            = .true.
+ABSORB_FREE_SURFACE             = .false.
+# save AVS or OpenDX movies
+MOVIE_SURFACE                   = .true.
+MOVIE_VOLUME                    = .false.
+NTSTEP_BETWEEN_FRAMES           = 6000
+CREATE_SHAKEMAP                 = .false.
+SAVE_DISPLACEMENT               = .true.
+USE_HIGHRES_FOR_MOVIES          = .false.
+HDUR_MOVIE                      = 0.0
+
+# save AVS or OpenDX mesh files to check the mesh
+SAVE_MESH_FILES                 = .true.
+
+# path to store the local database file on each node
+LOCAL_PATH                      = /cluster/work/erdw/gpercy 
+
+# interval at which we output time step info and max of norm of displacement
+NTSTEP_BETWEEN_OUTPUT_INFO      = 500
+
+# interval in time steps for writing of seismograms
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# print source time function
+PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+## Here defined tags that will be taken for faults.
+## which friction laws .
+
+

@@ -54,6 +54,7 @@ subroutine compute_forces_elastic_noDev( iphase, &
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS
+  use fault_solver_dynamic, only : Kelvin_Voigt_eta
 
   implicit none
 
@@ -109,6 +110,9 @@ subroutine compute_forces_elastic_noDev( iphase, &
             c22store,c23store,c24store,c25store,c26store,c33store, &
             c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
+
+! New dloc = displ + Kelvin Voigt damping*veloc
+ real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ) :: dloc
 
 !  logical,dimension(NSPEC_AB) :: ispec_is_elastic
   integer :: iphase
@@ -192,6 +196,30 @@ subroutine compute_forces_elastic_noDev( iphase, &
       endif
     endif
 
+      ! Kelvin Voigt damping: artificial viscosity around dynamic faults
+
+       if (allocated(Kelvin_Voigt_eta)) then
+         eta = Kelvin_Voigt_eta(ispec)   
+         do k=1,NGLLZ
+           do j=1,NGLLY
+             do i=1,NGLLX
+               iglob = ibool(i,j,k,ispec)
+               dloc(:,i,j,k) = displ(:,iglob) + eta*veloc(:,iglob)
+             enddo
+           enddo
+         enddo
+
+       else
+         do k=1,NGLLZ
+           do j=1,NGLLY
+             do i=1,NGLLX
+               iglob = ibool(i,j,k,ispec)
+               dloc(:,i,j,k) = displ(:,iglob) 
+             enddo
+           enddo
+         enddo
+       endif
+
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
@@ -211,23 +239,23 @@ subroutine compute_forces_elastic_noDev( iphase, &
           do l=1,NGLLX
             hp1 = hprime_xx(i,l)
             iglob = ibool(l,j,k,ispec)
-            tempx1l = tempx1l + displ(1,iglob)*hp1
-            tempy1l = tempy1l + displ(2,iglob)*hp1
-            tempz1l = tempz1l + displ(3,iglob)*hp1
+            tempx1l = tempx1l + dloc(1,iglob)*hp1
+            tempy1l = tempy1l + dloc(2,iglob)*hp1
+            tempz1l = tempz1l + dloc(3,iglob)*hp1
 
             !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp2 = hprime_yy(j,l)
             iglob = ibool(i,l,k,ispec)
-            tempx2l = tempx2l + displ(1,iglob)*hp2
-            tempy2l = tempy2l + displ(2,iglob)*hp2
-            tempz2l = tempz2l + displ(3,iglob)*hp2
+            tempx2l = tempx2l + dloc(1,iglob)*hp2
+            tempy2l = tempy2l + dloc(2,iglob)*hp2
+            tempz2l = tempz2l + dloc(3,iglob)*hp2
 
             !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp3 = hprime_zz(k,l)
             iglob = ibool(i,j,l,ispec)
-            tempx3l = tempx3l + displ(1,iglob)*hp3
-            tempy3l = tempy3l + displ(2,iglob)*hp3
-            tempz3l = tempz3l + displ(3,iglob)*hp3
+            tempx3l = tempx3l + dloc(1,iglob)*hp3
+            tempy3l = tempy3l + dloc(2,iglob)*hp3
+            tempz3l = tempz3l + dloc(3,iglob)*hp3
           enddo
 
           if( ATTENUATION .and. COMPUTE_AND_STORE_STRAIN ) then

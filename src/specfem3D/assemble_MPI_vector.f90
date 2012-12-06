@@ -790,3 +790,109 @@
   endif
 
   end subroutine assemble_MPI_scalar_write_cuda
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine assemble_MPI_vector_ext_mesh_w_ordered(NPROC,NGLOB_AB,array_val, &
+            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+            nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+            request_send_vector_ext_mesh,request_recv_vector_ext_mesh,my_neighbours_ext_mesh,myrank)
+
+! waits for data to receive and assembles
+
+! The goal of this version is to avoid different round-off errors in different processors.
+! The contribution of each processor is added following the order of its rank.
+! This guarantees that the sums are done in the same order on all processors.
+!
+! NOTE: this version assumes that the interfaces are ordered by increasing rank of the neighbour.
+! That is currently done so in subroutine write_interfaces_database in decompose_mesh_SCOTCH/part_decompose_mesh_SCOTCH.f90
+! A safety test could be added here.
+!
+! October 2012 - Surendra Somala and Jean-Paul Ampuero - Caltech Seismolab
+
+  implicit none
+
+  include "constants.h"
+
+! array to assemble
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val
+
+  integer :: NPROC
+  integer :: NGLOB_AB
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
+       buffer_recv_vector_ext_mesh
+
+  integer :: num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,myrank
+  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
+  integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: request_send_vector_ext_mesh,request_recv_vector_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: mybuffer
+  integer :: ipoin,iinterface,iglob
+  logical :: need_add_my_contrib
+
+! here we have to assemble all the contributions between partitions using MPI
+
+! assemble only if more than one partition
+  if (NPROC == 1) return
+
+! move interface values of array_val to local buffers 
+  do iinterface = 1, num_interfaces_ext_mesh
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+      mybuffer(:,ipoin,iinterface) = array_val(:,iglob)
+     ! set them to zero right away to avoid counting it more than once during assembly:
+     ! buffers of higher rank get zeros on nodes shared with current buffer
+      array_val(:,iglob) = 0._CUSTOM_REAL
+    enddo
+  enddo
+
+! wait for communications completion (recv)
+  do iinterface = 1, num_interfaces_ext_mesh
+    call wait_req(request_recv_vector_ext_mesh(iinterface))
+  enddo
+
+! adding all contributions in order of processor rank
+  need_add_my_contrib = .true.
+  do iinterface = 1, num_interfaces_ext_mesh
+    if (need_add_my_contrib .and. myrank < my_neighbours_ext_mesh(iinterface)) call add_my_contrib()
+    do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+      iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
+      array_val(:,iglob) = array_val(:,iglob) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
+    enddo
+  enddo
+  if (need_add_my_contrib) call add_my_contrib()
+
+! wait for communications completion (send)
+  do iinterface = 1, num_interfaces_ext_mesh
+    call wait_req(request_send_vector_ext_mesh(iinterface))
+  enddo
+
+  contains
+
+    subroutine add_my_contrib()
+  
+    integer :: my_iinterface,my_ipoin
+
+    do my_iinterface = 1, num_interfaces_ext_mesh
+      do my_ipoin = 1, nibool_interfaces_ext_mesh(my_iinterface)
+        iglob = ibool_interfaces_ext_mesh(my_ipoin,my_iinterface)
+        array_val(:,iglob) = array_val(:,iglob) + mybuffer(:,my_ipoin,my_iinterface)
+      enddo
+    enddo
+    need_add_my_contrib = .false.
+  
+    end subroutine add_my_contrib
+
+  end subroutine assemble_MPI_vector_ext_mesh_w_ordered
+
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+

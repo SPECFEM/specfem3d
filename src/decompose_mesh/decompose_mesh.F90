@@ -623,6 +623,12 @@ module decompose_mesh
     close(98)
     if( nspec2D_moho > 0 ) print*, '  nspec2D_moho = ', nspec2D_moho
 
+    call read_fault_files(localpath_name)
+    if (ANY_FAULT) then 
+      call save_nodes_coords(nodes_coords,nnodes)
+      call close_faults(nodes_coords,nnodes)    
+    end if 
+
   end subroutine read_mesh_files
 
   !----------------------------------------------------------------------------------------------
@@ -858,6 +864,10 @@ module decompose_mesh
                        nparts, part, NGNOD)
 
     deallocate(num_material)
+
+  ! re-partitioning transfers two coupled elements on fault side 1 and side 2 to the same partition
+    if (ANY_FAULT) call fault_repartition (nspec, nnodes, elmnts, nsize, nparts, part, esize, nodes_coords)
+
 
     ! re-partitioning puts moho-surface coupled elements into same partition
 ! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)

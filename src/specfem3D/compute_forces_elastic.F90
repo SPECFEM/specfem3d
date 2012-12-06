@@ -32,6 +32,8 @@ subroutine compute_forces_elastic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
+  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
   implicit none
 
@@ -286,11 +288,13 @@ subroutine compute_forces_elastic()
     else
       ! waits for send/receive requests to be completed and assembles values
       if(.NOT. GPU_MODE) then
-         call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_AB,accel, &
+         call assemble_MPI_vector_ext_mesh_w_ordered(NPROC,NGLOB_AB,accel, &
                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+                            request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                            my_neighbours_ext_mesh,myrank)
+
       else ! GPU_MODE == 1
          call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
                             buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
@@ -301,11 +305,13 @@ subroutine compute_forces_elastic()
       ! adjoint simulations
       if( SIMULATION_TYPE == 3 ) then
          if(.NOT. GPU_MODE) then
-            call assemble_MPI_vector_ext_mesh_w(NPROC,NGLOB_ADJOINT,b_accel, &
+            call assemble_MPI_vector_ext_mesh_w_ordered(NPROC,NGLOB_ADJOINT,b_accel, &
                              b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
                              max_nibool_interfaces_ext_mesh, &
                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
+                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
+                             my_neighbours_ext_mesh,myrank)
+
          else ! GPU_MODE == 1
             call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,b_accel, Mesh_pointer,&
                               b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
@@ -324,6 +330,12 @@ subroutine compute_forces_elastic()
     !! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
 
  enddo
+
+!Percy , Fault boundary term B*tau is added to the assembled forces 
+!        which at this point are stored in the array 'accel'
+  if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
+  
+  if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
 
  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
  if(.NOT. GPU_MODE) then

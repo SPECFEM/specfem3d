@@ -55,6 +55,17 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision SMALLVALTOL
 
+! number of points per spectral element
+!  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
+ !jpampuero To allow usage of this routine for volume and surface meshes:
+ !jpampuero For volumes  NGLLCUBE = NGLLX * NGLLY * NGLLZ
+ !jpampuero For surfaces NGLLCUBE = NGLLX * NGLLY
+  integer :: NGLLCUBE
+  
+  NGLLCUBE=npointot/nspec
+! for vectorization of loops 
+!  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
+
 ! define geometrical tolerance based upon typical size of the model
   SMALLVALTOL = 1.d-10 * dabs(UTM_X_MAX - UTM_X_MIN)
 

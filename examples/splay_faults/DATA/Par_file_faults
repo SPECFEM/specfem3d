@@ -1,0 +1,59 @@
+1
+0.00134                 ! #tag #eta(damping) FAULT A (Slab)
+1                       ! 1 = dyn 2=kin
+100						! NTOUT : Number of time steps
+1000                                            ! NTSNAP: time interation of snapshots
+-1e0                                            ! V_HEALING (-1 : Healing off)
+1e-3                                            ! V_RUPT
+
+&BEGIN_FAULT /
+
+&INIT_STRESS S1=0.0e6,S2=40.0e6,S3=100.0e6,n1=0,n2=0,n3=0 / 
+
+&SWF mus=1000.0e0,mud=1000.0e0,dc=4e0,nmus=2,nmud=1,ndc=19 /  
+! weak zone (us = 0.6 )
+&DIST2D	shape='cilinder', val = 0.6e0,  xc = -75.0e3, yc =-425.0e3, zc= -19.27e3, r = 253.0e3, lz=100.0e3 /
+! nucleation zone (us = 0.395)
+&DIST2D	shape='cilinder', val = 0.395e0,  xc = -60.0e3, yc =-400.0e3, zc= -17.8e3, r = 15.0e3, lz=100.0e3 /
+! Weak Zone (ud = 0.3 )
+&DIST2D	shape='cilinder', val = 0.3e0,  xc = -75.0e3, yc =-425.0e3, zc= -19.27e3, r = 253.0e3, lz=100.0e3 /
+! Big asperities dc = 2
+! Asp 1
+&DIST2D	shape='cilinder', val = 2.0e0,  xc =  -65.0e3, yc =-410.0e3, zc= -18.25e3, r = 110.0e3, lz=100.0e3 /
+! Asp 2
+&DIST2D	shape='cilinder', val = 2.0e0,  xc = -110.0e3, yc =-465.0e3, zc= -23.23e3, r =  71.5e3, lz=100.0e3 /
+! Asp 3
+&DIST2D	shape='cilinder', val = 2.0e0,  xc = -145.0e3, yc =-525.0e3, zc= -23.84e3, r =  49.5e3, lz=100.0e3 /
+! Asp 4
+&DIST2D	shape='cilinder', val = 2.0e0,  xc =  -30.0e3, yc =-305.0e3, zc= -15.47e3, r =  49.5e3, lz=100.0e3 /
+! Small ssperities dc =1 
+! Asp 5
+&DIST2D	shape='cilinder', val = 1.0e0,  xc =  -45.0e3, yc =-265.0e3, zc= -19.49e3, r =  13.75e3, lz=100.0e3 /
+! Asp 6
+&DIST2D	shape='cilinder', val = 1.0e0,  xc =  -60.0e3, yc =-275.0e3, zc= -21.7e3, r =  13.75e3, lz=100.0e3 /
+! Asp 7
+&DIST2D	shape='cilinder', val = 1.0e0,  xc =  -65.0e3, yc =-285.0e3, zc= -22.40e3, r =  13.75e3, lz=100.0e3 /
+! Asp 8
+&DIST2D	shape='cilinder', val = 1.0e0,  xc =  -80.0e3, yc =-310.0e3, zc= -25.19e3, r =  13.75e3, lz=100.0e3 /
+! asp 9
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -105.0e3, yc =-330.0e3, zc= -31.55e3, r =  13.75e3, lz=100.0e3 /
+! Asp 10
+&DIST2D	shape='cilinder', val = 1.0e0,  xc = -130.0e3, yc =-345.0e3, zc= -39.37e3, r =  13.75e3, lz=100.0e3 /
+! Asp 11
+&DIST2D	shape='cilinder', val = 1.0e0,  xc = -145.0e3, yc =-365.0e3, zc= -43.70e3, r =  13.75e3, lz=100.0e3 /
+! asp 12
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -155.75e3, yc =-390.0e3, zc= -45.36e3, r =  13.75e3, lz=100.0e3 /
+! asp 13
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -160.00e3, yc =-430.0e3, zc= -42.95e3, r =  13.75e3, lz=100.0e3 /
+! asp 14
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -165.00e3, yc =-440.0e3, zc= -43.70e3, r =  13.75e3, lz=100.0e3 /
+! asp 15
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -165.00e3, yc =-435.0e3, zc= -44.41e3, r =  13.75e3, lz=100.0e3 /
+! asp 16
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -185.00e3, yc =-480.0e3, zc= -47.20e3, r =  13.75e3, lz=100.0e3 /
+! asp 17
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -200.00e3, yc =-500.0e3, zc= -50.55e3, r =  13.75e3, lz=100.0e3 /
+! asp 18
+&dist2d	shape='cilinder', val = 1.0e0,  xc = -205.00e3, yc =-530.0e3, zc= -45.43e3, r =  13.75e3, lz=100.0e3 /
+! Nucleation dc = 1
+&dist2d	shape='cilinder', val = 1.0e0,  xc =  -60.00e3, yc =-400.0e3, zc= -17.8e3, r =  13.75e3, lz=100.0e3 /
