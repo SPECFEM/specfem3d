@@ -38,6 +38,7 @@
 module decompose_mesh
 
   use part_decompose_mesh
+  use fault_scotch
 
   implicit none
 
@@ -866,7 +867,7 @@ module decompose_mesh
     deallocate(num_material)
 
   ! re-partitioning transfers two coupled elements on fault side 1 and side 2 to the same partition
-    if (ANY_FAULT) call fault_repartition (nspec, nnodes, elmnts, nsize, nparts, part, esize, nodes_coords)
+    if (ANY_FAULT) call fault_repartition (nspec, nnodes, elmnts, nsize, nparts, part, NGNOD, nodes_coords)
 
 
     ! re-partitioning puts moho-surface coupled elements into same partition
@@ -1015,6 +1016,30 @@ module decompose_mesh
                                   nspec2D_moho, ibelm_moho, nodes_ibelm_moho, NGNOD2D)
 
        close(IIN_database)
+
+
+       ! write fault database
+       if (ANY_FAULT) then
+          write(prname, "(i6.6,'_Database_fault')") ipart
+          open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
+               status='replace', action='write', form='unformatted', iostat = ier)
+          if( ier /= 0 ) then
+            print*,'error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
+            print*
+            print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
+            stop 
+          endif
+          call write_fault_database(16, ipart, nspec, &
+                                    glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                    glob2loc_nodes, part)
+          !write(16,*) nnodes_loc
+          write(16) nnodes_loc
+          call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open,&
+                                  glob2loc_nodes_nparts, glob2loc_nodes_parts, &
+                                  glob2loc_nodes, nnodes, 2)
+          close(16)
+       endif
+
 
     enddo
     print*, 'partitions: '

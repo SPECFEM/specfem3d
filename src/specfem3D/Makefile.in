@@ -114,9 +114,6 @@ libspecfem_a_OBJECTS = \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
-	$O/fault_solver_common.o \
-	$O/fault_solver_dynamic.o \
-	$O/fault_solver_kinematic.o \
 	$O/force_ftz.cc.o \
 	$O/get_attenuation_model.shared.o \
 	$O/get_cmt.shared.o \
@@ -178,6 +175,9 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
 	$O/PML_init.o \
 	$O/assemble_MPI_vector.o \
+	$O/fault_solver_common.o \
+	$O/fault_solver_dynamic.o \
+	$O/fault_solver_kinematic.o \
 	$O/compute_add_sources_acoustic.o \
 	$O/compute_add_sources_elastic.o \
 	$O/compute_add_sources_poroelastic.o \

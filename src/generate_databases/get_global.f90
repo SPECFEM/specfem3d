@@ -55,14 +55,12 @@
 ! small value for double precision and to avoid sensitivity to roundoff
   double precision SMALLVALTOL
 
-! number of points per spectral element
-!  integer, parameter :: NGLLCUBE = NGLLX * NGLLY * NGLLZ
  !jpampuero To allow usage of this routine for volume and surface meshes:
  !jpampuero For volumes  NGLLCUBE = NGLLX * NGLLY * NGLLZ
  !jpampuero For surfaces NGLLCUBE = NGLLX * NGLLY
-  integer :: NGLLCUBE
+  integer :: NGLLCUBE_local
   
-  NGLLCUBE=npointot/nspec
+  NGLLCUBE_local=npointot/nspec
 ! for vectorization of loops 
 !  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
 
@@ -78,8 +76,8 @@
 
 ! establish initial pointers
   do ispec=1,nspec
-    ieoff=NGLLCUBE*(ispec-1)
-    do ilocnum=1,NGLLCUBE
+    ieoff=NGLLCUBE_local*(ispec-1)
+    do ilocnum=1,NGLLCUBE_local
       loc(ilocnum+ieoff)=ilocnum+ieoff
     enddo
   enddo

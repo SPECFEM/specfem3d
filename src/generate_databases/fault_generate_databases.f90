@@ -9,7 +9,8 @@
 
 module fault_generate_databases
   
-  use create_regions_mesh_ext_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NGNOD2D,NDIM,CUSTOM_REAL,IMAIN
+  use create_regions_mesh_ext_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
+  use generate_databases_par, only : NGNOD2D
 
   implicit none
   private 
@@ -72,7 +73,7 @@ subroutine fault_read_input(prname,myrank)
  
  ! read fault input file
   nb = 0
-  open(unit=IIN_PAR,file='DATA/Par_file_faults',status='old',action='read',iostat=ier)
+  open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
   if (ier==0) then    
     read(IIN_PAR,*) nb
     if (myrank==0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
@@ -92,16 +93,16 @@ subroutine fault_read_input(prname,myrank)
 
  ! read fault database file
   open(unit=IIN_PAR,file=prname(1:len_trim(prname))//'Database_fault', &
-       status='old',action='read',form='formatted',iostat=ier)
+       status='old',action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    write(IIN_PAR,*) 'error opening file: ',prname(1:len_trim(prname))//'Database_fault'
-    write(IIN_PAR,*) 'make sure file exists'
+    write(IMAIN,*) 'error opening file: ',prname(1:len_trim(prname))//'Database_fault'
+    write(IMAIN,*) 'make sure file exists'
     stop
   endif
 
   do iflt=1,size(fault_db) 
 
-    read(IIN_PAR,*) nspec 
+    read(IIN_PAR) nspec 
     fault_db(iflt)%nspec  = nspec
 
     if (nspec == 0) cycle
@@ -114,10 +115,10 @@ subroutine fault_read_input(prname,myrank)
     allocate(fault_db(iflt)%inodes2(4,nspec))
 
     do i=1,nspec
-      read(IIN_PAR,*) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
+      read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
     enddo
     do i=1,nspec
-      read(IIN_PAR,*) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
+      read(IIN_PAR) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
     enddo
  
    ! loading ispec1 ispec2 iface1 iface2 of fault elements.
@@ -131,10 +132,10 @@ subroutine fault_read_input(prname,myrank)
   enddo
 
  ! read nodes coordinates of the original version of the mesh, in which faults are open
-  read(IIN_PAR,*) nnodes_coords_open
+  read(IIN_PAR) nnodes_coords_open
   allocate(nodes_coords_open(NDIM,nnodes_coords_open))
   do i = 1, nnodes_coords_open
-     read(IIN_PAR,*) dummy_node, nodes_coords_open(:,i)
+     read(IIN_PAR) dummy_node, nodes_coords_open(:,i)
   enddo
 
   close(IIN_PAR)
