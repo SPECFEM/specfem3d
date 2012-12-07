@@ -320,8 +320,11 @@ subroutine init_2d_distribution(a,coord,iin,n)
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
   integer :: i
+  real(kind=CUSTOM_REAL) :: SMALLVAL 
 
   NAMELIST / DIST2D / shape, val,valh, xc, yc, zc, r, l, lx,ly,lz
+
+  SMALLVAL = 1.e-10_CUSTOM_REAL
 
   if (n==0) return   
 

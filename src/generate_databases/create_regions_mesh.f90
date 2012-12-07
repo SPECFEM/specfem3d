@@ -51,6 +51,11 @@
     nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho
 
   use create_regions_mesh_ext_par
+  use fault_generate_databases, only: fault_read_input,fault_setup, &
+                          fault_save_arrays,fault_save_arrays_test,&
+                          nnodes_coords_open,nodes_coords_open,ANY_FAULT_IN_THIS_PROC,&
+                          ANY_FAULT, PARALLEL_FAULT
+
   implicit none
 
 ! local parameters
@@ -68,6 +73,9 @@
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
+ ! if faults exist this reads nodes_coords_open
+  call fault_read_input(prname,myrank)
+
 ! fills location and weights for Gauss-Lobatto-Legendre points, shape and derivations,
 ! returns jacobianstore,xixstore,...gammazstore
 ! and GLL-point locations in xstore,ystore,zstore
@@ -75,19 +83,49 @@
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up jacobian '
   endif
-  call crm_ext_setup_jacobian(myrank, &
+  if (ANY_FAULT_IN_THIS_PROC) then
+   ! compute jacobians with fault open and *store needed for ibool.
+    call crm_ext_setup_jacobian(myrank, &
+                         xstore,ystore,zstore,nspec, &
+                         nodes_coords_open, nnodes_coords_open,&
+                         elmnts_ext_mesh,nelmnts_ext_mesh)
+  else ! with no fault
+    call crm_ext_setup_jacobian(myrank, &
                         xstore,ystore,zstore,nspec, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,&
                         elmnts_ext_mesh,nelmnts_ext_mesh)
+  endif
+
 
 ! creates ibool index array for projection from local to global points
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...indexing global points'
   endif
-  call crm_ext_setup_indexing(ibool, &
-                        xstore,ystore,zstore,nspec,nglob,npointot, &
-                        nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
+  if (ANY_FAULT_IN_THIS_PROC) then
+    call crm_ext_setup_indexing(ibool, &
+                       xstore,ystore,zstore,nspec,nglob,npointot, &
+                       nnodes_coords_open,nodes_coords_open,myrank)
+  else ! with no fault
+    call crm_ext_setup_indexing(ibool, &
+                      xstore,ystore,zstore,nspec,nglob,npointot, &
+                      nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
+  end if
+
+  if (ANY_FAULT) then
+   ! recalculate *store with faults closed 
+    call sync_all()
+    if (myrank == 0) write(IMAIN,*) '  ... resetting up jacobian in fault domains'
+    if (ANY_FAULT_IN_THIS_PROC) call crm_ext_setup_jacobian(myrank, &
+                           xstore,ystore,zstore,nspec, &
+                           nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                           elmnts_ext_mesh,nelmnts_ext_mesh)
+   ! at this point (xyz)store_dummy are still open
+    if (.NOT. PARALLEL_FAULT) call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
+                    xstore,ystore,zstore,nspec,nglob,myrank)
+   ! this closes (xyz)store_dummy
+  endif
+
 
 ! sets up MPI interfaces between partitions
   call sync_all()
@@ -101,6 +139,17 @@
               nibool_interfaces_ext_mesh, &
               num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
               my_neighbours_ext_mesh)
+
+
+  !SURENDRA (setting up parallel fault)
+  if (PARALLEL_FAULT .AND. ANY_FAULT) then
+    call sync_all()
+    !at this point (xyz)store_dummy are still open
+    call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
+                    xstore,ystore,zstore,nspec,nglob,myrank)
+   ! this closes (xyz)store_dummy
+  endif
+
 
 ! sets up absorbing/free surface boundaries
   call sync_all()
@@ -182,6 +231,9 @@
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         SAVE_MESH_FILES,ANISOTROPY)
+
+!  call fault_save_arrays_test(prname)  ! for debugging
+  call fault_save_arrays(prname)
 
 ! saves moho surface
   if( SAVE_MOHO_MESH ) then

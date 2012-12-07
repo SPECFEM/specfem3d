@@ -15,7 +15,7 @@ module fault_scotch
   double precision, dimension(:,:), allocatable, save :: nodes_coords_open
   logical, save :: ANY_FAULT = .false.
 
-  logical, parameter :: PARALLEL_FAULT = .false.
+  logical, parameter :: PARALLEL_FAULT = .true.
  ! NOTE: PARALLEL_FAULT has to be the same 
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
  
@@ -347,7 +347,7 @@ CONTAINS
 
   subroutine fault_repartition (nelmnts, nnodes, elmnts, nsize, nproc, part, esize, nodes_coords)
 
-  integer(long), intent(in) :: nelmnts,nsize
+  integer, intent(in) :: nelmnts,nsize
   integer, intent(in) :: nnodes, nproc, esize 
   integer, dimension(0:esize*nelmnts-1), intent(in) :: elmnts
   integer, dimension(0:nelmnts-1), intent(inout)    :: part
@@ -519,7 +519,8 @@ CONTAINS
       print *, 'Fatal error: Number of fault elements do not coincide. Abort.'
       stop 
     end if
-    write(IIN_database,*) nspec_fault_1
+    !write(IIN_database,*) nspec_fault_1
+    write(IIN_database) nspec_fault_1
 
    ! if no fault element in this partition, move to next fault
     if (nspec_fault_1==0) cycle 
@@ -536,7 +537,8 @@ CONTAINS
             end if
           end do
         end do
-        write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
+        !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
+        write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
       end if
     enddo
 
@@ -552,7 +554,8 @@ CONTAINS
             end if
           end do
         end do
-        write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
+        !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
+        write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
       end if
     enddo
 
