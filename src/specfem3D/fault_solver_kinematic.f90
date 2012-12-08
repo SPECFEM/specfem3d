@@ -53,12 +53,12 @@ contains
 ! Minv          inverse mass matrix
 ! dt            global time step
 !
-subroutine BC_KINFLT_init(prname,Minv,DTglobal,nt,myrank)
+subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
+  use specfem_par, only : nt=>NSTEP  
   character(len=256), intent(in) :: prname ! 'proc***'
-  real(kind=CUSTOM_REAL), intent(in) :: Minv(:)
   double precision, intent(in) :: DTglobal 
-  integer, intent(in) :: nt,myrank
+  integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: dt
   integer :: iflt,ier,dummy_idfault
@@ -73,7 +73,7 @@ subroutine BC_KINFLT_init(prname,Minv,DTglobal,nt,myrank)
 
   dummy_idfault = 0
 
-  open(unit=IIN_PAR,file='DATA/Par_file_faults',status='old',iostat=ier)
+  open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
   if( ier /= 0 ) then
     if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
     close(IIN_PAR) 
@@ -111,7 +111,7 @@ subroutine BC_KINFLT_init(prname,Minv,DTglobal,nt,myrank)
     dt = real(DTglobal)
     do iflt=1,nbfaults
       read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-      call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,Minv,dt,nt,iflt)
+      call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
     enddo 
   endif
   close(IIN_BIN)
@@ -128,10 +128,9 @@ end subroutine BC_KINFLT_init
 
 !---------------------------------------------------------------------
 
-subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,Minv,dt,NT,iflt)
+subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
   type(bc_kinflt_type), intent(inout) :: bc
-  real(kind=CUSTOM_REAL), intent(in)  :: Minv(:)
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
 
@@ -139,7 +138,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,Minv,dt,NT,iflt)
 
   NAMELIST / KINPAR / kindt
 
-  call initialize_fault(bc,IIN_BIN,Minv,dt)
+  call initialize_fault(bc,IIN_BIN,dt)
 
   if (bc%nspec>0) then
 
@@ -346,7 +345,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,nglob,iflt)
   IIN_BIN=101
   IOUT = 102
 
-  write(filename,"('OUTPUT_FILES/Snapshot',I0,'_F',I0,'.bin')") itime,iflt
+  write(filename,"('../OUTPUT_FILES/Snapshot',I0,'_F',I0,'.bin')") itime,iflt
   print*, trim(filename)
 
   open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&

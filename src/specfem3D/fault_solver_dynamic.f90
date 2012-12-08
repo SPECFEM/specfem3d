@@ -91,12 +91,12 @@ contains
 ! Minv          inverse mass matrix
 ! dt            global time step
 !
-subroutine BC_DYNFLT_init(prname,Minv,DTglobal,nt,vel,myrank)
+subroutine BC_DYNFLT_init(prname,DTglobal,vel,myrank)
 
+  use specfem_par, only : nt=>NSTEP
   character(len=256), intent(in) :: prname ! 'proc***'
-  real(kind=CUSTOM_REAL), intent(in) :: Minv(:)
   double precision, intent(in) :: DTglobal 
-  integer, intent(in) :: nt,myrank
+  integer, intent(in) :: myrank
   real(kind=CUSTOM_REAL), intent(inout) :: vel(:,:)
 
   real(kind=CUSTOM_REAL) :: dt
@@ -112,7 +112,7 @@ subroutine BC_DYNFLT_init(prname,Minv,DTglobal,nt,vel,myrank)
 
   dummy_idfault = 0
 
-  open(unit=IIN_PAR,file='DATA/Par_file_faults',status='old',iostat=ier)
+  open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
   if( ier /= 0 ) then
     if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
     close(IIN_PAR) 
@@ -158,7 +158,7 @@ subroutine BC_DYNFLT_init(prname,Minv,DTglobal,nt,vel,myrank)
   dt = real(DTglobal)
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,Minv,dt,nt,vel,iflt)
+    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,vel,iflt)
   enddo
   close(IIN_BIN)
   close(IIN_PAR)
@@ -186,12 +186,11 @@ end subroutine BC_DYNFLT_init
 
 !---------------------------------------------------------------------
 
-subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,Minv,dt,NT,vel,iflt)
+subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,vel,iflt)
 
   real(kind=CUSTOM_REAL), intent(inout) :: vel(:,:)
 
   type(bc_dynflt_type), intent(inout) :: bc
-  real(kind=CUSTOM_REAL), intent(in)  :: Minv(:)
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
 
@@ -200,7 +199,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,Minv,dt,NT,vel,iflt)
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
 
-  call initialize_fault(bc,IIN_BIN,Minv,dt)
+  call initialize_fault(bc,IIN_BIN,dt)
 
   if (bc%nspec>0) then
 
@@ -236,7 +235,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,Minv,dt,NT,vel,iflt)
     allocate(bc%MU(bc%nglob))
     if (RATE_AND_STATE) then
       allocate(bc%rsf)
-      call rsf_init(bc%rsf,bc%T0,bc%V,bc%Fload,bc%coord,IIN_PAR)
+      call rsf_init(bc%rsf,bc%T0,bc%V,vel,bc%Fload,bc%coord,IIN_PAR)
     else 
       allocate(bc%swf)
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
@@ -694,11 +693,12 @@ end function swf_mu
 
 !=====================================================================
 
-subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
+subroutine rsf_init(f,T0,V,vel,nucFload,coord,IIN_PAR)
 
   type(rsf_type), intent(out) :: f
   real(kind=CUSTOM_REAL), intent(in) :: T0(:,:)
   real(kind=CUSTOM_REAL), intent(inout) :: V(:,:)
+  real(kind=CUSTOM_REAL), intent(inout) :: vel(:,:)
   real(kind=CUSTOM_REAL), intent(in) :: coord(:,:)
   real(kind=CUSTOM_REAL), pointer :: nucFload(:)
   integer, intent(in) :: IIN_PAR
@@ -783,6 +783,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   call init_2d_distribution(f%Vw,coord,IIN_PAR,nVw)
 
 !!$    ! WARNING : Not general enough
+!!$    vel = 0._CUSTOM_REAL
 !!$    nglob_bulk = size(vel,2)
 !!$    allocate(init_vel(3,nglob_bulk))
 !!$    init_vel = 0._CUSTOM_REAL
@@ -1005,7 +1006,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,DT,NT,iflt)
   call itime(now)     ! now(1)=hour, (2)=minute, (3)=second
 
 
-  write(filename,"('OUTPUT_FILES/RuptureTime_Fault',I0)") iflt
+  write(filename,"('../OUTPUT_FILES/RuptureTime_Fault',I0)") iflt
 
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
@@ -1172,7 +1173,7 @@ subroutine write_dataXZ(dataXZ,itime,iflt)
 
   character(len=70) :: filename
 
-  write(filename,"('OUTPUT_FILES/Snapshot',I0,'_F',I0,'.bin')") itime,iflt
+  write(filename,"('../OUTPUT_FILES/Snapshot',I0,'_F',I0,'.bin')") itime,iflt
 
   open(unit=IOUT, file= trim(filename), status='replace', form='unformatted',action='write')
 
