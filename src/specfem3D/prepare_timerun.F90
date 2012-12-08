@@ -51,11 +51,10 @@
   ! initializes arrays
   call prepare_timerun_init_wavefield()
 
-  call sync_all()
   ! Loading kinematic and dynamic fault solvers.
-  call BC_DYNFLT_init(prname,rmass,DT,NSTEP,veloc,myrank)
+  call BC_DYNFLT_init(prname,DT,veloc,myrank)
     
-  call BC_KINFLT_init(prname,rmass,DT,NSTEP,myrank)
+  call BC_KINFLT_init(prname,DT,myrank)
 
   ! sets up time increments
   call prepare_timerun_constants()
