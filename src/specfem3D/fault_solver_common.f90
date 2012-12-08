@@ -42,12 +42,12 @@ contains
 
 !---------------------------------------------------------------------
 
-subroutine initialize_fault (bc,IIN_BIN,Minv,dt_tmp)
+subroutine initialize_fault (bc,IIN_BIN,dt_tmp)
 
   use specfem_par
+  use specfem_par_elastic, only : rmassx,rmassy,rmassz
 
   class(fault_type), intent(inout) :: bc
-  real(kind=CUSTOM_REAL), intent(in)  :: Minv(:)
   integer, intent(in)                 :: IIN_BIN
   real(kind=CUSTOM_REAL), intent(in)  :: dt_tmp
 
@@ -84,7 +84,7 @@ subroutine initialize_fault (bc,IIN_BIN,Minv,dt_tmp)
     read(IIN_BIN) bc%coord(2,:)
     read(IIN_BIN) bc%coord(3,:)
 
-    bc%dt = dt_tmp
+    bc%dt = dt
 
     bc%B = 0e0_CUSTOM_REAL
     allocate(nxyz(3,bc%nglob))
@@ -124,15 +124,16 @@ subroutine initialize_fault (bc,IIN_BIN,Minv,dt_tmp)
     call normalize_3d_vector(nxyz)
     call compute_R(bc%R,bc%nglob,nxyz)
 
+    !SURENDRA : WARNING! Assuming rmassx=rmassy=rmassz
     ! Needed in dA_Free = -K2*d2/M2 + K1*d1/M1
-    bc%invM1 = Minv(bc%ibulk1)
-    bc%invM2 = Minv(bc%ibulk2)
+    bc%invM1 = rmassx(bc%ibulk1)
+    bc%invM2 = rmassx(bc%ibulk2)
 
     ! Fault impedance, Z in :  Trac=T_Stick-Z*dV
     !   Z = 1/( B1/M1 + B2/M2 ) / (0.5*dt)
     ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity) 
     ! NOTE: same Bi on both sides, see note above
-    bc%Z = 1.e0_CUSTOM_REAL/(0.5e0_CUSTOM_REAL*dt_tmp * bc%B *( bc%invM1 + bc%invM2 ))
+    bc%Z = 1.e0_CUSTOM_REAL/(0.5e0_CUSTOM_REAL*bc%dt * bc%B *( bc%invM1 + bc%invM2 ))
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
     ! hence invM1+invM2=2/(M1+M2) instead of 1/M1+1/M2
     ! In a symmetric mesh (M1=M2) Z will be twice its intended value
@@ -297,7 +298,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   IIN = 251 ! WARNING: not safe, should check that unit is not aleady opened
 
  ! count the number of output points on the current fault (#iflt)
-  open(IIN,file='DATA/FAULT_STATIONS',status='old',action='read',iostat=ier)
+  open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
     stop 
@@ -316,7 +317,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   allocate(dataT%name(dataT%npoin))
   allocate(dist_loc(dataT%npoin)) !Surendra : for parallel fault
 
-  open(IIN,file='DATA/FAULT_STATIONS',status='old',action='read')
+  open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read')
   read(IIN,*) np
   k = 0
   do i=1,np
@@ -418,6 +419,7 @@ end subroutine init_dataT
 !---------------------------------------------------------------
 subroutine store_dataT(dataT,d,v,t,itime)
 
+  use specfem_par, only : myrank
   class(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t
   integer, intent(in) :: itime
@@ -454,7 +456,7 @@ subroutine SCEC_write_dataT(dataT)
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
     
   do i=1,dataT%npoin
-    open(IOUT,file='OUTPUT_FILES/'//trim(dataT%name(i))//'.dat',status='replace')
+    open(IOUT,file='../OUTPUT_FILES/'//trim(dataT%name(i))//'.dat',status='replace')
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
     write(IOUT,1000) today(2), today(1), today(3), now
