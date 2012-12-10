@@ -240,21 +240,21 @@ subroutine compute_forces_elastic_noDev( iphase, &
 
           do l=1,NGLLX
             hp1 = hprime_xx(i,l)
-            iglob = ibool(l,j,k,ispec)
+            !iglob = ibool(l,j,k,ispec)
             tempx1l = tempx1l + dloc(1,l,j,k)*hp1
             tempy1l = tempy1l + dloc(2,l,j,k)*hp1
             tempz1l = tempz1l + dloc(3,l,j,k)*hp1
 
             !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp2 = hprime_yy(j,l)
-            iglob = ibool(i,l,k,ispec)
+            !iglob = ibool(i,l,k,ispec)
             tempx2l = tempx2l + dloc(1,i,l,k)*hp2
             tempy2l = tempy2l + dloc(2,i,l,k)*hp2
             tempz2l = tempz2l + dloc(3,i,l,k)*hp2
 
             !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp3 = hprime_zz(k,l)
-            iglob = ibool(i,j,l,ispec)
+            !iglob = ibool(i,j,l,ispec)
             tempx3l = tempx3l + dloc(1,i,j,l)*hp3
             tempy3l = tempy3l + dloc(2,i,j,l)*hp3
             tempz3l = tempz3l + dloc(3,i,j,l)*hp3
