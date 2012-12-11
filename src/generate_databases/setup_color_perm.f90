@@ -563,12 +563,14 @@
   ! permutes all required mesh arrays according to new ordering
 
   ! permutation of ibool
-  allocate(temp_array_int(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(temp_array_int(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating temporary temp_array_int'
   call permute_elements_integer(ibool,temp_array_int,perm,nspec)
   deallocate(temp_array_int)
 
   ! element domain flags
-  allocate(temp_array_logical_1D(nspec))
+  allocate(temp_array_logical_1D(nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating temporary temp_array_logical_1D'
   call permute_elements_logical1D(ispec_is_acoustic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_elastic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_poroelastic,temp_array_logical_1D,perm,nspec)
@@ -576,7 +578,8 @@
   deallocate(temp_array_logical_1D)
 
   ! mesh arrays
-  allocate(temp_array_real(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(temp_array_real(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) stop 'error allocating temporary temp_array_real'
   call permute_elements_real(xixstore,temp_array_real,perm,nspec)
   call permute_elements_real(xiystore,temp_array_real,perm,nspec)
   call permute_elements_real(xizstore,temp_array_real,perm,nspec)
@@ -679,7 +682,8 @@
 
   ! moho surface
   if( NSPEC2D_MOHO > 0 ) then
-    allocate(temp_array_logical_1D(nspec))
+    allocate(temp_array_logical_1D(nspec),stat=ier)
+    if( ier /= 0 ) stop 'error allocating temporary temp_array_logical_1D'
     call permute_elements_logical1D(is_moho_top,temp_array_logical_1D,perm,nspec)
     call permute_elements_logical1D(is_moho_bot,temp_array_logical_1D,perm,nspec)
     deallocate(temp_array_logical_1D)

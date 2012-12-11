@@ -324,10 +324,7 @@
 
   ! elastic domains
   if( ELASTIC_SIMULATION ) then
-    allocate( rmassx(nglob_xy), &
-              rmassy(nglob_xy), &
-              rmassz(nglob_xy), &
-              stat=ier)
+    allocate( rmassx(nglob_xy), rmassy(nglob_xy), rmassz(nglob_xy), stat=ier)
     if(ier /= 0) stop 'error in allocate 21'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
@@ -336,8 +333,7 @@
 
   ! acoustic domains
   if( ACOUSTIC_SIMULATION ) then
-    allocate( rmassz_acoustic(nglob_xy), &
-              stat=ier)
+    allocate( rmassz_acoustic(nglob_xy), stat=ier)
     if(ier /= 0) stop 'error in allocate 22'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
