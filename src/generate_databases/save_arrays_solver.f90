@@ -539,16 +539,6 @@
       deallocate(v_tmp_i,iglob_tmp)
     endif !if( ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
 
-!    ! saves material flag assigned for each spectral element into a vtk file
-!    prname_file = prname(1:len_trim(prname))//'material_flag'
-!    allocate(elem_flag(nspec))
-!    elem_flag(:) = mat_ext_mesh(1,:)
-!    call write_VTK_data_elem_i(nspec,nglob_dummy, &
-!            xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-!            elem_flag,prname_file)
-!    deallocate(elem_flag)
-!  endif
-
   endif ! DEBUG
 
   end subroutine save_arrays_solver_files
