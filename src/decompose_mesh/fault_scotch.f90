@@ -450,16 +450,17 @@ CONTAINS
   end subroutine fault_repartition_not_parallel
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine fault_repartition_parallel (nelmnts, part, nodes_coords)
+  subroutine fault_repartition_parallel (nelmnts, part, nodes_coords,nnodes)
 
-  integer(long), intent(in) :: nelmnts
+  integer, intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(inout) :: part
+  integer, intent(in) :: nnodes
   double precision, dimension(3,nnodes), intent(in) :: nodes_coords
 
   integer  :: i,iflt,e,e1,e2,proc1,proc2
 
  ! Reorder both fault sides so that elements facing each other have the same index
-  call reorder_fault_elements(nodes_coords)
+  call reorder_fault_elements(nodes_coords,nnodes)
 
 !JPA loop over all faults 	 
 !JPA loop over all fault element pairs
