@@ -52,7 +52,7 @@
   call prepare_timerun_init_wavefield()
 
   ! Loading kinematic and dynamic fault solvers.
-  call BC_DYNFLT_init(prname,DT,veloc,myrank)
+  call BC_DYNFLT_init(prname,DT,myrank)
     
   call BC_KINFLT_init(prname,DT,myrank)
 
