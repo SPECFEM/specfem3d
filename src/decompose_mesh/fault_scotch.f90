@@ -209,24 +209,22 @@ CONTAINS
 ! Lexicographic reordering of fault elements (based on their centroid)
 ! to make sure both sides are ordered in the same way
 ! and hence elements facing each other have the same index
-  subroutine reorder_fault_elements(nodes_coords,nnodes)
+  subroutine reorder_fault_elements(nodes_coords)
 
-  integer, intent(in)  :: nnodes
   double precision,dimension(3,nnodes), intent(in) :: nodes_coords
 
   integer :: i
     
   do i=1,size(faults)
-    call reorder_fault_elements_single(faults(i),nodes_coords,nnodes)
+    call reorder_fault_elements_single(faults(i),nodes_coords)
   enddo
 
   end subroutine reorder_fault_elements
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine reorder_fault_elements_single(f,nodes_coords,nnodes)
+  subroutine reorder_fault_elements_single(f,nodes_coords)
 
   type(fault_type), intent(inout) :: f
-  integer, intent(in) :: nnodes
   double precision, dimension(3,nnodes), intent(in) :: nodes_coords
 
   double precision, dimension(3,f%nspec) :: xyz_c
@@ -243,7 +241,7 @@ CONTAINS
   enddo
   xyz_c = xyz_c / 4d0
   ! reorder
-  call lex_order(xyz_c,new_index_list,nnodes,f%nspec) 
+  call lex_order(xyz_c,new_index_list,f%nspec) 
   f%ispec1 = f%ispec1(new_index_list)
   f%inodes1 = f%inodes1(:,new_index_list)
 
@@ -256,16 +254,16 @@ CONTAINS
     enddo
   enddo
   xyz_c = xyz_c / 4d0
-  call lex_order(xyz_c,new_index_list,nnodes,f%nspec)
+  call lex_order(xyz_c,new_index_list,f%nspec)
   f%ispec2 = f%ispec2(new_index_list)
   f%inodes2 = f%inodes2(:,new_index_list)
 
   end subroutine reorder_fault_elements_single
   
 ! ---------------------------------------------------------------------------------------------------
-  subroutine lex_order(xyz_c,loc,nnodes,nspec)
+  subroutine lex_order(xyz_c,loc,nspec)
 
-  integer, intent(in) :: nnodes,nspec
+  integer, intent(in) :: nspec
   integer, intent(out) :: loc(nspec)
   double precision, intent(in) :: xyz_c(3,nspec)
    
@@ -370,14 +368,14 @@ CONTAINS
 
   subroutine fault_repartition_not_parallel (nelmnts, nnodes, elmnts, nsize, nproc, part, esize)
 
-  integer(long), intent(in) :: nelmnts,nsize
+  integer, intent(in) :: nelmnts,nsize
   integer, intent(in) :: nnodes, nproc, esize 
   integer, dimension(0:esize*nelmnts-1), intent(in) :: elmnts
   integer, dimension(0:nelmnts-1), intent(inout)    :: part
 
   integer, dimension(0:nnodes-1) :: nnodes_elmnts
   integer, dimension(0:nsize*nnodes-1) :: nodes_elmnts
-  integer  :: i,j, ipart,nproc_null,nproc_null_final
+  integer  :: i,ipart,nproc_null,nproc_null_final
   integer  :: k1, k2, k,e,iflt,inode
   integer, dimension(:), allocatable :: elem_proc_null
 
@@ -450,17 +448,16 @@ CONTAINS
   end subroutine fault_repartition_not_parallel
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine fault_repartition_parallel (nelmnts, part, nodes_coords,nnodes)
+  subroutine fault_repartition_parallel (nelmnts, part, nodes_coords)
 
   integer(long), intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(inout) :: part
-  integer, intent(in) :: nnodes
   double precision, dimension(3,nnodes), intent(in) :: nodes_coords
 
   integer  :: i,iflt,e,e1,e2,proc1,proc2
 
  ! Reorder both fault sides so that elements facing each other have the same index
-  call reorder_fault_elements(nodes_coords,nnodes)
+  call reorder_fault_elements(nodes_coords)
 
 !JPA loop over all faults 	 
 !JPA loop over all fault element pairs
@@ -495,7 +492,7 @@ CONTAINS
 
   integer, intent(in)  :: IIN_database
   integer, intent(in)  :: iproc
-  integer(long), intent(in) :: nelmnts
+  integer, intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(in)  :: part
   integer, dimension(0:nelmnts-1), intent(in)  :: glob2loc_elmnts
   integer, dimension(0:), intent(in) :: glob2loc_nodes_nparts

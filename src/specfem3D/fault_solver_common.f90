@@ -42,14 +42,13 @@ contains
 
 !---------------------------------------------------------------------
 
-subroutine initialize_fault (bc,IIN_BIN,dt_tmp)
+subroutine initialize_fault (bc,IIN_BIN)
 
   use specfem_par
   use specfem_par_elastic, only : rmassx,rmassy,rmassz
 
   class(fault_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN
-  real(kind=CUSTOM_REAL), intent(in)  :: dt_tmp
 
   real(kind=CUSTOM_REAL) :: tmp_vec(3,NGLOB_AB)
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable   :: jacobian2Dw
@@ -446,10 +445,10 @@ subroutine SCEC_write_dataT(dataT)
   
   integer   :: i,k,IOUT
   character(len=10) :: my_fmt
-  integer ::  today(3), now(3)
 
-  call idate(today)   ! today(1)=day, (2)=month, (3)=year
-  call itime(now)     ! now(1)=hour, (2)=minute, (3)=second
+  integer, dimension(8) :: time_values
+
+  call date_and_time(VALUES=time_values)
 
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
@@ -459,7 +458,7 @@ subroutine SCEC_write_dataT(dataT)
     open(IOUT,file='../OUTPUT_FILES/'//trim(dataT%name(i))//'.dat',status='replace')
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
     write(IOUT,*) "# author=Surendra Nadh Somala" ! WARNING: this should be a user input
-    write(IOUT,1000) today(2), today(1), today(3), now
+    write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
     write(IOUT,*) "# code=SPECFEM3D_SESAME (split nodes)"
     write(IOUT,*) "# code_version=1.1"
     write(IOUT,*) "# element_size=100 m  (*5 GLL nodes)" ! WARNING: this should be a user input
