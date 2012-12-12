@@ -4,6 +4,36 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+
+------------------------------------------------
+
+BUG TO FIX
+BUG TO FIX
+BUG TO FIX
+BUG TO FIX
+BUG TO FIX
+BUG TO FIX:
+
+I tried to run examples/meshfem3D_examples/simple_model/ in the SVN version but got errors from the solver.
+Basically what happens is that the code reads a maximum latitude value that is wrong:
+
+In DATA/meshfem3D_files/Mesh_Par_file we have this:
+
+# coordinates of mesh block in latitude/longitude and depth in km
+LATITUDE_MIN                    = 33.1d0
+LATITUDE_MAX                    = 34.1d0
+LONGITUDE_MIN                   = -118.9d0
+LONGITUDE_MAX                   = -117.9d0
+
+but the code prints this, which is not correct for latitude_max
+(and then the solver stops because it finds no station inside the mesh):
+
+   check that stations in file ../DATA/STATIONS are within
+     longitude min/max:   -118.899997686600       -117.892291275022
+     latitude min/max :    33.0998861981290        33.3583844203083
+     UTM x min/max:    322693.281250000        416981.312500000
+     UTM y min/max :    3663774.75000000        3691181.75000000
+
 ------------------------------------------------
 CPML :
 ------------------------------------------------
