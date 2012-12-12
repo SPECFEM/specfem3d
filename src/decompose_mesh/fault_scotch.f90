@@ -209,22 +209,24 @@ CONTAINS
 ! Lexicographic reordering of fault elements (based on their centroid)
 ! to make sure both sides are ordered in the same way
 ! and hence elements facing each other have the same index
-  subroutine reorder_fault_elements(nodes_coords)
+  subroutine reorder_fault_elements(nodes_coords,nnodes)
 
+  integer, intent(in)  :: nnodes
   double precision,dimension(3,nnodes), intent(in) :: nodes_coords
 
   integer :: i
     
   do i=1,size(faults)
-    call reorder_fault_elements_single(faults(i),nodes_coords)
+    call reorder_fault_elements_single(faults(i),nodes_coords,nnodes)
   enddo
 
   end subroutine reorder_fault_elements
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine reorder_fault_elements_single(f,nodes_coords)
+  subroutine reorder_fault_elements_single(f,nodes_coords,nnodes)
 
   type(fault_type), intent(inout) :: f
+  integer, intent(in) :: nnodes
   double precision, dimension(3,nnodes), intent(in) :: nodes_coords
 
   double precision, dimension(3,f%nspec) :: xyz_c
