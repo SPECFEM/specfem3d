@@ -198,7 +198,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,vel,iflt)
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
 
-  call initialize_fault(bc,IIN_BIN,dt)
+  call initialize_fault(bc,IIN_BIN)
 
   if (bc%nspec>0) then
 
@@ -427,7 +427,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T,dD,dV,dA
   real(kind=CUSTOM_REAL), dimension(bc%nglob) :: strength,tStick,tnew, &
                                                  theta_old, theta_new, dc, &
-                                                 ta,Vf_old,Vf_new,TxExt
+                                                 Vf_old,Vf_new,TxExt
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,time
   integer :: i
 
@@ -692,17 +692,16 @@ end function swf_mu
 
 !=====================================================================
 
-subroutine rsf_init(f,T0,V,vel,nucFload,coord,IIN_PAR)
+subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   type(rsf_type), intent(out) :: f
   real(kind=CUSTOM_REAL), intent(in) :: T0(:,:)
   real(kind=CUSTOM_REAL), intent(inout) :: V(:,:)
-  real(kind=CUSTOM_REAL), intent(inout) :: vel(:,:)
   real(kind=CUSTOM_REAL), intent(in) :: coord(:,:)
   real(kind=CUSTOM_REAL), pointer :: nucFload(:)
   integer, intent(in) :: IIN_PAR
 
-  real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta,theta_init,V_init,fw,Vw, C,T
+  real(kind=CUSTOM_REAL) :: V0,f0,a,b,L,theta_init,V_init,fw,Vw, C,T
   integer :: nV0,nf0,na,nb,nL,nV_init,ntheta_init,nfw,nVw, nC,nForcedRup
   real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
   real(kind=CUSTOM_REAL) :: x,z
@@ -872,7 +871,7 @@ function rsf_mu(f,V) result(mu)
   type(rsf_type), intent(in) :: f
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
   real(kind=CUSTOM_REAL) :: mu(size(V))
-  mu = f%a * asinh( V/2.0/f%V0 * exp((f%f0 + f%b*log(f%theta*f%V0/f%L))/f%a ) ) ! Regularized 
+  mu = f%a * asinh_slatec( V/2.0/f%V0 * exp((f%f0 + f%b*log(f%theta*f%V0/f%L))/f%a ) ) ! Regularized 
 
 end function rsf_mu
 
@@ -888,7 +887,7 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   else 
      arg = exp(theta/a)/TWO/V0
   endif
-  fn = tStick - Z*x - a*Seff*asinh(x*arg)
+  fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
   df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
 
 end subroutine funcd
@@ -991,19 +990,17 @@ end subroutine rsf_update_state
 !===============================================================
 ! OUTPUTS
 
-subroutine SCEC_Write_RuptureTime(dataXZ,DT,NT,iflt)
+subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
   type(dataXZ_type), intent(in) :: dataXZ
-  real(kind=CUSTOM_REAL), intent(in) :: DT
-  integer, intent(in) :: NT,iflt
+  integer, intent(in) :: iflt
 
   integer   :: i,IOUT
   character(len=70) :: filename
-  integer*4 today(3), now(3)
 
-  call idate(today)   ! today(1)=day, (2)=month, (3)=year
-  call itime(now)     ! now(1)=hour, (2)=minute, (3)=second
+  integer, dimension(8) :: time_values
 
+  call date_and_time(VALUES=time_values)
 
   write(filename,"('../OUTPUT_FILES/RuptureTime_Fault',I0)") iflt
 
@@ -1012,7 +1009,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,DT,NT,iflt)
   open(IOUT,file=trim(filename),status='replace')
   write(IOUT,*) "# problem=TPV104"
   write(IOUT,*) "# author=Surendra Nadh Somala"
-  write(IOUT,1000) today(2), today(1), today(3), now
+  write(IOUT,1000) time_values(2), time_values(3), time_values(1), time_values(5), time_values(6), time_values(7)
   write(IOUT,*) "# code=SPECFEM3D_SESAME (split nodes)"
   write(IOUT,*) "# code_version=1.1"
   write(IOUT,*) "# element_size=100 m  (*5 GLL nodes)"
@@ -1193,6 +1190,160 @@ subroutine write_dataXZ(dataXZ,itime,iflt)
   close(IOUT)
 
 end subroutine write_dataXZ
+
+!---------------------------------------------------------------
+
+
+! asinh() function taken from Netlib
+! April 1977 edition.  W. Fullerton, C3, Los Alamos Scientific Lab.
+
+! taken from http://www.tddft.org/trac/octopus/browser/trunk/src/asinh.F90?rev=2
+
+! and modified by Dimitri Komatitsch in December 2012 for portability
+
+ double precision function asinh_slatec(x)
+
+  double precision, intent(in) :: x
+
+  integer, parameter :: NSERIES = 39
+
+  double precision, parameter :: asnhcs(NSERIES) = (/ &
+   -.12820039911738186343372127359268D+0, -.58811761189951767565211757138362D-1, &
+   +.47274654322124815640725249756029D-2, -.49383631626536172101360174790273D-3, &
+   +.58506207058557412287494835259321D-4, -.74669983289313681354755069217188D-5, &
+   +.10011693583558199265966192015812D-5, -.13903543858708333608616472258886D-6, &
+   +.19823169483172793547317360237148D-7, -.28847468417848843612747272800317D-8, &
+   +.42672965467159937953457514995907D-9, -.63976084654366357868752632309681D-10, &
+   +.96991686089064704147878293131179D-11, -.14844276972043770830246658365696D-11, &
+   +.22903737939027447988040184378983D-12, -.35588395132732645159978942651310D-13, &
+   +.55639694080056789953374539088554D-14, -.87462509599624678045666593520162D-15, &
+   +.13815248844526692155868802298129D-15, -.21916688282900363984955142264149D-16, &
+   +.34904658524827565638313923706880D-17, -.55785788400895742439630157032106D-18, &
+   +.89445146617134012551050882798933D-19, -.14383426346571317305551845239466D-19, &
+   +.23191811872169963036326144682666D-20, -.37487007953314343674570604543999D-21, &
+   +.60732109822064279404549242880000D-22, -.98599402764633583177370173440000D-23, &
+   +.16039217452788496315232638293333D-23, -.26138847350287686596716134399999D-24, &
+   +.42670849606857390833358165333333D-25, -.69770217039185243299730773333333D-26, &
+   +.11425088336806858659812693333333D-26, -.18735292078860968933021013333333D-27, &
+   +.30763584414464922794065920000000D-28, -.50577364031639824787046399999999D-29, &
+   +.83250754712689142224213333333333D-30, -.13718457282501044163925333333333D-30, &
+   +.22629868426552784104106666666666D-31 /)
+
+  double precision, parameter :: aln2 = 0.69314718055994530941723212145818D0
+
+! series for asnh       on the interval  0.          to  1.00000d+00
+!                                        with weighted error   2.19e-17
+!                                         log weighted error  16.66
+!                               significant figures required  15.60
+!                                    decimal places required  17.31
+!
+
+  integer, save :: nterms = 0
+  double precision, save :: xmax = 0.d0, sqeps = 0.d0
+
+! taken from http://people.sc.fsu.edu/~jburkardt/f_src/machine/machine.f90
+  double precision, parameter :: d1mach_3 = 1.110223024625157D-016
+
+  integer, external :: inits
+  double precision, external :: csevl
+  double precision :: y
+
+  if (nterms == 0) then
+    nterms = inits(asnhcs, NSERIES, 0.1d0*d1mach_3)
+    sqeps = sqrt(d1mach_3)
+    xmax = 1.d0/sqeps
+  endif
+
+  y = abs(x)
+  if (y <= 1.d0) then
+    asinh_slatec = x
+    if (y > sqeps) asinh_slatec = x*(1.d0 + csevl(2.d0*x*x-1.d0, asnhcs, nterms))
+    return
+  endif
+
+  if (y < xmax) asinh_slatec = log(y + sqrt(y**2 + 1.d0))
+  if (y >= xmax) asinh_slatec = aln2 + log(y)
+  asinh_slatec = sign(asinh_slatec, x)
+
+end function asinh_slatec
+
+
+! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
+! Evaluate the n-term Chebyshev series cs at x.  Adapted from
+! R. Broucke, Algorithm 446, C.A.C.M., 16, 254 (1973).  Also see Fox
+! and Parker, Chebyshev polynomials in numerical analysis, Oxford Press, p.56.
+!
+!             input arguments --
+! x      value at which the series is to be evaluated.
+! cs     array of n terms of a Chebyshev series.
+!        in evaluating cs, only half the first coefficient is summed.
+! n      number of terms in array cs.
+
+double precision function csevl(x, cs, n)
+
+  integer, intent(in) :: n
+  double precision, intent(in) :: x
+  double precision, intent(in) :: cs(n)
+
+  integer i, ni
+  double precision :: b0, b1, b2, twox
+
+  if (n < 1) stop 'Math::csevl: number of terms <= 0'
+  if (n > 1000) stop 'Math::csevl: number of terms > 1000'
+
+  if (x < -1.1d0 .or. x > 1.1d0) stop 'Math::csevl: x outside (-1,+1)'
+
+  b1 = 0.d0
+  b0 = 0.d0
+  twox = 2.d0*x
+
+  do i = 1, n
+    b2 = b1
+    b1 = b0
+    ni = n + 1 - i
+    b0 = twox*b1 - b2 + cs(ni)
+  enddo
+
+  csevl = 0.5d0 * (b0 - b2)
+
+end function csevl
+
+
+! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
+!
+! Initialize the orthogonal series so that inits is the number of terms
+! needed to ensure that the error is no larger than eta. Ordinarily, eta
+! will be chosen to be one-tenth machine precision.
+!
+!             input arguments --
+! os     array of nos coefficients in an orthogonal series.
+! nos    number of coefficients in os.
+! eta    requested accuracy of series.
+
+integer function inits(os, nos, eta)
+
+  integer, intent(in) :: nos
+  double precision, intent(in) :: os(nos)
+  double precision, intent(in) :: eta
+
+  integer :: i, ii
+  double precision :: err
+
+  if (nos < 1) stop 'Math::inits: number of terms <= 0'
+
+  err = 0.d0
+  do ii=1,nos
+    i = nos + 1 - ii
+    err = err + abs(os(i))
+    if (err > eta) exit
+  enddo
+
+!!!!!!!  if (i == nos) print *,'warning: Math::inits: eta may be too small'
+
+  inits = i
+
+end function inits
+
 
 
 end module fault_solver_dynamic

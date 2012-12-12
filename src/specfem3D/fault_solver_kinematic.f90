@@ -138,7 +138,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
   NAMELIST / KINPAR / kindt
 
-  call initialize_fault(bc,IIN_BIN,dt)
+  call initialize_fault(bc,IIN_BIN)
 
   if (bc%nspec>0) then
 
@@ -335,9 +335,9 @@ end subroutine init_dataXZ
 
 !   OUTPUT v : slip rate on receivers.
  
-subroutine load_vslip_snapshots(dataXZ,itime,nglob,iflt)  
+subroutine load_vslip_snapshots(dataXZ,itime,iflt)  
 
-  integer, intent(in) :: itime,nglob,iflt
+  integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
   character(len=70) :: filename
   integer :: IIN_BIN,ier,IOUT
