@@ -78,8 +78,7 @@ module fault_solver_dynamic
 
   real(kind=CUSTOM_REAL), allocatable, save :: Kelvin_Voigt_eta(:)
 
-  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, &
-       SIMULATION_TYPE_DYN,RATE_AND_STATE
+  public :: BC_DYNFLT_init, BC_DYNFLT_set3d_all, Kelvin_Voigt_eta, SIMULATION_TYPE_DYN
 
 
 contains

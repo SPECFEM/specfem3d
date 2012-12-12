@@ -33,7 +33,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic, only : BC_DYNFLT_init, RATE_AND_STATE
+  use fault_solver_dynamic, only : BC_DYNFLT_init
   use fault_solver_kinematic, only : BC_KINFLT_init
   implicit none
   ! local parameters
@@ -333,7 +333,6 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use fault_solver_dynamic, only : RATE_AND_STATE
   implicit none
 
   ! initialize acoustic arrays to zero
@@ -348,7 +347,7 @@
   ! initialize elastic arrays to zero/verysmallvall
   if( ELASTIC_SIMULATION ) then
     displ(:,:) = 0._CUSTOM_REAL
-    if(.not. RATE_AND_STATE) veloc(:,:) = 0._CUSTOM_REAL
+    veloc(:,:) = 0._CUSTOM_REAL
     accel(:,:) = 0._CUSTOM_REAL
     ! put negligible initial value to avoid very slow underflow trapping
     if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
