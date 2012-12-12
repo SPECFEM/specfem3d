@@ -246,7 +246,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
       !Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001 
       !snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)             
       itime = bc%kin_it*nint(bc%kin_dt/bc%dt)
-      call load_vslip_snapshots(bc%dataXZ,itime,bc%nglob,iflt)
+      call load_vslip_snapshots(bc%dataXZ,itime,iflt)
 !     loading slip rates 
       bc%v_kin_t2(1,:)=bc%dataXZ%v1
       bc%v_kin_t2(2,:)=bc%dataXZ%v2

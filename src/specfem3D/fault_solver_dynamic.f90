@@ -90,13 +90,12 @@ contains
 ! Minv          inverse mass matrix
 ! dt            global time step
 !
-subroutine BC_DYNFLT_init(prname,DTglobal,vel,myrank)
+subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
   character(len=256), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal 
   integer, intent(in) :: myrank
-  real(kind=CUSTOM_REAL), intent(inout) :: vel(:,:)
 
   real(kind=CUSTOM_REAL) :: dt
   integer :: iflt,ier,dummy_idfault
@@ -157,7 +156,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,vel,myrank)
   dt = real(DTglobal)
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,vel,iflt)
+    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
   enddo
   close(IIN_BIN)
   close(IIN_PAR)
@@ -185,9 +184,8 @@ end subroutine BC_DYNFLT_init
 
 !---------------------------------------------------------------------
 
-subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,vel,iflt)
+subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
-  real(kind=CUSTOM_REAL), intent(inout) :: vel(:,:)
 
   type(bc_dynflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
@@ -234,7 +232,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,vel,iflt)
     allocate(bc%MU(bc%nglob))
     if (RATE_AND_STATE) then
       allocate(bc%rsf)
-      call rsf_init(bc%rsf,bc%T0,bc%V,vel,bc%Fload,bc%coord,IIN_PAR)
+      call rsf_init(bc%rsf,bc%T0,bc%V,bc%Fload,bc%coord,IIN_PAR)
     else 
       allocate(bc%swf)
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
@@ -595,9 +593,9 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
   if ( it == NSTEP) then
     if (.NOT. PARALLEL_FAULT) then
-      call SCEC_Write_RuptureTime(bc%dataXZ,bc%dt,NSTEP,iflt)
+      call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
     else
-      if (myrank==0) call SCEC_Write_RuptureTime(bc%dataXZ_all,bc%dt,NSTEP,iflt)
+      if (myrank==0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
     endif
   endif
 
@@ -865,91 +863,19 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 end subroutine rsf_init
 
 !---------------------------------------------------------------------
-! Rate and state friction coefficient
-function rsf_mu(f,V) result(mu)
-
-  type(rsf_type), intent(in) :: f
-  real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
-  real(kind=CUSTOM_REAL) :: mu(size(V))
-  mu = f%a * asinh_slatec( V/2.0/f%V0 * exp((f%f0 + f%b*log(f%theta*f%V0/f%L))/f%a ) ) ! Regularized 
-
-end function rsf_mu
-
-!---------------------------------------------------------------------
-subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-
-  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
-  double precision :: arg,fn,df,x
-  integer :: statelaw
-
-  if(statelaw == 1) then
-     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
-  else 
-     arg = exp(theta/a)/TWO/V0
-  endif
-  fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
-  df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
-
-end subroutine funcd
-
-!---------------------------------------------------------------------
-function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-
-  integer, parameter :: MAXIT=200
-  real(kind=CUSTOM_REAL) :: x1,x2,xacc
-  EXTERNAL funcd
-  integer :: j
-  !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
-  double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
-  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
-  integer :: statelaw
-
-  call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  if( (fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
-  if(fl==0.) then
-    rtsafe=x2
-    return
-  elseif(fh==0.) then
-    rtsafe=x2
-    return
-  elseif(fl<0) then
-    xl=x1
-    xh=x2
-  else
-    xh=x1
-    xl=x2
-  endif
-
-  rtsafe=0.5d0*(x1+x2)
-  dxold=abs(x2-x1)
-  dx=dxold
-  call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  do j=1,MAXIT
-    if( ((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)  ) then
-      dxold=dx
-      dx=0.5d0*(xh-xl)
-      rtsafe=xl+dx
-      if(xl==rtsafe) return
-    else
-      dxold=dx
-      dx=f/df
-      temp=rtsafe
-      rtsafe=rtsafe-dx
-      if(temp==rtsafe) return
-    endif
-    if(abs(dx)<xacc) return
-    call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-    if(f<0.) then
-      xl=rtsafe
-    else
-      xh=rtsafe
-    endif
-  enddo
-  stop 'rtsafe exceeding maximum iterations'
-  return
-
-end function rtsafe
+!!$! Rate and state friction coefficient
+!!$function rsf_mu(f,V) result(mu)
+!!$
+!!$  type(rsf_type), intent(in) :: f
+!!$  real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
+!!$  real(kind=CUSTOM_REAL) :: mu(size(V))
+!!$  double precision :: arg
+!!$
+!!$  arg = V/TWO/f%V0 * exp((f%f0 + f%b*log(f%theta*f%V0/f%L))/f%a )
+!!$
+!!$  mu = f%a * asinh_slatec( arg ) ! Regularized 
+!!$
+!!$end function rsf_mu
 
 !---------------------------------------------------------------------
 subroutine rsf_update_state(V,dt,f)
@@ -1244,8 +1170,8 @@ end subroutine write_dataXZ
 ! taken from http://people.sc.fsu.edu/~jburkardt/f_src/machine/machine.f90
   double precision, parameter :: d1mach_3 = 1.110223024625157D-016
 
-  integer, external :: inits
-  double precision, external :: csevl
+!  integer, external :: inits
+!  double precision, external :: csevl
   double precision :: y
 
   if (nterms == 0) then
@@ -1265,7 +1191,7 @@ end subroutine write_dataXZ
   if (y >= xmax) asinh_slatec = aln2 + log(y)
   asinh_slatec = sign(asinh_slatec, x)
 
-end function asinh_slatec
+contains 
 
 
 ! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
@@ -1343,6 +1269,85 @@ integer function inits(os, nos, eta)
   inits = i
 
 end function inits
+
+end function asinh_slatec
+
+
+!---------------------------------------------------------------------
+subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
+  double precision :: arg,fn,df,x
+  integer :: statelaw
+
+  if(statelaw == 1) then
+     arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
+  else 
+     arg = exp(theta/a)/TWO/V0
+  endif
+  fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
+  df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
+
+end subroutine funcd
+
+!---------------------------------------------------------------------
+function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  integer, parameter :: MAXIT=200
+  real(kind=CUSTOM_REAL) :: x1,x2,xacc
+  EXTERNAL funcd
+  integer :: j
+  !real(kind=CUSTOM_REAL) :: df,dx,dxold,f,fh,fl,temp,xh,xl
+  double precision :: df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe
+  real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
+  integer :: statelaw
+
+  call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  if( (fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
+  if(fl==0.) then
+    rtsafe=x2
+    return
+  elseif(fh==0.) then
+    rtsafe=x2
+    return
+  elseif(fl<0) then
+    xl=x1
+    xh=x2
+  else
+    xh=x1
+    xl=x2
+  endif
+
+  rtsafe=0.5d0*(x1+x2)
+  dxold=abs(x2-x1)
+  dx=dxold
+  call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+  do j=1,MAXIT
+    if( ((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)  ) then
+      dxold=dx
+      dx=0.5d0*(xh-xl)
+      rtsafe=xl+dx
+      if(xl==rtsafe) return
+    else
+      dxold=dx
+      dx=f/df
+      temp=rtsafe
+      rtsafe=rtsafe-dx
+      if(temp==rtsafe) return
+    endif
+    if(abs(dx)<xacc) return
+    call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+    if(f<0.) then
+      xl=rtsafe
+    else
+      xh=rtsafe
+    endif
+  enddo
+  stop 'rtsafe exceeding maximum iterations'
+  return
+
+end function rtsafe
 
 
 
