@@ -70,6 +70,8 @@
        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,tempx1_att,tempx2_att,tempx3_att, &
        tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
 
+  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -182,6 +184,8 @@
   integer num_colors_outer_elastic, num_colors_inner_elastic
   integer icolor
 
+  real(kind=CUSTOM_REAL) :: eta
+
   ! write(*,*) "num_elem_colors_elastic(1) = ",num_elem_colors_elastic(1)
   imodulo_N_SLS = mod(N_SLS,3)
 
@@ -252,17 +256,34 @@
           endif
        endif ! adjoint
 
-       ! stores displacement values in local array
-       do k=1,NGLLZ
-          do j=1,NGLLY
-             do i=1,NGLLX
+       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
+
+        ! stores displacment values in local array
+        if (allocated(Kelvin_Voigt_eta)) then
+          eta = Kelvin_Voigt_eta(ispec)   
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                iglob = ibool(i,j,k,ispec)
+                dummyx_loc(i,j,k,thread_id) = displ(1,iglob) + eta*veloc(1,iglob)
+                dummyy_loc(i,j,k,thread_id) = displ(2,iglob) + eta*veloc(2,iglob)
+                dummyz_loc(i,j,k,thread_id) = displ(3,iglob) + eta*veloc(3,iglob)
+              enddo
+            enddo
+          enddo
+
+        else
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
                 iglob = ibool(i,j,k,ispec)
                 dummyx_loc(i,j,k,thread_id) = displ(1,iglob)
                 dummyy_loc(i,j,k,thread_id) = displ(2,iglob)
                 dummyz_loc(i,j,k,thread_id) = displ(3,iglob)
-             enddo
+              enddo
+            enddo
           enddo
-       enddo
+        endif
 
        ! stores velocity values in local array
        do k=1,NGLLZ

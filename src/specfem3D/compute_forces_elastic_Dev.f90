@@ -58,6 +58,8 @@
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       N_SLS,SAVE_MOHO_MESH, &
                       ONE_THIRD,FOUR_THIRDS,m1,m2
+  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -217,6 +219,8 @@
   integer ispec,iglob,ispec_p,num_elements
   integer i,j,k
 
+  real(kind=CUSTOM_REAL) :: eta
+
   imodulo_N_SLS = mod(N_SLS,3)
 
   ! choses inner/outer elements
@@ -240,17 +244,34 @@
           endif
         endif ! adjoint
 
+       ! Kelvin Voigt damping: artificial viscosity around dynamic faults
+
         ! stores displacment values in local array
-        do k=1,NGLLZ
-           do j=1,NGLLY
+        if (allocated(Kelvin_Voigt_eta)) then
+          eta = Kelvin_Voigt_eta(ispec)   
+          do k=1,NGLLZ
+            do j=1,NGLLY
               do i=1,NGLLX
-                 iglob = ibool(i,j,k,ispec)
-                 dummyx_loc(i,j,k) = displ(1,iglob)
-                 dummyy_loc(i,j,k) = displ(2,iglob)
-                 dummyz_loc(i,j,k) = displ(3,iglob)
+                iglob = ibool(i,j,k,ispec)
+                dummyx_loc(i,j,k) = displ(1,iglob) + eta*veloc(1,iglob)
+                dummyy_loc(i,j,k) = displ(2,iglob) + eta*veloc(2,iglob)
+                dummyz_loc(i,j,k) = displ(3,iglob) + eta*veloc(3,iglob)
               enddo
-           enddo
-        enddo
+            enddo
+          enddo
+
+        else
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                iglob = ibool(i,j,k,ispec)
+                dummyx_loc(i,j,k) = displ(1,iglob)
+                dummyy_loc(i,j,k) = displ(2,iglob)
+                dummyz_loc(i,j,k) = displ(3,iglob)
+              enddo
+            enddo
+          enddo
+        endif
 
         ! use first order Taylor expansion of displacement for local storage of stresses 
         ! at this current time step, to fix attenuation in a consistent way
