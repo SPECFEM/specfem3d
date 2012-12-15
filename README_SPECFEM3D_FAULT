@@ -1,13 +1,13 @@
 
-This package contains a version of the 3D spectral element code SPECFEM3D-SESAME (Komatitsch, Tromp et al)
-modified by J.-P. Ampuero (Caltech Seismolab) and P. Galvez (ETH Zurich) 
-to model dynamic earthquake rupture on non-planar faults with slip-weakening friction. 
-The main modifications are encapsulated in the following new modules: 
+This file documents modifications done by
+J.-P. Ampuero (Caltech Seismolab), P. Galvez (ETH Zurich) and S. N. Somala (Caltech)
+to model dynamic and kinematic earthquake rupture on non-planar faults.
+The main modifications are encapsulated in the following modules: 
 	decompose_mesh_SCOTCH/fault_scotch.f90
-	src/fault_generate_databases.f90 
-	src/fault_solver_dynamic.f90 
-	src/fault_solver_kinematic.f90 
-	src/fault_solver_common.f90 
+	generate_databases/fault_generate_databases.f90 
+	specfem3d/fault_solver_dynamic.f90 
+	specfem3d/fault_solver_kinematic.f90 
+	specfem3d/fault_solver_common.f90 
 We also include examples and Matlab functions for post-processing and visualization. 
 
 This is a preliminary version, still under development and testing. 
@@ -302,8 +302,8 @@ SIGN CONVENTION FOR FAULT QUANTITIES
 -------------------------------------
 
 During mesh generation, the fault is defined by two surfaces in contact.
-Let's denote as "side 1" the first surface declared by the user in the call 
-to the python function "fault_input", and the second surface as "side 2".
+Let's denote as "side 1" the SECOND surface declared by the user in the call 
+to the python function "fault_input", and the FIRST surface as "side 2".
 The local coordinate system on the fault is defined as the right-handed coordinate system
 defined by (strike, dip, normal), where "normal" is the normal vector outgoing
 from side 1, "dip" is parallel to the along-dip direction pointing downwards,

@@ -12,10 +12,6 @@ module fault_solver_kinematic
 
   private
 
-  ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
-  ! strength, state, slip, slip velocity, fault stresses, rupture time, process zone time
-  ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
-  ! process zone time = first time when slip = Dc
   type dataXZ_type
     integer :: npoin=0
     real(kind=CUSTOM_REAL), dimension(:), pointer :: d1=>null(), d2=>null(), &
