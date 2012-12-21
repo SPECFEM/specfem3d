@@ -149,6 +149,11 @@ to parameterize the mesh. Alternatively, the Python script can call a Cubit jour
 which looks like the example above. Variables can be defined and manipulated there using the 
 APREPRO language built in Cubit.
 
+Note: you should avoid gaps in the list of indices of mesh objects 
+with the following Cubit command:
+  compress ids hex face edge node')
+(otherwise you will get a segmentation fault during domain decomposition)
+
 
 
 CUBIT-PYTHON SCRIPTS FOR FAULTS

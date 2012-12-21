@@ -446,6 +446,35 @@ Convert the mesh database of the 2D code from ASCII to binary to produce smaller
 For some of Paul Cristini's 2D simulations for instance the current ASCII file become really huge
 
 
+------------------------------------------------
+dynamic/kinematic faults:
+------------------------------------------------
+
++ fault_solver_common:
+	- make ordered version of subroutine assemble_MPI_vector_ext_mesh, and use it in subroutine initialize_fault 
+
++ fault_solver_dynamic:
+	- many hard-coded ad hoc features need to be set instead as user options
+
++ rate-and-state friction:
+	- make it a user-friendly option (currently a flag in fault_solver)
+
++ cubit interface:
+	- consolidate python scripts (eliminate redundancy)
+
++ verify consistency of fault edge nodes in kinematic solver: 
+  currently, these nodes are not split but they are included in the fault database
+
++ simplify mesh generation with faults:
+ 	- eliminate fault edge nodes? 
+          Currently fault edge nodes must be defined as closed and non-split in CUBIT,
+          SESAME asigns a single ibulk, but it adds it to the fault database.
+	- develop a recipe for mesh coarsening in CUBIT based on half "cubed sphere" mesh
+        - test tet-to-hex strategy
+
++ add snapshot outputs to kinematic solver (e.g. to export fault stresses for adjoint source inversion)
+
+
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
 
