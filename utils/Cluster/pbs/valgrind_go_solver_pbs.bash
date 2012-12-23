@@ -16,6 +16,9 @@
 # job output file
 #PBS -o OUTPUT_FILES/job.o
 
+# group/others read .o file
+#PBS -Wumask=0022
+
 ###########################################################
 # USER PARAMETERS
 

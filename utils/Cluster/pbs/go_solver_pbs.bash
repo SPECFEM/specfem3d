@@ -6,6 +6,9 @@
 #PBS -j oe
 #PBS -o OUTPUT_FILES/$PBS_JOBID.o
 
+## group/others read .o file
+#PBS -Wumask=0022
+
 ###########################################################
 # USER PARAMETERS
 
