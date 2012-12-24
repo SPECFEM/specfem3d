@@ -25,9 +25,6 @@ cd $PBS_O_WORKDIR
 # compute total number of nodes needed
 NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
-# total number of nodes is the product of the values read
-numnodes=$NPROC
-
 mkdir -p OUTPUT_FILES
 
 # backup files used for this simulation
@@ -50,7 +47,7 @@ echo " "
 
 sleep 2
 cd bin/
-mpiexec -np $numnodes ./xspecfem3D
+mpiexec -np $NPROC ./xspecfem3D
 
 cp ../DATA/STATIONS_FILTERED ../OUTPUT_FILES/
 

@@ -25,8 +25,10 @@ cd $PBS_O_WORKDIR
 # compute total number of nodes needed
 NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
-# total number of nodes is the product of the values read
-numnodes=$NPROC
+# path to database files for mesh (relative to bin/)
+LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2 `
+
+mkdir -p $LOCALPATH
 
 echo starting decomposer for $numnodes partitions
 echo " "
@@ -38,6 +40,6 @@ cp go_decomposer_pbs.bash OUTPUT_FILES/
 MESHDIR=examples/homogeneous_halfspace_HEX8/MESH/
 
 cd bin/
-./xdecompose_mesh $numnodes ../$MESHDIR ../OUTPUT_FILES/DATABASES_MPI/
+./xdecompose_mesh $numnodes ../$MESHDIR $LOCALPATH/
 
 echo "done "
