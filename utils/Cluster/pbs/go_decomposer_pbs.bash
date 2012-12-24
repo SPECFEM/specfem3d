@@ -33,13 +33,15 @@ mkdir -p $LOCALPATH
 echo starting decomposer for $numnodes partitions
 echo " "
 
+mkdir -p OUTPUT_FILES/
+
 # save a copy
 cp go_decomposer_pbs.bash OUTPUT_FILES/
 
 # USER CHANGE MESH DIRECTORY
-MESHDIR=examples/homogeneous_halfspace_HEX8/MESH/
+MESHDIR=examples/homogeneous_halfspace_HEX8/MESH
 
 cd bin/
-./xdecompose_mesh $numnodes ../$MESHDIR $LOCALPATH/
+./xdecompose_mesh $numnodes ../$MESHDIR/ $LOCALPATH/
 
 echo "done "
