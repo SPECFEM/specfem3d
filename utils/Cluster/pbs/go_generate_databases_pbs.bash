@@ -25,9 +25,6 @@ cd $PBS_O_WORKDIR
 # compute total number of nodes needed
 NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
 
-# total number of nodes is the product of the values read
-numnodes=$NPROC
-
 mkdir -p OUTPUT_FILES
 
 # backup files used for this simulation
@@ -47,13 +44,16 @@ echo " "
 
 sleep 2
 cd bin/
-mpiexec -np $numnodes ./xgenerate_databases
+mpiexec -np $NPROC ./xgenerate_databases
 
 echo "done "
 
-# per instructions in manual, view low-res mesh with these commands (replace 143 with nproc-1):
+# per instructions in manual, view low-res mesh with these commands
+# > NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+# > LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2 `
+# > nmax=$(($NPROC-1))
 # > make xcombine_vol_data
 # > cd bin/
-# > ./xcombine_vol_data 0 143 vs ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES 0
-# > cd ../OUTPUT_FILES
+# > ./xcombine_vol_data 0 $nmax vs $LOCALPATH/ $LOCALPATH 0
+# > cd $LOCALPATH
 # > paraview &
