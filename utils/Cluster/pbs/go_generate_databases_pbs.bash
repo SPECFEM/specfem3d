@@ -23,7 +23,7 @@ cd $PBS_O_WORKDIR
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 
@@ -39,7 +39,7 @@ cp DATA/Par_file OUTPUT_FILES/
 cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
-echo starting MPI mesher on $numnodes processors
+echo starting MPI mesher on $NPROC processors
 echo " "
 
 sleep 2
@@ -49,8 +49,8 @@ mpiexec -np $NPROC ./xgenerate_databases
 echo "done "
 
 # per instructions in manual, view low-res mesh with these commands
-# > NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
-# > LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2 `
+# > NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
+# > LOCALPATH=`grep LOCAL_PATH DATA/Par_file | cut -d = -f 2`
 # > nmax=$(($NPROC-1))
 # > make xcombine_vol_data
 # > cd bin/
