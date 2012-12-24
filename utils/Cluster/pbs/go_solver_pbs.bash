@@ -23,7 +23,7 @@ cd $PBS_O_WORKDIR
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 

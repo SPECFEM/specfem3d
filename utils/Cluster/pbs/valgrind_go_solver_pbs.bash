@@ -38,10 +38,7 @@ cd $PBS_O_WORKDIR
 # script to run the mesher and the solver
 # read Par_file to get information about the run
 # compute total number of nodes needed
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
-
-# total number of nodes is the product of the values read
-numnodes=$NPROC
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 
@@ -63,7 +60,7 @@ echo " "
 sleep 2
 
 # memory leaks
-LD_PRELOAD=$PRELOAD_LIB mpiexec -np $numnodes valgrind --leak-check=full ./xspecfem3D >& ../OUTPUT_FILES/output.memory-leaks.log
+LD_PRELOAD=$PRELOAD_LIB mpiexec -np $NPROC valgrind --leak-check=full ./xspecfem3D >& ../OUTPUT_FILES/output.memory-leaks.log
 
 sleep 2
 echo " "
@@ -71,7 +68,7 @@ echo "run: cache misses"
 echo " "
 
 # cache misses
-LD_PRELOAD=$PRELOAD_LIB mpiexec -np $numnodes valgrind --tool=cachegrind ./xspecfem3D >& ../OUTPUT_FILES/output.cache-misses.log
+LD_PRELOAD=$PRELOAD_LIB mpiexec -np $NPROC valgrind --tool=cachegrind ./xspecfem3D >& ../OUTPUT_FILES/output.cache-misses.log
 
 cp cachegrind.out.* ../OUTPUT_FILES/
 

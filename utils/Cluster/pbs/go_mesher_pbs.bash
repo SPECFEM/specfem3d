@@ -21,8 +21,7 @@
 cd $PBS_O_WORKDIR
 
 # number of cores for the job
-NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2 `
-numnodes=$NPROC
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
 
 mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
@@ -40,11 +39,11 @@ cp DATA/meshfem3D_files/Mesh_Par_file OUTPUT_FILES/
 cat $PBS_NODEFILE > OUTPUT_FILES/compute_nodes
 echo "$PBS_JOBID" > OUTPUT_FILES/jobid
 
-echo starting MPI internal mesher on $numnodes processors
+echo starting MPI internal mesher on $NPROC processors
 echo " "
 
 sleep 2
 cd bin/
-mpiexec -np $numnodes ./xmeshfem3D
+mpiexec -np $NPROC ./xmeshfem3D
 
 echo "done "
