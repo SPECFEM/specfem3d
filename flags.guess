@@ -42,20 +42,20 @@ case $FC in
         # check: http://software.intel.com/sites/products/documentation/hpc/compilerpro/en-us/fortran/lin/compiler_f/index.htm
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -xHost -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium
+            FLAGS_CHECK="-O3 -xHost -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium -shared-intel
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
-            FLAGS_NO_CHECK="-O3 -xHost -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium
+            FLAGS_NO_CHECK="-O3 -xHost -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium -shared-intel
         fi
         # useful for debugging...
             # for debugging: change -check nobounds to -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
         #if test x"$FLAGS_CHECK" = x; then
         #    # without -e95
-        #    FLAGS_CHECK="-O3 -check nobounds -ftz -assume byterecl -traceback -ftrapuv -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium
+        #    FLAGS_CHECK="-O3 -check nobounds -ftz -assume byterecl -traceback -ftrapuv -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
         #fi
         #if test x"$FLAGS_NO_CHECK" = x; then
         #    # standard options (leave option -ftz, which is *critical* for performance)
-        #    FLAGS_NO_CHECK="-O3 -xP -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium
+        #    FLAGS_NO_CHECK="-O3 -xP -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
         #fi
         #
         ;;
