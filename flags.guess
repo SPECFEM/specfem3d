@@ -26,13 +26,14 @@ case $FC in
         ;;
     pgf90|*/pgf90)
         #
-        # Beowulf Portland pgf90
+        # Portland pgf90
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-fast -Mnobounds -Mdclchk -Knoieee" # -mcmodel=medium
+            FLAGS_CHECK="-fast -Mbounds -Mneginfo -Mdclchk -Minform=warn" # -mcmodel=medium
         fi
         if test x"$FLAGS_NO_CHECK" = x; then
-            FLAGS_NO_CHECK="-fast -Mnobounds -Mdclchk -Knoieee -Ktrap=none -Minline" # -mcmodel=medium
+# -fastsse -tp amd64e -Msmart
+            FLAGS_NO_CHECK="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz" # -mcmodel=medium
         fi
         ;;
     ifort|*/ifort)
