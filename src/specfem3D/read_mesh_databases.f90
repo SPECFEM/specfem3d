@@ -28,15 +28,19 @@
 
   subroutine read_mesh_databases()
 
+  use pml_par
+
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
+
   real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
   integer :: ier,inum
 
-! start reading the databasesa
+! start reading the databases
 
 ! info about external mesh simulation
   call create_name_database(prname,myrank,LOCAL_PATH)
@@ -318,6 +322,43 @@
      call exit_mpi(myrank,'error no simulation type defined')
   endif
 
+  ! C-PML absorbing boundary conditions
+  read(27) NSPEC_CPML
+  read(27) CPML_width
+  if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then 
+     allocate(CPML_regions(NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array CPML_regions'
+     allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array CPML_to_spec'
+     allocate(CPML_mask_ibool(NSPEC_AB),stat=ier)
+     if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
+     allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array d_store_x'
+     allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array d_store_y'
+     allocate(d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array d_store_z'
+     allocate(K_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array K_store_x'
+     allocate(K_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array K_store_y'
+     allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array K_store_z'
+     allocate(alpha_store(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+     if(ier /= 0) stop 'error allocating array alpha_store'
+
+     read(27) CPML_regions
+     read(27) CPML_to_spec
+     read(27) CPML_mask_ibool
+     read(27) d_store_x
+     read(27) d_store_y
+     read(27) d_store_z
+     read(27) k_store_x
+     read(27) k_store_y
+     read(27) k_store_z
+     read(27) alpha_store
+  endif
+
   ! absorbing boundary surface
   read(27) num_abs_boundary_faces
   allocate(abs_boundary_ispec(num_abs_boundary_faces), &
@@ -341,13 +382,30 @@
     endif
   endif
 
+  read(27) nspec2D_xmin
+  read(27) nspec2D_xmax
+  read(27) nspec2D_ymin
+  read(27) nspec2D_ymax
+  read(27) NSPEC2D_BOTTOM
+  read(27) NSPEC2D_TOP
+  allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
+       ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
+       ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
+  if(ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
+  read(27) ibelm_xmin
+  read(27) ibelm_xmax
+  read(27) ibelm_ymin
+  read(27) ibelm_ymax
+  read(27) ibelm_bottom
+  read(27) ibelm_top
+
   ! free surface
   read(27) num_free_surface_faces
   allocate(free_surface_ispec(num_free_surface_faces), &
           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
-  if( ier /= 0 ) stop 'error allocating array free_surface_ispec etc.'
+  if(ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
   if( num_free_surface_faces > 0 ) then
     read(27) free_surface_ispec
     read(27) free_surface_ijk

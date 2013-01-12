@@ -31,11 +31,13 @@
 ! reads in proc***_Databases files
 
   use generate_databases_par
+
   implicit none
 
   integer :: num_xmin,num_xmax,num_ymin,num_ymax,num_top,num_bottom,num
+  integer :: num_cpml
   integer :: num_moho
-  integer :: j
+  integer :: i,j
   !character(len=128) :: line
 
 ! read databases about external mesh simulation
@@ -91,9 +93,11 @@
   if( ier /= 0 ) stop 'error allocating array undef_mat_prop'
   do imat = 1, nundefMat_ext_mesh
      ! format example tomography:
-     ! e.g.: -1 tomography elastic tomography_model.xyz 1 2
+     ! e.g.: -1 tomography elastic tomography_model.xyz 0 2
      ! format example interface:
-     ! e.g.: -1 interface 14 15 1 2
+     ! e.g.: -1 interface 14 15 0 2
+     ! format example C-PML:
+     ! e.g.: -2001 2300.0 2800.0 1500.0 0 2
      read(IIN) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat), undef_mat_prop(6,imat)
   end do
@@ -126,11 +130,11 @@
 
   call sum_all_i(nspec_ab,num)
   if(myrank == 0) then
-    write(IMAIN,*) '  spectral elements: ',num
+    write(IMAIN,*) ' total number of spectral elements: ',num
   endif
   call sync_all()
 
-! read boundaries
+! reads absorbing/free-surface boundaries
   read(IIN) boundary_number ,nspec2D_xmin
   if(boundary_number /= 1) stop "Error : invalid database file"
 
@@ -202,6 +206,58 @@
     write(IMAIN,*) '    bottom,top: ',num_bottom,num_top
   endif
   call sync_all()
+
+  ! reads number of C-PML elements in the global mesh
+  read(IIN) nspec_cpml_tot
+  if(myrank == 0) then
+     write(IMAIN,*) ' total number of C-PML elements in the global mesh: ',nspec_cpml_tot
+  endif
+  call sync_all()
+
+  if( nspec_cpml_tot > 0 ) then
+     ! reads number of C-PML elements in this partition
+     read(IIN) nspec_cpml
+
+     if(myrank == 0) then
+        write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
+     endif
+     call sync_all()
+
+     call sum_all_i(nspec_cpml,num_cpml)
+
+     ! checks that the sum of C-PML elements over all partitions is correct
+     if( myrank == 0 .and. nspec_cpml_tot /= num_cpml ) stop 'error while summing C-PML elements over all partitions'
+
+     ! reads thickness of C-PML layers for the global mesh
+     read(IIN) CPML_width
+
+     ! reads C-PML regions and C-PML spectral elements global indexing 
+     allocate(CPML_to_spec(nspec_cpml),stat=ier)
+     if(ier /= 0) stop 'error allocating array CPML_to_spec'
+     allocate(CPML_regions(nspec_cpml),stat=ier)
+     if(ier /= 0) stop 'error allocating array CPML_regions'
+
+     do i=1,nspec_cpml
+        ! #id_cpml_regions = 1 : X_surface C-PML
+        ! #id_cpml_regions = 2 : Y_surface C-PML
+        ! #id_cpml_regions = 3 : Z_surface C-PML
+        ! #id_cpml_regions = 4 : XY_edge C-PML
+        ! #id_cpml_regions = 5 : XZ_edge C-PML
+        ! #id_cpml_regions = 6 : YZ_edge C-PML
+        ! #id_cpml_regions = 7 : XYZ_corner C-PML
+        !
+        ! format: #id_cpml_element #id_cpml_regions
+        read(IIN) CPML_to_spec(i), CPML_regions(i)
+     enddo
+
+     ! reads mask of C-PML elements for all elements in this partition
+     allocate(CPML_mask_ibool(NSPEC_AB),stat=ier)
+     if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
+
+     do i=1,NSPEC_AB
+        read(IIN) CPML_mask_ibool(i)
+     enddo
+  endif
 
 ! MPI interfaces between different partitions
   if( NPROC > 1 ) then

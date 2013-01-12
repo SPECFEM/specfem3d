@@ -33,7 +33,8 @@
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,NTSTEP_BETWEEN_OUTPUT_INFO, &
                         SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                        PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
 
   implicit none
 
@@ -44,12 +45,13 @@
   integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
   integer IMODEL
 
-  double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
+  double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML,PML_WIDTH_MIN,PML_WIDTH_MAX
 
   logical ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
   logical ANISOTROPY,SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION,SUPPRESS_UTM_PROJECTION
   logical USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
+  logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
 
   character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION
 
@@ -126,6 +128,20 @@
   if(err_occurred() /= 0) return
   call read_value_logical(ABSORB_INSTEAD_OF_FREE_SURFACE, 'model.ABSORB_INSTEAD_OF_FREE_SURFACE')
   if(err_occurred() /= 0) return
+  call read_value_logical(PML_CONDITIONS, 'solver.PML_CONDITIONS')
+  if(err_occurred() /= 0) return
+  call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'model.PML_INSTEAD_OF_FREE_SURFACE')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(PML_WIDTH_MIN, 'model.PML_WIDTH_MIN')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(PML_WIDTH_MAX, 'model.PML_WIDTH_MAX')
+  if(err_occurred() /= 0) return
+  call read_value_double_precision(f0_FOR_PML, 'model.f0_FOR_PML')
+  if(err_occurred() /= 0) return
+  !call read_value_logical(ROTATE_PML_ACTIVATE, 'solver.ROTATE_PML_ACTIVATE')
+  !if(err_occurred() /= 0) return
+  !call read_value_double_precision(ROTATE_PML_ANGLE, 'solver.ROTATE_PML_ANGLE')
+  !if(err_occurred() /= 0) return
   call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
@@ -158,48 +174,42 @@
   if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
-
+  
   ! close parameter file
   call close_parameter_file()
 
-  ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
-  ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
-  if ( NGNOD == 8 ) then
-     NGNOD2D = 4
-  else if ( NGNOD == 27 ) then
-     NGNOD2D = 9
-  else if ( NGNOD /= 8 .and. NGNOD /= 27 ) then
-     stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file'
-  endif
-
-  ! checks the MOVIE_TYPE parameter
-  if ( MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2 ) then
-     stop 'error: MOVIE_TYPE must be either 1 or 2'
-  endif
-
   ! noise simulations:
   ! double the number of time steps, if running noise simulations (+/- branches)
-  if ( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
-
-  ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
-  if ( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
-
-  ! total times steps must be dividable by adjoint source chunks/blocks
-  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
-    print*,'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
-    print*,'      change your Par_file (when NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1)'
-    stop 'mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero!'
-  endif
+  if( NOISE_TOMOGRAPHY /= 0 )   NSTEP = 2*NSTEP-1
 
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
-  if ( NOISE_TOMOGRAPHY /= 0 ) then
-    MOVIE_TYPE = 1
-    MOVIE_SURFACE = .true.
-    USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
+  if( NOISE_TOMOGRAPHY /= 0 ) then
+     MOVIE_TYPE = 1
+     MOVIE_SURFACE = .true.
+     USE_HIGHRES_FOR_MOVIES = .true.     ! we need to save surface movie everywhere, i.e. at all GLL points on the surface
   endif
 
-  if (USE_FORCE_POINT_SOURCE) then
+  ! the default value of NTSTEP_BETWEEN_READ_ADJSRC (0) is to read the whole trace at the same time
+  if( NTSTEP_BETWEEN_READ_ADJSRC == 0 )  NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+
+  ! total times steps must be dividable by adjoint source chunks/blocks
+  if ( mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) /= 0 ) then
+     print*,'When NOISE_TOMOGRAPHY is not equal to zero, ACTUAL_NSTEP=2*NSTEP-1'
+     stop 'error: mod(NSTEP,NTSTEP_BETWEEN_READ_ADJSRC) must be zero! Please modify Par_file and recompile solver'
+  endif
+
+  ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
+  ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
+  if( NGNOD == 8 ) then
+     NGNOD2D = 4
+  else if( NGNOD == 27 ) then
+     NGNOD2D = 9
+  else if( NGNOD /= 8 .and. NGNOD /= 27 ) then
+     stop 'elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
+  endif
+
+  if( USE_FORCE_POINT_SOURCE ) then
      ! compute the total number of sources in the FORCESOLUTION file
      ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
      call get_value_string(FORCESOLUTION, 'solver.FORCESOLUTION',&
@@ -215,11 +225,11 @@
      enddo
      close(21)
 
-     if(mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
-          stop 'total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+     if( mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0 ) &
+          stop 'error: total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
 
      NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-     if(NSOURCES < 1) stop 'need at least one source in FORCESOLUTION file'
+     if(NSOURCES < 1) stop 'error: need at least one source in FORCESOLUTION file'
 
   else
      ! compute the total number of sources in the CMTSOLUTION file
@@ -238,10 +248,10 @@
      close(21)
 
      if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-          stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+          stop 'error: total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
 
      NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
-     if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
+     if(NSOURCES < 1) stop 'error: need at least one source in CMTSOLUTION file'
 
      ! compute the minimum value of hdur in CMTSOLUTION file
      open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
@@ -267,8 +277,8 @@
      close(21)
 
      ! one cannot use a Heaviside source for the movies
-     if((MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL) &
-          stop 'hdur too small for movie creation, movies do not make sense for Heaviside source'
+     if( (MOVIE_SURFACE .or. MOVIE_VOLUME) .and. sqrt(minval_hdur**2 + HDUR_MOVIE**2) < TINYVAL ) &
+          stop 'error: hdur too small for movie creation, movies do not make sense for Heaviside source'
   endif
 
   ! converts all string characters to lowercase
@@ -324,7 +334,7 @@
   ! check
   if( IMODEL == IMODEL_IPATI .or. IMODEL == IMODEL_IPATI_WATER ) then
     if( USE_RICKER_TIME_FUNCTION .eqv. .false. ) &
-         stop 'please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
+         stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
 
   end subroutine read_parameter_file

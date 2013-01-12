@@ -26,7 +26,7 @@
 
 program pre_meshfem3D
 
-  use decompose_mesh,only: nparts,localpath_name, outputpath_name,&
+  use decompose_mesh,only: nparts,localpath_name, outputpath_name, &
                                   read_mesh_files, &
                                   check_valence, &
                                   scotch_partitioning, &
@@ -42,11 +42,14 @@ program pre_meshfem3D
                                   OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE, &
                                   ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                                   ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
-                                  LOCAL_PATH,TOMOGRAPHY_PATH,IMODEL
+                                  LOCAL_PATH,TOMOGRAPHY_PATH,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
+                                  PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL
 
 ! daniel: ifort
 !  USE IFPORT,only: getarg
+
   implicit none
+
   integer :: i
   character(len=256) :: arg(3)
 
@@ -80,7 +83,8 @@ program pre_meshfem3D
                           NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                           USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                          USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
+                          USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                          PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()

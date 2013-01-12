@@ -45,6 +45,7 @@
 
   integer isource,dummyval
   double precision t_shift(NSOURCES)
+  double precision length
   character(len=7) dummy
   character(len=256) string, FORCESOLUTION
 
@@ -129,7 +130,6 @@
   endif
 
   do isource=1,NSOURCES
-
      ! checks half-duration
      ! half-duration is the dominant frequency of the source
      ! point forces use a Ricker source time function
@@ -138,9 +138,13 @@
      if( hdur(isource) < TINYVAL ) hdur(isource) = TINYVAL
 
      ! check (inclined) force source's direction vector
-     if( comp_dir_vect_source_E(isource) .eq. 0.d0 .and. comp_dir_vect_source_N(isource) .eq. 0.d0 &
-          .and. comp_dir_vect_source_Z_UP(isource) .eq. 0.d0 ) &
-          stop 'When using USE_FORCE_POINT_SOURCE make sure all forces have a non null direction vector'
+     length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
+          comp_dir_vect_source_Z_UP(isource)**2 )
+     if( length < TINYVAL) then 
+        print *, 'normal length: ', length
+        print *, 'isource: ',isource
+        stop 'error set force point normal length, make sure all forces have a non null direction vector'
+     endif
   enddo
 
   end subroutine get_force

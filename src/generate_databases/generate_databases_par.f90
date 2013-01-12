@@ -57,18 +57,15 @@
 ! parameters read from parameter file
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,SIMULATION_TYPE
   integer :: NSOURCES,NGNOD,NGNOD2D,MOVIE_TYPE
-
-  double precision :: DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
-
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
-       OCEANS,TOPOGRAPHY,SAVE_FORWARD,USE_FORCE_POINT_SOURCE
-  logical :: ANISOTROPY,ABSORBING_CONDITIONS,SAVE_MESH_FILES, &
-       ABSORB_INSTEAD_OF_FREE_SURFACE
-  logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
-
-  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
-          USE_HIGHRES_FOR_MOVIES
   integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,NTSTEP_BETWEEN_READ_ADJSRC
+
+  double precision :: DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML,PML_WIDTH_MIN,PML_WIDTH_MAX
+
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION,OCEANS,TOPOGRAPHY,SAVE_FORWARD,USE_FORCE_POINT_SOURCE
+  logical :: ANISOTROPY,ABSORBING_CONDITIONS,SAVE_MESH_FILES,ABSORB_INSTEAD_OF_FREE_SURFACE
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
+  logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
 
   character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH
 
@@ -114,15 +111,42 @@
 ! boundaries and materials
   double precision, dimension(:,:), allocatable :: materials_ext_mesh
 
-  integer  :: ispec2D, boundary_number
-  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
+  integer :: ispec2D, boundary_number
+  integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
 
-  integer, dimension(:), allocatable  :: ibelm_xmin,ibelm_xmax, &
+  integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax, &
               ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
-  integer, dimension(:,:), allocatable  :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
+  integer, dimension(:,:), allocatable :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
   character (len=30), dimension(:,:), allocatable :: undef_mat_prop
+
+! C-PML absorbing boundary conditions
+
+  ! local number of C-PML spectral elements 
+  integer :: nspec_cpml
+
+  ! global number of C-PML spectral elements 
+  integer :: nspec_cpml_tot
+
+  ! C-PML spectral elements global indexing
+  integer, dimension(:), allocatable :: CPML_to_spec
+
+  ! C-PML regions
+  integer, dimension(:), allocatable :: CPML_regions
+
+  ! mask of C-PML elements for the global mesh
+  logical, dimension(:), allocatable :: CPML_mask_ibool
+
+  ! thickness of C-PML layers 
+  real(kind=CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
+
+  ! C-PML damping profile arrays
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: d_store_x, d_store_y, d_store_z
+
+  ! auxiliary parameters arrays
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store
 
 ! moho (optional)
   integer :: nspec2D_moho_ext

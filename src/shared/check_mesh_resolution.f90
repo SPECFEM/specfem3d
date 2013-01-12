@@ -122,31 +122,31 @@
                         NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
     ! min/max for whole cpu partition
-    vpmin_glob = min ( vpmin_glob, vpmin)
-    vpmax_glob = max ( vpmax_glob, vpmax)
+    vpmin_glob = min(vpmin_glob, vpmin)
+    vpmax_glob = max(vpmax_glob, vpmax)
 
-    vsmin_glob = min ( vsmin_glob, vsmin)
-    vsmax_glob = max ( vsmax_glob, vsmax)
+    vsmin_glob = min(vsmin_glob, vsmin)
+    vsmax_glob = max(vsmax_glob, vsmax)
 
     ! computes minimum and maximum distance of neighbor GLL points in this grid cell
     call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
-    distance_min_glob = min( distance_min_glob, distance_min)
-    distance_max_glob = max( distance_max_glob, distance_max)
+    distance_min_glob = min(distance_min_glob, distance_min)
+    distance_max_glob = max(distance_max_glob, distance_max)
 
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
-    elemsize_min_glob = min( elemsize_min_glob, elemsize_min)
-    elemsize_max_glob = max( elemsize_max_glob, elemsize_max)
+    elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
+    elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
 
     ! courant number
     ! based on minimum GLL point distance and maximum velocity
     ! i.e. on the maximum ratio of ( velocity / gridsize )
     if( DT_PRESENT ) then
-      cmax = max( vpmax,vsmax ) * DT / distance_min
+      cmax = max(vpmax,vsmax) * DT / distance_min
       cmax_glob = max(cmax_glob,cmax)
 
       ! debug: for vtk output

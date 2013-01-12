@@ -88,7 +88,6 @@
   ! material properties on all GLL points: taken from material values defined for
   ! each spectral element in input mesh
   do ispec = 1, nspec
-
     ! loops over all gll points in element
     do k = 1, NGLLZ
       do j = 1, NGLLY

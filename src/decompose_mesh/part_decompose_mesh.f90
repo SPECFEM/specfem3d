@@ -72,7 +72,7 @@ contains
 
     ! local parameters
     integer  :: i, j, k, l, m, nb_edges
-    logical  ::  is_neighbour
+    logical  :: is_neighbour
     integer  :: num_node, n
     integer  :: elem_base, elem_target
     integer  :: connectivity
@@ -657,6 +657,7 @@ contains
     integer, intent(in)  :: NGNOD2D
     integer, intent(in)  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
       nspec2D_ymax, nspec2D_bottom, nspec2D_top
+
     integer, dimension(nspec2D_xmin), intent(in) :: ibelm_xmin
     integer, dimension(nspec2D_xmax), intent(in) :: ibelm_xmax
     integer, dimension(nspec2D_ymin), intent(in) :: ibelm_ymin
@@ -671,9 +672,9 @@ contains
     integer, dimension(NGNOD2D,nspec2D_bottom), intent(in) :: nodes_ibelm_bottom
     integer, dimension(NGNOD2D,nspec2D_top), intent(in) :: nodes_ibelm_top
     integer, dimension(:), pointer :: glob2loc_elmnts
-    integer, dimension(:), pointer  :: glob2loc_nodes_nparts
-    integer, dimension(:), pointer  :: glob2loc_nodes_parts
-    integer, dimension(:), pointer  :: glob2loc_nodes
+    integer, dimension(:), pointer :: glob2loc_nodes_nparts
+    integer, dimension(:), pointer :: glob2loc_nodes_parts
+    integer, dimension(:), pointer :: glob2loc_nodes
     integer, dimension(1:nspec)  :: part
 
     ! local parameters
@@ -682,6 +683,7 @@ contains
     integer, dimension(NGNOD2D) :: loc_node
     integer :: loc_nspec2D_xmin,loc_nspec2D_xmax,loc_nspec2D_ymin, &
                loc_nspec2D_ymax,loc_nspec2D_bottom,loc_nspec2D_top
+
 
     ! counts number of elements for boundary at xmin, xmax, ymin, ymax, bottom, top in this partition
     loc_nspec2D_xmin = 0
@@ -731,7 +733,7 @@ contains
        endif
     enddo
     write(IIN_database) 6, loc_nspec2D_top
-
+    
     ! outputs element index and element node indices
     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
@@ -965,10 +967,78 @@ contains
           enddo
           write(IIN_database) glob2loc_elmnts(ibelm_top(i)-1)+1, (loc_node(inode), inode = 1,NGNOD2D)
        endif
-
     enddo
 
   end subroutine write_boundaries_database
+
+  !--------------------------------------------------
+  ! Write C-PML elements indices, CPML-regions and thickness of C-PML layer 
+  ! pertaining to iproc partition in the corresponding Database
+  !--------------------------------------------------
+  subroutine write_cpml_database(IIN_database, iproc, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
+                                 CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
+
+    integer, intent(in)  :: IIN_database
+    integer, intent(in)  :: iproc
+    integer, intent(in)  :: nspec
+    integer, intent(in)  :: nspec_cpml
+
+    integer, dimension(nspec_cpml), intent(in) :: CPML_to_spec 
+    integer, dimension(nspec_cpml), intent(in) :: CPML_regions
+
+    logical, dimension(nspec), intent(in) :: CPML_mask_ibool
+
+    real(kind=CUSTOM_REAL), intent(in)  :: CPML_width
+
+    integer, dimension(:), pointer :: glob2loc_elmnts
+
+    integer, dimension(1:nspec), intent(in) :: part
+
+    ! local parameters
+    integer :: i,nspec_cpml_local
+
+    ! writes number of C-PML elements in the global mesh
+    write(IIN_database) nspec_cpml
+
+    if( nspec_cpml > 0 ) then
+       ! writes number of C-PML elements in this partition
+       nspec_cpml_local = 0
+       do i=1,nspec_cpml
+          if( part(CPML_to_spec(i)) == iproc ) then
+             nspec_cpml_local = nspec_cpml_local + 1
+          endif
+       enddo
+
+       write(IIN_database) nspec_cpml_local 
+
+       ! writes thickness of C-PML layers for the global mesh
+       write(IIN_database) CPML_width
+
+       ! writes C-PML regions and C-PML spectral elements global indexing 
+       do i=1,nspec_cpml
+          ! #id_cpml_regions = 1 : X_surface C-PML
+          ! #id_cpml_regions = 2 : Y_surface C-PML
+          ! #id_cpml_regions = 3 : Z_surface C-PML
+          ! #id_cpml_regions = 4 : XY_edge C-PML
+          ! #id_cpml_regions = 5 : XZ_edge C-PML
+          ! #id_cpml_regions = 6 : YZ_edge C-PML
+          ! #id_cpml_regions = 7 : XYZ_corner C-PML
+          !
+          ! format: #id_cpml_element #id_cpml_regions 
+          if( part(CPML_to_spec(i)) == iproc ) then
+             write(IIN_database) glob2loc_elmnts(CPML_to_spec(i)-1)+1, CPML_regions(i)
+          endif
+       enddo
+
+       ! writes mask of C-PML elements for all elements in this partition
+       do i=1,nspec
+          if( part(i) == iproc ) then
+             write(IIN_database) CPML_mask_ibool(i)
+          endif
+       enddo
+    endif
+
+   end subroutine write_cpml_database
 
 
   !--------------------------------------------------
@@ -996,7 +1066,7 @@ contains
     integer, dimension(0:NGNOD-1)  :: loc_nodes
 
     if ( num_phase == 1 ) then
-    ! counts number of spectral elements in this partition
+       ! counts number of spectral elements in this partition
        nspec_local = 0
        do i = 0, nspec-1
           if ( part(i) == iproc ) then
@@ -1005,7 +1075,7 @@ contains
        enddo
 
     else
-    ! writes out element corner indices
+       ! writes out element corner indices
        do i = 0, nspec-1
           if ( part(i) == iproc ) then
 
@@ -1360,7 +1430,7 @@ contains
         endif
         ! poroelastic element (very expensive)
         if (is_poroelastic(num_material(el+1))) elmnts_load(el+1) = POROELASTIC_LOAD
-      else
+      else ! JC JC: beware! To modify to take into account the -200? flags used in C-PML boundary conditions
         ! tomographic materials count as elastic
         if(ATTENUATION) then
           elmnts_load(el+1) = VISCOELASTIC_LOAD

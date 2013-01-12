@@ -62,7 +62,10 @@ read this from input files in the solver
 See also if the current arrays called isPML() or PML() or something like that in SPECFEM3D need to be suppressed or on the contrary could 
 be reused. They seem to correspond to an earlier attempt a few years ago that was never finished.
 
-One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, but I never implemented all the terms.
+One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned 
+with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with 
+the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, 
+but I never implemented all the terms.
 
 The standard logical bit handling functions of Fortran are described for instance at http://www.ews.uiuc.edu/~mrgates2/docs/fortran.html
 Thus here is the standard way of using a single array for all the logical flags for CPML in Fortran:

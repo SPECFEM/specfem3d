@@ -904,17 +904,9 @@
 
       if( myrank == 0 ) then
         ! get the 3-D shape functions
-        if( USE_FORCE_POINT_SOURCE ) then
-          ! note: we switch xi,eta,gamma range to be [-1,1]
-          ! uses initial guess in xi, eta and gamma
-          xil = xigll(nint(xi_source(isource)))
-          etal = yigll(nint(eta_source(isource)))
-          gammal = zigll(nint(gamma_source(isource)))
-        else
-          xil = xi_source(isource)
-          etal = eta_source(isource)
-          gammal = gamma_source(isource)
-        endif
+        xil = xi_source(isource)
+        etal = eta_source(isource)
+        gammal = gamma_source(isource)
         call eval_shape3D_single(myrank,shape3D,xil,etal,gammal,NGNOD)
 
         ! interpolates source locations

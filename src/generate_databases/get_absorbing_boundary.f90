@@ -34,8 +34,9 @@
 
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
-  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE, NGNOD2D
+  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block
@@ -76,7 +77,7 @@
 
   ! face corner locations
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
-  integer  :: ispec,ispec2D,icorner,iabs,iface,igll,i,j,igllfree,ifree
+  integer  :: ispec,ispec2D,icorner,itop,iabs,iface,igll,i,j,igllfree,ifree
 
   ! abs face counter
   iabs = 0
@@ -397,6 +398,7 @@
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
   ! free surface face counter
   ifree = 0
+
   do ispec2D = 1, NSPEC2D_TOP
     ! sets element
     ispec = ibelm_top(ispec2D)
@@ -454,7 +456,7 @@
           free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
           free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
         enddo
-      enddo
+      enddo     
 
     else
 
@@ -502,12 +504,18 @@
     stop 'error number of absorbing faces'
   endif
 
+  call sum_all_i(num_free_surface_faces,itop)
   call sum_all_i(num_abs_boundary_faces,iabs)
   if( myrank == 0 ) then
     write(IMAIN,*) '     absorbing boundary:'
+    write(IMAIN,*) '     total number of free faces = ',itop
     write(IMAIN,*) '     total number of faces = ',iabs
     if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
        write(IMAIN,*) '     absorbing boundary includes free surface'
+    endif
+    if( PML_INSTEAD_OF_FREE_SURFACE .and. itop /= 0 ) then
+       print*,'please check Par_file/free_surface_file and recompile solver'
+       stop 'error: number of free surface faces should be zero when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
     endif
   endif
 

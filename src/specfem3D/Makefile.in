@@ -173,7 +173,7 @@ CUDA_DEVICE_OBJ = \
 # solver objects - no statically allocated arrays anymore
 SOLVER_ARRAY_OBJECTS = \
 	$O/specfem3D_par.o \
-	$O/PML_init.o \
+	$O/pml_par.o \
 	$O/assemble_MPI_vector.o \
 	$O/fault_solver_common.o \
 	$O/fault_solver_dynamic.o \
@@ -211,6 +211,10 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/iterate_time.o \
 	$O/make_gravity.o \
 	$O/noise_tomography.o \
+	$O/pml_allocate_arrays.o \
+	$O/pml_output_VTKs.o \
+	$O/pml_set_accel_contribution.o \
+	$O/pml_set_memory_variables.o \
 	$O/prepare_timerun.o \
 	$O/program_specfem3D.o \
 	$O/read_mesh_databases.o \
@@ -228,6 +232,7 @@ SOLVER_ARRAY_OBJECTS = \
 
 MODEL_UPD_OBJECTS = \
 	$O/specfem3D_par.o \
+	$O/pml_par.o \
 	$O/model_update.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -406,7 +411,7 @@ $O/parallel.o: $(SHARED)constants.h $(SHARED)parallel.f90
 
 $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
-  
+
 $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
 	${MPIFCCOMPILE_NO_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 

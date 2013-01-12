@@ -72,6 +72,8 @@
   double precision , dimension(NMATERIALS,6) ::  material_properties
   double precision , dimension(16) :: matpropl
   integer :: i,ispec,iglob,ier
+  ! dummy_nspec_cpml is used here to match the read instructions in generate_databases/read_partition_files.f90
+  integer :: dummy_nspec_cpml
 
   ! name of the database files
   character(len=256) prname
@@ -147,6 +149,11 @@
           ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
   end do
 
+  ! JC JC todo: implement C-PML code in internal mesher
+  ! dummy_nspec_cpml is used here to match the read instructions in generate_databases/read_partition_files.f90
+  dummy_nspec_cpml = 0
+  write(IIN_database) dummy_nspec_cpml
+
   ! MPI Interfaces
 
   if(NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
@@ -197,7 +204,6 @@
   if(interfaces(NE))  nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
   if(interfaces(SE))  nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
   if(interfaces(SW))  nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
-
 
   nspec_interfaces_max = maxval(nspec_interface)
 

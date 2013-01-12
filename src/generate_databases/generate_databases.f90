@@ -189,6 +189,7 @@
   subroutine generate_databases
 
   use generate_databases_par
+
   implicit none
 
 ! sizeprocs returns number of processes started (should be equal to NPROC).
@@ -263,7 +264,8 @@
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                        PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
 
 ! check that the code is running with the requested nb of processes
   if(sizeprocs /= NPROC) then
@@ -280,7 +282,7 @@
 
 ! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
 ! just to be sure for now..
-  if( ABSORBING_CONDITIONS ) then
+  if(ABSORBING_CONDITIONS) then
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
       call exit_MPI(myrank,'must have NGLLX = NGLLY = NGLLZ for external meshes')
   endif

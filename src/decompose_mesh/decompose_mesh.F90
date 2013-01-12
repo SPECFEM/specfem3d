@@ -75,25 +75,32 @@ module decompose_mesh
   integer, dimension(:), pointer  :: tab_size_interfaces, tab_interfaces
   integer, dimension(:), allocatable  :: my_interfaces
   integer, dimension(:), allocatable  :: my_nb_interfaces
-  integer  ::  ninterfaces
-  integer  :: my_ninterface
+  integer ::  ninterfaces
+  integer :: my_ninterface
 
   integer :: nsize           ! max number of elements that contain the same node
-  integer  :: nb_edges
+  integer :: nb_edges
 
-  integer  :: ispec, inode
-  integer  :: max_neighbour   ! real maximum number of neighbours per element
-  integer  :: sup_neighbour   ! majoration (overestimate) of the maximum number of neighbours per element
+  integer :: ispec, inode
+  integer :: max_neighbour   ! real maximum number of neighbours per element
+  integer :: sup_neighbour   ! majoration (overestimate) of the maximum number of neighbours per element
 
-  integer  :: ipart, nnodes_loc, nspec_local,ncommonnodes
-  integer  :: num_elmnt, num_node, num_mat
+  integer :: ipart, nnodes_loc, nspec_local,ncommonnodes
+  integer :: num_elmnt, num_node, num_mat
 
   ! boundaries
-  integer  :: ispec2D
-  integer  :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
+  integer :: ispec2D
+  integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom, nspec2D_top
   integer, dimension(:), allocatable :: ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin
   integer, dimension(:,:), allocatable :: nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
+
+  ! C-PML absorbing boundary conditions
+  integer :: ispec_CPML
+  integer :: nspec_cpml
+  integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
+  logical, dimension(:), allocatable :: CPML_mask_ibool
+  real(kind=CUSTOM_REAL) :: CPML_width
 
   ! moho surface (optional)
   integer :: nspec2D_moho
@@ -134,14 +141,14 @@ module decompose_mesh
 
 ! for read_parameter_files
   double precision :: DT
-  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO
+  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML,PML_WIDTH_MIN,PML_WIDTH_MAX
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
   integer :: NTSTEP_BETWEEN_FRAMES,NTSTEP_BETWEEN_OUTPUT_INFO,MOVIE_TYPE
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
             USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
-  logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
+  logical :: ATTENUATION,USE_OLSEN_ATTENUATION,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
             OCEANS,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
   logical :: ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
@@ -237,7 +244,7 @@ module decompose_mesh
     if( ier /= 0 ) stop 'error allocating array mat'
     mat(:,:) = 0
     do ispec = 1, nspec
-      ! format: # id_element #flag
+      ! format: #id_element #flag
       ! note: be aware that elements may not be sorted in materials_file
       read(98,*) num_mat,mat(1,num_mat)
       if((num_mat > nspec) .or. (num_mat < 1) ) stop "ERROR : Invalid mat file."
@@ -393,12 +400,16 @@ module decompose_mesh
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #material_domain_id #material_id(<0) #type_name (="interface")
-       !     #material_id_for_material_below #material_id_for_material_above
-       !        example:     2  -1 interface 1 2
+       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="interface")
+       !     #(3) material_id_for_material_below #(4) material_id_for_material_above
+       !        example:     2 -1 interface 1 2
        !   - for tomography models
-       !    #material_domain_id #material_id(<0) #type_name (="tomography") #block_name (="elastic") #file_name
-       !        example:     2  -1 tomography elastic tomography_model.xyz 
+       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography") 
+       !     #(3) block_name (="elastic") #(4) file_name
+       !        example:     2 -1 tomography elastic tomography_model.xyz
+       !   - for C-PML absorbing boundaries
+       !    #(6) material_domain_id #(1) material_id(<= -2000) #(2) rho #(3) vp #(4) vs
+       !        example:     2 -2001 2300.0 2800.0 1500.0
        ! reads lines until it reaches a defined material
        num_mat = 1
        do while( num_mat >= 0 .and. ier == 0 )
@@ -407,28 +418,38 @@ module decompose_mesh
        enddo
        if( ier /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
 
-       ! checks if interface or tomography definition
+       ! checks if interface, tomography or C-PML definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
+       read(undef_mat_prop(1,imat),*) num_mat
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
-         ! line will have 5 arguments, e.g.: 2  -1 interface 1 2
+         ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
-       else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
-         ! line will have 6 arguments, e.g.: 2  -1 tomography elastic tomography_model.xyz 1
+       elseif( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+         ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat)
+         undef_mat_prop(5,imat) = "0" ! dummy value
+       elseif( num_mat <= -2001 .and. num_mat >= -2007 ) then
+         ! line will have 5 arguments, e.g.: 2 -2001 2300.0 2800.0 1500.0     
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+                     undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
        endif
 
        ! checks material_id
-       read(undef_mat_prop(1,imat),*) num_mat
-       if(num_mat > 0 .or. -num_mat > count_undef_mat)  &
-            stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
-       if(num_mat /= -imat)  &
-            stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."
+       if( trim(undef_mat_prop(2,imat)) == 'interface' .or. trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+          if(num_mat > 0 .or. -num_mat > count_undef_mat)  &
+               stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
+          if(num_mat /= -imat)  &
+               stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."
+       else
+          if(num_mat > -2001 .or. num_mat < -2007) &
+               stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
+       endif
 
        ! checks interface: flag_down/flag_up
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
@@ -604,6 +625,48 @@ module decompose_mesh
     enddo
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
+
+  ! reads in absorbing_cpml boundary file 
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
+         status='old', form='formatted',iostat=ier)
+    if( ier /= 0 ) then
+       nspec_cpml = 0
+    else
+       read(98,*) nspec_cpml, CPML_width       
+    endif
+
+    ! C-PML spectral elements global indexing
+    allocate(CPML_to_spec(nspec_cpml),stat=ier)
+    if(ier /= 0) stop 'error allocating array CPML_to_spec'
+    ! C-PML regions (see below)
+    allocate(CPML_regions(nspec_cpml),stat=ier)
+    if(ier /= 0) stop 'error allocating array CPML_regions'
+    do ispec_CPML=1,nspec_cpml
+       ! elements are stored with #id_cpml_regions increasing order:
+       !
+       ! #id_cpml_regions = 1 : X_surface C-PML
+       ! #id_cpml_regions = 2 : Y_surface C-PML
+       ! #id_cpml_regions = 3 : Z_surface C-PML
+       ! #id_cpml_regions = 4 : XY_edge C-PML
+       ! #id_cpml_regions = 5 : XZ_edge C-PML
+       ! #id_cpml_regions = 6 : YZ_edge C-PML
+       ! #id_cpml_regions = 7 : XYZ_corner C-PML
+       !
+       ! format: #id_cpml_element #id_cpml_regions
+       read(98,*) CPML_to_spec(ispec_CPML), CPML_regions(ispec_CPML)
+    enddo
+    close(98)
+    if( nspec_cpml > 0 ) print*, '  nspec_cpml = ', nspec_cpml
+
+    ! sets mask of C-PML elements for all elements in this partition
+    allocate(CPML_mask_ibool(nspec),stat=ier)
+    if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
+    CPML_mask_ibool(:) = .false. 
+    do ispec_CPML=1,nspec_cpml
+       if( (CPML_regions(ispec_CPML).ge.1) .and. (CPML_regions(ispec_CPML).le.7) ) then
+          CPML_mask_ibool(CPML_to_spec(ispec_CPML)) = .true.
+       endif
+    enddo
 
   ! reads in moho_surface boundary files (optional)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
@@ -929,7 +992,8 @@ module decompose_mesh
   subroutine write_mesh_databases
 
     implicit none
-    !local parameters
+
+    integer :: ier
 
     allocate(my_interfaces(0:ninterfaces-1),stat=ier)
     if( ier /= 0 ) stop 'error allocating array my_interfaces'
@@ -951,7 +1015,6 @@ module decompose_mesh
        endif
 
        ! gets number of nodes
-
        call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 1)
@@ -966,7 +1029,6 @@ module decompose_mesh
        ! writes out node coordinate locations
        write(IIN_database) nnodes_loc
 
-
        call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords,&
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
@@ -980,7 +1042,7 @@ module decompose_mesh
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
 
-       ! writes out absorbing/free-surface boundaries
+       ! writes out absorbing/free-surface boundaries 
        call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
                                   nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
                                   ibelm_xmin, ibelm_xmax, ibelm_ymin, &
@@ -989,6 +1051,10 @@ module decompose_mesh
                                   nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
+
+       ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer 
+       call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
+            CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
 
        ! gets number of MPI interfaces
        call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
@@ -1042,6 +1108,12 @@ module decompose_mesh
 
 
     enddo
+
+    ! cleanup
+    deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
+    deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
+    deallocate(CPML_mask_ibool,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_mask_ibool'
+
     print*, 'partitions: '
     print*, '  num = ',nparts
     print*

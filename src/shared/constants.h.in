@@ -137,9 +137,18 @@
 
 !!-----------------------------------------------------------
 !!
-!! absorption and PML
+!! C-PML absorbing boundary conditions 
 !!
 !!-----------------------------------------------------------
+  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1.d0
+  real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.d0 ! (Martin and Komatitsch, Geophys. J. Int. 2009) 
+
+! C-PML theoretical reflection coefficient 
+! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
+  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001d0
+
+! empirical damping modified factor 
+  real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2d0
 
 ! absorb boundaries using a PML region
 ! (EXPERIMENTAL feature)
