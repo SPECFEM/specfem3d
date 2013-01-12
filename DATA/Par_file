@@ -54,6 +54,23 @@ ABSORBING_CONDITIONS            = .false.
 # absorbing top surface (defined in mesh as 'free_surface_file')
 ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
 
+# C-PML boundary conditions for a regional simulation
+PML_CONDITIONS	  	    	= .false.
+
+# C-PML top surface
+PML_INSTEAD_OF_FREE_SURFACE     = .false.
+				
+# C-PML thickness min/max
+PML_WIDTH_MIN                   = 10000.0d0
+PML_WIDTH_MAX                   = 25000.0d0
+
+# C-PML dominant frequency
+f0_FOR_PML                      = 12.7
+
+# parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)				
+# ROTATE_PML_ACTIVATE           = .false.
+# ROTATE_PML_ANGLE              = 0.
+
 # save AVS or OpenDX movies
 # MOVIE_TYPE = 1 to show the top surface
 # MOVIE_TYPE = 2 to show all the external faces of the mesh
@@ -82,8 +99,7 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # 0 = read the whole adjoint sources at the same time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
-# use a (tilted) FORCESOLUTION force point source (or several) located exactly at a grid point 
-# instead of a CMTSOLUTION moment-tensor source.
+# use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
 # in which the source is a vertical force, normal force, inclined force, impact etc.
 # If this flag is turned on, the FORCESOLUTION file must be edited by precising:

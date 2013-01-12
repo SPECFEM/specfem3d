@@ -66,56 +66,60 @@ subroutine compute_forces_elastic()
         call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat, &
+                        ATTENUATION,deltat,PML_CONDITIONS, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         one_minus_sum_beta,factor_common, &
                         alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB, &
                         R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        epsilondev_xx,epsilondev_yy,epsilondev_xy,&
+                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store,&
-                        c22store,c23store,c24store,c25store,c26store,c33store,&
-                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
                         SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                         is_moho_top,is_moho_bot, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
-                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
-                        phase_ispec_inner_elastic  )
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
+                        phase_ispec_inner_elastic,ispec_is_elastic )
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
-          call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,&
+          call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat, &
+                        ATTENUATION,deltat,PML_CONDITIONS, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         one_minus_sum_beta,factor_common, &
-                        b_alphaval,b_betaval,b_gammaval,&
+                        b_alphaval,b_betaval,b_gammaval, &
                         NSPEC_ATTENUATION_AB, &
                         b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,&
+                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store,&
-                        c22store,c23store,c24store,c25store,c26store,c33store,&
-                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
                         SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                         is_moho_top,is_moho_bot, &
                         b_dsdx_top,b_dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
-                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic  )
 
       endif
@@ -145,8 +149,8 @@ subroutine compute_forces_elastic()
                   request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
          ! transfers mpi buffers onto GPU
-         call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh,&
-                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,&
+         call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                   request_recv_vector_ext_mesh)
       endif ! inner elements
 
@@ -154,8 +158,8 @@ subroutine compute_forces_elastic()
 
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if(ABSORBING_CONDITIONS) &
-      call compute_stacey_elastic(NSPEC_AB,NGLOB_AB,accel, &
+    if( ABSORBING_CONDITIONS ) then
+       call compute_stacey_elastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec, &
@@ -165,6 +169,8 @@ subroutine compute_forces_elastic()
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
                         GPU_MODE,Mesh_pointer)
+    endif
+
 
 ! acoustic coupling
     if( ACOUSTIC_SIMULATION ) then

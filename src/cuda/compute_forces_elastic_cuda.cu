@@ -799,6 +799,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
 #endif
   }
 
+  // JC JC here we will need to add GPU support for the new C-PML routines
   if(ATTENUATION){
     // use first order Taylor expansion of displacement for local storage of stresses 
     // at this current time step, to fix attenuation in a consistent way
@@ -864,6 +865,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
 
     }
 
+    // JC JC here we will need to add GPU support for the new C-PML routines
     if( ATTENUATION){
       // temporary variables used for fixing attenuation in a consistent way
 
@@ -957,6 +959,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
             + s_dummyz_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
             + s_dummyz_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
 
+    // JC JC here we will need to add GPU support for the new C-PML routines
     if( ATTENUATION){
       // temporary variables used for fixing attenuation in a consistent way
 
@@ -1042,6 +1045,8 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
     duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
     duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
 
+    // JC JC here we will need to add GPU support for the new C-PML routines
+
     // precompute some sums to save CPU time
     duxdxl_plus_duydyl = duxdxl + duydyl;
     duxdxl_plus_duzdzl = duxdxl + duzdzl;
@@ -1050,6 +1055,7 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
     duzdxl_plus_duxdzl = duzdxl + duxdzl;
     duzdyl_plus_duydzl = duzdyl + duydzl;
 
+    // JC JC here we will need to add GPU support for the new C-PML routines
     if( ATTENUATION){
       // temporary variables used for fixing attenuation in a consistent way
 
@@ -1084,6 +1090,8 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
 	if(SIMULATION_TYPE == 3) {
 	  epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
 	}
+	
+	// JC JC here we will need to add GPU support for the new C-PML routines
       }
     }else{
       // computes deviatoric strain attenuation and/or for kernel calculations
@@ -1217,6 +1225,8 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
 // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
+  // JC JC here we will need to add GPU support for the new C-PML routines
+
   if (active) {
 
 #ifndef MANUALLY_UNROLLED_LOOPS
@@ -1342,6 +1352,8 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
     d_accel[iglob*3 + 2] += sum_terms3;
 #endif // USE_TEXTURES_FIELDS
 
+    // JC JC here we will need to add GPU support for the new C-PML routines
+
 #else // MESH_COLORING
 
     //mesh coloring
@@ -1398,6 +1410,8 @@ __global__ void Kernel_2_impl(int nb_blocks_to_compute,
     }
 
   } // if(active)
+
+  // JC JC here we will need to add GPU support for the new C-PML routines
 
 } // kernel_2_impl()
 

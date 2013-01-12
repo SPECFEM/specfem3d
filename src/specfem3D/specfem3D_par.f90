@@ -73,6 +73,8 @@ module specfem_par
   integer, dimension(:,:,:), allocatable :: abs_boundary_ijk
   integer, dimension(:), allocatable :: abs_boundary_ispec
   integer :: num_abs_boundary_faces
+  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP
+  integer, dimension(:), allocatable :: ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top
 
 ! free surface arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: free_surface_normal
@@ -84,7 +86,6 @@ module specfem_par
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB
   character(len=256) prname_Q
-
 
 ! additional mass matrix for ocean load
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
@@ -166,11 +167,14 @@ module specfem_par
   integer :: NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,UTM_PROJECTION_ZONE
   integer :: IMODEL,NGNOD,NGNOD2D
 
-  double precision :: DT,OLSEN_ATTENUATION_RATIO
+  double precision :: DT,OLSEN_ATTENUATION_RATIO,f0_FOR_PML,PML_WIDTH_MIN,PML_WIDTH_MAX
 
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION, &
             OCEANS,TOPOGRAPHY,ABSORBING_CONDITIONS,ANISOTROPY, &
             ABSORB_INSTEAD_OF_FREE_SURFACE
+
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
+
   logical :: GRAVITY
 
   logical :: SAVE_FORWARD,SAVE_MESH_FILES

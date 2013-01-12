@@ -33,6 +33,7 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   implicit none
 
   integer :: ier
@@ -48,7 +49,8 @@
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
-                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,IMODEL)
+                        USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
+                        PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
@@ -260,19 +262,50 @@
   ! gravity only on GPU supported
   if( .not. GPU_MODE .and. GRAVITY ) &
     stop 'GRAVITY only supported in GPU mode'
-
+  
   ! absorbing surfaces
   if( ABSORBING_CONDITIONS ) then
-    ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
-    ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
-    ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
-    ! just to be sure for now..
-    if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
-      stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
+     ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
+     ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
+     ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
+     ! just to be sure for now..
+     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
+          stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
+     if( PML_CONDITIONS ) then
+        print*, 'please modify Par_file and recompile solver'
+        stop 'ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
+     elseif( PML_INSTEAD_OF_FREE_SURFACE ) then
+        print*, 'please modify Par_file and recompile solver'
+        stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with ABSORBING_CONDITIONS = .true.'
+     endif
   else
-    ! absorbing top surface
-    if(ABSORB_INSTEAD_OF_FREE_SURFACE) &
-      stop 'ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is true'
+     if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+        print*, 'please modify Par_file and recompile solver'
+        stop 'ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is set to .true.'
+     endif
+  endif
+
+  if( PML_CONDITIONS ) then
+     if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+        print*, 'please modify Par_file and recompile solver'
+        stop 'ABSORB_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
+     elseif( .not. SUPPRESS_UTM_PROJECTION ) then
+        print*, 'please modify Par_file and recompile solver'
+        stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
+     endif
+  else
+     if( PML_INSTEAD_OF_FREE_SURFACE ) &
+          stop 'PML_CONDITIONS must be activated when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
+  endif
+
+  if( ABSORB_INSTEAD_OF_FREE_SURFACE .and. PML_INSTEAD_OF_FREE_SURFACE ) then
+     print*, 'please modify Par_file and recompile solver'
+     stop 'error: ABSORB_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
+  endif
+
+  ! checks the MOVIE_TYPE parameter
+  if( MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2 ) then
+     stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file and recompile solver'
   endif
 
   ! check that the code has been compiled with the right values
@@ -369,7 +402,9 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+
   implicit none
+
   ! local parameters
   integer :: ncuda_devices,ncuda_devices_min,ncuda_devices_max
 

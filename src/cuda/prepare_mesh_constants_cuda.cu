@@ -399,6 +399,8 @@ TRACE("prepare_constants_device");
   // gravity flag initialization
   mp->gravity = 0;
 
+  // JC JC here we will need to add GPU support for the new C-PML routines
+
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("prepare_constants_device");
 #endif
@@ -1077,6 +1079,8 @@ TRACE("prepare_fields_elastic_device");
     mp->num_colors_inner_elastic = *num_colors_inner_elastic;
     mp->h_num_elem_colors_elastic = (int*) num_elem_colors_elastic;
   }
+
+  // JC JC here we will need to add GPU support for the new C-PML routines
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("prepare_fields_elastic_device");

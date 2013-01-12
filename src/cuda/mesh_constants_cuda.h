@@ -441,6 +441,8 @@ typedef struct mesh_ {
   realw* d_free_surface_normal;
   int* d_updated_dof_ocean_load;
 
+  // JC JC here we will need to add GPU support for the new C-PML routines
+
   // ------------------------------------------------------------------ //
   // acoustic wavefield
   // ------------------------------------------------------------------ //

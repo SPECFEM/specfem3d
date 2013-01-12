@@ -45,7 +45,7 @@
     ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
     nodes_ibelm_bottom,nodes_ibelm_top, &
-    SAVE_MESH_FILES, &
+    SAVE_MESH_FILES,PML_CONDITIONS, &
     ANISOTROPY,NPROC,OCEANS,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
     nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho
@@ -214,12 +214,21 @@
   call sync_all()
   call get_model_binaries(myrank,nspec,LOCAL_PATH)
 
+! calculates damping profiles and auxiliary coefficients on all C-PML points
+  call sync_all()
+  if( PML_CONDITIONS ) then
+     if( myrank == 0) then
+        write(IMAIN,*) '  ...creating C-PML damping profiles '
+     endif
+     call pml_set_local_dampingcoeff(myrank,xstore_dummy,ystore_dummy,zstore_dummy)
+  endif
+
 ! creates mass matrix
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
   endif
-  call create_mass_matrices(nglob_dummy,nspec,ibool)
+  call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS)
 
 ! saves the binary mesh files
   call sync_all()
@@ -279,7 +288,7 @@
   deallocate(kappastore,mustore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
-
+  
   if( .not. SAVE_MOHO_MESH ) then
     deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
   endif
@@ -308,6 +317,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
   use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer :: nspec,myrank
@@ -564,6 +574,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 ! creates global indexing array ibool
 
   use create_regions_mesh_ext_par
+
   implicit none
 
 ! number of spectral elements in each block

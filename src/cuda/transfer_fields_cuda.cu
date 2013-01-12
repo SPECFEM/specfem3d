@@ -344,6 +344,7 @@ void FC_FUNC_(transfer_fields_att_from_device,
 #endif
 }
 
+// JC JC here we will need to add GPU support for the new C-PML routines
 
 /* ----------------------------------------------------------------------------------------------- */
 

@@ -1,4 +1,4 @@
-Convention for the C-PML flags:
+Convention for C-PML flags:
 
 cpml_x    (flag 1)  X_surface C-PML
 cpml_y    (flag 2)  Y_surface C-PML

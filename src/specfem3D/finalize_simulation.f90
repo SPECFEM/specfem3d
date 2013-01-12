@@ -27,6 +27,8 @@
 ! United States and French Government Sponsorship Acknowledged.
 
   subroutine finalize_simulation()
+    
+  use pml_par
 
   use specfem_par
   use specfem_par_elastic
@@ -161,6 +163,85 @@
   if( ACOUSTIC_SIMULATION ) then
     deallocate(rmass_acoustic)
   endif
+
+  ! C-PML absorbing boundary conditions
+  if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then
+     ! outputs informations about C-PML elements in VTK-file format
+     call pml_output_VTKs()
+
+     ! deallocates C_PML arrays
+     deallocate(CPML_regions)
+     deallocate(CPML_to_spec)
+     deallocate(CPML_mask_ibool)
+     deallocate(d_store_x)
+     deallocate(d_store_y)
+     deallocate(d_store_z)
+     deallocate(k_store_x)
+     deallocate(k_store_y)
+     deallocate(k_store_z)
+     deallocate(alpha_store)
+     deallocate(spec_to_CPML)
+     deallocate(CPML_type)
+     deallocate(PML_dux_dxl)
+     deallocate(PML_dux_dyl)
+     deallocate(PML_dux_dzl)
+     deallocate(PML_duy_dxl)
+     deallocate(PML_duy_dyl)
+     deallocate(PML_duy_dzl)
+     deallocate(PML_duz_dxl)
+     deallocate(PML_duz_dyl)
+     deallocate(PML_duz_dzl)
+     deallocate(PML_dux_dxl_new)
+     deallocate(PML_dux_dyl_new)
+     deallocate(PML_dux_dzl_new)
+     deallocate(PML_duy_dxl_new)
+     deallocate(PML_duy_dyl_new)
+     deallocate(PML_duy_dzl_new)
+     deallocate(PML_duz_dxl_new)
+     deallocate(PML_duz_dyl_new)
+     deallocate(PML_duz_dzl_new)
+     deallocate(PML_dpotential_dxl)
+     deallocate(PML_dpotential_dyl)
+     deallocate(PML_dpotential_dzl)
+     deallocate(PML_dpotential_dxl_new)
+     deallocate(PML_dpotential_dyl_new)
+     deallocate(PML_dpotential_dzl_new)
+     deallocate(rmemory_dux_dxl_x)
+     deallocate(rmemory_dux_dyl_x)
+     deallocate(rmemory_dux_dzl_x)
+     deallocate(rmemory_duy_dxl_x)
+     deallocate(rmemory_duy_dyl_x)
+     deallocate(rmemory_duz_dxl_x)
+     deallocate(rmemory_duz_dzl_x)
+     deallocate(rmemory_dux_dxl_y)
+     deallocate(rmemory_dux_dyl_y)
+     deallocate(rmemory_duy_dxl_y)
+     deallocate(rmemory_duy_dyl_y)
+     deallocate(rmemory_duy_dzl_y)
+     deallocate(rmemory_duz_dyl_y)
+     deallocate(rmemory_duz_dzl_y)
+     deallocate(rmemory_dux_dxl_z)
+     deallocate(rmemory_dux_dzl_z)
+     deallocate(rmemory_duy_dyl_z)
+     deallocate(rmemory_duy_dzl_z)
+     deallocate(rmemory_duz_dxl_z)
+     deallocate(rmemory_duz_dyl_z)
+     deallocate(rmemory_duz_dzl_z)
+     deallocate(rmemory_dpotential_dxl)
+     deallocate(rmemory_dpotential_dyl)
+     deallocate(rmemory_dpotential_dzl)
+     deallocate(rmemory_displ_elastic)
+     deallocate(rmemory_potential_acoustic)
+     deallocate(accel_elastic_CPML)
+     deallocate(potential_dot_dot_acoustic_CPML)
+  endif
+
+  deallocate(ibelm_xmin)
+  deallocate(ibelm_xmax)
+  deallocate(ibelm_ymin)
+  deallocate(ibelm_ymax)
+  deallocate(ibelm_bottom)
+  deallocate(ibelm_top)
 
 ! close the main output file
   if(myrank == 0) then

@@ -35,7 +35,9 @@
   use specfem_par_movie
   use fault_solver_dynamic, only : BC_DYNFLT_init
   use fault_solver_kinematic, only : BC_KINFLT_init
+
   implicit none
+
   ! local parameters
   double precision :: tCPU
 
@@ -65,14 +67,14 @@
   ! prepares gravity arrays
   call prepare_timerun_gravity()
 
-  ! initializes PML arrays
-  if( ABSORBING_CONDITIONS  ) then
-    if (SIMULATION_TYPE /= 1 .and. ABSORB_USE_PML )  then
-      write(IMAIN,*) 'NOTE: adjoint simulations and PML not supported yet...'
+  ! prepares C-PML arrays
+  if( PML_CONDITIONS ) then
+    if( SIMULATION_TYPE /= 1 )  then
+       stop 'error: C-PML for adjoint simulations not supported yet'
+    else if( GPU_MODE ) then
+       stop 'error: C-PML only supported in CPU mode'
     else
-      if( ABSORB_USE_PML ) then
-        call PML_initialize()
-      endif
+       call prepare_timerun_pml()
     endif
   endif
 
@@ -83,7 +85,7 @@
   call prepare_timerun_noise()
 
   ! prepares GPU arrays
-  if(GPU_MODE) call prepare_timerun_GPU()
+  if( GPU_MODE ) call prepare_timerun_GPU()
 
 #ifdef OPENMP_MODE
   ! prepares arrays for OpenMP
@@ -135,6 +137,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   implicit none
 
   ! flag for any movie simulation
@@ -224,6 +227,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
 
   ! synchronize all the processes before assembling the mass matrix
@@ -232,7 +236,6 @@
 
   ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
-
     ! adds contributions
     if( ABSORBING_CONDITIONS ) then
       rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
@@ -248,11 +251,9 @@
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
     rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
-
   endif
 
   if(ELASTIC_SIMULATION) then
-
     ! switches to three-component mass matrix
     if( ABSORBING_CONDITIONS ) then
       ! adds boundary contributions
@@ -298,7 +299,7 @@
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
-  endif
+ endif
 
   if(POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
@@ -333,6 +334,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
 
   ! initialize acoustic arrays to zero
@@ -378,7 +380,9 @@
 ! precomputes constants for time integration
 
   use specfem_par
+
   implicit none
+
   ! local parameters
   character(len=256) :: plot_file
   integer :: ier
@@ -449,6 +453,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
 
   ! local parameters
@@ -576,6 +581,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
 
   ! local parameters
@@ -658,6 +664,97 @@
 
   end subroutine prepare_timerun_gravity
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine prepare_timerun_pml()
+
+    use pml_par
+    use specfem_par, only: NSPEC_AB,NGNOD,ibool,myrank
+    use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+
+    implicit none
+
+    ! local parameters
+    integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+
+    ! sets thickness of C-PML layers
+    CPML_width_x = CPML_width
+    CPML_width_y = CPML_width
+    CPML_width_z = CPML_width
+
+    call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
+
+    ! user output
+    if( myrank == 0 ) then
+       write(IMAIN,*)
+       write(IMAIN,*) 'incorporating C-PML  '
+       write(IMAIN,*)
+       write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
+       write(IMAIN,*)
+       write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
+       write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
+       write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+       write(IMAIN,*)
+    endif
+    call sync_all()
+
+    ! checks that 8-node mesh elements are used (27-node elements are not supported)
+    if( NGNOD /= NGNOD_EIGHT_CORNERS) &
+         stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
+
+    ! allocates and initializes C-PML arrays
+    if( NSPEC_CPML > 0 ) then
+       call pml_allocate_arrays()
+    else
+       stop 'error: the number of C-PML elements in partition is invalid'
+    endif
+
+    ! defines C-PML spectral elements local indexing
+    ispec_CPML = 0
+    do ispec=1,NSPEC_AB
+       if( CPML_mask_ibool(ispec) ) then
+          ispec_CPML = ispec_CPML + 1
+          spec_to_CPML(ispec) = ispec_CPML
+       endif
+    enddo
+
+    ! defines C-PML element type array: 1 = face, 2 = edge, 3 = corner
+    do ispec_CPML=1,NSPEC_CPML
+
+       ! X_surface C-PML
+       if( CPML_regions(ispec_CPML) == 1 ) then
+          CPML_type(ispec_CPML) = 1
+
+       ! Y_surface C-PML
+       elseif( CPML_regions(ispec_CPML) == 2 ) then
+          CPML_type(ispec_CPML) = 1
+
+       ! Z_surface C-PML
+       elseif( CPML_regions(ispec_CPML) == 3 ) then
+          CPML_type(ispec_CPML) = 1
+
+       ! XY_edge C-PML
+       elseif( CPML_regions(ispec_CPML) == 4 ) then
+          CPML_type(ispec_CPML) = 2
+
+       ! XZ_edge C-PML
+       elseif( CPML_regions(ispec_CPML) == 5 ) then
+          CPML_type(ispec_CPML) = 2
+
+       ! YZ_edge C-PML
+       elseif( CPML_regions(ispec_CPML) == 6 ) then
+          CPML_type(ispec_CPML) = 2
+
+       ! XYZ_corner C-PML
+       elseif( CPML_regions(ispec_CPML) == 7 ) then
+          CPML_type(ispec_CPML) = 3
+       endif
+
+    enddo
+
+  end subroutine prepare_timerun_pml
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -671,7 +768,9 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+
   implicit none
+
   ! local parameters
   integer :: ier
   integer(kind=8) :: filesize
@@ -699,10 +798,8 @@
 
 ! attenuation backward memories
   if( ATTENUATION .and. SIMULATION_TYPE == 3 ) then
-
     ! precompute Runge-Kutta coefficients if attenuation
     call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
-
   endif
 
 ! initializes adjoint kernels and reconstructed/backward wavefields
@@ -1017,7 +1114,9 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   implicit none
+
   ! local parameters
   integer :: ier
 
@@ -1085,6 +1184,8 @@
   use specfem_par_movie
 
   implicit none
+
+  ! local parameters
   real :: free_mb,used_mb,total_mb
 
   ! GPU_MODE now defined in Par_file
@@ -1094,6 +1195,7 @@
   endif
 
   ! prepares general fields on GPU
+  !§!§ JC JC here we will need to add GPU support for the new C-PML routines
   call prepare_constants_device(Mesh_pointer, &
                                   NGLLX, NSPEC_AB, NGLOB_AB, &
                                   xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
@@ -1143,6 +1245,7 @@
   endif
 
   ! prepares fields on GPU for elastic simulations
+  !§!§ JC JC here we will need to add GPU support for the new C-PML routines
   if( ELASTIC_SIMULATION ) then
     call prepare_fields_elastic_device(Mesh_pointer, NDIM*NGLOB_AB, &
                                   rmassx,rmassy,rmassz, &
@@ -1265,6 +1368,7 @@
 
   use specfem_par
   use specfem_par_elastic
+
   implicit none
 
   ! local parameters

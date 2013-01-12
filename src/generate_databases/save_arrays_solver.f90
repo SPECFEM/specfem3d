@@ -32,6 +32,10 @@
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
 
+  use generate_databases_par, only: nspec_cpml,CPML_width,CPML_to_spec,CPML_regions,CPML_mask_ibool,nspec_cpml_tot, &
+                                    d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,alpha_store, &
+                                    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                                    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -122,6 +126,22 @@
     write(IOUT) rho_vsI
   endif
 
+! C-PML absorbing boundary conditions
+  write(IOUT) nspec_cpml
+  write(IOUT) CPML_width
+  if( nspec_cpml > 0 ) then
+     write(IOUT) CPML_regions
+     write(IOUT) CPML_to_spec
+     write(IOUT) CPML_mask_ibool
+     write(IOUT) d_store_x
+     write(IOUT) d_store_y
+     write(IOUT) d_store_z
+     write(IOUT) k_store_x
+     write(IOUT) k_store_y
+     write(IOUT) k_store_z
+     write(IOUT) alpha_store
+  endif
+
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
   if( num_abs_boundary_faces > 0 ) then
@@ -139,6 +159,19 @@
       write(IOUT) rmassz_acoustic
     endif
   endif
+
+  write(IOUT) nspec2D_xmin
+  write(IOUT) nspec2D_xmax
+  write(IOUT) nspec2D_ymin
+  write(IOUT) nspec2D_ymax
+  write(IOUT) NSPEC2D_BOTTOM
+  write(IOUT) NSPEC2D_TOP
+  write(IOUT) ibelm_xmin
+  write(IOUT) ibelm_xmax
+  write(IOUT) ibelm_ymin
+  write(IOUT) ibelm_ymax
+  write(IOUT) ibelm_bottom
+  write(IOUT) ibelm_top
 
 ! free surface
   write(IOUT) num_free_surface_faces
@@ -271,7 +304,24 @@
   endif
 
   ! cleanup
-  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier); if( ier /= 0 ) stop 'error deallocating array'
+  deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
+  if( ier /= 0 ) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
+
+  if( nspec_cpml_tot > 0 ) then
+     deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
+     deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
+     deallocate(CPML_mask_ibool,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_mask_ibool'
+  endif
+
+  if( PML_CONDITIONS ) then
+     deallocate(d_store_x,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_x'
+     deallocate(d_store_y,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_y'
+     deallocate(d_store_z,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_z'
+     deallocate(k_store_x,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_x'
+     deallocate(k_store_y,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_y'
+     deallocate(k_store_z,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_z'
+     deallocate(alpha_store,stat=ier); if( ier /= 0 ) stop 'error deallocating array alpha_store'
+  endif
 
   end subroutine save_arrays_solver_ext_mesh
 

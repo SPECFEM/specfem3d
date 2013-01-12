@@ -32,6 +32,7 @@
  subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
                         OCEANS,memory_size)
 
+   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
   use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic
 
   implicit none
@@ -79,6 +80,57 @@
     memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
     ! rhostore
     memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  endif
+
+  ! see: read_mesh_databases.f90 and pml_allocate_arrays.f90
+  ! C-PML arrays
+  if( PML_CONDITIONS ) then
+     ! CPML_regions,CPML_to_spec,CPML_type 
+     memory_size = memory_size + 3.d0*nspec_cpml*dble(SIZE_INTEGER)
+
+     ! spec_to_CPML
+     memory_size = memory_size + NSPEC_AB*dble(SIZE_INTEGER)
+
+     ! CPML_mask_ibool
+     memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
+
+     ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store
+     memory_size = memory_size + 7.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,
+     ! PML_duy_dxl,PML_duy_dyl,PML_duy_dzl,
+     ! PML_duz_dxl,PML_duz_dyl,PML_duz_dzl,
+     ! PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new,
+     ! PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new,
+     ! PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
+     memory_size = memory_size + 18.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+     ! PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+     memory_size = memory_size + 6.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x,rmemory_duy_dxl_x,
+     ! rmemory_duy_dyl_x,rmemory_duz_dxl_x,rmemory_duz_dzl_x,
+     ! rmemory_dux_dxl_y,rmemory_dux_dyl_y,rmemory_duy_dxl_y,rmemory_duy_dyl_y,
+     ! rmemory_duy_dzl_y,rmemory_duz_dyl_y,rmemory_duz_dzl_y,
+     ! rmemory_dux_dxl_z,rmemory_dux_dzl_z,rmemory_duy_dyl_z,rmemory_duy_dzl_z,
+     ! rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
+     memory_size = memory_size + 21.d0*3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl
+     memory_size = memory_size + 3.d0*3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! rmemory_displ_elastic
+     memory_size = memory_size + 3.d0*dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! rmemory_potential_acoustic
+     memory_size = memory_size + 3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! accel_elastic_CPML
+     memory_size = memory_size + dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
+
+     ! second derivative of the potential 
+     memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
   endif
 
   ! elastic arrays

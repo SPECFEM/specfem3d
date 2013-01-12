@@ -40,7 +40,9 @@
 
 ! takes model values specified by mesh properties
 
+  use generate_databases_par, only: myrank
   use create_regions_mesh_ext_par
+
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
@@ -63,7 +65,7 @@
 
   ! local parameters
   integer :: iflag,flag_below,flag_above
-  integer :: iundef
+  integer :: iundef,num_mat
 
   ! check if the material is known or unknown
   if( imaterial_id > 0 ) then
@@ -122,6 +124,18 @@
       stop 'error: domain not recognized'
 
     end select
+
+ else if ( imaterial_id <= -2001 .and. imaterial_id >= -2007 ) then
+
+    do iundef = 1,nundefMat_ext_mesh
+       read(undef_mat_prop(1,iundef),*) num_mat
+       if( num_mat == imaterial_id ) then
+          read(undef_mat_prop(2,iundef),*) rho
+          read(undef_mat_prop(3,iundef),*) vp
+          read(undef_mat_prop(4,iundef),*) vs
+          read(undef_mat_prop(6,iundef),*) idomain_id
+       endif
+    enddo
 
  else if ( imaterial_def == 1 ) then
 

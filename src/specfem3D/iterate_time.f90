@@ -33,6 +33,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+
   implicit none
 
 !
@@ -398,8 +399,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use PML_par
-  use PML_par_acoustic
+
   implicit none
 
 ! updates acoustic potentials
@@ -418,28 +418,6 @@
       call it_update_displacement_ac_cuda(Mesh_pointer, NGLOB_AB, &
                                           deltat, deltatsqover2, deltatover2, &
                                           b_deltat, b_deltatsqover2, b_deltatover2)
-    endif
-
-    ! time marching potentials
-    if(ABSORB_USE_PML .and. ABSORBING_CONDITIONS) then
-      if( GPU_MODE ) call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
-
-      call PML_acoustic_time_march(NSPEC_AB,NGLOB_AB,ibool,&
-                        potential_acoustic,potential_dot_acoustic,&
-                        deltat,deltatsqover2,deltatover2,&
-                        num_PML_ispec,PML_ispec,PML_damping_d,&
-                        chi1,chi2,chi2_t,chi3,chi4,&
-                        chi1_dot,chi2_t_dot,chi3_dot,chi4_dot,&
-                        chi1_dot_dot,chi2_t_dot_dot,chi3_dot_dot,chi4_dot_dot,&
-                        iglob_is_PML_interface,PML_mask_ibool,&
-                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,&
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                        my_neighbours_ext_mesh,NPROC,&
-                        ispec_is_acoustic)
-
-      if( GPU_MODE ) call transfer_fields_ac_to_device(NGLOB_AB,potential_acoustic, &
-                              potential_dot_acoustic, potential_dot_dot_acoustic, Mesh_pointer)
     endif
 
   endif ! ACOUSTIC_SIMULATION
