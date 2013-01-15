@@ -64,7 +64,7 @@ case $FC in
         # GNU gfortran
         #
         if test x"$FLAGS_NO_CHECK" = x; then
-            FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow" # -mcmodel=medium
+            FLAGS_NO_CHECK="-std=f2003 -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow" # -mcmodel=medium
         fi
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="\$(FLAGS_NO_CHECK)"
@@ -72,8 +72,7 @@ case $FC in
         # useful for debugging... -ffpe-trap=underflow,overflow,zero -fbacktrace -fbounds-check
         #
         # older gfortran syntax
-        # note: -std=f95 can lead to problem: undefined reference to `system_'
-        #           FLAGS_NO_CHECK="-std=gnu -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow" # -mcmodel=medium -std=f95
+        #           FLAGS_NO_CHECK="-std=f2003 -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow" # -mcmodel=medium
         #fi
         #if test x"$FLAGS_CHECK" = x; then
         #    FLAGS_CHECK="\$(FLAGS_NO_CHECK)" # -fbounds-check
