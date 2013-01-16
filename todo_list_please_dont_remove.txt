@@ -64,7 +64,7 @@ for corners that combine an X, a Y and a Z PML.
 easy to do once we have an expression for the weighting factors
 
 ------------------------------------------------
-PT-SCOTCH:
+PT-SCOTCH and ParMETIS:
 ------------------------------------------------
 
 - suggestion 06:
