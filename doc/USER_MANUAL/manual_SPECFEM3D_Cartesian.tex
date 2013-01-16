@@ -634,15 +634,43 @@ Optionally, instead of specifying for each surface at the boundaries a single bl
 After the block definitions are done, you export the mesh using the script \texttt{cubit2specfem3d.py} provided in each of the example directories. If the export was successful, you should find the following files in a subdirectory \texttt{MESH/}:
 
 \begin{description}
-\item [nummaterial\_velocity\_file] Defines the material properties. For fully defined materials, the formats is:
+\item [absorbing\_cpml\_file] {\bf (only in case of C-PML absorbing conditions)} Contains at the first line respectively the "number of C-PML spectral elements"
+and the "thickness of C-PML layers" (currently, a common thickness for all faces is defined but this can be easily adapted in the future if needed by the setting of CPML\_width\_x, CPML\_width\_y, CPML\_width\_z parameters). On all following lines are defined the "C-PML spectral elements global indexing" and "C-PML regions" for each
+C-PML element according to the following convention:
+
+\begin{itemize}
+\item \#id\_cpml\_regions = 1 : X\_surface C-PML,
+\item \#id\_cpml\_regions = 2 : Y\_surface C-PML,
+\item \#id\_cpml\_regions = 3 : Z\_surface C-PML,
+\item \#id\_cpml\_regions = 4 : XY\_edge C-PML,
+\item \#id\_cpml\_regions = 5 : XZ\_edge C-PML,
+\item \#id\_cpml\_regions = 6 : YZ\_edge C-PML,
+\item \#id\_cpml\_regions = 7 : XYZ\_corner C-PML.
+\end{itemize}
+
+\item [materials\_file] Contains the material associations for each element. The format is: 
+\begin{lyxcode}
+\texttt{element\_ID} \texttt{material\_ID}
+\end{lyxcode}
+where \texttt{element\_ID} is the element identifier and \texttt{material\_ID} is a unique identifier, positive (for materials) or negative (for tomographic models or C-PML elements).
+For C-PML absorbing conditions, \texttt{material\_ID} is a unique negative identifier between -2001 and -2007 in correspondance to the convention seen above in the description of the 
+absorbing\_cpml\_file: -2001 <-> 1, -2002 <-> 2, etc\ldots
+
+\item [nummaterial\_velocity\_file] Defines the material properties. 
+\begin{itemize}
+\item For fully defined materials, the format is:
 \begin{lyxcode}
 \texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q}  \texttt{anisotropy\_flag}
 \end{lyxcode}
-where
-\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
+where \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
 
+\item For C-PML absorbing conditions, , the format is:
+\begin{lyxcode}
+\texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}
+\end{lyxcode}
+where \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier between -2001 and -2007 to correspond with the definition given in materials\_file,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$
 %%magnoni
-For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details.
+\item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details. 
 %
 %For a tomographic model, the material definition format is:
 %\begin{lyxcode}
@@ -652,20 +680,17 @@ For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and
 %\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a negative, unique identifier, \texttt{tomography} keyword for tomographic material definition and \texttt{name} the name of the tomography file. The name is not used so far, rather change the filename defined in the file \texttt{model\_tomography.f90} located in the
 %\texttt{src/generate\_databases/} directory.
 %
-\item [materials\_file] Contains the material associations for each element. The format is: 
-\begin{lyxcode}
-\texttt{element\_ID} \texttt{material\_ID}
-\end{lyxcode}
-where \texttt{element\_ID} is the element identifier and \texttt{material\_ID} is a unique identifier, positive (for materials) or negative (for tomographic models).
+\end{itemize}
+
 \item [nodes\_coords\_file] Contains the point locations in Cartesian coordinates of the mesh element corners.
 \item [mesh\_file] Contains the mesh element connectivity.
 \item [free\_surface\_file] Contains the free surface connectivity. You should put both the surface of acoustic regions and of elastic regions in that file;
 that is, list all the element faces that constitute the surface of the model in that file.
-\item [absorbing\_surface\_file\_xmax] Contains the surface connectivity of the absorbing boundary surface at the Xmax.
-\item [absorbing\_surface\_file\_xmin] Contains the surface connectivity of the absorbing boundary surface at the Xmin.
-\item [absorbing\_surface\_file\_ymax] Contains the surface connectivity of the absorbing boundary surface at the Ymax.
-\item [absorbing\_surface\_file\_ymin] Contains the surface connectivity of the absorbing boundary surface at the Ymin.
-\item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom.
+\item [absorbing\_surface\_file\_xmax] Contains the surface connectivity of the absorbing boundary surface at the Xmax \\(irrelevant in case of C-PML absorbing conditions).
+\item [absorbing\_surface\_file\_xmin] Contains the surface connectivity of the absorbing boundary surface at the Xmin \\(irrelevant in case of C-PML absorbing conditions).
+\item [absorbing\_surface\_file\_ymax] Contains the surface connectivity of the absorbing boundary surface at the Ymax \\(irrelevant in case of C-PML absorbing conditions).
+\item [absorbing\_surface\_file\_ymin] Contains the surface connectivity of the absorbing boundary surface at the Ymin \\(irrelevant in case of C-PML absorbing conditions).
+\item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom \\(irrelevant in case of C-PML absorbing conditions).
 \end{description}
 
 These mesh files are needed as input files for the partitioner  \texttt{xdecompose\_mesh}
@@ -1082,6 +1107,11 @@ using Olsen's empirical relation (see \citet{OlDaBr03}).
 on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
 \item [{\texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on
 absorbing boundary conditions on the top surface which by default constitutes a free surface of the model.
+\item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML boundary conditions for a regional simulation. Both fluids and elastic solids are supported.
+\item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on C-PML boundary conditions on the top surface which by default constitutes a free surface of the model.
+\item [{\texttt{PML\_WIDTH\_MIN}}] Gives a min. authorized bound to the solver to target an optimized thickness of C-PML layers. 
+\item [{\texttt{PML\_WIDTH\_MAX}}] Gives a max. authorized bound to the solver to target an optimized thickness of C-PML layers. 
+\item [{\texttt{f0\_FOR\_PML}}] Determines the dominant frequency that will be used in the calculation of: \\ ALPHA\_MAX\_PML = PI*f0\_FOR\_PML.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered, i.e., a peak ground velocity map
 of the maximum absolute value of the two horizontal components of the velocity vector.
