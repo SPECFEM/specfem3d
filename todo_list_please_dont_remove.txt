@@ -9,111 +9,14 @@ To-do list for the different flavors of SPECFEM:
 CPML :
 ------------------------------------------------
 
-- suggestion 01a:
-----------------
-
-Zhinan commits his current clean 2D C-PML code to SVN; because changes
-made outside of SVN are useless for regular users of the application,
-and are also quickly lost.
-
-Zhinan, please also include the modifications that René Matzen made to "compute_forces"
-and that he sent on May 10, 2012.
-
-Here is a more detailed list of things to do in order to finish that:
-
-- commit the acoustic CPML routines
-
-- make sure that CPML elastic and CPML acoustic work with MPI
-
-- make sure CPML can be used without Stacey; to do this, suppress the anyabs_local flag, whose name is confusing,
-and use the PML_BOUNDARY_CONDITIONS and STACEY_ABSORBING_CONDITIONS flags instead;
-maybe define anyabs_PML and anyabs_Stacey internally in the code instead of anyabs
-
-- make sure CPML can be used with external meshes (coming from Gmsh or CUBIT) as well, using the numbering convention
-that you defined with Paul two months ago; make sure that external meshes with fluid regions and solid regions also work fine with CPML
-
-- clarify why the corners need additional arrays and additional code; 
-I still do not understand that; I thought that corners were not different from the rest in PML and that memory variables were simply summed there,
-but I see that in your code you have specific arrays for the corners, called "rmemory_dux_dx_corner()" and so on; they make the code
-(the implementation) longer and more complex, thus let us see if they are absolutely needed or if we could (maybe?) get rid of them;
-we should explain this in the LaTeX file that you are writing now to explain the CPML equations
-
-- see if CPML works with curved elements (checking the behavior with the default M2 UPPA example with topography for instance)
-
-- suggestion 01b:
-----------------
-
-Zhinan is going to try to adapt CPML in the 2D code to tilted models, to see how to do that;
-he will also try to see how many PML flags he needs.
-
-- suggestion 03:
-----------------
-
-Zhinan (with the help of Jo and Daniel) implements C-PML in SPECFEM3D (in that code only for now; we can cut and paste that in
-SPECFEM3D_GLOBE later if needed, but we do not need that now).
-Paul Cristini and I will then test it extensively after the summer.
-Zhinan, Daniel, Paul and Jo need to agree on a numbering convention (i.e. flags) for the different PML regions and corners (a
-binary / bit encoding technique can be used; see more details about this at the end of this suggestion);
-they could use the same idea as in the convention used in 2D.
-
-See (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT;
-read this from input files in the solver
-
-See also if the current arrays called isPML() or PML() or something like that in SPECFEM3D need to be suppressed or on the contrary could 
-be reused. They seem to correspond to an earlier attempt a few years ago that was never finished.
-
-One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned 
-with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with 
-the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, 
-but I never implemented all the terms.
-
-The standard logical bit handling functions of Fortran are described for instance at http://www.ews.uiuc.edu/~mrgates2/docs/fortran.html
-Thus here is the standard way of using a single array for all the logical flags for CPML in Fortran:
-
-- define a single integer flag
-
-integer, dimension(nspec) :: PML_flags
-
-- clear it initially :  PML_flags(:) = 0
-
-- use for instance bit #1 for Xmin, bit #2 for Xmax , bit #3 for Ymin .... bit #6 for Zmax
-
-- thus, to indicate that an element belongs to the Xmax PML for instance, use :
-
-PML_flags(ispec) = ibset(PML_flags(ispec), 2)     ! sets bit #2 of that integer to 1
-
-- later, to test if this element belongs to the Xmax PML, use:
-
-if(bset(PML_flags(ispec), 2)) then ! test if bit #2 is equal to 1
-endif
+DK DK new suggestion by Dimitri, Jan 2013: now that C-PML is implemented for forward runs, make it work for adjoint runs as well
+(more precisely, the problem is just to reinject the right boundary conditions at the entrance of the PML when we undo the forward run
+in the second set of simulations, starting from the last time frame and going backwards)
 
 
-Pretty simple, and then a single array is needed for all the flags.
+DK DK new suggestion by Dimitri, Jan 2013: add GPU support for C-PML once the C-PML code is finished;
+C-PML is currently only implemented in regular Fortran + MPI
 
-(in fact, we could use this technique to group all the other logical flags of the code in a single array, to reduce memory size...)
-
-
-- suggestion 04:
-----------------
-
-Zhinan sees if Dirichlet or Neumann conditions are needed on the outside edge of the C-PML layers in acoustic media; in elastic
-media, a Dirichlet condition (zero displacement) is needed to prevent spurious Rayleigh waves from developing at the far end of the
-PML and making it blow up; in the acoustic case, a Dirichlet condition for pressure (zero pressure) means a Neumann (rather than
-Dirichlet) condition for the potential because pressure is related to its gradient;
-
-thus Zhinan should see (by running a simple test in the 2D code) if a Neumann condition is OK for an acoustic PML, and/or if a
-Dirichlet condition works fine as well; it could be that both are OK (because no such spurious surface waves can develop, contrary
-to the elastic case) but it is worth checking (and it is simple to check)
-
-- suggestion 18:
-----------------
-
-leave Stacey as an option even once C-PML is implemented;
-because in many cases C-PML (with Dirichlet conditions on its outer edges) will be sufficient, but in principle it is possible to
-replace Dirichlet with Stacey and thus use both C-PML and Stacey simultaneously to have even better absorption;
-There is a paper by Collino and Monk in 1998 about this (for Maxwell)
-
-So let us keep Stacey in the future codes, but let us make it off by default in DATA/Par_file (and C-PML on by default)
 
 - suggestion 19:
 ----------------
@@ -144,6 +47,8 @@ use PT-Scotch (the parallel version of SCOTCH) in SPECFEM3D instead of (or as an
 SCOTCH; because decomposing very large 3D meshes on a serial machine (on a single processor core) can be a severe limitation and
 for some meshes that will be a major bottleneck.
 
+Support ParMetis as well because there is a new, improved version that has been released by Karypis et al recently.
+
 What would need to be done is switch to PT-Scotch version 6.0 and/or to ParMETIS
 (supporting both would be easy, since the subroutine calls are very similar; in the current serial code we support both Scotch and METIS).
 
@@ -167,6 +72,8 @@ generating more than 4O smaller files per slice in GLOBE puts a very heavy load 
 GPFS shared file systems for no reason
 
 the only reason why we have many files per slice is historical; we should definitely change that
+
+Add ADIOS support for that
 
 I have asked Jo to reduce that to a single file per process
 
@@ -252,41 +159,10 @@ Jeroen, Qinya, Zhinan and I discussed that a few months ago, some of us think th
 time schemes:
 ------------------------------------------------
 
-- suggestion 17:
-----------------
-
-in comments in DATA/Par_file and also in the LaTeX manual of the 2D code, Zhinan should mention the CFL upper bound of the
-different time schemes that are now implemented and that can be selected by the user:
-Newark, RK4 and LDDRK4-6
-
-mention also in the manual and in these comments in DATA/Par_file that using Stacey absorbing conditions slightly reduces this maximum
-CFL value i.e. the maximum time step (as a rule of thumb obtained by trial and error, it is reduced by a factor of about 0.90).
-
-without such numbers as comments nor in the manual, it is difficult for users to decide what value to use for the time step (in the
-2D code, the user selects the time step, it is not computed automatically by the code)
-
 - suggestion 30:
 ----------------
 
 Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme). 
-
-
-------------------------------------------------
-Stacey absorbing boundaries:
-------------------------------------------------
-
-- suggestion 20:
-----------------
-
-see with Zhinan if a spring should be added to Stacey in SPECFEM3D and SPECFEM3D_GLOBE; Stacey is a dashpot and thus Zhinan and his
-advisors in China have shown that the condition can become inaccurate and have a static offset in some cases; they have shown how
-to suppress this by adding a spring in parallel to the dashpot
-
-already done in the 2D code
-
-see with Zhinan if he thinks this should be done in SPECFEM3D and SPECFEM3D_GLOBE as well, and if it would be useful
-
-should probably not be a high priority; PML and other things are more urgent
 
 
 ------------------------------------------------
@@ -390,52 +266,6 @@ ATTENUATION_PORO_FLUID_PART     = .false.        # turn viscous attenuation on o
 and making it local to each material set instead of global for the whole mesh.
 
 Feedback from Qinya: I agree. The way attenuation appears in the 2D Par_file is quite confusing. It will be good to clean up, or at least explain well in the manual.
-
-
-
-
-------------------------------------------------
-27-node elements in SPECFEM3D:
-------------------------------------------------
-
-- suggestion 25:
-----------------
-
-Add support for 27-node elements in addition to 8-node elements; 
-that is useful for instance when handling large topographic variations or
-significantly distorted layers; we do have support for 27-node elements in
-SPECFEM3D_GLOBE but not in SPECFEM3D. I guess it would just be a
-matter of cutting and pasting the 27-node routines from SPECFEM3D_GLOBE.
-
-Users (for instance Vadim Monteiller and Paul Cristini) who use SPECFEM3D for mountain ranges for instance would be able to use curved elements, and since we have support for 27-node hexahedra in SPECFEM3D_GLOBE we could probably cut and paste that in SPECFEM3D.
-
-Vadim could probably have a look at that because he will need that for his study of the Pyrénées.
-
-As Emanuele mentioned, CUBIT has no real support for HEX27, but Gmsh does (and Paul uses Gmsh all the time; thus we could use it rather than CUBIT when curvature is needed).
-
-I guess Vadim will work on that at some point.
-
-Comment from Daniel: 
-
-keep in mind that we have two ways to mesh, in-house mesher xmeshfem3D and CUBIT/SCOTCH. if you insist on 27-node elements, i would start to implement it in the xmeshfem3D in-house mesher. that would probably show what is needed when combining it with CUBIT and SCOTCH which might be more of a problem.
-
-Comment from Emanuele: 
-
-Theoretically, Cubit can generate mesh for HEX8, HEX20, HEX27 type of
-hexahedra but higher-order nodes are created only when the mesh is
-being exported to the Exodus II file (and persist in the CUBIT
-database after file export) so after the meshing process... therefore
-basically it is a regular hex mesh with more nodes inside each
-elements (not a curvilinear element).
-
-I'm not sure if the cubit's python interface is able to extract the
-information about the internal nodes... I should take a try but in
- any case it is possible to recreate it during the exporting phase
-from cubit/geocubit to specfem3d (or directly in specfem?)
-
-I suppose that I can easily create a script that produce a hex
-association of 27 nodes but the hard-for-me step is to adapt the
-specfem3d reader and the scotch partitioning.
 
 
 ------------------------------------------------
@@ -581,6 +411,191 @@ Feedback from Qinya: The same time scheme should be used for forward and adjoint
 
 DONE (MOVE ITEMS ABOVE BELOW THIS LINE WHEN THEY ARE DONE):
 -----------------------------------------------------------
+
+- suggestion 01a:
+----------------
+
+Zhinan commits his current clean 2D C-PML code to SVN; because changes
+made outside of SVN are useless for regular users of the application,
+and are also quickly lost.
+
+Zhinan, please also include the modifications that René Matzen made to "compute_forces"
+and that he sent on May 10, 2012.
+
+Here is a more detailed list of things to do in order to finish that:
+
+- commit the acoustic CPML routines
+
+- make sure that CPML elastic and CPML acoustic work with MPI
+
+- make sure CPML can be used without Stacey; to do this, suppress the anyabs_local flag, whose name is confusing,
+and use the PML_BOUNDARY_CONDITIONS and STACEY_ABSORBING_CONDITIONS flags instead;
+maybe define anyabs_PML and anyabs_Stacey internally in the code instead of anyabs
+
+- make sure CPML can be used with external meshes (coming from Gmsh or CUBIT) as well, using the numbering convention
+that you defined with Paul two months ago; make sure that external meshes with fluid regions and solid regions also work fine with CPML
+
+- clarify why the corners need additional arrays and additional code; 
+I still do not understand that; I thought that corners were not different from the rest in PML and that memory variables were simply summed there,
+but I see that in your code you have specific arrays for the corners, called "rmemory_dux_dx_corner()" and so on; they make the code
+(the implementation) longer and more complex, thus let us see if they are absolutely needed or if we could (maybe?) get rid of them;
+we should explain this in the LaTeX file that you are writing now to explain the CPML equations
+
+- see if CPML works with curved elements (checking the behavior with the default M2 UPPA example with topography for instance)
+
+- suggestion 01b:
+----------------
+
+Zhinan is going to try to adapt CPML in the 2D code to tilted models, to see how to do that;
+he will also try to see how many PML flags he needs.
+
+- suggestion 03:
+----------------
+
+Zhinan (with the help of Jo and Daniel) implements C-PML in SPECFEM3D (in that code only for now; we can cut and paste that in
+SPECFEM3D_GLOBE later if needed, but we do not need that now).
+Paul Cristini and I will then test it extensively after the summer.
+Zhinan, Daniel, Paul and Jo need to agree on a numbering convention (i.e. flags) for the different PML regions and corners (a
+binary / bit encoding technique can be used; see more details about this at the end of this suggestion);
+they could use the same idea as in the convention used in 2D.
+
+See (with Emanuele and also Paul Cristini) how to define and handle the PML absorbing elements in CUBIT;
+read this from input files in the solver
+
+See also if the current arrays called isPML() or PML() or something like that in SPECFEM3D need to be suppressed or on the contrary could 
+be reused. They seem to correspond to an earlier attempt a few years ago that was never finished.
+
+One thing that we will need to investigate in the specific case of GLOBE is how to make PML work for boundaries that are not aligned 
+with x / y / z (i.e. for one chunk of SPECFEM3D_GLOBE). That should not be a problem but we will get more terms because of products with 
+the three components of the normal vector. We already have the general (tensorial) formulation written in our PML paper of 2003, 
+but I never implemented all the terms.
+
+The standard logical bit handling functions of Fortran are described for instance at http://www.ews.uiuc.edu/~mrgates2/docs/fortran.html
+Thus here is the standard way of using a single array for all the logical flags for CPML in Fortran:
+
+- define a single integer flag
+
+integer, dimension(nspec) :: PML_flags
+
+- clear it initially :  PML_flags(:) = 0
+
+- use for instance bit #1 for Xmin, bit #2 for Xmax , bit #3 for Ymin .... bit #6 for Zmax
+
+- thus, to indicate that an element belongs to the Xmax PML for instance, use :
+
+PML_flags(ispec) = ibset(PML_flags(ispec), 2)     ! sets bit #2 of that integer to 1
+
+- later, to test if this element belongs to the Xmax PML, use:
+
+if(bset(PML_flags(ispec), 2)) then ! test if bit #2 is equal to 1
+endif
+
+
+Pretty simple, and then a single array is needed for all the flags.
+
+(in fact, we could use this technique to group all the other logical flags of the code in a single array, to reduce memory size...)
+
+
+- suggestion 04:
+----------------
+
+Zhinan sees if Dirichlet or Neumann conditions are needed on the outside edge of the C-PML layers in acoustic media; in elastic
+media, a Dirichlet condition (zero displacement) is needed to prevent spurious Rayleigh waves from developing at the far end of the
+PML and making it blow up; in the acoustic case, a Dirichlet condition for pressure (zero pressure) means a Neumann (rather than
+Dirichlet) condition for the potential because pressure is related to its gradient;
+
+thus Zhinan should see (by running a simple test in the 2D code) if a Neumann condition is OK for an acoustic PML, and/or if a
+Dirichlet condition works fine as well; it could be that both are OK (because no such spurious surface waves can develop, contrary
+to the elastic case) but it is worth checking (and it is simple to check)
+
+- suggestion 18:
+----------------
+
+leave Stacey as an option even once C-PML is implemented;
+because in many cases C-PML (with Dirichlet conditions on its outer edges) will be sufficient, but in principle it is possible to
+replace Dirichlet with Stacey and thus use both C-PML and Stacey simultaneously to have even better absorption;
+There is a paper by Collino and Monk in 1998 about this (for Maxwell)
+
+So let us keep Stacey in the future codes, but let us make it off by default in DATA/Par_file (and C-PML on by default)
+
+
+------------------------------------------------
+27-node elements in SPECFEM3D:
+------------------------------------------------
+
+- suggestion 25:
+----------------
+
+Add support for 27-node elements in addition to 8-node elements;
+that is useful for instance when handling large topographic variations or
+significantly distorted layers; we do have support for 27-node elements in
+SPECFEM3D_GLOBE but not in SPECFEM3D. I guess it would just be a
+matter of cutting and pasting the 27-node routines from SPECFEM3D_GLOBE.
+
+Users (for instance Vadim Monteiller and Paul Cristini) who use SPECFEM3D for mountain ranges for instance would be able to use curved elements, and since we have support for 27-node hexahedra in SPECFEM3D_GLOBE we could probably cut and paste that in SPECFEM3D.
+
+Vadim could probably have a look at that because he will need that for his study of the Pyrénées.
+
+As Emanuele mentioned, CUBIT has no real support for HEX27, but Gmsh does (and Paul uses Gmsh all the time; thus we could use it rather than CUBIT when curvature is needed).
+
+I guess Vadim will work on that at some point.
+
+Comment from Daniel:
+
+keep in mind that we have two ways to mesh, in-house mesher xmeshfem3D and CUBIT/SCOTCH. if you insist on 27-node elements, i would start to implement it in the xmeshfem3D in-house mesher. that would probably show what is needed when combining it with CUBIT and SCOTCH which might be more of a problem.
+
+Comment from Emanuele:
+
+Theoretically, Cubit can generate mesh for HEX8, HEX20, HEX27 type of
+hexahedra but higher-order nodes are created only when the mesh is
+being exported to the Exodus II file (and persist in the CUBIT
+database after file export) so after the meshing process... therefore
+basically it is a regular hex mesh with more nodes inside each
+elements (not a curvilinear element).
+
+I'm not sure if the cubit's python interface is able to extract the
+information about the internal nodes... I should take a try but in
+ any case it is possible to recreate it during the exporting phase
+from cubit/geocubit to specfem3d (or directly in specfem?)
+
+I suppose that I can easily create a script that produce a hex
+association of 27 nodes but the hard-for-me step is to adapt the
+specfem3d reader and the scotch partitioning.
+
+
+- suggestion 17:
+----------------
+
+in comments in DATA/Par_file and also in the LaTeX manual of the 2D code, Zhinan should mention the CFL upper bound of the
+different time schemes that are now implemented and that can be selected by the user:
+Newark, RK4 and LDDRK4-6
+
+mention also in the manual and in these comments in DATA/Par_file that using Stacey absorbing conditions slightly reduces this maximum
+CFL value i.e. the maximum time step (as a rule of thumb obtained by trial and error, it is reduced by a factor of about 0.90).
+
+without such numbers as comments nor in the manual, it is difficult for users to decide what value to use for the time step (in the
+2D code, the user selects the time step, it is not computed automatically by the code)
+
+
+------------------------------------------------
+Stacey absorbing boundaries:
+------------------------------------------------
+
+- suggestion 20:  note DK DK Jan 2013: not needed any more because we now have C-PML instead; thus purposely not done.
+----------------
+
+see with Zhinan if a spring should be added to Stacey in SPECFEM3D and SPECFEM3D_GLOBE; Stacey is a dashpot and thus Zhinan and his
+advisors in China have shown that the condition can become inaccurate and have a static offset in some cases; they have shown how
+to suppress this by adding a spring in parallel to the dashpot
+
+already done in the 2D code
+
+see with Zhinan if he thinks this should be done in SPECFEM3D and SPECFEM3D_GLOBE as well, and if it would be useful
+
+should probably not be a high priority; PML and other things are more urgent
+
+
+
 
 - suggestion 00: about VERCE project modifications
 ----------------
