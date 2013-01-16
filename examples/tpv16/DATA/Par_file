@@ -61,8 +61,8 @@ PML_CONDITIONS	  	    	= .false.
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
 				
 # C-PML thickness min/max
-PML_WIDTH_MIN                   = 10000.d0
-PML_WIDTH_MAX                   = 25000.d0
+PML_WIDTH_MIN                   = 10000.0d0
+PML_WIDTH_MAX                   = 25000.0d0
 
 # C-PML dominant frequency
 f0_FOR_PML                      = 12.7
