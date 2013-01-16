@@ -96,7 +96,7 @@ subroutine compute_forces_acoustic()
     ! acoustic pressure term
     if(.NOT. GPU_MODE) then
       ! on CPU
-      call compute_forces_acoustic_pot( iphase, NSPEC_AB,NGLOB_AB, &
+      call compute_forces_acoustic_pot_noDev( iphase, NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -110,7 +110,7 @@ subroutine compute_forces_acoustic()
 
       ! adjoint simulations
       if( SIMULATION_TYPE == 3 ) &
-        call compute_forces_acoustic_pot( iphase, NSPEC_ADJOINT,NGLOB_ADJOINT, &
+        call compute_forces_acoustic_pot_noDev( iphase, NSPEC_ADJOINT,NGLOB_ADJOINT, &
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
