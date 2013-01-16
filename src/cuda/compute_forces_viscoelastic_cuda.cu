@@ -1640,8 +1640,8 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
 
 
 extern "C"
-void FC_FUNC_(compute_forces_elastic_cuda,
-              COMPUTE_FORCES_ELASTIC_CUDA)(long* Mesh_pointer_f,
+void FC_FUNC_(compute_forces_viscoelastic_cuda,
+              COMPUTE_FORCES_VISCOELASTIC_CUDA)(long* Mesh_pointer_f,
                                            int* iphase,
 					   realw* deltat,
                                            int* nspec_outer_elastic,
@@ -1650,8 +1650,8 @@ void FC_FUNC_(compute_forces_elastic_cuda,
                                            int* ATTENUATION,
                                            int* ANISOTROPY) {
 
-  TRACE("compute_forces_elastic_cuda");
-  // EPIK_TRACER("compute_forces_elastic_cuda");
+  TRACE("compute_forces_viscoelastic_cuda");
+  // EPIK_TRACER("compute_forces_viscoelastic_cuda");
   //printf("Running compute_forces\n");
   //double start_time = get_time();
 

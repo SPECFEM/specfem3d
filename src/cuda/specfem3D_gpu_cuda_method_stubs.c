@@ -120,7 +120,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
 
 
 //
-// src/cuda/compute_add_sources_elastic_cuda.cu
+// src/cuda/compute_add_sources_viscoelastic_cuda.cu
 //
 
 void FC_FUNC_(compute_add_sources_el_cuda,
@@ -216,7 +216,7 @@ void FC_FUNC_(acoustic_enforce_free_surf_cuda,
 
 
 //
-// src/cuda/compute_forces_elastic_cuda.cu
+// src/cuda/compute_forces_viscoelastic_cuda.cu
 //
 
 void FC_FUNC_(transfer_boun_accel_from_device,
@@ -256,8 +256,8 @@ void FC_FUNC_(transfer_asmbl_accel_to_device,
                                                     int* ibool_interfaces_ext_mesh,
                                                     int* FORWARD_OR_ADJOINT) {}
 
-void FC_FUNC_(compute_forces_elastic_cuda,
-              COMPUTE_FORCES_ELASTIC_CUDA)(long* Mesh_pointer_f,
+void FC_FUNC_(compute_forces_viscoelastic_cuda,
+              COMPUTE_FORCES_VISCOELASTIC_CUDA)(long* Mesh_pointer_f,
                                            int* iphase,
                                            int* nspec_outer_elastic,
                                            int* nspec_inner_elastic,
@@ -308,11 +308,11 @@ void FC_FUNC_(compute_stacey_acoustic_cuda,
 
 
 //
-// src/cuda/compute_stacey_elastic_cuda.cu
+// src/cuda/compute_stacey_viscoelastic_cuda.cu
 //
 
-void FC_FUNC_(compute_stacey_elastic_cuda,
-              COMPUTE_STACEY_ELASTIC_CUDA)(long* Mesh_pointer_f,
+void FC_FUNC_(compute_stacey_viscoelastic_cuda,
+              COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
                                            int* SAVE_FORWARDf,
                                            realw* h_b_absorb_field) {}

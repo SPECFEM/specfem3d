@@ -129,13 +129,13 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
 
 
 extern "C"
-void FC_FUNC_(compute_stacey_elastic_cuda,
-              COMPUTE_STACEY_ELASTIC_CUDA)(long* Mesh_pointer_f,
+void FC_FUNC_(compute_stacey_viscoelastic_cuda,
+              COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer_f,
                                            int* phase_is_innerf,
                                            int* SAVE_FORWARDf,
                                            realw* h_b_absorb_field) {
 
-TRACE("compute_stacey_elastic_cuda");
+TRACE("compute_stacey_viscoelastic_cuda");
 
   Mesh* mp = (Mesh*)(*Mesh_pointer_f); //get mesh pointer out of fortran integer container
 
