@@ -50,7 +50,6 @@ case $FC in
         # useful for debugging...
             # for debugging: change -check nobounds to -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
         #if test x"$FLAGS_CHECK" = x; then
-        #    # without -e95
         #    FLAGS_CHECK="-O3 -check nobounds -ftz -assume byterecl -traceback -ftrapuv -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
         #fi
         #if test x"$FLAGS_NO_CHECK" = x; then
