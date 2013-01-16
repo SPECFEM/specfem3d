@@ -75,6 +75,7 @@ SCOTCH; because decomposing very large 3D meshes on a serial machine (on a singl
 for some meshes that will be a major bottleneck.
 
 Support ParMetis as well because there is a new, improved version that has been released by Karypis et al recently.
+To do that, Jeroen sent a Fortran bug fix (a patch to use to call METIS from Fortran) to Matthieu by email on Jan 16, 2013.
 
 What would need to be done is switch to PT-Scotch version 6.0 and/or to ParMETIS
 (supporting both would be easy, since the subroutine calls are very similar; in the current serial code we support both Scotch and METIS).
