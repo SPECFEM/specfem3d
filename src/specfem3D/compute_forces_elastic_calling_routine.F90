@@ -435,6 +435,7 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
+!! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
     call compute_forces_elastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
            hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &

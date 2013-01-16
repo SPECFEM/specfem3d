@@ -25,22 +25,22 @@
 !=====================================================================
 
 
-  subroutine compute_forces_fluid( iphase, &
-                        NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
-                        velocw_poroelastic,displs_poroelastic,&
+  subroutine compute_forces_poro_solid_part( iphase, &
+                        NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
+                        displw_poroelastic,velocw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
                         phistore,tortstore,jacobian,ibool,&
-                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
-                        epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
+                        epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,&
+                        epsilonsdev_xz,epsilonsdev_yz,epsilons_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
                         num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
                         phase_ispec_inner_poroelastic )
 
-! compute forces for the fluid poroelastic part
+! compute forces for the solid poroelastic part
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       N_SLS, &
@@ -60,13 +60,12 @@
 !    mufr_kl, B_kl
 
 ! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic,&
-                                                      velocw_poroelastic
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,velocw_poroelastic
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: &
-       epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,epsilonwdev_xz,epsilonwdev_yz
-  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilonw_trace_over_3
+       epsilonsdev_xx,epsilonsdev_yy,epsilonsdev_xy,epsilonsdev_xz,epsilonsdev_yz
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilons_trace_over_3
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -95,9 +94,7 @@
   integer :: num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic
   integer, dimension(num_phase_ispec_poroelastic,2) :: phase_ispec_inner_poroelastic
 
-!---
-!--- local variables
-!---
+! local parameters
 
   integer :: ispec,i,j,k,l,iglob,num_elements,ispec_p
 
@@ -155,6 +152,7 @@
 
 ! for attenuation
 !  real(kind=CUSTOM_REAL) :: Un,Unp1,tauinv,Sn,Snp1,theta_n,theta_np1,tauinvsquare,tauinvcube,tauinvUn
+
 
 ! compute Grad(displs_poroelastic) at time step n for attenuation
 !  if(TURN_ATTENUATION_ON) call compute_gradient_attenuation(displs_poroelastic,dux_dxl_n,duz_dxl_n, &
@@ -333,15 +331,17 @@
 
     sigmap = C_biot*duxdxl_plus_duydyl_plus_duzdzl + M_biot*dwxdxl_plus_dwydyl_plus_dwzdzl
 
+!  endif !if(ATTENUATION)
+
           if(SIMULATION_TYPE == 3) then ! kernels calculation
-    epsilonw_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
-    epsilonwdev_xx(i,j,k,ispec) = duxdxl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
-    epsilonwdev_yy(i,j,k,ispec) = duydyl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
-    epsilonwdev_xy(i,j,k,ispec) = 0.5 * duxdyl_plus_duydxl
-    epsilonwdev_xz(i,j,k,ispec) = 0.5 * duzdxl_plus_duxdzl
-    epsilonwdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
+    epsilons_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonsdev_xx(i,j,k,ispec) = duxdxl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonsdev_yy(i,j,k,ispec) = duydyl - ONE_THIRD * (duxdxl + duydyl + duzdzl)
+    epsilonsdev_xy(i,j,k,ispec) = 0.5 * duxdyl_plus_duydxl
+    epsilonsdev_xz(i,j,k,ispec) = 0.5 * duzdxl_plus_duxdzl
+    epsilonsdev_yz(i,j,k,ispec) = 0.5 * duzdyl_plus_duydzl
           endif
-!  endif !if(VISCOATTENUATION)
+
 
 ! weak formulation term based on stress tensor (non-symmetric form)
             ! define symmetric components of sigma
@@ -373,6 +373,7 @@
           tempx3p(i,j,k) = jacobianl * sigmap*gammaxl
           tempy3p(i,j,k) = jacobianl * sigmap*gammayl
           tempz3p(i,j,k) = jacobianl * sigmap*gammazl
+
 
         enddo
       enddo
@@ -443,29 +444,22 @@
               fac2 = wgllwgll_xz(i,k)
               fac3 = wgllwgll_xy(i,j)
 
-! get poroelastic parameters of current local GLL
-    phil = phistore(i,j,k,ispec)
-!solid properties
-    rhol_s = rhoarraystore(1,i,j,k,ispec)
-!fluid properties
-    rhol_f = rhoarraystore(2,i,j,k,ispec)
-!frame properties
-    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+              phil = phistore(i,j,k,ispec)
+              tortl = tortstore(i,j,k,ispec)
 
     ! sum contributions from each element to the global mesh
 
               iglob = ibool(i,j,k,ispec)
 
 
-    accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + ( fac1*(rhol_f/rhol_bar*tempx1ls - tempx1lw) &
-           + fac2*(rhol_f/rhol_bar*tempx2ls - tempx2lw) + fac3*(rhol_f/rhol_bar*tempx3ls - tempx3lw) )
+    accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) - ( fac1*(tempx1ls - phil/tortl*tempx1lw) &
+           + fac2*(tempx2ls - phil/tortl*tempx2lw) + fac3*(tempx3ls - phil/tortl*tempx3lw) )
 
-    accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + ( fac1*(rhol_f/rhol_bar*tempy1ls - tempy1lw) &
-           + fac2*(rhol_f/rhol_bar*tempy2ls - tempy2lw) + fac3*(rhol_f/rhol_bar*tempy3ls - tempy3lw) )
+    accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) - ( fac1*(tempy1ls - phil/tortl*tempy1lw) &
+           + fac2*(tempy2ls - phil/tortl*tempy2lw) + fac3*(tempy3ls - phil/tortl*tempy3lw) )
 
-    accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + ( fac1*(rhol_f/rhol_bar*tempz1ls - tempz1lw) &
-           + fac2*(rhol_f/rhol_bar*tempz2ls - tempz2lw) + fac3*(rhol_f/rhol_bar*tempz3ls - tempz3lw) )
-
+    accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) - ( fac1*(tempz1ls - phil/tortl*tempz1lw) &
+           + fac2*(tempz2ls - phil/tortl*tempz2lw) + fac3*(tempz3ls - phil/tortl*tempz3lw) )
 
 !
 !---- viscous damping
@@ -536,14 +530,14 @@
                    velocw_poroelastic(3,iglob)*bl_relaxed(6)
 !     endif
 
-     accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) - wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*&
+     accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + phil/tortl*wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*&
               viscodampx
-     accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) - wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*&
+     accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + phil/tortl*wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*&
               viscodampy
-     accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) - wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*&
+     accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + phil/tortl*wxgll(i)*wygll(j)*wzgll(k)*jacobian(i,j,k,ispec)*&
               viscodampz
 
-! if isolver == 1 .and. save_forward then b_viscodamp is save in compute_forces_fluid.f90
+! if isolver == 1 .and. save_forward then b_viscodamp is saved in compute_forces_poro_fluid_part.f90
 !          if(isolver == 2) then ! kernels calculation
 !        b_accels_poroelastic(1,iglob) = b_accels_poroelastic(1,iglob) + phil/tortl*b_viscodampx(iglob)
 !        b_accels_poroelastic(2,iglob) = b_accels_poroelastic(2,iglob) + phil/tortl*b_viscodampz(iglob)
@@ -562,5 +556,5 @@
     enddo ! end of loop over all spectral elements
 
 
-  end subroutine compute_forces_fluid
+  end subroutine compute_forces_poro_solid_part
 

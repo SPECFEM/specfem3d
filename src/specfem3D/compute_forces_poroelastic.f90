@@ -53,7 +53,7 @@ subroutine compute_forces_poroelastic()
     if( .NOT. GPU_MODE ) then
 ! solid phase
 
-    call compute_forces_solid( iphase, &
+    call compute_forces_poro_solid_part( iphase, &
                         NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
                         displw_poroelastic,velocw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -70,7 +70,7 @@ subroutine compute_forces_poroelastic()
 
 ! fluid phase
 
-    call compute_forces_fluid( iphase, &
+    call compute_forces_poro_fluid_part( iphase, &
                         NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
                         velocw_poroelastic,displs_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -89,7 +89,7 @@ subroutine compute_forces_poroelastic()
     if( SIMULATION_TYPE == 3 ) then
 ! solid phase
 
-    call compute_forces_solid( iphase, &
+    call compute_forces_poro_solid_part( iphase, &
                         NSPEC_AB,NGLOB_AB,b_displs_poroelastic,b_accels_poroelastic,&
                         b_displw_poroelastic,b_velocw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -106,7 +106,7 @@ subroutine compute_forces_poroelastic()
 
 ! fluid phase
 
-    call compute_forces_fluid( iphase, &
+    call compute_forces_poro_fluid_part( iphase, &
                         NSPEC_AB,NGLOB_AB,b_displw_poroelastic,b_accelw_poroelastic,&
                         b_velocw_poroelastic,b_displs_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
