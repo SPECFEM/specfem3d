@@ -172,7 +172,7 @@
     if( ier /= 0 ) stop 'error allocating array c11store etc.'
 
     ! note: currently, they need to be defined, as they are used in the routine arguments
-    !          for compute_forces_elastic_Deville()
+    !          for compute_forces_viscoelastic_Deville()
     allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &

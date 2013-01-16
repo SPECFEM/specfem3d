@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-subroutine compute_forces_elastic_noDev( iphase, &
+subroutine compute_forces_viscoelastic_noDev( iphase, &
                         NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -821,5 +821,5 @@ subroutine compute_forces_elastic_noDev( iphase, &
 
   endif ! if( PML_CONDITIONS )
 
-end subroutine compute_forces_elastic_noDev
+end subroutine compute_forces_viscoelastic_noDev
 

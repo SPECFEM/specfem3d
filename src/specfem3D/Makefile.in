@@ -145,13 +145,13 @@ libspecfem_a_OBJECTS = \
 CUDA_OBJECTS = \
 	$O/check_fields_cuda.cuda.o \
 	$O/compute_add_sources_acoustic_cuda.cuda.o \
-	$O/compute_add_sources_elastic_cuda.cuda.o \
+	$O/compute_add_sources_viscoelastic_cuda.cuda.o \
 	$O/compute_coupling_cuda.cuda.o \
 	$O/compute_forces_acoustic_cuda.cuda.o \
-	$O/compute_forces_elastic_cuda.cuda.o \
+	$O/compute_forces_viscoelastic_cuda.cuda.o \
 	$O/compute_kernels_cuda.cuda.o \
 	$O/compute_stacey_acoustic_cuda.cuda.o \
-	$O/compute_stacey_elastic_cuda.cuda.o \
+	$O/compute_stacey_viscoelastic_cuda.cuda.o \
 	$O/initialize_cuda.cuda.o \
 	$O/it_update_displacement_cuda.cuda.o \
 	$O/noise_tomography_cuda.cuda.o \
@@ -179,21 +179,21 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/fault_solver_dynamic.o \
 	$O/fault_solver_kinematic.o \
 	$O/compute_add_sources_acoustic.o \
-	$O/compute_add_sources_elastic.o \
+	$O/compute_add_sources_viscoelastic.o \
 	$O/compute_add_sources_poroelastic.o \
 	$O/compute_boundary_kernel.o \
 	$O/compute_coupling_acoustic_el.o \
 	$O/compute_coupling_acoustic_po.o \
-	$O/compute_coupling_elastic_ac.o \
-	$O/compute_coupling_elastic_po.o \
+	$O/compute_coupling_viscoelastic_ac.o \
+	$O/compute_coupling_viscoelastic_po.o \
 	$O/compute_coupling_poroelastic_ac.o \
 	$O/compute_coupling_poroelastic_el.o \
 	$O/compute_forces_acoustic_calling_routine.o \
 	$O/compute_forces_acoustic_PML.o \
 	$O/compute_forces_acoustic_pot_noDev.o \
-	$O/compute_forces_elastic_calling_routine.o \
-	$O/compute_forces_elastic_Dev.o \
-	$O/compute_forces_elastic_noDev.o \
+	$O/compute_forces_viscoelastic_calling_routine.o \
+	$O/compute_forces_viscoelastic_Dev.o \
+	$O/compute_forces_viscoelastic_noDev.o \
 	$O/compute_forces_poro_fluid_part.o \
 	$O/compute_forces_poroelastic.o \
 	$O/compute_forces_poro_solid_part.o \
@@ -201,7 +201,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_interpolated_dva.o \
 	$O/compute_kernels.o \
 	$O/compute_stacey_acoustic.o \
-	$O/compute_stacey_elastic.o \
+	$O/compute_stacey_viscoelastic.o \
 	$O/compute_stacey_poroelastic.o \
 	$O/create_color_image.o \
 	$O/detect_mesh_surfaces.o \
@@ -264,7 +264,7 @@ SUM_KERNELS_OBJECTS = \
 @COND_MPI_FALSE@COND_MPI_OBJECTS = $O/serial.o
 
 # objects toggled between openmp and non-openmp version
-@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_compute_forces_elastic_Dev_openmp.openmp.o
+@COND_OPENMP_TRUE@COND_OPENMP_OBJECTS = $O/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.openmp.o
 @COND_OPENMP_FALSE@COND_OPENMP_OBJECTS =
 
 LIBSPECFEM = $L/libspecfem.a

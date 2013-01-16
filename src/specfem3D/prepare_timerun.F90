@@ -1360,7 +1360,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-! OpenMP version uses "special" compute_forces_elastic_Dev routine
+! OpenMP version uses "special" compute_forces_viscoelastic_Dev routine
 ! we need to set num_elem_colors_elastic arrays
 
 #ifdef OPENMP_MODE
