@@ -193,7 +193,6 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_forces_acoustic_pot.o \
 	$O/compute_forces_elastic.o \
 	$O/compute_forces_elastic_Dev.o \
-	$O/compute_forces_elastic_Dev2.o \
 	$O/compute_forces_elastic_noDev.o \
 	$O/compute_forces_fluid.o \
 	$O/compute_forces_poroelastic.o \
