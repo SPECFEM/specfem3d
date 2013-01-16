@@ -28,7 +28,7 @@
 
 !! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
 
-  subroutine compute_forces_elastic_Dev_openmp(iphase ,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_viscoelastic_Dev_openmp(iphase ,NSPEC_AB,NGLOB_AB, &
                              displ,veloc,accel, &
                              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                              hprime_xx,hprime_xxT, &
@@ -979,6 +979,6 @@
 
   ! accel(:,:) = accel_omp(:,:,1)
 
-  end subroutine compute_forces_elastic_Dev_openmp
+  end subroutine compute_forces_viscoelastic_Dev_openmp
 
 

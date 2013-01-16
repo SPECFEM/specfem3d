@@ -728,7 +728,7 @@
 
 ! note:
 ! computes adjoint sources in chunks/blocks during time iterations.
-! we moved it to compute_add_sources_elastic.f90 & compute_add_sources_acoustic.f90,
+! we moved it to compute_add_sources_viscoelastic.f90 & compute_add_sources_acoustic.f90,
 ! because we may need to read in adjoint sources block by block
 
     ! initializes adjoint sources

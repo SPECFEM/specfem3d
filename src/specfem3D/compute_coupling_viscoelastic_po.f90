@@ -26,7 +26,7 @@
 
 ! for elastic solver
 
-  subroutine compute_coupling_elastic_po(NSPEC_AB,NGLOB_AB,ibool,&
+  subroutine compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
                         displs_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
@@ -224,7 +224,7 @@
                 ! adjoint simulations
                 if (SIMULATION_TYPE == 3) then
                   ! to do
-                  stop 'compute_coupling_elastic_po() : adjoint run not implemented yet'
+                  stop 'compute_coupling_viscoelastic_po() : adjoint run not implemented yet'
 
                   ! dummy to avoid compiler warnings
                   iglob = NGLOB_ADJOINT
@@ -499,5 +499,5 @@
 
   enddo ! iface
 
-end subroutine compute_coupling_elastic_po
+end subroutine compute_coupling_viscoelastic_po
 

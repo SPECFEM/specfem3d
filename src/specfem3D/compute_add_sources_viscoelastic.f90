@@ -26,7 +26,7 @@
 
 ! for elastic solver
 
-  subroutine compute_add_sources_elastic( NSPEC_AB,NGLOB_AB,accel, &
+  subroutine compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
@@ -580,4 +580,4 @@
   endif
 
 
-  end subroutine compute_add_sources_elastic
+  end subroutine compute_add_sources_viscoelastic

@@ -190,7 +190,7 @@ stop 'GPU for poroelastic simulation not implemented'
       ! adjoint simulations
 ! chris:'adjoint elastic-poroelastic simulation not implemented yet'
 !      if( SIMULATION_TYPE == 3 ) &
-!        call compute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+!        call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
 !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
 !                        num_coupling_ac_el_faces, &
 !                        coupling_ac_el_ispec,coupling_ac_el_ijk, &

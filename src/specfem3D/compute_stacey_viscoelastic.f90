@@ -28,7 +28,7 @@
 
 ! absorbing boundary term for elastic media (Stacey conditions)
 
-  subroutine compute_stacey_elastic(NSPEC_AB,NGLOB_AB,accel, &
+  subroutine compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec, &
@@ -165,7 +165,7 @@
   else
     ! GPU_MODE == .true.
     if( num_abs_boundary_faces > 0 ) &
-      call compute_stacey_elastic_cuda(Mesh_pointer,phase_is_inner, &
+      call compute_stacey_viscoelastic_cuda(Mesh_pointer,phase_is_inner, &
                                        SAVE_FORWARD,b_absorb_field)
   endif
 
@@ -180,5 +180,5 @@
     endif
   endif
 
-  end subroutine compute_stacey_elastic
+  end subroutine compute_stacey_viscoelastic
 

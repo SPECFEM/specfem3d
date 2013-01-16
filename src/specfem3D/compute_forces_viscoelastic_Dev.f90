@@ -26,7 +26,7 @@
 
 ! Deville routine for NGLL == 5 (default)
 
-  subroutine compute_forces_elastic_Dev_5p( iphase ,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_viscoelastic_Dev_5p( iphase ,NSPEC_AB,NGLOB_AB, &
                                     displ,veloc,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -840,5 +840,5 @@
 
   enddo  ! spectral element loop
 
-  end subroutine compute_forces_elastic_Dev_5p
+  end subroutine compute_forces_viscoelastic_Dev_5p
 

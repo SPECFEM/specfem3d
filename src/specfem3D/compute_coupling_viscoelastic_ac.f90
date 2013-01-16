@@ -26,7 +26,7 @@
 
 ! for elastic solver
 
-  subroutine compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
+  subroutine compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
                         ibool,accel,potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -118,7 +118,7 @@
 
   enddo ! iface
 
-end subroutine compute_coupling_elastic_ac
+end subroutine compute_coupling_viscoelastic_ac
 
 !
 !-------------------------------------------------------------------------------------------------

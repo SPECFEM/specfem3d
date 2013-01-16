@@ -26,7 +26,7 @@
 
 ! elastic solver
 
-subroutine compute_forces_elastic()
+subroutine compute_forces_viscoelastic()
 
   use specfem_par
   use specfem_par_acoustic
@@ -55,15 +55,15 @@ subroutine compute_forces_elastic()
     if( .NOT. GPU_MODE ) then
       if(USE_DEVILLE_PRODUCTS) then
         ! uses Deville (2002) optimizations
-        call compute_forces_elastic_Dev_sim1(iphase)
+        call compute_forces_viscoelastic_Dev_sim1(iphase)
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
-          call compute_forces_elastic_Dev_sim3(iphase)
+          call compute_forces_viscoelastic_Dev_sim3(iphase)
 
       else
         ! no optimizations used
-        call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+        call compute_forces_viscoelastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
@@ -93,7 +93,7 @@ subroutine compute_forces_elastic()
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
-          call compute_forces_elastic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
+          call compute_forces_viscoelastic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -127,7 +127,7 @@ subroutine compute_forces_elastic()
     else
       ! on GPU
       ! contains both forward SIM_TYPE==1 and backward SIM_TYPE==3 simulations
-      call compute_forces_elastic_cuda(Mesh_pointer, iphase, deltat, &
+      call compute_forces_viscoelastic_cuda(Mesh_pointer, iphase, deltat, &
                                       nspec_outer_elastic, &
                                       nspec_inner_elastic, &
                                       COMPUTE_AND_STORE_STRAIN,ATTENUATION,ANISOTROPY)
@@ -159,7 +159,7 @@ subroutine compute_forces_elastic()
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if( ABSORBING_CONDITIONS ) then
-       call compute_stacey_elastic(NSPEC_AB,NGLOB_AB,accel, &
+       call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec, &
@@ -178,7 +178,7 @@ subroutine compute_forces_elastic()
         if( .NOT. GPU_MODE ) then
           if( SIMULATION_TYPE == 1 ) then
             ! forward definition: pressure=-potential_dot_dot
-            call compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
+            call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
                         ibool,accel,potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -188,7 +188,7 @@ subroutine compute_forces_elastic()
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adoint definition: pressure^\dagger=potential^\dagger
-            call compute_coupling_elastic_ac(NSPEC_AB,NGLOB_AB, &
+            call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
                               ibool,accel,-potential_acoustic_adj_coupling, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -199,7 +199,7 @@ subroutine compute_forces_elastic()
 
         ! adjoint simulations
         if( SIMULATION_TYPE == 3 ) &
-          call compute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+          call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
                         ibool,b_accel,b_potential_dot_dot_acoustic, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
@@ -218,7 +218,7 @@ subroutine compute_forces_elastic()
 
 ! poroelastic coupling
     if( POROELASTIC_SIMULATION ) then
-      call compute_coupling_elastic_po(NSPEC_AB,NGLOB_AB,ibool,&
+      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
                         displs_poroelastic,displw_poroelastic,&
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz,&
@@ -240,7 +240,7 @@ subroutine compute_forces_elastic()
     endif
 
 ! adds source term (single-force/moment-tensor solution)
-    call compute_add_sources_elastic( NSPEC_AB,NGLOB_AB,accel, &
+    call compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
@@ -262,9 +262,9 @@ subroutine compute_forces_elastic()
                request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
        else ! GPU_MODE==1
           ! transfers boundary region to host asynchronously. The
-          ! MPI-send is done from within compute_forces_elastic_cuda,
+          ! MPI-send is done from within compute_forces_viscoelastic_cuda,
           ! once the inner element kernels are launched, and the
-          ! memcpy has finished. see compute_forces_elastic_cuda:1655
+          ! memcpy has finished. see compute_forces_viscoelastic_cuda:1655
           call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
        endif ! GPU_MODE
 
@@ -399,7 +399,7 @@ subroutine compute_forces_elastic()
   endif
 
 
-end subroutine compute_forces_elastic
+end subroutine compute_forces_viscoelastic
 
 
 !
@@ -408,10 +408,10 @@ end subroutine compute_forces_elastic
 
 ! distributes routines according to chosen NGLLX in constants.h
 
-!daniel: note -- i put it here rather than in compute_forces_elastic_Dev.f90 because compiler complains that:
+!daniel: note -- i put it here rather than in compute_forces_viscoelastic_Dev.f90 because compiler complains that:
 ! " The storage extent of the dummy argument exceeds that of the actual argument. "
 
-subroutine compute_forces_elastic_Dev_sim1(iphase)
+subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
 ! forward simulations
 
@@ -436,7 +436,7 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
 !! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
-    call compute_forces_elastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+    call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
            hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -462,7 +462,7 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
            phase_ispec_inner_elastic,&
            num_colors_outer_elastic,num_colors_inner_elastic)
 #else
-    call compute_forces_elastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+    call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
              hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -494,14 +494,14 @@ subroutine compute_forces_elastic_Dev_sim1(iphase)
 
   end select
 
-end subroutine compute_forces_elastic_Dev_sim1
+end subroutine compute_forces_viscoelastic_Dev_sim1
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
 
-subroutine compute_forces_elastic_Dev_sim3(iphase)
+subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
 
 ! uses backward/reconstructed displacement and acceleration arrays
 
@@ -517,7 +517,7 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
   select case(NGLLX)
 
   case (5)
-    call compute_forces_elastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB, &
                   b_displ,b_veloc,b_accel, &
                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                   hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
@@ -550,5 +550,5 @@ subroutine compute_forces_elastic_Dev_sim3(iphase)
   end select
 
 
-end subroutine compute_forces_elastic_Dev_sim3
+end subroutine compute_forces_viscoelastic_Dev_sim3
 
