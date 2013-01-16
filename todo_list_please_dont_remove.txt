@@ -5,14 +5,41 @@ To-do list for the different flavors of SPECFEM:
 (items listed in no particular order)
 
 
+- suggestion 35:
+----------------
+
+Add full viscoelastic kernels, undoing full attenuation
+
+- suggestion 36:
+----------------
+
+Add Deville for acoustic media; currently there is Deville for viscoelastic media only
+
+- suggestion 37:
+----------------
+
+Add QKappa attenuation in solids and in fluids, in addition to Qmu
+
+- suggestion 38:
+----------------
+
+Add full loop vectorization for critical calculation loops, to make sure we gain a factor of about 1.8 in terms of CPU time as suggested by INTEL.
+
+
 ------------------------------------------------
 CPML :
 ------------------------------------------------
+
+- suggestion 33:
+----------------
 
 DK DK new suggestion by Dimitri, Jan 2013: now that C-PML is implemented for forward runs, make it work for adjoint runs as well
 (more precisely, the problem is just to reinject the right boundary conditions at the entrance of the PML when we undo the forward run
 in the second set of simulations, starting from the last time frame and going backwards)
 
+
+- suggestion 34:
+----------------
 
 DK DK new suggestion by Dimitri, Jan 2013: add GPU support for C-PML once the C-PML code is finished;
 C-PML is currently only implemented in regular Fortran + MPI
