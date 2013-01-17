@@ -227,10 +227,12 @@
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Y = 65500.0
   real(kind=CUSTOM_REAL),parameter :: CROSS_SECTION_Z = -30000.0
 
-! plots GIF cross-section image
+! plots PNM cross-section image
 ! (EXPERIMENTAL feature)
 ! (cross-section plane parameters can be specified in create_color_image.f90)
-  logical, parameter :: PNM_GIF_IMAGE = .false.
+!! DK DK Jan 2013: here for performance and to reduce the size of the files, one day
+!! DK DK Jan 2013: we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
+  logical, parameter :: PNM_IMAGE = .false.
 
 ! geometry tolerance parameter to calculate number of independent grid points
 ! sensitive to actual size of model, assumes reference sphere of radius 1

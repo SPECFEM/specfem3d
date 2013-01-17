@@ -654,7 +654,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine detect_surface_PNM_GIF_image(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool,&
                             ispec_is_image_surface, &
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
@@ -765,5 +765,5 @@
   enddo ! nspec
   num_iglob_image_surface = count
 
-  end subroutine detect_surface_PNM_GIF_image
+  end subroutine detect_surface_PNM_image
 

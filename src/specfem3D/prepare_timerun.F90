@@ -141,7 +141,7 @@
   implicit none
 
   ! flag for any movie simulation
-  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_GIF_IMAGE ) then
+  if( MOVIE_SURFACE .or. CREATE_SHAKEMAP .or. MOVIE_VOLUME .or. PNM_IMAGE ) then
     MOVIE_SIMULATION = .true.
   else
     MOVIE_SIMULATION = .false.

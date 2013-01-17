@@ -166,7 +166,7 @@ xcheck_mesh_quality_CUBIT_Abaqus: required reqche
 
 
 clean: required
-	(rm -rf bin lib obj src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod)
+	(rm -rf bin lib obj src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod ; cd src/decompose_mesh/scotch/src ; make realclean)
 
 
 help:
