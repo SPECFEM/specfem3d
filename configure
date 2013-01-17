@@ -649,7 +649,6 @@ OPENMP_LIB
 MPI_INC
 CUDA_INC
 CUDA_LIB
-FLAGS_NO_CHECK
 FLAGS_CHECK
 MPICC
 MPILIBS
@@ -795,7 +794,6 @@ MPIFC
 MPILIBS
 MPICC
 FLAGS_CHECK
-FLAGS_NO_CHECK
 CUDA_LIB
 CUDA_INC
 MPI_INC
@@ -1471,10 +1469,7 @@ Some influential environment variables:
   MPIFC       MPI Fortran compiler command
   MPILIBS     extra libraries for linking MPI programs
   MPICC       MPI C compiler command
-  FLAGS_CHECK Fortran compiler flags for non-critical subroutines
-  FLAGS_NO_CHECK
-              Fortran compiler flags for creating fast, production-run code
-              for critical subroutines
+  FLAGS_CHECK Fortran compiler flags
   CUDA_LIB    Location of CUDA library libcudart
   CUDA_INC    Location of CUDA include files
   MPI_INC     Location of MPI include mpi.h, which is needed by nvcc when
@@ -7541,7 +7536,7 @@ rm -f "$cfgfile"
 cit_fc_save_fc=$FC
 cit_fc_save_fcflags=$FCFLAGS
 FC=$MPIFC
-FCFLAGS="$FCFLAGS $FLAGS_NO_CHECK"
+FCFLAGS="$FCFLAGS $FLAGS_CHECK"
 
 { $as_echo "$as_me:$LINENO: checking whether mpif.h works" >&5
 $as_echo_n "checking whether mpif.h works... " >&6; }
@@ -7904,7 +7899,7 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 cit_fc_save_fc=$FC
 cit_fc_save_fcflags=$FCFLAGS
 FC=$FC
-FCFLAGS="$FCFLAGS $FLAGS_NO_CHECK"
+FCFLAGS="$FCFLAGS $FLAGS_CHECK"
 
 { $as_echo "$as_me:$LINENO: checking whether OpenMP directives work" >&5
 $as_echo_n "checking whether OpenMP directives work... " >&6; }
@@ -7968,9 +7963,9 @@ sed 's/^/| /' conftest.$ac_ext >&5
 $as_echo "no" >&6; }
     { { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-{ { $as_echo "$as_me:$LINENO: error: cannot link a trivial OpenMP program using $FC with flags: $FLAGS_NO_CHECK
+{ { $as_echo "$as_me:$LINENO: error: cannot link a trivial OpenMP program using $FC with flags: $FLAGS_CHECK
 See \`config.log' for more details." >&5
-$as_echo "$as_me: error: cannot link a trivial OpenMP program using $FC with flags: $FLAGS_NO_CHECK
+$as_echo "$as_me: error: cannot link a trivial OpenMP program using $FC with flags: $FLAGS_CHECK
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }; }
 

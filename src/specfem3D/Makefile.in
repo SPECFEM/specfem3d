@@ -58,7 +58,7 @@ MPI_INC = @MPI_INC@
 @COND_CUDA_FALSE@NVCCLINK = $(NVCC) $(NVCC_FLAGS)
 
 # OpenMP
-# with configure: ./configure --with-openmp FLAGS_NO_CHECK="-openmp .." OPENMP_LIB=.. 
+# with configure: ./configure --with-openmp FLAGS_CHECK="-openmp .." OPENMP_LIB=.. 
 @COND_OPENMP_TRUE@OPENMP_LIBS = $(OPENMP_LIB)
 @COND_OPENMP_FALSE@OPENMP_LIBS = 
 @COND_OPENMP_TRUE@COND_OPENMP_FFLAGS = -DOPENMP_MODE
@@ -70,7 +70,6 @@ FCFLAGS = #@FCFLAGS@
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 FLAGS_CHECK = @FLAGS_CHECK@
-FLAGS_NO_CHECK = @FLAGS_NO_CHECK@
 FCFLAGS_f90 = @FCFLAGS_f90@
 
 
@@ -87,11 +86,9 @@ L = ../../lib
 OUTPUT=../../OUTPUT_FILES
 
 FCCOMPILE_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
-FCCOMPILE_NO_CHECK =@FCENV@ ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
 MPIFCCOMPILE_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
-MPIFCCOMPILE_NO_CHECK =@FCENV@ ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK) $(COND_OPENMP_FFLAGS) -I$(SHARED)
-@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_NO_CHECK)
-@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_NO_CHECK)
+@COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_CHECK)
+@COND_MPI_FALSE@FCLINK = $(FCCOMPILE_CHECK)
 
 CC = @CC@
 CFLAGS = @CFLAGS@ $(CPPFLAGS)
@@ -362,23 +359,23 @@ $L/libspecfem.a: $(libspecfem_a_OBJECTS)
 ###
 
 $O/%.o: %.f90 $(SHARED)constants.h
-	${FCCOMPILE_NO_CHECK} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.o: %.F90 $(SHARED)constants.h
-	${FCCOMPILE_NO_CHECK} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared.o: ${SHARED}%.f90 $(SHARED)constants.h
-	${FCCOMPILE_NO_CHECK} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 $O/%.shared.o: ${SHARED}%.F90 $(SHARED)constants.h
-	${FCCOMPILE_NO_CHECK} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 
 ###
 ### OpenMP compilation
 ###
 $O/%.openmp.o: %.f90 $(SHARED)constants.h
-	${FCCOMPILE_NO_CHECK} -c -o $@ $<
+	${FCCOMPILE_CHECK} -c -o $@ $<
 
 
 ###
@@ -411,7 +408,7 @@ $O/serial.o: $(SHARED)constants.h $(SHARED)serial.f90
 	${FCCOMPILE_CHECK} -c -o $O/serial.o $(SHARED)serial.f90
 
 $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/smooth_vol_data.o $(SHARED)smooth_vol_data.f90
 
 
 
@@ -421,14 +418,14 @@ $O/smooth_vol_data.o: $(SHARED)constants.h $(SHARED)smooth_vol_data.f90
 ##
 
 $O/sum_kernels.o: $(SHARED)constants.h $(SHARED)sum_kernels.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/sum_kernels.o $(SHARED)sum_kernels.f90
 
 ##
 ## model update
 ##
 
 $O/model_update.o: $(SHARED)constants.h model_update.f90
-	${MPIFCCOMPILE_NO_CHECK} -c -o $O/model_update.o model_update.f90
+	${MPIFCCOMPILE_CHECK} -c -o $O/model_update.o model_update.f90
 
 $O/save_external_bin_m_up.o:  $(SHARED)constants.h save_external_bin_m_up.f90
 	${FCCOMPILE_CHECK} -c -o $O/save_external_bin_m_up.o save_external_bin_m_up.f90
