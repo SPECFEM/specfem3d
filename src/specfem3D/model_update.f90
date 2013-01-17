@@ -151,7 +151,7 @@ program model_update
   ! subjective step length to multiply to the gradient
   ! e.g. step_fac = 0.03
 
-  call getarg(1,s_step_fac)
+  call get_command_argument(1,s_step_fac)
 
   if (trim(s_step_fac) == '') then
     call exit_MPI(myrank,'Usage: add_model step_factor')

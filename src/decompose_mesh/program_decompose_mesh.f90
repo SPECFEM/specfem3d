@@ -45,9 +45,6 @@ program pre_meshfem3D
                                   LOCAL_PATH,TOMOGRAPHY_PATH,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
                                   PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL
 
-! daniel: ifort
-!  USE IFPORT,only: getarg
-
   implicit none
 
   integer :: i
@@ -55,7 +52,7 @@ program pre_meshfem3D
 
 ! check usage
   do i=1,3
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i <= 3 .and. trim(arg(i)) == "") then
       print *, 'Usage: ./decompose_mesh  nparts  input_directory output_directory'
       print *

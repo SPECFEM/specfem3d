@@ -64,7 +64,7 @@ program combine_surf_data
 
 
   do i = 1, 8
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
       print *, 'Usage: xcombine_surface start_slice end_slice filename surfacename input_dir output_dir high/low-resolution 3D/2D'
       print *, '    or xcombine_surface slice_list filename surfacename input_dir output_dir high/low-resolution 3D/2D'
