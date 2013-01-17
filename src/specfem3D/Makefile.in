@@ -186,7 +186,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_coupling_poroelastic_ac.o \
 	$O/compute_coupling_poroelastic_el.o \
 	$O/compute_forces_acoustic_calling_routine.o \
-	$O/compute_forces_acoustic_pot_noDev.o \
+	$O/compute_forces_acoustic_noDev.o \
 	$O/compute_forces_viscoelastic_calling_routine.o \
 	$O/compute_forces_viscoelastic_Dev.o \
 	$O/compute_forces_viscoelastic_noDev.o \

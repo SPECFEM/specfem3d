@@ -26,7 +26,7 @@
 
 ! for acoustic solver
 
-  subroutine compute_forces_acoustic_pot_noDev( iphase, NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_acoustic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -390,5 +390,5 @@
 
   endif ! if( PML_CONDITIONS )
 
-  end subroutine compute_forces_acoustic_pot_noDev
+  end subroutine compute_forces_acoustic_noDev
 
