@@ -152,7 +152,7 @@ program smooth_vol_data
 
   ! reads arguments
   do i = 1, 5
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i <= 5 .and. trim(arg(i)) == '') then
       print *, 'Usage: '
       print *, '        xsmooth_data filename input_dir output_dir sigma_h sigma_v'

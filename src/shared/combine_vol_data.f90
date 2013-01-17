@@ -110,7 +110,7 @@
   print *
 
   do i = 1, 6
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
       print *, 'Usage: '
       print *, '        xcombine_data start_slice end_slice filename input_dir output_dir high/low-resolution'
