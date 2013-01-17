@@ -367,9 +367,7 @@ A summary of the most important configuration variables follows.
 \item [{\texttt{MPIF90}}] Path to MPI Fortran90.
 \item [{\texttt{MPI\_FLAGS}}] Some systems require this flag to link to
 MPI libraries.
-\item [{\texttt{FLAGS\_CHECK}}] Compiler flag for non-critical subroutines.
-\item [{\texttt{FLAGS\_NO\_CHECK}}] Compiler flag for creating fast, production-run
-code for critical subroutines.
+\item [{\texttt{FLAGS\_CHECK}}] Compiler flags.
 \end{description}
 The configuration script automatically creates for each executable a corresponding
 \texttt{Makefile} in the \texttt{src/} subdirectoy.
@@ -447,7 +445,7 @@ scheduling policy, which will slow down the job quite a bit.
 \underline{More recent installation instruction for IBM BlueGene, from October 2012:}\\
 
 \noindent
-Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK} and \texttt{FLAGS\_NO\_CHECK}:\\
+Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:\\
 
 \noindent
 \texttt{-g -qfullpath -O2 -qsave -qstrict -qtune=qp -qarch=qp -qcache=auto -qhalt=w}\\
@@ -480,7 +478,7 @@ Then, to configure the code, type this:\\
 To compile the code on an IBM BlueGene, Laurent L\'eger from IDRIS, France, suggests the following: compile the code with
 
 \noindent
-\texttt{   FLAGS\_NO\_CHECK="-O3 -qsave -qstrict -qtune=auto -qarch=450d -qcache=auto \\}
+\texttt{   FLAGS\_CHECK="-O3 -qsave -qstrict -qtune=auto -qarch=450d -qcache=auto \\}
 \texttt{   -qfree=f90 -qsuffix=f=f90 -g -qlanglvl=95pure -qhalt=w -Q -Q+rank,swap\_all -Wl,-relax"}
 
 \noindent
