@@ -614,7 +614,7 @@
   ! local parameter
   integer :: ix,iy,R,G,B,tenthousands,thousands,hundreds,tens,units,remainder,current_rec
   real(kind=CUSTOM_REAL) :: amplitude_max,normalized_value,vpmin,vpmax,x1
-  character(len=256) :: file_name,system_command
+  character(len=256) :: file_name
   ! ASCII code of character '0' and of carriage return character
   integer, parameter :: ascii_code_of_zero = 48, ascii_code_of_carriage_return = 10
 
