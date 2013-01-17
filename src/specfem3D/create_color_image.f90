@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  module image_PNM_GIF_par
+  module image_PNM_par
 
   use constants,only: CUSTOM_REAL,IMAIN
   use specfem_par,only: myrank,NPROC,it
@@ -73,8 +73,6 @@
   ! or ASCII PNM P3 format (easier to edit)
   logical, parameter :: BINARY_FILE = .true.
 
-  ! only keeps GIF file
-  logical, parameter :: REMOVE_PNM_FILE = .false.
   ! ----------------------------------------------
 
   ! image data
@@ -93,13 +91,13 @@
   integer :: NX_IMAGE_color,NZ_IMAGE_color
   integer :: nb_pixel_loc
 
-  end module image_PNM_GIF_par
+  end module image_PNM_par
 
 !=============================================================
 
-  subroutine write_PNM_GIF_initialize()
+  subroutine write_PNM_initialize()
 
-  use image_PNM_GIF_par
+  use image_PNM_par
   use specfem_par,only: NGLOB_AB,NSPEC_AB,ibool,xstore,ystore,zstore,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
@@ -135,7 +133,7 @@
 
   ! checks image type
   if(IMAGE_TYPE > 4 .or. IMAGE_TYPE < 1) then
-    call exit_mpi(myrank,'That type is not implemented for GIF images yet')
+    call exit_mpi(myrank,'That type is not implemented for PNM images yet')
   endif
 
   ! user output
@@ -143,20 +141,20 @@
     write(IMAIN,*)
     write(IMAIN,*) '********'
     !   type = 1 : velocity V_x component
-    if( IMAGE_TYPE == 1 ) write(IMAIN,*) 'GIF image: velocity V_x component'
+    if( IMAGE_TYPE == 1 ) write(IMAIN,*) 'PNM image: velocity V_x component'
     !   type = 2 : velocity V_y component
-    if( IMAGE_TYPE == 2 ) write(IMAIN,*) 'GIF image: velocity V_y component'
+    if( IMAGE_TYPE == 2 ) write(IMAIN,*) 'PNM image: velocity V_y component'
     !   type = 3 : velocity V_z component
-    if( IMAGE_TYPE == 3 ) write(IMAIN,*) 'GIF image: velocity V_z component'
+    if( IMAGE_TYPE == 3 ) write(IMAIN,*) 'PNM image: velocity V_z component'
     !   type = 4 : velocity V norm
-    if( IMAGE_TYPE == 4 ) write(IMAIN,*) 'GIF image: velocity norm'
+    if( IMAGE_TYPE == 4 ) write(IMAIN,*) 'PNM image: velocity norm'
   endif
 
   ! finds global points on image surface
   allocate(ispec_is_image_surface(NSPEC_AB),iglob_is_image_surface(NGLOB_AB),stat=ier)
   if( ier /= 0 ) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
-  call detect_surface_PNM_GIF_image(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
+  call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
                             ispec_is_image_surface, &
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
@@ -203,11 +201,6 @@
   enddo
 
   if( count /= num_iglob_image_surface) call exit_mpi(myrank,'error image point number')
-
-  !daniel: outputs global points into vtk file
-  !vtkfilename = prname(1:len_trim(prname))//'GIF_image_points'
-  !call write_VTK_data_points(NGLOB_AB,xstore,ystore,zstore, &
-  !                        iglob_coord,count,vtkfilename)
 
   ! horizontal size of the image
   xmin_color_image_loc = minval( xcoord(:) )
@@ -451,7 +444,7 @@
   endif
 
   ! handles vp background data
-  call write_PNM_GIF_vp_background()
+  call write_PNM_vp_background()
 
   ! user output
   if( myrank == 0 ) then
@@ -460,15 +453,15 @@
   endif
 
 
-  end subroutine write_PNM_GIF_initialize
+  end subroutine write_PNM_initialize
 
 
 !=============================================================
 
 
-  subroutine write_PNM_GIF_vp_background
+  subroutine write_PNM_vp_background
 
-  use image_PNM_GIF_par
+  use image_PNM_par
   use specfem_par,only:myrank
   implicit none
   ! local parameters
@@ -513,16 +506,19 @@
     endif
   endif
 
-  end subroutine write_PNM_GIF_vp_background
+  end subroutine write_PNM_vp_background
 
 
 !================================================================
 
-  subroutine write_PNM_GIF_create_image
+  subroutine write_PNM_create_image
 
-! creates color PNM/GIF image
+! creates color PNM image
 
-  use image_PNM_GIF_par
+!! DK DK Jan 2013: here for performance and to reduce the size of the files, one day
+!! DK DK Jan 2013: we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
+
+  use image_PNM_par
   use constants,only: NDIM
   implicit none
 
@@ -585,26 +581,26 @@
   ! master process writes out file
   if (myrank == 0) then
     ! writes output file
-    call write_PNM_GIF_data(image_color_data,iglob_image_color,&
+    call write_PNM_data(image_color_data,iglob_image_color,&
                             NX_IMAGE_color,NZ_IMAGE_color,it,image_cutsnaps,image_color_vp_display)
   endif
 
 
-  end subroutine write_PNM_GIF_create_image
+  end subroutine write_PNM_create_image
 
 
 !================================================================
 
 
-  subroutine write_PNM_GIF_data(color_image_2D_data,iglob_image_color_2D,&
+  subroutine write_PNM_data(color_image_2D_data,iglob_image_color_2D,&
                                 NX,NY,it,cutsnaps,image_color_vp_display)
 
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
   use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES_PATH
-  use image_PNM_GIF_par,only: BINARY_FILE,VP_BACKGROUND,&
-                        POWER_DISPLAY_COLOR,REMOVE_PNM_FILE
+  use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
+                        POWER_DISPLAY_COLOR
   implicit none
 
   integer :: NX,NY,it
@@ -792,24 +788,7 @@
   ! close the file
   close(27)
 
-  ! open image file and create system command to convert image to more convenient format
-  ! use the "convert" command from ImageMagick http://www.imagemagick.org
-  write(system_command,"('cd ',a,' ; convert image',i7.7,'.pnm image',i7.7,'.gif')") &
-       OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it,it
-
-  ! call the system to convert image to GIF
-  ! this line can be safely commented out if your compiler does not implement "system()" for system calls;
-  ! in such a case you will simply get images in PNM format in directory OUTPUT_FILES instead of GIF format
-  call system(system_command)
-
-  ! removes PNM file
-  if( REMOVE_PNM_FILE ) then
-    write(system_command,"('cd ',a,' ; rm -f image',i7.7,'.pnm')") &
-         OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)), it
-    call system(system_command)
-  endif
-
-  end subroutine write_PNM_GIF_data
+  end subroutine write_PNM_data
 
 !=============================================================
 

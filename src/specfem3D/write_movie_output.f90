@@ -40,7 +40,7 @@
       CREATE_SHAKEMAP .or. &
       ( MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
       ( MOVIE_VOLUME .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) .or. &
-      ( PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) &
+      ( PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) &
      ) ) then
     ! acoustic domains
     if ( ACOUSTIC_SIMULATION ) then
@@ -78,9 +78,9 @@
     call wmo_movie_volume_output()
   endif
 
-  ! creates cross-section GIF image
-  if (PNM_GIF_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0 ) then
-    call write_PNM_GIF_create_image()
+  ! creates cross-section PNM image
+  if (PNM_IMAGE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0 ) then
+    call write_PNM_create_image()
   endif
 
   end subroutine write_movie_output

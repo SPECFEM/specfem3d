@@ -115,8 +115,8 @@
   endif
 
 ! initializes cross-section gif image
-  if( PNM_GIF_IMAGE ) then
-    call write_PNM_GIF_initialize()
+  if( PNM_IMAGE ) then
+    call write_PNM_initialize()
   endif
 
   end subroutine detect_mesh_surfaces

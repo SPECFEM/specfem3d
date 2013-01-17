@@ -9,7 +9,7 @@ module fault_solver_common
 
   implicit none  
 
-  private
+!!!!! DK DK  private
   
   type fault_type
     integer :: nspec=0, nglob=0
@@ -20,6 +20,35 @@ module fault_solver_common
     integer, dimension(:), pointer :: ibulk1=>null(), ibulk2=>null()
   end type fault_type
 
+  ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
+  ! strength, state, slip, slip velocity, fault stresses, rupture time, process zone time
+  ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
+  ! process zone time = first time when slip = Dc
+  type dataXZ_type
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), &
+                                                     t1=>null(), t2=>null(), t3=>null(), tRUP=>null(), tPZ=>null()
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()
+    integer                                       :: npoin=0
+  end type dataXZ_type
+
+  type swf_type
+!! DK DK    private
+    integer :: kind
+    logical :: healing = .false.
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
+                                                     theta=>null(), T=>null(), C=>null()
+  end type swf_type
+
+  type rsf_type
+!! DK DK    private
+    integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
+                                                     V_init=>null(), &
+                                                     a=>null(), b=>null(), theta=>null(), &
+                                                     T=>null(), C=>null(), &
+                                                     fw=>null(), Vw=>null()
+  end type rsf_type
+
  ! outputs on selected fault nodes at every time step:
   type dataT_type
     integer :: npoin=0, ndat=0, nt=0
@@ -29,6 +58,24 @@ module fault_solver_common
     character(len=70), dimension(:), pointer :: name=>null(),longFieldNames=>null()
     character(len=100) :: shortFieldNames
   end type dataT_type
+
+  type, extends (fault_type) :: bc_dynandkinflt_type
+!!!!!!!! DK DK      private
+    real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
+    real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
+    integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
+    type(dataT_type)        :: dataT
+    type(dataXZ_type)       :: dataXZ,dataXZ_all
+    type(swf_type), pointer :: swf => null()
+    type(rsf_type), pointer :: rsf => null()
+    logical                 :: allow_opening = .false. ! default : do not allow opening
+
+!! DK DK added this in order to be able to use the type for both dynamic and kinematic faults
+    real(kind=CUSTOM_REAL) :: kin_dt
+    integer :: kin_it
+    real(kind=CUSTOM_REAL), dimension(:,:), pointer :: v_kin_t1,v_kin_t2
+
+  end type bc_dynandkinflt_type
 
   logical, parameter :: PARALLEL_FAULT = .true.
  ! NOTE: PARALLEL_FAULT has to be the same 
@@ -47,7 +94,8 @@ subroutine initialize_fault (bc,IIN_BIN)
   use specfem_par
   use specfem_par_elastic, only : rmassx,rmassy,rmassz
 
-  class(fault_type), intent(inout) :: bc
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN
 
   real(kind=CUSTOM_REAL) :: tmp_vec(3,NGLOB_AB)
@@ -195,7 +243,8 @@ end subroutine compute_R
 !===============================================================
 function get_jump (bc,v) result(dv)
 
-  class(fault_type), intent(in) :: bc
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(:,:)
   real(kind=CUSTOM_REAL) :: dv(3,bc%nglob)
 
@@ -209,7 +258,8 @@ end function get_jump
 !---------------------------------------------------------------------
 function get_weighted_jump (bc,f) result(da)
 
-  class(fault_type), intent(in) :: bc
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: f(:,:)
 
   real(kind=CUSTOM_REAL) :: da(3,bc%nglob)
@@ -227,7 +277,8 @@ end function get_weighted_jump
 !----------------------------------------------------------------------
 function rotate(bc,v,fb) result(vr)
 
-  class(fault_type), intent(in) :: bc
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(3,bc%nglob)
   integer, intent(in) :: fb
   real(kind=CUSTOM_REAL) :: vr(3,bc%nglob)
@@ -254,7 +305,8 @@ end function rotate
 
 subroutine add_BT(bc,MxA,T)
 
-  class(fault_type), intent(in) :: bc
+!! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
+  type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob), intent(in) :: T
 
@@ -419,7 +471,8 @@ end subroutine init_dataT
 subroutine store_dataT(dataT,d,v,t,itime)
 
   use specfem_par, only : myrank
-  class(dataT_type), intent(inout) :: dataT
+!! DK DK use type() instead of class() for compatibility with some current compilers
+  type(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t
   integer, intent(in) :: itime
 
@@ -441,7 +494,8 @@ end subroutine store_dataT
 !------------------------------------------------------------------------
 subroutine SCEC_write_dataT(dataT)
 
-  class(dataT_type), intent(in) :: dataT
+!! DK DK use type() instead of class() for compatibility with some current compilers
+  type(dataT_type), intent(in) :: dataT
   
   integer   :: i,k,IOUT
   character(len=10) :: my_fmt
