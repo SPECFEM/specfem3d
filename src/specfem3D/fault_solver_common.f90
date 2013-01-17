@@ -1,16 +1,16 @@
 ! Base module for kinematic and dynamic fault solvers
 !
-! Authors: 
-! Percy Galvez, Surendra Somala, Jean-Paul Ampuero 
+! Authors:
+! Percy Galvez, Surendra Somala, Jean-Paul Ampuero
 
 module fault_solver_common
 
   use constants
 
-  implicit none  
+  implicit none
 
 !!!!! DK DK  private
-  
+
   type fault_type
     integer :: nspec=0, nglob=0
     real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null()
@@ -78,7 +78,7 @@ module fault_solver_common
   end type bc_dynandkinflt_type
 
   logical, parameter :: PARALLEL_FAULT = .true.
- ! NOTE: PARALLEL_FAULT has to be the same 
+ ! NOTE: PARALLEL_FAULT has to be the same
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
 
   public :: fault_type, PARALLEL_FAULT, &
@@ -115,7 +115,7 @@ subroutine initialize_fault (bc,IIN_BIN)
     allocate(bc%coord(3,(bc%nglob)))
     allocate(bc%invM1(bc%nglob))
     allocate(bc%invM2(bc%nglob))
-    allocate(bc%B(bc%nglob)) 
+    allocate(bc%B(bc%nglob))
     allocate(bc%Z(bc%nglob))
 
     allocate(ibool1(NGLLSQUARE,bc%nspec))
@@ -178,7 +178,7 @@ subroutine initialize_fault (bc,IIN_BIN)
 
     ! Fault impedance, Z in :  Trac=T_Stick-Z*dV
     !   Z = 1/( B1/M1 + B2/M2 ) / (0.5*dt)
-    ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity) 
+    ! T_stick = Z*Vfree traction as if the fault was stuck (no displ discontinuity)
     ! NOTE: same Bi on both sides, see note above
     bc%Z = 1.e0_CUSTOM_REAL/(0.5e0_CUSTOM_REAL*bc%dt * bc%B *( bc%invM1 + bc%invM2 ))
     ! WARNING: In non-split nodes at fault edges M is assembled across the fault.
@@ -192,7 +192,7 @@ end subroutine initialize_fault
 !---------------------------------------------------------------------
 subroutine normalize_3d_vector(v)
 
-  real(kind=CUSTOM_REAL), intent(inout) :: v(:,:)  
+  real(kind=CUSTOM_REAL), intent(inout) :: v(:,:)
 
   real(kind=CUSTOM_REAL) :: norm
   integer :: k
@@ -214,7 +214,7 @@ end subroutine normalize_3d_vector
 !
 subroutine compute_R(R,nglob,n)
 
-  integer :: nglob 
+  integer :: nglob
   real(kind=CUSTOM_REAL), intent(out) :: R(3,3,nglob)
   real(kind=CUSTOM_REAL), intent(in) :: n(3,nglob)
 
@@ -222,15 +222,15 @@ subroutine compute_R(R,nglob,n)
 
   s(1,:) =  n(2,:)   ! sx = ny
   s(2,:) = -n(1,:)   ! sy =-nx
-  s(3,:) = 0.e0_CUSTOM_REAL  
+  s(3,:) = 0.e0_CUSTOM_REAL
   call normalize_3d_vector(s)
 
   d(1,:) = -s(2,:)*n(3,:) ! dx = -sy*nz
   d(2,:) =  s(1,:)*n(3,:) ! dy = sx*nz
   d(3,:) =  s(2,:)*n(1,:) - s(1,:)*n(2,:) ! dz = sy*nx-ny*sx
   call normalize_3d_vector(d)
-  ! dz is always dipwards (negative), because 
-  ! (nx*sy-ny*sx) = -(nx^2+ny^2)/sqrt(nx^2+ny^2) 
+  ! dz is always dipwards (negative), because
+  ! (nx*sy-ny*sx) = -(nx^2+ny^2)/sqrt(nx^2+ny^2)
   !               = -sqrt(nx^2+ny^2) < 0
 
   R(1,:,:) = s
@@ -266,12 +266,12 @@ function get_weighted_jump (bc,f) result(da)
 
   ! diference between side 2 and side 1 of fault nodes. M-1 * F
   da(1,:) = bc%invM2*f(1,bc%ibulk2)-bc%invM1*f(1,bc%ibulk1)
-  da(2,:) = bc%invM2*f(2,bc%ibulk2)-bc%invM1*f(2,bc%ibulk1) 
+  da(2,:) = bc%invM2*f(2,bc%ibulk2)-bc%invM1*f(2,bc%ibulk1)
   da(3,:) = bc%invM2*f(3,bc%ibulk2)-bc%invM1*f(3,bc%ibulk1)
 
   ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
   ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
- 
+
 end function get_weighted_jump
 
 !----------------------------------------------------------------------
@@ -317,7 +317,7 @@ subroutine add_BT(bc,MxA,T)
   MxA(1,bc%ibulk2) = MxA(1,bc%ibulk2) - bc%B*T(1,:)
   MxA(2,bc%ibulk2) = MxA(2,bc%ibulk2) - bc%B*T(2,:)
   MxA(3,bc%ibulk2) = MxA(3,bc%ibulk2) - bc%B*T(3,:)
-  
+
 end subroutine add_BT
 
 
@@ -330,7 +330,8 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   integer, intent(in) :: nglob,NT,iflt,ndat
   real(kind=CUSTOM_REAL), intent(in) :: coord(3,nglob),DT
-  class (dataT_type), intent(out) :: dataT
+!! DK DK use type(dataT_type) instead of class(dataT_type) for compatibility with some current compilers
+  type(dataT_type), intent(out) :: dataT
 
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: dist_all
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: dist_loc
@@ -342,7 +343,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   character(len=70), dimension(:), allocatable :: name_tmp
   integer :: ipoin, ipoin_local, npoin_local
 
-  !  1. read fault output coordinates from user file, 
+  !  1. read fault output coordinates from user file,
   !  2. define iglob: the fault global index of the node nearest to user
   !     requested coordinate
 
@@ -352,7 +353,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   open(IIN,file='../DATA/FAULT_STATIONS',status='old',action='read',iostat=ier)
   if (ier /= 0) then
     if (myrank==0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
-    stop 
+    stop
   endif
   read(IIN,*) np
   dataT%npoin =0
@@ -385,7 +386,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
                  + (coord(3,iglob)-ztarget)**2 )
       if (dist < distkeep) then
         distkeep = dist
-        dataT%iglob(k) = iglob   
+        dataT%iglob(k) = iglob
       endif
     enddo
     dist_loc(k) = distkeep
@@ -396,7 +397,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   if (PARALLEL_FAULT) then
 
    ! For each output point, find the processor that contains the nearest node
-    allocate(iproc(dataT%npoin)) 
+    allocate(iproc(dataT%npoin))
     allocate(iglob_all(dataT%npoin,0:NPROC-1))
     allocate(dist_all(dataT%npoin,0:NPROC-1))
     call gather_all_i(dataT%iglob,dataT%npoin,iglob_all,dataT%npoin,NPROC)
@@ -445,10 +446,10 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     endif
 
     deallocate(iproc,iglob_all,dist_all)
-  endif 
+  endif
 
- !  3. initialize arrays 
-  if (dataT%npoin>0) then 
+ !  3. initialize arrays
+  if (dataT%npoin>0) then
     dataT%ndat = ndat
     dataT%nt = NT
     dataT%dt = DT
@@ -496,7 +497,7 @@ subroutine SCEC_write_dataT(dataT)
 
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
-  
+
   integer   :: i,k,IOUT
   character(len=10) :: my_fmt
 
@@ -507,7 +508,7 @@ subroutine SCEC_write_dataT(dataT)
   IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
 
   write(my_fmt,'(a,i1,a)') '(',dataT%ndat+1,'(E15.7))'
-    
+
   do i=1,dataT%npoin
     open(IOUT,file='../OUTPUT_FILES/'//trim(dataT%name(i))//'.dat',status='replace')
     write(IOUT,*) "# problem=TPV104" ! WARNING: this should be a user input
