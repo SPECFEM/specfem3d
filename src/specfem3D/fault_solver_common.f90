@@ -248,7 +248,7 @@ function get_jump (bc,v) result(dv)
   real(kind=CUSTOM_REAL), intent(in) :: v(:,:)
   real(kind=CUSTOM_REAL) :: dv(3,bc%nglob)
 
-  ! diference between side 2 and side 1 of fault nodes. dv
+  ! difference between side 2 and side 1 of fault nodes. dv
   dv(1,:) = v(1,bc%ibulk2)-v(1,bc%ibulk1)
   dv(2,:) = v(2,bc%ibulk2)-v(2,bc%ibulk1)
   dv(3,:) = v(3,bc%ibulk2)-v(3,bc%ibulk1)
@@ -264,7 +264,7 @@ function get_weighted_jump (bc,f) result(da)
 
   real(kind=CUSTOM_REAL) :: da(3,bc%nglob)
 
-  ! diference between side 2 and side 1 of fault nodes. M-1 * F
+  ! difference between side 2 and side 1 of fault nodes. M-1 * F
   da(1,:) = bc%invM2*f(1,bc%ibulk2)-bc%invM1*f(1,bc%ibulk1)
   da(2,:) = bc%invM2*f(2,bc%ibulk2)-bc%invM1*f(2,bc%ibulk1)
   da(3,:) = bc%invM2*f(3,bc%ibulk2)-bc%invM1*f(3,bc%ibulk1)
