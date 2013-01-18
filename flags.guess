@@ -138,7 +138,7 @@ case $FC in
         #
         if test x"$FLAGS_CHECK" = x; then
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-            FLAGS_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=90pure -qsuppress=1518-317 -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
+            FLAGS_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -qsuppress=1518-317 -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
         # on MareNostrum at the Barcelona SuperComputing Center (Spain) one can use
         # -qtune=ppc970 -qarch=ppc64v instead of -qtune=auto -qarch=auto
         # on "Babel" IBM BlueGene at IDRIS (France) use:
