@@ -196,9 +196,9 @@ perfectly diagonal mass matrix, include \cite{CoJoTo93}, \cite{Kom97},
 whereas applications involving Chebyshev basis functions and a nondiagonal mass matrix
 include \cite{SePr94}, \cite{PrCaSe94} and \cite{SePrPr95}.\\
 
-All SPECFEM3D Cartesian software is written in Fortran90 with full portability
-in mind, and conforms strictly to the Fortran95 standard. It uses
-no obsolete or obsolescent features of Fortran77. The package uses
+All SPECFEM2D software is written in Fortran2003 with full portability
+in mind, and conforms strictly to the Fortran2003 standard. It uses
+no obsolete or obsolescent features of Fortran. The package uses
 parallel programming based upon the Message Passing Interface (MPI)
 \citep{GrLuSk94,Pac97}.\\
 
@@ -303,7 +303,7 @@ Then, to configure the software for your system, run the
 \texttt{configure} shell script. This script will attempt to guess
 the appropriate configuration values for your system. However, at
 a minimum, it is recommended that you explicitly specify the appropriate
-command names for your Fortran90 compiler and MPI package:
+command names for your Fortran compiler and MPI package:
 
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90
@@ -363,8 +363,8 @@ MPI.
 A summary of the most important configuration variables follows.
 
 \begin{description}
-\item [{\texttt{F90}}] Path to the Fortran90 compiler.
-\item [{\texttt{MPIF90}}] Path to MPI Fortran90.
+\item [{\texttt{F90}}] Path to the Fortran compiler.
+\item [{\texttt{MPIF90}}] Path to MPI Fortran.
 \item [{\texttt{MPI\_FLAGS}}] Some systems require this flag to link to
 MPI libraries.
 \item [{\texttt{FLAGS\_CHECK}}] Compiler flags.
@@ -3058,8 +3058,8 @@ the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.true.}, then the 
 \item [configuration fails:]
 
    Examine the log file 'config.log'. It contains detailed informations.
-   In many cases, the path's to these specific compiler commands F90,
-   CC and MPIF90 won't be correct if `./configure` fails.
+   In many cases, the paths to these specific compiler commands F90,
+   CC and MPIF90 will not be correct if `./configure` fails.
 
    Please make sure that you have a working installation of a Fortran compiler,
    a C compiler and an MPI implementation. You should be able to compile this
@@ -3089,7 +3089,7 @@ the flag \texttt{SUPPRESS\_UTM\_PROJECTION} is set to \texttt{.true.}, then the 
 
   Make sure you're pointing to the right 'mpif90' wrapper command.
 
-  Normally, this message will appear when you're mixing two different Fortran
+  Normally, this message will appear when you are mixing two different Fortran
   compilers. That is, using e.g. gfortran to compile non-MPI files
   and mpif90, wrapper provided for e.g. ifort, to compile MPI-files.
 
