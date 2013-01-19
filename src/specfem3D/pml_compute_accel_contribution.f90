@@ -26,7 +26,7 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-subroutine pml_set_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
  
@@ -822,4 +822,4 @@ subroutine pml_set_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_el
      enddo
   enddo
 
-end subroutine pml_set_accel_contribution
+end subroutine pml_compute_accel_contribution
