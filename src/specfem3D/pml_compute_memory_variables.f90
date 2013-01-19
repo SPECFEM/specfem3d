@@ -26,7 +26,7 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-subroutine pml_set_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
                                     tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
                                     sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
                                     etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
@@ -2186,5 +2186,5 @@ subroutine pml_set_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tem
   enddo
   endif
 
-end subroutine pml_set_memory_variables
+end subroutine pml_compute_memory_variables
 

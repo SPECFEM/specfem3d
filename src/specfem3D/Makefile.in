@@ -208,8 +208,8 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/noise_tomography.o \
 	$O/pml_allocate_arrays.o \
 	$O/pml_output_VTKs.o \
-	$O/pml_set_accel_contribution.o \
-	$O/pml_set_memory_variables.o \
+	$O/pml_compute_accel_contribution.o \
+	$O/pml_compute_memory_variables.o \
 	$O/prepare_timerun.o \
 	$O/program_specfem3D.o \
 	$O/read_mesh_databases.o \
