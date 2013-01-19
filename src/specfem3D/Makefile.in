@@ -191,7 +191,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/compute_forces_viscoelastic_Dev.o \
 	$O/compute_forces_viscoelastic_noDev.o \
 	$O/compute_forces_poro_fluid_part.o \
-	$O/compute_forces_poroelastic.o \
+	$O/compute_forces_poroelastic_calling_routine.o \
 	$O/compute_forces_poro_solid_part.o \
 	$O/compute_gradient.o \
 	$O/compute_interpolated_dva.o \
