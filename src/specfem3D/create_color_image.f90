@@ -621,6 +621,10 @@
   ! open the image file
   write(file_name,"(a,'/image',i7.7,'.pnm')") OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)),it
 
+! first delete the file, just in case it was previously bigger
+  open(unit=27,file=file_name,status='unknown')
+  close(unit=27,status='delete')
+
   if(BINARY_FILE) then
     open(unit=27,file=file_name,status='unknown',access='direct',recl=1)
     write(27,rec=1) 'P'
