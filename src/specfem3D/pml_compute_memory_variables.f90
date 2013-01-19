@@ -317,9 +317,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
         enddo
      enddo
   enddo
-  endif
 
-  if( CPML_regions(ispec_CPML) == 2 ) then
+  else if( CPML_regions(ispec_CPML) == 2 ) then
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
@@ -571,9 +570,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
         enddo
      enddo
   enddo
-  endif
 
- if( CPML_regions(ispec_CPML) == 3 ) then
+ else if( CPML_regions(ispec_CPML) == 3 ) then
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
@@ -825,9 +823,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
         enddo
      enddo
   enddo
-  endif
 
-  if( CPML_regions(ispec_CPML) == 4 ) then
+  else if( CPML_regions(ispec_CPML) == 4 ) then
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
@@ -1411,9 +1408,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
         enddo
      enddo
   enddo
-  endif
 
-  if( CPML_regions(ispec_CPML) == 6 ) then
+  else if( CPML_regions(ispec_CPML) == 6 ) then
 
   do k=1,NGLLZ
      do j=1,NGLLY
@@ -1703,9 +1699,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
         enddo
      enddo
   enddo
-  endif
 
-  if( CPML_regions(ispec_CPML) == 7 ) then
+  else if( CPML_regions(ispec_CPML) == 7 ) then
 
   do k=1,NGLLZ
      do j=1,NGLLY
@@ -2184,6 +2179,11 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
         enddo
      enddo
   enddo
+
+  else
+
+    stop 'wrong PML flag in PML memory variable calculation routine'
+
   endif
 
 end subroutine pml_compute_memory_variables
