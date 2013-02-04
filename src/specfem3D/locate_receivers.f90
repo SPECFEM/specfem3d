@@ -494,7 +494,7 @@
 
     ! get normal to the face of the hexaedra if receiver is on the surface
     if ((.not. RECVS_CAN_BE_BURIED_EXT_MESH) .and. &
-       .not. (ispec_selected_rec(irec) == 0)) then
+       .not. (ispec_selected_rec(irec) == 1)) then
       pt0_ix = -1
       pt0_iy = -1
       pt0_iz = -1
