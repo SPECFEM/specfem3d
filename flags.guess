@@ -51,7 +51,7 @@ case $FC in
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="-std=f2003 -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow" # -mcmodel=medium
         fi
-        # useful for debugging... -ffpe-trap=underflow,overflow,zero -fbacktrace -fbounds-check
+        # useful for debugging... -ffpe-trap=overflow,zero -fbacktrace -fbounds-check
         #
         # older gfortran syntax
         #   -std=f2003 -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow" # -mcmodel=medium
