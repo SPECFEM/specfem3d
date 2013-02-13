@@ -148,6 +148,7 @@
     ! if attenuation is off, set dummy size of arrays to one
     NSPEC_ATTENUATION_AB = 1
   endif
+
   ! needed for attenuation and/or kernel computations
   if( ATTENUATION .or. SIMULATION_TYPE == 3 ) then
     COMPUTE_AND_STORE_STRAIN = .true.
