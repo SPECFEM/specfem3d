@@ -328,6 +328,8 @@ subroutine init_2d_distribution(a,coord,iin,n)
 
   do i=1,n
     shape = ''
+    val  = 0e0_CUSTOM_REAL
+    valh = 0e0_CUSTOM_REAL
     xc = 0e0_CUSTOM_REAL
     yc = 0e0_CUSTOM_REAL
     zc = 0e0_CUSTOM_REAL
@@ -336,21 +338,20 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lx = 0e0_CUSTOM_REAL
     ly = 0e0_CUSTOM_REAL
     lz = 0e0_CUSTOM_REAL
-    valh  = 0e0_CUSTOM_REAL
 
     read(iin,DIST2D)
     select case(shape)
     case ('circle')
-      b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) )
+      b = heaviside( r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 ) ) *val
     case ('circle-exp')
       r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2 )
       where(r1<r)
-        b =exp(r1**2/(r1**2 - r**2) )
+        b =exp(r1**2/(r1**2 - r**2) ) *val + valh
       elsewhere
         b =0._CUSTOM_REAL
       endwhere
     case ('ellipse')
-      b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2 ) )
+      b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2 ) ) *val
     case ('square')
       b = heaviside((l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * & 
            heaviside((l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * & 
@@ -369,7 +370,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
       b = heaviside((lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
            heaviside((ly/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
            heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
-           (val + ( coord(3,:) - zc + lz/2._CUSTOM_REAL ) * ((valh-val)/lz))
+           (val + ( coord(3,:) - zc + lz/2._CUSTOM_REAL ) * (valh-val)/lz )
     case default
       stop 'bc_dynflt_3d::init_2d_distribution:: unknown shape'
     end select
