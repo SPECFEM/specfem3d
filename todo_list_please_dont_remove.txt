@@ -335,6 +335,8 @@ dynamic/kinematic faults:
 
 + add snapshot outputs to kinematic solver (e.g. to export fault stresses for adjoint source inversion)
 
++ prepare automated tests
+
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
 ------------------------------------------------------------------------------------------------------------------
