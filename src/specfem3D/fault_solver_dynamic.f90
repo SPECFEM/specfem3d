@@ -254,7 +254,15 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
   endif
+
   call init_dataXZ(bc%dataXZ,bc)
+ ! output a fault snapshot at t=0 
+  if (.NOT. PARALLEL_FAULT) then
+    if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
+  else
+    call gather_dataXZ(bc)
+    if (myrank==0) call write_dataXZ(bc%dataXZ_all,0,iflt)
+  endif
 
 !--------------------------------------------------------
 contains
