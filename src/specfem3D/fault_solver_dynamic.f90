@@ -158,7 +158,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   dt = real(DTglobal)
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
+    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
   enddo
   close(IIN_BIN)
   close(IIN_PAR)
@@ -186,12 +186,13 @@ end subroutine BC_DYNFLT_init
 
 !---------------------------------------------------------------------
 
-subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
+subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
   real(kind=CUSTOM_REAL), intent(in)  :: dt
+  integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3
   integer :: n1,n2,n3
