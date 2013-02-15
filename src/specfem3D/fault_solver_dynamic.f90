@@ -225,6 +225,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1) 
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2) 
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3) 
+    bc%T = bc%T0
 
     !WARNING : Quick and dirty free surface condition at z=0 
     !  do k=1,bc%nglob  
