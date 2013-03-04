@@ -19,7 +19,7 @@ case $FC in
         #
         if test x"$FLAGS_CHECK" = x; then
             FLAGS_CHECK="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
-        # -eC -eD -hfp2  # turn on full debugging and range checking
+        # -eC -eD -ec -en -eI -ea -g -G0  # turn on full debugging and range checking
         fi
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90)
