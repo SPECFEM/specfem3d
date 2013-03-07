@@ -37,8 +37,12 @@ case $FC in
         # Intel ifort Fortran90 for Linux
         # check: http://software.intel.com/sites/products/documentation/hpc/compilerpro/en-us/fortran/lin/compiler_f/index.htm
         #
+# option "-assume buffered_io" is important especially on
+# parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
+# I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
+# However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -xHost -ftz -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium -shared-intel
+            FLAGS_CHECK="-O3 -xHost -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds" # -mcmodel=medium -shared-intel
         fi
         # useful for debugging...
         # for debugging: change -O3 -check nobounds to      -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
