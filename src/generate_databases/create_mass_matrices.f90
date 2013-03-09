@@ -99,10 +99,10 @@
                  do j=1,NGLLY
                     do i=1,NGLLX
                        iglob = ibool(i,j,k,ispec)
-                       
+
                        weight = wxgll(i)*wygll(j)*wzgll(k)
                        jacobianl = jacobianstore(i,j,k,ispec)
-                       
+
                        ! distinguish between single and double precision for reals
                        if(CUSTOM_REAL == SIZE_REAL) then
                           rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
@@ -424,7 +424,7 @@
 !
 
   subroutine create_mass_matrices_pml(nspec,ibool)
-    
+
     use generate_databases_par, only: CPML_mask_ibool,CPML_regions,d_store_x,d_store_y,d_store_z, &
                                       K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,DT
 
@@ -435,7 +435,7 @@
     integer, intent(in) :: nspec
 
     integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
-    
+
     ! local parameters
     double precision :: weight
     real(kind=CUSTOM_REAL) :: jacobianl,deltat,mat_coef
@@ -448,7 +448,7 @@
        deltat = DT
     endif
 
-    ! loops over physical mesh elements 
+    ! loops over physical mesh elements
     do ispec=1,nspec
        if( .not. CPML_mask_ibool(ispec) ) then
           do k=1,NGLLZ
@@ -494,7 +494,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -524,7 +524,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -554,7 +554,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -584,7 +584,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -618,7 +618,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -652,7 +652,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -686,7 +686,7 @@
                          mat_coef = rhostore(i,j,k,ispec)
                       elseif( ispec_is_acoustic(ispec) ) then
                          mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif          
+                      endif
 
                       iglob = ibool(i,j,k,ispec)
 

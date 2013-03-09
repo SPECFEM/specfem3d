@@ -84,7 +84,7 @@ module specfem_par
   integer :: num_free_surface_faces
 
 ! attenuation
-  integer :: NSPEC_ATTENUATION_AB
+  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa !ZN
   character(len=256) prname_Q
 
 ! additional mass matrix for ocean load
@@ -284,17 +284,17 @@ module specfem_par_elastic
   implicit none
 
   ! memory variables and standard linear solids for attenuation
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta,one_minus_sum_beta_kappa !ZN
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common,factor_common_kappa !ZN
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL) :: min_resolved_period
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     alphaval,betaval,gammaval
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    R_xx,R_yy,R_xy,R_xz,R_yz
+    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz  !ZN
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz !ZN
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
 
 ! displacement, velocity, acceleration
@@ -306,7 +306,7 @@ module specfem_par_elastic
        dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3,&
        newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3,&
        tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
-  
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
        tempx1_att,tempx2_att,tempx3_att, &
@@ -353,9 +353,9 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     b_alphaval, b_betaval, b_gammaval
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
+    b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz !ZN
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
+    b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz !ZN
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
 
   ! adjoint kernels

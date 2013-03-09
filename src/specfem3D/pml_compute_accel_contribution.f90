@@ -29,7 +29,7 @@
 subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
- 
+
   use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,it,kappastore
   use specfem_par_elastic, only: rho_vp,displ,veloc,ispec_is_elastic
   use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,ispec_is_acoustic
@@ -40,7 +40,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
-  
+
   real(kind=CUSTOM_REAL), intent(in) :: deltat,jacobianl
 
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), intent(out) :: accel_elastic_CPML
@@ -50,7 +50,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
 
   real(kind=CUSTOM_REAL) :: fac1,fac2,fac3,fac4,rhol,kappal
   real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
-  real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5 ! for convolution of acceleration 
+  real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5 ! for convolution of acceleration
   real(kind=CUSTOM_REAL) :: temp_A3,temp_A4,temp_A5
 
   do k=1,NGLLZ
@@ -65,7 +65,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               !------------------------------------------------------------------------------
               !---------------------------- X-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
-              
+
               bb = alpha_store(i,j,k,ispec_CPML)
 
               coef0_1 = exp(-bb * deltat)
@@ -105,7 +105,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) 
+              A0 = k_store_x(i,j,k,ispec_CPML)
               A1 = d_store_x(i,j,k,ispec_CPML)
               A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML)
               A3 = d_store_x(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
@@ -120,7 +120,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               if( ispec_is_elastic(ispec) ) then
 
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -139,11 +139,11 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
                       A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
-              
+
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
@@ -154,7 +154,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               !------------------------------------------------------------------------------
               !---------------------------- Y-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
-              
+
               bb = alpha_store(i,j,k,ispec_CPML)
 
               coef0_1 = exp(-bb * deltat)
@@ -194,7 +194,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_y(i,j,k,ispec_CPML) 
+              A0 = k_store_y(i,j,k,ispec_CPML)
               A1 = d_store_y(i,j,k,ispec_CPML)
               A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               A3 = d_store_y(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
@@ -207,9 +207,9 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               fac4 = sqrt(fac1 * fac2 * fac3)
 
               if( ispec_is_elastic(ispec) ) then
-              
+
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -232,7 +232,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
@@ -253,7 +253,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
                  coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
               else
                  coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0 
+                 coef2_1 = deltat/2.0d0
               end if
 
               if( ispec_is_elastic(ispec) ) then
@@ -283,7 +283,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_z(i,j,k,ispec_CPML) 
+              A0 = k_store_z(i,j,k,ispec_CPML)
               A1 = d_store_z(i,j,k,ispec_CPML)
               A2 = - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A3 = d_store_z(i,j,k,ispec_CPML) * alpha_store(i,j,k,ispec_CPML) ** 2
@@ -298,7 +298,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               if( ispec_is_elastic(ispec) ) then
 
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -321,7 +321,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
@@ -384,7 +384,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) 
+              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
               A1 = d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
                    + d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
               A2 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
@@ -412,7 +412,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               if( ispec_is_elastic(ispec) ) then
 
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -435,14 +435,14 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 5 ) then 
+           elseif( CPML_regions(ispec_CPML) == 5 ) then
               !------------------------------------------------------------------------------
               !---------------------------- XZ-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -456,7 +456,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
                  coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
               else
                  coef1_1 = deltat/2.0d0
-                 coef2_1 = deltat/2.0d0 
+                 coef2_1 = deltat/2.0d0
               end if
 
               coef0_2 = coef0_1
@@ -498,7 +498,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) 
+              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
               A1 = d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)&
                    + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
               A2 = d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
@@ -526,7 +526,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               if( ispec_is_elastic(ispec) ) then
 
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -549,7 +549,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
@@ -569,8 +569,8 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
                  coef1_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) / bb
                  coef2_1 = (1.0d0 - exp(-bb * deltat/2.0d0) ) * exp(-bb * deltat/2.0d0) / bb
               else
-                 coef1_1 = deltat/2.0d0 
-                 coef2_1 = deltat/2.0d0 
+                 coef1_1 = deltat/2.0d0
+                 coef2_1 = deltat/2.0d0
               end if
 
               coef0_2 = coef0_1
@@ -612,7 +612,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) 
+              A0 = k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
               A1 = d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                    + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
               A2 = d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
@@ -640,7 +640,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               if( ispec_is_elastic(ispec) ) then
 
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -663,7 +663,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
@@ -674,7 +674,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               !------------------------------------------------------------------------------
               !---------------------------- XYZ-corner C-PML --------------------------------
               !------------------------------------------------------------------------------
-              
+
               bb = alpha_store(i,j,k,ispec_CPML)
 
               coef0_1 = exp(-bb * deltat)
@@ -738,7 +738,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
-              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) 
+              A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
               A1 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
                    d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
                    d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -758,14 +758,14 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
                    d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
                    d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
                    d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   ) 
+                   )
               temp_A4 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * &
                    d_store_z(i,j,k,ispec_CPML) + alpha_store(i,j,k,ispec_CPML)**2 * ( &
                    d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) + &
                    d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) + &
                    d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
-                   )                              
-              temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) 
+                   )
+              temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
               !                  A3 = temp_A3 + (it+0.0) * deltat*temp_A4 + ((it+0.0) * deltat)**2*temp_A5
               !                  A4 = -temp_A4-2.0*(it+0.0) * deltat*temp_A5
@@ -788,7 +788,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               if( ispec_is_elastic(ispec) ) then
 
                  accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + & 
+                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                       A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                       A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                       A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
@@ -811,7 +811,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
               elseif( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + & 
+                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &

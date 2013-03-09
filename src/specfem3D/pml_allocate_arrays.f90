@@ -47,57 +47,57 @@ subroutine pml_allocate_arrays()
 
   ! stores derivatives of ux, uy and uz with respect to x, y and z
   allocate(PML_dux_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dux_dxl array' 
+  if(ier /= 0) stop 'error allocating PML_dux_dxl array'
   allocate(PML_dux_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating PML_dux_dyl array'
   allocate(PML_dux_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dux_dzl array'  
+  if(ier /= 0) stop 'error allocating PML_dux_dzl array'
   allocate(PML_duy_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duy_dxl array' 
+  if(ier /= 0) stop 'error allocating PML_duy_dxl array'
   allocate(PML_duy_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duy_dyl array' 
+  if(ier /= 0) stop 'error allocating PML_duy_dyl array'
   allocate(PML_duy_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duy_dzl array'  
+  if(ier /= 0) stop 'error allocating PML_duy_dzl array'
   allocate(PML_duz_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating PML_duz_dxl array'
   allocate(PML_duz_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duz_dyl array' 
+  if(ier /= 0) stop 'error allocating PML_duz_dyl array'
   allocate(PML_duz_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating PML_duz_dzl array'
 
   allocate(PML_dux_dxl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dux_dxl_new array' 
+  if(ier /= 0) stop 'error allocating PML_dux_dxl_new array'
   allocate(PML_dux_dyl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating PML_dux_dyl_new array'
   allocate(PML_dux_dzl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dux_dzl_new array'  
+  if(ier /= 0) stop 'error allocating PML_dux_dzl_new array'
   allocate(PML_duy_dxl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duy_dxl_new array' 
+  if(ier /= 0) stop 'error allocating PML_duy_dxl_new array'
   allocate(PML_duy_dyl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duy_dyl_new array' 
+  if(ier /= 0) stop 'error allocating PML_duy_dyl_new array'
   allocate(PML_duy_dzl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duy_dzl_new array'  
+  if(ier /= 0) stop 'error allocating PML_duy_dzl_new array'
   allocate(PML_duz_dxl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating PML_duz_dxl_new array'
   allocate(PML_duz_dyl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_duz_dyl_new array' 
+  if(ier /= 0) stop 'error allocating PML_duz_dyl_new array'
   allocate(PML_duz_dzl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating PML_duz_dzl_new array'
 
   ! stores derivatives of potential with respect to x, y and z
   allocate(PML_dpotential_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dpotential_dxl array' 
+  if(ier /= 0) stop 'error allocating PML_dpotential_dxl array'
   allocate(PML_dpotential_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dpotential_dxl array' 
+  if(ier /= 0) stop 'error allocating PML_dpotential_dxl array'
   allocate(PML_dpotential_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dpotential_dxl array' 
+  if(ier /= 0) stop 'error allocating PML_dpotential_dxl array'
 
   allocate(PML_dpotential_dxl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array' 
+  if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
   allocate(PML_dpotential_dyl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array' 
+  if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
   allocate(PML_dpotential_dzl_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-  if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array' 
+  if(ier /= 0) stop 'error allocating PML_dpotential_dxl_new array'
 
   ! stores C-PML memory variables
   allocate(rmemory_dux_dxl_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
@@ -171,7 +171,7 @@ subroutine pml_allocate_arrays()
   spec_to_CPML(:) = 0
 
   CPML_type(:) = 0
-  
+
   PML_dux_dxl(:,:,:,:) = 0._CUSTOM_REAL
   PML_dux_dyl(:,:,:,:) = 0._CUSTOM_REAL
   PML_dux_dzl(:,:,:,:) = 0._CUSTOM_REAL

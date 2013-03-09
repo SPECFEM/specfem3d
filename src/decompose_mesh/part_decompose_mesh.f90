@@ -733,7 +733,7 @@ contains
        endif
     enddo
     write(IIN_database) 6, loc_nspec2D_top
-    
+
     ! outputs element index and element node indices
     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
@@ -972,7 +972,7 @@ contains
   end subroutine write_boundaries_database
 
   !--------------------------------------------------
-  ! Write C-PML elements indices, CPML-regions and thickness of C-PML layer 
+  ! Write C-PML elements indices, CPML-regions and thickness of C-PML layer
   ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_cpml_database(IIN_database, iproc, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
@@ -983,7 +983,7 @@ contains
     integer, intent(in)  :: nspec
     integer, intent(in)  :: nspec_cpml
 
-    integer, dimension(nspec_cpml), intent(in) :: CPML_to_spec 
+    integer, dimension(nspec_cpml), intent(in) :: CPML_to_spec
     integer, dimension(nspec_cpml), intent(in) :: CPML_regions
 
     logical, dimension(nspec), intent(in) :: CPML_mask_ibool
@@ -1009,12 +1009,12 @@ contains
           endif
        enddo
 
-       write(IIN_database) nspec_cpml_local 
+       write(IIN_database) nspec_cpml_local
 
        ! writes thickness of C-PML layers for the global mesh
        write(IIN_database) CPML_width
 
-       ! writes C-PML regions and C-PML spectral elements global indexing 
+       ! writes C-PML regions and C-PML spectral elements global indexing
        do i=1,nspec_cpml
           ! #id_cpml_regions = 1 : X_surface C-PML
           ! #id_cpml_regions = 2 : Y_surface C-PML
@@ -1024,7 +1024,7 @@ contains
           ! #id_cpml_regions = 6 : YZ_edge C-PML
           ! #id_cpml_regions = 7 : XYZ_corner C-PML
           !
-          ! format: #id_cpml_element #id_cpml_regions 
+          ! format: #id_cpml_element #id_cpml_regions
           if( part(CPML_to_spec(i)) == iproc ) then
              write(IIN_database) glob2loc_elmnts(CPML_to_spec(i)-1)+1, CPML_regions(i)
           endif

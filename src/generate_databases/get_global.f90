@@ -59,9 +59,9 @@
  !jpampuero For volumes  NGLLCUBE = NGLLX * NGLLY * NGLLZ
  !jpampuero For surfaces NGLLCUBE = NGLLX * NGLLY
   integer :: NGLLCUBE_local
-  
+
   NGLLCUBE_local=npointot/nspec
-! for vectorization of loops 
+! for vectorization of loops
 !  integer, parameter :: NGLLCUBE_NDIM = NGLLCUBE * NDIM
 
 ! define geometrical tolerance based upon typical size of the model

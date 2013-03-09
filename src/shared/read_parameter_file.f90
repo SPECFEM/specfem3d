@@ -174,7 +174,7 @@
   if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
-  
+
   ! close parameter file
   call close_parameter_file()
 

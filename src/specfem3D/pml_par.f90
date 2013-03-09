@@ -32,9 +32,9 @@ module pml_par
 
   use constants, only: CUSTOM_REAL
 
-  implicit none 
+  implicit none
 
-  ! number of C-PML spectral elements 
+  ! number of C-PML spectral elements
   integer :: NSPEC_CPML
 
   ! C-PML spectral elements global indexing

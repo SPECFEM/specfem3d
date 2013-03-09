@@ -1,6 +1,6 @@
 ! Generates database for faults (dynamic or kinematic)
 !
-! Splitting fault nodes (with opening) is done in CUBIT. 
+! Splitting fault nodes (with opening) is done in CUBIT.
 ! See sections "Mesh generation with split nodes"
 ! and "Cubit-python scripts for faults" in the README_SPECFEM3D_FAULT file.
 !
@@ -8,14 +8,14 @@
 ! Percy Galvez, Jean-Paul Ampuero and Tarje Nissen-Meyer
 
 module fault_generate_databases
-  
+
   use create_regions_mesh_ext_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
   use generate_databases_par, only : NGNOD2D
 
   implicit none
-  private 
-   
-  type fault_db_type 
+  private
+
+  type fault_db_type
     private
     integer :: nspec=0,nglob=0
     real(kind=CUSTOM_REAL) :: eta
@@ -36,9 +36,9 @@ module fault_generate_databases
   logical, save :: ANY_FAULT = .false.
 
   logical, parameter :: PARALLEL_FAULT = .true.
- ! NOTE: PARALLEL_FAULT has to be the same 
+ ! NOTE: PARALLEL_FAULT has to be the same
  !       in fault_solver_common.f90, fault_generate_databases.f90 and fault_scotch.f90
-  
+
   ! corners indices of reference cube faces
   integer,dimension(3,4),parameter :: iface1_corner_ijk = &
              reshape( (/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ /),(/3,4/))   ! xmin
@@ -51,7 +51,7 @@ module fault_generate_databases
   integer,dimension(3,4),parameter :: iface5_corner_ijk = &
              reshape( (/ 1,1,1, 1,NGLLY,1, NGLLX,NGLLY,1, NGLLX,1,1 /),(/3,4/))  ! bottom
   integer,dimension(3,4),parameter :: iface6_corner_ijk = &
-             reshape( (/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/))   ! top  
+             reshape( (/ 1,1,NGLLZ, NGLLX,1,NGLLZ, NGLLX,NGLLY,NGLLZ, 1,NGLLY,NGLLZ  /),(/3,4/))   ! top
   integer,dimension(3,4,6),parameter :: iface_all_corner_ijk = &
              reshape( (/ iface1_corner_ijk,iface2_corner_ijk, &
                  iface3_corner_ijk,iface4_corner_ijk, &
@@ -65,16 +65,16 @@ contains
 !=================================================================================================================
 subroutine fault_read_input(prname,myrank)
 
-  character(len=256), intent(in) :: prname 
+  character(len=256), intent(in) :: prname
   integer, intent(in) :: myrank
 
   integer :: nb,i,iflt,ier,nspec,dummy_node
-  integer, parameter :: IIN_PAR = 100  
- 
+  integer, parameter :: IIN_PAR = 100
+
  ! read fault input file
   nb = 0
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',action='read',iostat=ier)
-  if (ier==0) then    
+  if (ier==0) then
     read(IIN_PAR,*) nb
     if (myrank==0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
   else
@@ -83,12 +83,12 @@ subroutine fault_read_input(prname,myrank)
   end if
 
   ANY_FAULT = (nb>0)
-  if (.not. ANY_FAULT)  return  
+  if (.not. ANY_FAULT)  return
 
   allocate(fault_db(nb))
   do i=1,nb
-    read(IIN_PAR,*) fault_db(i)%eta 
-  enddo 
+    read(IIN_PAR,*) fault_db(i)%eta
+  enddo
   close(IIN_PAR)
 
  ! read fault database file
@@ -100,9 +100,9 @@ subroutine fault_read_input(prname,myrank)
     stop
   endif
 
-  do iflt=1,size(fault_db) 
+  do iflt=1,size(fault_db)
 
-    read(IIN_PAR) nspec 
+    read(IIN_PAR) nspec
     fault_db(iflt)%nspec  = nspec
 
     if (nspec == 0) cycle
@@ -120,7 +120,7 @@ subroutine fault_read_input(prname,myrank)
     do i=1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec2(i), fault_db(iflt)%inodes2(:,i)
     enddo
- 
+
    ! loading ispec1 ispec2 iface1 iface2 of fault elements.
 !    allocate(fault_db(iflt)%iface1(nspec))
 !    allocate(fault_db(iflt)%iface2(nspec))
@@ -167,7 +167,7 @@ subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
     ! saving gll indices for each fault face, needed for ibulks
     call setup_ijk(fault_db(iflt))
 
-    ! ibools = mapping from local indices on the fault (GLL index, element index) 
+    ! ibools = mapping from local indices on the fault (GLL index, element index)
     !          to global indices on the fault
     call setup_ibools(fault_db(iflt),xstore,ystore,zstore,nspec,fault_db(iflt)%nspec*NGLLSQUARE)
 
@@ -176,10 +176,10 @@ subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
     call setup_ibulks(fault_db(iflt),ibool,nspec)
 
     ! close the fault in (xyz)store_dummy
-    call close_fault(fault_db(iflt)) 
+    call close_fault(fault_db(iflt))
 
     call setup_Kelvin_Voigt_eta(fault_db(iflt),nspec)
- 
+
     call save_fault_xyzcoord_ibulk(fault_db(iflt))
 
     call setup_normal_jacobian(fault_db(iflt),ibool,nspec,nglob,myrank)
@@ -197,12 +197,12 @@ subroutine setup_iface(fdb,nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibo
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
-  type(fault_db_type), intent(inout) :: fdb  
-  integer, intent(in) :: nnodes_ext_mesh,nspec,nglob 
+  type(fault_db_type), intent(inout) :: fdb
+  integer, intent(in) :: nnodes_ext_mesh,nspec,nglob
   double precision, dimension(NDIM,nnodes_ext_mesh), intent(in) :: nodes_coords_ext_mesh
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
-  real(kind=CUSTOM_REAL), dimension(NGNOD2D) :: xcoord,ycoord,zcoord    
+  real(kind=CUSTOM_REAL), dimension(NGNOD2D) :: xcoord,ycoord,zcoord
   integer :: icorner,e
 
   allocate(fdb%iface1(fdb%nspec))
@@ -235,8 +235,8 @@ end subroutine setup_iface
 !=============================================================================================================
 subroutine setup_ijk(fdb)
 
-  type(fault_db_type), intent(inout) :: fdb  
-  
+  type(fault_db_type), intent(inout) :: fdb
+
   integer :: e,i,j,igll
   integer :: ijk_face1(3,NGLLX,NGLLY), ijk_face2(3,NGLLX,NGLLY)
 
@@ -250,7 +250,7 @@ subroutine setup_ijk(fdb)
     do j=1,NGLLY
       do i=1,NGLLX
         igll = igll + 1
-        fdb%ijk1(:,igll,e)=ijk_face1(:,i,j)  
+        fdb%ijk1(:,igll,e)=ijk_face1(:,i,j)
         fdb%ijk2(:,igll,e)=ijk_face2(:,i,j)
       enddo
     enddo
@@ -260,13 +260,13 @@ end subroutine setup_ijk
 
 !=============================================================================================================
  subroutine setup_Kelvin_Voigt_eta(fdb,nspec)
-        
-  type(fault_db_type), intent(in) :: fdb  
+
+  type(fault_db_type), intent(in) :: fdb
   integer, intent(in) :: nspec ! number of spectral elements in each block
 
   if (fdb%eta > 0.0_CUSTOM_REAL) then
     if (.not.allocated(Kelvin_Voigt_eta)) then
-      allocate(Kelvin_Voigt_eta(nspec)) 
+      allocate(Kelvin_Voigt_eta(nspec))
       Kelvin_Voigt_eta(:) = 0.0_CUSTOM_REAL
     endif
     Kelvin_Voigt_eta(fdb%ispec1) = fdb%eta
@@ -277,7 +277,7 @@ end subroutine setup_ijk
 
 !===============================================================================================================
 ! The lexicographic ordering of node coordinates
-! guarantees that the fault nodes are 
+! guarantees that the fault nodes are
 ! consistently ordered on both sides of the fault,
 ! such that the K-th node of side 1 is facing the K-th node of side 2
 
@@ -298,7 +298,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
   xmax = maxval(nodes_coords_ext_mesh(1,:))
 
   k = 0
-  do e = 1,fdb%nspec 
+  do e = 1,fdb%nspec
     ispec = fdb%ispec1(e)
     do igll=1,NGLLSQUARE
       ie=fdb%ijk1(1,igll,e)
@@ -313,12 +313,12 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
   allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) )
   call get_global(fdb%nspec,xp,yp,zp,fdb%ibool1,loc,ifseg,fdb%nglob,npointot,xmin,xmax)
 
-! xp,yp,zp need to be recomputed on side 2 
-! because they are generally not in the same order as on side 1, 
-! because ispec1(e) is not necessarily facing ispec2(e).  
+! xp,yp,zp need to be recomputed on side 2
+! because they are generally not in the same order as on side 1,
+! because ispec1(e) is not necessarily facing ispec2(e).
 
   k = 0
-  do e = 1,fdb%nspec 
+  do e = 1,fdb%nspec
     ispec = fdb%ispec2(e)
     do igll=1,NGLLSQUARE
       ie=fdb%ijk2(1,igll,e)
@@ -339,7 +339,7 @@ end subroutine setup_ibools
 !=================================================================================
 
 subroutine setup_ibulks(fdb,ibool,nspec)
- 
+
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec, ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
@@ -347,23 +347,23 @@ subroutine setup_ibulks(fdb,ibool,nspec)
 
   allocate( fdb%ibulk1(fdb%nglob) )
   allocate( fdb%ibulk2(fdb%nglob) )
-  
+
   do e=1, fdb%nspec
     do k=1, NGLLSQUARE
- 
+
       ie=fdb%ijk1(1,k,e)
       je=fdb%ijk1(2,k,e)
       ke=fdb%ijk1(3,k,e)
       K1= fdb%ibool1(k,e)
       fdb%ibulk1(K1)=ibool(ie,je,ke,fdb%ispec1(e))
-  
+
       ie=fdb%ijk2(1,k,e)
       je=fdb%ijk2(2,k,e)
       ke=fdb%ijk2(3,k,e)
       K2= fdb%ibool2(k,e)
       fdb%ibulk2(K2)=ibool(ie,je,ke,fdb%ispec2(e))
-    
-    enddo 
+
+    enddo
   enddo
 
 end subroutine setup_ibulks
@@ -373,10 +373,10 @@ end subroutine setup_ibulks
 ! Fortunately only *store_dummy is needed to compute jacobians and normals
 
 subroutine close_fault(fdb)
- 
+
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
-  type(fault_db_type), intent(inout) :: fdb  
+  type(fault_db_type), intent(inout) :: fdb
 
   integer :: i,K1,K2
 
@@ -409,14 +409,14 @@ end subroutine close_fault
   allocate( fdb%xcoordbulk2(fdb%nglob) )
   allocate( fdb%ycoordbulk2(fdb%nglob) )
   allocate( fdb%zcoordbulk2(fdb%nglob) )
-  
+
   do i=1, fdb%nglob
       K1 =fdb%ibulk1(i)
       K2 =fdb%ibulk2(i)
       fdb%xcoordbulk1(i) = xstore_dummy(K1)
       fdb%ycoordbulk1(i) = ystore_dummy(K1)
-      fdb%zcoordbulk1(i) = zstore_dummy(K1) 
-  
+      fdb%zcoordbulk1(i) = zstore_dummy(K1)
+
       fdb%xcoordbulk2(i) = xstore_dummy(K2)
       fdb%ycoordbulk2(i) = ystore_dummy(K2)
       fdb%zcoordbulk2(i) = zstore_dummy(K2)
@@ -428,7 +428,7 @@ end subroutine close_fault
 !=================================================================================
 
  subroutine setup_normal_jacobian(fdb,ibool,nspec,nglob,myrank)
-   
+
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
@@ -441,19 +441,19 @@ end subroutine close_fault
   integer, intent(in) :: myrank
 
   ! (assumes NGLLX=NGLLY=NGLLZ)
-  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord    
+  real(kind=CUSTOM_REAL),dimension(NGNOD2D) :: xcoord,ycoord,zcoord
   real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   integer,dimension(NGNOD2D) :: iglob_corners_ref
   integer :: ispec_flt,ispec,i,j,k,igll
   integer :: iface_ref,icorner
-  
+
   allocate(fdb%normal(NDIM,NGLLSQUARE,fdb%nspec))
   allocate(fdb%jacobian2Dw(NGLLSQUARE,fdb%nspec))
 
   do ispec_flt=1,fdb%nspec
 
-    iface_ref= fdb%iface1(ispec_flt)     
+    iface_ref= fdb%iface1(ispec_flt)
     ispec = fdb%ispec1(ispec_flt)
 
     ! takes indices of corners of reference face
@@ -468,7 +468,7 @@ end subroutine close_fault
       ! reference corner coordinates
       xcoord(icorner) = xstore_dummy(iglob_corners_ref(icorner))
       ycoord(icorner) = ystore_dummy(iglob_corners_ref(icorner))
-      zcoord(icorner) = zstore_dummy(iglob_corners_ref(icorner))                  
+      zcoord(icorner) = zstore_dummy(iglob_corners_ref(icorner))
     enddo
 
     ! gets face GLL 2Djacobian, weighted from element face
@@ -478,7 +478,7 @@ end subroutine close_fault
            wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
            ispec,iface_ref,jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
-    ! normal convention: points away from domain1, reference element. 
+    ! normal convention: points away from domain1, reference element.
     do j=1,NGLLY
       do i=1,NGLLX
         ! directs normals such that they point outwards of element
@@ -494,15 +494,15 @@ end subroutine close_fault
     do j=1,NGLLY
       do i=1,NGLLX
         ! adds all gll points on that face
-        igll = igll + 1  
+        igll = igll + 1
         ! stores weighted jacobian and normals
         fdb%jacobian2Dw(igll,ispec_flt) = jacobian2Dw_face(i,j)
         fdb%normal(:,igll,ispec_flt) = normal_face(:,i,j)
       enddo
     enddo
 
-  enddo ! ispec_flt 
- 
+  enddo ! ispec_flt
+
 end subroutine setup_normal_jacobian
 
 !====================================================================================
@@ -513,7 +513,7 @@ subroutine fault_save_arrays_test(prname)
 
   integer, parameter :: IOUT = 121 !WARNING: not very robust. Could instead look for an available ID
   integer :: nbfaults,iflt,ier
-  character(len=256) :: filename 
+  character(len=256) :: filename
 
   if (.not.ANY_FAULT) return
 
@@ -521,14 +521,14 @@ subroutine fault_save_arrays_test(prname)
   filename = prname(1:len_trim(prname))//'fault_db.txt'
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',iostat=ier)
   if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
-  
+
   nbfaults = size(fault_db)
   write(IOUT,*) 'NBFAULTS = ',nbfaults
   do iflt=1,nbfaults
     write(IOUT,*) 'BEGIN FAULT # ',iflt
     call save_one_fault_test(fault_db(iflt),IOUT)
     write(IOUT,*) 'END FAULT # ',iflt
-  enddo 
+  enddo
   close(IOUT)
 
 end subroutine fault_save_arrays_test
@@ -536,7 +536,7 @@ end subroutine fault_save_arrays_test
 !-------------------------------------------------------------------------------------
 
 subroutine save_one_fault_test(f,IOUT)
-  
+
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
 
@@ -549,7 +549,7 @@ subroutine save_one_fault_test(f,IOUT)
   write(IOUT,*) 'NSPEC NGLOB NGLL = ',f%nspec,f%nglob,NGLLX
   if (f%nspec==0) return
   do e=1,f%nspec
-    write(IOUT,*) 'FLT_ELEM = ',e 
+    write(IOUT,*) 'FLT_ELEM = ',e
     write(IOUT,*) 'ISPEC1 ISPEC2 = ',f%ispec1(e),f%ispec2(e)
     write(IOUT,fmt1) 'IBOOL1 = ',f%ibool1(:,e)
     write(IOUT,fmt1) 'IBOOL2 = ',f%ibool2(:,e)
@@ -564,12 +564,12 @@ subroutine save_one_fault_test(f,IOUT)
     write(IOUT,fmt2) 'N2 = ',f%normal(2,:,e)
     write(IOUT,fmt2) 'N3 = ',f%normal(3,:,e)
   enddo
- 
+
   write(IOUT,*) 'FLT_NODE IBULK1 IBULK2'
   do k=1,f%nglob
     write(IOUT,*) k,f%ibulk1(k),f%ibulk2(k)
   enddo
- 
+
   write(IOUT,*) 'FLT_NODE xcoordbulk ycoordbulk zcoordbulk'
   do k=1,f%nglob
     write(IOUT,*) f%ibulk1(k),f%xcoordbulk1(k),f%ycoordbulk1(k),f%zcoordbulk1(k)
@@ -579,7 +579,7 @@ subroutine save_one_fault_test(f,IOUT)
 end subroutine save_one_fault_test
 
 !=================================================================================
-! saves fault data needed by the solver in binary files 
+! saves fault data needed by the solver in binary files
 subroutine fault_save_arrays(prname)
 
   character(len=256), intent(in) :: prname ! 'proc***'
@@ -597,17 +597,17 @@ subroutine fault_save_arrays(prname)
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
     write(IMAIN,*) 'error opening file ',trim(filename)
-    stop 
+    stop
   endif
-   
+
 ! saves mesh file proc***_Kelvin_voigt_eta.bin
   if (allocated(Kelvin_Voigt_eta)) then
     size_Kelvin_Voigt = size(Kelvin_Voigt_eta)
-  else 
+  else
     size_Kelvin_Voigt = 0
   endif
   write(IOUT) size_Kelvin_Voigt
-  if (size_Kelvin_Voigt /= 0) Write(IOUT) Kelvin_Voigt_eta  
+  if (size_Kelvin_Voigt /= 0) Write(IOUT) Kelvin_Voigt_eta
   close(IOUT)
 
 ! saves mesh file proc***_fault_db.bin
@@ -615,26 +615,26 @@ subroutine fault_save_arrays(prname)
   open(unit=IOUT,file=trim(filename),status='unknown',action='write',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
     write(IMAIN,*) 'error opening file ',trim(filename)
-    stop 
+    stop
   endif
-  
+
   nbfaults = size(fault_db)
   write(IOUT) nbfaults
   do iflt=1,nbfaults
     call save_one_fault_bin(fault_db(iflt),IOUT)
-  enddo 
+  enddo
   close(IOUT)
 
-  
+
 end subroutine fault_save_arrays
 
 !----------------------------------------------
 
 subroutine save_one_fault_bin(f,IOUT)
-  
+
   type(fault_db_type), intent(in) :: f
   integer, intent(in) :: IOUT
-  
+
   write(IOUT) f%nspec,f%nglob
   if (f%nspec==0) return
   write(IOUT) f%ibool1
@@ -642,7 +642,7 @@ subroutine save_one_fault_bin(f,IOUT)
   write(IOUT) f%normal
   write(IOUT) f%ibulk1
   write(IOUT) f%ibulk2
-  write(IOUT) f%xcoordbulk1 
+  write(IOUT) f%xcoordbulk1
   write(IOUT) f%ycoordbulk1
   write(IOUT) f%zcoordbulk1
 

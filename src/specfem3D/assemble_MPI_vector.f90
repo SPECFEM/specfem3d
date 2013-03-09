@@ -842,7 +842,7 @@
 ! assemble only if more than one partition
   if (NPROC == 1) return
 
-! move interface values of array_val to local buffers 
+! move interface values of array_val to local buffers
   do iinterface = 1, num_interfaces_ext_mesh
     do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
       iglob = ibool_interfaces_ext_mesh(ipoin,iinterface)
@@ -877,7 +877,7 @@
   contains
 
     subroutine add_my_contrib()
-  
+
     integer :: my_iinterface,my_ipoin
 
     do my_iinterface = 1, num_interfaces_ext_mesh
@@ -887,7 +887,7 @@
       enddo
     enddo
     need_add_my_contrib = .false.
-  
+
     end subroutine add_my_contrib
 
   end subroutine assemble_MPI_vector_ext_mesh_w_ordered

@@ -231,7 +231,7 @@
      ! reads thickness of C-PML layers for the global mesh
      read(IIN) CPML_width
 
-     ! reads C-PML regions and C-PML spectral elements global indexing 
+     ! reads C-PML regions and C-PML spectral elements global indexing
      allocate(CPML_to_spec(nspec_cpml),stat=ier)
      if(ier /= 0) stop 'error allocating array CPML_to_spec'
      allocate(CPML_regions(nspec_cpml),stat=ier)

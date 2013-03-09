@@ -188,6 +188,10 @@
             epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilondev_xx etc.'
 
+    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),& !ZN
+             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)  !ZN
+    if( ier /= 0 ) stop 'error allocating array R_trace etc.'  !ZN
+
     ! note: needed for argument of deville routine
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilon_trace_over_3'
@@ -196,6 +200,10 @@
     allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta etc.'
+
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), & !ZN
+             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier) !ZN
+    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta_kappa etc.'  !ZN
 
     ! reads mass matrices
     read(27,iostat=ier) rmass
@@ -325,7 +333,7 @@
   ! C-PML absorbing boundary conditions
   read(27) NSPEC_CPML
   read(27) CPML_width
-  if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then 
+  if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then
      allocate(CPML_regions(NSPEC_CPML),stat=ier)
      if(ier /= 0) stop 'error allocating array CPML_regions'
      allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
@@ -755,6 +763,11 @@
     ! needed for kernel computations
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_epsilon_trace_over_3'
+
+    ! allocates attenuation solids for considering kappa  !ZN
+    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&    !ZN
+             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)    !ZN
+    if( ier /= 0 ) stop 'error allocating array b_R_trace etc.'
 
   else
     ! modification: Camille Mazoyer

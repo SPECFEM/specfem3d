@@ -140,7 +140,7 @@
      ! check (inclined) force source's direction vector
      length = sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
           comp_dir_vect_source_Z_UP(isource)**2 )
-     if( length < TINYVAL) then 
+     if( length < TINYVAL) then
         print *, 'normal length: ', length
         print *, 'isource: ',isource
         stop 'error set force point normal length, make sure all forces have a non null direction vector'

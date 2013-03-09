@@ -452,7 +452,7 @@ end module user_noise_distribution
      reclen=CUSTOM_REAL*NDIM*NGLLSQUARE*NSPEC_TOP
 
      ! only open files if there are surface faces in this paritition
-     if(NSPEC_TOP .gt. 0) then
+     if(NSPEC_TOP > 0) then
 
         ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
         if( NSPEC_TOP > 2147483646 / (CUSTOM_REAL * NGLLSQUARE * NDIM) ) then

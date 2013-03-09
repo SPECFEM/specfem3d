@@ -113,7 +113,7 @@
   end if
 
   if (ANY_FAULT) then
-   ! recalculate *store with faults closed 
+   ! recalculate *store with faults closed
     call sync_all()
     if (myrank == 0) write(IMAIN,*) '  ... resetting up jacobian in fault domains'
     if (ANY_FAULT_IN_THIS_PROC) call crm_ext_setup_jacobian(myrank, &
@@ -276,7 +276,7 @@
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                              mustore,rho_vs,qmu_attenuation_store, &
+                              mustore,rho_vs,kappastore,rho_vp,qmu_attenuation_store, &  !ZN
                               ispec_is_elastic,min_resolved_period,prname)
   endif
 
@@ -288,7 +288,7 @@
   deallocate(kappastore,mustore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
-  
+
   if( .not. SAVE_MOHO_MESH ) then
     deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
   endif

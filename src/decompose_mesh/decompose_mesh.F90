@@ -404,7 +404,7 @@ module decompose_mesh
        !     #(3) material_id_for_material_below #(4) material_id_for_material_above
        !        example:     2 -1 interface 1 2
        !   - for tomography models
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography") 
+       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
        !   - for C-PML absorbing boundaries
@@ -432,7 +432,7 @@ module decompose_mesh
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        elseif( num_mat <= -2001 .and. num_mat >= -2007 ) then
-         ! line will have 5 arguments, e.g.: 2 -2001 2300.0 2800.0 1500.0     
+         ! line will have 5 arguments, e.g.: 2 -2001 2300.0 2800.0 1500.0
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
@@ -626,13 +626,13 @@ module decompose_mesh
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
 
-  ! reads in absorbing_cpml boundary file 
+  ! reads in absorbing_cpml boundary file
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
          status='old', form='formatted',iostat=ier)
     if( ier /= 0 ) then
        nspec_cpml = 0
     else
-       read(98,*) nspec_cpml, CPML_width       
+       read(98,*) nspec_cpml, CPML_width
     endif
 
     ! C-PML spectral elements global indexing
@@ -661,9 +661,9 @@ module decompose_mesh
     ! sets mask of C-PML elements for all elements in this partition
     allocate(CPML_mask_ibool(nspec),stat=ier)
     if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
-    CPML_mask_ibool(:) = .false. 
+    CPML_mask_ibool(:) = .false.
     do ispec_CPML=1,nspec_cpml
-       if( (CPML_regions(ispec_CPML).ge.1) .and. (CPML_regions(ispec_CPML).le.7) ) then
+       if( (CPML_regions(ispec_CPML)>=1) .and. (CPML_regions(ispec_CPML)<=7) ) then
           CPML_mask_ibool(CPML_to_spec(ispec_CPML)) = .true.
        endif
     enddo
@@ -688,10 +688,10 @@ module decompose_mesh
     if( nspec2D_moho > 0 ) print*, '  nspec2D_moho = ', nspec2D_moho
 
     call read_fault_files(localpath_name)
-    if (ANY_FAULT) then 
+    if (ANY_FAULT) then
       call save_nodes_coords(nodes_coords,nnodes)
-      call close_faults(nodes_coords,nnodes)    
-    end if 
+      call close_faults(nodes_coords,nnodes)
+    end if
 
   end subroutine read_mesh_files
 
@@ -1042,7 +1042,7 @@ module decompose_mesh
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
 
-       ! writes out absorbing/free-surface boundaries 
+       ! writes out absorbing/free-surface boundaries
        call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
                                   nspec2D_ymax, nspec2D_bottom, nspec2D_top, &
                                   ibelm_xmin, ibelm_xmax, ibelm_ymin, &
@@ -1052,7 +1052,7 @@ module decompose_mesh
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
                                   glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
-       ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer 
+       ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
        call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
             CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
 
@@ -1093,7 +1093,7 @@ module decompose_mesh
             print*,'error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
             print*
             print*,'check if path exists:',outputpath_name(1:len_trim(outputpath_name))
-            stop 
+            stop
           endif
           call write_fault_database(16, ipart, nspec, &
                                     glob2loc_elmnts, glob2loc_nodes_nparts, glob2loc_nodes_parts, &

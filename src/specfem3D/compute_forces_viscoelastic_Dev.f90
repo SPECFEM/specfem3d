@@ -34,10 +34,14 @@
                                     wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,deltat, &
-                                    one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
-                                    NSPEC_ATTENUATION_AB, &
-                                    R_xx,R_yy,R_xy,R_xz,R_yz, &
-                                    epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                    one_minus_sum_beta,factor_common,&
+                                    one_minus_sum_beta_kappa,factor_common_kappa,& !ZN
+                                    alphaval,betaval,gammaval,&      !ZN
+                                    NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
+!ZN                                    R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  !ZN
+!ZN                                    epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+                                    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  !ZN
                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                     ANISOTROPY,NSPEC_ANISO, &
                                     c11store,c12store,c13store,c14store,c15store,c16store,&
@@ -57,7 +61,7 @@
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       N_SLS,SAVE_MOHO_MESH, &
-                      ONE_THIRD,FOUR_THIRDS,m1,m2
+                      ONE_THIRD,FOUR_THIRDS,m1,m2,FULL_ATTENUATION_SOLID,CONST_Q_KAPPA,IOUT
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
 
   implicit none
@@ -88,16 +92,20 @@
   logical :: ATTENUATION
   logical :: COMPUTE_AND_STORE_STRAIN
   integer :: NSPEC_STRAIN_ONLY, NSPEC_ADJOINT
-  integer :: NSPEC_ATTENUATION_AB
+  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: one_minus_sum_beta_kappa   !ZN
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa  !ZN
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
       R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace  !ZN
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace  !ZN
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
 ! anisotropy
@@ -191,9 +199,10 @@
   equivalence(tempz3_att,C3_mxm_m2_m1_5points_att)
 
   ! local attenuation parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc,epsilondev_xx_loc, & !ZN
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3
+  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, & !ZN
+                         R_trace_val1,R_trace_val2,R_trace_val3 !ZN
   real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc
   real(kind=CUSTOM_REAL) Sn,Snp1
   real(kind=CUSTOM_REAL) templ
@@ -248,7 +257,7 @@
 
         ! stores displacment values in local array
         if (allocated(Kelvin_Voigt_eta)) then
-          eta = Kelvin_Voigt_eta(ispec)   
+          eta = Kelvin_Voigt_eta(ispec)
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
@@ -273,7 +282,7 @@
           enddo
         endif
 
-        ! use first order Taylor expansion of displacement for local storage of stresses 
+        ! use first order Taylor expansion of displacement for local storage of stresses
         ! at this current time step, to fix attenuation in a consistent way
         if(ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
            do k=1,NGLLZ
@@ -316,7 +325,7 @@
            ! temporary variables used for fixing attenuation in a consistent way
            do j=1,m2
               do i=1,m1
-                 C1_m1_m2_5points_att(i,j) = C1_m1_m2_5points(i,j) + & 
+                 C1_m1_m2_5points_att(i,j) = C1_m1_m2_5points(i,j) + &
                       hprime_xx(i,1)*B1_m1_m2_5points_att(1,j) + &
                       hprime_xx(i,2)*B1_m1_m2_5points_att(2,j) + &
                       hprime_xx(i,3)*B1_m1_m2_5points_att(3,j) + &
@@ -527,6 +536,7 @@
                  ! compute deviatoric strain
                  templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
                  if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
+                 if(FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3.0 * templ
                  epsilondev_xx_loc(i,j,k) = duxdxl_att - templ
                  epsilondev_yy_loc(i,j,k) = duydyl_att - templ
                  epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
@@ -537,6 +547,7 @@
                  if (COMPUTE_AND_STORE_STRAIN) then
                     templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
                     if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = templ
+                    if(FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3.0 * templ
                     epsilondev_xx_loc(i,j,k) = duxdxl - templ
                     epsilondev_yy_loc(i,j,k) = duydyl - templ
                     epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl
@@ -552,6 +563,9 @@
               if(ATTENUATION) then
                 ! use unrelaxed parameters if attenuation
                 mul  = mul * one_minus_sum_beta(i,j,k,ispec)
+                if(FULL_ATTENUATION_SOLID) then  !ZN
+                   kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)  !ZN
+                endif  !ZN
               endif
 
   ! full anisotropic case, stress calculations
@@ -628,11 +642,16 @@
 !          by default, N_SLS = 3, therefore we take steps of 3
               if(imodulo_N_SLS >= 1) then
                 do i_sls = 1,imodulo_N_SLS
+                  if(FULL_ATTENUATION_SOLID) then !! ZN: for performance, it would be better to avoid "if" statements inside loops
+                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
+                  else
+                    R_trace_val1 = 0.
+                  endif
                   R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                   R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                  sigma_xx = sigma_xx - R_xx_val1
-                  sigma_yy = sigma_yy - R_yy_val1
-                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1
+                  sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
+                  sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
+                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
@@ -641,29 +660,43 @@
 
               if(N_SLS >= imodulo_N_SLS+1) then
                 do i_sls = imodulo_N_SLS+1,N_SLS,3
+                  if(FULL_ATTENUATION_SOLID) then !! ZN: for performance, it would be better to avoid "if" statements inside loops
+                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
+                  else
+                    R_trace_val1 = 0.
+                  endif
                   R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                   R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                  sigma_xx = sigma_xx - R_xx_val1
-                  sigma_yy = sigma_yy - R_yy_val1
-                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1
+                  sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
+                  sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
+                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-
+                  if(FULL_ATTENUATION_SOLID) then
+                    R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
+                  else
+                    R_trace_val2 = 0.
+                  endif
                   R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
                   R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
-                  sigma_xx = sigma_xx - R_xx_val2
-                  sigma_yy = sigma_yy - R_yy_val2
-                  sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2
+                  sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
+                  sigma_yy = sigma_yy - R_yy_val2 - R_trace_val2
+                  sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2 - R_trace_val2
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+1)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
 
+                  if(FULL_ATTENUATION_SOLID) then
+                    R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
+                  else
+                    R_trace_val3 = 0.
+                  endif
                   R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
                   R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
-                  sigma_xx = sigma_xx - R_xx_val3
-                  sigma_yy = sigma_yy - R_yy_val3
-                  sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3
+                  sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
+                  sigma_yy = sigma_yy - R_yy_val3 - R_trace_val3
+                  sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3 - R_trace_val3
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+2)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+2)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
@@ -788,11 +821,22 @@
                  ! use Runge-Kutta scheme to march in time
                  do i_sls = 1,N_SLS
 
-                    factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
-
                     alphaval_loc = alphaval(i_sls)
                     betaval_loc = betaval(i_sls)
                     gammaval_loc = gammaval(i_sls)
+
+                    if(FULL_ATTENUATION_SOLID) then
+                      ! term in trace  !ZN
+                      factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)  !ZN
+
+                      Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)  !ZN
+                      Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)  !ZN
+                      R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &  !ZN
+                                        betaval_loc * Sn + gammaval_loc * Snp1  !ZN
+                    endif
+
+                    ! term in xx yy zz xy xz yz
+                    factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
 
                     ! term in xx
                     Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
@@ -820,7 +864,6 @@
                     Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
                     R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
                                       betaval_loc * Sn + gammaval_loc * Snp1
-
                  enddo   ! end of loop on memory variables
 
               endif  !  end attenuation
@@ -831,6 +874,7 @@
 
         ! save deviatoric strain for Runge-Kutta scheme
         if ( COMPUTE_AND_STORE_STRAIN ) then
+          if(FULL_ATTENUATION_SOLID) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
           epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
           epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
           epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
