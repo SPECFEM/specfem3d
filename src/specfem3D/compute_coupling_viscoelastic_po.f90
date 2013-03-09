@@ -347,7 +347,7 @@
         ! (note: should be the same as for corresponding
         ! i',j',k',ispec_poroelastic or ispec_elastic )
         iglob_el = ibool(i,j,k,ispec_el)
-        if (iglob_el .ne. iglob_po) stop 'poroelastic-elastic coupling error'
+        if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error'
           tempx1l = 0.
           tempx2l = 0.
           tempx3l = 0.

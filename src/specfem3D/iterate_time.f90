@@ -60,6 +60,7 @@
 ! get MPI starting time
   time_start = wtime()
 
+
 ! *********************************************************
 ! ************* MAIN LOOP OVER THE TIME STEPS *************
 ! *********************************************************
@@ -77,9 +78,9 @@
     ! acoustic solver
     ! (needs to be done first, before elastic one)
     if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
-
     ! elastic solver
     ! (needs to be done first, before poroelastic one)
+
     if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
 
     ! poroelastic solver
@@ -546,11 +547,13 @@
 
     ! memory variables if attenuation
     if( ATTENUATION ) then
+      if(FULL_ATTENUATION_SOLID) read(27) b_R_trace  !ZN
       read(27) b_R_xx
       read(27) b_R_yy
       read(27) b_R_xy
       read(27) b_R_xz
       read(27) b_R_yz
+      if(FULL_ATTENUATION_SOLID) read(27) b_epsilondev_trace !ZN
       read(27) b_epsilondev_xx
       read(27) b_epsilondev_yy
       read(27) b_epsilondev_xy
@@ -561,7 +564,10 @@
       if(GPU_MODE) &
           call transfer_b_fields_att_to_device(Mesh_pointer, &
                                             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
+!ZN                                            b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &  please change the above line with this
                                             b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+!ZN                                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+!ZN                                         please change the above line with this
                                             size(b_epsilondev_xx))
     endif
 
@@ -617,12 +623,13 @@
           ! wavefields
           call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
         endif
-
+        if(FULL_ATTENUATION_SOLID) read(27) b_R_trace !ZN
         read(27) b_R_xx
         read(27) b_R_yy
         read(27) b_R_xy
         read(27) b_R_xz
         read(27) b_R_yz
+        if(FULL_ATTENUATION_SOLID) read(27) b_epsilondev_trace !ZN
         read(27) b_epsilondev_xx
         read(27) b_epsilondev_yy
         read(27) b_epsilondev_xy
@@ -634,7 +641,9 @@
           ! attenuation arrays
           call transfer_b_fields_att_to_device(Mesh_pointer, &
                                             b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
+!ZN                                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
                                             b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+!ZN                                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
                                             size(b_epsilondev_xx))
         endif
       endif
@@ -672,15 +681,19 @@
           ! attenuation arrays
           call transfer_fields_att_from_device(Mesh_pointer, &
                                             R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+!ZN                                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+!ZN                                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                                             size(epsilondev_xx))
         endif
 
+        if(FULL_ATTENUATION_SOLID) write(27) R_trace  !ZN
         write(27) R_xx
         write(27) R_yy
         write(27) R_xy
         write(27) R_xz
         write(27) R_yz
+        if(FULL_ATTENUATION_SOLID) write(27) epsilondev_trace !ZN
         write(27) epsilondev_xx
         write(27) epsilondev_yy
         write(27) epsilondev_xy
@@ -758,7 +771,9 @@
       if (ATTENUATION) &
         call transfer_fields_att_from_device(Mesh_pointer, &
                                             R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+!ZN                                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
                                             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+!ZN                                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                                             size(epsilondev_xx))
 
     endif

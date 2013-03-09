@@ -8,7 +8,7 @@ module fault_solver_kinematic
   use fault_solver_common
   use constants
 
-  implicit none  
+  implicit none
 
   private
 
@@ -17,7 +17,7 @@ module fault_solver_kinematic
 ! type dataXZ_type
 !   integer :: npoin=0
 !   real(kind=CUSTOM_REAL), dimension(:), pointer :: d1=>null(), d2=>null(), &
-!                                                    v1=>null(), v2=>null(), & 
+!                                                    v1=>null(), v2=>null(), &
 !                                                    t1=>null(), t2=>null(), t3=>null(), &
 !                                                    xcoord=>null(), ycoord=>null(), zcoord=>null()
 ! end type dataXZ_type
@@ -32,15 +32,15 @@ module fault_solver_kinematic
 !   integer :: kin_it
 !   real(kind=CUSTOM_REAL), dimension(:,:), pointer :: v_kin_t1,v_kin_t2
 ! end type bc_kinflt_type
- 
+
 !! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), allocatable, save :: faults(:)
- 
+
   !Number of time steps defined by the user : NTOUT
   integer, save :: NTOUT,NSNAP
- 
+
   logical, save :: SIMULATION_TYPE_KIN = .false.
-  
+
   public :: BC_KINFLT_init, BC_KINFLT_set_all, SIMULATION_TYPE_KIN
 
 
@@ -48,7 +48,7 @@ contains
 
 
 !=====================================================================
-! BC_KINFLT_init initializes kinematic faults 
+! BC_KINFLT_init initializes kinematic faults
 !
 ! prname        fault database is read from file prname_fault_db.bin
 ! Minv          inverse mass matrix
@@ -56,9 +56,9 @@ contains
 !
 subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only : nt=>NSTEP  
+  use specfem_par, only : nt=>NSTEP
   character(len=256), intent(in) :: prname ! 'proc***'
-  double precision, intent(in) :: DTglobal 
+  double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: dt
@@ -68,17 +68,17 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   character(len=256) :: filename
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
-  real(kind=CUSTOM_REAL) :: DUMMY 
+  real(kind=CUSTOM_REAL) :: DUMMY
 
-  NAMELIST / BEGIN_FAULT / dummy_idfault 
+  NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
 
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
   if( ier /= 0 ) then
     if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
-    close(IIN_PAR) 
-    return 
+    close(IIN_PAR)
+    return
   endif
 
   read(IIN_PAR,*) nbfaults
@@ -94,7 +94,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort' 
+    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     stop
   endif
   ! WARNING TO DO: should be an MPI abort
@@ -106,14 +106,14 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
     read(IIN_PAR,*) NTOUT
     read(IIN_PAR,*) NSNAP
     read(IIN_PAR,*) DUMMY
-    read(IIN_PAR,*) DUMMY 
+    read(IIN_PAR,*) DUMMY
     read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
     allocate( faults(nbfaults) )
     dt = real(DTglobal)
     do iflt=1,nbfaults
       read(IIN_PAR,nml=BEGIN_FAULT,end=100)
       call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
-    enddo 
+    enddo
   endif
   close(IIN_BIN)
   close(IIN_PAR)
@@ -150,13 +150,13 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
     bc%T = 0e0_CUSTOM_REAL
     bc%D = 0e0_CUSTOM_REAL
     bc%V = 0e0_CUSTOM_REAL
-  
+
     ! time interval between two loaded slip rates
-    read(IIN_PAR,nml=KINPAR) 
+    read(IIN_PAR,nml=KINPAR)
     bc%kin_dt = kindt
-  
+
     bc%kin_it=0
-    ! Always have in memory the slip-rate model at two times, t1 and t2, 
+    ! Always have in memory the slip-rate model at two times, t1 and t2,
     ! spatially interpolated in the spectral element grid
     allocate(bc%v_kin_t1(2,bc%nglob))
     allocate(bc%v_kin_t2(2,bc%nglob))
@@ -184,27 +184,27 @@ subroutine BC_KINFLT_set_all(F,Vel,Dis)
   if (.not. allocated(faults)) return
   do iflt=1,size(faults)
     if (faults(iflt)%nspec>0) call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
-  enddo 
+  enddo
 
 end subroutine BC_KINFLT_set_all
 
 !---------------------------------------------------------------------
 !
-!NOTE: On non-split nodes at fault edges, dD=dV=dA=0 but bc%T is corrupted. 
+!NOTE: On non-split nodes at fault edges, dD=dV=dA=0 but bc%T is corrupted.
 !      That does not affect computations: the net contribution of B*T is =0.
 !      However, the output T in these nodes should be ignored.
 !      It is =0 if the user sets bc%V=0 there in the input slip rates.
 !
-subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt) 
+subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
 
-  use specfem_par, only:it,NSTEP 
+  use specfem_par, only:it,NSTEP
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
 !! DK DK now use bc_dynandkinflt_type here instead
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: V(:,:),D(:,:)
   integer,intent(in) :: iflt
-  integer :: it_kin,itime 
+  integer :: it_kin,itime
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: T
   real(kind=CUSTOM_REAL), dimension(3,bc%nglob) :: dD,dV,dA,dV_free
   real(kind=CUSTOM_REAL) :: t1,t2
@@ -222,19 +222,19 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     ! rotate to fault frame (tangent,normal)
     ! component 3 is normal to the fault
     dD = rotate(bc,dD,1)
-    dV = rotate(bc,dV,1) 
-    dA = rotate(bc,dA,1)   
+    dV = rotate(bc,dV,1)
+    dA = rotate(bc,dA,1)
 
     ! Time marching
     time = it*bc%dt
     ! Slip_rate step "it_kin"
     it_kin = bc%kin_it*nint(bc%kin_dt/bc%dt)
-    ! (nint : fortran round (nearest whole number) , 
+    ! (nint : fortran round (nearest whole number) ,
     !  if nint(a)=0.5 then "a" get upper bound )
 
     ! Loading the next slip_rate one ahead it.
-    ! This is done in case bc%kin_dt 
-    ! if (it_kin == it) it_kin=it_kin+1 ! 
+    ! This is done in case bc%kin_dt
+    ! if (it_kin == it) it_kin=it_kin+1 !
 
 
     !NOTE : it and it_kin is being used due to integers are exact numbers.
@@ -246,14 +246,14 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
       bc%kin_it = bc%kin_it +1
       bc%v_kin_t1 = bc%v_kin_t2
       print*, 'loading v_kin_t2'
-      !Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001 
-      !snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)             
+      !Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001
+      !snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)
       itime = bc%kin_it*nint(bc%kin_dt/bc%dt)
       call load_vslip_snapshots(bc%dataXZ,itime,iflt)
-!     loading slip rates 
+!     loading slip rates
       bc%v_kin_t2(1,:)=bc%dataXZ%v1
       bc%v_kin_t2(2,:)=bc%dataXZ%v2
-    
+
       !linear interpolation in time between t1 and t2
       !REMARK , bc%kin_dt is the delta "t" between two snapshots.
 
@@ -269,7 +269,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     bc%V(1,:) = ( (t2 - time)*bc%v_kin_t1(1,:) + (time - t1)*bc%v_kin_t2(1,:) )/ bc%kin_dt
     bc%V(2,:) = ( (t2 - time)*bc%v_kin_t1(2,:) + (time - t1)*bc%v_kin_t2(2,:) )/ bc%kin_dt
 
-    !dV_free = dV_predictor + (dt/2)*dA_free 
+    !dV_free = dV_predictor + (dt/2)*dA_free
     dV_free(1,:) = dV(1,:) + half_dt*dA(1,:)
     dV_free(2,:) = dV(2,:) + half_dt*dA(2,:)
     dV_free(3,:) = dV(3,:) + half_dt*dA(3,:)
@@ -286,7 +286,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     ! Update slip in fault frame
     bc%D = dD
 
-    ! Rotate tractions back to (x,y,z) frame 
+    ! Rotate tractions back to (x,y,z) frame
     T = rotate(bc,T,-1)
 
     ! Add boundary term B*T to M*a
@@ -327,7 +327,7 @@ subroutine init_dataXZ(dataXZ,nglob)
 end subroutine init_dataXZ
 
 !---------------------------------------------------------------
-!LOAD_VSLIP_SNAPSHOTS(v,dataXZ,itime,coord,npoin,nglob,iflt)  
+!LOAD_VSLIP_SNAPSHOTS(v,dataXZ,itime,coord,npoin,nglob,iflt)
 !Loading slip velocity from snapshots.
 !   INPUT  itime : iteration time
 !          coord : Receivers coordinates
@@ -337,8 +337,8 @@ end subroutine init_dataXZ
 !          iflt : number of faults.
 
 !   OUTPUT v : slip rate on receivers.
- 
-subroutine load_vslip_snapshots(dataXZ,itime,iflt)  
+
+subroutine load_vslip_snapshots(dataXZ,itime,iflt)
 
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
@@ -353,11 +353,11 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt)
 
   open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
        action='read',iostat=ier)
-!  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!! 
+!  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
 !        action='read',iostat=ier)
 !  if( ier /= 0 ) stop 'Snapshots have been found'
- 
+
   read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
 
   close(IIN_BIN)

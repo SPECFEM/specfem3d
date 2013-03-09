@@ -284,7 +284,7 @@
 
   enddo ! end of loop over all spectral elements
 
-  ! C-PML boundary 
+  ! C-PML boundary
   if( PML_CONDITIONS ) then
      ! xmin
      do ispec2D=1,nspec2D_xmin

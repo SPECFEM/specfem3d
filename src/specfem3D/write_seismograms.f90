@@ -806,12 +806,12 @@
   logical,parameter :: SUPPRESS_IRIS_CONVENTION = .false.
 
   ! see manual for ranges
-  if (DT .ge. 1.0d0)  bic = 'LX'
-  if (DT .lt. 1.0d0 .and. DT .gt. 0.1d0) bic = 'MX'
-  if (DT .le. 0.1d0 .and. DT .gt. 0.0125d0) bic = 'BX'
-  if (DT .le. 0.0125d0 .and. DT .gt. 0.004d0) bic = 'HX'
-  if (DT .le. 0.004d0 .and. DT .gt. 0.001d0) bic = 'CX'
-  if (DT .le. 0.001d0) bic = 'FX'
+  if (DT >= 1.0d0)  bic = 'LX'
+  if (DT < 1.0d0 .and. DT > 0.1d0) bic = 'MX'
+  if (DT <= 0.1d0 .and. DT > 0.0125d0) bic = 'BX'
+  if (DT <= 0.0125d0 .and. DT > 0.004d0) bic = 'HX'
+  if (DT <= 0.004d0 .and. DT > 0.001d0) bic = 'CX'
+  if (DT <= 0.001d0) bic = 'FX'
 
   ! ignores IRIS convention, uses previous, constant band and instrument code
   if( SUPPRESS_IRIS_CONVENTION ) then

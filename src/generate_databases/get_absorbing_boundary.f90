@@ -456,7 +456,7 @@
           free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
           free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
         enddo
-      enddo     
+      enddo
 
     else
 

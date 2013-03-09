@@ -28,12 +28,12 @@
 
 subroutine pml_output_VTKs()
 
-  ! outputs informations about C-PML elements in VTK-file format 
+  ! outputs informations about C-PML elements in VTK-file format
 
   use pml_par
   use specfem_par, only: NGLOB_AB,NSPEC_AB,myrank,prname,xstore,ystore,zstore,ibool
   use constants, only: NGLLX,NGLLY,NGLLZ,IMAIN
-  
+
   implicit none
 
   ! local parameters
@@ -52,7 +52,7 @@ subroutine pml_output_VTKs()
 
   do ispec_CPML=1,nspec_cpml
      ispec = CPML_to_spec(ispec_CPML)
-     
+
      temp_CPML_regions(ispec) = CPML_regions(ispec_CPML)
   enddo
 
@@ -77,7 +77,7 @@ subroutine pml_output_VTKs()
 
   do ispec_CPML=1,nspec_cpml
      ispec = CPML_to_spec(ispec_CPML)
-     
+
      temp_d_store_x(:,:,:,ispec) = d_store_x(:,:,:,ispec_CPML)
      temp_d_store_y(:,:,:,ispec) = d_store_y(:,:,:,ispec_CPML)
      temp_d_store_z(:,:,:,ispec) = d_store_z(:,:,:,ispec_CPML)

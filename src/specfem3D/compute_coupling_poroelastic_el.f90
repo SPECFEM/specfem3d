@@ -294,7 +294,7 @@
         k = coupling_el_po_ijk(3,igll,iface)
 
         iglob_po = ibool(i,j,k,ispec_po)
-        if (iglob_el .ne. iglob_po) stop 'poroelastic-elastic coupling error'
+        if (iglob_el /= iglob_po) stop 'poroelastic-elastic coupling error'
 
 ! get poroelastic parameters of current local GLL
     phil = phistore(i,j,k,ispec_po)

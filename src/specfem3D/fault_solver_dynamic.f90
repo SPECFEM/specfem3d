@@ -12,8 +12,8 @@ module fault_solver_dynamic
 
   use fault_solver_common
   use constants
- 
-  implicit none  
+
+  implicit none
 
   private
 
@@ -24,9 +24,9 @@ module fault_solver_dynamic
 ! ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
 ! ! process zone time = first time when slip = Dc
 ! type dataXZ_type
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), & 
+!   real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), &
 !                                                    t1=>null(), t2=>null(), t3=>null(), tRUP=>null(), tPZ=>null()
-!   real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()  
+!   real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()
 !   integer                                       :: npoin=0
 ! end type dataXZ_type
 
@@ -64,10 +64,10 @@ module fault_solver_dynamic
 
   !slip velocity threshold for healing
   !WARNING: not very robust
-  real(kind=CUSTOM_REAL), save :: V_HEALING 
+  real(kind=CUSTOM_REAL), save :: V_HEALING
 
   !slip velocity threshold for definition of rupture front
-  real(kind=CUSTOM_REAL), save :: V_RUPT 
+  real(kind=CUSTOM_REAL), save :: V_RUPT
 
   !Number of time steps defined by the user : NTOUT
   integer, save                :: NTOUT,NSNAP
@@ -86,7 +86,7 @@ module fault_solver_dynamic
 contains
 
 !=====================================================================
-! BC_DYNFLT_init initializes dynamic faults 
+! BC_DYNFLT_init initializes dynamic faults
 !
 ! prname        fault database is read from file prname_fault_db.bin
 ! Minv          inverse mass matrix
@@ -96,7 +96,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only : nt=>NSTEP
   character(len=256), intent(in) :: prname ! 'proc***'
-  double precision, intent(in) :: DTglobal 
+  double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: dt
@@ -108,15 +108,15 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / BEGIN_FAULT / dummy_idfault 
+  NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
 
   open(unit=IIN_PAR,file='../DATA/Par_file_faults',status='old',iostat=ier)
   if( ier /= 0 ) then
     if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
-    close(IIN_PAR) 
-    return 
+    close(IIN_PAR)
+    return
   endif
 
   read(IIN_PAR,*) nbfaults
@@ -132,7 +132,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   filename = prname(1:len_trim(prname))//'fault_db.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort' 
+    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     stop
   endif
   ! WARNING TO DO: should be an MPI abort
@@ -145,11 +145,11 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   if ( SIMULATION_TYPE /= 1 ) then
     close(IIN_BIN)
     close(IIN_PAR)
-    return 
+    return
   endif
   SIMULATION_TYPE_DYN = .true.
   read(IIN_PAR,*) NTOUT
-  read(IIN_PAR,*) NSNAP 
+  read(IIN_PAR,*) NSNAP
   read(IIN_PAR,*) V_HEALING
   read(IIN_PAR,*) V_RUPT
 
@@ -166,7 +166,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   filename = prname(1:len_trim(prname))//'Kelvin_voigt_eta.bin'
   open(unit=IIN_BIN,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then
-    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort' 
+    write(IMAIN,*) 'Fatal error: file ',trim(filename),' not found. Abort'
     stop
   endif
   read(IIN_BIN) size_Kelvin_Voigt
@@ -222,22 +222,22 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     bc%T0(1,:) = S1
     bc%T0(2,:) = S2
     bc%T0(3,:) = S3
-    call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1) 
-    call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2) 
-    call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3) 
+    call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
+    call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
+    call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
     bc%T = bc%T0
 
-    !WARNING : Quick and dirty free surface condition at z=0 
-    !  do k=1,bc%nglob  
+    !WARNING : Quick and dirty free surface condition at z=0
+    !  do k=1,bc%nglob
     !    if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) <= SMALLVAL) bc%T0(2,k) = 0
-    !  end do 
+    !  end do
 
     ! Set friction parameters and initialize friction variables
     allocate(bc%MU(bc%nglob))
     if (RATE_AND_STATE) then
       allocate(bc%rsf)
       call rsf_init(bc%rsf,bc%T0,bc%V,bc%Fload,bc%coord,IIN_PAR)
-    else 
+    else
       allocate(bc%swf)
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
@@ -247,18 +247,18 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
-    bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)" 
-    if (bc%rsf%StateLaw==1) then 
+    bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
+    if (bc%rsf%StateLaw==1) then
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
     else
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
-    endif   
+    endif
   else
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
   endif
 
   call init_dataXZ(bc%dataXZ,bc)
- ! output a fault snapshot at t=0 
+ ! output a fault snapshot at t=0
   if (.NOT. PARALLEL_FAULT) then
     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
   else
@@ -289,13 +289,13 @@ subroutine TPV16_init
          Rstress_str(ipar),Rstress_dip(ipar),static_fc(ipar),dyn_fc(ipar),swcd(ipar),cohes(ipar),tim_forcedRup(ipar)
   enddo
   close(IIN_NUC)
-  
+
   minX = minval(bc%coord(1,:))
 
   do i=1,bc%nglob
-  
+
    ! WARNING: nearest neighbor interpolation
-    ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1) 
+    ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1)
    !loc_dip is negative of Z-coord
 
     bc%T0(3,i) = -sigma0(ipar)
@@ -328,13 +328,13 @@ subroutine init_2d_distribution(a,coord,iin,n)
   real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
   integer :: i
-  real(kind=CUSTOM_REAL) :: SMALLVAL 
+  real(kind=CUSTOM_REAL) :: SMALLVAL
 
   NAMELIST / DIST2D / shape, val,valh, xc, yc, zc, r, l, lx,ly,lz
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
-  if (n==0) return   
+  if (n==0) return
 
   do i=1,n
     shape = ''
@@ -363,13 +363,13 @@ subroutine init_2d_distribution(a,coord,iin,n)
     case ('ellipse')
       b = heaviside( 1e0_CUSTOM_REAL - sqrt( (coord(1,:)-xc)**2/lx**2 + (coord(2,:)-yc)**2/ly**2 + (coord(3,:)-zc)**2/lz**2 ) ) *val
     case ('square')
-      b = heaviside((l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * & 
-           heaviside((l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * & 
+      b = heaviside((l/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
+           heaviside((l/2._CUSTOM_REAL)-abs(coord(2,:)-yc)+SMALLVAL) * &
            heaviside((l/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL) * &
            val
     case ('cylinder')
       b = heaviside(r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)) * &
-           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * & 
+           heaviside((lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL)  * &
            val
     case ('rectangle')
       b = heaviside((lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL)  * &
@@ -426,7 +426,7 @@ subroutine bc_dynflt_set3d_all(F,V,D)
 end subroutine bc_dynflt_set3d_all
 
 !---------------------------------------------------------------------
-subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt) 
+subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
   use specfem_par, only: it,NSTEP,myrank
 
@@ -446,7 +446,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
     half_dt = 0.5e0_CUSTOM_REAL*bc%dt
     Vf_old = sqrt(bc%V(1,:)*bc%V(1,:)+bc%V(2,:)*bc%V(2,:))
-    
+
     ! get predicted values
     dD = get_jump(bc,D) ! dD_predictor
     dV = get_jump(bc,V) ! dV_predictor
@@ -455,27 +455,27 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     ! rotate to fault frame (tangent,normal)
     ! component 3 is normal to the fault
     dD = rotate(bc,dD,1)
-    dV = rotate(bc,dV,1) 
-    dA = rotate(bc,dA,1)   
-    
+    dV = rotate(bc,dV,1)
+    dA = rotate(bc,dA,1)
+
     ! T_stick
     T(1,:) = bc%Z * ( dV(1,:) + half_dt*dA(1,:) )
     T(2,:) = bc%Z * ( dV(2,:) + half_dt*dA(2,:) )
     T(3,:) = bc%Z * ( dV(3,:) + half_dt*dA(3,:) )
-    
-    !Warning : dirty particular free surface condition z = 0. 
+
+    !Warning : dirty particular free surface condition z = 0.
     !  where (bc%zcoord(:) > - SMALLVAL) T(2,:) = 0
-    ! do k=1,bc%nglob  
+    ! do k=1,bc%nglob
     !   if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) < SMALLVAL) T(2,k) = 0.e0_CUSTOM_REAL
-    ! end do 
+    ! end do
 
     ! add initial stress
     T = T + bc%T0
-    
+
     ! Solve for normal stress (negative is compressive)
     ! Opening implies free stress
-    if (bc%allow_opening) T(3,:) = min(T(3,:),0.e0_CUSTOM_REAL) 
-    
+    if (bc%allow_opening) T(3,:) = min(T(3,:),0.e0_CUSTOM_REAL)
+
     ! smooth loading within nucleation patch
     !WARNING : ad hoc for SCEC benchmark TPV10x
     if (RATE_AND_STATE) then
@@ -499,10 +499,10 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       ! WARNING: during opening the friction state variable should not evolve
       theta_old = bc%swf%theta
       call swf_update_state(bc%D,dD,bc%V,bc%swf)
-      
+
       ! Update friction coeficient
-      bc%MU = swf_mu(bc%swf)  
-      
+      bc%MU = swf_mu(bc%swf)
+
       ! combined with time-weakening for nucleation
       !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,time) )
       if (TPV16) then
@@ -511,10 +511,10 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
       ! Update strength
       strength = -bc%MU * min(T(3,:),0.e0_CUSTOM_REAL) + bc%swf%C
-      
+
       ! Solve for shear stress
-      tnew = min(tStick,strength) 
-      
+      tnew = min(tStick,strength)
+
     else  ! Update rate and state friction:
       !JPA the solver below can be refactored into a loop with two passes
 
@@ -525,7 +525,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
         Vf_new(i)=rtsafe(funcd,0.0,Vf_old(i)+5.0,1e-5,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
-      
+
       ! second pass
       bc%rsf%theta = theta_old
       call rsf_update_state(0.5e0_CUSTOM_REAL*(Vf_old + Vf_new),bc%dt,bc%rsf)
@@ -533,36 +533,36 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
         Vf_new(i)=rtsafe(funcd,0.0,Vf_old(i)+5.0,1e-5,tStick(i),-T(3,i),bc%Z(i),bc%rsf%f0(i), &
                          bc%rsf%V0(i),bc%rsf%a(i),bc%rsf%b(i),bc%rsf%L(i),bc%rsf%theta(i),bc%rsf%StateLaw)
       enddo
-      
+
       tnew = tStick - bc%Z*Vf_new
 
     endif
-    
+
     tStick = max(tStick,1e0_CUSTOM_REAL) ! to avoid division by zero
     T(1,:) = tnew * T(1,:)/tStick
     T(2,:) = tnew * T(2,:)/tStick
 
     ! Save total tractions
     bc%T = T
-    
+
     ! Subtract initial stress
     T = T - bc%T0
 
-    if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt 
+    if (RATE_AND_STATE) T(1,:) = T(1,:) - TxExt
     !JPA: this eliminates the effect of TxExt on the equations of motion. Why is it needed?
 
     ! Update slip acceleration da=da_free-T/(0.5*dt*Z)
     dA(1,:) = dA(1,:) - T(1,:)/(bc%Z*half_dt)
     dA(2,:) = dA(2,:) - T(2,:)/(bc%Z*half_dt)
     dA(3,:) = dA(3,:) - T(3,:)/(bc%Z*half_dt)
-    
+
     ! Update slip and slip rate, in fault frame
     bc%D = dD
     bc%V = dV + half_dt*dA
-    
-    ! Rotate tractions back to (x,y,z) frame 
+
+    ! Rotate tractions back to (x,y,z) frame
     T = rotate(bc,T,-1)
-    
+
     ! Add boundary term B*T to M*a
     call add_BT(bc,MxA,T)
 
@@ -575,7 +575,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       theta_new = bc%rsf%theta
       dc = bc%rsf%L
     endif
-    
+
     call store_dataXZ(bc%dataXZ, strength, theta_old, theta_new, dc, &
          Vf_old, Vf_new, it*bc%dt,bc%dt)
 
@@ -640,8 +640,8 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   ! WARNING: if V_HEALING is negative we turn off healing
   f%healing = (V_HEALING > 0e0_CUSTOM_REAL)
 
-  mus = 0.6e0_CUSTOM_REAL 
-  mud = 0.1e0_CUSTOM_REAL 
+  mus = 0.6e0_CUSTOM_REAL
+  mud = 0.1e0_CUSTOM_REAL
   dc = 1e0_CUSTOM_REAL
   C = 0._CUSTOM_REAL
   T = HUGEVAL
@@ -660,7 +660,7 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
   f%C   = C
   f%T   = T
   call init_2d_distribution(f%mus,coord,IIN_PAR,nmus)
-  call init_2d_distribution(f%mud,coord,IIN_PAR,nmud) 
+  call init_2d_distribution(f%mud,coord,IIN_PAR,nmud)
   call init_2d_distribution(f%Dc ,coord,IIN_PAR,ndc)
   call init_2d_distribution(f%C  ,coord,IIN_PAR,nC)
   call init_2d_distribution(f%T  ,coord,IIN_PAR,nForcedRup)
@@ -683,7 +683,7 @@ subroutine swf_update_state(dold,dnew,vold,f)
   f%theta = f%theta + sqrt( (dold(1,:)-dnew(1,:))**2 + (dold(2,:)-dnew(2,:))**2 )
 
   if (f%healing) then
-    npoin = size(vold,2) 
+    npoin = size(vold,2)
     do k=1,npoin
       vnorm = sqrt(vold(1,k)**2 + vold(2,k)**2)
       if (vnorm<V_HEALING) f%theta(k) = 0e0_CUSTOM_REAL
@@ -802,7 +802,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 !!$    where(ystore < 0) init_vel(1,:) = V_init/2._CUSTOM_REAL
 !!$    !init_vel = rotate(bc,init_vel,-1) ! directly assigned in global coordinates here as it is a simplified case
 !!$    vel = vel + init_vel
-    
+
  ! WARNING: below is an ad-hoc setting of a(x,z) for some SCEC benchmark
  !          This should be instead an option in init_2d_distribution
   W1=15000._CUSTOM_REAL
@@ -827,7 +827,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
       else
         B1 = 0._CUSTOM_REAL
       endif
-    
+
       if (c3 .and. c4) then
         b21 = w/(abs(z-hypo_z)-W2-w)
         b22 = w/(abs(z-hypo_z)-W2)
@@ -837,7 +837,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
       else
         B2 = 0._CUSTOM_REAL
       endif
-    
+
       f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
       f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
 
@@ -851,7 +851,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   enddo
 
- ! WARNING: The line below scratches an earlier initialization of theta through theta_init 
+ ! WARNING: The line below scratches an earlier initialization of theta through theta_init
  !          We should implement it as an option for the user
   if(f%stateLaw == 1) then
      f%theta = f%L/f%V0 &
@@ -886,7 +886,7 @@ end subroutine rsf_init
 !!$
 !!$  arg = V/TWO/f%V0 * exp((f%f0 + f%b*log(f%theta*f%V0/f%L))/f%a )
 !!$
-!!$  mu = f%a * asinh_slatec( arg ) ! Regularized 
+!!$  mu = f%a * asinh_slatec( arg ) ! Regularized
 !!$
 !!$end function rsf_mu
 
@@ -905,9 +905,9 @@ subroutine rsf_update_state(V,dt,f)
   ! ageing law
   if (f%StateLaw == 1) then
     where(vDtL > 1.e-5_CUSTOM_REAL)
-      f%theta = f%theta * exp(-vDtL) + f%L/V * (ONE - exp(-vDtL)) 
+      f%theta = f%theta * exp(-vDtL) + f%L/V * (ONE - exp(-vDtL))
     elsewhere
-      f%theta = f%theta * exp(-vDtL) + dt*( ONE - HALF*vDtL ) 
+      f%theta = f%theta * exp(-vDtL) + dt*( ONE - HALF*vDtL )
     endwhere
 
   ! slip law : by default use strong rate-weakening
@@ -990,11 +990,11 @@ subroutine init_dataXZ(dataXZ,bc)
     dataXZ%d1 => bc%d(1,:)
     dataXZ%d2 => bc%d(2,:)
     dataXZ%v1 => bc%v(1,:)
-    dataXZ%v2 => bc%v(2,:) 
+    dataXZ%v2 => bc%v(2,:)
     dataXZ%t1 => bc%t(1,:)
     dataXZ%t2 => bc%t(2,:)
     dataXZ%t3 => bc%t(3,:)
-    dataXZ%xcoord => bc%coord(1,:) 
+    dataXZ%xcoord => bc%coord(1,:)
     dataXZ%ycoord => bc%coord(2,:)
     dataXZ%zcoord => bc%coord(3,:)
     allocate(dataXZ%tRUP(bc%nglob))
@@ -1027,17 +1027,17 @@ subroutine init_dataXZ(dataXZ,bc)
       allocate(bc%dataXZ_all%stg(npoin_all))
       allocate(bc%dataXZ_all%sta(npoin_all))
     endif
-    
+
     allocate(bc%npoin_perproc(NPROC))
     bc%npoin_perproc=0
     call gather_all_i(dataXZ%npoin,1,bc%npoin_perproc,1,NPROC)
-    
+
     allocate(bc%poin_offset(NPROC))
     bc%poin_offset(1)=0
     do iproc=2,NPROC
       bc%poin_offset(iproc) = sum(bc%npoin_perproc(1:iproc-1))
     enddo
-    
+
     call gatherv_all_cr(dataXZ%xcoord,dataXZ%npoin,bc%dataXZ_all%xcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
     call gatherv_all_cr(dataXZ%ycoord,dataXZ%npoin,bc%dataXZ_all%ycoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
     call gatherv_all_cr(dataXZ%zcoord,dataXZ%npoin,bc%dataXZ_all%zcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
@@ -1067,7 +1067,7 @@ subroutine gather_dataXZ(bc)
 end subroutine gather_dataXZ
 
 !---------------------------------------------------------------
-subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,time,dt) 
+subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,time,dt)
 
   type(dataXZ_type), intent(inout) :: dataXZ
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: stg,dold,dnew,dc,vold,vnew
@@ -1202,7 +1202,7 @@ end subroutine write_dataXZ
   if (y >= xmax) asinh_slatec = aln2 + log(y)
   asinh_slatec = sign(asinh_slatec, x)
 
-contains 
+contains
 
 
 ! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
@@ -1293,7 +1293,7 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   if(statelaw == 1) then
      arg = exp((f0+dble(b)*log(V0*theta/L))/a)/TWO/V0
-  else 
+  else
      arg = exp(theta/a)/TWO/V0
   endif
   fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)

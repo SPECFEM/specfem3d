@@ -35,10 +35,13 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         one_minus_sum_beta,factor_common, &
+                        one_minus_sum_beta_kappa,factor_common_kappa, &  !ZN
                         alphaval,betaval,gammaval, &
-                        NSPEC_ATTENUATION_AB, &
-                        R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        epsilondev_xx,epsilondev_yy,epsilondev_xy,&
+                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
+!ZN                        R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, & !ZN
+!ZN                        epsilondev_xx,epsilondev_yy,epsilondev_xy,&
+                        epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,& !ZN
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store, &
@@ -53,7 +56,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic)
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,FULL_ATTENUATION_SOLID,IOUT !ZN
   use pml_par
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
 
@@ -90,15 +93,19 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
   logical :: ATTENUATION
   logical :: COMPUTE_AND_STORE_STRAIN
   integer :: NSPEC_STRAIN_ONLY, NSPEC_ADJOINT
-  integer :: NSPEC_ATTENUATION_AB
+  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: one_minus_sum_beta_kappa  !ZN
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: factor_common_kappa !ZN
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
        R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS) :: R_trace !ZN
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
-       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
+       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz !ZN
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: epsilondev_trace
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
 ! anisotropy
@@ -168,9 +175,9 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   ! local attenuation parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_xx_loc, &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, & !ZN
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) :: R_xx_val,R_yy_val
+  real(kind=CUSTOM_REAL) :: R_trace_val,R_xx_val,R_yy_val !ZN
   real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
   real(kind=CUSTOM_REAL) :: templ
 
@@ -209,7 +216,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
 
      ! Kelvin Voigt damping: artificial viscosity around dynamic faults
      if (allocated(Kelvin_Voigt_eta)) then
-        eta = Kelvin_Voigt_eta(ispec)   
+        eta = Kelvin_Voigt_eta(ispec)
         do k=1,NGLLZ
            do j=1,NGLLY
               do i=1,NGLLX
@@ -224,7 +231,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
            do j=1,NGLLY
               do i=1,NGLLX
                  iglob = ibool(i,j,k,ispec)
-                 dloc(:,i,j,k) = displ(:,iglob) 
+                 dloc(:,i,j,k) = displ(:,iglob)
               enddo
            enddo
         enddo
@@ -279,7 +286,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
              tempz2l_new = tempz2l
              tempz3l_new = tempz3l
 
-             ! use first order Taylor expansion of displacement for local storage of stresses 
+             ! use first order Taylor expansion of displacement for local storage of stresses
              ! at this current time step, to fix attenuation in a consistent way
              do l=1,NGLLX
                 hp1 = hprime_xx(i,l)
@@ -404,6 +411,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
 
                 ! compute deviatoric strain
                 if( SIMULATION_TYPE == 3 ) epsilon_trace_over_3(i,j,k,ispec) = ONE_THIRD * (duxdxl_new + duydyl_new + duzdzl_new)
+                epsilondev_trace_loc(i,j,k) = 3.0 * epsilon_trace_over_3(i,j,k,ispec) !ZN
                 epsilondev_xx_loc(i,j,k) = duxdxl_new - epsilon_trace_over_3(i,j,k,ispec)
                 epsilondev_yy_loc(i,j,k) = duydyl_new - epsilon_trace_over_3(i,j,k,ispec)
                 epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_new
@@ -422,7 +430,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
 
                 PML_duz_dxl_new(i,j,k,ispec_CPML) = duzdxl_new
                 PML_duz_dyl_new(i,j,k,ispec_CPML) = duzdyl_new
-                PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_new 
+                PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_new
              endif
 
           elseif( .not.(ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) ) then
@@ -445,6 +453,9 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
           if(ATTENUATION) then
             ! use unrelaxed parameters if attenuation
             mul  = mul * one_minus_sum_beta(i,j,k,ispec)
+            if(FULL_ATTENUATION_SOLID)then   !ZN
+              kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)   !ZN
+            endif   !ZN
           endif
 
           ! full anisotropic case, stress calculations
@@ -504,18 +515,23 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
           ! subtract memory variables if attenuation
           if(ATTENUATION) then
              do i_sls = 1,N_SLS
+                if(FULL_ATTENUATION_SOLID)then !ZN
+                  R_trace_val = R_trace(i,j,k,ispec,i_sls)  !ZN
+                else !ZN
+                  R_trace_val = 0.0  !ZN
+                endif !ZN
                 R_xx_val = R_xx(i,j,k,ispec,i_sls)
                 R_yy_val = R_yy(i,j,k,ispec,i_sls)
-                sigma_xx = sigma_xx - R_xx_val
-                sigma_yy = sigma_yy - R_yy_val
-                sigma_zz = sigma_zz + R_xx_val + R_yy_val
+                sigma_xx = sigma_xx - R_xx_val - R_trace_val
+                sigma_yy = sigma_yy - R_yy_val - R_trace_val
+                sigma_zz = sigma_zz + R_xx_val + R_yy_val - R_trace_val
                 sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                 sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                 sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
              enddo
           endif
 
-          if( .not. PML_CONDITIONS ) then 
+          if( .not. PML_CONDITIONS ) then
              ! define symmetric components of sigma
              sigma_yx = sigma_xy
              sigma_zx = sigma_xz
@@ -610,11 +626,22 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
              ! use Runge-Kutta scheme to march in time
              do i_sls = 1,N_SLS
 
-                factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
-
                 alphaval_loc = alphaval(i_sls)
                 betaval_loc = betaval(i_sls)
                 gammaval_loc = gammaval(i_sls)
+
+                if(FULL_ATTENUATION_SOLID)then
+                  ! term in trace  !ZN
+                  factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)  !ZN
+
+                  Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)  !ZN
+                  Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)  !ZN
+                  R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &  !ZN
+                                    betaval_loc * Sn + gammaval_loc * Snp1  !ZN
+                endif
+
+                ! term in xx yy zz xy xz yz
+                factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
 
                 ! term in xx
                 Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
@@ -658,6 +685,7 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
 
     ! save deviatoric strain for Runge-Kutta scheme
     if ( COMPUTE_AND_STORE_STRAIN ) then
+      if(FULL_ATTENUATION_SOLID)epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)  !ZN
       epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
       epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
@@ -666,8 +694,8 @@ subroutine compute_forces_viscoelastic_noDev( iphase, &
     endif
 
   enddo  ! spectral element loop
-  
-  ! C-PML boundary 
+
+  ! C-PML boundary
   if( PML_CONDITIONS ) then
      ! xmin
      do ispec2D=1,nspec2D_xmin

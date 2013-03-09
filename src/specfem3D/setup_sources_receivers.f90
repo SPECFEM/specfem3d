@@ -581,12 +581,12 @@
         call lagrange_any(xi_source(isource),NGLLX,xigll,hxis,hpxis)
         call lagrange_any(eta_source(isource),NGLLY,yigll,hetas,hpetas)
         call lagrange_any(gamma_source(isource),NGLLZ,zigll,hgammas,hpgammas)
-        
+
         hxis_store(isource,:) = hxis(:)
         hetas_store(isource,:) = hetas(:)
         hgammas_store(isource,:) = hgammas(:)
 
-        if (USE_FORCE_POINT_SOURCE) then ! use of FORCESOLUTION files 
+        if (USE_FORCE_POINT_SOURCE) then ! use of FORCESOLUTION files
 
            ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
 
@@ -644,18 +644,18 @@
               ! note: M0 by Dahlen and Tromp, eq. 5.91
               factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
                    + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2 ) )
-              
+
               ! scales source such that it would be equivalent to explosion source moment tensor,
               ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
               ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
               factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
-              
+
               ! source encoding
               ! determines factor +/-1 depending on sign of moment tensor
               ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
               !   Geophysics, 74 (6), WCC177-WCC188.)
               pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
-              
+
               ! source array interpolated on all element gll points (only used for non point sources)
               call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
            endif
@@ -663,7 +663,7 @@
         endif
         ! stores source excitations
         sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
-        
+
      endif
     enddo
   else

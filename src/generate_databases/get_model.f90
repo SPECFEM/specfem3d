@@ -330,7 +330,7 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
-  ! deallocates tomographic arrays 
+  ! deallocates tomographic arrays
   if( nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO ) then
      call deallocate_tomography_files()
   endif

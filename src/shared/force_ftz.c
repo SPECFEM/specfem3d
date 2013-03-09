@@ -74,5 +74,5 @@ FC_FUNC_(force_ftz,FORCE_FTZ)()
   x |= (1 << UNDERFLOW_EXCEPTION_MASK);
   _mm_setcsr(x);
 #endif
-#endif // __GNUC__ 
+#endif // __GNUC__
 }

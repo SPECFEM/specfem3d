@@ -144,9 +144,15 @@
   if( ATTENUATION ) then
     !pll
     NSPEC_ATTENUATION_AB = NSPEC_AB
+    if(FULL_ATTENUATION_SOLID) then  !ZN
+      NSPEC_ATTENUATION_AB_kappa = NSPEC_AB  !ZN
+    else  !ZN
+      NSPEC_ATTENUATION_AB_kappa = 1  !ZN
+    endif  !ZN
   else
     ! if attenuation is off, set dummy size of arrays to one
     NSPEC_ATTENUATION_AB = 1
+    NSPEC_ATTENUATION_AB_kappa = 1  !ZN
   endif
 
   ! needed for attenuation and/or kernel computations
@@ -263,7 +269,7 @@
   ! gravity only on GPU supported
   if( .not. GPU_MODE .and. GRAVITY ) &
     stop 'GRAVITY only supported in GPU mode'
-  
+
   ! absorbing surfaces
   if( ABSORBING_CONDITIONS ) then
      ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -

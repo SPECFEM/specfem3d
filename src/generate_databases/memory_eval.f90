@@ -85,7 +85,7 @@
   ! see: read_mesh_databases.f90 and pml_allocate_arrays.f90
   ! C-PML arrays
   if( PML_CONDITIONS ) then
-     ! CPML_regions,CPML_to_spec,CPML_type 
+     ! CPML_regions,CPML_to_spec,CPML_type
      memory_size = memory_size + 3.d0*nspec_cpml*dble(SIZE_INTEGER)
 
      ! spec_to_CPML
@@ -129,7 +129,7 @@
      ! accel_elastic_CPML
      memory_size = memory_size + dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
-     ! second derivative of the potential 
+     ! second derivative of the potential
      memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
   endif
 

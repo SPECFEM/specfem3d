@@ -27,7 +27,7 @@
 ! United States and French Government Sponsorship Acknowledged.
 
   subroutine finalize_simulation()
-    
+
   use pml_par
 
   use specfem_par
@@ -57,11 +57,13 @@
       write(27) accel
 
       if (ATTENUATION) then
+        if(FULL_ATTENUATION_SOLID) write(27) R_trace  !ZN
         write(27) R_xx
         write(27) R_yy
         write(27) R_xy
         write(27) R_xz
         write(27) R_yz
+        if(FULL_ATTENUATION_SOLID) write(27) epsilondev_trace !ZN
         write(27) epsilondev_xx
         write(27) epsilondev_yy
         write(27) epsilondev_xy

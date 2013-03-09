@@ -123,10 +123,10 @@
 
 ! C-PML absorbing boundary conditions
 
-  ! local number of C-PML spectral elements 
+  ! local number of C-PML spectral elements
   integer :: nspec_cpml
 
-  ! global number of C-PML spectral elements 
+  ! global number of C-PML spectral elements
   integer :: nspec_cpml_tot
 
   ! C-PML spectral elements global indexing
@@ -138,7 +138,7 @@
   ! mask of C-PML elements for the global mesh
   logical, dimension(:), allocatable :: CPML_mask_ibool
 
-  ! thickness of C-PML layers 
+  ! thickness of C-PML layers
   real(kind=CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
 
   ! C-PML damping profile arrays

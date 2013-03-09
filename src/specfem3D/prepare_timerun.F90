@@ -55,7 +55,7 @@
 
   ! Loading kinematic and dynamic fault solvers.
   call BC_DYNFLT_init(prname,DT,myrank)
-    
+
   call BC_KINFLT_init(prname,DT,myrank)
 
   ! sets up time increments
@@ -462,7 +462,7 @@
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
   real(kind=CUSTOM_REAL):: scale_factorl
   integer :: i,j,k,ispec,ier
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor,scale_factor_kappa !ZN
 
   ! if attenuation is on, shift shear moduli to center frequency of absorption period band, i.e.
   ! rescale mu to average (central) frequency for attenuation
@@ -475,6 +475,13 @@
     allocate( scale_factor(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if( ier /= 0 ) call exit_mpi(myrank,'error allocation scale_factor')
     scale_factor(:,:,:,:) = 1._CUSTOM_REAL
+
+    one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL  !ZN
+    factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL  !ZN
+    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)  !ZN
+    if( ier /= 0 ) call exit_mpi(myrank,'error allocation scale_factor_kappa')  !ZN
+    scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL  !ZN
+
 
     ! reads in attenuation arrays
     open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
@@ -492,6 +499,13 @@
     read(27) one_minus_sum_beta
     read(27) factor_common
     read(27) scale_factor
+
+    if(FULL_ATTENUATION_SOLID)then  !ZN
+      read(27) one_minus_sum_beta_kappa !ZN
+      read(27) factor_common_kappa !ZN
+      read(27) scale_factor_kappa !ZN
+    endif !ZN
+
     close(27)
 
 
@@ -524,12 +538,19 @@
             scale_factorl = scale_factor(i,j,k,ispec)
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
+            if(FULL_ATTENUATION_SOLID)then  !ZN
+              ! scales kappa moduli
+              scale_factorl = scale_factor_kappa(i,j,k,ispec)
+              kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
+            endif  !ZN
+
           enddo
         enddo
       enddo
     enddo
 
     deallocate(scale_factor)
+    deallocate(scale_factor_kappa) !ZN
 
     ! statistics
     ! user output
@@ -546,12 +567,14 @@
 
     ! clear memory variables if attenuation
     ! initialize memory variables for attenuation
+    epsilondev_trace(:,:,:,:) = 0._CUSTOM_REAL !ZN
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
 
+    R_trace(:,:,:,:,:) = 0._CUSTOM_REAL !ZN
     R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
     R_yy(:,:,:,:,:) = 0._CUSTOM_REAL
     R_xy(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -559,6 +582,7 @@
     R_yz(:,:,:,:,:) = 0._CUSTOM_REAL
 
     if(FIX_UNDERFLOW_PROBLEM) then
+      R_trace(:,:,:,:,:) = VERYSMALLVAL !ZN
       R_xx(:,:,:,:,:) = VERYSMALLVAL
       R_yy(:,:,:,:,:) = VERYSMALLVAL
       R_xy(:,:,:,:,:) = VERYSMALLVAL
@@ -821,11 +845,13 @@
 
       ! memory variables if attenuation
       if( ATTENUATION ) then
+         b_R_trace = 0._CUSTOM_REAL !ZN
          b_R_xx = 0._CUSTOM_REAL
          b_R_yy = 0._CUSTOM_REAL
          b_R_xy = 0._CUSTOM_REAL
          b_R_xz = 0._CUSTOM_REAL
          b_R_yz = 0._CUSTOM_REAL
+         b_epsilondev_trace = 0._CUSTOM_REAL !ZN
          b_epsilondev_xx = 0._CUSTOM_REAL
          b_epsilondev_yy = 0._CUSTOM_REAL
          b_epsilondev_xy = 0._CUSTOM_REAL
@@ -1256,11 +1282,14 @@
                                   SAVE_FORWARD, &
                                   COMPUTE_AND_STORE_STRAIN, &
                                   epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+!ZN                               epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                   epsilondev_xz,epsilondev_yz, &
                                   ATTENUATION, &
                                   size(R_xx), &
                                   R_xx,R_yy,R_xy,R_xz,R_yz, &
+!ZN                               R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
                                   one_minus_sum_beta,factor_common, &
+!ZN                                  one_minus_sum_beta_kappa,factor_commonkappa, &
                                   alphaval,betaval,gammaval, &
                                   OCEANS,rmass_ocean_load, &
                                   NOISE_TOMOGRAPHY, &
@@ -1280,10 +1309,12 @@
                                   COMPUTE_AND_STORE_STRAIN, &
                                   epsilon_trace_over_3, &
                                   b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+!ZN                               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                                   b_epsilondev_xz,b_epsilondev_yz, &
                                   b_epsilon_trace_over_3, &
                                   ATTENUATION,size(R_xx), &
                                   b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+!ZN                               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
                                   b_alphaval,b_betaval,b_gammaval, &
                                   APPROXIMATE_HESS_KL)
 

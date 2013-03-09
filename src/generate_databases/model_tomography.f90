@@ -48,8 +48,8 @@
 
   ! determines the number of external tomographic models and allocates tomographic arrays
   call init_tomography_files(myrank)
-  
-  ! reads Vp Vs and rho from extracted text file 
+
+  ! reads Vp Vs and rho from extracted text file
   call read_model_tomography(myrank)
 
   ! otherwise:
@@ -128,7 +128,7 @@
 
         ! checks the number of records for points definition
         nlines = 0
-        do while(ier == 0) 
+        do while(ier == 0)
            read(27,*,iostat=ier)
            if (ier == 0) nlines = nlines + 1
         end do
@@ -222,7 +222,7 @@ end subroutine init_tomography_files
         open(unit=27,file=trim(tomo_filename),status='old',action='read',iostat=ier)
         if(ier /= 0) call exit_MPI(myrank,'error reading tomography file')
 
-        rewind(unit=27,iostat=ier) 
+        rewind(unit=27,iostat=ier)
         if(ier /= 0) call exit_MPI(myrank,'error rewinding tomography file')
 
         ! reads in model dimensions
@@ -334,7 +334,7 @@ end subroutine init_tomography_files
 
   implicit none
 
-  integer, intent(in) :: imaterial_id 
+  integer, intent(in) :: imaterial_id
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
@@ -355,7 +355,7 @@ end subroutine init_tomography_files
     vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8,rho1,rho2,rho3,rho4,rho5,rho6,rho7,rho8
 
   real(kind=CUSTOM_REAL), dimension(NFILES_TOMO) :: vp_final,vs_final,rho_final
-  
+
 
   if( imaterial_id < 0 .and. trim(undef_mat_prop(2,abs(imaterial_id))) == 'tomography' ) then
 
@@ -587,6 +587,6 @@ end subroutine init_tomography_files
 
     ! deallocates models min/max statistics
     deallocate(VP_MIN,VS_MIN,RHO_MIN)
-    deallocate(VP_MAX,VS_MAX,RHO_MAX)    
+    deallocate(VP_MAX,VS_MAX,RHO_MAX)
 
   end subroutine deallocate_tomography_files

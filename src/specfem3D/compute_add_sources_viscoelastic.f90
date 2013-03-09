@@ -449,7 +449,7 @@
 
                   if(USE_FORCE_POINT_SOURCE) then
 
-                     !f0 = hdur(isource) !! using hdur as a FREQUENCY 
+                     !f0 = hdur(isource) !! using hdur as a FREQUENCY
                      !if (it == 1 .and. myrank == 0) then
                      !   write(IMAIN,*) 'using a source of dominant frequency ',f0
                      !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
