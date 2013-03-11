@@ -30,6 +30,11 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
+  ! second-order accurate convolution term calculation from equation (21) of
+  ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
+  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
+
   use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,it,kappastore
   use specfem_par_elastic, only: rho_vp,displ,veloc,ispec_is_elastic
   use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,ispec_is_acoustic
