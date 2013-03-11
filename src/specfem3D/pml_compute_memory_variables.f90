@@ -33,6 +33,11 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
 
   ! calculates C-PML elastic memory variables and computes stress sigma
 
+  ! second-order accurate convolution term calculation from equation (21) of
+  ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
+  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
+
   use specfem_par, only: it
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic
