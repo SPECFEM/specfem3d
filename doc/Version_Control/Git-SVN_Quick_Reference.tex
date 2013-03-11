@@ -1,0 +1,191 @@
+\documentclass[11pt,twoside]{article}
+
+\begin{document}
+
+\title{GIT-SVN basic commands}
+\maketitle
+
+\subsection*{Important remark}
+
+It might be useful to issue some git-svn commands beforehand with the \verb|-n| option (or with its longer name \verb|--dry-run|).
+This option shows what will be impacted by the \texttt{git-svn} command before issuing the actual command.
+This can be used with the \texttt{dcommit}, \texttt{rebase}, \texttt{branch} and \texttt{tag} commands.
+
+\subsection*{Git-svn -- Initial checkout}
+\begin{verbatim}
+$ git svn clone -s \
+  svn+ssh://svn@geodynamics.org/cig/seismo/3D/SPECFEM3D_GLOBE
+\end{verbatim}
+The previous command checkouts the full svn history and converts it into a git history. It takes a huge amount of time. If the full history is not needed, one can checkout a partial history.
+For instance, checking out revisions from $20\:000$ to the last one (\texttt{HEAD}) is done with:
+\begin{verbatim}
+$ git svn clone -s -r 20000:HEAD \
+  svn+ssh://svn@geodynamics.org/cig/seismo/3D/SPECFEM3D\_GLOBE
+\end{verbatim}
+
+\subsection*{Git-svn -- SVN branches}
+
+Taking a look at the different branches available:
+\begin{verbatim}
+$ git branch -a
+* master
+  remotes/NOISE_TOMOGRAPHY
+  remotes/ORIGINAL
+  remotes/SPECFEM3D_GLOBE_SUNFLOWER
+  remotes/adjoint
+  remotes/pluggable
+  remotes/tags/v5.1.5
+  remotes/trunk
+\end{verbatim}  
+
+Creating a new branch \texttt{SPECFEM3D\_GLOBE\_ADIOS} on the svn server:
+\begin{verbatim}
+$ git svn branch SPECFEM3D_GLOBE_ADIOS
+\end{verbatim}
+
+Switching to a remote branch. It is mandatory, else the commit will be done in the master branch
+\begin{verbatim}
+$ git checkout -b local/SPECFEM3D_GLOBE_ADIOS \
+  SPECFEM3D_GLOBE_ADIOS
+\end{verbatim}
+
+\subsection*{Git -- Checking the status of the file.}
+Before doing any modification it is mandatory to know which files are tracked, have been modified or deleted.
+
+\begin{verbatim}
+$ git status
+\end{verbatim}
+
+If some files appear to be untracked they can be added to the local git repository with:
+
+\begin{verbatim}
+$ git add filename
+\end{verbatim}
+
+\begin{verbatim}
+$ git status 
+# should now return the added file
+# as 'new file' unstead of 'untracked'.
+\end{verbatim}
+
+If some files were modified, before committing the modifications, it may be useful to see what has changed :
+
+\begin{verbatim}
+$ git diff filename
+\end{verbatim}
+
+\subsection*{Git -- Committing changes into the local repository}
+
+
+\begin{verbatim}
+$ git commit
+\end{verbatim}
+
+This command will open your favorite text editor (it is likely to be vi without any particular configuration) and ask you for a comment about the commit. If nothing is written, the commit will abort.
+
+\subsection*{Git -- Removing files}
+
+\begin{verbatim}
+$ rm filename # remove the file from your workspace.
+\end{verbatim}
+\begin{verbatim}
+$ git rm filename 
+# prepare to remove the file from the git local repository.
+\end{verbatim}
+\begin{verbatim}
+$ git commit #... 
+\end{verbatim}
+
+\subsection*{Git -- Moving files}
+
+\begin{verbatim}
+$ git mv old_file new_file
+\end{verbatim}
+\begin{verbatim}
+$ git commit
+\end{verbatim}
+
+OR
+
+\begin{verbatim}
+$ mv old_file new_file
+\end{verbatim}
+\begin{verbatim}
+$ git rm old_file
+\end{verbatim}
+\begin{verbatim}
+$ git add new_file
+\end{verbatim}
+\begin{verbatim}
+$ git commit
+\end{verbatim}
+
+\subsection*{Git -- Commit history}
+
+\begin{verbatim}
+$ git log
+\end{verbatim}
+
+\subsection*{Git -- Changing the last commit}
+
+\begin{verbatim}
+$ git commit -m 'initial commit'
+\end{verbatim}
+\begin{verbatim}
+$ git add forgotten_file
+\end{verbatim}
+\begin{verbatim}
+$ git commit --amend
+\end{verbatim}
+\subsection*{Git -- Unstaging a staged file (i.e. Removing a file from the list of files to be 
+committed)}
+
+\begin{verbatim}
+$ git status 
+# the file has to be in the 'changes to be committed' section
+\end{verbatim}
+
+\begin{verbatim}
+$ git reset HEAD filename
+filename: locally modified
+\end{verbatim}
+\begin{verbatim}
+$ git status  
+# the file should be in the 'Changes not staged for commit' section
+\end{verbatim}
+
+\subsection*{Git -- Unmodifying a Modified File}
+
+\begin{verbatim}
+$ git checkout -- filename
+\end{verbatim}
+\begin{verbatim}
+$ git status
+\end{verbatim}
+
+\subsection*{Git-svn -- Back to the svn server}
+
+Push modifications up to the svn server:
+\begin{verbatim}
+$ git svn dcommit
+\end{verbatim}
+That will also bring your local tree up to date. To bring your tree up to date in general, run: 
+\begin{verbatim}
+$ git svn rebase
+\end{verbatim}
+This will update your local checkout and then re-apply your local un-submitted commits on top of the new trunk. 
+If you want to get the commits for all branches that exist in your clone: 
+\begin{verbatim}
+$ git svn fetch
+\end{verbatim}
+
+\subsection*{References and usefull readings}
+
+\verb|http://git-scm.com/book|
+\\
+\verb|http://git.or.cz/course/svn.html|
+\\
+\verb|http://trac.parrot.org/parrot/wiki/git-svn-tutorial|
+
+
+\end{document}
