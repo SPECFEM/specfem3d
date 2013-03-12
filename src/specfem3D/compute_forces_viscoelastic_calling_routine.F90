@@ -441,35 +441,36 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
+    stop 'OpenMP support has been discontinued for now' 
 !! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
-    call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
-           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-           hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-           wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-           kappastore,mustore,jacobian,ibool, &
-           ATTENUATION,deltat, &
-           one_minus_sum_beta,factor_common, &
-           one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
-           alphaval,betaval,gammaval, &
-           NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
-!ZN           R_xx,R_yy,R_xy,R_xz,R_yz, &
-           R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  !ZN
-!ZN           epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-           epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  !ZN
-           epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-           ANISOTROPY,NSPEC_ANISO, &
-           c11store,c12store,c13store,c14store,c15store,c16store,&
-           c22store,c23store,c24store,c25store,c26store,c33store,&
-           c34store,c35store,c36store,c44store,c45store,c46store,&
-           c55store,c56store,c66store, &
-           SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-           NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-           is_moho_top,is_moho_bot, &
-           dsdx_top,dsdx_bot, &
-           ispec2D_moho_top,ispec2D_moho_bot, &
-           num_phase_ispec_elastic,&
-           phase_ispec_inner_elastic,&
-           num_colors_outer_elastic,num_colors_inner_elastic)
+!   call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+!          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+!          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
+!          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+!          kappastore,mustore,jacobian,ibool, &
+!          ATTENUATION,deltat, &
+!          one_minus_sum_beta,factor_common, &
+!          one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
+!          alphaval,betaval,gammaval, &
+!          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
+! !ZN      R_xx,R_yy,R_xy,R_xz,R_yz, &
+!          R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  !ZN
+! !ZN      epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+!          epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  !ZN
+!          epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
+!          ANISOTROPY,NSPEC_ANISO, &
+!          c11store,c12store,c13store,c14store,c15store,c16store,&
+!          c22store,c23store,c24store,c25store,c26store,c33store,&
+!          c34store,c35store,c36store,c44store,c45store,c46store,&
+!          c55store,c56store,c66store, &
+!          SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+!          NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
+!          is_moho_top,is_moho_bot, &
+!          dsdx_top,dsdx_bot, &
+!          ispec2D_moho_top,ispec2D_moho_bot, &
+!          num_phase_ispec_elastic,&
+!          phase_ispec_inner_elastic,&
+!          num_colors_outer_elastic,num_colors_inner_elastic)
 #else
     call compute_forces_viscoelastic_Dev_5p(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
