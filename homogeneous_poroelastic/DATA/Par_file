@@ -23,7 +23,7 @@ DT                              = 5.d-5 #0.5d-3
 # If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported)
 # CUBIT does not support HEX27 elements either (it can generate them, but they are flat, i.e. identical to HEX8).
 # To generate HEX27 elements with curvature properly taken into account, you can use Gmsh http://geuz.org/gmsh/
-NGNOD 	      	    	     	= 8
+NGNOD                       = 8
 
 # models:
 # available options are:
@@ -35,7 +35,7 @@ NGNOD 	      	    	     	= 8
 MODEL                           = default
 
 # parameters describing the model
-OCEANS                          = .false.
+APPROXIMATE_OCEAN_LOAD                          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
 ANISOTROPY                      = .false.
@@ -55,7 +55,7 @@ ABSORBING_CONDITIONS            = .false.
 ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
 
 # C-PML boundary conditions for a regional simulation
-PML_CONDITIONS 	 	    	= .false.
+PML_CONDITIONS          = .false.
 
 # C-PML top surface
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
@@ -67,7 +67,7 @@ PML_WIDTH_MAX                   = 25000.0d0
 # C-PML dominant frequency
 f0_FOR_PML                      = 12.7
 
-# parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)				
+# parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
 # ROTATE_PML_ANGLE              = 0.
 
@@ -112,7 +112,7 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
 USE_FORCE_POINT_SOURCE          = .false.
 
-# set to true to use a Ricker source time function instead of the source time functions set by default 
+# set to true to use a Ricker source time function instead of the source time functions set by default
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .false.
 
