@@ -27,7 +27,7 @@
 
 ! for external mesh
 
-  subroutine save_arrays_solver_ext_mesh(nspec,nglob,OCEANS,ibool, &
+  subroutine save_arrays_solver_ext_mesh(nspec,nglob,APPROXIMATE_OCEAN_LOAD,ibool, &
                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
@@ -42,7 +42,7 @@
 
   integer :: nspec,nglob
   ! ocean load
-  logical :: OCEANS
+  logical :: APPROXIMATE_OCEAN_LOAD
   ! mesh coordinates
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   ! MPI interfaces
@@ -103,7 +103,7 @@
 ! elastic
   if( ELASTIC_SIMULATION ) then
     write(IOUT) rmass
-    if( OCEANS) then
+    if( APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
     !pll Stacey

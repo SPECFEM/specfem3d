@@ -185,7 +185,7 @@
 ! returns precomputed mass matrix in rmass array
 
   use generate_databases_par, only: &
-    OCEANS,TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+    APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
     NX_TOPO,NY_TOPO,itopo_bathy,myrank
 
   use create_regions_mesh_ext_par
@@ -209,7 +209,7 @@
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_elevation
 
   ! creates ocean load mass matrix
-  if(OCEANS) then
+  if(APPROXIMATE_OCEAN_LOAD) then
 
     if( myrank == 0) then
       write(IMAIN,*) '  ...creating ocean load mass matrix '
@@ -269,7 +269,7 @@
 
           ! take into account inertia of water column
           weight = dble( free_surface_jacobian2Dw(igll,ispec2D)) &
-                   * dble(RHO_OCEANS) * height_oceans
+                   * dble(RHO_APPROXIMATE_OCEAN_LOAD) * height_oceans
 
           ! distinguish between single and double precision for reals
           if(CUSTOM_REAL == SIZE_REAL) then

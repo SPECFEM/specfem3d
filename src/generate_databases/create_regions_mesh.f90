@@ -46,7 +46,7 @@
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
     nodes_ibelm_bottom,nodes_ibelm_top, &
     SAVE_MESH_FILES,PML_CONDITIONS, &
-    ANISOTROPY,NPROC,OCEANS,OLSEN_ATTENUATION_RATIO, &
+    ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
     nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho
 
@@ -236,7 +236,7 @@
     write(IMAIN,*) '  ...saving databases'
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
-  call save_arrays_solver_ext_mesh(nspec,nglob_dummy,OCEANS,ibool, &
+  call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
                         num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         SAVE_MESH_FILES,ANISOTROPY)
@@ -252,7 +252,7 @@
 ! computes the approximate amount of memory needed to run the solver
   call sync_all()
   call memory_eval(nspec,nglob_dummy,maxval(nibool_interfaces_ext_mesh),num_interfaces_ext_mesh, &
-                  OCEANS,memory_size)
+                  APPROXIMATE_OCEAN_LOAD,memory_size)
   call max_all_dp(memory_size, max_memory_size)
 
 ! checks the mesh, stability and resolved period

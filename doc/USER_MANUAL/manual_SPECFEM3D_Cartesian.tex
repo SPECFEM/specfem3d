@@ -1075,15 +1075,14 @@ for a discussion on how to specify your own 3D tomographic model.
 \end{description}
 %
 %
-\item [{\texttt{OCEANS}}] Set to \texttt{.true.} if the effect of the oceans
+\item [{\texttt{APPROXIMATE\_OCEAN\_LOAD}}] Set to \texttt{.true.} if the effect of the oceans
 on seismic wave propagation should be incorporated based upon the
-approximate treatment discussed in \citet{KoTr02b}. This feature
+(rough) approximate treatment discussed in \citet{KoTr02b}. This feature
 is inexpensive from a numerical perspective, both in terms of memory
 requirements and CPU time. This approximation is accurate at periods
 of roughly 20~s and longer. At shorter periods the effect of water
-phases/reverberations is not taken into account, even when the flag
-is on.
-\item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{OCEANS} is set to \texttt{.true.}.
+phases/reverberations is not taken into account, even when the flag is on.
+\item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{APPROXIMATE\_OCEAN\_LOAD} is set to \texttt{.true.}.
 Set to \texttt{.true.} if topography and
 bathymetry should be read in based upon the topography file specified in the main
 constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/} to evaluate

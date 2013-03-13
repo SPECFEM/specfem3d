@@ -358,7 +358,7 @@ void FC_FUNC_(kernel_3_a_cuda,
                                int* size_F,
                                realw* deltatover2_F,
                                realw* b_deltatover2_F,
-                               int* OCEANS) {}
+                               int* APPROXIMATE_OCEAN_LOAD) {}
 
 void FC_FUNC_(kernel_3_b_cuda,
               KERNEL_3_B_CUDA)(long* Mesh_pointer,
@@ -494,7 +494,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
                                              realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
                                              realw* one_minus_sum_beta,realw* factor_common,
                                              realw* alphaval,realw* betaval,realw* gammaval,
-                                             int* OCEANS,
+                                             int* APPROXIMATE_OCEAN_LOAD,
                                              realw* rmass_ocean_load,
                                              int* NOISE_TOMOGRAPHY,
                                              realw* free_surface_normal,
@@ -588,7 +588,7 @@ void FC_FUNC_(prepare_cleanup_device,
                                       int* COMPUTE_AND_STORE_STRAIN,
                                       int* ATTENUATION,
                                       int* ANISOTROPY,
-                                      int* OCEANS,
+                                      int* APPROXIMATE_OCEAN_LOAD,
                                       int* APPROXIMATE_HESS_KL) {}
 
 

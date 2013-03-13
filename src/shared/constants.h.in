@@ -137,17 +137,17 @@
 
 !!-----------------------------------------------------------
 !!
-!! C-PML absorbing boundary conditions 
+!! C-PML absorbing boundary conditions
 !!
 !!-----------------------------------------------------------
   real(kind=CUSTOM_REAL), parameter :: NPOWER = 1.d0
-  real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.d0 ! (Martin and Komatitsch, Geophys. J. Int. 2009) 
+  real(kind=CUSTOM_REAL), parameter :: K_MAX_PML = 1.d0 ! (Martin and Komatitsch, Geophys. J. Int. 2009)
 
-! C-PML theoretical reflection coefficient 
+! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
   real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001d0
 
-! empirical damping modified factor 
+! empirical damping modified factor
   real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2d0
 
 ! absorb boundaries using a PML region
@@ -364,14 +364,14 @@
 
 !!-----------------------------------------------------------
 !!
-!! OCEANS load approximation
+!! APPROXIMATE_OCEAN_LOAD load approximation
 !!
 !!-----------------------------------------------------------
 ! minimum thickness in meters to include the effect of the oceans
 ! to avoid taking into account spurious oscillations in topography model
   double precision, parameter :: MINIMUM_THICKNESS_3D_OCEANS = 10.d0
 ! density of sea water
-  real(kind=CUSTOM_REAL), parameter :: RHO_OCEANS = 1020.0
+  real(kind=CUSTOM_REAL), parameter :: RHO_APPROXIMATE_OCEAN_LOAD = 1020.0
 
 !!-----------------------------------------------------------
 !!

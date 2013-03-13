@@ -257,7 +257,7 @@
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        OCEANS,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
@@ -381,7 +381,7 @@
     endif
 
     write(IMAIN,*)
-    if(OCEANS) then
+    if(APPROXIMATE_OCEAN_LOAD) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
       if(TOPOGRAPHY) write(IMAIN,*) ' with elevation from topography file'
     else
@@ -434,7 +434,7 @@
   use generate_databases_par
   implicit none
 
-  if( OCEANS .and. TOPOGRAPHY ) then
+  if( APPROXIMATE_OCEAN_LOAD .and. TOPOGRAPHY ) then
 
     ! values given in constants.h
     NX_TOPO = NX_TOPO_FILE

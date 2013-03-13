@@ -209,7 +209,7 @@
     read(27,iostat=ier) rmass
     if( ier /= 0 ) stop 'error reading in array rmass'
 
-    if( OCEANS ) then
+    if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix
       allocate(rmass_ocean_load(NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array rmass_ocean_load'

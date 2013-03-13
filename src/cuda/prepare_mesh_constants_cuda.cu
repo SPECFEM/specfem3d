@@ -665,7 +665,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
                                              realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
                                              realw* one_minus_sum_beta,realw* factor_common,
                                              realw* alphaval,realw* betaval,realw* gammaval,
-                                             int* OCEANS,
+                                             int* APPROXIMATE_OCEAN_LOAD,
                                              realw* rmass_ocean_load,
                                              int* NOISE_TOMOGRAPHY,
                                              realw* free_surface_normal,
@@ -1029,7 +1029,7 @@ TRACE("prepare_fields_elastic_device");
   }
 
   // ocean load approximation
-  if( *OCEANS ){
+  if( *APPROXIMATE_OCEAN_LOAD ){
     // oceans needs a free surface
     mp->num_free_surface_faces = *num_free_surface_faces;
     if( mp->num_free_surface_faces > 0 ){
@@ -1519,7 +1519,7 @@ void FC_FUNC_(prepare_cleanup_device,
                                       int* COMPUTE_AND_STORE_STRAIN,
                                       int* ATTENUATION,
                                       int* ANISOTROPY,
-                                      int* OCEANS,
+                                      int* APPROXIMATE_OCEAN_LOAD,
                                       int* APPROXIMATE_HESS_KL) {
 
 TRACE("prepare_cleanup_device");
@@ -1706,7 +1706,7 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_c66store);
     }
 
-    if( *OCEANS ){
+    if( *APPROXIMATE_OCEAN_LOAD ){
       if( mp->num_free_surface_faces > 0 ){
         cudaFree(mp->d_rmass_ocean_load);
         cudaFree(mp->d_free_surface_normal);
