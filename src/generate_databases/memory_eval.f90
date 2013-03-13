@@ -30,7 +30,7 @@
 ! compute the approximate amount of memory needed to run the solver
 
  subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
-                        OCEANS,memory_size)
+                        APPROXIMATE_OCEAN_LOAD,memory_size)
 
    use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
   use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic
@@ -42,7 +42,7 @@
   ! input
   integer, intent(in) :: NSPEC_AB,NGLOB_AB
   integer, intent(in) :: max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh
-  logical, intent(in) :: OCEANS
+  logical, intent(in) :: APPROXIMATE_OCEAN_LOAD
   ! output
   double precision, intent(out) :: memory_size
   ! local parameters
@@ -151,7 +151,7 @@
     ! c11store,...c66store
     memory_size = memory_size + 21.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_ANISO*dble(CUSTOM_REAL)
 
-    if (OCEANS ) then
+    if (APPROXIMATE_OCEAN_LOAD ) then
       ! rmass_ocean_load
       memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
       ! updated_dof_ocean_load

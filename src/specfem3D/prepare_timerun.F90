@@ -170,7 +170,7 @@
     endif
 
     write(IMAIN,*)
-    if(OCEANS) then
+    if(APPROXIMATE_OCEAN_LOAD) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
     else
       write(IMAIN,*) 'no oceans'
@@ -291,7 +291,7 @@
     rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
 
     ! ocean load
-    if(OCEANS ) then
+    if(APPROXIMATE_OCEAN_LOAD ) then
       call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_ocean_load, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
@@ -1291,7 +1291,7 @@
                                   one_minus_sum_beta,factor_common, &
 !ZN                                  one_minus_sum_beta_kappa,factor_commonkappa, &
                                   alphaval,betaval,gammaval, &
-                                  OCEANS,rmass_ocean_load, &
+                                  APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
                                   NOISE_TOMOGRAPHY, &
                                   free_surface_normal,free_surface_ispec,free_surface_ijk, &
                                   num_free_surface_faces, &

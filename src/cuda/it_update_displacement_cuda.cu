@@ -302,7 +302,7 @@ void FC_FUNC_(kernel_3_a_cuda,
                                int* size_F,
                                realw* deltatover2_F,
                                realw* b_deltatover2_F,
-                               int* OCEANS) {
+                               int* APPROXIMATE_OCEAN_LOAD) {
 TRACE("kernel_3_a_cuda");
 
    Mesh* mp = (Mesh*)(*Mesh_pointer); // get Mesh from fortran integer wrapper
@@ -326,7 +326,7 @@ TRACE("kernel_3_a_cuda");
    dim3 threads(blocksize,1,1);
 
    // check whether we can update accel and veloc, or only accel at this point
-   if( *OCEANS == 0 ){
+   if( *APPROXIMATE_OCEAN_LOAD == 0 ){
      // updates both, accel and veloc
      kernel_3_cuda_device<<< grid, threads,0,mp->compute_stream>>>(mp->d_veloc,
                                                                    mp->d_accel,

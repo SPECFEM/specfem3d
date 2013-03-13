@@ -37,7 +37,7 @@
                     jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
                     rhostore,kappastore,mustore, &
                     rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                    OCEANS,rmass_ocean_load,NGLOB_OCEAN,&
+                    APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,&
                     ibool, &
                     xstore_dummy,ystore_dummy,zstore_dummy, &
                     abs_boundary_normal,abs_boundary_jacobian2Dw, &
@@ -94,7 +94,7 @@
             rmass_solid_poroelastic,rmass_fluid_poroelastic
 
 ! ocean load
-  logical :: OCEANS
+  logical :: APPROXIMATE_OCEAN_LOAD
   integer :: NGLOB_OCEAN
   real(kind=CUSTOM_REAL),dimension(NGLOB_OCEAN) :: rmass_ocean_load
 
@@ -196,7 +196,7 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if( ELASTIC_SIMULATION ) then
     write(IOUT) rmass
-    if( OCEANS) then
+    if( APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif
     !pll Stacey

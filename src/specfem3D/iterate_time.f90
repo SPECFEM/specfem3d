@@ -817,7 +817,7 @@
                               SAVE_FORWARD, &
                               ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
                               ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
-                              ATTENUATION,ANISOTROPY,OCEANS, &
+                              ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
                               APPROXIMATE_HESS_KL)
 
   end subroutine it_transfer_from_GPU

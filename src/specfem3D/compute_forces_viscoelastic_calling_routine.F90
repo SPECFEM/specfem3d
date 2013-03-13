@@ -361,11 +361,11 @@ subroutine compute_forces_viscoelastic()
        b_accel(3,:) = b_accel(3,:)*rmassz(:)
     endif !adjoint
  else ! GPU_MODE == 1
-    call kernel_3_a_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2,OCEANS)
+    call kernel_3_a_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2,APPROXIMATE_OCEAN_LOAD)
  endif
 
 ! updates acceleration with ocean load term
-  if(OCEANS) then
+  if(APPROXIMATE_OCEAN_LOAD) then
     if( .NOT. GPU_MODE ) then
       call compute_coupling_ocean(NSPEC_AB,NGLOB_AB, &
                                   ibool,rmassx,rmassy,rmassz, &
@@ -401,7 +401,7 @@ subroutine compute_forces_viscoelastic()
      ! adjoint simulations
      if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
   else ! GPU_MODE == 1
-    if( OCEANS ) call kernel_3_b_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2)
+    if( APPROXIMATE_OCEAN_LOAD ) call kernel_3_b_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2)
   endif
 
 
@@ -441,7 +441,7 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 
 !----------------------------------------------------------------------------------------------
 #ifdef OPENMP_MODE
-    stop 'OpenMP support has been discontinued for now' 
+    stop 'OpenMP support has been discontinued for now'
 !! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
 !   call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
 !          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &

@@ -174,7 +174,7 @@ program model_update
 !    print*
 !    print*,'  SAVE_MESH_FILES: ',SAVE_MESH_FILES
 !    print*,'  ANISOTROPY: ',ANISOTROPY
-!    print*,'  OCEANS: ',OCEANS
+!    print*,'  APPROXIMATE_OCEAN_LOAD: ',APPROXIMATE_OCEAN_LOAD
 !    print*,'  NGLLX, NGLLY, NGLLZ: ',NGLLX, NGLLY, NGLLZ
 !    print*,'  ATTENUATION: ',ATTENUATION
 !    print*,'  USE_OLSEN_ATTENUATION: ',USE_OLSEN_ATTENUATION
@@ -974,7 +974,7 @@ program model_update
                         jacobianstore,rho_vp_new,rho_vs_new,qmu_attenuation_store, &
                         rhostore_new,kappastore_new,mustore_new, &
                         rmass_new,rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new, &
-                        OCEANS,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore,ystore,zstore, &
+                        APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore,ystore,zstore, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
                         free_surface_normal,free_surface_jacobian2Dw, &
