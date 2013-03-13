@@ -212,7 +212,7 @@ and \url{www.sc-conference.org/sc2003/nr_finalaward.html}).
 It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
 It also won the BULL Joseph Fourier supercomputing award in 2010.\\
 
-This new release of the code (version 2.1) includes support for GPU graphics card acceleration \citep{KoMiEr09,KoGoErMi10,KoErGoMi10,MiKo10,Kom11}.\\
+This new release of the code (version 2.1) includes support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.\\
 
 The next release of the code will include support Convolution or Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
@@ -231,21 +231,21 @@ of the following articles:
 \begin{description}
 
 \item [Numerical simulations in general] ~\\
-Forward and adjoint simulations are described in detail in \cite{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,KoGoErMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
+Forward and adjoint simulations are described in detail in \cite{TrKoLi08,PeKoLuMaLeCaLeMaLiBlNiBaTr11,VaCaSaKoVi99,KoMiEr09,KoErGoMi10,ChKoViCaVaFe07,MaKoDi09,KoViCh10,CaKoLaTiMiLeSnTr08,TrKoHjLiZhPeBoMcFrTrHu10,KoRiTr02,KoTr02a,KoTr02b,KoTr99} or \cite{KoVi98}.
 Additional aspects of adjoint simulations are described in
 \cite{TrTaLi05,LiTr06,TrKoLi08,LiTr08,TrKoHjLiZhPeBoMcFrTrHu10,PeKoLuMaLeCaLeMaLiBlNiBaTr11}.
 Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores is shown for instance in
-\cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11},
+\cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11},
 
 \item [GPU computing] ~\\
 Computing on GPU graphics cards for acoustic or seismic wave propagation applications
-is described in detail in \cite{KoMiEr09,KoGoErMi10,KoErGoMi10,MiKo10,Kom11}.
+is described in detail in \cite{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.
 
 \end{description}
 
 \noindent
 If you use this new version 2.1, which has non blocking MPI for much better performance for medium or large runs, please cite at least one of these six articles,
-in which results of non blocking MPI runs are presented: \cite{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoGoErMi10,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
+in which results of non blocking MPI runs are presented: \cite{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
 
 \noindent
 If you work on geophysical applications, you may be interested in citing some of these application articles as well, among others:
@@ -650,15 +650,15 @@ C-PML element according to the following convention:
 \item \#id\_cpml\_regions = 7 : XYZ\_corner C-PML.
 \end{itemize}
 
-\item [materials\_file] Contains the material associations for each element. The format is: 
+\item [materials\_file] Contains the material associations for each element. The format is:
 \begin{lyxcode}
 \texttt{element\_ID} \texttt{material\_ID}
 \end{lyxcode}
 where \texttt{element\_ID} is the element identifier and \texttt{material\_ID} is a unique identifier, positive (for materials) or negative (for tomographic models or C-PML elements).
-For C-PML absorbing conditions, \texttt{material\_ID} is a unique negative identifier between -2001 and -2007 in correspondance to the convention seen above in the description of the 
+For C-PML absorbing conditions, \texttt{material\_ID} is a unique negative identifier between -2001 and -2007 in correspondance to the convention seen above in the description of the
 absorbing\_cpml\_file: -2001 <-> 1, -2002 <-> 2, etc\ldots
 
-\item [nummaterial\_velocity\_file] Defines the material properties. 
+\item [nummaterial\_velocity\_file] Defines the material properties.
 \begin{itemize}
 \item For fully defined materials, the format is:
 \begin{lyxcode}
@@ -672,7 +672,7 @@ where \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{
 \end{lyxcode}
 where \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier between -2001 and -2007 to correspond with the definition given in materials\_file,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$
 %%magnoni
-\item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details. 
+\item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details.
 %
 %For a tomographic model, the material definition format is:
 %\begin{lyxcode}
@@ -770,7 +770,7 @@ In the future you should be able to find more recent versions at  \url{http://ww
 
 \caption{Example of a mesh partitioning onto four cores. Each single core partition is colored differently. The executable \texttt{xdecompose\_mesh} can equally distribute the mesh on any arbitrary number of cores.
 Domain decomposition is explained in detail in \cite{MaKoBlLe08}, and excellent scaling up to 150,000 processor cores in shown for instance in
-\cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,KoGoErMi10,Kom11}.}
+\cite{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11}.}
 
 
 \label{fig:mount.partitions}
@@ -1036,10 +1036,10 @@ parameter after running  \texttt{xgenerate\_databases}.
 \item [{\texttt{DT}}] The length of each time step in seconds.
 This feature is not used at the time of generating the distributed databases but is required for the solver.
 Please see also Section~\ref{sec:Choosing-the-Time-Step} for further details.
-\item [{\texttt{NGNOD}}] The number of nodes for 2D and 3D shape functions for hexahedra. We use either 
-8-node mesh elements (bricks) or 27-node elements. If you use the internal mesher, the only option is 8-node bricks 
-(27-node elements are not supported). \texttt{CUBIT} does not support HEX27 elements either (it can generate them, 
-but they are flat, i.e. identical to HEX8). To generate HEX27 elements with curvature properly taken into account, 
+\item [{\texttt{NGNOD}}] The number of nodes for 2D and 3D shape functions for hexahedra. We use either
+8-node mesh elements (bricks) or 27-node elements. If you use the internal mesher, the only option is 8-node bricks
+(27-node elements are not supported). \texttt{CUBIT} does not support HEX27 elements either (it can generate them,
+but they are flat, i.e. identical to HEX8). To generate HEX27 elements with curvature properly taken into account,
 you can use \texttt{Gmsh} \url{http://geuz.org/gmsh/}
 \item [{\texttt{MODEL}}] Must be set to one of the following:
 %
@@ -1097,8 +1097,8 @@ To change this reference frequency, you change the value of
 \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you
 want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
-\item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files are stored for using external 
-tomographic Earth models (please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} 
+\item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files are stored for using external
+tomographic Earth models (please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic}
 `Using external tomographic Earth models' for further details.).
 \item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
 want to use the attenuation model that scaled from the S-wave speed model
@@ -1110,8 +1110,8 @@ on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
 absorbing boundary conditions on the top surface which by default constitutes a free surface of the model.
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML boundary conditions for a regional simulation. Both fluids and elastic solids are supported.
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on C-PML boundary conditions on the top surface which by default constitutes a free surface of the model.
-\item [{\texttt{PML\_WIDTH\_MIN}}] Gives a min. authorized bound to the solver to target an optimized thickness of C-PML layers. 
-\item [{\texttt{PML\_WIDTH\_MAX}}] Gives a max. authorized bound to the solver to target an optimized thickness of C-PML layers. 
+\item [{\texttt{PML\_WIDTH\_MIN}}] Gives a min. authorized bound to the solver to target an optimized thickness of C-PML layers.
+\item [{\texttt{PML\_WIDTH\_MAX}}] Gives a max. authorized bound to the solver to target an optimized thickness of C-PML layers.
 \item [{\texttt{f0\_FOR\_PML}}] Determines the dominant frequency that will be used in the calculation of: \\ ALPHA\_MAX\_PML = PI*f0\_FOR\_PML.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered, i.e., a peak ground velocity map
@@ -1175,11 +1175,11 @@ directory. If a run crashes, you may still find usable (but shorter
 than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only relevant for the solver.
-\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a (tilted) \texttt{FORCESOLUTION} force 
-point source instead of a \texttt{CMTSOLUTION} moment-tensor source. 
-When the force source does not fall exactly at a grid point, the solver interpolates the force between grid points 
-using Lagrange interpolants. This can be useful e.g. for oil industry foothills simulations 
-in which the source is a vertical force, normal force, tilted force, or an impact etc. 
+\item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a (tilted) \texttt{FORCESOLUTION} force
+point source instead of a \texttt{CMTSOLUTION} moment-tensor source.
+When the force source does not fall exactly at a grid point, the solver interpolates the force between grid points
+using Lagrange interpolants. This can be useful e.g. for oil industry foothills simulations
+in which the source is a vertical force, normal force, tilted force, or an impact etc.
 Note that in the \texttt{FORCESOLUTION} file, you will need to edit
 the East, North and vertical components of an arbitrary (non-unitary)
 direction vector of the force vector; thus refer to
@@ -1188,13 +1188,13 @@ frame. This vector is made unitary internally in the solver and thus
 only its direction matters here; its norm is ignored and the norm of
 the force used is the factor force source times the source time
 function.
-\item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to 
-use a Ricker source time function instead of the source time functions set by default 
-to represent a (tilted) \texttt{FORCESOLUTION} force point source or a \texttt{CMTSOLUTION} moment-tensor source. 
-Originally, if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo) Heaviside step 
-function with a very short half duration is defined for elastic cases to represent the permanent slip on the fault while 
-in the acoustic case a Gaussian source time function with a similarly short half duration is defined to physically describe 
-actions within the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is used, a (pseudo) Dirac delta source time 
+\item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to
+use a Ricker source time function instead of the source time functions set by default
+to represent a (tilted) \texttt{FORCESOLUTION} force point source or a \texttt{CMTSOLUTION} moment-tensor source.
+Originally, if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo) Heaviside step
+function with a very short half duration is defined for elastic cases to represent the permanent slip on the fault while
+in the acoustic case a Gaussian source time function with a similarly short half duration is defined to physically describe
+actions within the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is used, a (pseudo) Dirac delta source time
 function is defined by default. Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
@@ -1568,10 +1568,10 @@ iterations. Applications and procedures pertaining to source studies
 and finite-frequency kernels are discussed in Sections~\ref{sec:Adjoint-simulation-sources}
 and \ref{sec:Adjoint-simulation-finite}, respectively. The two related
 parameters in the \texttt{Par\_file} are \texttt{SIMULATION\_TYPE}
-(1 or 2) and the \texttt{SAVE\_FORWARD} (boolean).
+(1, 2 or 3) and the \texttt{SAVE\_FORWARD} (boolean).
 
 
-\section{\label{sec:Adjoint-simulation-sources}Adjoint Simulations for Sources}
+\section{\label{sec:Adjoint-simulation-sources}Adjoint Simulations for Sources Only (not for the Model)}
 
 In the case where a specific misfit function is minimized to invert
 for the earthquake source parameters, the gradient of the misfit function
@@ -2543,9 +2543,9 @@ Note that \texttt{SPECFEM3D Cartesian} can handle Earth models with material pro
 %% magnoni 6/12
 \section{{\normalsize \label{sec:Using-tomographic}}Using external tomographic Earth models}
 
-To implement your own external tomographic model(s), you must provide your own external tomography file(s), 
+To implement your own external tomographic model(s), you must provide your own external tomography file(s),
 and choose between two possible options:\\
-\indent (1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = tomo}, \\ 
+\indent (1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = tomo}, \\
 or for more user control: \\
 \indent (2) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = default}, define the negative \texttt{material\_ID} identifier for each element in the file \texttt{MESH/materials\_file} and use the following format in the file \texttt{MESH/nummaterial\_velocity\_file} when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
 \begin{lyxcode}
@@ -2556,7 +2556,7 @@ where: \\
 \indent \texttt{material\_ID} a negative, unique identifier (i.e., -1,-2,...), \\
 \indent \texttt{tomography} keyword for tomographic material definition, \\
 \indent \texttt{elastic} keyword for elastic material definition, \\
-\indent \texttt{file\_name} the name of the tomography file and 1 a positive unique identifier.\\ 
+\indent \texttt{file\_name} the name of the tomography file and 1 a positive unique identifier.\\
 
 The external tomographic model is represented by a grid of points with assigned material properties and homogeneous resolution along each spatial direction x, y and z.
 The ASCII file \texttt{file\_name} that describe the tomography should be located in the \texttt{TOMOGRAPHY\_PATH} directory, set in the \texttt{Par\_file}.
@@ -3059,7 +3059,7 @@ The seismograms are by default written out in ASCII-format to the \texttt{OUTPUT
 
 Seismic networks, such as the Global Seismographic Network (GSN), generally involve various types of instruments with different bandwidths, sampling properties and component configurations. There are standards to name channel codes depending on instrument properties. IRIS  \texttt{(www.iris.edu)} uses SEED format for channel codes, which are represented by three letters, such as \texttt{LHN}, \texttt{BHZ}, etc. In older versions of the SPECFEM3D Cartesian package, a common format was used for the channel codes of all seismograms, which was \texttt{BHE/BHN/BHZ} for three components. To avoid confusion when comparison are made to observed data, we are now using the FDSN convention (\url{http://www.fdsn.org/}) for SEM seismograms. In the following, we give a brief explanation of the FDSN convention used by IRIS, and how it is adopted in SEM seismograms. Please visit \texttt{www.iris.edu/manuals/SEED\_appA.htm} for further information.\\
 
-\noindent \textbf{\texttt{Band code:}} The first letter in the channel code denotes the band code of seismograms, which depends on the response band and the sampling rate of instruments. The list of band codes used by IRIS is shown in Figure \ref{fig:IRIS_band_codes}. The sampling rate of SEM synthetics is controlled by the resolution of simulations rather than instrument properties. However, for consistency, we follow the FDSN convention for SEM seismograms governed by their sampling rate. For SEM synthetics, we consider band codes for which $dt \leq 1$ s. IRIS also considers the response band of instruments. For instance, short-period and broad-band seismograms with the same sampling rate correspond to different band codes, such as S and B, respectively. In such cases, we consider SEM seismograms as broad band, ignoring the corner period ($\geq 10$ s) of the response band of instruments (note that at these resolutions, the minimum period in the SEM synthetics will be less than $10$ s). Accordingly, when 
+\noindent \textbf{\texttt{Band code:}} The first letter in the channel code denotes the band code of seismograms, which depends on the response band and the sampling rate of instruments. The list of band codes used by IRIS is shown in Figure \ref{fig:IRIS_band_codes}. The sampling rate of SEM synthetics is controlled by the resolution of simulations rather than instrument properties. However, for consistency, we follow the FDSN convention for SEM seismograms governed by their sampling rate. For SEM synthetics, we consider band codes for which $dt \leq 1$ s. IRIS also considers the response band of instruments. For instance, short-period and broad-band seismograms with the same sampling rate correspond to different band codes, such as S and B, respectively. In such cases, we consider SEM seismograms as broad band, ignoring the corner period ($\geq 10$ s) of the response band of instruments (note that at these resolutions, the minimum period in the SEM synthetics will be less than $10$ s). Accordingly, when
 you run a simulation the band code will be chosen depending on the resolution of the synthetics, and channel codes of SEM seismograms will start with either \texttt{L}, \texttt{M}, \texttt{B}, \texttt{H}, \texttt{C} or \texttt{F}, shown by red color in the figure.\\
 
 \begin{figure}[ht]
