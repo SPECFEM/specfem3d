@@ -215,7 +215,7 @@ It also won the BULL Joseph Fourier supercomputing award in 2010.\\
 This new release of the code (version 2.1) includes support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.\\
 
 The next release of the code will include support Convolution or Auxiliary Differential Equation Perfectly Matched absorbing Layers
-(C-PML or ADE-PML) \citep{KoMa07,MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10}.
+(C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
 It will also use the PT-SCOTCH parallel and threaded version of SCOTCH for mesh partitioning instead of the serial version.\\
 
 SPECFEM3D Cartesian includes coupled fluid-solid domains and
@@ -1201,6 +1201,13 @@ information about the source time function in the file \texttt{OUTPUT\_FILES/plo
 This feature is only relevant for the solver.
 \item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 \end{description}
+
+If you use PML, the mesh elements that belong to the PML layers can be acoustic or elastic, but not viscoelastic nor poroelastic.
+Then, when defining your model, you should define these absorbing elements as either acoustic or elastic.
+In you forget to do that, the code will fix the problem by automatically converting the viscoelastic or poroelastic PML
+elements to elastic. This means that strictly speaking the PML layer will not be perfectly matched any more, since the physical
+model will change from viscoelastic or poroelastic to elastic at the entrance of the PML, but in practice this is sufficient and
+produces only tiny / negligible spurious reflections.
 
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities along the
