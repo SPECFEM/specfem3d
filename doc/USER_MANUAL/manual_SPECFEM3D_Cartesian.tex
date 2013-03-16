@@ -42,6 +42,14 @@
  \item[]}
 {\end{list}}
 
+\newenvironment{lyxlist}[1]
+{\begin{list}{}
+{\settowidth{\labelwidth}{#1}
+\setlength{\leftmargin}{\labelwidth}
+\addtolength{\leftmargin}{\labelsep}
+\renewcommand{\makelabel}[1]{#1\hfil}}}
+{\end{list}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 %\renewcommand{\baselinestretch}{1.5}
 
@@ -1082,6 +1090,9 @@ is inexpensive from a numerical perspective, both in terms of memory
 requirements and CPU time. This approximation is accurate at periods
 of roughly 20~s and longer. At shorter periods the effect of water
 phases/reverberations is not taken into account, even when the flag is on.
+If you want to model the effect of a fluid-solid model at short periods,
+then set this flag to \texttt{.false.} and mesh the fluid layer explicitly in your mesher,
+so that it is computed accurately and without this approximation.
 \item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{APPROXIMATE\_OCEAN\_LOAD} is set to \texttt{.true.}.
 Set to \texttt{.true.} if topography and
 bathymetry should be read in based upon the topography file specified in the main
@@ -1580,7 +1591,7 @@ directory for faults with split nodes\\
 
 \texttt{\textbf{Par\_file\_faults}}\texttt{ - }specialized parameters
 required by fault modules (\emph{if this file doesn't exist, code
-assumes that there are no faults}) 
+assumes that there are no faults})
 
 \texttt{\textbf{FAULT\_STATIONS}}\texttt{ - }stations on the fault
 where timeseries output of slip, sliprate and traction is required
@@ -1641,25 +1652,20 @@ set node constraint off \\
 node in surf 168 move X 0 Y 0.01 Z 0 \\
 node in surf 160 move X 0 Y -0.01 Z 0\\
 
-
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[scale=0.3]{\lyxdot \lyxdot /src/MAIN_TRUNK/SPECFEM3D_Cartesian/doc/USER_MANUAL/figures/faultmesh}
+\includegraphics[scale=0.3]{figures/faultmesh}
 \\
-\includegraphics[scale=0.3]{\lyxdot \lyxdot /src/MAIN_TRUNK/SPECFEM3D_Cartesian/doc/USER_MANUAL/figures/surf168}
-\includegraphics[scale=0.3]{\lyxdot \lyxdot /src/MAIN_TRUNK/SPECFEM3D_Cartesian/doc/USER_MANUAL/figures/splitnodes} 
+\includegraphics[scale=0.3]{figures/surf168}
+\includegraphics[scale=0.3]{figures/splitnodes}
 \par\end{centering}
-
 \caption{Screenshots of the CUBIT example for embedded fault with split nodes:
 entire mesh decomposed into several volumes bounding the fault (top),
 fault surface 168 is selected (bottom-left) and split nodes of the
 fault illustrating only interior nodes of fault are split while those
 on the edges of fault surface are touching each other (bottom-right).}
-
-
-\label{fig:examples.splitnodes} 
+\label{fig:examples.splitnodes}
 \end{figure}
-
 
 The Cubit scripts ({*}.jou and {*}.py) in the directory $\mathtt{EXAMPLES}$
 generate more complicated meshes. The {*}.py files are Python scripts
@@ -1672,9 +1678,9 @@ using the $\mathtt{APREPRO}$ language built in Cubit.\\
 
 
 \texttt{Note}: you should avoid gaps in the list of indices of mesh
-objects with the following Cubit command: 
+objects with the following Cubit command:
 
-compress ids hex face edge node') 
+compress ids hex face edge node')
 
 (otherwise you will get a segmentation fault during domain decomposition)\\
 
@@ -1685,15 +1691,15 @@ compress ids hex face edge node')
 The mesh generated in Cubit needs to be processed and exported in
 a format compatible with SPECFEM3D. This is achieved in the Python
 scripts by calling the Python-Cubit interface functions defined in
-the CUBIT directory: 
+the CUBIT directory:
 \begin{enumerate}
 \item Function \textquotedbl{}$\mathtt{define\_bc}$\textquotedbl{} (or
-similar ones) must be called to set up the absorbing boundaries database 
+similar ones) must be called to set up the absorbing boundaries database
 \item Function \textquotedbl{}$\mathtt{fault\_input}$\textquotedbl{} must
-be called once for each fault to set up the fault database 
+be called once for each fault to set up the fault database
 \item Function \textquotedbl{}$\mathtt{cubit2specfem3d.export2SESAME}$\textquotedbl{}
 must be called at the very end of the script to export the mesh in
-a SPECFEM3D format. 
+a SPECFEM3D format.
 \end{enumerate}
 The functions in \#1 and \#3 are for bulk and are not documented here.
 We focus here on \#2:\\
@@ -1702,19 +1708,19 @@ We focus here on \#2:\\
 \textbf{Function}: $\mathtt{fault\_input}$
 
 \textbf{Purpose}: export a fault mesh database from Cubit to a SPECFEM3D-compliant
-file 
+file
 
 \textbf{Syntax}: fault\_input(id\_fault, ids\_surf\_1, ids\_surf\_2)\\
 
 
-\textbf{Inputs}: id\_fault integer index assigned to the fault. 
+\textbf{Inputs}: id\_fault integer index assigned to the fault.
 
-(The user must number all the faults, starting at 1, with unit increments) 
-\begin{lyxlist}{00.00.0000}
+(The user must number all the faults, starting at 1, with unit increments)
+\begin{lyxlist}{-}
 \item [{ids\_surf\_1}] list of Cubit ids of all surfaces that form side
 1 of the fault
 \item [{ids\_surf\_2}] list of Cubit ids of all surfaces that form side
-2 of the fault 
+2 of the fault
 \end{lyxlist}
 (The user must decide which side of the fault is side 1. This choice
 affects the sign conventions of fault quantities as explained in a
@@ -1728,9 +1734,9 @@ where X is the fault id (id\_fault).\\
 \textbf{Example}: For the example in the previous section:\\
 
 
-$\hphantom{}$A1 = {[}168{]} 
+$\hphantom{}$A1 = {[}168{]}
 
-$\hphantom{}$A2 = {[}160{]} 
+$\hphantom{}$A2 = {[}160{]}
 
 $\hphantom{}$faultA = fault\_input(1,A1,A2)\\
 
@@ -1741,7 +1747,7 @@ $\hphantom{}$faultA = fault\_input(1,A1,A2)\\
 \item Copy the input files to the work directory:
 
 
->\textcompwordmark{}> cd \textasciitilde{}/$\mathtt{SPECFEM3D}$$\mathtt{}$ 
+>\textcompwordmark{}> cd \textasciitilde{}/$\mathtt{SPECFEM3D}$$\mathtt{}$
 
 
 >\textcompwordmark{}> cp -r $\mathtt{EXAMPLES/splay\_faults/DATA}$
@@ -1781,7 +1787,7 @@ variable $\mathtt{PYTHONPATH}$
 
 
 >\textcompwordmark{}> ./$\mathtt{decompose\_mesh\_SCOTCH}$ 'nproc'
-../$\mathtt{CUBIT/MESH/}$ ../$\mathtt{DATABASES\_MPI}$ / 
+../$\mathtt{CUBIT/MESH/}$ ../$\mathtt{DATABASES\_MPI}$ /
 
 
 where 'nproc' is the number of processors that you will use in the
@@ -1797,7 +1803,7 @@ $x\mathtt{decompose\_mesh\_SCOTCH}$.
 see III.2)
 
 
-$\mathtt{LOCAL\_PATH}$= should be the path to $\mathtt{DATABASES\_MPI}$ 
+$\mathtt{LOCAL\_PATH}$= should be the path to $\mathtt{DATABASES\_MPI}$
 
 
 $\mathtt{NPROC}$= number of processors. The same as the number of
@@ -1806,19 +1812,19 @@ partitions in SCOTCH (step 3).
 \item Generate databases:
 
 
->\textcompwordmark{}> cd \textasciitilde{}/$\mathtt{SPECFEM3D}$ 
+>\textcompwordmark{}> cd \textasciitilde{}/$\mathtt{SPECFEM3D}$
 
 
 >\textcompwordmark{}> mpirun -np nproc ./$\mathtt{xgenerate_{d}atabases}$
 
 
-or 
+or
 
 
->\textcompwordmark{}> $\mathtt{./run/run.xdatabases}$ 
+>\textcompwordmark{}> $\mathtt{./run/run.xdatabases}$
 
 
-or 
+or
 
 
 >\textcompwordmark{}> qsub -l nodes=... -l walltime=... go\_mesher
@@ -1838,16 +1844,16 @@ in $\mathtt{DATA/Par\_file}$ accordingly.
 \item Run the solver:
 
 
->\textcompwordmark{}> mpirun -np nproc ./$\mathtt{xspecfem3D}$ 
+>\textcompwordmark{}> mpirun -np nproc ./$\mathtt{xspecfem3D}$
 
 
-or 
+or
 
 
 >\textcompwordmark{}> $\mathtt{./run/run.xspecfem3d}$
 
 
-or 
+or
 
 
 >\textcompwordmark{}> qsub -l nodes=... -l walltime=... go\_solver
@@ -1857,10 +1863,10 @@ or
 
 \section{Examples}
 
-The package includes examples, the SCEC benchmark problems: 
+The package includes examples, the SCEC benchmark problems:
 \begin{itemize}
-\item TPV5, a planar vertical strike-slip fault 
-\item TPV14 and TPV15, vertical strike-slip fault system with a fault branch 
+\item TPV5, a planar vertical strike-slip fault
+\item TPV14 and TPV15, vertical strike-slip fault system with a fault branch
 \item TPV102 and TPV103, rate-and-state benchmarks
 \item TPV22 and TPV23, step-over benchmarks
 \item TPV16, heterogenous initial stress
@@ -1871,7 +1877,7 @@ To run the examples:
 \begin{enumerate}
 \item Read the documents in the directory $\mathtt{EXAMPLES/*/description}$.
 They contain a description of the example and additional instructions
-to run it. 
+to run it.
 \item Replace the contents of directory $\mathtt{DATA/*}$ by one of the
 $\mathtt{EXAMPLES/tpv*/DATA}$, for instance:
 
@@ -1913,27 +1919,27 @@ on the foot wall).
 
 \section{Input Files}
 
-\textbf{DATA/Par\_file} 
-\begin{lyxlist}{00.00.0000}
-\item [{\textbf{DATA/STATIONS}}] List of stations outside the fault 
+\textbf{DATA/Par\_file}
+\begin{lyxlist}{-}
+\item [{\textbf{DATA/STATIONS}}] List of stations outside the fault
 \item [{\textbf{DATA/Par\_file\_faults}}] contains parameters of the fault.
 The first part of this file has a strict format:
 
 \begin{description}
-\item [{Line}] 1: Number of faults (NF) 
+\item [{Line}] 1: Number of faults (NF)
 \item [{Lines}] 2 to NF+1: Kelvin Voigt damping (in seconds) for each fault.
-(See below how to set this parameter) 
-\item [{Line}] NF+2: Type of simulation (1=dynamic , 2 = kinematic) 
+(See below how to set this parameter)
+\item [{Line}] NF+2: Type of simulation (1=dynamic , 2 = kinematic)
 \item [{Line}] NF+3: Number of time steps between updates of the time series
 outputs at selected fault points (see DATA/FAULT\_STATIONS), usually
 a large number (100s or 1000s). Note that the sampling rate of the
 time series is usually much higher.
 \item [{Line}] NF+4: Number of time steps between fault snapshot outputs
 (quantities at every fault point exported at regular times), usually
-a large number (100s or 1000s). 
+a large number (100s or 1000s).
 \item [{Line}] NF+5: Slip velocity threshold below which frictional healing
 is set (friction coefficient is reset to its static value). If this
-value is negative healing is disabled. 
+value is negative healing is disabled.
 \item [{Line}] NF+6: Slip velocity threshold to define the rupture front.
 Only used for outputs.
 \end{description}
@@ -1943,41 +1949,41 @@ in a Fortran 9x manual). The input for each fault has the following
 sequence (arguments in {[}brackets{]} are optional):
 
 \end{lyxlist}
-\&\textbf{BEGIN\_FAULT} / 
+\&\textbf{BEGIN\_FAULT} /
 
-\&\textbf{INIT\_STRESS} S1, S2, S3 {[},n1, n2, n3{]} / 
+\&\textbf{INIT\_STRESS} S1, S2, S3 {[},n1, n2, n3{]} /
 
-followed by (n1+n2+n3) \&\textbf{DIST2D} blocks 
+followed by (n1+n2+n3) \&\textbf{DIST2D} blocks
 
-\&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} / 
+\&\textbf{SWF} mus, mud, dc {[}, nmus, nmud, ndc{]} /
 
 followed by (nmus+nmud+ndc) \&\textbf{DIST2D} blocks\\
 
-\begin{lyxlist}{00.00.0000}
+\begin{lyxlist}{-}
 \item [{\&\textbf{INIT\_STRESS}}] input block sets the initial fault stresses
 relative to the foot-wall side of the fault. Initial stresses are
 composed of a constant background value possibly overwritten in prescribed
 regions by heterogeneous distributions (see \&\textbf{DIST2D} blocks
-below): 
+below):
 
 
 S1 = constant background value of along-strike shear stress (positive
-in the usual strike direction) 
+in the usual strike direction)
 
 
 S2 = constant background value of along-dip shear (positive is down-dip,
-normal faulting) 
+normal faulting)
 
 
-S3 = constant background value of normal stress (negative in compresion) 
+S3 = constant background value of normal stress (negative in compresion)
 
 
 n1 = number of heterogeneous items for along-strike shear stress {[}default
-is 0{]} 
+is 0{]}
 
 
 n2 = number of heterogeneous items for along-dip shear stress {[}default
-is 0{]} 
+is 0{]}
 
 
 n3 = number of heterogeneous items for normal stress {[}default is
@@ -1985,24 +1991,24 @@ n3 = number of heterogeneous items for normal stress {[}default is
 
 
 \item [{\&\textbf{SWF}}] input block sets the slip-weakening friction parameters
-of the fault: 
+of the fault:
 
 
-mus = constant background value of static friction coefficient 
+mus = constant background value of static friction coefficient
 
 
-mud = constant background value of dynamic friction coefficient 
+mud = constant background value of dynamic friction coefficient
 
 
-dc = constant background value of critical slip-weakening distance 
+dc = constant background value of critical slip-weakening distance
 
 
 nmus = number of heterogeneous items for static friction coefficient
-{[}default is 0{]} 
+{[}default is 0{]}
 
 
 nmud = number of heterogeneous items for dynamic friction coefficient
-{[}default is 0{]} 
+{[}default is 0{]}
 
 
 ndc = number of heterogeneous items for critical slip-weakening distance
@@ -2013,23 +2019,23 @@ ndc = number of heterogeneous items for critical slip-weakening distance
 a fault parameter by a heterogeneous spatial distribution:
 
 
-\&\textbf{DIST2D} shape='$\mathtt{square}$', val, xc, yc, zc, l / 
+\&\textbf{DIST2D} shape='$\mathtt{square}$', val, xc, yc, zc, l /
 
 
 $\;$sets a constant value (val) within a cube with center (xc,yc,zc)
-and edge size l. 
+and edge size l.
 
 
 \&\textbf{DIST2D} shape='$\mathtt{rectangle}$', val, xc, yc, zc,
-lx, ly, lz / 
+lx, ly, lz /
 
 
 $\;$sets a constant value (val) within a rectangular prism with center
-(xc,yc,zc) and edge sizes (lx,ly,lz). 
+(xc,yc,zc) and edge sizes (lx,ly,lz).
 
 
 \&\textbf{DIST2D} shape='$\mathtt{rectangle-taper}$', val, valh,
-xc, yc, zc, lx, ly, lz / 
+xc, yc, zc, lx, ly, lz /
 
 
 $\;$sets a vertical linear gradient within a rectangular prism with
@@ -2039,68 +2045,68 @@ and value valh at z = zc+lz/2 .
 
 
 \&\textbf{DIST2D} shape='$\mathtt{circular}$', val, xc, yc, zc, r
-/ 
+/
 
 
 $\;$sets a constant value (val) within a sphere with center (xc,yc,zc)
 and radius r. \\
 
 
-\item [{\textbf{DATA/FAULT\_STATIONS}}] Stations in the fault plane. 
+\item [{\textbf{DATA/FAULT\_STATIONS}}] Stations in the fault plane.
 
 
-Line 1: number of stations. 
+Line 1: number of stations.
 
 
-Line 2 to end: 5 columns: X, Y, Z (-depth), station name, fault-id 
+Line 2 to end: 5 columns: X, Y, Z (-depth), station name, fault-id
 
 
 The fault-id identifies the fault that contains the station. It is
 the index of appearance in the faults list after line 2 of Par\_file\_faults
 
 \item [{\textbf{DATA/input\_file.txt}}] Heterogeneous stresses and friction
-parameters Documented in page 10 of EXAMPLES/tpv16.crack/description/TPV16\_17\_Description\_v03.pdf 
+parameters Documented in page 10 of EXAMPLES/tpv16.crack/description/TPV16\_17\_Description\_v03.pdf
 
 
 To activate this feature, in fault\_solver.f90 set TPV16 = .true.
 then re-compile the code: cd SPECFEM3D make
 
-\item [{Heterogeneous}] velocity models can be given in a regular grid. 
+\item [{Heterogeneous}] velocity models can be given in a regular grid.
 
 
 In the mesh generation Python file (.py) or in the CUBIT journal file
-(.jou), set the material 1st attribute to -1: 
+(.jou), set the material 1st attribute to -1:
 
 
-\qquad{}block {*} attribute index 1 -1 
+\qquad{}block {*} attribute index 1 -1
 
 
-In module model\_tomography.f90: 
+In module model\_tomography.f90:
 
 
 \qquad{}Set the parameter TOMO\_FILENAME to the name of the file
-containing the velocity model. 
+containing the velocity model.
 
 
-Re-compile the code: 
+Re-compile the code:
 
 
-\qquad{}cd SPECFEM3D 
+\qquad{}cd SPECFEM3D
 
 
 \qquad{}make \\
 
 
 
-The format of the velocity file is: 
+The format of the velocity file is:
 \begin{description}
 \item [{Line}] 1: ORIG\_X, ORIG\_Y, ORIG\_Z, END\_X, END\_Y, END\_Z (coordinates
-of the two extreme corners of the box) 
+of the two extreme corners of the box)
 \item [{Line}] 2: SPACING\_X, SPACING\_Y, SPACING\_Z (regular grid spacing
-in each direction) 
-\item [{Line}] 3: NX, NY, NZ (number of grid point in each direction) 
+in each direction)
+\item [{Line}] 3: NX, NY, NZ (number of grid point in each direction)
 \item [{Line}] 4: VP\_MIN, VP\_MAX, VS\_MIN, VS\_MAX, RHO\_MIN, RHO\_MAX
-(min and max values of P wave speed, S wave speed and density) 
+(min and max values of P wave speed, S wave speed and density)
 \item [{Line}] 5 to 4+NX{*}NY{*}NZ: x\_tomo,y\_tomo,z\_tomo,vp\_tomo,vs\_tomo,rho\_tomo
 (position, P wave speed, S wave speed, density)\\
 
@@ -2122,11 +2128,11 @@ is how to set it:
 \item Determine the average linear size of the elements on the fault plane,
 \textquotedbl{}\emph{h\_fault}\textquotedbl{}. Usually this value
 is prescribed by the user during mesh generation. Otherwise it can
-be found by inspection of the mesh inside the Cubit GUI. 
+be found by inspection of the mesh inside the Cubit GUI.
 \item Use the matlab function $\mathtt{utils/critical_{t}imestep.m}$ to
 compute dtc\_fault = critical\_timestep(cp,h\_fault,ngll) This is
 the critical time step in an elastic medium for a hypothetical element
-of cubic shape with size equal to h\_fault. 
+of cubic shape with size equal to h\_fault.
 \item Set eta in Par\_file\_faults to (0.1 to 0.3){*}dtc\_fault. A larger
 eta damps high-frequencies more aggresively but it might also affect
 lower frequencies and rupture speed.
@@ -2134,13 +2140,13 @@ lower frequencies and rupture speed.
 
 Viscosity reduces numerical stability: the critical timestep in a
 simulation with Kelvin-Voigt damping needs to be smaller than that
-in a purely elastic simulation. Here is how to set the time step accordingly: 
+in a purely elastic simulation. Here is how to set the time step accordingly:
 
 \item Run a test simulation without viscosity (eta=0 and only a few time
-steps) 
+steps)
 \item Look for the \textquotedbl{}maximum suggested time step\textquotedbl{}
 in $\mathtt{OUTPUT_{F}ILES/output_{m}esher.txt}$ This is the critical
-timestep of a purely elastic simulation, \textquotedbl{}dtc\_bulk\textquotedbl{}. 
+timestep of a purely elastic simulation, \textquotedbl{}dtc\_bulk\textquotedbl{}.
 \item Reset the timestep of the simulation with a Kelvin-Voigt material
 to a value smaller than dtc\_kv = eta{*}( sqrt(1+dtc\_bulk\textasciicircum{}2/eta\textasciicircum{}2)-1
 )
@@ -2162,25 +2168,25 @@ by a data block with the following format, one line per time sample:\\
 
 
 
-\# Column \#1 = Time (s) 
+\# Column \#1 = Time (s)
 
 
-\# Column \#2 = horizontal right-lateral slip (m) 
+\# Column \#2 = horizontal right-lateral slip (m)
 
 
-\# Column \#3 = horizontal right-lateral slip rate (m/s) 
+\# Column \#3 = horizontal right-lateral slip rate (m/s)
 
 
-\# Column \#4 = horizontal right-lateral shear stress (MPa) 
+\# Column \#4 = horizontal right-lateral shear stress (MPa)
 
 
-\# Column \#5 = vertical up-dip slip (m) 
+\# Column \#5 = vertical up-dip slip (m)
 
 
-\# Column \#6 = vertical up-dip slip rate (m/s) 
+\# Column \#6 = vertical up-dip slip rate (m/s)
 
 
-\# Column \#7 = vertical up-dip shear stress (MPa) 
+\# Column \#7 = vertical up-dip shear stress (MPa)
 
 
 \# Column \#8 = normal stress (MPa)\\
@@ -2192,17 +2198,17 @@ convention controls their sign, but not their amplitude). Slip is
 defined as displacement of the hanging wall relative to the footwall.
 
 \item Seismograms at stations in the bulk (out of the fault plane) given
-in $\mathtt{DATA/STATIONS}$. 
+in $\mathtt{DATA/STATIONS}$.
 \item Rupture time files are named Rupture\_time\_FAULT-id. One file is
 generated for each fault. The files are ascii and start with a header
 (12 lines long) followed by a data block with the following format,
-one line per fault node: 
+one line per fault node:
 
 
-\# Column \#1 = horizontal coordinate, distance along strike (m) 
+\# Column \#1 = horizontal coordinate, distance along strike (m)
 
 
-\# Column \#2 = vertical coordinate, distance down-dip (m) 
+\# Column \#2 = vertical coordinate, distance down-dip (m)
 
 
 \# Column \#3 = rupture time (s)
