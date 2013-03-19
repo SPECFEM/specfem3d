@@ -32,7 +32,7 @@ in the second set of simulations, starting from the last time frame and going ba
 - suggestion 19:
 ----------------
 
-use weights in Scotch and PT-Scotch once we add C-PML to the code;
+use weights in Scotch decomposition for C-PML elements in the code;
 because C-PML elements will be more expensive because they will compute more terms and will solve more equations (for the memory
 variables / convolution terms) thus we should assign a higher weight to them when we call Scotch
 
