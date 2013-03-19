@@ -43,6 +43,10 @@ use weights in Scotch decomposition for C-PML elements in the code;
 because C-PML elements will be more expensive because they will compute more terms and will solve more equations (for the memory
 variables / convolution terms) thus we should assign a higher weight to them when we call Scotch
 
+the "elmnts_load" array up in decompose_mesh/part_decompose_mesh.f90 (around line 1432)
+currently does not take into account C-PML elements weights. The matching array in the code is
+called "CPML_type" and is defined as follows: 1 = face, 2 = edge, 3 = corner. 
+
 that is similar to what Daniel does for acoustic elements in the current version of SPECFEM3D: he uses a weight of 1 for acoustic
 elements and 3 (or something like that) for elastic elements, which use a 3D vector instead of a scalar.
 
