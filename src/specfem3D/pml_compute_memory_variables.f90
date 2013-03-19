@@ -68,10 +68,9 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
   real(kind=CUSTOM_REAL) :: A18,A19,A20 ! for convolution of strain(simple)
 
   if( CPML_regions(ispec_CPML) == 1 ) then
-
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
 
               !------------------------------------------------------------------------------
               !---------------------------- X-surface C-PML ---------------------------------
@@ -317,16 +316,41 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-              endif
 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+           enddo
         enddo
      enddo
-  enddo
 
   else if( CPML_regions(ispec_CPML) == 2 ) then
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
               !------------------------------------------------------------------------------
               !---------------------------- Y-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -371,12 +395,12 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
 
               else if( ispec_is_acoustic(ispec) ) then
 
-                   rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) &
-                   + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_1
-                   rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = 0.d0
+                 rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) &
+                      + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_1
+                 rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = 0.d0
 
-                   dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                        + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
+                 dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
+                      + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
               endif
 
               !---------------------- A9, A10 and A11 --------------------------
@@ -570,17 +594,41 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-              endif
 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+           enddo
         enddo
      enddo
-  enddo
 
- else if( CPML_regions(ispec_CPML) == 3 ) then
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
-
+  else if( CPML_regions(ispec_CPML) == 3 ) then
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
               !------------------------------------------------------------------------------
               !---------------------------- Z-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -823,17 +871,41 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-              endif
 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+           enddo
         enddo
      enddo
-  enddo
 
   else if( CPML_regions(ispec_CPML) == 4 ) then
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
-
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
               !------------------------------------------------------------------------------
               !---------------------------- XY-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -1115,17 +1187,41 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-              endif
 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+           enddo
         enddo
      enddo
-  enddo
-  endif
 
-  if(CPML_regions(ispec_CPML)==5) then
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
+  else if( CPML_regions(ispec_CPML) == 5 ) then
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
 
               !------------------------------------------------------------------------------
               !---------------------------- XZ-edge C-PML -----------------------------------
@@ -1408,17 +1504,41 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-              endif
 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+           enddo
         enddo
      enddo
-  enddo
 
   else if( CPML_regions(ispec_CPML) == 6 ) then
-
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
               !------------------------------------------------------------------------------
               !---------------------------- YZ-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -1699,17 +1819,41 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-              endif
 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+           enddo
         enddo
      enddo
-  enddo
 
   else if( CPML_regions(ispec_CPML) == 7 ) then
-
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
+     do k=1,NGLLZ
+        do j=1,NGLLY
+           do i=1,NGLLX
               !------------------------------------------------------------------------------
               !---------------------------- XYZ-corner C-PML --------------------------------
               !------------------------------------------------------------------------------
@@ -2144,51 +2288,38 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
+                 
+                 ! compute stress sigma
+                 sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+                 sigma_yx = mul*duxdyl_x + mul*duydxl_x
+                 sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+                 sigma_xy = mul*duxdyl_y + mul*duydxl_y
+                 sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+                 sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+                 sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+                 sigma_yz = mul*duzdyl_z + mul*duydzl_z
+                 sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+                 ! form dot product with test vector, non-symmetric form
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
-
+           enddo
         enddo
      enddo
-  enddo
-  endif
-
-
-  if( ispec_is_elastic(ispec) ) then
-  do k=1,NGLLZ
-     do j=1,NGLLY
-        do i=1,NGLLX
-              ! compute stress sigma
-              sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
-              sigma_yx = mul*duxdyl_x + mul*duydxl_x
-              sigma_zx = mul*duzdxl_x + mul*duxdzl_x
-
-              sigma_xy = mul*duxdyl_y + mul*duydxl_y
-              sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
-              sigma_zy = mul*duzdyl_y + mul*duydzl_y
-
-              sigma_xz = mul*duzdxl_z + mul*duxdzl_z
-              sigma_yz = mul*duzdyl_z + mul*duydzl_z
-              sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
-
-              ! form dot product with test vector, non-symmetric form
-              tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
-              tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
-              tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
-
-              tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
-              tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
-              tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
-
-              tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
-              tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
-              tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
-        enddo
-     enddo
-  enddo
-
   else
-
-    stop 'wrong PML flag in PML memory variable calculation routine'
-
+     stop 'wrong PML flag in PML memory variable calculation routine'
   endif
 
 end subroutine pml_compute_memory_variables
