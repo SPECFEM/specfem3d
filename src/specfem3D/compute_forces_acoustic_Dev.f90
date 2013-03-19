@@ -29,8 +29,7 @@
   subroutine compute_forces_acoustic_Dev(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
@@ -41,11 +40,10 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML,ABSORBING_CONDITIONS,PML_CONDITIONS
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML,ABSORBING_CONDITIONS,PML_CONDITIONS,m1,m2
 
   implicit none
 
-  !include "constants.h"
   integer :: NSPEC_AB,NGLOB_AB
 
   ! acoustic potentials
@@ -60,9 +58,8 @@
         rhostore,jacobian
 
   ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprimewgll_xx,hprimewgll_xxT
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
@@ -72,15 +69,33 @@
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
   integer, dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
-  real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: tempx1,tempx2,tempx3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtempx1,newtempx2,newtempx3
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) :: rho_invl
 
-  integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
+  integer :: ispec,iglob,i,j,k,ispec_p,num_elements
+
+  ! manually inline the calls to the Deville et al. (2002) routines
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,m2) :: B1_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points
+
+  equivalence(chi_elem,B1_m1_m2_5points)
+  equivalence(tempx1,C1_m1_m2_5points)
+  equivalence(newtempx1,E1_m1_m2_5points)
+
+  real(kind=CUSTOM_REAL), dimension(m2,NGLLX) :: A1_mxm_m2_m1_5points
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: C1_mxm_m2_m1_5points
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: E1_mxm_m2_m1_5points
+
+  equivalence(chi_elem,A1_mxm_m2_m1_5points)
+  equivalence(tempx3,C1_mxm_m2_m1_5points)
+  equivalence(newtempx3,E1_mxm_m2_m1_5points)
 
   if( iphase == 1 ) then
     num_elements = nspec_outer_acoustic
@@ -102,22 +117,45 @@
       enddo
     enddo
 
+    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+    ! for incompressible fluid flow, Cambridge University Press (2002),
+    ! pages 386 and 389 and Figure 8.3.1
+    do j=1,m2
+      do i=1,m1
+        C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
+                                hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
+                                hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
+                                hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
+                                hprime_xx(i,5)*B1_m1_m2_5points(5,j)
+      enddo
+    enddo
+
+    do k = 1,NGLLX
+      do j=1,m1
+        do i=1,m1
+          tempx2(i,j,k) = chi_elem(i,1,k)*hprime_xxT(1,j) + &
+                          chi_elem(i,2,k)*hprime_xxT(2,j) + &
+                          chi_elem(i,3,k)*hprime_xxT(3,j) + &
+                          chi_elem(i,4,k)*hprime_xxT(4,j) + &
+                          chi_elem(i,5,k)*hprime_xxT(5,j)
+        enddo
+      enddo
+    enddo
+
+    do j=1,m1
+      do i=1,m2
+        C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
+                                    A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                    A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                    A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                    A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+      enddo
+    enddo
+
+
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
-
-          ! derivative along x, y, z
-          ! first double loop over GLL points to compute and store gradients
-          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
-
-          do l = 1,NGLLX
-            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-          enddo
 
          ! get derivatives of potential with respect to x, y and z
           xixl = xix(i,j,k,ispec)
@@ -132,47 +170,71 @@
           jacobianl = jacobian(i,j,k,ispec)
 
           ! derivatives of potential
-          dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
-          dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
-          dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
+          dpotentialdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
+          dpotentialdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
+          dpotentialdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
 
           ! density (reciproc)
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
           ! for acoustic medium
           ! also add GLL integration weights
-          temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+          tempx1(i,j,k) = rho_invl * jacobianl* &
                         (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-          temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+          tempx2(i,j,k) = rho_invl * jacobianl* &
                         (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-          temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+          tempx3(i,j,k) = rho_invl * jacobianl* &
                         (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
         enddo
       enddo
     enddo
+
+    ! subroutines adapted from Deville, Fischer and Mund, High-order methods
+    ! for incompressible fluid flow, Cambridge University Press (2002),
+    ! pages 386 and 389 and Figure 8.3.1
+    do j=1,m2
+      do i=1,m1
+        E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
+                                hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
+                                hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
+                                hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
+                                hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
+      enddo
+    enddo
+
+    do k = 1,NGLLX
+      do j=1,m1
+        do i=1,m1
+          newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
+                             tempx2(i,2,k)*hprimewgll_xx(2,j) + &
+                             tempx2(i,3,k)*hprimewgll_xx(3,j) + &
+                             tempx2(i,4,k)*hprimewgll_xx(4,j) + &
+                             tempx2(i,5,k)*hprimewgll_xx(5,j)
+        enddo
+      enddo
+    enddo
+
+    do j=1,m1
+      do i=1,m2
+        E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
+                                    C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                    C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                    C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                    C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+      enddo
+    enddo
+
 
     ! second double-loop over GLL to compute all the terms
     do k = 1,NGLLZ
       do j = 1,NGLLZ
         do i = 1,NGLLX
 
-          ! along x,y,z direction
-          ! and assemble the contributions
-          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
-
-          do l=1,NGLLX
-            temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
-            temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
-            temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
-          enddo
-
           ! sum contributions from each element to the global values
           iglob = ibool(i,j,k,ispec)
 
-          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - ( temp1l + temp2l + temp3l )
+          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - (wgllwgll_yz(j,k)*newtempx1(i,j,k) &
+                       + wgllwgll_xz(i,k)*newtempx2(i,j,k) + wgllwgll_xy(i,j)*newtempx3(i,j,k))
 
         enddo
       enddo
