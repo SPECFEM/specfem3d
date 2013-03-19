@@ -101,8 +101,7 @@ subroutine compute_forces_acoustic()
         call compute_forces_acoustic_Dev(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
@@ -126,14 +125,11 @@ subroutine compute_forces_acoustic()
         if(USE_DEVILLE_PRODUCTS) then
           ! uses Deville (2002) optimizations
           call compute_forces_acoustic_Dev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                        b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                        b_potential_acoustic,b_potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        rhostore,jacobian,ibool,deltat, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                        rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic)
         else
