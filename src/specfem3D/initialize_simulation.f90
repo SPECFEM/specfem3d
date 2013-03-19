@@ -52,10 +52,11 @@
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
 
-!! DK DK added this for now (March 2013) because CPML is not yet implemented for USE_DEVILLE;
+!! DK DK added this for now (March 2013) because CPML is not yet implemented for USE_DEVILLE_PRODUCTS;
 !! DK DK we will soon add it (in a month or so)
-  if(PML_CONDITIONS .and. USE_DEVILLE) &
-    stop 'CPML not implemented for USE_DEVILLE for now, set USE_DEVILLE to false in constants.h and recompile; exiting...'
+  if(PML_CONDITIONS .and. USE_DEVILLE_PRODUCTS) &
+    stop 'CPML not implemented for USE_DEVILLE_PRODUCTS for now, set USE_DEVILLE_PRODUCTS to false in constants.h&
+       & and recompile; we will add support for this soon; exiting for now...'
 
   ! GPU_MODE is in par_file
   call read_gpu_mode(GPU_MODE,GRAVITY)
