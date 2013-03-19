@@ -50,7 +50,7 @@ cd ../
 echo
 echo "  decomposing mesh..."
 echo
-./bin/xdecompose_mesh $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
+./bin/xdecompose_mesh $NPROC DATA/MESH-default/ OUTPUT_FILES/DATABASES_MPI/
 
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/
