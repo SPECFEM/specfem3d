@@ -10,20 +10,11 @@ To-do list for the different flavors of SPECFEM:
 
 Add full viscoelastic kernels, undoing full attenuation
 
-- suggestion 36:
-----------------
-
-Add Deville for acoustic media; currently there is Deville for viscoelastic media only
-
-- suggestion 37:
-----------------
-
-Add QKappa attenuation in solids and in fluids, in addition to Qmu
-
 - suggestion 38:
 ----------------
 
-Add full loop vectorization for critical calculation loops, to make sure we gain a factor of about 1.8 in terms of CPU time as suggested by INTEL.
+Add full loop vectorization for critical calculation loops, to make sure we gain a factor of about 1.8 in terms of CPU time as suggested
+by INTEL and as done by Cray and NCSA in their local version of SPECFEM3D_GLOBE.
 
 
 ------------------------------------------------
@@ -36,13 +27,6 @@ CPML :
 DK DK new suggestion by Dimitri, Jan 2013: now that C-PML is implemented for forward runs, make it work for adjoint runs as well
 (more precisely, the problem is just to reinject the right boundary conditions at the entrance of the PML when we undo the forward run
 in the second set of simulations, starting from the last time frame and going backwards)
-
-
-- suggestion 34:
-----------------
-
-DK DK new suggestion by Dimitri, Jan 2013: add GPU support for C-PML once the C-PML code is finished;
-C-PML is currently only implemented in regular Fortran + MPI
 
 
 - suggestion 19:
@@ -226,7 +210,14 @@ Feedback from Qinya on the last point: I recently hosted a visit by Prof. Ling-y
 GPU:
 ------------------------------------------------
 
-- suggestion 22:
+- suggestion 34:
+----------------
+
+DK DK new suggestion by Dimitri, Jan 2013: add GPU support for C-PML once the C-PML code is finished;
+C-PML is currently only implemented in regular Fortran + MPI
+
+
+- suggestion 22: (not really critical, probably not worth doing, at least for now)
 ----------------
 
 when I said that the future codes will support either CPUs or GPUs (in the same code but not simultaneously because we do not
@@ -336,6 +327,9 @@ dynamic/kinematic faults:
 + add snapshot outputs to kinematic solver (e.g. to export fault stresses for adjoint source inversion)
 
 + prepare automated tests
+
+
+
 
 
 Older to-do lists of SPECFEM2D, SPECFEM3D and SPECFEM3D_GLOBE (some items are probably still useful to implement):
@@ -1131,4 +1125,13 @@ on a topologically-regular grid instead of the non-structured SEM grid (this can
 packages that require a topologically-regular grid of points as input).
 
 
+- suggestion 37:
+----------------
+
+Add QKappa attenuation in solids and in fluids, in addition to Qmu
+
+- suggestion 36:
+----------------
+
+Add Deville for acoustic media; currently there is Deville for viscoelastic media only:  done by Dimitri in March 2013
 
