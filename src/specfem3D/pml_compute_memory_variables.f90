@@ -2288,7 +2288,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                       + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
                  duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
                       + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-                 
+
                  ! compute stress sigma
                  sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
                  sigma_yx = mul*duxdyl_x + mul*duydxl_x

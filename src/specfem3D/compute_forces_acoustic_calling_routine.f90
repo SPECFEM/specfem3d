@@ -96,7 +96,19 @@ subroutine compute_forces_acoustic()
     ! acoustic pressure term
     if(.NOT. GPU_MODE) then
       ! on CPU
-      call compute_forces_acoustic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
+      if(USE_DEVILLE_PRODUCTS) then
+        ! uses Deville (2002) optimizations
+        call compute_forces_acoustic_Dev(iphase,NSPEC_AB,NGLOB_AB, &
+                        potential_acoustic,potential_dot_dot_acoustic, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        rhostore,jacobian,ibool, &
+                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
+                        phase_ispec_inner_acoustic)
+      else
+        call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -106,11 +118,14 @@ subroutine compute_forces_acoustic()
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic )
+                        phase_ispec_inner_acoustic)
+      endif
 
       ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) &
-        call compute_forces_acoustic_noDev( iphase, NSPEC_ADJOINT,NGLOB_ADJOINT, &
+      if( SIMULATION_TYPE == 3 ) then
+        if(USE_DEVILLE_PRODUCTS) then
+          ! uses Deville (2002) optimizations
+          call compute_forces_acoustic_Dev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -120,7 +135,22 @@ subroutine compute_forces_acoustic()
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic )
+                        phase_ispec_inner_acoustic)
+        else
+          call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                        b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        rhostore,jacobian,ibool,deltat, &
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
+                        phase_ispec_inner_acoustic)
+        endif
+      endif
+
     else
       ! on GPU
       ! includes code for SIMULATION_TYPE==3
