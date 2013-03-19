@@ -26,7 +26,7 @@
 
 ! for acoustic solver
 
-  subroutine compute_forces_acoustic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -36,7 +36,7 @@
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic )
+                        phase_ispec_inner_acoustic)
 
 ! computes forces for acoustic elements
 !
@@ -73,12 +73,6 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
-
-! communication overlap
-!  logical, dimension(NSPEC_AB) :: ispec_is_inner
-!  logical :: phase_is_inner
-
-!  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
   integer :: iphase
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
@@ -126,11 +120,7 @@
   ! loop over spectral elements
   do ispec_p = 1,num_elements
 
-    !if( (ispec_is_inner(ispec) .eqv. phase_is_inner) ) then
-
     ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
-
-    !if( ispec_is_acoustic(ispec) ) then
 
     ! gets values for element
     do k=1,NGLLZ
@@ -140,9 +130,6 @@
         enddo
       enddo
     enddo
-
-    ! would check if anything to do, but might lower accuracy of computation
-    !if( maxval( abs( chi_elem ) ) < TINYVAL_SNGL ) cycle
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -170,7 +157,6 @@
                 hp1 = hprime_xx(l,i)
                 iglob = ibool(l,j,k,ispec)
                 temp1l_new = temp1l_new + deltat*potential_dot_acoustic(iglob)*hp1
-
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
@@ -278,9 +264,6 @@
         enddo
       enddo
     enddo
-
-!      endif ! end of test if acoustic element
-!    endif ! ispec_is_inner
 
   enddo ! end of loop over all spectral elements
 
