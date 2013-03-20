@@ -335,12 +335,6 @@ subroutine compute_forces_viscoelastic()
 
     endif
 
-    !! DK DK May 2009: removed this because now each slice of a CUBIT + SCOTCH mesh
-    !! DK DK May 2009: has a different number of spectral elements and therefore
-    !! DK DK May 2009: only the general non-blocking MPI routines assemble_MPI_vector_ext_mesh_s
-    !! DK DK May 2009: and assemble_MPI_vector_ext_mesh_w above can be used.
-    !! DK DK May 2009: For adjoint runs below (SIMULATION_TYPE == 3) they should be used as well.
-
  enddo
 
 !Percy , Fault boundary term B*tau is added to the assembled forces
