@@ -102,7 +102,7 @@ subroutine compute_forces_acoustic()
                         potential_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic)
@@ -128,7 +128,7 @@ subroutine compute_forces_acoustic()
                         b_potential_acoustic,b_potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic)

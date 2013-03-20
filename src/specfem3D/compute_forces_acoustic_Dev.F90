@@ -30,7 +30,7 @@
                         potential_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic)
@@ -40,7 +40,8 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML,ABSORBING_CONDITIONS,PML_CONDITIONS,m1,m2
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML, &
+              ABSORBING_CONDITIONS,PML_CONDITIONS,m1,m2,NGLLCUBE
 
   implicit none
 
@@ -61,9 +62,7 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprime_xxT
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprimewgll_xx,hprimewgll_xxT
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
 
   integer :: iphase
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
@@ -97,6 +96,10 @@
   equivalence(tempx3,C1_mxm_m2_m1_5points)
   equivalence(newtempx3,E1_mxm_m2_m1_5points)
 
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#endif
+
   if( iphase == 1 ) then
     num_elements = nspec_outer_acoustic
   else
@@ -109,6 +112,7 @@
     ispec = phase_ispec_inner_acoustic(ispec_p,iphase)
 
     ! gets values for element
+#ifndef FORCE_VECTORIZATION
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
@@ -116,6 +120,13 @@
         enddo
       enddo
     enddo
+#else
+! this will (purposely) give out-of-bound array accesses if run through range checking,
+! thus use only for production runs with no bound checking
+    do ijk = 1,NGLLCUBE
+      chi_elem(ijk,1,1) = potential_acoustic(ibool(ijk,1,1,ispec))
+    enddo
+#endif
 
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
@@ -152,7 +163,7 @@
       enddo
     enddo
 
-
+#ifndef FORCE_VECTORIZATION
     do k=1,NGLLZ
       do j=1,NGLLY
         do i=1,NGLLX
@@ -188,6 +199,38 @@
         enddo
       enddo
     enddo
+#else
+    do ijk = 1,NGLLCUBE
+         ! get derivatives of potential with respect to x, y and z
+          xixl = xix(ijk,1,1,ispec)
+          xiyl = xiy(ijk,1,1,ispec)
+          xizl = xiz(ijk,1,1,ispec)
+          etaxl = etax(ijk,1,1,ispec)
+          etayl = etay(ijk,1,1,ispec)
+          etazl = etaz(ijk,1,1,ispec)
+          gammaxl = gammax(ijk,1,1,ispec)
+          gammayl = gammay(ijk,1,1,ispec)
+          gammazl = gammaz(ijk,1,1,ispec)
+          jacobianl = jacobian(ijk,1,1,ispec)
+
+          ! derivatives of potential
+          dpotentialdxl = xixl*tempx1(ijk,1,1) + etaxl*tempx2(ijk,1,1) + gammaxl*tempx3(ijk,1,1)
+          dpotentialdyl = xiyl*tempx1(ijk,1,1) + etayl*tempx2(ijk,1,1) + gammayl*tempx3(ijk,1,1)
+          dpotentialdzl = xizl*tempx1(ijk,1,1) + etazl*tempx2(ijk,1,1) + gammazl*tempx3(ijk,1,1)
+
+          ! density (reciproc)
+          rho_invl = 1.0_CUSTOM_REAL / rhostore(ijk,1,1,ispec)
+
+          ! for acoustic medium
+          ! also add GLL integration weights
+          tempx1(ijk,1,1) = rho_invl * jacobianl* &
+                        (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+          tempx2(ijk,1,1) = rho_invl * jacobianl* &
+                        (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+          tempx3(ijk,1,1) = rho_invl * jacobianl* &
+                        (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+    enddo
+#endif
 
     ! subroutines adapted from Deville, Fischer and Mund, High-order methods
     ! for incompressible fluid flow, Cambridge University Press (2002),
@@ -226,6 +269,7 @@
 
 
     ! second double-loop over GLL to compute all the terms
+#ifndef FORCE_VECTORIZATION
     do k = 1,NGLLZ
       do j = 1,NGLLZ
         do i = 1,NGLLX
@@ -233,12 +277,24 @@
           ! sum contributions from each element to the global values
           iglob = ibool(i,j,k,ispec)
 
-          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - (wgllwgll_yz(j,k)*newtempx1(i,j,k) &
-                       + wgllwgll_xz(i,k)*newtempx2(i,j,k) + wgllwgll_xy(i,j)*newtempx3(i,j,k))
+          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - (wgllwgll_yz_3D(i,j,k)*newtempx1(i,j,k) &
+                       + wgllwgll_xz_3D(i,j,k)*newtempx2(i,j,k) + wgllwgll_xy_3D(i,j,k)*newtempx3(i,j,k))
 
         enddo
       enddo
     enddo
+#else
+! we can force vectorization using a compiler directive here because we know that there is no dependency
+! inside a given spectral element, since all the global points of a local elements are different by definition
+! (only common points between different elements can be the same)
+!DIR$ IVDEP
+    do ijk = 1,NGLLCUBE
+          ! sum contributions from each element to the global values
+          iglob = ibool(ijk,1,1,ispec)
+          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - (wgllwgll_yz_3D(ijk,1,1)*newtempx1(ijk,1,1) &
+                       + wgllwgll_xz_3D(ijk,1,1)*newtempx2(ijk,1,1) + wgllwgll_xy_3D(ijk,1,1)*newtempx3(ijk,1,1))
+    enddo
+#endif
 
   enddo ! end of loop over all spectral elements
 

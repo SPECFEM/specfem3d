@@ -144,6 +144,8 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
+
 ! Lagrange interpolators at receivers
   double precision, dimension(:), allocatable :: hxir,hetar,hpxir,hpetar,hgammar,hpgammar
   double precision, dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
