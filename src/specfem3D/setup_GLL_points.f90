@@ -30,7 +30,7 @@
 
   use specfem_par
   implicit none
-  integer :: i,j,ier
+  integer :: i,j,k,ier
 
   if(myrank == 0) then
     write(IMAIN,*) '******************************************'
@@ -50,6 +50,17 @@
     do i = 1,NGLLX
       hprime_xxT(j,i) = hprime_xx(i,j)
       hprimewgll_xxT(j,i) = hprimewgll_xx(i,j)
+    enddo
+  enddo
+
+! define a 3D extension in order to be able to force vectorization in the compute_forces routines
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
+        wgllwgll_yz_3D(i,j,k) = wgllwgll_yz(j,k)
+        wgllwgll_xz_3D(i,j,k) = wgllwgll_xz(i,k)
+        wgllwgll_xy_3D(i,j,k) = wgllwgll_xy(i,j)
+      enddo
     enddo
   enddo
 

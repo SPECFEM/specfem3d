@@ -18,7 +18,7 @@ case $FC in
         # Cray Fortran
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
+            FLAGS_CHECK="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -DFORCE_VECTORIZATION" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
         # -eC -eD -ec -en -eI -ea -g -G0  # turn on full debugging and range checking
         fi
         ;;
@@ -27,7 +27,7 @@ case $FC in
         # Portland PGI
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz" # -mcmodel=medium
+            FLAGS_CHECK="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -DFORCE_VECTORIZATION" # -mcmodel=medium
         # -Mbounds
         # -fastsse -tp amd64e -Msmart
         fi
@@ -42,10 +42,12 @@ case $FC in
 # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
 # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -check nobounds -xHost -ftz -fpe0 -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
+            FLAGS_CHECK="-O3 -check nobounds -DFORCE_VECTORIZATION -xHost -ftz -fpe0 -assume buffered_io -assume byterecl -align sequence -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
         fi
         # useful for debugging...
-        # for debugging: change -O3 -check nobounds to      -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv
+        # for debugging: change "-O3 -check nobounds -DFORCE_VECTORIZATION" to  "-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
+        #
+        # for developers, to check Fortran2003 standard conformity add "-std03" and ignore all warnings about the "DIR IVDEP" directive, which we use purposely
         #
         ;;
     gfortran|*/gfortran|f95|*/f95)
@@ -53,9 +55,9 @@ case $FC in
         # GNU gfortran
         #
         if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-std=f2003 -fimplicit-none -frange-check -O2 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow " # -mcmodel=medium
+            FLAGS_CHECK="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow " # -mcmodel=medium
         fi
-        # useful for debugging... -fbacktrace -fbounds-check
+        # useful for debugging... -fbacktrace -fbounds-check, and suppress -DFORCE_VECTORIZATION
         ;;
     g95|*/g95)
         #
@@ -139,7 +141,7 @@ case $FC in
         #
         if test x"$FLAGS_CHECK" = x; then
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-            FLAGS_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -qsuppress=1518-317 -Q -Q+rank,swap_all -Wl,-relax -qunroll=yes"
+            FLAGS_CHECK="-O3 -qsave -qstrict -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -qsuppress=1518-317 -Q -Q+rank,swap_all -Wl,-relax -WF,-DFORCE_VECTORIZATION"
         # on MareNostrum at the Barcelona SuperComputing Center (Spain) one can use
         # -qtune=ppc970 -qarch=ppc64v instead of -qtune=auto -qarch=auto
         # on "Babel" IBM BlueGene at IDRIS (France) use:
