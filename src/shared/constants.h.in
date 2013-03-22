@@ -306,10 +306,9 @@
   integer, parameter :: ATTENUATION_COMP_RESOLUTION = 1
   integer, parameter :: ATTENUATION_COMP_MAXIMUM    = 9000
 
-! Add Q_Kappa effect in viscoelastic simulation
-  logical, parameter :: FULL_ATTENUATION_SOLID = .true.
+! add Q_Kappa effect (in addition to Q_mu) to viscoelastic simulation
+  logical, parameter :: FULL_ATTENUATION_SOLID = .false.
   real(kind=CUSTOM_REAL), parameter :: CONST_Q_KAPPA = 120._CUSTOM_REAL
-
 
 ! reference frequency for target velocity values in velocity model
 ! arbitrarily set to typical resolution of model (3 sec)
