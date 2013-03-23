@@ -641,7 +641,7 @@
 !          by default, N_SLS = 3, therefore we take steps of 3
               if(imodulo_N_SLS >= 1) then
                 do i_sls = 1,imodulo_N_SLS
-                  if(FULL_ATTENUATION_SOLID) then !! ZN: for performance, it would be better to avoid "if" statements inside loops
+                  if(FULL_ATTENUATION_SOLID) then
                     R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
                   else
                     R_trace_val1 = 0.
@@ -659,7 +659,7 @@
 
               if(N_SLS >= imodulo_N_SLS+1) then
                 do i_sls = imodulo_N_SLS+1,N_SLS,3
-                  if(FULL_ATTENUATION_SOLID) then !! ZN: for performance, it would be better to avoid "if" statements inside loops
+                  if(FULL_ATTENUATION_SOLID) then
                     R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
                   else
                     R_trace_val1 = 0.
