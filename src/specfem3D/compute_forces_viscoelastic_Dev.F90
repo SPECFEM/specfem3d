@@ -82,8 +82,8 @@
         kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,5) :: hprime_xx,hprimewgll_xxT
-  real(kind=CUSTOM_REAL), dimension(5,NGLLX) :: hprime_xxT,hprimewgll_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xxT,hprimewgll_xx
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -132,9 +132,9 @@
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! local parameters
-  real(kind=CUSTOM_REAL), dimension(5,5,5) :: dummyx_loc,dummyy_loc,dummyz_loc, &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc, &
     newtempx1,newtempx2,newtempx3,newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3
-  real(kind=CUSTOM_REAL), dimension(5,5,5) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   real(kind=CUSTOM_REAL) duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att
@@ -142,9 +142,9 @@
   real(kind=CUSTOM_REAL) duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att
 
   ! manually inline the calls to the Deville et al. (2002) routines
-  real(kind=CUSTOM_REAL), dimension(5,25) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(5,25) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
-  real(kind=CUSTOM_REAL), dimension(5,25) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: B1_m1_m2_5points,B2_m1_m2_5points,B3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points,C2_m1_m2_5points,C3_m1_m2_5points
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: E1_m1_m2_5points,E2_m1_m2_5points,E3_m1_m2_5points
 
   equivalence(dummyx_loc,B1_m1_m2_5points)
   equivalence(dummyy_loc,B2_m1_m2_5points)
@@ -156,11 +156,11 @@
   equivalence(newtempy1,E2_m1_m2_5points)
   equivalence(newtempz1,E3_m1_m2_5points)
 
-  real(kind=CUSTOM_REAL), dimension(5,5,5) :: &
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
-  real(kind=CUSTOM_REAL), dimension(5,5,5) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
-  real(kind=CUSTOM_REAL), dimension(5,25) :: B1_m1_m2_5points_att,B2_m1_m2_5points_att,B3_m1_m2_5points_att
-  real(kind=CUSTOM_REAL), dimension(5,25) :: C1_m1_m2_5points_att,C2_m1_m2_5points_att,C3_m1_m2_5points_att
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: B1_m1_m2_5points_att,B2_m1_m2_5points_att,B3_m1_m2_5points_att
+  real(kind=CUSTOM_REAL), dimension(m1,m2) :: C1_m1_m2_5points_att,C2_m1_m2_5points_att,C3_m1_m2_5points_att
 
   equivalence(dummyx_loc_att,B1_m1_m2_5points_att)
   equivalence(dummyy_loc_att,B2_m1_m2_5points_att)
@@ -169,11 +169,11 @@
   equivalence(tempy1_att,C2_m1_m2_5points_att)
   equivalence(tempz1_att,C3_m1_m2_5points_att)
 
-  real(kind=CUSTOM_REAL), dimension(25,5) :: &
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
     A1_mxm_m2_m1_5points,A2_mxm_m2_m1_5points,A3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(25,5) :: &
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
     C1_mxm_m2_m1_5points,C2_mxm_m2_m1_5points,C3_mxm_m2_m1_5points
-  real(kind=CUSTOM_REAL), dimension(25,5) :: &
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
     E1_mxm_m2_m1_5points,E2_mxm_m2_m1_5points,E3_mxm_m2_m1_5points
 
   equivalence(dummyx_loc,A1_mxm_m2_m1_5points)
@@ -186,9 +186,9 @@
   equivalence(newtempy3,E2_mxm_m2_m1_5points)
   equivalence(newtempz3,E3_mxm_m2_m1_5points)
 
-  real(kind=CUSTOM_REAL), dimension(25,5) :: &
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
     A1_mxm_m2_m1_5points_att,A2_mxm_m2_m1_5points_att,A3_mxm_m2_m1_5points_att
-  real(kind=CUSTOM_REAL), dimension(25,5) :: &
+  real(kind=CUSTOM_REAL), dimension(m2,m1) :: &
     C1_mxm_m2_m1_5points_att,C2_mxm_m2_m1_5points_att,C3_mxm_m2_m1_5points_att
 
   equivalence(dummyx_loc_att,A1_mxm_m2_m1_5points_att)
@@ -304,20 +304,20 @@
         do j=1,m2
           do i=1,m1
             C1_m1_m2_5points(i,j) = hprime_xx(i,1)*B1_m1_m2_5points(1,j) + &
-                                  hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
-                                  hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
-                                  hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
-                                  hprime_xx(i,5)*B1_m1_m2_5points(5,j)
+                                    hprime_xx(i,2)*B1_m1_m2_5points(2,j) + &
+                                    hprime_xx(i,3)*B1_m1_m2_5points(3,j) + &
+                                    hprime_xx(i,4)*B1_m1_m2_5points(4,j) + &
+                                    hprime_xx(i,5)*B1_m1_m2_5points(5,j)
             C2_m1_m2_5points(i,j) = hprime_xx(i,1)*B2_m1_m2_5points(1,j) + &
-                                  hprime_xx(i,2)*B2_m1_m2_5points(2,j) + &
-                                  hprime_xx(i,3)*B2_m1_m2_5points(3,j) + &
-                                  hprime_xx(i,4)*B2_m1_m2_5points(4,j) + &
-                                  hprime_xx(i,5)*B2_m1_m2_5points(5,j)
+                                    hprime_xx(i,2)*B2_m1_m2_5points(2,j) + &
+                                    hprime_xx(i,3)*B2_m1_m2_5points(3,j) + &
+                                    hprime_xx(i,4)*B2_m1_m2_5points(4,j) + &
+                                    hprime_xx(i,5)*B2_m1_m2_5points(5,j)
             C3_m1_m2_5points(i,j) = hprime_xx(i,1)*B3_m1_m2_5points(1,j) + &
-                                  hprime_xx(i,2)*B3_m1_m2_5points(2,j) + &
-                                  hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
-                                  hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
-                                  hprime_xx(i,5)*B3_m1_m2_5points(5,j)
+                                    hprime_xx(i,2)*B3_m1_m2_5points(2,j) + &
+                                    hprime_xx(i,3)*B3_m1_m2_5points(3,j) + &
+                                    hprime_xx(i,4)*B3_m1_m2_5points(4,j) + &
+                                    hprime_xx(i,5)*B3_m1_m2_5points(5,j)
           enddo
         enddo
 
@@ -356,20 +356,20 @@
             ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
             do k = 1,NGLLX
               tempx2(i,j,k) = dummyx_loc(i,1,k)*hprime_xxT(1,j) + &
-                            dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
-                            dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
-                            dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
-                            dummyx_loc(i,5,k)*hprime_xxT(5,j)
+                              dummyx_loc(i,2,k)*hprime_xxT(2,j) + &
+                              dummyx_loc(i,3,k)*hprime_xxT(3,j) + &
+                              dummyx_loc(i,4,k)*hprime_xxT(4,j) + &
+                              dummyx_loc(i,5,k)*hprime_xxT(5,j)
               tempy2(i,j,k) = dummyy_loc(i,1,k)*hprime_xxT(1,j) + &
-                            dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
-                            dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
-                            dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
-                            dummyy_loc(i,5,k)*hprime_xxT(5,j)
+                              dummyy_loc(i,2,k)*hprime_xxT(2,j) + &
+                              dummyy_loc(i,3,k)*hprime_xxT(3,j) + &
+                              dummyy_loc(i,4,k)*hprime_xxT(4,j) + &
+                              dummyy_loc(i,5,k)*hprime_xxT(5,j)
               tempz2(i,j,k) = dummyz_loc(i,1,k)*hprime_xxT(1,j) + &
-                            dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
-                            dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
-                            dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
-                            dummyz_loc(i,5,k)*hprime_xxT(5,j)
+                              dummyz_loc(i,2,k)*hprime_xxT(2,j) + &
+                              dummyz_loc(i,3,k)*hprime_xxT(3,j) + &
+                              dummyz_loc(i,4,k)*hprime_xxT(4,j) + &
+                              dummyz_loc(i,5,k)*hprime_xxT(5,j)
             enddo
           enddo
         enddo
@@ -409,20 +409,20 @@
         do j=1,m1
           do i=1,m2
             C1_mxm_m2_m1_5points(i,j) = A1_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                      A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                      A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                      A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                      A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+                                        A1_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                        A1_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                        A1_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                        A1_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
             C2_mxm_m2_m1_5points(i,j) = A2_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                      A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                      A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                      A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                      A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+                                        A2_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                        A2_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                        A2_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                        A2_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
             C3_mxm_m2_m1_5points(i,j) = A3_mxm_m2_m1_5points(i,1)*hprime_xxT(1,j) + &
-                                      A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
-                                      A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
-                                      A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
-                                      A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
+                                        A3_mxm_m2_m1_5points(i,2)*hprime_xxT(2,j) + &
+                                        A3_mxm_m2_m1_5points(i,3)*hprime_xxT(3,j) + &
+                                        A3_mxm_m2_m1_5points(i,4)*hprime_xxT(4,j) + &
+                                        A3_mxm_m2_m1_5points(i,5)*hprime_xxT(5,j)
           enddo
         enddo
 
@@ -457,6 +457,7 @@
         do k=1,NGLLZ
           do j=1,NGLLY
             do i=1,NGLLX
+
               ! get derivatives of ux, uy and uz with respect to x, y and z
               xixl = xix(i,j,k,ispec)
               xiyl = xiy(i,j,k,ispec)
@@ -563,9 +564,7 @@
               if(ATTENUATION) then
                 ! use unrelaxed parameters if attenuation
                 mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-                if(FULL_ATTENUATION_SOLID) then  !ZN
-                   kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)  !ZN
-                endif  !ZN
+                if(FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)  !ZN
               endif
 
   ! full anisotropic case, stress calculations
