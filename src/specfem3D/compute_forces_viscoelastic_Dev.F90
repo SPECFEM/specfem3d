@@ -733,20 +733,20 @@
         do j=1,m2
           do i=1,m1
             E1_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C1_m1_m2_5points(1,j) + &
-                                  hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
-                                  hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
-                                  hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
-                                  hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
+                                    hprimewgll_xxT(i,2)*C1_m1_m2_5points(2,j) + &
+                                    hprimewgll_xxT(i,3)*C1_m1_m2_5points(3,j) + &
+                                    hprimewgll_xxT(i,4)*C1_m1_m2_5points(4,j) + &
+                                    hprimewgll_xxT(i,5)*C1_m1_m2_5points(5,j)
             E2_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C2_m1_m2_5points(1,j) + &
-                                  hprimewgll_xxT(i,2)*C2_m1_m2_5points(2,j) + &
-                                  hprimewgll_xxT(i,3)*C2_m1_m2_5points(3,j) + &
-                                  hprimewgll_xxT(i,4)*C2_m1_m2_5points(4,j) + &
-                                  hprimewgll_xxT(i,5)*C2_m1_m2_5points(5,j)
+                                    hprimewgll_xxT(i,2)*C2_m1_m2_5points(2,j) + &
+                                    hprimewgll_xxT(i,3)*C2_m1_m2_5points(3,j) + &
+                                    hprimewgll_xxT(i,4)*C2_m1_m2_5points(4,j) + &
+                                    hprimewgll_xxT(i,5)*C2_m1_m2_5points(5,j)
             E3_m1_m2_5points(i,j) = hprimewgll_xxT(i,1)*C3_m1_m2_5points(1,j) + &
-                                  hprimewgll_xxT(i,2)*C3_m1_m2_5points(2,j) + &
-                                  hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
-                                  hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
-                                  hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
+                                    hprimewgll_xxT(i,2)*C3_m1_m2_5points(2,j) + &
+                                    hprimewgll_xxT(i,3)*C3_m1_m2_5points(3,j) + &
+                                    hprimewgll_xxT(i,4)*C3_m1_m2_5points(4,j) + &
+                                    hprimewgll_xxT(i,5)*C3_m1_m2_5points(5,j)
           enddo
         enddo
 
@@ -757,20 +757,20 @@
             ! for efficiency it is better to leave this loop on k inside, it leads to slightly faster code
             do k = 1,NGLLX
               newtempx2(i,j,k) = tempx2(i,1,k)*hprimewgll_xx(1,j) + &
-                               tempx2(i,2,k)*hprimewgll_xx(2,j) + &
-                               tempx2(i,3,k)*hprimewgll_xx(3,j) + &
-                               tempx2(i,4,k)*hprimewgll_xx(4,j) + &
-                               tempx2(i,5,k)*hprimewgll_xx(5,j)
+                                 tempx2(i,2,k)*hprimewgll_xx(2,j) + &
+                                 tempx2(i,3,k)*hprimewgll_xx(3,j) + &
+                                 tempx2(i,4,k)*hprimewgll_xx(4,j) + &
+                                 tempx2(i,5,k)*hprimewgll_xx(5,j)
               newtempy2(i,j,k) = tempy2(i,1,k)*hprimewgll_xx(1,j) + &
-                               tempy2(i,2,k)*hprimewgll_xx(2,j) + &
-                               tempy2(i,3,k)*hprimewgll_xx(3,j) + &
-                               tempy2(i,4,k)*hprimewgll_xx(4,j) + &
-                               tempy2(i,5,k)*hprimewgll_xx(5,j)
+                                 tempy2(i,2,k)*hprimewgll_xx(2,j) + &
+                                 tempy2(i,3,k)*hprimewgll_xx(3,j) + &
+                                 tempy2(i,4,k)*hprimewgll_xx(4,j) + &
+                                 tempy2(i,5,k)*hprimewgll_xx(5,j)
               newtempz2(i,j,k) = tempz2(i,1,k)*hprimewgll_xx(1,j) + &
-                               tempz2(i,2,k)*hprimewgll_xx(2,j) + &
-                               tempz2(i,3,k)*hprimewgll_xx(3,j) + &
-                               tempz2(i,4,k)*hprimewgll_xx(4,j) + &
-                               tempz2(i,5,k)*hprimewgll_xx(5,j)
+                                 tempz2(i,2,k)*hprimewgll_xx(2,j) + &
+                                 tempz2(i,3,k)*hprimewgll_xx(3,j) + &
+                                 tempz2(i,4,k)*hprimewgll_xx(4,j) + &
+                                 tempz2(i,5,k)*hprimewgll_xx(5,j)
             enddo
           enddo
         enddo
@@ -779,20 +779,20 @@
         do j=1,m1
           do i=1,m2
             E1_mxm_m2_m1_5points(i,j) = C1_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                      C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                      C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                      C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                      C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+                                        C1_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                        C1_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                        C1_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                        C1_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
             E2_mxm_m2_m1_5points(i,j) = C2_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                      C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                      C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                      C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                      C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+                                        C2_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                        C2_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                        C2_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                        C2_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
             E3_mxm_m2_m1_5points(i,j) = C3_mxm_m2_m1_5points(i,1)*hprimewgll_xx(1,j) + &
-                                      C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
-                                      C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
-                                      C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
-                                      C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
+                                        C3_mxm_m2_m1_5points(i,2)*hprimewgll_xx(2,j) + &
+                                        C3_mxm_m2_m1_5points(i,3)*hprimewgll_xx(3,j) + &
+                                        C3_mxm_m2_m1_5points(i,4)*hprimewgll_xx(4,j) + &
+                                        C3_mxm_m2_m1_5points(i,5)*hprimewgll_xx(5,j)
           enddo
         enddo
 
@@ -864,7 +864,7 @@
                                       betaval_loc * Sn + gammaval_loc * Snp1
                  enddo   ! end of loop on memory variables
 
-              endif  !  end attenuation
+              endif  !  end of if attenuation
 
             enddo
           enddo

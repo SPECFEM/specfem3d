@@ -266,6 +266,25 @@
 
   enddo ! end of loop over all spectral elements
 
+
+!! DK DK to Jo, to debug CPML, 22 March 2013:
+
+!! DK DK please check with Zhinan, it could be that this Dirichlet condition for acoustic CPML elements
+!! DK DK is not needed any more, I think that in the 2D code for acoustic CPML elements we switched to
+!! DK DK Neumann instead of Dirichlet (and if so, for Neumann there is nothing to do,
+!! DK DK the condition is automatic, nothing to program);  Zhinan can tell you more about this.
+
+
+
+
+!! DK DK to Jo, to debug CPML, 22 March 2013:
+
+!! DK DK I think that there is an error in the loops below, you should also check if ispec is a CPML element,
+!! DK DK and also if ispec is an acoustic element (and NOT for instance an elastic or viscoelastic element)
+!! DK DK
+!! DK DK thus test something like:   if (is_CPML(ispec) .and. acoustic(ispec)) then
+!! DK DK or something like that
+
   ! C-PML boundary
   if( PML_CONDITIONS ) then
      ! xmin
