@@ -434,19 +434,33 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
 
              if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-                PML_dux_dxl_new(i,j,k,ispec_CPML) = duxdxl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
+!! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
 !! DK DK to Jo and Zhinan to debug CPML: maybe replace it with "duxdxl_att"??
 !! DK DK (this is a variable name that has changed in this routine since Jo left, thus it cannot explain the previous CPML bug)
-                PML_dux_dyl_new(i,j,k,ispec_CPML) = duxdyl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
-                PML_dux_dzl_new(i,j,k,ispec_CPML) = duxdzl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
+!               PML_dux_dxl_new(i,j,k,ispec_CPML) = duxdxl_new
+!               PML_dux_dyl_new(i,j,k,ispec_CPML) = duxdyl_new
+!               PML_dux_dzl_new(i,j,k,ispec_CPML) = duxdzl_new
 
-                PML_duy_dxl_new(i,j,k,ispec_CPML) = duydxl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
-                PML_duy_dyl_new(i,j,k,ispec_CPML) = duydyl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
-                PML_duy_dzl_new(i,j,k,ispec_CPML) = duydzl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
+!               PML_duy_dxl_new(i,j,k,ispec_CPML) = duydxl_new
+!               PML_duy_dyl_new(i,j,k,ispec_CPML) = duydyl_new
+!               PML_duy_dzl_new(i,j,k,ispec_CPML) = duydzl_new
 
-                PML_duz_dxl_new(i,j,k,ispec_CPML) = duzdxl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
-                PML_duz_dyl_new(i,j,k,ispec_CPML) = duzdyl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
-                PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_new !! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
+!               PML_duz_dxl_new(i,j,k,ispec_CPML) = duzdxl_new
+!               PML_duz_dyl_new(i,j,k,ispec_CPML) = duzdyl_new
+!               PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_new
+
+!! DK DK 23 March 2013: I make the change from "duxdxl_new" to "duxdxl_att" here, see my comment above
+                PML_dux_dxl_new(i,j,k,ispec_CPML) = duxdxl_att
+                PML_dux_dyl_new(i,j,k,ispec_CPML) = duxdyl_att
+                PML_dux_dzl_new(i,j,k,ispec_CPML) = duxdzl_att
+
+                PML_duy_dxl_new(i,j,k,ispec_CPML) = duydxl_att
+                PML_duy_dyl_new(i,j,k,ispec_CPML) = duydyl_att
+                PML_duy_dzl_new(i,j,k,ispec_CPML) = duydzl_att
+
+                PML_duz_dxl_new(i,j,k,ispec_CPML) = duzdxl_att
+                PML_duz_dyl_new(i,j,k,ispec_CPML) = duzdyl_att
+                PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_att
              endif
 
               else
