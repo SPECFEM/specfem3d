@@ -63,7 +63,7 @@ subroutine compute_forces_viscoelastic()
 
       else
         ! no optimizations used
-        call compute_forces_viscoelastic_noDev( iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
+        call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
@@ -76,9 +76,7 @@ subroutine compute_forces_viscoelastic()
                         one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
                         alphaval,betaval,gammaval,&
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
-!ZN                        R_xx,R_yy,R_xy,R_xz,R_yz, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-!ZN                        epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -96,7 +94,7 @@ subroutine compute_forces_viscoelastic()
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
-          call compute_forces_viscoelastic_noDev( iphase, NSPEC_AB,NGLOB_AB, &
+          call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -110,9 +108,7 @@ subroutine compute_forces_viscoelastic()
                         one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
                         b_alphaval,b_betaval,b_gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
-!ZN                        b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-!ZN                        b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
@@ -126,7 +122,7 @@ subroutine compute_forces_viscoelastic()
                         b_dsdx_top,b_dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic  )
+                        phase_ispec_inner_elastic)
 
       endif
 
