@@ -702,7 +702,6 @@
                 enddo
               endif
 
-
               endif
 
             ! define symmetric components of sigma
