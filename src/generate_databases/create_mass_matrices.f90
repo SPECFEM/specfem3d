@@ -450,16 +450,12 @@
 
     ! loops over physical mesh elements
     do ispec=1,nspec
-       if( .not. CPML_mask_ibool(ispec) ) then
+       if( .not. CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec) ) then
           do k=1,NGLLZ
              do j=1,NGLLY
                 do i=1,NGLLX
                    ! defines the material coefficient associated to the domain
-                   if( ispec_is_elastic(ispec) ) then
-                      mat_coef = rhostore(i,j,k,ispec)
-                   elseif( ispec_is_acoustic(ispec) ) then
-                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                   endif
+                   mat_coef = rhostore(i,j,k,ispec)
 
                    iglob = ibool(i,j,k,ispec)
 
@@ -476,6 +472,28 @@
                 enddo
              enddo
           enddo
+       else if( .not. CPML_mask_ibool(ispec) .and. ispec_is_acoustic(ispec) ) then
+          do k=1,NGLLZ
+             do j=1,NGLLY
+                do i=1,NGLLX
+                   ! defines the material coefficient associated to the domain
+                   mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                   iglob = ibool(i,j,k,ispec)
+
+                   weight = wxgll(i)*wygll(j)*wzgll(k)
+                   jacobianl = jacobianstore(i,j,k,ispec)
+
+                   if(CUSTOM_REAL == SIZE_REAL) then
+                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                           sngl( dble(jacobianl) * weight * dble(mat_coef) )
+                   else
+                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                           jacobianl * weight * mat_coef
+                   endif
+                enddo
+             enddo
+          enddo
        endif
     enddo
 
@@ -483,18 +501,14 @@
     do ispec_CPML=1,nspec_cpml
        ispec = CPML_to_spec(ispec_CPML)
 
-       if( CPML_mask_ibool(ispec) ) then
+       if( CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec) ) then
           ! X_surface C-PML
           if( CPML_regions(ispec_CPML) == 1 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -520,11 +534,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -550,11 +560,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -580,11 +586,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -614,11 +616,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -648,11 +646,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -682,11 +676,7 @@
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
-                      if( ispec_is_elastic(ispec) ) then
-                         mat_coef = rhostore(i,j,k,ispec)
-                      elseif( ispec_is_acoustic(ispec) ) then
-                         mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-                      endif
+                      mat_coef = rhostore(i,j,k,ispec)
 
                       iglob = ibool(i,j,k,ispec)
 
@@ -705,6 +695,218 @@
                               deltat / 2.d0) )
                       else
                          rmass(iglob) = rmass(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML)) * &
+                              deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+          endif
+       endif
+    enddo ! do ispec_CPML=1,nspec_cpml
+
+    ! loops over C-PML elements
+    do ispec_CPML=1,nspec_cpml
+       ispec = CPML_to_spec(ispec_CPML)
+
+       if( CPML_mask_ibool(ispec) .and. ispec_is_acoustic(ispec) ) then
+          ! X_surface C-PML
+          if( CPML_regions(ispec_CPML) == 1 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_x(i,j,k,ispec_CPML)) + dble(d_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_x(i,j,k,ispec_CPML) + d_store_x(i,j,k,ispec_CPML) * deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+
+             ! Y_surface C-PML
+          elseif( CPML_regions(ispec_CPML) == 2 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_y(i,j,k,ispec_CPML)) + dble(d_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_y(i,j,k,ispec_CPML) + d_store_y(i,j,k,ispec_CPML) * deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+
+             ! Z_surface C-PML
+          elseif( CPML_regions(ispec_CPML) == 3 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_z(i,j,k,ispec_CPML) + d_store_z(i,j,k,ispec_CPML) * deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+
+             ! XY_edge C-PML
+          elseif( CPML_regions(ispec_CPML) == 4 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
+                              (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
+                              dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) + &
+                              (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) + &
+                              d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+
+             ! XZ_edge C-PML
+          elseif( CPML_regions(ispec_CPML) == 5 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                              (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                              dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              (d_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              d_store_z(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+
+             ! YZ_edge C-PML
+          elseif( CPML_regions(ispec_CPML) == 6 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                              (dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                              dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              jacobianl * weight * mat_coef * &
+                              (K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              (d_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
+                              d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0)
+                      endif
+                   enddo
+                enddo
+             enddo
+
+             ! XYZ_corner C-PML
+          elseif( CPML_regions(ispec_CPML) == 7 ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      ! defines the material coefficient associated to the domain
+                      mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                              sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                              (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) * &
+                              dble(K_store_z(i,j,k,ispec_CPML)) + (dble(d_store_x(i,j,k,ispec_CPML)) * &
+                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                              dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
+                              dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
+                              dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML))) * &
+                              deltat / 2.d0) )
+                      else
+                         rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                               jacobianl * weight * mat_coef * &
                               (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
                               (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
