@@ -53,6 +53,7 @@ rm -f *
 cp ../../../bin/xdecompose_mesh .
 cp ../../../bin/xgenerate_databases .
 cp ../../../bin/xspecfem3D .
+cd ../
 
 # stores setup
 cp DATA/Par_file OUTPUT_FILES/
@@ -64,7 +65,7 @@ echo
 echo "  decomposing mesh..."
 echo
 cd bin/
-./xdecompose_mesh $NPROC ../DATA/MESH-default/ ../OUTPUT_FILES/DATABASES_MPI/
+./xdecompose_mesh $NPROC ../MESH-default ../OUTPUT_FILES/DATABASES_MPI/
 
 # runs database generation
 echo
