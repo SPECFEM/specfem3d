@@ -90,7 +90,7 @@ subroutine compute_forces_viscoelastic()
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic)
+                        phase_ispec_inner_elastic,ispec_is_elastic)
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
@@ -122,7 +122,7 @@ subroutine compute_forces_viscoelastic()
                         b_dsdx_top,b_dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic)
+                        phase_ispec_inner_elastic,ispec_is_elastic)
 
       endif
 

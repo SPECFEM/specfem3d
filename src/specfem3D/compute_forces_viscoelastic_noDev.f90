@@ -52,7 +52,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic)
+                        phase_ispec_inner_elastic,ispec_is_elastic)
 
   use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,FULL_ATTENUATION_SOLID,IOUT !ZN
   use pml_par
@@ -135,6 +135,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer, dimension(NSPEC2D_BOTTOM) :: ibelm_bottom
   integer, dimension(NSPEC2D_TOP) :: ibelm_top
 
+   logical, dimension(NSPEC_AB) :: ispec_is_elastic
+
 ! local parameters
   integer :: i_SLS,imodulo_N_SLS
   integer :: ispec,ispec2D,iglob,ispec_p,num_elements
@@ -180,9 +182,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1_att,tempx2_att,tempx3_att,tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc_att,dummyy_loc_att,dummyz_loc_att
-
-  real(kind=CUSTOM_REAL) :: duxdxl_new,duxdyl_new,duxdzl_new,duydxl_new
-  real(kind=CUSTOM_REAL) :: duydyl_new,duydzl_new,duzdxl_new,duzdyl_new,duzdzl_new;
 
   real(kind=CUSTOM_REAL) :: eta
 
@@ -254,6 +253,21 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  enddo
               enddo
            enddo
+        else if(PML_CONDITIONS) then
+           ! do not merge this second line with the first using an ".and." statement
+           ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+           if(CPML_mask_ibool(ispec)) then
+              do k=1,NGLLZ
+                 do j=1,NGLLY
+                    do i=1,NGLLX
+                       iglob = ibool(i,j,k,ispec)
+                       dummyx_loc_att(i,j,k) = deltat*veloc(1,iglob)
+                       dummyy_loc_att(i,j,k) = deltat*veloc(2,iglob)
+                       dummyz_loc_att(i,j,k) = deltat*veloc(3,iglob)
+                    enddo
+                 enddo
+              enddo
+           endif
         endif
 
      do k=1,NGLLZ
@@ -291,8 +305,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             tempz3(i,j,k) = tempz3(i,j,k) + dummyz_loc(i,j,l)*hp3
           enddo
 
-          if( (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) .or. &
-               (PML_CONDITIONS .and. CPML_mask_ibool(ispec)) ) then
+          if(ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
              tempx1_att(i,j,k) = tempx1(i,j,k)
              tempx2_att(i,j,k) = tempx2(i,j,k)
              tempx3_att(i,j,k) = tempx3(i,j,k)
@@ -308,24 +321,61 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
              ! use first order Taylor expansion of displacement for local storage of stresses
              ! at this current time step, to fix attenuation in a consistent way
              do l=1,NGLLX
-               hp1 = hprime_xx(i,l)
-               tempx1_att(i,j,k) = tempx1_att(i,j,k) + dummyx_loc_att(l,j,k)*hp1
-               tempy1_att(i,j,k) = tempy1_att(i,j,k) + dummyy_loc_att(l,j,k)*hp1
-               tempz1_att(i,j,k) = tempz1_att(i,j,k) + dummyz_loc_att(l,j,k)*hp1
+                hp1 = hprime_xx(i,l)
+                tempx1_att(i,j,k) = tempx1_att(i,j,k) + dummyx_loc_att(l,j,k)*hp1
+                tempy1_att(i,j,k) = tempy1_att(i,j,k) + dummyy_loc_att(l,j,k)*hp1
+                tempz1_att(i,j,k) = tempz1_att(i,j,k) + dummyz_loc_att(l,j,k)*hp1
 
-               !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-               hp2 = hprime_yy(j,l)
-               tempx2_att(i,j,k) = tempx2_att(i,j,k) + dummyx_loc_att(i,l,k)*hp2
-               tempy2_att(i,j,k) = tempy2_att(i,j,k) + dummyy_loc_att(i,l,k)*hp2
-               tempz2_att(i,j,k) = tempz2_att(i,j,k) + dummyz_loc_att(i,l,k)*hp2
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ
+                hp2 = hprime_yy(j,l)
+                tempx2_att(i,j,k) = tempx2_att(i,j,k) + dummyx_loc_att(i,l,k)*hp2
+                tempy2_att(i,j,k) = tempy2_att(i,j,k) + dummyy_loc_att(i,l,k)*hp2
+                tempz2_att(i,j,k) = tempz2_att(i,j,k) + dummyz_loc_att(i,l,k)*hp2
 
-               !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-               hp3 = hprime_zz(k,l)
-               tempx3_att(i,j,k) = tempx3_att(i,j,k) + dummyx_loc_att(i,j,l)*hp3
-               tempy3_att(i,j,k) = tempy3_att(i,j,k) + dummyy_loc_att(i,j,l)*hp3
-               tempz3_att(i,j,k) = tempz3_att(i,j,k) + dummyz_loc_att(i,j,l)*hp3
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ
+                hp3 = hprime_zz(k,l)
+                tempx3_att(i,j,k) = tempx3_att(i,j,k) + dummyx_loc_att(i,j,l)*hp3
+                tempy3_att(i,j,k) = tempy3_att(i,j,k) + dummyy_loc_att(i,j,l)*hp3
+                tempz3_att(i,j,k) = tempz3_att(i,j,k) + dummyz_loc_att(i,j,l)*hp3
              enddo
 
+          else if(PML_CONDITIONS) then
+             ! do not merge this second line with the first using an ".and." statement
+             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+             if(CPML_mask_ibool(ispec)) then
+                tempx1_att(i,j,k) = tempx1(i,j,k)
+                tempx2_att(i,j,k) = tempx2(i,j,k)
+                tempx3_att(i,j,k) = tempx3(i,j,k)
+
+                tempy1_att(i,j,k) = tempy1(i,j,k)
+                tempy2_att(i,j,k) = tempy2(i,j,k)
+                tempy3_att(i,j,k) = tempy3(i,j,k)
+
+                tempz1_att(i,j,k) = tempz1(i,j,k)
+                tempz2_att(i,j,k) = tempz2(i,j,k)
+                tempz3_att(i,j,k) = tempz3(i,j,k)
+
+                ! use first order Taylor expansion of displacement for local storage of stresses
+                ! at this current time step, to fix attenuation in a consistent way
+                do l=1,NGLLX
+                   hp1 = hprime_xx(i,l)
+                   tempx1_att(i,j,k) = tempx1_att(i,j,k) + dummyx_loc_att(l,j,k)*hp1
+                   tempy1_att(i,j,k) = tempy1_att(i,j,k) + dummyy_loc_att(l,j,k)*hp1
+                   tempz1_att(i,j,k) = tempz1_att(i,j,k) + dummyz_loc_att(l,j,k)*hp1
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ
+                   hp2 = hprime_yy(j,l)
+                   tempx2_att(i,j,k) = tempx2_att(i,j,k) + dummyx_loc_att(i,l,k)*hp2
+                   tempy2_att(i,j,k) = tempy2_att(i,j,k) + dummyy_loc_att(i,l,k)*hp2
+                   tempz2_att(i,j,k) = tempz2_att(i,j,k) + dummyz_loc_att(i,l,k)*hp2
+
+!!! can merge these loops because NGLLX = NGLLY = NGLLZ
+                   hp3 = hprime_zz(k,l)
+                   tempx3_att(i,j,k) = tempx3_att(i,j,k) + dummyx_loc_att(i,j,l)*hp3
+                   tempy3_att(i,j,k) = tempy3_att(i,j,k) + dummyy_loc_att(i,j,l)*hp3
+                   tempz3_att(i,j,k) = tempz3_att(i,j,k) + dummyz_loc_att(i,j,l)*hp3
+                enddo
+             endif
           endif
 
               ! get derivatives of ux, uy and uz with respect to x, y and z
@@ -352,22 +402,26 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
 
-          ! stores derivatives of ux, uy and uz with respect to x, y and z
-          if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-             ispec_CPML = spec_to_CPML(ispec)
+              ! stores derivatives of ux, uy and uz with respect to x, y and z
+              if (PML_CONDITIONS) then
+                 ! do not merge this second line with the first using an ".and." statement
+                 ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+                 if(CPML_mask_ibool(ispec)) then
+                    ispec_CPML = spec_to_CPML(ispec)
 
-             PML_dux_dxl(i,j,k,ispec_CPML) = duxdxl
-             PML_dux_dyl(i,j,k,ispec_CPML) = duxdyl
-             PML_dux_dzl(i,j,k,ispec_CPML) = duxdzl
+                    PML_dux_dxl(i,j,k,ispec_CPML) = duxdxl
+                    PML_dux_dyl(i,j,k,ispec_CPML) = duxdyl
+                    PML_dux_dzl(i,j,k,ispec_CPML) = duxdzl
 
-             PML_duy_dxl(i,j,k,ispec_CPML) = duydxl
-             PML_duy_dyl(i,j,k,ispec_CPML) = duydyl
-             PML_duy_dzl(i,j,k,ispec_CPML) = duydzl
+                    PML_duy_dxl(i,j,k,ispec_CPML) = duydxl
+                    PML_duy_dyl(i,j,k,ispec_CPML) = duydyl
+                    PML_duy_dzl(i,j,k,ispec_CPML) = duydzl
 
-             PML_duz_dxl(i,j,k,ispec_CPML) = duzdxl
-             PML_duz_dyl(i,j,k,ispec_CPML) = duzdyl
-             PML_duz_dzl(i,j,k,ispec_CPML) = duzdzl
-          endif
+                    PML_duz_dxl(i,j,k,ispec_CPML) = duzdxl
+                    PML_duz_dyl(i,j,k,ispec_CPML) = duzdyl
+                    PML_duz_dzl(i,j,k,ispec_CPML) = duzdzl
+                 endif
+              endif
 
               ! save strain on the Moho boundary
               if (SAVE_MOHO_MESH ) then
@@ -402,9 +456,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               duzdxl_plus_duxdzl = duzdxl + duxdzl
               duzdyl_plus_duydzl = duzdyl + duydzl
 
-              if( (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) .or. &
-                   (PML_CONDITIONS .and. CPML_mask_ibool(ispec)) ) then
-
+              if(ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
                  ! temporary variables used for fixing attenuation in a consistent way
                  duxdxl_att = xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
                  duxdyl_att = xiyl*tempx1_att(i,j,k) + etayl*tempx2_att(i,j,k) + gammayl*tempx3_att(i,j,k)
@@ -432,36 +484,32 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
                  epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
                  epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
+                 
+              else if(PML_CONDITIONS) then
+                    ! do not merge this second line with the first using an ".and." statement
+                    ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+                    if(CPML_mask_ibool(ispec)) then
+                       PML_dux_dxl_new(i,j,k,ispec_CPML) = &
+                            xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
+                       PML_dux_dyl_new(i,j,k,ispec_CPML) = &
+                            xiyl*tempx1_att(i,j,k) + etayl*tempx2_att(i,j,k) + gammayl*tempx3_att(i,j,k)
+                       PML_dux_dzl_new(i,j,k,ispec_CPML) = &
+                            xizl*tempx1_att(i,j,k) + etazl*tempx2_att(i,j,k) + gammazl*tempx3_att(i,j,k)
 
-             if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-!! DK DK to Jo and Zhinan to debug CPML: duxdxl_new is undefined
-!! DK DK to Jo and Zhinan to debug CPML: maybe replace it with "duxdxl_att"??
-!! DK DK (this is a variable name that has changed in this routine since Jo left, thus it cannot explain the previous CPML bug)
-!               PML_dux_dxl_new(i,j,k,ispec_CPML) = duxdxl_new
-!               PML_dux_dyl_new(i,j,k,ispec_CPML) = duxdyl_new
-!               PML_dux_dzl_new(i,j,k,ispec_CPML) = duxdzl_new
+                       PML_duy_dxl_new(i,j,k,ispec_CPML) = &
+                            xixl*tempy1_att(i,j,k) + etaxl*tempy2_att(i,j,k) + gammaxl*tempy3_att(i,j,k)
+                       PML_duy_dyl_new(i,j,k,ispec_CPML) = &
+                            xiyl*tempy1_att(i,j,k) + etayl*tempy2_att(i,j,k) + gammayl*tempy3_att(i,j,k)
+                       PML_duy_dzl_new(i,j,k,ispec_CPML) = &
+                            xizl*tempy1_att(i,j,k) + etazl*tempy2_att(i,j,k) + gammazl*tempy3_att(i,j,k)
 
-!               PML_duy_dxl_new(i,j,k,ispec_CPML) = duydxl_new
-!               PML_duy_dyl_new(i,j,k,ispec_CPML) = duydyl_new
-!               PML_duy_dzl_new(i,j,k,ispec_CPML) = duydzl_new
-
-!               PML_duz_dxl_new(i,j,k,ispec_CPML) = duzdxl_new
-!               PML_duz_dyl_new(i,j,k,ispec_CPML) = duzdyl_new
-!               PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_new
-
-!! DK DK 23 March 2013: I make the change from "duxdxl_new" to "duxdxl_att" here, see my comment above
-                PML_dux_dxl_new(i,j,k,ispec_CPML) = duxdxl_att
-                PML_dux_dyl_new(i,j,k,ispec_CPML) = duxdyl_att
-                PML_dux_dzl_new(i,j,k,ispec_CPML) = duxdzl_att
-
-                PML_duy_dxl_new(i,j,k,ispec_CPML) = duydxl_att
-                PML_duy_dyl_new(i,j,k,ispec_CPML) = duydyl_att
-                PML_duy_dzl_new(i,j,k,ispec_CPML) = duydzl_att
-
-                PML_duz_dxl_new(i,j,k,ispec_CPML) = duzdxl_att
-                PML_duz_dyl_new(i,j,k,ispec_CPML) = duzdyl_att
-                PML_duz_dzl_new(i,j,k,ispec_CPML) = duzdzl_att
-             endif
+                       PML_duz_dxl_new(i,j,k,ispec_CPML) = &
+                            xixl*tempz1_att(i,j,k) + etaxl*tempz2_att(i,j,k) + gammaxl*tempz3_att(i,j,k)
+                       PML_duz_dyl_new(i,j,k,ispec_CPML) = &
+                            xiyl*tempz1_att(i,j,k) + etayl*tempz2_att(i,j,k) + gammayl*tempz3_att(i,j,k)
+                       PML_duz_dzl_new(i,j,k,ispec_CPML) = &
+                            xizl*tempz1_att(i,j,k) + etazl*tempz2_att(i,j,k) + gammazl*tempz3_att(i,j,k)
+                    endif
 
               else
                  ! computes deviatoric strain attenuation and/or for kernel calculations
@@ -631,41 +679,64 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !! DK DK that when PML_CONDITIONS is on then you do not compute the tempx, tempy, tempz arrays
 !! DK DK (even in non-PML elements!!), even though such arrays are needed below;
 !! DK DK shouldn't there be at least a "if (is_CPML(ispec))" test as well here, or something like that?
-          if( .not. PML_CONDITIONS ) then
+              if (PML_CONDITIONS) then
+                 ! do not merge this second line with the first using an ".and." statement
+                 ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+                 if(.not.CPML_mask_ibool(ispec)) then
+                    ! define symmetric components of sigma
+                    sigma_yx = sigma_xy
+                    sigma_zx = sigma_xz
+                    sigma_zy = sigma_yz
 
-            ! define symmetric components of sigma
-            sigma_yx = sigma_xy
-            sigma_zx = sigma_xz
-            sigma_zy = sigma_yz
+                    ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
+                    tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                    tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                    tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
 
-            ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-            tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
-            tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
-            tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+                    tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                    tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                    tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
 
-            tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
-            tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
-            tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+                    tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                    tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                    tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+                 endif
+              else
+                 ! define symmetric components of sigma
+                 sigma_yx = sigma_xy
+                 sigma_zx = sigma_xz
+                 sigma_zy = sigma_yz
 
-            tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
-            tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
-            tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+                 ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
+                 tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
+                 tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
+                 tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
 
-         endif
+                 tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
+                 tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
+                 tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
 
-        enddo
+                 tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
+                 tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
+                 tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+         enddo
       enddo
     enddo
 
-    if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-       ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-       call pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-                                    tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
-                                    sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
-                                    etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
+    if (PML_CONDITIONS) then
+       ! do not merge this second line with the first using an ".and." statement
+       ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+       if(CPML_mask_ibool(ispec)) then
+          ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
+          call pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+               tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
+               sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
+               etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
 
-       ! calculates contribution from each C-PML element to update acceleration
-       call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+          ! calculates contribution from each C-PML element to update acceleration
+          call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+       endif
     endif
 
     ! second double-loop over GLL to compute all the terms
@@ -718,64 +789,68 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
           ! updates acceleration with contribution from each C-PML element
-          if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-             accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k,ispec_CPML)
-             accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k,ispec_CPML)
-             accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k,ispec_CPML)
+          if (PML_CONDITIONS) then
+             ! do not merge this second line with the first using an ".and." statement
+             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+             if(CPML_mask_ibool(ispec)) then
+                accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k,ispec_CPML)
+                accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k,ispec_CPML)
+                accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k,ispec_CPML)
+             endif
           endif
 
-              !  update memory variables based upon the Runge-Kutta scheme
-              if(ATTENUATION) then
+          !  update memory variables based upon the Runge-Kutta scheme
+          if(ATTENUATION) then
 
-                 ! use Runge-Kutta scheme to march in time
-                 do i_sls = 1,N_SLS
+             ! use Runge-Kutta scheme to march in time
+             do i_sls = 1,N_SLS
 
-                    alphaval_loc = alphaval(i_sls)
-                    betaval_loc = betaval(i_sls)
-                    gammaval_loc = gammaval(i_sls)
+                alphaval_loc = alphaval(i_sls)
+                betaval_loc = betaval(i_sls)
+                gammaval_loc = gammaval(i_sls)
 
-                    if(FULL_ATTENUATION_SOLID) then
-                      ! term in trace  !ZN
-                      factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)  !ZN
+                if(FULL_ATTENUATION_SOLID) then
+                   ! term in trace  !ZN
+                   factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)  !ZN
 
-                      Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)  !ZN
-                      Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)  !ZN
-                      R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &  !ZN
-                                        betaval_loc * Sn + gammaval_loc * Snp1  !ZN
-                    endif
+                   Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)  !ZN
+                   Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)  !ZN
+                   R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &  !ZN
+                        betaval_loc * Sn + gammaval_loc * Snp1  !ZN
+                endif
 
-                    ! term in xx yy zz xy xz yz
-                    factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+                ! term in xx yy zz xy xz yz
+                factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
 
-                    ! term in xx
-                    Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
-                    Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
-                    R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1
-                    ! term in yy
-                    Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
-                    Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
-                    R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1
-                    ! term in zz not computed since zero trace
-                    ! term in xy
-                    Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
-                    Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
-                    R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1
-                    ! term in xz
-                    Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
-                    Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
-                    R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1
-                    ! term in yz
-                    Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
-                    Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
-                    R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1
-                 enddo   ! end of loop on memory variables
+                ! term in xx
+                Sn   = factor_loc * epsilondev_xx(i,j,k,ispec)
+                Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
+                R_xx(i,j,k,ispec,i_sls) = alphaval_loc * R_xx(i,j,k,ispec,i_sls) + &
+                     betaval_loc * Sn + gammaval_loc * Snp1
+                ! term in yy
+                Sn   = factor_loc * epsilondev_yy(i,j,k,ispec)
+                Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
+                R_yy(i,j,k,ispec,i_sls) = alphaval_loc * R_yy(i,j,k,ispec,i_sls) + &
+                     betaval_loc * Sn + gammaval_loc * Snp1
+                ! term in zz not computed since zero trace
+                ! term in xy
+                Sn   = factor_loc * epsilondev_xy(i,j,k,ispec)
+                Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
+                R_xy(i,j,k,ispec,i_sls) = alphaval_loc * R_xy(i,j,k,ispec,i_sls) + &
+                     betaval_loc * Sn + gammaval_loc * Snp1
+                ! term in xz
+                Sn   = factor_loc * epsilondev_xz(i,j,k,ispec)
+                Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
+                R_xz(i,j,k,ispec,i_sls) = alphaval_loc * R_xz(i,j,k,ispec,i_sls) + &
+                     betaval_loc * Sn + gammaval_loc * Snp1
+                ! term in yz
+                Sn   = factor_loc * epsilondev_yz(i,j,k,ispec)
+                Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
+                R_yz(i,j,k,ispec,i_sls) = alphaval_loc * R_yz(i,j,k,ispec,i_sls) + &
+                     betaval_loc * Sn + gammaval_loc * Snp1
+             enddo   ! end of loop on memory variables
 
-              endif  !  end of if attenuation
+          endif  !  end of if attenuation
 
         enddo
       enddo
@@ -807,150 +882,162 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
      do ispec2D=1,nspec2D_xmin
         ispec = ibelm_xmin(ispec2D)
 
-        i = 1
+        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+           i = 1
 
-        do k=1,NGLLZ
-           do j=1,NGLLY
-              iglob = ibool(i,j,k,ispec)
+           do k=1,NGLLZ
+              do j=1,NGLLY
+                 iglob = ibool(i,j,k,ispec)
 
-              accel(1,iglob) = 0._CUSTOM_REAL
-              accel(2,iglob) = 0._CUSTOM_REAL
-              accel(3,iglob) = 0._CUSTOM_REAL
+                 accel(1,iglob) = 0._CUSTOM_REAL
+                 accel(2,iglob) = 0._CUSTOM_REAL
+                 accel(3,iglob) = 0._CUSTOM_REAL
 
-              veloc(1,iglob) = 0._CUSTOM_REAL
-              veloc(2,iglob) = 0._CUSTOM_REAL
-              veloc(3,iglob) = 0._CUSTOM_REAL
+                 veloc(1,iglob) = 0._CUSTOM_REAL
+                 veloc(2,iglob) = 0._CUSTOM_REAL
+                 veloc(3,iglob) = 0._CUSTOM_REAL
 
-              displ(1,iglob) = 0._CUSTOM_REAL
-              displ(2,iglob) = 0._CUSTOM_REAL
-              displ(3,iglob) = 0._CUSTOM_REAL
+                 displ(1,iglob) = 0._CUSTOM_REAL
+                 displ(2,iglob) = 0._CUSTOM_REAL
+                 displ(3,iglob) = 0._CUSTOM_REAL
+              enddo
            enddo
-        enddo
+        endif
      enddo
 
      ! xmax
      do ispec2D=1,nspec2D_xmax
         ispec = ibelm_xmax(ispec2D)
 
-        i = NGLLX
+        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+           i = NGLLX
 
-        do k=1,NGLLZ
-           do j=1,NGLLY
-              iglob = ibool(i,j,k,ispec)
+           do k=1,NGLLZ
+              do j=1,NGLLY
+                 iglob = ibool(i,j,k,ispec)
 
-              accel(1,iglob) = 0._CUSTOM_REAL
-              accel(2,iglob) = 0._CUSTOM_REAL
-              accel(3,iglob) = 0._CUSTOM_REAL
+                 accel(1,iglob) = 0._CUSTOM_REAL
+                 accel(2,iglob) = 0._CUSTOM_REAL
+                 accel(3,iglob) = 0._CUSTOM_REAL
 
-              veloc(1,iglob) = 0._CUSTOM_REAL
-              veloc(2,iglob) = 0._CUSTOM_REAL
-              veloc(3,iglob) = 0._CUSTOM_REAL
+                 veloc(1,iglob) = 0._CUSTOM_REAL
+                 veloc(2,iglob) = 0._CUSTOM_REAL
+                 veloc(3,iglob) = 0._CUSTOM_REAL
 
-              displ(1,iglob) = 0._CUSTOM_REAL
-              displ(2,iglob) = 0._CUSTOM_REAL
-              displ(3,iglob) = 0._CUSTOM_REAL
+                 displ(1,iglob) = 0._CUSTOM_REAL
+                 displ(2,iglob) = 0._CUSTOM_REAL
+                 displ(3,iglob) = 0._CUSTOM_REAL
+              enddo
            enddo
-        enddo
+        endif
      enddo
 
      ! ymin
      do ispec2D=1,nspec2D_ymin
         ispec = ibelm_ymin(ispec2D)
 
-        j = 1
+        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+           j = 1
 
-        do k=1,NGLLZ
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
+           do k=1,NGLLZ
+              do i=1,NGLLX
+                 iglob = ibool(i,j,k,ispec)
 
-              accel(1,iglob) = 0._CUSTOM_REAL
-              accel(2,iglob) = 0._CUSTOM_REAL
-              accel(3,iglob) = 0._CUSTOM_REAL
+                 accel(1,iglob) = 0._CUSTOM_REAL
+                 accel(2,iglob) = 0._CUSTOM_REAL
+                 accel(3,iglob) = 0._CUSTOM_REAL
 
-              veloc(1,iglob) = 0._CUSTOM_REAL
-              veloc(2,iglob) = 0._CUSTOM_REAL
-              veloc(3,iglob) = 0._CUSTOM_REAL
+                 veloc(1,iglob) = 0._CUSTOM_REAL
+                 veloc(2,iglob) = 0._CUSTOM_REAL
+                 veloc(3,iglob) = 0._CUSTOM_REAL
 
-              displ(1,iglob) = 0._CUSTOM_REAL
-              displ(2,iglob) = 0._CUSTOM_REAL
-              displ(3,iglob) = 0._CUSTOM_REAL
+                 displ(1,iglob) = 0._CUSTOM_REAL
+                 displ(2,iglob) = 0._CUSTOM_REAL
+                 displ(3,iglob) = 0._CUSTOM_REAL
+              enddo
            enddo
-        enddo
+        endif
      enddo
 
      ! ymax
      do ispec2D=1,nspec2D_ymax
         ispec = ibelm_ymax(ispec2D)
 
-        j = NGLLY
+        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+           j = NGLLY
 
-        do k=1,NGLLZ
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
+           do k=1,NGLLZ
+              do i=1,NGLLX
+                 iglob = ibool(i,j,k,ispec)
 
-              accel(1,iglob) = 0._CUSTOM_REAL
-              accel(2,iglob) = 0._CUSTOM_REAL
-              accel(3,iglob) = 0._CUSTOM_REAL
+                 accel(1,iglob) = 0._CUSTOM_REAL
+                 accel(2,iglob) = 0._CUSTOM_REAL
+                 accel(3,iglob) = 0._CUSTOM_REAL
 
-              veloc(1,iglob) = 0._CUSTOM_REAL
-              veloc(2,iglob) = 0._CUSTOM_REAL
-              veloc(3,iglob) = 0._CUSTOM_REAL
+                 veloc(1,iglob) = 0._CUSTOM_REAL
+                 veloc(2,iglob) = 0._CUSTOM_REAL
+                 veloc(3,iglob) = 0._CUSTOM_REAL
 
-              displ(1,iglob) = 0._CUSTOM_REAL
-              displ(2,iglob) = 0._CUSTOM_REAL
-              displ(3,iglob) = 0._CUSTOM_REAL
+                 displ(1,iglob) = 0._CUSTOM_REAL
+                 displ(2,iglob) = 0._CUSTOM_REAL
+                 displ(3,iglob) = 0._CUSTOM_REAL
+              enddo
            enddo
-        enddo
+        endif
      enddo
 
      ! bottom (zmin)
      do ispec2D=1,NSPEC2D_BOTTOM
         ispec = ibelm_bottom(ispec2D)
 
-        k = 1
+        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+           k = 1
 
-        do j=1,NGLLY
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
+           do j=1,NGLLY
+              do i=1,NGLLX
+                 iglob = ibool(i,j,k,ispec)
 
-              accel(1,iglob) = 0._CUSTOM_REAL
-              accel(2,iglob) = 0._CUSTOM_REAL
-              accel(3,iglob) = 0._CUSTOM_REAL
+                 accel(1,iglob) = 0._CUSTOM_REAL
+                 accel(2,iglob) = 0._CUSTOM_REAL
+                 accel(3,iglob) = 0._CUSTOM_REAL
 
-              veloc(1,iglob) = 0._CUSTOM_REAL
-              veloc(2,iglob) = 0._CUSTOM_REAL
-              veloc(3,iglob) = 0._CUSTOM_REAL
+                 veloc(1,iglob) = 0._CUSTOM_REAL
+                 veloc(2,iglob) = 0._CUSTOM_REAL
+                 veloc(3,iglob) = 0._CUSTOM_REAL
 
-              displ(1,iglob) = 0._CUSTOM_REAL
-              displ(2,iglob) = 0._CUSTOM_REAL
-              displ(3,iglob) = 0._CUSTOM_REAL
+                 displ(1,iglob) = 0._CUSTOM_REAL
+                 displ(2,iglob) = 0._CUSTOM_REAL
+                 displ(3,iglob) = 0._CUSTOM_REAL
+              enddo
            enddo
-        enddo
+        endif
      enddo
 
      ! top (zmax)
      do ispec2D=1,NSPEC2D_BOTTOM
         ispec = ibelm_top(ispec2D)
 
-        k = NGLLZ
+        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+           k = NGLLZ
 
-        do j=1,NGLLY
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
+           do j=1,NGLLY
+              do i=1,NGLLX
+                 iglob = ibool(i,j,k,ispec)
 
-              accel(1,iglob) = 0._CUSTOM_REAL
-              accel(2,iglob) = 0._CUSTOM_REAL
-              accel(3,iglob) = 0._CUSTOM_REAL
+                 accel(1,iglob) = 0._CUSTOM_REAL
+                 accel(2,iglob) = 0._CUSTOM_REAL
+                 accel(3,iglob) = 0._CUSTOM_REAL
 
-              veloc(1,iglob) = 0._CUSTOM_REAL
-              veloc(2,iglob) = 0._CUSTOM_REAL
-              veloc(3,iglob) = 0._CUSTOM_REAL
+                 veloc(1,iglob) = 0._CUSTOM_REAL
+                 veloc(2,iglob) = 0._CUSTOM_REAL
+                 veloc(3,iglob) = 0._CUSTOM_REAL
 
-              displ(1,iglob) = 0._CUSTOM_REAL
-              displ(2,iglob) = 0._CUSTOM_REAL
-              displ(3,iglob) = 0._CUSTOM_REAL
+                 displ(1,iglob) = 0._CUSTOM_REAL
+                 displ(2,iglob) = 0._CUSTOM_REAL
+                 displ(3,iglob) = 0._CUSTOM_REAL
+              enddo
            enddo
-        enddo
+        endif
      enddo
 
   endif ! if( PML_CONDITIONS )
