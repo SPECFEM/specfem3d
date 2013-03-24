@@ -361,6 +361,10 @@ module decompose_mesh
        if(idomain_id == 1 .or. idomain_id == 2) then
          ! material is elastic or acoustic
 
+         ! check that the S-wave velocity is zero if the material is acoustic
+         if(idomain_id == 1 .and. vs >= 0.0001) &
+                stop 'acoustic material defined with a non-zero shear-wave velocity Vs, exiting...'
+
          mat_prop(1,num_mat) = rho
          mat_prop(2,num_mat) = vp
          mat_prop(3,num_mat) = vs
