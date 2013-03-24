@@ -147,28 +147,32 @@
             temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
           enddo
 
-          if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-             temp1l_new = temp1l
-             temp2l_new = temp2l
-             temp3l_new = temp3l
-
-             do l=1,NGLLX
-                hp1 = hprime_xx(l,i)
-                iglob = ibool(l,j,k,ispec)
-                temp1l_new = temp1l_new + deltat*potential_dot_acoustic(iglob)*hp1
+          if (PML_CONDITIONS) then
+             ! do not merge this second line with the first using an ".and." statement
+             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+             if(CPML_mask_ibool(ispec)) then
+                temp1l_new = temp1l
+                temp2l_new = temp2l
+                temp3l_new = temp3l
+                
+                do l=1,NGLLX
+                   hp1 = hprime_xx(l,i)
+                   iglob = ibool(l,j,k,ispec)
+                   temp1l_new = temp1l_new + deltat*potential_dot_acoustic(iglob)*hp1
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
+                   
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-                hp2 = hprime_yy(l,j)
-                iglob = ibool(i,l,k,ispec)
-                temp2l_new = temp2l_new + deltat*potential_dot_acoustic(iglob)*hp2
+                   hp2 = hprime_yy(l,j)
+                   iglob = ibool(i,l,k,ispec)
+                   temp2l_new = temp2l_new + deltat*potential_dot_acoustic(iglob)*hp2
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-
+                   
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-                hp3 = hprime_zz(l,k)
-                iglob = ibool(i,j,l,ispec)
-                temp3l_new = temp3l_new + deltat*potential_dot_acoustic(iglob)*hp3
-             enddo
+                   hp3 = hprime_zz(l,k)
+                   iglob = ibool(i,j,l,ispec)
+                   temp3l_new = temp3l_new + deltat*potential_dot_acoustic(iglob)*hp3
+                enddo
+             endif
           endif
 
          ! get derivatives of potential with respect to x, y and z
@@ -189,20 +193,24 @@
           dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
 
           ! stores derivatives of ux, uy and uz with respect to x, y and z
-          if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-             ispec_CPML = spec_to_CPML(ispec)
+          if (PML_CONDITIONS) then
+             ! do not merge this second line with the first using an ".and." statement
+             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+             if(CPML_mask_ibool(ispec)) then
+                ispec_CPML = spec_to_CPML(ispec)
 
-             PML_dpotential_dxl(i,j,k,ispec_CPML) = dpotentialdxl
-             PML_dpotential_dyl(i,j,k,ispec_CPML) = dpotentialdyl
-             PML_dpotential_dzl(i,j,k,ispec_CPML) = dpotentialdzl
+                PML_dpotential_dxl(i,j,k,ispec_CPML) = dpotentialdxl
+                PML_dpotential_dyl(i,j,k,ispec_CPML) = dpotentialdyl
+                PML_dpotential_dzl(i,j,k,ispec_CPML) = dpotentialdzl
 
-             dpotentialdxl_new = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
-             dpotentialdyl_new = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
-             dpotentialdzl_new = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
+                dpotentialdxl_new = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
+                dpotentialdyl_new = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
+                dpotentialdzl_new = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
 
-             PML_dpotential_dxl_new(i,j,k,ispec_CPML) = dpotentialdxl_new
-             PML_dpotential_dyl_new(i,j,k,ispec_CPML) = dpotentialdyl_new
-             PML_dpotential_dzl_new(i,j,k,ispec_CPML) = dpotentialdzl_new
+                PML_dpotential_dxl_new(i,j,k,ispec_CPML) = dpotentialdxl_new
+                PML_dpotential_dyl_new(i,j,k,ispec_CPML) = dpotentialdyl_new
+                PML_dpotential_dzl_new(i,j,k,ispec_CPML) = dpotentialdzl_new
+             endif
           endif
 
           ! density (reciproc)
@@ -220,15 +228,19 @@
       enddo
     enddo
 
-    if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-       ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-       call pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-                                    tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
-                                    sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
-                                    etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
+    if (PML_CONDITIONS) then
+       ! do not merge this second line with the first using an ".and." statement
+       ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+       if(CPML_mask_ibool(ispec)) then
+          ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
+          call pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+               tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
+               sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
+               etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
 
-       ! calculates contribution from each C-PML element to update acceleration
-       call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+          ! calculates contribution from each C-PML element to update acceleration
+          call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+       endif
     endif
 
     ! second double-loop over GLL to compute all the terms
@@ -255,9 +267,13 @@
           potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - ( temp1l + temp2l + temp3l )
 
           ! updates potential_dot_dot_acoustic with contribution from each C-PML element
-          if( PML_CONDITIONS .and. CPML_mask_ibool(ispec) ) then
-             potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
-                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML)
+          if (PML_CONDITIONS) then
+             ! do not merge this second line with the first using an ".and." statement
+             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
+             if(CPML_mask_ibool(ispec)) then
+                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
+                     potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML)
+             endif
           endif
 
         enddo
@@ -285,111 +301,111 @@
 !! DK DK thus test something like:   if (is_CPML(ispec) .and. acoustic(ispec)) then
 !! DK DK or something like that
 
-  ! C-PML boundary
-  if( PML_CONDITIONS ) then
-     ! xmin
-     do ispec2D=1,nspec2D_xmin
-        ispec = ibelm_xmin(ispec2D)
-
-        i = 1
-
-        do k=1,NGLLZ
-           do j=1,NGLLY
-              iglob = ibool(i,j,k,ispec)
-
-              potential_dot_dot_acoustic(iglob) = 0.d0
-              potential_dot_acoustic(iglob) = 0.d0
-              potential_acoustic(iglob) = 0.d0
-           enddo
-        enddo
-     enddo
-
-     ! xmax
-     do ispec2D=1,nspec2D_xmax
-        ispec = ibelm_xmax(ispec2D)
-
-        i = NGLLX
-
-        do k=1,NGLLZ
-           do j=1,NGLLY
-              iglob = ibool(i,j,k,ispec)
-
-              potential_dot_dot_acoustic(iglob) = 0.d0
-              potential_dot_acoustic(iglob) = 0.d0
-              potential_acoustic(iglob) = 0.d0
-           enddo
-        enddo
-     enddo
-
-     ! ymin
-     do ispec2D=1,nspec2D_ymin
-        ispec = ibelm_ymin(ispec2D)
-
-        j = 1
-
-        do k=1,NGLLZ
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-
-              potential_dot_dot_acoustic(iglob) = 0.d0
-              potential_dot_acoustic(iglob) = 0.d0
-              potential_acoustic(iglob) = 0.d0
-           enddo
-        enddo
-     enddo
-
-     ! ymax
-     do ispec2D=1,nspec2D_ymax
-        ispec = ibelm_ymax(ispec2D)
-
-        j = NGLLY
-
-        do k=1,NGLLZ
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-
-              potential_dot_dot_acoustic(iglob) = 0.d0
-              potential_dot_acoustic(iglob) = 0.d0
-              potential_acoustic(iglob) = 0.d0
-           enddo
-        enddo
-     enddo
-
-     ! bottom (zmin)
-     do ispec2D=1,NSPEC2D_BOTTOM
-        ispec = ibelm_bottom(ispec2D)
-
-        k = 1
-
-        do j=1,NGLLY
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-
-              potential_dot_dot_acoustic(iglob) = 0.d0
-              potential_dot_acoustic(iglob) = 0.d0
-              potential_acoustic(iglob) = 0.d0
-           enddo
-        enddo
-     enddo
-
-     ! top (zmax)
-     do ispec2D=1,NSPEC2D_BOTTOM
-        ispec = ibelm_top(ispec2D)
-
-        k = NGLLZ
-
-        do j=1,NGLLY
-           do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-
-              potential_dot_dot_acoustic(iglob) = 0.d0
-              potential_dot_acoustic(iglob) = 0.d0
-              potential_acoustic(iglob) = 0.d0
-           enddo
-        enddo
-     enddo
-
-  endif ! if( PML_CONDITIONS )
+!!$  ! C-PML boundary
+!!$  if( PML_CONDITIONS ) then
+!!$     ! xmin
+!!$     do ispec2D=1,nspec2D_xmin
+!!$        ispec = ibelm_xmin(ispec2D)
+!!$
+!!$        i = 1
+!!$
+!!$        do k=1,NGLLZ
+!!$           do j=1,NGLLY
+!!$              iglob = ibool(i,j,k,ispec)
+!!$
+!!$              potential_dot_dot_acoustic(iglob) = 0.d0
+!!$              potential_dot_acoustic(iglob) = 0.d0
+!!$              potential_acoustic(iglob) = 0.d0
+!!$           enddo
+!!$        enddo
+!!$     enddo
+!!$
+!!$     ! xmax
+!!$     do ispec2D=1,nspec2D_xmax
+!!$        ispec = ibelm_xmax(ispec2D)
+!!$
+!!$        i = NGLLX
+!!$
+!!$        do k=1,NGLLZ
+!!$           do j=1,NGLLY
+!!$              iglob = ibool(i,j,k,ispec)
+!!$
+!!$              potential_dot_dot_acoustic(iglob) = 0.d0
+!!$              potential_dot_acoustic(iglob) = 0.d0
+!!$              potential_acoustic(iglob) = 0.d0
+!!$           enddo
+!!$        enddo
+!!$     enddo
+!!$
+!!$     ! ymin
+!!$     do ispec2D=1,nspec2D_ymin
+!!$        ispec = ibelm_ymin(ispec2D)
+!!$
+!!$        j = 1
+!!$
+!!$        do k=1,NGLLZ
+!!$           do i=1,NGLLX
+!!$              iglob = ibool(i,j,k,ispec)
+!!$
+!!$              potential_dot_dot_acoustic(iglob) = 0.d0
+!!$              potential_dot_acoustic(iglob) = 0.d0
+!!$              potential_acoustic(iglob) = 0.d0
+!!$           enddo
+!!$        enddo
+!!$     enddo
+!!$
+!!$     ! ymax
+!!$     do ispec2D=1,nspec2D_ymax
+!!$        ispec = ibelm_ymax(ispec2D)
+!!$
+!!$        j = NGLLY
+!!$
+!!$        do k=1,NGLLZ
+!!$           do i=1,NGLLX
+!!$              iglob = ibool(i,j,k,ispec)
+!!$
+!!$              potential_dot_dot_acoustic(iglob) = 0.d0
+!!$              potential_dot_acoustic(iglob) = 0.d0
+!!$              potential_acoustic(iglob) = 0.d0
+!!$           enddo
+!!$        enddo
+!!$     enddo
+!!$
+!!$     ! bottom (zmin)
+!!$     do ispec2D=1,NSPEC2D_BOTTOM
+!!$        ispec = ibelm_bottom(ispec2D)
+!!$
+!!$        k = 1
+!!$
+!!$        do j=1,NGLLY
+!!$           do i=1,NGLLX
+!!$              iglob = ibool(i,j,k,ispec)
+!!$
+!!$              potential_dot_dot_acoustic(iglob) = 0.d0
+!!$              potential_dot_acoustic(iglob) = 0.d0
+!!$              potential_acoustic(iglob) = 0.d0
+!!$           enddo
+!!$        enddo
+!!$     enddo
+!!$
+!!$     ! top (zmax)
+!!$     do ispec2D=1,NSPEC2D_BOTTOM
+!!$        ispec = ibelm_top(ispec2D)
+!!$
+!!$        k = NGLLZ
+!!$
+!!$        do j=1,NGLLY
+!!$           do i=1,NGLLX
+!!$              iglob = ibool(i,j,k,ispec)
+!!$
+!!$              potential_dot_dot_acoustic(iglob) = 0.d0
+!!$              potential_dot_acoustic(iglob) = 0.d0
+!!$              potential_acoustic(iglob) = 0.d0
+!!$           enddo
+!!$        enddo
+!!$     enddo
+!!$
+!!$  endif ! if( PML_CONDITIONS )
 
   end subroutine compute_forces_acoustic_noDev
 

@@ -158,7 +158,7 @@ subroutine pml_allocate_arrays()
 
   ! stores C-PML memory variables needed for potential
   allocate(rmemory_potential_acoustic(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
-  if(ier /= 0) stop 'error allocating rmemory_displ_elastic array'
+  if(ier /= 0) stop 'error allocating rmemory_potential_acoustic array'
 
   ! stores C-PML contribution to update acceleration to the global mesh
   allocate(accel_elastic_CPML(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
