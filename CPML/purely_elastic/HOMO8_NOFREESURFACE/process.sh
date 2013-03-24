@@ -1,13 +1,17 @@
 #!/bin/bash
 #
-# script runs mesher,database generation and solver
+# script runs decomposition,database generation and solver
 # using this example setup
 #
+# prior to running this script, you must create the mesh files
+# in directory MESH/ 
+# (see section 3.1 "Meshing with CUBIT" in user guide)
+#
 
-###################################################
+##################################################
 
 # number of processes
-NPROC=4
+NPROC=8
 
 ##################################################
 
@@ -15,7 +19,7 @@ echo "running example: `date`"
 currentdir=`pwd`
 
 echo
-echo "(will take about 15 minutes)"
+echo "(will take about 5 minutes)"
 echo
 
 # sets up directory structure in current example directoy
@@ -30,43 +34,52 @@ rm -f OUTPUT_FILES/*
 rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 # compiles executables in root directory
-cd ../../../
+cd ../../../..
+
+rm -fr DATA/*
+cd $currentdir
+cp -fr DATA/* ../../../../DATA/.
+
+cd ../../../..
+
 make clean
-make > $currentdir/tmp.log
+./configure
+make all > $currentdir/tmp.log
 cd $currentdir
 
 # links executables
+cd bin/
 rm -f bin/*
-cp ../../../bin/* bin/
+ln -s ../../../../../bin/xdecompose_mesh .
+ln -s ../../../../../bin/xgenerate_databases .
+ln -s ../../../../../bin/xspecfem3D .
+cd ../
+
 if [ ! -e bin/xspecfem3D ]; then echo "compilation failed, please check..."; exit 1; fi
 
 # stores setup
-cp DATA/meshfem3D_files/Mesh_Par_file OUTPUT_FILES/
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
-# creates and decomposes mesh
+# decomposes mesh
 echo
-echo "running mesher..."
+echo "  decomposing mesh..."
 echo
 cd bin/
-mpirun -np $NPROC ./xmeshfem3D
-cd ../
-mv OUTPUT_FILES/output_mesher.txt OUTPUT_FILES/output_meshfem3D.txt
+./xdecompose_mesh $NPROC ../DATA/MESH/ ../OUTPUT_FILES/DATABASES_MPI/
 
 # runs database generation
 echo
-echo "running database generation..."
+echo "  running database generation..."
 echo
-cd bin/
-mpirun -np $NPROC ./xgenerate_databases
+mpirun -n $NPROC ./xgenerate_databases
 
 # runs simulation
 echo
 echo "  running solver..."
 echo
-mpirun -np $NPROC ./xspecfem3D
+mpirun -n $NPROC ./xspecfem3D
 cd ../
 
 echo
