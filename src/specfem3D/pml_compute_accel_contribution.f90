@@ -61,8 +61,11 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
-           rhol = rho_vp(i,j,k,ispec)
-           kappal = kappastore(i,j,k,ispec)
+           if( ispec_is_elastic(ispec) ) then
+              rhol = rho_vp(i,j,k,ispec)
+           else if( ispec_is_acoustic(ispec) ) then
+              kappal = kappastore(i,j,k,ispec)
+           endif
 
            iglob = ibool(i,j,k,ispec)
 
