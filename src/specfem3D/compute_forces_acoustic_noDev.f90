@@ -154,19 +154,19 @@
                 temp1l_new = temp1l
                 temp2l_new = temp2l
                 temp3l_new = temp3l
-                
+
                 do l=1,NGLLX
                    hp1 = hprime_xx(l,i)
                    iglob = ibool(l,j,k,ispec)
                    temp1l_new = temp1l_new + deltat*potential_dot_acoustic(iglob)*hp1
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-                   
+
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
                    hp2 = hprime_yy(l,j)
                    iglob = ibool(i,l,k,ispec)
                    temp2l_new = temp2l_new + deltat*potential_dot_acoustic(iglob)*hp2
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
-                   
+
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
                    hp3 = hprime_zz(l,k)
                    iglob = ibool(i,j,l,ispec)
@@ -282,130 +282,11 @@
 
   enddo ! end of loop over all spectral elements
 
-
-!! DK DK to Jo, to debug CPML, 22 March 2013:
-
-!! DK DK please check with Zhinan, it could be that this Dirichlet condition for acoustic CPML elements
-!! DK DK is not needed any more, I think that in the 2D code for acoustic CPML elements we switched to
-!! DK DK Neumann instead of Dirichlet (and if so, for Neumann there is nothing to do,
-!! DK DK the condition is automatic, nothing to program);  Zhinan can tell you more about this.
-
-
-
-
-!! DK DK to Jo, to debug CPML, 22 March 2013:
-
-!! DK DK I think that there is an error in the loops below, you should also check if ispec is a CPML element,
-!! DK DK and also if ispec is an acoustic element (and NOT for instance an elastic or viscoelastic element)
-!! DK DK
-!! DK DK thus test something like:   if (is_CPML(ispec) .and. acoustic(ispec)) then
-!! DK DK or something like that
-
-!!$  ! C-PML boundary
-!!$  if( PML_CONDITIONS ) then
-!!$     ! xmin
-!!$     do ispec2D=1,nspec2D_xmin
-!!$        ispec = ibelm_xmin(ispec2D)
-!!$
-!!$        i = 1
-!!$
-!!$        do k=1,NGLLZ
-!!$           do j=1,NGLLY
-!!$              iglob = ibool(i,j,k,ispec)
-!!$
-!!$              potential_dot_dot_acoustic(iglob) = 0.d0
-!!$              potential_dot_acoustic(iglob) = 0.d0
-!!$              potential_acoustic(iglob) = 0.d0
-!!$           enddo
-!!$        enddo
-!!$     enddo
-!!$
-!!$     ! xmax
-!!$     do ispec2D=1,nspec2D_xmax
-!!$        ispec = ibelm_xmax(ispec2D)
-!!$
-!!$        i = NGLLX
-!!$
-!!$        do k=1,NGLLZ
-!!$           do j=1,NGLLY
-!!$              iglob = ibool(i,j,k,ispec)
-!!$
-!!$              potential_dot_dot_acoustic(iglob) = 0.d0
-!!$              potential_dot_acoustic(iglob) = 0.d0
-!!$              potential_acoustic(iglob) = 0.d0
-!!$           enddo
-!!$        enddo
-!!$     enddo
-!!$
-!!$     ! ymin
-!!$     do ispec2D=1,nspec2D_ymin
-!!$        ispec = ibelm_ymin(ispec2D)
-!!$
-!!$        j = 1
-!!$
-!!$        do k=1,NGLLZ
-!!$           do i=1,NGLLX
-!!$              iglob = ibool(i,j,k,ispec)
-!!$
-!!$              potential_dot_dot_acoustic(iglob) = 0.d0
-!!$              potential_dot_acoustic(iglob) = 0.d0
-!!$              potential_acoustic(iglob) = 0.d0
-!!$           enddo
-!!$        enddo
-!!$     enddo
-!!$
-!!$     ! ymax
-!!$     do ispec2D=1,nspec2D_ymax
-!!$        ispec = ibelm_ymax(ispec2D)
-!!$
-!!$        j = NGLLY
-!!$
-!!$        do k=1,NGLLZ
-!!$           do i=1,NGLLX
-!!$              iglob = ibool(i,j,k,ispec)
-!!$
-!!$              potential_dot_dot_acoustic(iglob) = 0.d0
-!!$              potential_dot_acoustic(iglob) = 0.d0
-!!$              potential_acoustic(iglob) = 0.d0
-!!$           enddo
-!!$        enddo
-!!$     enddo
-!!$
-!!$     ! bottom (zmin)
-!!$     do ispec2D=1,NSPEC2D_BOTTOM
-!!$        ispec = ibelm_bottom(ispec2D)
-!!$
-!!$        k = 1
-!!$
-!!$        do j=1,NGLLY
-!!$           do i=1,NGLLX
-!!$              iglob = ibool(i,j,k,ispec)
-!!$
-!!$              potential_dot_dot_acoustic(iglob) = 0.d0
-!!$              potential_dot_acoustic(iglob) = 0.d0
-!!$              potential_acoustic(iglob) = 0.d0
-!!$           enddo
-!!$        enddo
-!!$     enddo
-!!$
-!!$     ! top (zmax)
-!!$     do ispec2D=1,NSPEC2D_BOTTOM
-!!$        ispec = ibelm_top(ispec2D)
-!!$
-!!$        k = NGLLZ
-!!$
-!!$        do j=1,NGLLY
-!!$           do i=1,NGLLX
-!!$              iglob = ibool(i,j,k,ispec)
-!!$
-!!$              potential_dot_dot_acoustic(iglob) = 0.d0
-!!$              potential_dot_acoustic(iglob) = 0.d0
-!!$              potential_acoustic(iglob) = 0.d0
-!!$           enddo
-!!$        enddo
-!!$     enddo
-!!$
-!!$  endif ! if( PML_CONDITIONS )
+! The outer boundary condition to use for PML elements in fluid layers is Neumann for the potential
+! because we need Dirichlet conditions for the displacement vector, which means Neumann for the potential.
+! Thus, there is nothing to enforce explicitly here.
+! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
+! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
 
   end subroutine compute_forces_acoustic_noDev
 
