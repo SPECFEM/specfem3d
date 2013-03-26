@@ -65,7 +65,7 @@ PML_WIDTH_MIN                   = 10000.0d0
 PML_WIDTH_MAX                   = 25000.0d0
 
 # C-PML dominant frequency
-f0_FOR_PML                      = 12.7
+f0_FOR_PML                      = 0.09160
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
