@@ -484,7 +484,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  epsilondev_xy_loc(i,j,k) = 0.5 * duxdyl_plus_duydxl_att
                  epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
                  epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
-                 
+
               else if(PML_CONDITIONS) then
                     ! do not merge this second line with the first using an ".and." statement
                     ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false

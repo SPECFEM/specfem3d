@@ -57,6 +57,9 @@ module specfem_par
   ! isotropic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: kappastore,mustore
 
+! density
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
+
 ! CUDA mesh pointer<->integer wrapper
   integer(kind=8) :: Mesh_pointer
 
@@ -398,9 +401,6 @@ module specfem_par_acoustic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic, &
                         potential_dot_acoustic,potential_dot_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
-
-! density
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
