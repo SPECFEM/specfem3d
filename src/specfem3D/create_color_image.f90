@@ -799,8 +799,8 @@
   subroutine get_iglob_vp(iglob,ispec,vp)
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
-  use specfem_par,only: mustore,kappastore,ibool,myrank
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,rhostore
+  use specfem_par,only: mustore,kappastore,rhostore,ibool,myrank
+  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION
   use specfem_par_elastic,only: ELASTIC_SIMULATION,rho_vp
   implicit none
 
@@ -837,13 +837,13 @@
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
   use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
-                                rhostore,ispec_is_acoustic, &
+                                ispec_is_acoustic, &
                                 b_potential_acoustic,b_potential_dot_acoustic
   use specfem_par_elastic,only: ELASTIC_SIMULATION,displ,veloc, &
                                 ispec_is_elastic ! ,b_displ,b_veloc
   use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,SIMULATION_TYPE,GRAVITY
+                        ibool,rhostore,SIMULATION_TYPE,GRAVITY
   use specfem_par_movie,only:SAVE_DISPLACEMENT
   implicit none
 

@@ -35,8 +35,8 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,it,kappastore
-  use specfem_par_elastic, only: rho_vp,displ,veloc,ispec_is_elastic
+  use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,it,kappastore,rhostore
+  use specfem_par_elastic, only: displ,veloc,ispec_is_elastic
   use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,ispec_is_acoustic
   use pml_par, only: NSPEC_CPML,rmemory_displ_elastic,rmemory_potential_acoustic,CPML_regions,spec_to_CPML,alpha_store, &
                      d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,potential_dot_dot_acoustic_CPML
@@ -62,9 +62,11 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
      do j=1,NGLLY
         do i=1,NGLLX
            if( ispec_is_elastic(ispec) ) then
-              rhol = rho_vp(i,j,k,ispec)
+              rhol = rhostore(i,j,k,ispec)
            else if( ispec_is_acoustic(ispec) ) then
               kappal = kappastore(i,j,k,ispec)
+           else
+              stop 'CPML elements should be either acoustic or elastic; exiting...'
            endif
 
            iglob = ibool(i,j,k,ispec)
