@@ -99,18 +99,19 @@
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
+    read(27) rmass_acoustic
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmassz_acoustic'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
-
-    allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array rhostore'
-
-    read(27) rmass_acoustic
-    read(27) rhostore
   endif
+
+! this array is needed for acoustic simulations but also for elastic simulations with CPML,
+! thus we now allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if( ier /= 0 ) stop 'error allocating array rhostore'
+  read(27) rhostore
 
   ! elastic
   ! number of elastic elements in this partition
@@ -226,29 +227,30 @@
     read(27,iostat=ier) rho_vs
     if( ier /= 0 ) stop 'error reading in array rho_vs'
 
-    ! checks if rhostore is available for gravity
-    if( GRAVITY ) then
-
-      if( .not. ACOUSTIC_SIMULATION ) then
-        ! rho array needed for gravity
-        allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-        if( ier /= 0 ) stop 'error allocating array rhostore'
-
-        ! extract rho information from mu = rho * vs * vs and rho_vs = rho * vs
-        rhostore = 0.0_CUSTOM_REAL
-        where( mustore > TINYVAL )
-          rhostore = (rho_vs*rho_vs) / mustore
-        endwhere
-
-        ! note: the construct below leads to a segmentation fault (ifort v11.1). not sure why...
-        !          (where statement - standard fortran 95)
-        !where( mustore > TINYVAL )
-        !  rhostore = (rho_vs*rho_vs) / mustore
-        !elsewhere
-        !  rhostore = 0.0_CUSTOM_REAL
-        !endwhere
-      endif
-    endif
+!! DK DK rhostore is now allocated and read in all cases (see above)
+!   ! checks if rhostore is available for gravity
+!   if( GRAVITY ) then
+!
+!     if( .not. ACOUSTIC_SIMULATION ) then
+!       ! rho array needed for gravity
+!       allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+!       if( ier /= 0 ) stop 'error allocating array rhostore'
+!
+!       ! extract rho information from mu = rho * vs * vs and rho_vs = rho * vs
+!       rhostore = 0.0_CUSTOM_REAL
+!       where( mustore > TINYVAL )
+!         rhostore = (rho_vs*rho_vs) / mustore
+!       endwhere
+!
+!       ! note: the construct below leads to a segmentation fault (ifort v11.1). not sure why...
+!       !          (where statement - standard fortran 95)
+!       !where( mustore > TINYVAL )
+!       !  rhostore = (rho_vs*rho_vs) / mustore
+!       !elsewhere
+!       !  rhostore = 0.0_CUSTOM_REAL
+!       !endwhere
+!     endif
+!   endif
   else
     ! no elastic attenuation & anisotropy
     ATTENUATION = .false.
