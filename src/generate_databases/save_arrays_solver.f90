@@ -97,8 +97,11 @@
 ! acoustic
   if( ACOUSTIC_SIMULATION ) then
     write(IOUT) rmass_acoustic
-    write(IOUT) rhostore
   endif
+
+! this array is needed for acoustic simulations but also for elastic simulations with CPML,
+! thus we allocate it and read it in all cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
+  write(IOUT) rhostore
 
 ! elastic
   if( ELASTIC_SIMULATION ) then
