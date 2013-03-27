@@ -28,9 +28,8 @@
 
 subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
                                     tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
-                                    sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
-                                    etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
-
+                                    sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,NSPEC_AB,xix,xiy,xiz, &
+                                    etax,etay,etaz,gammax,gammay,gammaz,jacobian)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
   ! second-order accurate convolution term calculation from equation (21) of
@@ -46,10 +45,13 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
 
   implicit none
 
-  integer, intent(in) :: ispec,ispec_CPML
+  integer, intent(in) :: ispec,ispec_CPML,NSPEC_AB
 
-  real(kind=CUSTOM_REAL), intent(in) :: lambdal,mul,lambdalplus2mul
-  real(kind=CUSTOM_REAL), intent(in) :: deltat,xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL), intent(in) :: lambdal,mul,lambdalplus2mul,deltat
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB), intent(in) :: &
+                                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempx1,tempx2,tempx3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempy1,tempy2,tempy3
@@ -331,6 +333,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -609,6 +621,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -886,6 +908,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -1202,6 +1234,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -1519,6 +1561,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -1834,6 +1886,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
@@ -2303,6 +2365,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1
                  sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
                  ! form dot product with test vector, non-symmetric form
+                 xixl = xix(i,j,k,ispec)
+                 xiyl = xiy(i,j,k,ispec)
+                 xizl = xiz(i,j,k,ispec)
+                 etaxl = etax(i,j,k,ispec)
+                 etayl = etay(i,j,k,ispec)
+                 etazl = etaz(i,j,k,ispec)
+                 gammaxl = gammax(i,j,k,ispec)
+                 gammayl = gammay(i,j,k,ispec)
+                 gammazl = gammaz(i,j,k,ispec)
+                 jacobianl = jacobian(i,j,k,ispec)
                  tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
                  tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
                  tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
