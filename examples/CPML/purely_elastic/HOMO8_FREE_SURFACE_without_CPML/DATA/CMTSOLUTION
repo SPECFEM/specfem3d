@@ -1,0 +1,13 @@
+PDE  1999 01 01 00 00 00.00  67000 67000 -25000 4.2 4.2 BOLIVIA
+event name:       BOLIVIA
+time shift:       0.0000
+half duration:   15.0
+latitude:      312800.0
+longitude:    3653250.0
+depth:          25.0
+Mrr:      -0.759000E+28
+Mtt:       0.775000E+28
+Mpp:      -0.160000E+27
+Mrt:      -0.250300E+29
+Mrp:       0.420000E+27
+Mtp:      -0.248000E+28      
