@@ -109,6 +109,17 @@
 
 !!-----------------------------------------------------------
 !!
+!! total energy calculation
+!!
+!!-----------------------------------------------------------
+
+! to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
+! should be turned OFF in most cases
+  logical, parameter :: output_energy = .false. ! .true.
+  integer, parameter :: IOUT_ENERGY = 937  ! file number for the energy file
+
+!!-----------------------------------------------------------
+!!
 !! source/receiver setup
 !!
 !!-----------------------------------------------------------
