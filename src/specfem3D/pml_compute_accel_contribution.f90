@@ -26,7 +26,7 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacobian,accel_elastic_CPML)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -44,16 +44,17 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
 
   implicit none
 
-  integer, intent(in) :: ispec,ispec_CPML
+  integer, intent(in) :: ispec,ispec_CPML,nspec_AB
 
-  real(kind=CUSTOM_REAL), intent(in) :: deltat,jacobianl
+  real(kind=CUSTOM_REAL), intent(in) :: deltat
 
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML), intent(out) :: accel_elastic_CPML
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec_AB), intent(in) :: jacobian
 
   ! local parameters
   integer :: i,j,k,iglob
 
-  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3,fac4,rhol,kappal
+  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3,fac4,rhol,kappal,jacobianl
   real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
   real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5 ! for convolution of acceleration
   real(kind=CUSTOM_REAL) :: temp_A3,temp_A4,temp_A5
@@ -63,8 +64,10 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,acce
         do i=1,NGLLX
            if( ispec_is_elastic(ispec) ) then
               rhol = rhostore(i,j,k,ispec)
+              jacobianl = jacobian(i,j,k,ispec)
            else if( ispec_is_acoustic(ispec) ) then
               kappal = kappastore(i,j,k,ispec)
+              jacobianl = jacobian(i,j,k,ispec)
            else
               stop 'CPML elements should be either acoustic or elastic; exiting...'
            endif
