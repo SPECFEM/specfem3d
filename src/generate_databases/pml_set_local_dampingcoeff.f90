@@ -90,7 +90,9 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ALPHA_MAX_PML = PI*f0_FOR_PML ! ELASTIC from Festa and Vilotte (2005)
   ALPHA_MAX_PML = PI*f0_FOR_PML*2.0  ! ACOUSTIC from Festa and Vilotte (2005)
 
-  CPML_width_x = CPML_width
+  !the idea of fix PML width is bad when element sizes are not the same in x,y,z direction 
+
+  CPML_width_x = CPML_width 
   CPML_width_y = CPML_width
   CPML_width_z = CPML_width
 
@@ -99,12 +101,14 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   y_min = minval(ystore(:))
   y_max = maxval(ystore(:))
   z_min = minval(zstore(:))
+  z_max = maxval(zstore(:))
 
   x_min_all = 10.e30
   x_max_all = -10.e30
   y_min_all = 10.e30
   y_max_all = -10.e30
   z_min_all = 10.e30
+  z_max_all = -10.e30
 
   call min_all_all_cr(x_min,x_min_all)
   call min_all_all_cr(y_min,y_min_all)
@@ -112,28 +116,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   call max_all_all_cr(x_max,x_max_all)
   call max_all_all_cr(y_max,y_max_all)
+  call max_all_all_cr(z_max,z_max_all)
+
   x_origin = (x_min_all + x_max_all)/2.0
   y_origin = (y_min_all + y_max_all)/2.0
-  z_origin = z_min_all/2.0
+  z_origin = (z_max_all + z_min_all)/2.0
 
   ! determines equations of C-PML/mesh interface planes
-!ZN  xoriginleft   = minval(xstore(:)) + CPML_width_x
-!ZN  xoriginright  = maxval(xstore(:)) - CPML_width_x
-!ZN  yoriginback   = minval(ystore(:)) + CPML_width_y
-!ZN  yoriginfront  = maxval(ystore(:)) - CPML_width_y
-!ZN  zoriginbottom = minval(zstore(:)) + CPML_width_z
-
   xoriginleft   = x_min_all + CPML_width_x
   xoriginright  = x_max_all - CPML_width_x
   yoriginback   = y_min_all + CPML_width_y
   yoriginfront  = y_max_all - CPML_width_y
   zoriginbottom = z_min_all + CPML_width_z
 
-  if( PML_INSTEAD_OF_FREE_SURFACE ) then
-!ZN     zorigintop = maxval(zstore(:)) - CPML_width_z
-     z_max = maxval(zstore(:))
-     z_max_all = -10.e30
-     call max_all_all_cr(z_max,z_max_all)  
+  if( PML_INSTEAD_OF_FREE_SURFACE ) then 
      zorigintop = z_max_all - CPML_width_z 
   endif
 

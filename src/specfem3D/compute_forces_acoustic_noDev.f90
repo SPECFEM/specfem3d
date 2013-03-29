@@ -90,15 +90,12 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
        tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
-  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
   real(kind=CUSTOM_REAL) :: temp1l_new,temp2l_new,temp3l_new
-
-  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
@@ -233,13 +230,11 @@
        ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
        if(CPML_mask_ibool(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-          call pml_compute_memory_variables(ispec,ispec_CPML,deltat,jacobianl,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-               tempx3,tempy3,tempz3,sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
-               sigma_yx,sigma_zx,sigma_zy,lambdal,mul,lambdalplus2mul,xixl,xiyl,xizl, &
-               etaxl,etayl,etazl,gammaxl,gammayl,gammazl)
+          call pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+               tempx3,tempy3,tempz3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
 
           ! calculates contribution from each C-PML element to update acceleration
-          call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,jacobianl,accel_elastic_CPML)
+          call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacobian,potential_dot_dot_acoustic_CPML)
        endif
     endif
 
