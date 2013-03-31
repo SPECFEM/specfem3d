@@ -60,10 +60,6 @@ PML_CONDITIONS                  = .true.
 # C-PML top surface
 PML_INSTEAD_OF_FREE_SURFACE     = .true.
 
-# C-PML thickness min/max
-PML_WIDTH_MIN                   = 10000.0d0
-PML_WIDTH_MAX                   = 25000.0d0
-
 # C-PML dominant frequency
 f0_FOR_PML                      = 0.09160
 

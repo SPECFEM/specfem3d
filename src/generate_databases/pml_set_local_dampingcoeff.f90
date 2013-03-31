@@ -1296,7 +1296,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   !   vp:    P-velocity
   !   delta: thickness of the C-PML layer
 
-  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef,damping_factor,PML_WIDTH_MIN,PML_WIDTH_MAX
+  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef,damping_factor
 
   implicit none
 
@@ -1314,29 +1314,12 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
      call exit_mpi(myrank,'C-PML error: NPOWER must be greater than or equal to 1')
   endif
 
-!!$   JC JC (from Daniel in his PML_init.f90 file) dominant wavelength has to be set differently
-!!$   determines dominant wavelength based on maximum model speed and source half time duration
-!!$  hdur_max = maxval(hdur(:))
-!!$  if( hdur_max > 0.0 ) then
-!!$    dominant_wavelength = model_speed_max * 2.0 * hdur_max
-!!$  else
-!!$    dominant_wavelength = 0._CUSTOM_REAL
-!!$  endif
-
   ! checks coordinates of C-PML points and thickness of C-PML layer
   if( delta < dist ) then
      print*,'C-PML point ',iglob
      print*,'distance to C-PML/mesh interface ',dist
      print*,'C-PML thickness ',delta
      call exit_mpi(myrank,'C-PML error: distance to C-PML/mesh interface is bigger than thickness of C-PML layer')
-  else if( delta <  PML_WIDTH_MIN .or. delta > PML_WIDTH_MAX ) then
-     print*,'C-PML thickness min/max ',PML_WIDTH_MIN,PML_WIDTH_MAX
-     print*,'C-PML thickness ',delta
-     call exit_mpi(myrank,'C-PML error: thickness of C-PML layer is out of bounds')
-!!$  else if( delta < dominant_wavelength/2.0 ) then ! JC JC
-!!$     print*,'dominant wavelength/2 ',dominant_wavelength/2.0
-!!$     print*,'C-PML thickness ',delta
-!!$     call exit_mpi(myrank,'C-PML error: thickness of C-PML layer must be set according to dominant wavelength')
   endif
 
 end function pml_damping_profile_l

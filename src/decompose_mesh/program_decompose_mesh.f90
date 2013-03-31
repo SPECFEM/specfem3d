@@ -43,7 +43,7 @@ program pre_meshfem3D
                                   ABSORBING_CONDITIONS,SAVE_FORWARD,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                                   ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
                                   LOCAL_PATH,TOMOGRAPHY_PATH,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
-                                  PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL
+                                  f0_FOR_PML,IMODEL
 
   implicit none
 
@@ -81,7 +81,7 @@ program pre_meshfem3D
                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                           USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                          PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
+                          PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()
