@@ -67,20 +67,20 @@ subroutine compute_forces_acoustic()
   ! enforces free surface (zeroes potentials at free surface)
   if(.NOT. GPU_MODE) then
     ! on CPU
-    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
 
     ! adjoint simulations
     if( SIMULATION_TYPE == 3 ) &
-      call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+      call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
   else
     ! on GPU
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,ABSORB_INSTEAD_OF_FREE_SURFACE)
+    call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
   endif
 
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
@@ -382,7 +382,7 @@ subroutine compute_forces_acoustic()
 ! enforces free surface (zeroes potentials at free surface)
   if(.NOT. GPU_MODE) then
     ! on CPU
-    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+    call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
@@ -395,13 +395,13 @@ subroutine compute_forces_acoustic()
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) &
-      call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+      call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
   else
     ! on GPU
-    call acoustic_enforce_free_surf_cuda(Mesh_pointer,ABSORB_INSTEAD_OF_FREE_SURFACE)
+    call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
   endif
 
 end subroutine compute_forces_acoustic
@@ -410,7 +410,7 @@ end subroutine compute_forces_acoustic
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
@@ -418,7 +418,7 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,ABSORB_INSTEAD_OF_FRE
   include 'constants.h'
 
   integer :: NSPEC_AB,NGLOB_AB
-  logical :: ABSORB_INSTEAD_OF_FREE_SURFACE
+  logical :: STACEY_INSTEAD_OF_FREE_SURFACE
 
 ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
@@ -437,7 +437,7 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,ABSORB_INSTEAD_OF_FRE
   integer :: iface,igll,i,j,k,ispec,iglob
 
   ! checks if free surface became an absorbing boundary
-  if( ABSORB_INSTEAD_OF_FREE_SURFACE ) return
+  if( STACEY_INSTEAD_OF_FREE_SURFACE ) return
 
 ! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces

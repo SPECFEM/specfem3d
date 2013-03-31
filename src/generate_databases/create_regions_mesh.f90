@@ -315,7 +315,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
-  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D
+  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D
   use create_regions_mesh_ext_par
 
   implicit none
@@ -413,7 +413,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   ! absorbing faces
   num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
   ! adds faces of free surface if it also absorbs
-  if( ABSORB_INSTEAD_OF_FREE_SURFACE ) num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
+  if( STACEY_INSTEAD_OF_FREE_SURFACE ) num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( abs_boundary_ispec(num_abs_boundary_faces), &
