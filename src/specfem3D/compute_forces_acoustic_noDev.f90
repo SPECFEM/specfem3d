@@ -33,8 +33,6 @@
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic)
 
@@ -77,15 +75,6 @@
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
   integer, dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
 
-! C-PML absorbing boundary conditions
-  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP
-  integer, dimension(nspec2D_xmin) :: ibelm_xmin
-  integer, dimension(nspec2D_xmax) :: ibelm_xmax
-  integer, dimension(nspec2D_ymin) :: ibelm_ymin
-  integer, dimension(nspec2D_ymax) :: ibelm_ymax
-  integer, dimension(NSPEC2D_BOTTOM) :: ibelm_bottom
-  integer, dimension(NSPEC2D_TOP) :: ibelm_top
-
 ! local variables
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
        tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
@@ -102,7 +91,7 @@
   real(kind=CUSTOM_REAL) :: dpotentialdxl_new,dpotentialdyl_new,dpotentialdzl_new
   real(kind=CUSTOM_REAL) :: rho_invl
 
-  integer :: ispec,ispec2D,iglob,i,j,k,l,ispec_p,num_elements
+  integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
