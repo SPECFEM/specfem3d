@@ -34,7 +34,7 @@
                         SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
 
   implicit none
 
@@ -45,7 +45,7 @@
   integer NOISE_TOMOGRAPHY,NGNOD,NGNOD2D,MOVIE_TYPE
   integer IMODEL
 
-  double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML,PML_WIDTH_MIN,PML_WIDTH_MAX
+  double precision DT,HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
 
   logical ATTENUATION,USE_OLSEN_ATTENUATION,APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ABSORBING_CONDITIONS,SAVE_FORWARD
   logical MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
@@ -131,10 +131,6 @@
   call read_value_logical(PML_CONDITIONS, 'solver.PML_CONDITIONS')
   if(err_occurred() /= 0) return
   call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'model.PML_INSTEAD_OF_FREE_SURFACE')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(PML_WIDTH_MIN, 'model.PML_WIDTH_MIN')
-  if(err_occurred() /= 0) return
-  call read_value_double_precision(PML_WIDTH_MAX, 'model.PML_WIDTH_MAX')
   if(err_occurred() /= 0) return
   call read_value_double_precision(f0_FOR_PML, 'model.f0_FOR_PML')
   if(err_occurred() /= 0) return

@@ -103,7 +103,7 @@ program sum_kernels
 
   ! for read_parameter_files
   double precision :: DT
-  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML,PML_WIDTH_MIN,PML_WIDTH_MAX
+  double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
             UTM_PROJECTION_ZONE,SIMULATION_TYPE,NGNOD,NGNOD2D
   integer :: NSOURCES,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
@@ -162,7 +162,7 @@ program sum_kernels
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,PML_WIDTH_MIN,PML_WIDTH_MAX,f0_FOR_PML,IMODEL)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
 
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
