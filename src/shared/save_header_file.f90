@@ -27,7 +27,7 @@
 ! save header file OUTPUT_FILES/values_from_mesher.h
 
   subroutine save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
-             ATTENUATION,ANISOTROPY,NSTEP,DT,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+             ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
              SIMULATION_TYPE,memory_size,nfaces_surface_glob_ext_mesh)
 
   implicit none
@@ -37,7 +37,7 @@
   integer NSPEC_AB,NGLOB_AB,NPROC,NSTEP,SIMULATION_TYPE
 
   logical ATTENUATION,ANISOTROPY
-  logical ABSORB_INSTEAD_OF_FREE_SURFACE, ABSORB_FREE_SURFACE_VAL
+  logical STACEY_INSTEAD_OF_FREE_SURFACE, ABSORB_FREE_SURFACE_VAL
 
   double precision DT, memory_size
 
@@ -47,7 +47,7 @@
 
   NAMELIST/MESHER/ABSORB_FREE_SURFACE_VAL
 
-  if (ABSORB_INSTEAD_OF_FREE_SURFACE) then
+  if (STACEY_INSTEAD_OF_FREE_SURFACE) then
       ABSORB_FREE_SURFACE_VAL = .true.
   else
       ABSORB_FREE_SURFACE_VAL = .false.

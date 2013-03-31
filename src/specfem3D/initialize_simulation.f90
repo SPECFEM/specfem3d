@@ -48,7 +48,7 @@
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
                         NTSTEP_BETWEEN_OUTPUT_INFO,SIMULATION_TYPE,SAVE_FORWARD, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        USE_FORCE_POINT_SOURCE,ABSORB_INSTEAD_OF_FREE_SURFACE, &
+                        USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
                         PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
 
@@ -292,16 +292,16 @@
         stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
      endif
   else
-     if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+     if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
         print*, 'please modify Par_file and recompile solver'
-        stop 'STACEY_ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is set to .true.'
+        stop 'STACEY_ABSORBING_CONDITIONS must be activated when STACEY_INSTEAD_OF_FREE_SURFACE is set to .true.'
      endif
   endif
 
   if( PML_CONDITIONS ) then
-     if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+     if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
         print*, 'please modify Par_file and recompile solver'
-        stop 'ABSORB_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
+        stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
      elseif( .not. SUPPRESS_UTM_PROJECTION ) then
         print*, 'please modify Par_file and recompile solver'
         stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
@@ -311,9 +311,9 @@
           stop 'PML_CONDITIONS must be activated when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
   endif
 
-  if( ABSORB_INSTEAD_OF_FREE_SURFACE .and. PML_INSTEAD_OF_FREE_SURFACE ) then
+  if( STACEY_INSTEAD_OF_FREE_SURFACE .and. PML_INSTEAD_OF_FREE_SURFACE ) then
      print*, 'please modify Par_file and recompile solver'
-     stop 'error: ABSORB_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
+     stop 'error: STACEY_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
   endif
 
   ! checks the MOVIE_TYPE parameter
@@ -330,9 +330,9 @@
      read(IOUT,NML=MESHER)
      close(IOUT)
 
-     if (ABSORB_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
-        write(IMAIN,*) 'ABSORB_INSTEAD_OF_FREE_SURFACE:',ABSORB_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
-        call exit_MPI(myrank,'error in compiled parameters ABSORB_INSTEAD_OF_FREE_SURFACE, please recompile solver')
+     if (STACEY_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
+        write(IMAIN,*) 'STACEY_INSTEAD_OF_FREE_SURFACE:',STACEY_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
+        call exit_MPI(myrank,'error in compiled parameters STACEY_INSTEAD_OF_FREE_SURFACE, please recompile solver')
      endif
   endif
 

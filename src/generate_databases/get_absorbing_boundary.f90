@@ -34,7 +34,7 @@
 
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
-  use generate_databases_par, only: ABSORB_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D
+  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D
   use create_regions_mesh_ext_par
 
   implicit none
@@ -441,7 +441,7 @@
     enddo
 
     ! stores surface infos
-    if( .not. ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+    if( .not. STACEY_INSTEAD_OF_FREE_SURFACE ) then
       ! stores free surface
       ! sets face infos
       ifree = ifree + 1
@@ -510,7 +510,7 @@
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of free faces = ',itop
     write(IMAIN,*) '     total number of faces = ',iabs
-    if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
+    if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
        write(IMAIN,*) '     absorbing boundary includes free surface'
     endif
     if( PML_INSTEAD_OF_FREE_SURFACE .and. itop /= 0 ) then

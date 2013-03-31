@@ -52,7 +52,7 @@ OLSEN_ATTENUATION_RATIO         = 0.05
 STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
-ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
+STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
 
 # C-PML boundary conditions for a regional simulation
 PML_CONDITIONS            = .false.
