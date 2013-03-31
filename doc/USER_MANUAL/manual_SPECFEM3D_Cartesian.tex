@@ -1115,14 +1115,13 @@ tomographic Earth models (please read Chapter \ref{cha:-Changing-the} and Sectio
 want to use the attenuation model that scaled from the S-wave speed model
 using Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{OLSEN\_ATTENUATION\_RATIO}}] Determines the Olsen's constant in Olsen's empirical relation (see \citet{OlDaBr03}).
-\item [{\texttt{ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
-on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
-\item [{\texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on
+\item [{\texttt{STACEY\_ABSORBING\_CONDITIONS}}] Set to \texttt{.true.} to turn
+on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}). In almost all cases it is much better to use CPML absorbing
+layers (see the options below) and leave this flag to \texttt{.false.}.
+\item [{\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on
 absorbing boundary conditions on the top surface which by default constitutes a free surface of the model.
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML boundary conditions for a regional simulation. Both fluids and elastic solids are supported.
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.} to turn on C-PML boundary conditions on the top surface which by default constitutes a free surface of the model.
-\item [{\texttt{PML\_WIDTH\_MIN}}] Gives a min. authorized bound to the solver to target an optimized thickness of C-PML layers.
-\item [{\texttt{PML\_WIDTH\_MAX}}] Gives a max. authorized bound to the solver to target an optimized thickness of C-PML layers.
 \item [{\texttt{f0\_FOR\_PML}}] Determines the dominant frequency that will be used in the calculation of: \\ ALPHA\_MAX\_PML = PI*f0\_FOR\_PML.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered, i.e., a peak ground velocity map
@@ -1296,8 +1295,8 @@ may be changed after running \texttt{xgenerate\_databases}:
 \item the simulation type control parameters: \texttt{SIMULATION\_TYPE}
 and \texttt{SAVE\_FORWARD}
 \item the time step parameters \texttt{NSTEP} and \texttt{DT}
-\item the absorbing boundary control parameter \texttt{ABSORBING\_CONDITIONS} on condition that the\\
-  \texttt{ABSORB\_INSTEAD\_OF\_FREE\_SURFACE} flag remains unmodified after running the databases generation.
+\item the absorbing boundary control parameter \texttt{PML\_CONDITIONS} on condition that the\\
+  \texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE} flag remains unmodified after running the databases generation.
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
 and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
 \item the ShakeMap\textregistered option \texttt{CREATE\_SHAKEMAP}
