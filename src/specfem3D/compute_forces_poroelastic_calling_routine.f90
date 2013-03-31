@@ -128,7 +128,7 @@ stop 'GPU for poroelastic simulation not implemented'
     endif ! GPU_MODE
 
 ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
-    if(ABSORBING_CONDITIONS) &
+    if(STACEY_ABSORBING_CONDITIONS) &
       call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &

@@ -41,7 +41,7 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML,ABSORBING_CONDITIONS,PML_CONDITIONS
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML,STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS
   use pml_par
 
   implicit none

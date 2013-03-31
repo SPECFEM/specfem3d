@@ -98,7 +98,7 @@
 
 ! stacey absorbing fields will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
-  if( ABSORBING_CONDITIONS ) then
+  if( STACEY_ABSORBING_CONDITIONS ) then
     ! closes absorbing wavefield saved/to-be-saved by forward simulations
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
           (SIMULATION_TYPE == 1 .and. SAVE_FORWARD)) ) then

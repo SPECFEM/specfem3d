@@ -237,7 +237,7 @@
   ! the mass matrix needs to be assembled with MPI here once and for all
   if(ACOUSTIC_SIMULATION) then
     ! adds contributions
-    if( ABSORBING_CONDITIONS ) then
+    if( STACEY_ABSORBING_CONDITIONS ) then
       rmass_acoustic(:) = rmass_acoustic(:) + rmassz_acoustic(:)
       ! not needed anymore
       deallocate(rmassz_acoustic)
@@ -255,7 +255,7 @@
 
   if(ELASTIC_SIMULATION) then
     ! switches to three-component mass matrix
-    if( ABSORBING_CONDITIONS ) then
+    if( STACEY_ABSORBING_CONDITIONS ) then
       ! adds boundary contributions
       rmassx(:) = rmass(:) + rmassx(:)
       rmassy(:) = rmass(:) + rmassy(:)
@@ -912,7 +912,7 @@
 
 ! stacey absorbing fields will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
-  if( ABSORBING_CONDITIONS ) then
+  if( STACEY_ABSORBING_CONDITIONS ) then
 
     ! opens absorbing wavefield saved/to-be-saved by forward simulations
     if( num_abs_boundary_faces > 0 .and. (SIMULATION_TYPE == 3 .or. &
@@ -1104,7 +1104,7 @@
         if( ier /= 0 ) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
       endif
     endif
-  else ! ABSORBING_CONDITIONS
+  else ! STACEY_ABSORBING_CONDITIONS
     ! needs dummy array
     b_num_abs_boundary_faces = 1
     if( ELASTIC_SIMULATION ) then
@@ -1231,7 +1231,7 @@
                                   hprime_xx, &
                                   hprimewgll_xx, &
                                   wgllwgll_xy, wgllwgll_xz, wgllwgll_yz, &
-                                  ABSORBING_CONDITIONS, &
+                                  STACEY_ABSORBING_CONDITIONS, &
                                   abs_boundary_ispec, abs_boundary_ijk, &
                                   abs_boundary_normal, &
                                   abs_boundary_jacobian2Dw, &

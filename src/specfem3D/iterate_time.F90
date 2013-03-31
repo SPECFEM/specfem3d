@@ -816,7 +816,7 @@
   call prepare_cleanup_device(Mesh_pointer, &
                               SAVE_FORWARD, &
                               ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
-                              ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
+                              STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
                               ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
                               APPROXIMATE_HESS_KL)
 

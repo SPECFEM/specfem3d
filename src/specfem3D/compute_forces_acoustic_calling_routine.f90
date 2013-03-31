@@ -151,7 +151,7 @@ subroutine compute_forces_acoustic()
     endif
 
     ! ! Stacey absorbing boundary conditions
-    if(ABSORBING_CONDITIONS) then
+    if(STACEY_ABSORBING_CONDITIONS) then
        call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
                          potential_dot_dot_acoustic,potential_dot_acoustic, &
                          ibool,ispec_is_inner,phase_is_inner, &
