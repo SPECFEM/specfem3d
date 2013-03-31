@@ -160,7 +160,7 @@ subroutine compute_forces_viscoelastic()
 
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if( ABSORBING_CONDITIONS ) then
+    if( STACEY_ABSORBING_CONDITIONS ) then
        call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &

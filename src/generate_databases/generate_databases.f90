@@ -257,7 +257,7 @@
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
@@ -282,7 +282,7 @@
 
 ! there would be a problem with absorbing boundaries for different NGLLX,NGLLY,NGLLZ values
 ! just to be sure for now..
-  if(ABSORBING_CONDITIONS) then
+  if(STACEY_ABSORBING_CONDITIONS) then
     if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
       call exit_MPI(myrank,'must have NGLLX = NGLLY = NGLLZ for external meshes')
   endif
@@ -389,7 +389,7 @@
     endif
 
     write(IMAIN,*)
-    if(ABSORBING_CONDITIONS) then
+    if(STACEY_ABSORBING_CONDITIONS) then
       write(IMAIN,*) 'incorporating absorbing conditions'
     else
       write(IMAIN,*) 'no absorbing condition'

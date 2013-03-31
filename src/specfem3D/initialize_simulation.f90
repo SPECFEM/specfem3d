@@ -42,7 +42,7 @@
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
-                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,ABSORBING_CONDITIONS,MOVIE_TYPE, &
+                        APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ANISOTROPY,STACEY_ABSORBING_CONDITIONS,MOVIE_TYPE, &
                         MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
                         NTSTEP_BETWEEN_FRAMES,USE_HIGHRES_FOR_MOVIES,HDUR_MOVIE, &
                         SAVE_MESH_FILES,PRINT_SOURCE_TIME_FUNCTION, &
@@ -277,24 +277,24 @@
     stop 'GRAVITY only supported in GPU mode'
 
   ! absorbing surfaces
-  if( ABSORBING_CONDITIONS ) then
+  if( STACEY_ABSORBING_CONDITIONS ) then
      ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
      ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
      ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
      ! just to be sure for now..
      if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
-          stop 'ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
+          stop 'STACEY_ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
      if( PML_CONDITIONS ) then
         print*, 'please modify Par_file and recompile solver'
-        stop 'ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
+        stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
      elseif( PML_INSTEAD_OF_FREE_SURFACE ) then
         print*, 'please modify Par_file and recompile solver'
-        stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with ABSORBING_CONDITIONS = .true.'
+        stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
      endif
   else
      if( ABSORB_INSTEAD_OF_FREE_SURFACE ) then
         print*, 'please modify Par_file and recompile solver'
-        stop 'ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is set to .true.'
+        stop 'STACEY_ABSORBING_CONDITIONS must be activated when ABSORB_INSTEAD_OF_FREE_SURFACE is set to .true.'
      endif
   endif
 

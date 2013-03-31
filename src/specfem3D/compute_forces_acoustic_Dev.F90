@@ -41,7 +41,7 @@
 !     p = - Chi_dot_dot
 !
   use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,ABSORB_USE_PML, &
-              ABSORBING_CONDITIONS,PML_CONDITIONS,m1,m2,NGLLCUBE
+              STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,m1,m2,NGLLCUBE
 
   implicit none
 
