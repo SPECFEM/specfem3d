@@ -36,7 +36,7 @@ ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
 # absorbing boundary conditions for a regional simulation
-ABSORBING_CONDITIONS            = .true.
+STACEY_ABSORBING_CONDITIONS     = .true.
 
 # save AVS or OpenDX movies
 MOVIE_SURFACE                   = .false.

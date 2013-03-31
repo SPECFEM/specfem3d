@@ -49,7 +49,7 @@ USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
 
 # absorbing boundary conditions for a regional simulation
-ABSORBING_CONDITIONS            = .true.
+STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 ABSORB_INSTEAD_OF_FREE_SURFACE  = .false.
