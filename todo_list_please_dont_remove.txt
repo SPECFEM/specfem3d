@@ -81,6 +81,9 @@ Unfortunately that file is not very well written nor very well commented.
 Thus unfortunately that set of routines is not so easy to understand and modify.
 A bunch of things are hardwired. 
 
+Thus, this is not so easy to do (Daniel and I checked about a year ago). It would maybe be easier to rewrite 'decompose_mesh_scotch'
+from scratch as a new, MPI program instead of trying to add MPI support to the current and not so well written serial version.
+That program is relatively small, and what it does is relatively straightforward.
 
 ------------------------------------------------
 mesh files in SPECFEM3D_GLOBE:
