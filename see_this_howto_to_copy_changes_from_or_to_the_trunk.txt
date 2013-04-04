@@ -1,0 +1,10 @@
+
+See http://www.math-linux.com/linux-19/tip-of-the-day/article/svn-branch-branching-subversion-howto
+
+This explains how to merge changes made by others in the trunk into your branch;
+
+and conversely, how to merge your branch into the trunk at the end of your project.
+
+IMPORTANT: this branch was created with revision number 21712.
+Thus this is the number to use in the HOWTO above.
+
