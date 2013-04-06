@@ -14,9 +14,14 @@ Add full viscoelastic kernels, undoing full attenuation
 ----------------
 
 Add full loop vectorization for critical calculation loops, to make sure we gain a factor of about 1.8 in terms of CPU time as suggested
-by INTEL and as done by Cray and NCSA in their local version of SPECFEM3D_GLOBE.
+by INTEL and as done by Cray and NCSA in their local version of SPECFEM3D_GLOBE. Already done (independently of Cray and NCSA) by Dimitri
+in SPECFEM3D_Cartesian, but the Cray and NCSA improvements for SPECFEM3D_GLOBE have not been merged yet (we asked NCSA several times, but
+unsuccessfully for now). However it would not be too difficult to redo these improvements independently by studying what Dimitri has done
+in SPECFEM3D_Cartesian (grep for "FORCE_VECTORIZATION" in the whole source code) and doing the same things in SPECFEM3D_GLOBE.
+The changes to make are straightforward, and reduce total wall clock-time by about 1.8 times, i.e., a very significant amount.
 
-- new suggestion:
+- suggestion 39:
+----------------
 
 doublecheck carefully file memory_eval.f90 in both SPECFEM3D_Cartesian and SPECFEM3D_Globe
 (in particular now that C-PML has been implemented in SPECFEM3D_Cartesian), as both codes have undergone lots of changes in the past few months
