@@ -655,7 +655,7 @@ module decompose_mesh
 ! if the file does not exist but if there are PML_CONDITIONS then stop
     if( ier /= 0 .and. PML_CONDITIONS) &
         stop 'error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
-! if the file does not exist or if there are PML_CONDITIONS then define the number of CPML elements as zero
+! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
     if( ier /= 0 .or. .not. PML_CONDITIONS) then
        nspec_cpml = 0
     else
