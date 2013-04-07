@@ -177,6 +177,7 @@ module decompose_mesh
       stop 'error file open'
     endif
     read(98,*) nnodes
+    if( nnodes < 1 ) stop 'error: nnodes < 1'
     allocate(nodes_coords(3,nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_coords'
     do inode = 1, nnodes
@@ -205,6 +206,7 @@ module decompose_mesh
     ! sets number of elements (integer 4-byte)
     nspec = nspec_long
 
+    if( nspec < 1 ) stop 'error: nspec < 1'
     allocate(elmnts(NGNOD,nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array elmnts'
     do ispec = 1, nspec
@@ -512,11 +514,21 @@ module decompose_mesh
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
           status='old', form='formatted',iostat=ier)
+! if the file does not exist then define the number of Stacey elements as zero for this face;
+! beware that these files can also be used to set Dirichlet boundary conditions on the outer edges of CPML
+! absorbing layers for elastic elements, not only for Stacey; thus these files may exist and be non-empty
+! even when STACEY_ABSORBING_CONDITIONS is false
     if( ier /= 0 ) then
       nspec2D_xmin = 0
     else
       read(98,*) nspec2D_xmin
     endif
+! 33333333333333333333333333333333333333333
+! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
+! and can thus for instance be used as an argument in a call to a subroutine without giving any error
+! even when full range and pointer checking is used in the compiler options;
+! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
+! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
     allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
     allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
@@ -630,10 +642,21 @@ module decompose_mesh
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
 
+! 33333333333333333333333333333333333333333
+! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
+! and can thus for instance be used as an argument in a call to a subroutine without giving any error
+! even when full range and pointer checking is used in the compiler options;
+! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
+! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
+
   ! reads in absorbing_cpml boundary file
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
          status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+! if the file does not exist but if there are PML_CONDITIONS then stop
+    if( ier /= 0 .and. PML_CONDITIONS) &
+        stop 'error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
+! if the file does not exist or if there are PML_CONDITIONS then define the number of CPML elements as zero
+    if( ier /= 0 .or. .not. PML_CONDITIONS) then
        nspec_cpml = 0
     else
        read(98,*) nspec_cpml, CPML_width
