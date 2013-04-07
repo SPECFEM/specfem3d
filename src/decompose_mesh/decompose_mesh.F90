@@ -662,6 +662,10 @@ module decompose_mesh
        read(98,*) nspec_cpml, CPML_width
     endif
 
+! sanity check
+    if( PML_CONDITIONS .and. nspec_cpml <= 0) &
+        stop 'error: PML_CONDITIONS is set to true but nspec_cpml <= 0 in file absorbing_cpml_file'
+
     ! C-PML spectral elements global indexing
     allocate(CPML_to_spec(nspec_cpml),stat=ier)
     if(ier /= 0) stop 'error allocating array CPML_to_spec'
