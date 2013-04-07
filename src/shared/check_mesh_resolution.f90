@@ -51,6 +51,9 @@
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
   real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL) :: x_min,x_max,x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL) :: y_min,y_max,y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL) :: z_min,z_max,z_min_glob,z_max_glob
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
   real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob,avg_distance
 
@@ -95,6 +98,15 @@
   distance_min_glob = HUGEVAL
   distance_max_glob = -HUGEVAL
 
+  x_min_glob = HUGEVAL
+  x_max_glob = -HUGEVAL
+
+  y_min_glob = HUGEVAL
+  y_max_glob = -HUGEVAL
+
+  z_min_glob = HUGEVAL
+  z_max_glob = -HUGEVAL
+
   elemsize_min_glob = HUGEVAL
   elemsize_max_glob = -HUGEVAL
 
@@ -134,6 +146,15 @@
 
     distance_min_glob = min(distance_min_glob, distance_min)
     distance_max_glob = max(distance_max_glob, distance_max)
+
+    x_min_glob = minval(xstore)
+    x_max_glob = maxval(xstore)
+
+    y_min_glob = minval(ystore)
+    y_max_glob = maxval(ystore)
+
+    z_min_glob = minval(zstore)
+    z_max_glob = maxval(zstore)
 
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
@@ -236,6 +257,22 @@
   call min_all_cr(distance_min,distance_min_glob)
   call max_all_cr(distance_max,distance_max_glob)
 
+  ! min and max dimensions of the model
+  x_min = x_min_glob
+  x_max = x_max_glob
+  call min_all_cr(x_min,x_min_glob)
+  call max_all_cr(x_max,x_max_glob)
+
+  y_min = y_min_glob
+  y_max = y_max_glob
+  call min_all_cr(y_min,y_min_glob)
+  call max_all_cr(y_max,y_max_glob)
+
+  z_min = z_min_glob
+  z_max = z_max_glob
+  call min_all_cr(z_min,z_min_glob)
+  call max_all_cr(z_max,z_max_glob)
+
   ! element size
   elemsize_min = elemsize_min_glob
   elemsize_max = elemsize_max_glob
@@ -301,9 +338,14 @@
     write(IMAIN,*) '*** Verification of simulation parameters ***'
     write(IMAIN,*) '*********************************************'
     write(IMAIN,*)
+    write(IMAIN,*) '*** Xmin and Xmax of the model = ',x_min_glob,x_max_glob
+    write(IMAIN,*) '*** Ymin and Ymax of the model = ',y_min_glob,y_max_glob
+    write(IMAIN,*) '*** Zmin and Zmax of the model = ',z_min_glob,z_max_glob
+    write(IMAIN,*)
     write(IMAIN,*) '*** Max GLL point distance = ',distance_max_glob
     write(IMAIN,*) '*** Min GLL point distance = ',distance_min_glob
     write(IMAIN,*) '*** Max/min ratio = ',distance_max_glob/distance_min_glob
+    write(IMAIN,*)
     write(IMAIN,*) '*** Max element size = ',elemsize_max_glob
     write(IMAIN,*) '*** Min element size = ',elemsize_min_glob
     write(IMAIN,*) '*** Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
