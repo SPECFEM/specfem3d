@@ -1,0 +1,11 @@
+
+this regular mesh contains 36 x 36 x 16 elements:
+
+36 elements along X
+
+36 elements along Y
+
+16 elements along Z
+
+i.e. a total of 36 x 36 x 16 = 20736 elements.
+
