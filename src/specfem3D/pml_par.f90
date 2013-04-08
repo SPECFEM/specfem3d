@@ -52,7 +52,7 @@ module pml_par
   ! mask of C-PML elements for the global mesh
   logical, dimension(:), allocatable :: CPML_mask_ibool
 
-  ! thickness of C-PML layers read in "absorbing_cpml_file.asc"
+  ! thickness of C-PML layers
   real(CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
 
   ! C-PML damping profile arrays
