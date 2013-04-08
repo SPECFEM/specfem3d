@@ -647,19 +647,51 @@ Optionally, instead of specifying for each surface at the boundaries a single bl
 After the block definitions are done, you export the mesh using the script \texttt{cubit2specfem3d.py} provided in each of the example directories. If the export was successful, you should find the following files in a subdirectory \texttt{MESH/}:
 
 \begin{description}
-\item [absorbing\_cpml\_file] {\bf (only in case of C-PML absorbing conditions)} Contains at the first line respectively the "number of C-PML spectral elements"
-and the "thickness of C-PML layers" (currently, a common thickness for all faces is defined but this can be easily adapted in the future if needed by the setting of CPML\_width\_x, CPML\_width\_y, CPML\_width\_z parameters). On all following lines are defined the "C-PML spectral elements global indexing" and "C-PML regions" for each
-C-PML element according to the following convention:
+\item [absorbing\_cpml\_file] {\bf (only needed in case of C-PML absorbing conditions)}
+Contains on the first line the total number of C-PML spectral elements in the mesh,
+and then on the following line the list of all these C-PML elements with two numbers per line:
+first the spectral element number, and then a C-PML flag indicating to which C-PML layer(s)
+that element belongs, according to the following convention:
 
 \begin{itemize}
-\item \#id\_cpml\_regions = 1 : X\_surface C-PML,
-\item \#id\_cpml\_regions = 2 : Y\_surface C-PML,
-\item \#id\_cpml\_regions = 3 : Z\_surface C-PML,
-\item \#id\_cpml\_regions = 4 : XY\_edge C-PML,
-\item \#id\_cpml\_regions = 5 : XZ\_edge C-PML,
-\item \#id\_cpml\_regions = 6 : YZ\_edge C-PML,
-\item \#id\_cpml\_regions = 7 : XYZ\_corner C-PML.
+\item Flag = 1 : element belongs to a X CPML layer only (either in Xmin or in Xmax),
+\item Flag = 2 : element belongs to a Y CPML layer only (either in Ymin or in Ymax),
+\item Flag = 3 : element belongs to a Z CPML layer only (either in Zmin or in Zmax),
+\item Flag = 4 : element belongs to a X CPML layer and also to a Y CPML layer,
+\item Flag = 5 : element belongs to a X CPML layer and also to a Z CPML layer,
+\item Flag = 6 : element belongs to a Y CPML layer and also to a Z CPML layer,
+\item Flag = 7 : element belongs to a X, to a Y and to a Z CPML layer, i.e., it belongs to a CPML corner.
 \end{itemize}
+
+Note that it does not matter whether an element belongs to a Xmin or to a Xmax CPML, the flag
+is the same in both cases; the same is true for Ymin and Ymax, and also Zmin and Zmax.
+
+When you have an existing CUBIT (or similar) mesh stored in SPECFEM3D format,
+i.e., if you have existing "nodes\_coords\_file" and "mesh\_file" files but do not know how to assign
+CPML flags to them, we have created a small serial Fortran program that will do that automatically
+for you, i.e., which will create the "absorbing\_cpml\_file" for you.
+That program is
+utils/CPML/convert\_external\_layers\_of\_a\_given\_mesh\_to\_CPML\_layers.f90, and a small Makefile
+is provided in that directory (utils/CPML).
+
+IMPORTANT: it is your responsibility to make sure that in the input CUBIT (or similar) mesh
+that this code will read in SPECFEM3D format from files "nodes\_coords\_file" and "mesh\_file"
+you have created layers of elements that constitute a layer of constant thickness aligned
+with the coordinate grid axes (X, Y and/or Z), so that this code can assign CPML flags to them.
+This code does NOT check that (because it cannot, in any easy way).
+The mesh inside these CPML layers does not need to be structured nor regular, any non-structured
+mesh is fine as long as it has flat PML inner and outer faces, parallel to the axes, and thus
+of a constant thickness.
+The thickness can be different between the X, Y and Z sides. But for X it must not vary,
+for Y it must not vary, and for Z it must not vary.
+If you do not know the exact thickness, or if you think the thickness may have tiny variations,
+for instance due to roundoff issues when exporting the mesh, you can use a slightly LARGER value
+in this code (say 2\% to 5\% more), and this code will fix that and will adjust it; never use
+a SMALLER value otherwise this code will miss some CPML elements.
+
+Note: in a future release we will remove the constraint of having CPML layers aligned with the
+coordinate axes; we will allow for meshes that are titled by any constant angle in the horizontal plane.
+However this is not implemented yet.
 
 \item [materials\_file] Contains the material associations for each element. The format is:
 \begin{lyxcode}
