@@ -240,7 +240,7 @@ subroutine compute_forces_viscoelastic()
                         coupling_el_po_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner)
     endif
-
+    if (not.USE_VADIM) then
 ! adds source term (single-force/moment-tensor solution)
     call compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
@@ -251,7 +251,7 @@ subroutine compute_forces_viscoelastic()
                         nadj_rec_local,adj_sourcearrays,b_accel, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         GPU_MODE, Mesh_pointer )
-
+    end if
     ! assemble all the contributions between slices using MPI
     if( phase_is_inner .eqv. .false. ) then
        ! sends accel values to corresponding MPI interface neighbors
