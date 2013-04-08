@@ -1,0 +1,16 @@
+
+Here are the thicknesses to use to define the CPML layers for this mesh when running
+the Fortran code utils/CPML/convert_external_layers_of_a_given_mesh_to_CPML_layers.f90:
+
+Because we want 3 elements inside each PML layer, and because the size of the mesh elements
+in this regular mesh is:
+
+ *** Max element size =    3750 m  along Z
+ *** Min element size =    3722.219 m  along X and Y
+
+then the thicknesses to use to answer the questions asked by the Fortran code are:
+
+THICKNESS_OF_X_PML = 3722.219 * 3 = 11166.657
+THICKNESS_OF_Y_PML = 3722.219 * 3 = 11166.657
+THICKNESS_OF_Z_PML = 3750. * 3    = 11250
+
