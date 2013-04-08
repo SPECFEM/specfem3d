@@ -19,8 +19,6 @@
 
   real, dimension(:), allocatable :: x,y,z
 
-  integer, dimension(:,:), allocatable :: ibool
-
   logical, dimension(:), allocatable :: is_X_CPML,is_Y_CPML,is_Z_CPML
 
   real :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit
@@ -126,8 +124,6 @@
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
   open(unit=23,file='mesh_file',status='old',action='read')
   read(23,*) nspec
-
-  allocate(ibool(NGNOD,nspec))
 
   allocate(is_X_CPML(nspec))
   allocate(is_Y_CPML(nspec))
