@@ -81,7 +81,7 @@ program pre_meshfem3D
                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                           USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                           USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                          PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
+                          PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,TRAC_PATH)
 
 ! reads in (CUBIT) mesh files: mesh_file,nodes_coord_file, ...
   call read_mesh_files()

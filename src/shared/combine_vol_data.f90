@@ -101,7 +101,7 @@
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
   integer :: IMODEL
 
 ! checks given arguments
@@ -173,7 +173,7 @@
     HIGH_RESOLUTION_MESH = .true.
   endif
 
-  ! needs local_path for mesh files
+  ! needs local_path for mesh files !! VM VM added TRAC_PATH
   call read_parameter_file( NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
@@ -185,7 +185,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,TRAC_PATH)
 
   print *, 'Slice list: '
   print *, node_list(1:num_node)

@@ -193,8 +193,8 @@ module specfem_par
 ! parameters read from mesh parameter file
   integer :: NPROC_XI,NPROC_ETA
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
-
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname
+! VM VM added path for DSM
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname,TRAC_PATH,dsmname
 
 ! names of the data files for all the processors in MPI
   character(len=256) outputname

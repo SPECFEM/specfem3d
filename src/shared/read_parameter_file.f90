@@ -34,7 +34,7 @@
                         SIMULATION_TYPE,SAVE_FORWARD,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,TRAC_PATH)
 
   implicit none
 
@@ -53,7 +53,7 @@
   logical USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE,USE_RICKER_TIME_FUNCTION
   logical PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
 
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,CMTSOLUTION,FORCESOLUTION,TRAC_PATH ! VM VM add TRAC_PATH for DSM
 
 ! local variables
   integer ::ios,icounter,isource,idummy,nproc_eta_old,nproc_xi_old
@@ -170,7 +170,11 @@
   if(err_occurred() /= 0) return
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
-
+  !! VM VM read the traction path directory
+  if (USE_DSM) then
+     call read_value_string(TRAC_PATH, 'TRAC_PATH')
+     if(err_occurred() /= 0) return
+  end if
   ! close parameter file
   call close_parameter_file()
 
