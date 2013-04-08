@@ -428,3 +428,6 @@
   integer, parameter :: IMODEL_IPATI            = 10
   integer, parameter :: IMODEL_IPATI_WATER      = 11
 
+! vadim tests
+   logical, parameter :: USE_VADIM=.true.
+
