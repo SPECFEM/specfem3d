@@ -1,0 +1,121 @@
+----------------------------------------------------------------------
+README - single travel-time adjoint kernel
+----------------------------------------------------------------------
+
+This example creates a travel-time adjoint source for a single receiver
+station and runs a kernel simulation.
+
+note: make yourself familiar with how to run a forward simulation.
+      a detailed step-by-step tutorial is given in the file
+      /SPECFEM3D/examples/homogeneous_halfspace/README
+
+
+step-by-step kernel tutorial:
+
+
+1. run forward simulation with saving wavefields:
+
+   - assuming that you have configured and setup the root directory
+     /SPECFEM3D as described in the step-by-step tutorial described
+     in the file /SPECFEM3D/examples/homogeneous_halfspace/README,
+     update the Par_file:
+
+     > cd /SPECFEM3D
+     > ./utils/change_simulation_type.pl -F
+
+     or change manually in /SPECFEM3D/DATA/Par_file:
+     ...
+     # forward or adjoint simulation
+     SIMULATION_TYPE                 = 1
+     SAVE_FORWARD                    = .true.
+     ...
+
+   - run the forward simulation, submitting the job script:
+     > qsub go_solver_pbs.bash
+
+   you should have now the necessary seismograms in directory OUTPUT_FILES/:
+     ...
+     OUTPUT_FILES/X20.BXX.semd
+     OUTPUT_FILES/X20.BXY.semd
+     OUTPUT_FILES/X20.BXZ.semd
+     ...
+
+
+2. create adjoint source files:
+
+   - compile the utility xcreate_adjsrc_traveltime:
+     > cd /SPECFEM3D/utils/adjoint_sources/traveltime
+     > make
+
+   - specify which receiver station becomes an adjoint source,
+     e.g. using the seismograms from station X20, and create the
+     corresponding adjoint source files:
+     > cd /SPECFEM3D
+     > ./utils/adjoint_sources/traveltime/xcreate_adjsrc_traveltime 10. 25. 3 OUTPUT_FILES/X20.DB.BX*.semd
+
+     note: the traveltime adjoint source above uses the signal which arrives
+           within a time window between 10 - 25 seconds and on the Z-component only.
+
+   - make designated directory for adjoint sources:
+     > mkdir OUTPUT_FILES/SEM/
+     > mv OUTPUT_FILES/*.adj OUTPUT_FILES/SEM/
+     > cd OUTPUT_FILES/SEM/
+     > rename .semd.adj .adj *.adj
+
+     this should create the files:
+          OUTPUT_FILES/SEM/X20.DB.BXX.adj
+          OUTPUT_FILES/SEM/X20.DB.BXY.adj
+          OUTPUT_FILES/SEM/X20.DB.BXZ.adj
+
+   - setup adjoint stations file STATIONS_ADJOINT containing the receiver stations locations
+     which will have adjoint source files in OUTPUT_FILES/SEM/:
+     > cd /SPECFEM3D
+     > cp examples/homogeneous_halfspace/DATA/STATIONS_ADJOINT DATA/
+
+
+3. run adjoint simulation with restored backward wavefields:
+
+   - update the Par_file:
+     > cd /SPECFEM3D
+     > ./utils/change_simulation_type.pl -b
+
+     or change manually in /SPECFEM3D/DATA/Par_file:
+     # forward or adjoint simulation
+     SIMULATION_TYPE                 = 3
+     SAVE_FORWARD                    = .false.
+
+   - run the backward simulation, submitting the job script:
+     > qsub go_solver_pbs.bash
+
+
+     this will create adjoint kernel files in directory OUTPUT_FILES/DATABASES_MPI/
+     according to travel-time kernels as e.g. defined in Tromp et al. (2005) :
+          OUTPUT_FILES/DATABASES_MPI/proc000***_alpha_kernel.bin
+          OUTPUT_FILES/DATABASES_MPI/proc000***_beta_kernel.bin
+          OUTPUT_FILES/DATABASES_MPI/proc000***_kappa_kernel.bin
+          OUTPUT_FILES/DATABASES_MPI/proc000***_mu_kernel.bin
+          OUTPUT_FILES/DATABASES_MPI/proc000***_rho_kernel.bin
+          OUTPUT_FILES/DATABASES_MPI/proc000***_rhop_kernel.bin
+
+   - visualize with Paraview, e.g. :
+      > cd /SPECFEM3D
+      > make xcombine_vol_data
+      > cd bin/
+      > ./xcombine_vol_data 0 3 alpha_kernel ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/ 1
+
+     where we use the partitions with id 0 to 3 to include all 4 processor partitions.
+     By default, this will produce the vtk file /SPECFEM3D/OUTPUT_FILES/alpha_kernel.vtk
+     This file can be visualized using Paraview (see image alpha_kernel.png for reference).
+
+     OPTIONAL:
+     To convert the mesh format to VTK, you can use utils/Visualization/Paraview/mesh2vtu:
+      > cd utils/Visualization/Paraview/mesh2vtu
+     Modify the Makefile according to your library paths and compile mesh2vtu:
+      > make
+     the modify the paths to your mesh2vtu installation in the utils/Visualization/Paraview/mesh2vtu.pl file,
+     and run:
+      > mesh2vtu.pl -i OUTPUT_FILES/alpha_kernel.mesh -o OUTPUT_FILES/alpha_kernel.vtu
+
+     which creates the *.vtu file:  Paraview -> Menu File -> Open ...
+                                       (and choose the alpha_kernel.vtu)
+
