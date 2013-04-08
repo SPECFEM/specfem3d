@@ -697,33 +697,23 @@ However this is not implemented yet.
 \begin{lyxcode}
 \texttt{element\_ID} \texttt{material\_ID}
 \end{lyxcode}
-where \texttt{element\_ID} is the element identifier and \texttt{material\_ID} is a unique identifier, positive (for materials) or negative (for tomographic models or C-PML elements).
-For C-PML absorbing conditions, \texttt{material\_ID} is a unique negative identifier between -2001 and -2007 in correspondance to the convention seen above in the description of the
-absorbing\_cpml\_file: -2001 <-> 1, -2002 <-> 2, etc\ldots
+where \texttt{element\_ID} is the element identifier and \texttt{material\_ID} is a unique identifier,
+positive (for materials taken from this list of materials, i.e. for which each spectral
+element has constant material properties taken from this list) or negative (for tomographic models,
+i.e. for spectral element whose real velocities and density will be assigned later by calling an external function
+to define model variations, for instance in the case of tomographic models; in such a case, material properties
+can vary inside each spectral element, i.e. be different at each of its Gauss-Lobatto-Legendre grid points).
 
 \item [nummaterial\_velocity\_file] Defines the material properties.
 \begin{itemize}
-\item For fully defined materials, the format is:
+\item For classical materials (i.e., spectral elements for which the velocity and density
+model will not be assigned by calling an external function to define for instance a tomographic model), the format is:
 \begin{lyxcode}
 \texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q}  \texttt{anisotropy\_flag}
 \end{lyxcode}
 where \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
-
-\item For C-PML absorbing conditions, , the format is:
-\begin{lyxcode}
-\texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}
-\end{lyxcode}
-where \texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a unique identifier between -2001 and -2007 to correspond with the definition given in materials\_file,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$
 %%magnoni
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details.
-%
-%For a tomographic model, the material definition format is:
-%\begin{lyxcode}
-%\texttt{domain\_ID} \texttt{material\_ID}  \texttt{tomography}  \texttt{name}
-%\end{lyxcode}
-%where
-%\texttt{domain\_ID} is 1 for acoustic or 2 for elastic materials, \texttt{material\_ID} a negative, unique identifier, \texttt{tomography} keyword for tomographic material definition and \texttt{name} the name of the tomography file. The name is not used so far, rather change the filename defined in the file \texttt{model\_tomography.f90} located in the
-%\texttt{src/generate\_databases/} directory.
 %
 \end{itemize}
 
