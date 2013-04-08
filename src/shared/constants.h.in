@@ -161,11 +161,14 @@
 ! empirical damping modified factor
   real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2d0
 
-! absorb boundaries using a PML region
-! (EXPERIMENTAL feature)
-! (only acoustic domains supported...)
-! (user parameters can be specified in PML_init.f90)
-  logical,parameter :: ABSORB_USE_PML = .false.
+! flags for the seven CPML regions
+  integer, parameter :: CPML_X_ONLY = 1
+  integer, parameter :: CPML_Y_ONLY = 2
+  integer, parameter :: CPML_Z_ONLY = 3
+  integer, parameter :: CPML_XY_ONLY = 4
+  integer, parameter :: CPML_XZ_ONLY = 5
+  integer, parameter :: CPML_YZ_ONLY = 6
+  integer, parameter :: CPML_XYZ = 7
 
 !!-----------------------------------------------------------
 !!

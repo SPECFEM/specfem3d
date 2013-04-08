@@ -74,7 +74,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
 
            iglob = ibool(i,j,k,ispec)
 
-           if( CPML_regions(ispec_CPML) == 1 ) then
+           if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- X-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 2 ) then
+           elseif( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- Y-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 3 ) then
+           elseif( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- Z-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -341,7 +341,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 4 ) then
+           elseif( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- XY-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -455,7 +455,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 5 ) then
+           elseif( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- XZ-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -569,7 +569,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 6 ) then
+           elseif( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- YZ-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -683,7 +683,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == 7 ) then
+           elseif( CPML_regions(ispec_CPML) == CPML_XYZ ) then
               !------------------------------------------------------------------------------
               !---------------------------- XYZ-corner C-PML --------------------------------
               !------------------------------------------------------------------------------
