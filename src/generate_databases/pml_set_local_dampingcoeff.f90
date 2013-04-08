@@ -175,7 +175,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
               iglob = ibool(i,j,k,ispec)
 
-              if( CPML_regions(ispec_CPML) == 1 ) then
+              if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- X-surface C-PML ---------------------------------
                  !------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  alpha_store(i,j,k,ispec_CPML) = alpha_x
 
-              elseif( CPML_regions(ispec_CPML) == 2 ) then
+              elseif( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- Y-surface C-PML ---------------------------------
                  !------------------------------------------------------------------------------
@@ -289,7 +289,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  alpha_store(i,j,k,ispec_CPML) = alpha_y
 
-              elseif( CPML_regions(ispec_CPML) == 3 ) then
+              elseif( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- Z-surface C-PML ---------------------------------
                  !------------------------------------------------------------------------------
@@ -346,7 +346,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  alpha_store(i,j,k,ispec_CPML) = alpha_z
 
-              elseif( CPML_regions(ispec_CPML) == 4 ) then
+              elseif( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- XY-edge C-PML -----------------------------------
                  !------------------------------------------------------------------------------
@@ -507,7 +507,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  alpha_store(i,j,k,ispec_CPML) = ALPHA_MAX_PML / 2.d0
 
-              elseif( CPML_regions(ispec_CPML) == 5 ) then
+              elseif( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- XZ-edge C-PML -----------------------------------
                  !------------------------------------------------------------------------------
@@ -671,7 +671,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  alpha_store(i,j,k,ispec_CPML) = ALPHA_MAX_PML / 2.d0
 
-              elseif( CPML_regions(ispec_CPML) == 6 ) then
+              elseif( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- YZ-edge C-PML -----------------------------------
                  !------------------------------------------------------------------------------
@@ -834,7 +834,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
                  alpha_store(i,j,k,ispec_CPML) = ALPHA_MAX_PML / 2.d0
 
-              elseif( CPML_regions(ispec_CPML) == 7 ) then
+              elseif( CPML_regions(ispec_CPML) == CPML_XYZ ) then
                  !------------------------------------------------------------------------------
                  !---------------------------- XYZ-corner C-PML --------------------------------
                  !------------------------------------------------------------------------------
