@@ -13,7 +13,7 @@
 
   integer :: nspec,npoin
   integer :: ispec,ipoin
-  integer :: ipoin_read,ispec_read,imat_read
+  integer :: ipoin_read,ispec_read,imat_read,nspec_CPML,iflag
   integer :: i1,i2,i3,i4,i5,i6,i7,i8
 
   real, dimension(:), allocatable :: x,y,z
@@ -24,6 +24,13 @@
 
   real :: xread,yread,zread
   real :: val_color
+
+  print *,' 1 = use material file to color the mesh elements'
+  print *,' 2 = use CPML flag file to color the mesh elements'
+  print *,' 3 = exit'
+  read(*,*) iflag
+  if(iflag /= 1 .and. iflag /= 2) stop 'exiting...'
+  print *
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
     open(unit=23,file='nodes_coords_file',status='old',action='read')
@@ -89,13 +96,26 @@
     write(11,*) 'object 3 class array type float rank 0 items ',nspec,' data follows'
 
 ! read local elements in this slice and output global DX elements
-  open(unit=23,file='materials_file',status='old',action='read')
-  do ispec=1,nspec
+  if(iflag == 1) then
+    open(unit=23,file='materials_file',status='old',action='read')
+    do ispec=1,nspec
 ! beware: elements may not be listed in increasing order, they can appear in any order
-    read(23,*) ispec_read,imat_read
-    imat(ispec_read) = imat_read
-  enddo
-  close(23)
+      read(23,*) ispec_read,imat_read
+      imat(ispec_read) = imat_read
+    enddo
+    close(23)
+  else
+    imat(:) = 0
+    open(unit=23,file='absorbing_cpml_file',status='old',action='read')
+    read(23,*) nspec_CPML
+    if(nspec_CPML < 1 .or. nspec_CPML > nspec) stop 'incorrect value of nspec_CPML read'
+    do ispec=1,nspec_CPML
+! beware: elements may not be listed in increasing order, they can appear in any order
+      read(23,*) ispec_read,imat_read
+      imat(ispec_read) = imat_read
+    enddo
+    close(23)
+  endif
 
   do ispec=1,nspec
     val_color = imat(ispec) ! use material property read to color the elements

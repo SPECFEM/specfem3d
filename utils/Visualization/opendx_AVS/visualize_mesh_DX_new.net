@@ -1,5 +1,5 @@
 //
-// time: Mon Apr  8 02:25:28 2013
+// time: Mon Apr  8 03:59:30 2013
 //
 // version: 3.2.0 (format), 4.4.4 (DX)
 //
@@ -101,13 +101,13 @@ main_Collect_1_out_1 =
     // node Image[2]: x = 192, y = 540, inputs = 49, label = Image
     // input[1]: defaulting = 0, visible = 0, type = 67108863, value = "Image_2"
     // input[4]: defaulting = 0, visible = 0, type = 1, value = 1
-    // input[5]: defaulting = 0, visible = 0, type = 8, value = [67000 67000 -30000]
-    // input[6]: defaulting = 0, visible = 0, type = 8, value = [430621 -380714 207366]
-    // input[7]: defaulting = 0, visible = 0, type = 5, value = 334244.0
+    // input[5]: defaulting = 0, visible = 0, type = 8, value = [61302.4 66055.3 -23053.7]
+    // input[6]: defaulting = 0, visible = 0, type = 8, value = [424923 -381659 214312]
+    // input[7]: defaulting = 0, visible = 0, type = 5, value = 265713.0
     // input[8]: defaulting = 0, visible = 0, type = 1, value = 1073
     // input[9]: defaulting = 0, visible = 0, type = 5, value = 0.600652
     // input[10]: defaulting = 0, visible = 0, type = 8, value = [-0.103508 0.398975 0.911101]
-    // input[11]: defaulting = 1, visible = 0, type = 5, value = 30.0
+    // input[11]: defaulting = 1, visible = 0, type = 5, value = 24.0498
     // input[12]: defaulting = 0, visible = 0, type = 1, value = 0
     // input[14]: defaulting = 0, visible = 0, type = 1, value = 1
     // input[15]: defaulting = 0, visible = 0, type = 32, value = "none"
@@ -116,8 +116,8 @@ main_Collect_1_out_1 =
     // input[18]: defaulting = 0, visible = 0, type = 1, value = 1
     // input[19]: defaulting = 0, visible = 0, type = 1, value = 1
     // input[22]: defaulting = 0, visible = 0, type = 32, value = "black"
-    // input[25]: defaulting = 0, visible = 0, type = 32, value = "/home/latychev/boo"
-    // input[26]: defaulting = 0, visible = 0, type = 32, value = "eps gray dpi=86 orient=portrait"
+    // input[25]: defaulting = 0, visible = 0, type = 32, value = "mesh_CPML_OK.tiff"
+    // input[26]: defaulting = 0, visible = 0, type = 32, value = "tiff"
     // input[29]: defaulting = 0, visible = 0, type = 3, value = 0
     // input[33]: defaulting = 0, visible = 0, type = 3, value = 1
     // input[36]: defaulting = 0, visible = 0, type = 3, value = 1
@@ -536,9 +536,9 @@ macro Image(
 main_Image_2_in_1 = "Image_2";
 main_Image_2_in_3 = "X24,,";
 main_Image_2_in_4 = 1;
-main_Image_2_in_5 = [67000 67000 -30000];
-main_Image_2_in_6 = [430621 -380714 207366];
-main_Image_2_in_7 = 334244.0;
+main_Image_2_in_5 = [61302.4 66055.3 -23053.7];
+main_Image_2_in_6 = [424923 -381659 214312];
+main_Image_2_in_7 = 265713.0;
 main_Image_2_in_8 = 1073;
 main_Image_2_in_9 = 0.600652;
 main_Image_2_in_10 = [-0.103508 0.398975 0.911101];
@@ -555,8 +555,8 @@ main_Image_2_in_20 = NULL;
 main_Image_2_in_21 = NULL;
 main_Image_2_in_22 = "black";
 main_Image_2_in_23 = NULL;
-main_Image_2_in_25 = "/home/latychev/boo";
-main_Image_2_in_26 = "eps gray dpi=86 orient=portrait";
+main_Image_2_in_25 = "mesh_CPML_OK.tiff";
+main_Image_2_in_26 = "tiff";
 main_Image_2_in_27 = NULL;
 main_Image_2_in_28 = NULL;
 main_Image_2_in_29 = 0;
