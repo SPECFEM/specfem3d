@@ -13,8 +13,8 @@ i.e. a total of 36 x 36 x 16 = 20736 elements.
  *** Ymin and Ymax of the model =   0.   134000. m
  *** Zmin and Zmax of the model =   -60000. m    0.
 
- *** Max element size =    3750 m
- *** Min element size =    3722.219 m
+ *** Max element size =    3750 m  along Z
+ *** Min element size =    3722.219 m  along X and Y
  *** Max/min ratio =    1.007464
 
 
