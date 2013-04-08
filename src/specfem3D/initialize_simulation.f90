@@ -135,6 +135,7 @@
 
   ! reads in numbers of spectral elements and points for this process' domain
   call create_name_database(prname,myrank,LOCAL_PATH)
+  if (USE_VADIM) call create_name_database(dsmname,myrank,TRAC_PATH)  !! VM VM 
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
         action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then

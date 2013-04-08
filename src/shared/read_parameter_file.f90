@@ -171,7 +171,7 @@
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
   if(err_occurred() /= 0) return
   !! VM VM read the traction path directory
-  if (USE_DSM) then
+  if (USE_VADIM) then
      call read_value_string(TRAC_PATH, 'TRAC_PATH')
      if(err_occurred() /= 0) return
   end if

@@ -375,6 +375,15 @@
           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (USE_VADIM) then
+     ! VM for DSM/SEM Hybrid method
+     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old',&
+          action='read',form='unformatted',iostat=ier)
+     open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old',&
+          action='read',form='unformatted',iostat=ier)
+  end if
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
   if( num_abs_boundary_faces > 0 ) then
     read(27) abs_boundary_ispec

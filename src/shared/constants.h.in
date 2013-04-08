@@ -430,4 +430,4 @@
 
 ! vadim tests
    logical, parameter :: USE_VADIM=.true.
-
+   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100 

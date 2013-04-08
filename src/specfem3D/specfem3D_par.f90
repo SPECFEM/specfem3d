@@ -86,6 +86,9 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
+! VM for DSM/SEM Hybrid method
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary,Tract_dsm_boundary
+
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa !ZN
   character(len=256) prname_Q
