@@ -41,10 +41,9 @@
   print *,'of a constant thickness.'
   print *,'The thickness can be different between the X, Y and Z sides. But for X it must not vary,'
   print *,'for Y it must not vary, and for Z it must not vary.'
-  print *,'If you do not know the exact thickness, or if you think the thickness may have tiny variations,'
-  print *,'for instance due to roundoff issues when exporting the mesh, you can use a slightly LARGER value'
-  print *,'in this code (say 2% to 5% more), and this code will fix that and will adjust it; never use'
-  print *,'a SMALLER value otherwise this code will miss some CPML elements.'
+  print *,'If you do not know the exact thickness, you can use a slightly LARGER value'
+  print *,'in this code (say 2% to 5% more) and this code will fix that and will adjust it;'
+  print *,'never use a SMALLER value otherwise this code will miss some CPML elements.'
   print *
   print *,'Note: in a future release we will remove the constraint of having CPML layers aligned with the'
   print *,'coordinate axes; we will allow for meshes that are titled by any constant angle in the horizontal plane.'
