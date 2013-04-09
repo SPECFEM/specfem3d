@@ -34,7 +34,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                                     K_store_x,K_store_y,K_store_z,alpha_store,CPML_to_spec, &
                                     CPML_width,CPML_width_x,CPML_width_y,CPML_width_z,NPOWER,K_MAX_PML, &
                                     CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
-                                    IMAIN,FOUR_THIRDS,CPML_REGIONS,f0_FOR_PML,PI
+                                    IMAIN,FOUR_THIRDS,CPML_REGIONS,f0_FOR_PML,PI, &
+                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   use create_regions_mesh_ext_par, only: kappastore,mustore,rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic
 
