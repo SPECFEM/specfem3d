@@ -40,7 +40,8 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
   use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,ispec_is_acoustic
   use pml_par, only: NSPEC_CPML,rmemory_displ_elastic,rmemory_potential_acoustic,CPML_regions,spec_to_CPML,alpha_store, &
                      d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,potential_dot_dot_acoustic_CPML
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
+                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 

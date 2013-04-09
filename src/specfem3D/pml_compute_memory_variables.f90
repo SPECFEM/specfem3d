@@ -40,7 +40,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic
   use pml_par
-  use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
+                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
