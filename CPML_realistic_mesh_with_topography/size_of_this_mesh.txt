@@ -1,0 +1,5 @@
+
+ Xmin and Xmax of the mesh =    280000.        345600.
+ Ymin and Ymax of the mesh =    3621400.       3685100.
+ Zmin and Zmax of the mesh =   -72600.        -685.4874
+
