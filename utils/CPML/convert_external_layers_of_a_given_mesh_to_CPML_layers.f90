@@ -30,6 +30,15 @@
 ! to make sure coordinate roundoff problems do not occur, use a tolerance of 1.5%
   real, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.015
 
+! flags for the seven CPML regions
+  integer, parameter :: CPML_X_ONLY = 1
+  integer, parameter :: CPML_Y_ONLY = 2
+  integer, parameter :: CPML_Z_ONLY = 3
+  integer, parameter :: CPML_XY_ONLY = 4
+  integer, parameter :: CPML_XZ_ONLY = 5
+  integer, parameter :: CPML_YZ_ONLY = 6
+  integer, parameter :: CPML_XYZ = 7
+
   print *
   print *,'IMPORTANT: it is your responsibility to make sure that in the input CUBIT (or similar) mesh'
   print *,'that this code will read in SPECFEM3D format from files "nodes_coords_file" and "mesh_file"'
@@ -196,28 +205,28 @@
 ! write the total number of unique CPML elements
   write(23,*) number_of_CPML_elements
 
-! write the encoded CPML flag for each CPML element
+! write the CPML flag for each CPML element
   do ispec=1,nspec
     if(is_X_CPML(ispec) .and. is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
-      write(23,*) ispec,' 7'  !! DK DK mettre flag CPML_XYZ
+      write(23,*) ispec,CPML_XYZ
 
     else if(is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
-      write(23,*) ispec,' 6'  !! DK DK mettre flag CPML_YZ_ONLY
+      write(23,*) ispec,CPML_YZ_ONLY
 
     else if(is_X_CPML(ispec) .and. is_Z_CPML(ispec)) then
-      write(23,*) ispec,' 5'
+      write(23,*) ispec,CPML_XZ_ONLY
 
     else if(is_X_CPML(ispec) .and. is_Y_CPML(ispec)) then
-      write(23,*) ispec,' 4'
+      write(23,*) ispec,CPML_XY_ONLY
 
     else if(is_Z_CPML(ispec)) then
-      write(23,*) ispec,' 3'
+      write(23,*) ispec,CPML_Z_ONLY
 
     else if(is_Y_CPML(ispec)) then
-      write(23,*) ispec,' 2'
+      write(23,*) ispec,CPML_Y_ONLY
 
     else if(is_X_CPML(ispec)) then
-      write(23,*) ispec,' 1'
+      write(23,*) ispec,CPML_X_ONLY
     endif
 
   enddo
