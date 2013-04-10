@@ -713,6 +713,10 @@
     allocate(kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array kappa_kl'
 
+    ! anisotropic kernels
+    allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+
     ! derived kernels
     ! density prime kernel
     allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)

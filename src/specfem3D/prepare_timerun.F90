@@ -833,6 +833,7 @@
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
       mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
       kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+      cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
 
       if ( APPROXIMATE_HESS_KL ) &
         hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
