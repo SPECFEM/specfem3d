@@ -366,7 +366,10 @@ module specfem_par_elastic
   ! adjoint kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl
-
+  
+  ! anisotropic kernels
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl
+  
   ! approximate hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
 

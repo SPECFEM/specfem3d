@@ -273,6 +273,21 @@
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
 
+!!-----------------------------------------------------------
+!!
+!! adjoint kernel outputs
+!!
+!!-----------------------------------------------------------
+
+! this parameter must be set to .true. to compute anisotropic kernels
+! in crust and mantle (related to the 21 Cij in geographical coordinates)
+! default is .false. to compute isotropic kernels (related to alpha and beta)
+  logical, parameter :: ANISOTROPIC_KL = .false.
+
+! compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
+! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
+  logical, parameter :: SAVE_TRANSVERSE_KL = .false.
+
 !------------------------------------------------------
 !----------- do not modify anything below -------------
 !------------------------------------------------------
