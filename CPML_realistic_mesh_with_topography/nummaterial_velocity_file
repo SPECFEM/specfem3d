@@ -1,5 +1,2 @@
-0   1 vol1  -->       syntax: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy
-0   2 vol2  -->       syntax: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy
-
-DK DK this file will need to be filled when we run that test next week
- 
+2   1          3400.000000          8800.000000          5176.000000    9999.00000  0
+2   2          2300.000000          4500.000000          2812.500000    9999.00000  0
