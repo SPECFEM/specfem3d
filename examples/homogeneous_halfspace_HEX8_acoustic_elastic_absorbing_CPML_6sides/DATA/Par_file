@@ -53,7 +53,7 @@ OLSEN_ATTENUATION_RATIO         = 0.05
 PML_CONDITIONS                  = .true.
 
 # C-PML top surface
-PML_INSTEAD_OF_FREE_SURFACE     = .false.
+PML_INSTEAD_OF_FREE_SURFACE     = .true.
 
 # C-PML dominant frequency
 f0_FOR_PML                      = 0.05555
