@@ -513,6 +513,10 @@
     if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
        write(IMAIN,*) '     absorbing boundary includes free surface'
     endif
+!in curent code when set PML_CONDITIONS and PML_INSTEAD_OF_FREE_SURFACE to be .true. we should also
+!provide the free_surface_file, since we need the free_surface_file to determin ibelm_top which is the
+!outer boundary of top CPML layer. Thus when set PML_CONDITIONS and PML_INSTEAD_OF_FREE_SURFACE to be .true.
+!we should suppress the following four lines.
     if( PML_INSTEAD_OF_FREE_SURFACE .and. itop /= 0 ) then
        print*,'please check Par_file/free_surface_file and recompile solver'
        stop 'error: number of free surface faces should be zero when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
