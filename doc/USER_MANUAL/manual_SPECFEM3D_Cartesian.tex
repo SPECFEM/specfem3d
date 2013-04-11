@@ -719,14 +719,24 @@ where \textbf{\texttt{domain\_ID} is 1 for acoustic and 2 for elastic or viscoel
 \end{itemize}
 
 \item [nodes\_coords\_file] Contains the point locations in Cartesian coordinates of the mesh element corners.
-\item [mesh\_file] Contains the mesh element connectivity.
-\item [free\_surface\_file] Contains the free surface connectivity. You should put both the surface of acoustic regions and of elastic regions in that file;
+\item [mesh\_file] Contains the mesh element connectivity. The hexahedral elements can have 8 or 27 nodes.\\
+See picture doc/mesh\_numbering\_convention/numbering\_convention\_27\_nodes.jpg to see\\
+in which (standard) order the points must be cited. In the case of 8 nodes, just include the first 8 points.
+\item [free\_or\_absorbing\_surface\_file\_zmax] Contains the free surface connectivity or \\
+the surface connectivity of the absorbing boundary surface at the top (Zmax), \\
+depending on whether the top surface is defined as free or absorbing in DATA/Par\_file. \\
+You should put both the surface of acoustic regions and of elastic regions in that file;
 that is, list all the element faces that constitute the surface of the model in that file.
-\item [absorbing\_surface\_file\_xmax] Contains the surface connectivity of the absorbing boundary surface at the Xmax \\(irrelevant in case of C-PML absorbing conditions).
-\item [absorbing\_surface\_file\_xmin] Contains the surface connectivity of the absorbing boundary surface at the Xmin \\(irrelevant in case of C-PML absorbing conditions).
-\item [absorbing\_surface\_file\_ymax] Contains the surface connectivity of the absorbing boundary surface at the Ymax \\(irrelevant in case of C-PML absorbing conditions).
-\item [absorbing\_surface\_file\_ymin] Contains the surface connectivity of the absorbing boundary surface at the Ymin \\(irrelevant in case of C-PML absorbing conditions).
-\item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom \\(irrelevant in case of C-PML absorbing conditions).
+\item [absorbing\_surface\_file\_xmax] Contains the surface connectivity of the absorbing boundary surface at Xmax \\(also needed in the case of C-PML absorbing conditions,
+in order for the code to be able to impose Dirichlet conditions on their outer edge).
+\item [absorbing\_surface\_file\_xmin] Contains the surface connectivity of the absorbing boundary surface at Xmin \\(also needed in the case of C-PML absorbing conditions,
+in order for the code to be able to impose Dirichlet conditions on their outer edge).
+\item [absorbing\_surface\_file\_ymax] Contains the surface connectivity of the absorbing boundary surface at Ymax \\(also needed in the case of C-PML absorbing conditions,
+in order for the code to be able to impose Dirichlet conditions on their outer edge).
+\item [absorbing\_surface\_file\_ymin] Contains the surface connectivity of the absorbing boundary surface at Ymin \\(also needed in the case of C-PML absorbing conditions,
+in order for the code to be able to impose Dirichlet conditions on their outer edge).
+\item [absorbing\_surface\_file\_bottom] Contains the surface connectivity of the absorbing boundary surface at the bottom (Zmin) \\(also needed in the case of C-PML absorbing conditions,
+in order for the code to be able to impose Dirichlet conditions on their outer edge).
 \end{description}
 
 These mesh files are needed as input files for the partitioner  \texttt{xdecompose\_mesh}
@@ -1799,7 +1809,7 @@ a script file, for instance: $\mathtt{EXAMPLES/splay\_faults/splay\_faults.py}$
 
 
 This creates several mesh files in directory $\mathtt{CUBIT/MESH/}$:
-absorbing\_surface\_file\_{*} (5 files) free\_surface\_file materials\_file
+absorbing\_surface\_file\_{*} (5 files) free\_or\_absorbing\_surface\_file\_zmax materials\_file
 mesh\_file nodes\_coords\_file nummaterial\_velocity\_file
 
 

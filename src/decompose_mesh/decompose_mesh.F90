@@ -622,7 +622,7 @@ module decompose_mesh
     print*, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
           status='old', form='formatted',iostat=ier)
     if( ier /= 0 ) then
       nspec2D_top = 0
