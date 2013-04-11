@@ -228,9 +228,6 @@
      ! checks that the sum of C-PML elements over all partitions is correct
      if( myrank == 0 .and. nspec_cpml_tot /= num_cpml ) stop 'error while summing C-PML elements over all partitions'
 
-     ! reads thickness of C-PML layers for the global mesh
-     read(IIN) CPML_width
-
      ! reads C-PML regions and C-PML spectral elements global indexing
      allocate(CPML_to_spec(nspec_cpml),stat=ier)
      if(ier /= 0) stop 'error allocating array CPML_to_spec'

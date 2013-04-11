@@ -334,7 +334,9 @@
 
   ! C-PML absorbing boundary conditions
   read(27) NSPEC_CPML
-  read(27) CPML_width
+  read(27) CPML_width_x
+  read(27) CPML_width_y
+  read(27) CPML_width_z
   if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then
      allocate(CPML_regions(NSPEC_CPML),stat=ier)
      if(ier /= 0) stop 'error allocating array CPML_regions'

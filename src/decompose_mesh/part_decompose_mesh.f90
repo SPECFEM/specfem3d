@@ -974,8 +974,8 @@ contains
   !--------------------------------------------------
   ! Write C-PML elements indices, CPML-regions and thickness of C-PML layer
   ! pertaining to iproc partition in the corresponding Database
-  !--------------------------------------------------
-  subroutine write_cpml_database(IIN_database, iproc, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
+  !-------------------------------------------------- 
+  subroutine write_cpml_database(IIN_database, iproc, nspec, nspec_cpml, CPML_to_spec, &  
                                  CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
 
     integer, intent(in)  :: IIN_database
@@ -987,8 +987,6 @@ contains
     integer, dimension(nspec_cpml), intent(in) :: CPML_regions
 
     logical, dimension(nspec), intent(in) :: CPML_mask_ibool
-
-    real(kind=CUSTOM_REAL), intent(in)  :: CPML_width
 
     integer, dimension(:), pointer :: glob2loc_elmnts
 
@@ -1010,9 +1008,6 @@ contains
        enddo
 
        write(IIN_database) nspec_cpml_local
-
-       ! writes thickness of C-PML layers for the global mesh
-       write(IIN_database) CPML_width
 
        ! writes C-PML regions and C-PML spectral elements global indexing
        do i=1,nspec_cpml

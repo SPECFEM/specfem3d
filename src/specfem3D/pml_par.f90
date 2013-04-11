@@ -53,7 +53,8 @@ module pml_par
   logical, dimension(:), allocatable :: CPML_mask_ibool
 
   ! thickness of C-PML layers
-  real(CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
+!ZN  real(CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
+  real(CUSTOM_REAL) :: CPML_width_x,CPML_width_y,CPML_width_z
 
   ! C-PML damping profile arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: d_store_x, d_store_y, d_store_z

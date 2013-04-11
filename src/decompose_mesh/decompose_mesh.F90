@@ -100,7 +100,6 @@ module decompose_mesh
   integer :: nspec_cpml
   integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
   logical, dimension(:), allocatable :: CPML_mask_ibool
-  real(kind=CUSTOM_REAL) :: CPML_width
 
   ! moho surface (optional)
   integer :: nspec2D_moho
@@ -658,7 +657,7 @@ module decompose_mesh
     if( ier /= 0 .or. .not. PML_CONDITIONS) then
        nspec_cpml = 0
     else
-       read(98,*) nspec_cpml, CPML_width
+       read(98,*) nspec_cpml
     endif
 
 ! sanity check
@@ -1083,7 +1082,7 @@ module decompose_mesh
                                   glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
        ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
-       call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
+       call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_to_spec, &
             CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
 
        ! gets number of MPI interfaces
