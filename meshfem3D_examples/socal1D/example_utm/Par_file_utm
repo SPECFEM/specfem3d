@@ -31,6 +31,7 @@ MODEL                           = default
 APPROXIMATE_OCEAN_LOAD                          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
+FULL_ATTENUATION_SOLID          = .false.
 USE_OLSEN_ATTENUATION           = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
