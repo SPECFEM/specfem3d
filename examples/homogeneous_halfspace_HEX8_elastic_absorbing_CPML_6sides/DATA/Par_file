@@ -15,7 +15,7 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 5000
+NSTEP                           = 100
 DT                              = 0.05
 
 # number of nodes for 2D and 3D shape functions for hexahedra
@@ -53,7 +53,7 @@ OLSEN_ATTENUATION_RATIO         = 0.05
 PML_CONDITIONS                  = .true.
 
 # C-PML top surface
-PML_INSTEAD_OF_FREE_SURFACE     = .false.
+PML_INSTEAD_OF_FREE_SURFACE     = .true.
 
 # C-PML dominant frequency
 f0_FOR_PML                      = 0.05555
