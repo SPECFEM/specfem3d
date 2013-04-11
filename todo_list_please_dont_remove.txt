@@ -33,13 +33,6 @@ Thus we should make sure that all these arrays are taken into account in the mem
 CPML :
 ------------------------------------------------
 
-- suggestion 33:
-----------------
-
-DK DK new suggestion by Dimitri, Jan 2013: now that C-PML is implemented for forward runs, make it work for adjoint runs as well
-(more precisely, the problem is just to reinject the right boundary conditions at the entrance of the PML when we undo the forward run
-in the second set of simulations, starting from the last time frame and going backwards)
-
 
 - suggestion 19:
 ----------------
@@ -153,9 +146,6 @@ significantly since Brian wrote that routine)
 probably not urgent (in our group at least we almost always use the full Earth or else a chunk of size 90 x 90 degrees); but if
 other users change that the current code will likely blow up
 
-Jo could maybe do it in a few months, once all the other items and suggestions are implemented; he should probably then contact
-Brian (I do not know if Brian still uses SPECFEM)
-
 
 ------------------------------------------------
 re-constructing wavefields:
@@ -177,24 +167,6 @@ equivalent to the current behavior?
 
 Feedback from Qinya: The way I implemented this was for simplicity. It was just easier to write every step the absorbing boundary term and then read it back in reverse order in the kernel calculation. But obviously you can write in 50-step chunks, and read them back in 50-step chunks as well (make sure you still apply them in the reverse time order). We may have to be careful of the sizes of storage variables so they are not exceedingly large for some slices. For example, a model of 3x3 slices, slice 0 will have 2 absorbing boundary sides, slice 1 will have 1 a.b. side, while slice 4 will have no a.b.  We can make it a default option, but giving users the choice of 50 or 100 is just going to make the Par_file even more confusing. We could easily estimate a number from the max number of adjoint boundary elements in all slices.
 
-- suggestion 26:
-----------------
-
-Zhinan will try to back-propagate some waves in 1D with viscoelasticity;
-
-Jeroen, Qinya, Zhinan and I discussed that a few months ago, some of us think the backward run is unstable when undoing attenuation but Zhinan remembers seeing some stable backward runs with a C viscous damping matrix in mechanical engineering at his institute in China, therefore it is worth trying using SPECFEM1D for instance.
-
-(in 2D we could avoid this problem by saving all the timesteps of the forward run to disk and reading them back, but in 3D is it not possible yet because the amount of I/Os would be too big; this should change in 5 to 10 years, but for now we still need to back-propagate when SIMULATION_TYPE = 3 in 3D)
-
-------------------------------------------------
-time schemes:
-------------------------------------------------
-
-- suggestion 30:
-----------------
-
-Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme).
-
 
 ------------------------------------------------
 workflow inverse schemes:
@@ -210,16 +182,6 @@ Currently many users complain that computing sensitivity kernels is easy with SP
 One thing we should do quickly for sure is make sure we maintain the current tools of SPECFEM3D inside the same directory as SPECFEM3D itself; it seems that currently everything is outside, in an "ADJOINT_TOMO" directory, which is thus not downloaded by users when they get SPECFEM3D through SVN or from the CIG tar file; which is problematic.
 
 ==================
-
-Zhinan should clean and improve the tools to solve actual inverse problems once the sensitivity kernels are created by the code;
-i.e. how to efficiently solve the linear systems, what kind of tools to use, how to make them more flexible, more user friendly,
-maybe semi-automatic or at least easier to use
-
-this should be one of the main goals of Zhinan's stay at Princeton, as we discussed
-
-Zhinan has now defined 12 sub-steps that can be used to split the work needed to solve an inverse problem into sub-tasks.
-We can problably then document these 12 sub-steps in the users manual and use some corresponding sub-directories, one per sub-step,
-to put all the tools necessary for each of these sub-steps.
 
 Later, in a few months, maybe also see if compression (wavelets?) could help
 
@@ -267,6 +229,16 @@ limitation (of hybrid models in general, not of the above approach): if GPUs are
 probably not very useful and using the GPUs only is probably sufficient because using the CPUs in addition will result in a gain of
 a few percent only;
 maybe not worth doing it
+
+
+------------------------------------------------
+time schemes:
+------------------------------------------------
+
+- suggestion 30:
+----------------
+
+Regarding the implicit time schemes that Zhinan has implemented in 2D, I agree that it would be great to put that in the official SVN version relatively soon to avoid losing the changes if we wait for too long. But I think we only need this in 2D for now, so let us not do it in 3D (at least for now in 2012). Let us just commit Zhinan's 2D version of the implicit routines to the official SVN code (making it off by default; the default should remain a purely explicit second-order Newmark scheme).
 
 
 ------------------------------------------------
@@ -647,6 +619,14 @@ see with Zhinan if he thinks this should be done in SPECFEM3D and SPECFEM3D_GLOB
 should probably not be a high priority; PML and other things are more urgent
 
 
+- suggestion 26:
+----------------
+
+Zhinan will try to back-propagate some waves in 1D with viscoelasticity;
+
+Jeroen, Qinya, Zhinan and I discussed that a few months ago, some of us think the backward run is unstable when undoing attenuation but Zhinan remembers seeing some stable backward runs with a C viscous damping matrix in mechanical engineering at his institute in China, therefore it is worth trying using SPECFEM1D for instance.
+
+(in 2D we could avoid this problem by saving all the timesteps of the forward run to disk and reading them back, but in 3D is it not possible yet because the amount of I/Os would be too big; this should change in 5 to 10 years, but for now we still need to back-propagate when SIMULATION_TYPE = 3 in 3D)
 
 
 - suggestion 00: about VERCE project modifications
@@ -1162,4 +1142,11 @@ Add QKappa attenuation in solids and in fluids, in addition to Qmu
 ----------------
 
 Add Deville for acoustic media; currently there is Deville for viscoelastic media only:  done by Dimitri in March 2013
+
+- suggestion 33:
+----------------
+
+DK DK new suggestion by Dimitri, Jan 2013: now that C-PML is implemented for forward runs, make it work for adjoint runs as well
+(more precisely, the problem is just to reinject the right boundary conditions at the entrance of the PML when we undo the forward run
+in the second set of simulations, starting from the last time frame and going backwards)
 
