@@ -37,7 +37,7 @@
   integer :: myrank
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
+  real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
                         c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
   real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
@@ -114,7 +114,8 @@
           kyz = 0._CUSTOM_REAL
           kzz = 0._CUSTOM_REAL
 
-          qmu_atten = 0._CUSTOM_REAL
+          qkappa_atten = 9999._CUSTOM_REAL
+          qmu_atten = 9999._CUSTOM_REAL
 
           c11 = 0._CUSTOM_REAL
           c12 = 0._CUSTOM_REAL
@@ -157,7 +158,7 @@
                                undef_mat_prop,nundefMat_ext_mesh, &
                                imaterial_id,imaterial_def, &
                                xmesh,ymesh,zmesh, &
-                               rho,vp,vs,qmu_atten,idomain_id, &
+                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                                rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                                phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
                                c11,c12,c13,c14,c15,c16, &
@@ -180,6 +181,7 @@
             mustore(i,j,k,ispec) = rho*vs*vs
 
             ! attenuation
+            qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
             qmu_attenuation_store(i,j,k,ispec) = qmu_atten
 
             ! Stacey, a completer par la suite
@@ -345,7 +347,7 @@
                              undef_mat_prop,nundefMat_ext_mesh, &
                              imaterial_id,imaterial_def, &
                              xmesh,ymesh,zmesh, &
-                             rho,vp,vs,qmu_atten,idomain_id, &
+                             rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
                              rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                              phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
                              c11,c12,c13,c14,c15,c16, &
@@ -367,7 +369,7 @@
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
-  real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
+  real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
 
   integer :: idomain_id
 
@@ -401,13 +403,14 @@
                           imaterial_id,imaterial_def, &
                           xmesh,ymesh,zmesh, &
                           rho,vp,vs, &
-                          iflag_aniso,qmu_atten,idomain_id, &
+                          iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                           rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
   case( IMODEL_1D_PREM )
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_PREM_PB )
     ! 1D model profile from PREM modified by Piero
@@ -418,27 +421,31 @@
     ! sets acoustic/elastic domain as given in materials properties
     iundef = - imaterial_id    ! iundef must be positive
     read(undef_mat_prop(6,iundef),*) idomain_id
+    qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_CASCADIA )
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_1D_SOCAL )
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_SALTON_TROUGH )
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    qkappa_atten = 9999.  ! undefined in this model
 
   case( IMODEL_TOMO )
     ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,imaterial_id)
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
 
   case( IMODEL_USER_EXTERNAL )
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
-    call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,iflag_aniso,idomain_id)
+    call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
 
   case default
     stop 'error: model not implemented yet'

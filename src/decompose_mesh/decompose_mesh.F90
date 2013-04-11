@@ -132,7 +132,7 @@ module decompose_mesh
   character(len=256) :: outputpath_name
 
   integer :: aniso_flag,idomain_id
-  double precision :: vp,vs,rho,qmu
+  double precision :: vp,vs,rho,qkappa,qmu
 ! poroelastic parameters read in a new file
   double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
@@ -255,7 +255,7 @@ module decompose_mesh
   !
   ! note: format of nummaterial_velocity_file must be
   !
-  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_mu  #(7)anisotropy_flag
+  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_kappa   #(7)Q_mu  #(8)anisotropy_flag
   !
   ! where
   !     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
@@ -263,7 +263,8 @@ module decompose_mesh
   !     rho                : density
   !     vp                 : P-velocity
   !     vs                 : S-velocity
-  !     Q_mu               : 0=no attenuation
+  !     Q_kappa            : 9999 = no Q_kappa attenuation
+  !     Q_mu               : 9999 = no Q_mu attenuation
   !     anisotropy_flag    : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
   ! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id,
   ! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT
@@ -342,7 +343,6 @@ module decompose_mesh
        ! material definitions
        !
        ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
-       !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_mu #(5) anisotropy_flag
        !
        ! reads lines until it reaches a defined material
        num_mat = -1
@@ -353,17 +353,25 @@ module decompose_mesh
        if( ier /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
 
        ! reads in defined material properties
-       read(line,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
+       read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+
+       ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
+       ! if users have used 0 to indicate that instead
+       if(qkappa <= 0.000001) qkappa = 9999.
+       if(qmu <= 0.000001) qmu = 9999.
 
        ! checks material_id bounds
        if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
 
-       if(idomain_id == 1 .or. idomain_id == 2) then
-         ! material is elastic or acoustic
+       if(idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
 
          ! check that the S-wave velocity is zero if the material is acoustic
          if(idomain_id == 1 .and. vs >= 0.0001) &
                 stop 'acoustic material defined with a non-zero shear-wave velocity Vs, exiting...'
+
+         ! check that the S-wave velocity is not zero if the material is elastic
+         if(idomain_id == 2 .and. vs <= 0.0001) &
+                stop '(visco)elastic material defined with a zero shear-wave velocity Vs, exiting...'
 
          mat_prop(1,num_mat) = rho
          mat_prop(2,num_mat) = vp
@@ -371,9 +379,10 @@ module decompose_mesh
          mat_prop(4,num_mat) = qmu
          mat_prop(5,num_mat) = aniso_flag
          mat_prop(6,num_mat) = idomain_id
+         mat_prop(7,num_mat) = qkappa  ! this one is not stored next to qmu for historical reasons, because it was added later
 
-       else
-         ! material is poroelastic
+       else if(idomain_id == 3) then ! material is poroelastic
+
          if( use_poroelastic_file .eqv. .false. ) stop 'error poroelastic material requires nummaterial_poroelastic_file'
 
          read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
@@ -394,7 +403,10 @@ module decompose_mesh
          mat_prop(15,num_mat) = kappafr
          mat_prop(16,num_mat) = mufr
 
-       endif !if(idomain_id == 1 .or. idomain_id == 2)
+       else
+         stop 'idomain_id must be 1, 2 or 3 for acoustic, elastic or poroelastic in nummaterial_velocity_file'
+
+       endif ! of if(idomain_id == ...)
 
     enddo
 
@@ -411,9 +423,6 @@ module decompose_mesh
        !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
-       !   - for C-PML absorbing boundaries
-       !    #(6) material_domain_id #(1) material_id(<= -2000) #(2) rho #(3) vp #(4) vs
-       !        example:     2 -2001 2300.0 2800.0 1500.0
        ! reads lines until it reaches a defined material
        num_mat = 1
        do while( num_mat >= 0 .and. ier == 0 )
@@ -422,7 +431,7 @@ module decompose_mesh
        enddo
        if( ier /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
 
-       ! checks if interface, tomography or C-PML definition
+       ! checks if interface or tomography definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
        read(undef_mat_prop(1,imat),*) num_mat
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
@@ -435,11 +444,6 @@ module decompose_mesh
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
-       elseif( num_mat <= -2001 .and. num_mat >= -2007 ) then
-         ! line will have 5 arguments, e.g.: 2 -2001 2300.0 2800.0 1500.0
-         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-                     undef_mat_prop(3,imat),undef_mat_prop(4,imat)
-         undef_mat_prop(5,imat) = "0" ! dummy value
        else
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
        endif
@@ -450,9 +454,6 @@ module decompose_mesh
                stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
           if(num_mat /= -imat)  &
                stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."
-       else
-          if(num_mat > -2001 .or. num_mat < -2007) &
-               stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
        endif
 
        ! checks interface: flag_down/flag_up

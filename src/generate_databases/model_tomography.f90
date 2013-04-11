@@ -327,7 +327,7 @@ end subroutine init_tomography_files
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qmu_atten,imaterial_id)
+  subroutine model_tomography(xmesh,ymesh,zmesh,rho_model,vp_model,vs_model,qkappa_atten,qmu_atten,imaterial_id)
 
   use tomography_par
   use generate_databases_par, only: undef_mat_prop,nundefMat_ext_mesh
@@ -338,7 +338,7 @@ end subroutine init_tomography_files
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
-  real(kind=CUSTOM_REAL), intent(out) :: qmu_atten
+  real(kind=CUSTOM_REAL), intent(out) :: qkappa_atten,qmu_atten
 
   real(kind=CUSTOM_REAL), intent(out) :: vp_model,vs_model,rho_model
 
@@ -558,6 +558,9 @@ end subroutine init_tomography_files
      qmu_atten = ATTENUATION_COMP_MAXIMUM
 
   endif
+
+!! DK DK Q_kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
+  qkappa_atten = 9999.
 
   end subroutine model_tomography
 
