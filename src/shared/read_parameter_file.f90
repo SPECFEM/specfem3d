@@ -124,10 +124,6 @@
   if(err_occurred() /= 0) return
   call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'model.OLSEN_ATTENUATION_RATIO')
   if(err_occurred() /= 0) return
-  call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'solver.STACEY_ABSORBING_CONDITIONS')
-  if(err_occurred() /= 0) return
-  call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'model.STACEY_INSTEAD_OF_FREE_SURFACE')
-  if(err_occurred() /= 0) return
   call read_value_logical(PML_CONDITIONS, 'solver.PML_CONDITIONS')
   if(err_occurred() /= 0) return
   call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'model.PML_INSTEAD_OF_FREE_SURFACE')
@@ -138,6 +134,10 @@
   !if(err_occurred() /= 0) return
   !call read_value_double_precision(ROTATE_PML_ANGLE, 'solver.ROTATE_PML_ANGLE')
   !if(err_occurred() /= 0) return
+  call read_value_logical(STACEY_ABSORBING_CONDITIONS, 'solver.STACEY_ABSORBING_CONDITIONS')
+  if(err_occurred() /= 0) return
+  call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'model.STACEY_INSTEAD_OF_FREE_SURFACE')
+  if(err_occurred() /= 0) return
   call read_value_logical(CREATE_SHAKEMAP, 'solver.CREATE_SHAKEMAP')
   if(err_occurred() /= 0) return
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
