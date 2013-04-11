@@ -206,8 +206,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   xoriginleft   = x_min_all + CPML_width_x_left_max_all
   xoriginright  = x_max_all - CPML_width_x_right_max_all
-  yoriginback   = y_min_all + CPML_width_y_front_max_all
-  yoriginfront  = y_max_all - CPML_width_y_back_max_all
+  yoriginback   = y_min_all + CPML_width_y_back_max_all
+  yoriginfront  = y_max_all - CPML_width_y_front_max_all
   zoriginbottom = z_min_all + CPML_width_z_bottom_max_all
 
   CPML_width_x = max(CPML_width_x_left_max_all,CPML_width_x_right_max_all)
@@ -284,7 +284,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_x = 1.d0
                     endif
 
-                 else
+                 elseif( xstore(iglob) - x_origin < 0.d0 ) then 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -302,7 +302,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_x = 0.d0
                        K_x = 1.d0
                     endif
-
+                 else 
+                    stop "there is error in mesh of CPML-layer x" 
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -341,7 +342,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_y = 1.d0
                     endif
 
-                 else
+                 elseif( ystore(iglob) - y_origin < 0.d0 ) then 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
 
@@ -358,6 +359,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_y = 0.d0
                        K_y = 1.d0
                     endif
+                 else 
+                    stop "there is error in mesh of  CPML-layer y" 
 
                  endif
 
@@ -398,7 +401,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                           K_z = 1.d0
                        endif
                     endif
-                 else
+                 elseif( zstore(iglob) - z_origin < 0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
 
@@ -415,7 +418,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = 0.d0
                        K_z = 1.d0
                     endif
-
+                 else 
+                    stop "there is error in mesh of CPML-layer z" 
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -575,7 +579,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_y = 0.d0
                        K_y = 1.d0
                     endif
-
+                 else
+                    stop "there is error in mesh of CPML-layer xy" 
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -740,7 +745,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = 0.d0
                        K_z = 1.d0
                     endif
-
+                 else
+                    stop "there is error in mesh of CPML-layer xz" 
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -904,7 +910,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = 0.d0
                        K_z = 1.d0
                     endif
-
+                 else
+                    stop "there is error in mesh of CPML-layer yz" 
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -1347,7 +1354,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = 0.d0
                        K_z = 1.d0
                     endif
-
+                 else
+                    stop "there is error in mesh of CPML-layer xyz" 
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
