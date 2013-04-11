@@ -54,9 +54,10 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,ispec_is_elastic)
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,FULL_ATTENUATION_SOLID,IOUT !ZN
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,IOUT
   use pml_par
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use specfem_par, only : FULL_ATTENUATION_SOLID
 
   implicit none
 

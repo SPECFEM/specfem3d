@@ -43,7 +43,7 @@ program pre_meshfem3D
                                   STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE, &
                                   ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
                                   LOCAL_PATH,TOMOGRAPHY_PATH,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
-                                  f0_FOR_PML,IMODEL
+                                  f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID
 
   implicit none
 

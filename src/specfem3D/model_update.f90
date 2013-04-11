@@ -748,7 +748,6 @@ program model_update
   ! and store NEW model files vp_new.bin vs_new.bin rho_new.bin vp_new.vtk vs_new.vtk rho_new.vtk
   ! calling save_external_bin_m_up with SAVE_MESH_FILES=true
   ! and also write NEW attenuation files attenuation.bin and attenuation.vtk (this should be equal to the old one)
-  ! calling get_attenuation_model
   !---------------------------------------------------------------------------------------------
 
   if( myrank == 0 ) then
@@ -916,7 +915,7 @@ program model_update
 
   call sync_all()
 
-  ! calculate min_resolved_period needed for get_attenuation_model
+  ! calculate min_resolved_period needed for attenuation model
   call check_mesh_resolution(myrank,NSPEC,NGLOB,ibool,&
                             xstore,ystore,zstore, &
                             kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
@@ -934,7 +933,7 @@ program model_update
   if( ATTENUATION ) then
     call get_attenuation_model(myrank,NSPEC,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                           mustore_new,rho_vs_new,kappastore_new,rho_vp_new,qmu_attenuation_store, & !ZN
-                          ispec_is_elastic,min_resolved_period,prname_new)
+                          ispec_is_elastic,min_resolved_period,prname_new,FULL_ATTENUATION_SOLID)
   endif
 
   !----------------------------
