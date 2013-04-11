@@ -88,7 +88,7 @@
             do j = 1, NGLLY
                do i = 1, NGLLX
                   iglob = ibool(i,j,k,ispec)
-                  
+
                   epsilondev_loc(1) = epsilondev_xx(i,j,k,ispec)
                   epsilondev_loc(2) = epsilondev_yy(i,j,k,ispec)
                   epsilondev_loc(3) = epsilondev_xy(i,j,k,ispec)
@@ -441,7 +441,7 @@
   end subroutine compute_kernels_hessian
 
 !-------------------------------------------------------------------------------------------------
-! 
+!
 ! Subroutine to compute the kernels for the 21 elastic coefficients
 ! Last modified 19/04/2007
 

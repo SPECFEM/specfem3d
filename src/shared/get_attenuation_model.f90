@@ -113,7 +113,7 @@
 !
 
   subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                                  mustore,rho_vs,kappastore,rho_vp,qmu_attenuation_store, &  !ZN
+                                  mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
                                   ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
 
 ! precalculates attenuation arrays and stores arrays into files
@@ -128,10 +128,11 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: mustore
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: qkappa_attenuation_store
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: qmu_attenuation_store
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: kappastore !ZN
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp !ZN
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: kappastore
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: rho_vp
 
   logical, dimension(nspec) :: ispec_is_elastic
   real(kind=CUSTOM_REAL) :: min_resolved_period
@@ -140,19 +141,19 @@
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta_kappa  !ZN
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common_kappa !ZN
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta_kappa
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor, scale_factor_kappa
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
   double precision factor_scale_dble,one_minus_sum_beta_dble,&
                    factor_scale_dble_kappa,one_minus_sum_beta_dble_kappa
-  double precision :: Q_mu,Q_kappa,Q_p,Q_s  !ZN
+  double precision :: Q_mu,Q_kappa,Q_p,Q_s
   double precision :: f_c_source
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: beta,beta_kappa
-  real(kind=CUSTOM_REAL):: vs_val,vp_val  !ZN
+  real(kind=CUSTOM_REAL):: vs_val,vp_val
   integer :: i,j,k,ispec,ier
   double precision :: qmin,qmax,qmin_all,qmax_all
   logical :: FULL_ATTENUATION_SOLID
@@ -163,25 +164,25 @@
           scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  if(FULL_ATTENUATION_SOLID)then  !ZN
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &  !ZN
-            factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &  !ZN
-            scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)  !ZN
-    if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')  !ZN
+  if(FULL_ATTENUATION_SOLID)then
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &
+            factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
+            scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+    if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
   else
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,1), &  !ZN
-            factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,1), &  !ZN
-            scale_factor_kappa(NGLLX,NGLLY,NGLLZ,1),stat=ier)  !ZN
-    if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')  !ZN
-  endif  !ZN
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,1), &
+            factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,1), &
+            scale_factor_kappa(NGLLX,NGLLY,NGLLZ,1),stat=ier)
+    if( ier /= 0 ) call exit_mpi(myrank,'error allocation attenuation arrays')
+  endif
 
   one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
   scale_factor(:,:,:,:) = 1._CUSTOM_REAL
 
-  one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL !ZN
-  factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL !ZN
-  scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL !ZN
+  one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL
+  factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
+  scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
   ! gets stress relaxation times tau_sigma, i.e.
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
@@ -233,32 +234,30 @@
               Q_s = Q_mu
               Q_p = 1.5d0 * Q_s
               Q_kappa = 1.0d0 / ((1.0/Q_p - 4.0d0/3.0d0*(vp_val/vs_val)**2*(1.d0/Q_mu)) /(1.0d0 - 4.0d0/3.0d0*(vp_val/vs_val)**2))
-              if( Q_kappa < 1.0d0 ) Q_kappa = 1.0d0   !ZN
-              if( Q_kappa > ATTENUATION_COMP_MAXIMUM ) Q_kappa = ATTENUATION_COMP_MAXIMUM   !ZN
+              if( Q_kappa < 1.0d0 ) Q_kappa = 1.0d0
+              if( Q_kappa > ATTENUATION_COMP_MAXIMUM ) Q_kappa = ATTENUATION_COMP_MAXIMUM
             endif
           else
             ! takes Q set in (CUBIT) mesh
             Q_mu = qmu_attenuation_store(i,j,k,ispec)
-            Q_kappa = CONST_Q_KAPPA !ZN
+            Q_kappa = qkappa_attenuation_store(i,j,k,ispec)
 
             ! attenuation zero
             if( Q_mu <= 1.e-5 ) cycle
-            if( Q_kappa <= 1.e-5 ) cycle  !ZN
+            if( Q_kappa <= 1.e-5 ) cycle
 
             ! limits Q
             if( Q_mu < 1.0d0 ) Q_mu = 1.0d0
             if( Q_mu > ATTENUATION_COMP_MAXIMUM ) Q_mu = ATTENUATION_COMP_MAXIMUM
 
-            if( Q_kappa < 1.0d0 ) Q_kappa = 1.0d0   !ZN
-            if( Q_kappa > ATTENUATION_COMP_MAXIMUM ) Q_kappa = ATTENUATION_COMP_MAXIMUM   !ZN
+            if( Q_kappa < 1.0d0 ) Q_kappa = 1.0d0
+            if( Q_kappa > ATTENUATION_COMP_MAXIMUM ) Q_kappa = ATTENUATION_COMP_MAXIMUM
 
           endif
-          ! statistics
+
+          ! statistics on Q_mu
           if( Q_mu < qmin ) qmin = Q_mu
           if( Q_mu > qmax ) qmax = Q_mu
-
-          if( Q_kappa < qmin ) qmin = CONST_Q_KAPPA  !ZN
-          if( Q_kappa > qmax ) qmax = CONST_Q_KAPPA  !ZN
 
           ! gets beta, on_minus_sum_beta and factor_scale
           ! based on calculation of strain relaxation times tau_eps
@@ -280,14 +279,14 @@
           ! stores scale factor for mu moduli
           scale_factor(i,j,k,ispec) = factor_scale_dble
 
-          if(FULL_ATTENUATION_SOLID)then  !ZN
-            one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa !ZN
-            beta_kappa(:) = beta_dble_kappa(:)  !ZN
-            factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)  !ZN
+          if(FULL_ATTENUATION_SOLID)then
+            one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa
+            beta_kappa(:) = beta_dble_kappa(:)
+            factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)
 
-            ! stores scale factor for mu moduli  !ZN
-            scale_factor_kappa(i,j,k,ispec) = factor_scale_dble_kappa  !ZN
-          endif  !ZN
+            ! stores scale factor for mu moduli
+            scale_factor_kappa(i,j,k,ispec) = factor_scale_dble_kappa
+          endif
 
         enddo
       enddo
@@ -306,19 +305,19 @@
   write(27) factor_common
   write(27) scale_factor
 
-  if(FULL_ATTENUATION_SOLID)then   !ZN
-    write(27) one_minus_sum_beta_kappa   !ZN
-    write(27) factor_common_kappa   !ZN
-    write(27) scale_factor_kappa   !ZN
-  endif   !ZN
+  if(FULL_ATTENUATION_SOLID)then
+    write(27) one_minus_sum_beta_kappa
+    write(27) factor_common_kappa
+    write(27) scale_factor_kappa
+  endif
 
   close(27)
 
   deallocate(one_minus_sum_beta,factor_common,scale_factor)
 
-  if(FULL_ATTENUATION_SOLID)then     !ZN
-    deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)    !ZN
-  endif    !ZN
+  if(FULL_ATTENUATION_SOLID)then
+    deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)
+  endif
 
   ! statistics
   call min_all_dp(qmin,qmin_all)
@@ -417,7 +416,7 @@
 
   subroutine get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                               f_c_source,tau_sigma, &
-                              beta,one_minus_sum_beta,factor_scale, & 
+                              beta,one_minus_sum_beta,factor_scale, &
                               Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa,FULL_ATTENUATION_SOLID)
 
 ! returns: attenuation mechanisms beta,one_minus_sum_beta,factor_scale
@@ -436,11 +435,11 @@
 
   integer:: myrank
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
-  double precision :: f_c_source,Q_mu,Q_kappa !ZN
+  double precision :: f_c_source,Q_mu,Q_kappa
   double precision, dimension(N_SLS) :: tau_sigma
-  double precision, dimension(N_SLS) :: beta,beta_kappa !ZN
-  double precision :: one_minus_sum_beta,one_minus_sum_beta_kappa !ZN
-  double precision :: factor_scale,factor_scale_kappa !ZN
+  double precision, dimension(N_SLS) :: beta,beta_kappa
+  double precision :: one_minus_sum_beta,one_minus_sum_beta_kappa
+  double precision :: factor_scale,factor_scale_kappa
   logical :: FULL_ATTENUATION_SOLID
   ! local parameters
   double precision, dimension(N_SLS) :: tau_eps,tau_eps_kappa
@@ -456,17 +455,17 @@
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale)
 
-  if(FULL_ATTENUATION_SOLID)then  !ZN
+  if(FULL_ATTENUATION_SOLID)then
     ! determines tau_eps for Q_kappa
-    call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa, &  !ZN
-                                MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)  !ZN
+    call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa, &
+                                MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines one_minus_sum_beta
-    call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)  !ZN
+    call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)
 
     ! determines the "scale factor"
-    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa)  !ZN
-  endif  !ZN
+    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa)
+  endif
 
   end subroutine get_attenuation_factors
 

@@ -709,10 +709,15 @@ can vary inside each spectral element, i.e. be different at each of its Gauss-Lo
 \item For classical materials (i.e., spectral elements for which the velocity and density
 model will not be assigned by calling an external function to define for instance a tomographic model), the format is:
 \begin{lyxcode}
-\texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Q}  \texttt{anisotropy\_flag}
+\texttt{domain\_ID} \texttt{material\_ID}  \texttt{rho}  \texttt{vp}  \texttt{vs}  \texttt{Qkappa}  \texttt{Qmu} \texttt{anisotropy\_flag}
 \end{lyxcode}
 where \textbf{\texttt{domain\_ID} is 1 for acoustic and 2 for elastic or viscoelastic materials,}
-\texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$, \texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
+\texttt{material\_ID} a unique identifier,  \texttt{rho} the density in $kg \, m^{-3}$,  \texttt{vp} the P-wave speed in $m \, s^{-1}$,
+\texttt{vs}  the S-wave speed in $m \, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag} an identifier for anisotropic models.
+Note that the \texttt{Qkappa} value is ignored by the code unless \texttt{FULL\_ATTENUATION\_SOLID} is set.
+Note also that both \texttt{Qkappa} and \texttt{Qmu} are ignored by the code unless \texttt{ATTENUATION} is set.
+If you want a model with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to \texttt{.false.} in the \texttt{Par\_file} and set \texttt{Qmu} to 9999 here.
+If you want a model with no \texttt{Qkappa} attenuation, both set \texttt{FULL\_ATTENUATION\_SOLID} to \texttt{.false.} in the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here.
 %%magnoni
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic} `Using external tomographic Earth models' for further details.
 %
@@ -3273,7 +3278,9 @@ To implement your own external tomographic model(s), you must provide your own e
 and choose between two possible options:\\
 \indent (1) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = tomo}, \\
 or for more user control: \\
-\indent (2) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = default}, define the negative \texttt{material\_ID} identifier for each element in the file \texttt{MESH/materials\_file} and use the following format in the file \texttt{MESH/nummaterial\_velocity\_file} when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
+\indent (2) set in the \texttt{Par\_file} the model parameter \texttt{MODEL = default}, define the negative \texttt{material\_ID} identifier for each element in the file \texttt{MESH/materials\_file}
+and use the following format in the file \texttt{MESH/nummaterial\_velocity\_file}
+when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
 \begin{lyxcode}
 \texttt{domain\_ID} \texttt{material\_ID} \texttt{tomography} \texttt{elastic} \texttt{file\_name} 1
 \end{lyxcode}
@@ -3309,7 +3316,8 @@ After the first four lines, in the file \texttt{file\_name} the tomographic grid
 \end{figure}
 
 The user can implement his own interpolation algorithm for the tomography model by changing the routine \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases/} directory.
-Moreover, for models that involve both fully defined materials and a tomography description, the \texttt{nummaterial\_velocity\_file} has multiple lines each with the corresponding suitable format described above.
+Moreover, for models that involve both fully defined materials and a tomography description, the \texttt{nummaterial\_velocity\_file}
+has multiple lines each with the corresponding suitable format described above.
 
 
 \section{{\normalsize \label{sec:Anelastic-Models}}External (an)elastic Models}

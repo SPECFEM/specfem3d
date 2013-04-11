@@ -213,7 +213,7 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
 ! attenuation
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qkappa_attenuation_store,qmu_attenuation_store
 
 ! 2D shape functions and their derivatives, weights
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top

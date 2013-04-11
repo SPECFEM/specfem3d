@@ -66,15 +66,18 @@
   endif
   call sync_all()
 
-! read materials' physical properties
+! read physical properties of the materials
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
   read(IIN) nmat_ext_mesh, nundefMat_ext_mesh
 
   allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
   if( ier /= 0 ) stop 'error allocating array materials_ext_mesh'
   do imat = 1, nmat_ext_mesh
-     ! ielastic/acoustic format: #(1) rho   #(2) vp  #(3) vs  #(4) Q_flag  #(5) anisotropy_flag  #(6) material_domain_id
-     ! and remaining entries are filled with zeros
+     ! (visco)elastic or acoustic format:
+     ! #(1) rho   #(2) vp  #(3) vs  #(4) Q_mu  #(5) anisotropy_flag  #(6) material_domain_id  #(7) Q_kappa
+     ! and remaining entries are filled with zeros.
+     ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later.
+     !
      ! poroelastic format:  rhos,rhof,phi,tort,eta,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
      read(IIN) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
           materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat), &
@@ -96,8 +99,6 @@
      ! e.g.: -1 tomography elastic tomography_model.xyz 0 2
      ! format example interface:
      ! e.g.: -1 interface 14 15 0 2
-     ! format example C-PML:
-     ! e.g.: -2001 2300.0 2800.0 1500.0 0 2
      read(IIN) undef_mat_prop(1,imat),undef_mat_prop(2,imat),undef_mat_prop(3,imat),undef_mat_prop(4,imat), &
           undef_mat_prop(5,imat), undef_mat_prop(6,imat)
   end do

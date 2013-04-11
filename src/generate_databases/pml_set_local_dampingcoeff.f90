@@ -56,17 +56,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   real(kind=CUSTOM_REAL) :: xoriginleft,xoriginright,yoriginfront,yoriginback,zoriginbottom,zorigintop
   real(kind=CUSTOM_REAL) :: abscissa_in_PML_x,abscissa_in_PML_y,abscissa_in_PML_z
   real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,k_x,k_y,k_z,alpha_x,alpha_y,alpha_z
-  real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all,& 
+  real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all,&
                             x_max,x_max_all,y_max,y_max_all,z_max,z_max_all,&
                             x_origin,y_origin,z_origin
   real(kind=CUSTOM_REAL) :: CPML_width_x_left, CPML_width_x_right,&
-                            CPML_width_y_front,CPML_width_y_back,& 
+                            CPML_width_y_front,CPML_width_y_back,&
                             CPML_width_z_top,CPML_width_z_bottom,&
                             CPML_x_left, CPML_x_right,&
-                            CPML_y_front,CPML_y_back,& 
+                            CPML_y_front,CPML_y_back,&
                             CPML_z_top,CPML_z_bottom,&
                             CPML_width_x_left_max_all, CPML_width_x_right_max_all,&
-                            CPML_width_y_front_max_all,CPML_width_y_back_max_all,& 
+                            CPML_width_y_front_max_all,CPML_width_y_back_max_all,&
                             CPML_width_z_top_max_all,CPML_width_z_bottom_max_all
 
   ! stores damping profiles
@@ -100,7 +100,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ALPHA_MAX_PML = PI*f0_FOR_PML ! ELASTIC from Festa and Vilotte (2005)
   ALPHA_MAX_PML = PI*f0_FOR_PML*2.0  ! ACOUSTIC from Festa and Vilotte (2005)
 
-  x_min = minval(xstore(:)) 
+  x_min = minval(xstore(:))
   x_max = maxval(xstore(:))
   y_min = minval(ystore(:))
   y_max = maxval(ystore(:))
@@ -214,8 +214,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   CPML_width_y = max(CPML_width_y_front_max_all,CPML_width_y_back_max_all)
   CPML_width_z = max(CPML_width_z_bottom_max_all,CPML_width_z_top_max_all )
 
-  if( PML_INSTEAD_OF_FREE_SURFACE ) then 
-     zorigintop = z_max_all - CPML_width_z_top_max_all 
+  if( PML_INSTEAD_OF_FREE_SURFACE ) then
+     zorigintop = z_max_all - CPML_width_z_top_max_all
   endif
 
   ! user output
@@ -265,7 +265,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  !---------------------------- X-surface C-PML ---------------------------------
                  !------------------------------------------------------------------------------
 
-                 if( xstore(iglob) - x_origin > 0.d0 ) then 
+                 if( xstore(iglob) - x_origin > 0.d0 ) then
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
@@ -284,7 +284,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_x = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin < 0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin < 0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -302,8 +302,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_x = 0.d0
                        K_x = 1.d0
                     endif
-                 else 
-                    stop "there is error in mesh of CPML-layer x" 
+                 else
+                    stop "there is error in mesh of CPML-layer x"
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -324,7 +324,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  !---------------------------- Y-surface C-PML ---------------------------------
                  !------------------------------------------------------------------------------
 
-                 if( ystore(iglob) - y_origin > 0.d0 ) then 
+                 if( ystore(iglob) - y_origin > 0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
@@ -342,7 +342,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_y = 1.d0
                     endif
 
-                 elseif( ystore(iglob) - y_origin < 0.d0 ) then 
+                 elseif( ystore(iglob) - y_origin < 0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
 
@@ -359,8 +359,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_y = 0.d0
                        K_y = 1.d0
                     endif
-                 else 
-                    stop "there is error in mesh of  CPML-layer y" 
+                 else
+                    stop "there is error in mesh of  CPML-layer y"
 
                  endif
 
@@ -418,8 +418,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = 0.d0
                        K_z = 1.d0
                     endif
-                 else 
-                    stop "there is error in mesh of CPML-layer z" 
+                 else
+                    stop "there is error in mesh of CPML-layer z"
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -440,7 +440,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  !---------------------------- XY-edge C-PML -----------------------------------
                  !------------------------------------------------------------------------------
 
-                 if( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin>0.d0 ) then 
+                 if( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin>0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
@@ -475,7 +475,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_y = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
@@ -510,7 +510,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_y = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -545,7 +545,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_y = 1.d0
                     endif
 
-                 elseif( xstore(iglob)  - x_origin <0.d0 .and. ystore(iglob)  - y_origin <0.d0 ) then 
+                 elseif( xstore(iglob)  - x_origin <0.d0 .and. ystore(iglob)  - y_origin <0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -580,7 +580,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_y = 1.d0
                     endif
                  else
-                    stop "there is error in mesh of CPML-layer xy" 
+                    stop "there is error in mesh of CPML-layer xy"
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -602,7 +602,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  !---------------------------- XZ-edge C-PML -----------------------------------
                  !------------------------------------------------------------------------------
 
-                 if( xstore(iglob) - x_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 if( xstore(iglob) - x_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xstore(iglob) - xoriginright
@@ -639,7 +639,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
@@ -674,7 +674,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xoriginleft - xstore(iglob)
@@ -711,7 +711,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -746,7 +746,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
                  else
-                    stop "there is error in mesh of CPML-layer xz" 
+                    stop "there is error in mesh of CPML-layer xz"
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -767,7 +767,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  !---------------------------- YZ-edge C-PML -----------------------------------
                  !------------------------------------------------------------------------------
 
-                 if( ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 if( ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = ystore(iglob) - yoriginfront
@@ -804,7 +804,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then 
+                 elseif( ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
@@ -839,7 +839,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
 
-                 elseif( ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 elseif( ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = yoriginback - ystore(iglob)
@@ -876,7 +876,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then 
+                 elseif( ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
 
@@ -911,7 +911,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
                  else
-                    stop "there is error in mesh of CPML-layer yz" 
+                    stop "there is error in mesh of CPML-layer yz"
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)
@@ -931,7 +931,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                  !---------------------------- XYZ-corner C-PML --------------------------------
                  !------------------------------------------------------------------------------
 
-                 if( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 if( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xstore(iglob) - xoriginright
@@ -985,7 +985,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
@@ -1037,7 +1037,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xstore(iglob) - xoriginright
@@ -1091,7 +1091,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
@@ -1143,7 +1143,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xoriginleft - xstore(iglob)
@@ -1197,7 +1197,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -1249,7 +1249,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xoriginleft - xstore(iglob)
@@ -1303,7 +1303,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        endif
                     endif
 
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then 
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
@@ -1355,7 +1355,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        K_z = 1.d0
                     endif
                  else
-                    stop "there is error in mesh of CPML-layer xyz" 
+                    stop "there is error in mesh of CPML-layer xyz"
                  endif
 
                  !! DK DK define an alias for y and z variable names (which are the same)

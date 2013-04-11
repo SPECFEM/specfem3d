@@ -178,18 +178,18 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-             
+
             ! Store local material values
               rhol = rho_vs(i,j,k,ispec)*rho_vs(i,j,k,ispec) / mustore(i,j,k,ispec)
               mul = mustore(i,j,k,ispec)
               kappal = kappastore(i,j,k,ispec)
 
             if (ANISOTROPIC_KL) then
- 
-               cijkl_kl_local = - cijkl_kl(:,i,j,k,ispec)             
-             
+
+               cijkl_kl_local = - cijkl_kl(:,i,j,k,ispec)
+
                if (SAVE_TRANSVERSE_KL) then
-                 
+
                  ! Computes parameters for an isotropic model
                  A = kappal + FOUR_THIRDS * mul
                  C = A
@@ -197,13 +197,13 @@
                  N = mul
                  F = kappal - 2._CUSTOM_REAL/3._CUSTOM_REAL * mul
                  eta = 1._CUSTOM_REAL
-  
+
                  ! note: cijkl_kl_local() is fully anisotropic C_ij kernel components (non-dimensionalized)
                  !          for GLL point at (i,j,k,ispec)
- 
+
                  ! Purpose : compute the kernels for the An coeffs (an_kl)
                  ! from the kernels for Cij (cijkl_kl_local)
- 
+
                  ! Definition of the input array cij_kl :
                  ! cij_kl(1) = C11 ; cij_kl(2) = C12 ; cij_kl(3) = C13
                  ! cij_kl(4) = C14 ; cij_kl(5) = C15 ; cij_kl(6) = C16
@@ -215,7 +215,7 @@
                  ! where the Cij (Voigt's notation) are defined as function of
                  ! the components of the elastic tensor in spherical coordinates
                  ! by eq. (A.1) of Chen & Tromp, GJI 168 (2007)
- 
+
                  ! From the relations giving Cij in function of An
                  ! Checked with Min Chen's results (routine build_cij)
 
@@ -224,7 +224,7 @@
                  an_kl(3) = -2*cijkl_kl_local(2)+cijkl_kl_local(21)                !N
                  an_kl(4) = cijkl_kl_local(16)+cijkl_kl_local(19)                  !L
                  an_kl(5) = cijkl_kl_local(3)+cijkl_kl_local(8)                    !F
- 
+
                  ! for parameterization: ( alpha_v, alpha_h, beta_v, beta_h, eta, rho )
                  ! K_alpha_v
                  alphav_kl(i,j,k,ispec) = 2*C*an_kl(2)
@@ -246,7 +246,7 @@
                 endif ! SAVE_TRANSVERSE_KL
 
             else
-             
+
               ! isotropic kernels
 
               ! isotropic adjoint kernels (see e.g. Tromp et al. 2005)
@@ -282,7 +282,7 @@
     endif ! elastic
 
   enddo
-  
+
   if (ANISOTROPIC_KL) then
 
      ! outputs transverse isotropic kernels only
@@ -328,7 +328,7 @@
       endif
 
   else
-  
+
     ! save kernels to binary files
     open(unit=27,file=prname(1:len_trim(prname))//'rho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file rho_kernel.bin'
@@ -359,8 +359,8 @@
     if( ier /= 0 ) stop 'error opening file alpha_kernel.bin'
     write(27) alpha_kl
     close(27)
-  endif 
-  
+  endif
+
   if (SAVE_MOHO_MESH) then
     open(unit=27,file=prname(1:len_trim(prname))//'moho_kernel.bin',status='unknown',form='unformatted',iostat=ier)
     if( ier /= 0 ) stop 'error opening file moho_kernel.bin'

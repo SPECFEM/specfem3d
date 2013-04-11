@@ -115,7 +115,7 @@
 !
 
 
-  subroutine model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,iflag_aniso,idomain_id )
+  subroutine model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id )
 
 ! given a GLL point, returns super-imposed velocity model values
 
@@ -134,7 +134,7 @@
   real(kind=CUSTOM_REAL) :: vp,vs,rho
 
   ! attenuation flag
-  real(kind=CUSTOM_REAL) :: qmu_atten
+  real(kind=CUSTOM_REAL) :: qkappa_atten,qmu_atten
 
   ! anisotropy flag
   integer :: iflag_aniso
@@ -201,7 +201,10 @@
   vs = vs + 2720.d0 * depth
 
   ! attenuation: PREM crust value
-  qmu_atten=600.0d0
+  qmu_atten=600.
+
+  ! no Q_kappa in this model
+  qkappa_atten = 9999.
 
   ! no anisotropy
   iflag_aniso = 0
