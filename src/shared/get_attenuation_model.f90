@@ -114,7 +114,7 @@
 
   subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                   mustore,rho_vs,kappastore,rho_vp,qmu_attenuation_store, &  !ZN
-                                  ispec_is_elastic,min_resolved_period,prname)
+                                  ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
 
 ! precalculates attenuation arrays and stores arrays into files
 
@@ -155,6 +155,7 @@
   real(kind=CUSTOM_REAL):: vs_val,vp_val  !ZN
   integer :: i,j,k,ispec,ier
   double precision :: qmin,qmax,qmin_all,qmax_all
+  logical :: FULL_ATTENUATION_SOLID
 
   ! initializes arrays
   allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,nspec), &
@@ -263,8 +264,8 @@
           ! based on calculation of strain relaxation times tau_eps
           call get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                             f_c_source,tau_sigma_dble, &
-                            beta_dble,one_minus_sum_beta_dble,factor_scale_dble,&
-                            Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa)  !ZN
+                            beta_dble,one_minus_sum_beta_dble,factor_scale_dble, &
+                            Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa,FULL_ATTENUATION_SOLID)
 
           ! stores factor for unrelaxed parameter
           one_minus_sum_beta(i,j,k,ispec) = one_minus_sum_beta_dble
@@ -416,8 +417,8 @@
 
   subroutine get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                               f_c_source,tau_sigma, &
-                              beta,one_minus_sum_beta,factor_scale,& !ZN
-                              Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa) !ZN
+                              beta,one_minus_sum_beta,factor_scale, & 
+                              Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa,FULL_ATTENUATION_SOLID)
 
 ! returns: attenuation mechanisms beta,one_minus_sum_beta,factor_scale
 
@@ -440,9 +441,9 @@
   double precision, dimension(N_SLS) :: beta,beta_kappa !ZN
   double precision :: one_minus_sum_beta,one_minus_sum_beta_kappa !ZN
   double precision :: factor_scale,factor_scale_kappa !ZN
+  logical :: FULL_ATTENUATION_SOLID
   ! local parameters
   double precision, dimension(N_SLS) :: tau_eps,tau_eps_kappa
-
 
 
   ! determines tau_eps for Q_mu
