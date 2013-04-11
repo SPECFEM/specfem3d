@@ -1132,6 +1132,11 @@ of attenuation based upon standard linear solids.
 Please note that the Vp- and Vs-velocities of your model are given for a reference frequency.
 To change this reference frequency, you change the value of
 \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
+\item [{\texttt{FULL\_ATTENUATION\_SOLID}}] Set to \texttt{.true.} to add $Q_\kappa$ attenuation to the simulations in addition to $Q_\mu$
+attenuation when the \texttt{ATTENUATION} flag above is on.
+Should be off in almost all cases for seismic wave propagation, since $Q_\kappa$ is almost always negligible in Earth models.
+However, this parameter can be useful for instance for ocean acoustics simulations, when $Q_\kappa$ is not negligible in the solid
+layer at the sea bottom.
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you
 want to use an anisotropy model. Please see the file \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/} for the current implementation of anisotropic models.
 \item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files are stored for using external
