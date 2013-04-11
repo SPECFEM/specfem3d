@@ -32,7 +32,8 @@
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
 
-  use generate_databases_par, only: nspec_cpml,CPML_width,CPML_to_spec,CPML_regions,CPML_mask_ibool,nspec_cpml_tot, &
+  use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec,&
+                                    CPML_regions,CPML_mask_ibool,nspec_cpml_tot, &
                                     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,alpha_store, &
                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS
@@ -131,7 +132,9 @@
 
 ! C-PML absorbing boundary conditions
   write(IOUT) nspec_cpml
-  write(IOUT) CPML_width
+  write(IOUT) CPML_width_x
+  write(IOUT) CPML_width_y
+  write(IOUT) CPML_width_z
   if( nspec_cpml > 0 ) then
      write(IOUT) CPML_regions
      write(IOUT) CPML_to_spec
