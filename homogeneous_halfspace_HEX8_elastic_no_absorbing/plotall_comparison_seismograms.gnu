@@ -1,4 +1,7 @@
 
+#set term postscript color solid
+#set output "results_of_seismogram_comparison.ps"
+
 set xlabel "time (s)"
 set ylabel "displacement (m)"
 
