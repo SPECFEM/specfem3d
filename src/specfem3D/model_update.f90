@@ -166,36 +166,13 @@ program model_update
 
   call sync_all()
 
-  ! reads in parameters calling read_parameter_file and checks for some inconsistencies
+  ! reads in parameters and checks for some inconsistencies
   call initialize_simulation()
-
-  ! check
-!  if( myrank == 0 ) then
-!    print*
-!    print*,'  SAVE_MESH_FILES: ',SAVE_MESH_FILES
-!    print*,'  ANISOTROPY: ',ANISOTROPY
-!    print*,'  APPROXIMATE_OCEAN_LOAD: ',APPROXIMATE_OCEAN_LOAD
-!    print*,'  NGLLX, NGLLY, NGLLZ: ',NGLLX, NGLLY, NGLLZ
-!    print*,'  ATTENUATION: ',ATTENUATION
-!    print*,'  USE_OLSEN_ATTENUATION: ',USE_OLSEN_ATTENUATION
-!    print*
-!  endif
 
   call sync_all()
 
   ! reads in external mesh
   call read_mesh_databases()
-
-  !check
-!  if( myrank == 0 ) then
-!     print*,'NSPEC_AB            ', NSPEC_AB
-!     print*,'NGLOB_AB            ', NGLOB_AB
-!     print*,'ACOUSTIC_SIMULATION ', ACOUSTIC_SIMULATION
-!     print*,'ELASTIC_SIMULATION ', ELASTIC_SIMULATION
-!     print*,'max_nibool_interfaces_ext_mesh ',max_nibool_interfaces_ext_mesh
-!    print*
-!  endif
-
 
   !===================================================
   !===================================================
