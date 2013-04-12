@@ -457,7 +457,7 @@ scheduling policy, which will slow down the job quite a bit.
 
 \section{Compiling on an IBM BlueGene}
 
-\underline{More recent installation instruction for IBM BlueGene, from October 2012:}\\
+\underline{More recent installation instruction for IBM BlueGene, from April 2013:}\\
 
 \noindent
 Edit file \texttt{flags.guess} and put this for \texttt{FLAGS\_CHECK}:\\
@@ -485,6 +485,24 @@ Then, to configure the code, type this:\\
 
 \noindent
 \texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}\\
+
+In order for the SCOTCH domain decomposer to compile, on some (but not all) Blue Gene systems after
+running \texttt{configure} you may need to edit file src/decompose\_mesh/scotch/src/Makefile.inc and replace\\
+
+\noindent
+CCS    = bgxlc\_r \\
+\noindent
+CCD    = bgxlc\_r (or similar)\\
+
+with:
+
+\noindent
+CCS    = gcc \\
+\noindent
+CCD    = gcc \\
+
+and then type "make clean" and "make all".
+
 
 \noindent
 \underline{Older installation instruction for IBM BlueGene, from 2011:}\\
