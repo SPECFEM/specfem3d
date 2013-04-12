@@ -145,7 +145,7 @@ case $FC in
         #
         if test x"$FLAGS_CHECK" = x; then
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-            FLAGS_CHECK="-O4 -qnostrict -qsimd=auto -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-317 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax -WF,-DFORCE_VECTORIZATION"
+            FLAGS_CHECK="-O4 -qnostrict -qsimd=auto -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax -WF,-DFORCE_VECTORIZATION"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         # On IBM BlueGene at IDRIS (France) use:
         # -qtune=auto -qarch=450d -qsave     instead of -qtune=auto -qarch=auto
