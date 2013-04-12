@@ -69,13 +69,13 @@ subroutine compute_forces_viscoelastic()
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat,PML_CONDITIONS, &
+                        ATTENUATION,deltat,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
+                        one_minus_sum_beta_kappa,factor_common_kappa, & 
                         alphaval,betaval,gammaval,&
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
+                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & 
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
@@ -101,13 +101,13 @@ subroutine compute_forces_viscoelastic()
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat,PML_CONDITIONS, &
+                        ATTENUATION,deltat,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
+                        one_minus_sum_beta_kappa,factor_common_kappa, & 
                         b_alphaval,b_betaval,b_gammaval, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
+                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & 
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
@@ -440,13 +440,13 @@ subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
 !          kappastore,mustore,jacobian,ibool, &
 !          ATTENUATION,deltat, &
 !          one_minus_sum_beta,factor_common, &
-!          one_minus_sum_beta_kappa,factor_common_kappa, & !ZN
+!          one_minus_sum_beta_kappa,factor_common_kappa, & 
 !          alphaval,betaval,gammaval, &
-!          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & !ZN
-! !ZN      R_xx,R_yy,R_xy,R_xz,R_yz, &
-!          R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  !ZN
-! !ZN      epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!          epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  !ZN
+!          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & 
+!          R_xx,R_yy,R_xy,R_xz,R_yz, &
+!          R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  
+!          epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+!          epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  
 !          epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
 !          ANISOTROPY,NSPEC_ANISO, &
 !          c11store,c12store,c13store,c14store,c15store,c16store,&
