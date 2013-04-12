@@ -36,6 +36,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer nspec,myrank
   integer NSPEC2D_A_XI,NSPEC2D_B_XI

@@ -33,6 +33,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer nspec,myrank
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
@@ -138,6 +139,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer nspec,myrank
   integer NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX
@@ -367,6 +369,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
 ! generic routine that accepts any polynomial degree in each direction
 

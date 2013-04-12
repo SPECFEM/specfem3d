@@ -35,6 +35,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   ! parameters read from parameter file
   integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA

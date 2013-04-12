@@ -32,6 +32,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
@@ -660,6 +661,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
@@ -1206,6 +1208,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
