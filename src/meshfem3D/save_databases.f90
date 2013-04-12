@@ -36,6 +36,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   ! number of spectral elements in each block
   integer nspec

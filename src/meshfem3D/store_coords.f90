@@ -29,6 +29,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer ispec,nspec
 

@@ -7991,7 +7991,7 @@ fi
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files Makefile src/meshfem3D/Makefile src/meshfem3D/constants.h src/meshfem3D/precision.h src/decompose_mesh/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh/scotch/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
+ac_config_files="$ac_config_files Makefile src/meshfem3D/Makefile src/meshfem3D/precision.h src/decompose_mesh/Makefile src/specfem3D/Makefile src/generate_databases/Makefile src/shared/constants.h src/shared/precision.h src/decompose_mesh/scotch/src/Makefile.inc src/check_mesh_quality_CUBIT_Abaqus/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8624,7 +8624,6 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/meshfem3D/Makefile") CONFIG_FILES="$CONFIG_FILES src/meshfem3D/Makefile" ;;
-    "src/meshfem3D/constants.h") CONFIG_FILES="$CONFIG_FILES src/meshfem3D/constants.h" ;;
     "src/meshfem3D/precision.h") CONFIG_FILES="$CONFIG_FILES src/meshfem3D/precision.h" ;;
     "src/decompose_mesh/Makefile") CONFIG_FILES="$CONFIG_FILES src/decompose_mesh/Makefile" ;;
     "src/specfem3D/Makefile") CONFIG_FILES="$CONFIG_FILES src/specfem3D/Makefile" ;;

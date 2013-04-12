@@ -35,6 +35,7 @@
   implicit none
 
   include "constants.h"
+  include "constants_meshfem3D.h"
 
   integer myrank
   integer ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir

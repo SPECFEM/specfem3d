@@ -31,8 +31,11 @@
 
   use readParFile
   use createRegMesh
+
   implicit none
+
   include "constants.h"
+  include "constants_meshfem3D.h"
 
 !=============================================================================!
 !                                                                             !
