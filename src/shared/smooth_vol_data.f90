@@ -108,7 +108,7 @@ program smooth_vol_data
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
-  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRAC_PATH
+  character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH
   integer :: MOVIE_TYPE,IMODEL
 
   ! smoothing parameters
@@ -210,7 +210,7 @@ program smooth_vol_data
     print*,"  out dir: ",trim(outdir)
   endif
 
-  ! needs local_path for mesh files !! VM VM added TRAC_PATH
+  ! needs local_path for mesh files
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
                         UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,TOMOGRAPHY_PATH, &
                         ATTENUATION,USE_OLSEN_ATTENUATION,LOCAL_PATH,NSOURCES, &
