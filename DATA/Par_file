@@ -38,6 +38,7 @@ MODEL                           = default
 APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
+FULL_ATTENUATION_SOLID          = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
@@ -48,12 +49,6 @@ TOMOGRAPHY_PATH                 = ../DATA/tomo_files/
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
 
-# absorbing boundary conditions for a regional simulation
-STACEY_ABSORBING_CONDITIONS     = .false.
-
-# absorbing top surface (defined in mesh as 'free_surface_file')
-STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
-
 # C-PML boundary conditions for a regional simulation
 PML_CONDITIONS                  = .false.
 
@@ -63,9 +58,15 @@ PML_INSTEAD_OF_FREE_SURFACE     = .false.
 # C-PML dominant frequency
 f0_FOR_PML                      = 12.7
 
-# parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
+# parameters used to rotate C-PML boundary conditions by a given angle (not implemented yet)
 # ROTATE_PML_ACTIVATE           = .false.
 # ROTATE_PML_ANGLE              = 0.
+
+# Stacey absorbing boundary conditions for a regional simulation (obsolete, using CPML above is much better)
+STACEY_ABSORBING_CONDITIONS     = .false.
+
+# Stacey absorbing top surface (defined in mesh as 'free_surface_file') (obsolete, using CPML above is much better)
+STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
 
 # save AVS or OpenDX movies
 # MOVIE_TYPE = 1 to show the top surface

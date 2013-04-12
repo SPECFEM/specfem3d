@@ -100,7 +100,6 @@ module decompose_mesh
   integer :: nspec_cpml
   integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
   logical, dimension(:), allocatable :: CPML_mask_ibool
-  real(kind=CUSTOM_REAL) :: CPML_width
 
   ! moho surface (optional)
   integer :: nspec2D_moho
@@ -133,13 +132,12 @@ module decompose_mesh
   character(len=256) :: outputpath_name
 
   integer :: aniso_flag,idomain_id
-  double precision :: vp,vs,rho,qmu
+  double precision :: vp,vs,rho,qkappa,qmu
 ! poroelastic parameters read in a new file
   double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
   integer, parameter :: IIN_database = 15
 
-! for read_parameter_files
   double precision :: DT
   double precision :: HDUR_MOVIE,OLSEN_ATTENUATION_RATIO,f0_FOR_PML
   integer :: NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP, &
@@ -149,7 +147,7 @@ module decompose_mesh
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT, &
             USE_HIGHRES_FOR_MOVIES,SUPPRESS_UTM_PROJECTION
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
-            APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE
+            APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,USE_FORCE_POINT_SOURCE,FULL_ATTENUATION_SOLID
   logical :: STACEY_ABSORBING_CONDITIONS,SAVE_FORWARD,STACEY_INSTEAD_OF_FREE_SURFACE
   logical :: ANISOTROPY,SAVE_MESH_FILES,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   character(len=256) LOCAL_PATH,TOMOGRAPHY_PATH,TRACT_PATH !! VM VM added TRACT_PATH
@@ -177,6 +175,7 @@ module decompose_mesh
       stop 'error file open'
     endif
     read(98,*) nnodes
+    if( nnodes < 1 ) stop 'error: nnodes < 1'
     allocate(nodes_coords(3,nnodes),stat=ier)
     if( ier /= 0 ) stop 'error allocating array nodes_coords'
     do inode = 1, nnodes
@@ -205,6 +204,7 @@ module decompose_mesh
     ! sets number of elements (integer 4-byte)
     nspec = nspec_long
 
+    if( nspec < 1 ) stop 'error: nspec < 1'
     allocate(elmnts(NGNOD,nspec),stat=ier)
     if( ier /= 0 ) stop 'error allocating array elmnts'
     do ispec = 1, nspec
@@ -255,7 +255,7 @@ module decompose_mesh
   !
   ! note: format of nummaterial_velocity_file must be
   !
-  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_mu  #(7)anisotropy_flag
+  ! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_kappa   #(7)Q_mu  #(8)anisotropy_flag
   !
   ! where
   !     material_domain_id : 1=acoustic / 2=elastic / 3=poroelastic
@@ -263,7 +263,8 @@ module decompose_mesh
   !     rho                : density
   !     vp                 : P-velocity
   !     vs                 : S-velocity
-  !     Q_mu               : 0=no attenuation
+  !     Q_kappa            : 9999 = no Q_kappa attenuation
+  !     Q_mu               : 9999 = no Q_mu attenuation
   !     anisotropy_flag    : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
   ! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id,
   ! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT
@@ -342,7 +343,6 @@ module decompose_mesh
        ! material definitions
        !
        ! format: note that we save the arguments in a slightly different order in mat_prop(:,:)
-       !              #(6) material_domain_id #(0) material_id  #(1) rho #(2) vp #(3) vs #(4) Q_mu #(5) anisotropy_flag
        !
        ! reads lines until it reaches a defined material
        num_mat = -1
@@ -353,17 +353,25 @@ module decompose_mesh
        if( ier /= 0 ) stop 'error reading in defined materials in nummaterial_velocity_file'
 
        ! reads in defined material properties
-       read(line,*) idomain_id,num_mat,rho,vp,vs,qmu,aniso_flag
+       read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+
+       ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
+       ! if users have used 0 to indicate that instead
+       if(qkappa <= 0.000001) qkappa = 9999.
+       if(qmu <= 0.000001) qmu = 9999.
 
        ! checks material_id bounds
        if(num_mat < 1 .or. num_mat > count_def_mat)  stop "ERROR : Invalid nummaterial_velocity_file file."
 
-       if(idomain_id == 1 .or. idomain_id == 2) then
-         ! material is elastic or acoustic
+       if(idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
 
          ! check that the S-wave velocity is zero if the material is acoustic
          if(idomain_id == 1 .and. vs >= 0.0001) &
                 stop 'acoustic material defined with a non-zero shear-wave velocity Vs, exiting...'
+
+         ! check that the S-wave velocity is not zero if the material is elastic
+         if(idomain_id == 2 .and. vs <= 0.0001) &
+                stop '(visco)elastic material defined with a zero shear-wave velocity Vs, exiting...'
 
          mat_prop(1,num_mat) = rho
          mat_prop(2,num_mat) = vp
@@ -371,9 +379,10 @@ module decompose_mesh
          mat_prop(4,num_mat) = qmu
          mat_prop(5,num_mat) = aniso_flag
          mat_prop(6,num_mat) = idomain_id
+         mat_prop(7,num_mat) = qkappa  ! this one is not stored next to qmu for historical reasons, because it was added later
 
-       else
-         ! material is poroelastic
+       else if(idomain_id == 3) then ! material is poroelastic
+
          if( use_poroelastic_file .eqv. .false. ) stop 'error poroelastic material requires nummaterial_poroelastic_file'
 
          read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
@@ -394,7 +403,10 @@ module decompose_mesh
          mat_prop(15,num_mat) = kappafr
          mat_prop(16,num_mat) = mufr
 
-       endif !if(idomain_id == 1 .or. idomain_id == 2)
+       else
+         stop 'idomain_id must be 1, 2 or 3 for acoustic, elastic or poroelastic in nummaterial_velocity_file'
+
+       endif ! of if(idomain_id == ...)
 
     enddo
 
@@ -411,9 +423,6 @@ module decompose_mesh
        !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
-       !   - for C-PML absorbing boundaries
-       !    #(6) material_domain_id #(1) material_id(<= -2000) #(2) rho #(3) vp #(4) vs
-       !        example:     2 -2001 2300.0 2800.0 1500.0
        ! reads lines until it reaches a defined material
        num_mat = 1
        do while( num_mat >= 0 .and. ier == 0 )
@@ -422,7 +431,7 @@ module decompose_mesh
        enddo
        if( ier /= 0 ) stop 'error reading in undefined materials in nummaterial_velocity_file'
 
-       ! checks if interface, tomography or C-PML definition
+       ! checks if interface or tomography definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
        read(undef_mat_prop(1,imat),*) num_mat
        if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
@@ -435,11 +444,6 @@ module decompose_mesh
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
-       elseif( num_mat <= -2001 .and. num_mat >= -2007 ) then
-         ! line will have 5 arguments, e.g.: 2 -2001 2300.0 2800.0 1500.0
-         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
-                     undef_mat_prop(3,imat),undef_mat_prop(4,imat)
-         undef_mat_prop(5,imat) = "0" ! dummy value
        else
          stop "ERROR: invalid line in nummaterial_velocity_file for undefined material"
        endif
@@ -450,9 +454,6 @@ module decompose_mesh
                stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
           if(num_mat /= -imat)  &
                stop "ERROR : Invalid material_id in nummaterial_velocity_file for undefined materials."
-       else
-          if(num_mat > -2001 .or. num_mat < -2007) &
-               stop "ERROR : Invalid nummaterial_velocity_file for undefined materials."
        endif
 
        ! checks interface: flag_down/flag_up
@@ -512,11 +513,21 @@ module decompose_mesh
   ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
           status='old', form='formatted',iostat=ier)
+! if the file does not exist then define the number of Stacey elements as zero for this face;
+! beware that these files can also be used to set Dirichlet boundary conditions on the outer edges of CPML
+! absorbing layers for elastic elements, not only for Stacey; thus these files may exist and be non-empty
+! even when STACEY_ABSORBING_CONDITIONS is false
     if( ier /= 0 ) then
       nspec2D_xmin = 0
     else
       read(98,*) nspec2D_xmin
     endif
+! 33333333333333333333333333333333333333333
+! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
+! and can thus for instance be used as an argument in a call to a subroutine without giving any error
+! even when full range and pointer checking is used in the compiler options;
+! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
+! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
     allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
     if( ier /= 0 ) stop 'error allocating array ibelm_xmin'
     allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
@@ -612,7 +623,7 @@ module decompose_mesh
     print*, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
           status='old', form='formatted',iostat=ier)
     if( ier /= 0 ) then
       nspec2D_top = 0
@@ -630,14 +641,29 @@ module decompose_mesh
     close(98)
     print*, '  nspec2D_top = ', nspec2D_top
 
+! 33333333333333333333333333333333333333333
+! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
+! and can thus for instance be used as an argument in a call to a subroutine without giving any error
+! even when full range and pointer checking is used in the compiler options;
+! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
+! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
+
   ! reads in absorbing_cpml boundary file
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
          status='old', form='formatted',iostat=ier)
-    if( ier /= 0 ) then
+! if the file does not exist but if there are PML_CONDITIONS then stop
+    if( ier /= 0 .and. PML_CONDITIONS) &
+        stop 'error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
+! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
+    if( ier /= 0 .or. .not. PML_CONDITIONS) then
        nspec_cpml = 0
     else
-       read(98,*) nspec_cpml, CPML_width
+       read(98,*) nspec_cpml
     endif
+
+! sanity check
+    if( PML_CONDITIONS .and. nspec_cpml <= 0) &
+        stop 'error: PML_CONDITIONS is set to true but nspec_cpml <= 0 in file absorbing_cpml_file'
 
     ! C-PML spectral elements global indexing
     allocate(CPML_to_spec(nspec_cpml),stat=ier)
@@ -1057,7 +1083,7 @@ module decompose_mesh
                                   glob2loc_nodes_parts, glob2loc_nodes, part, NGNOD2D)
 
        ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
-       call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_width, CPML_to_spec, &
+       call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_to_spec, &
             CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
 
        ! gets number of MPI interfaces

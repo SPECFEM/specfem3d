@@ -45,7 +45,7 @@
     ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
     nodes_ibelm_bottom,nodes_ibelm_top, &
-    SAVE_MESH_FILES,PML_CONDITIONS, &
+    SAVE_MESH_FILES,PML_CONDITIONS,FULL_ATTENUATION_SOLID, &
     ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
     ATTENUATION,USE_OLSEN_ATTENUATION, &
     nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho
@@ -276,15 +276,15 @@
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                              mustore,rho_vs,kappastore,rho_vp,qmu_attenuation_store, &  !ZN
-                              ispec_is_elastic,min_resolved_period,prname)
+                              mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
+                              ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
   endif
 
   ! cleanup
   deallocate(xixstore,xiystore,xizstore,&
               etaxstore,etaystore,etazstore,&
               gammaxstore,gammaystore,gammazstore)
-  deallocate(jacobianstore,qmu_attenuation_store)
+  deallocate(jacobianstore,qkappa_attenuation_store,qmu_attenuation_store)
   deallocate(kappastore,mustore,rho_vp,rho_vs)
   deallocate(rho_vpI,rho_vpII,rho_vsI)
   deallocate(rhoarraystore,kappaarraystore,etastore,phistore,tortstore,permstore)
@@ -333,6 +333,9 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
   allocate(xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
   if( ier /= 0 ) stop 'error allocating array xelm etc.'
+
+  allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if( ier /= 0 ) call exit_MPI(myrank,'not enough memory to allocate arrays')

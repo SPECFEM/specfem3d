@@ -36,6 +36,25 @@
 
   implicit none
 
+!----  create a Gnuplot script to display the energy curve in log scale
+  if(output_energy .and. myrank == 0) then
+    open(unit=IOUT_ENERGY,file='plot_energy.gnu',status='unknown',action='write')
+    write(IOUT_ENERGY,*) 'set term wxt'
+    write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
+    write(IOUT_ENERGY,*) '#set output "energy.ps"'
+    write(IOUT_ENERGY,*) '# set xrange [0:60]'
+    write(IOUT_ENERGY,*) 'set logscale y'
+    write(IOUT_ENERGY,*) 'set xlabel "Time (s)"'
+    write(IOUT_ENERGY,*) 'set ylabel "Energy (J)"'
+    write(IOUT_ENERGY,'(a150)') &
+      'plot "energy.dat" us 1:4 t ''Total Energy'' w linesp lc 1, "energy.dat" us 1:3 t ''Potential Energy'' w linesp lc 2'
+    write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
+    close(IOUT_ENERGY)
+  endif
+
+! open the file in which we will store the energy curve
+  if(output_energy .and. myrank == 0) open(unit=IOUT_ENERGY,file='energy.dat',status='unknown',action='write')
+
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
@@ -70,6 +89,7 @@
     ! simulation status output and stability check
     if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) then
       call it_check_stability()
+      if(output_energy) call it_compute_total_energy()
     endif
 
     ! update displacement using Newmark time scheme
@@ -132,6 +152,9 @@
 
   ! Transfer fields from GPU card to host for further analysis
   if(GPU_MODE) call it_transfer_from_GPU()
+
+!----  close energy file
+  if(output_energy .and. myrank == 0) close(IOUT_ENERGY)
 
   end subroutine iterate_time
 
@@ -362,6 +385,217 @@
 
   end subroutine it_check_stability
 
+!=====================================================================
+
+  subroutine it_compute_total_energy()
+
+! 3333333333333333333333333333333333333333333333333
+
+! computes kinetic, potential and total energy
+! in all the slices using an MPI reduction
+! and output that to an energy file
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+  implicit none
+
+! integer :: numat
+
+! vector field in an element
+  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLX) :: vector_field_element
+
+! pressure in an element
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: pressure_element
+
+  integer :: nglob_acoustic
+
+  logical :: ATTENUATION_VISCOELASTIC_SOLID,p_sv
+
+  logical :: assign_external_model
+! double precision, dimension(2,numat) :: density
+! double precision, dimension(numat) :: porosity,tortuosity
+
+! integer :: nglob_elastic
+! real(kind=CUSTOM_REAL), dimension(3,nglob_elastic) :: displ_elastic,veloc_elastic
+
+! local variables
+  integer :: i,j,k,ispec
+
+! spatial derivatives
+  real(kind=CUSTOM_REAL) :: dux_dxi,dux_dgamma,duz_dxi,duz_dgamma
+  real(kind=CUSTOM_REAL) :: dux_dxl,duz_dxl,dux_dzl,duz_dzl
+  real(kind=CUSTOM_REAL) :: dwx_dxi,dwx_dgamma,dwz_dxi,dwz_dgamma
+  real(kind=CUSTOM_REAL) :: dwx_dxl,dwz_dxl,dwx_dzl,dwz_dzl
+
+! jacobian
+  real(kind=CUSTOM_REAL) :: xixl,xizl,gammaxl,gammazl,jacobianl
+
+  real(kind=CUSTOM_REAL) :: kinetic_energy,potential_energy
+  real(kind=CUSTOM_REAL) :: kinetic_energy_glob,potential_energy_glob
+  real(kind=CUSTOM_REAL) :: cpl,csl,rhol,mul_unrelaxed_elastic,lambdal_unrelaxed_elastic, &
+    lambdaplus2mu_unrelaxed_elastic,kappal
+
+  kinetic_energy = ZERO
+  potential_energy = ZERO
+
+! loop over spectral elements
+  do ispec = 1,NSPEC_AB
+
+
+! if element is a CPML then cycle
+! ............. YYYYYYYYYYYYY ...........
+
+
+    !---
+    !--- elastic spectral element
+    !---
+    if(ispec_is_elastic(ispec)) then
+
+      ! get relaxed elastic parameters of current spectral element
+!     lambdal_unrelaxed_elastic = poroelastcoef(1,1,kmato(ispec))
+!     mul_unrelaxed_elastic = poroelastcoef(2,1,kmato(ispec))
+!     lambdaplus2mu_unrelaxed_elastic = poroelastcoef(3,1,kmato(ispec))
+!     rhol  = density(1,kmato(ispec))
+
+      ! double loop over GLL points
+!     do j = 1,NGLLZ
+!       do i = 1,NGLLX
+
+          !--- if external medium, get elastic parameters of current grid point
+!         if(assign_external_model) then
+!           cpl = vpext(i,j,ispec)
+!           csl = vsext(i,j,ispec)
+!           rhol = rhoext(i,j,ispec)
+!           mul_unrelaxed_elastic = rhol*csl*csl
+!           lambdal_unrelaxed_elastic = rhol*cpl*cpl - TWO*mul_unrelaxed_elastic
+!           lambdaplus2mu_unrelaxed_elastic = lambdal_unrelaxed_elastic + TWO*mul_unrelaxed_elastic
+!         endif
+
+          ! derivative along x and along z
+!         dux_dxi = 0._CUSTOM_REAL
+!         duz_dxi = 0._CUSTOM_REAL
+
+!         dux_dgamma = 0._CUSTOM_REAL
+!         duz_dgamma = 0._CUSTOM_REAL
+
+          ! first double loop over GLL points to compute and store gradients
+          ! we can merge the two loops because NGLLX == NGLLZ
+!         do k = 1,NGLLX
+!           dux_dxi = dux_dxi + displ_elastic(1,ibool(k,j,ispec))*hprime_xx(i,k)
+!           duz_dxi = duz_dxi + displ_elastic(3,ibool(k,j,ispec))*hprime_xx(i,k)
+!           dux_dgamma = dux_dgamma + displ_elastic(1,ibool(i,k,ispec))*hprime_zz(j,k)
+!           duz_dgamma = duz_dgamma + displ_elastic(3,ibool(i,k,ispec))*hprime_zz(j,k)
+!         enddo
+
+!         xixl = xix(i,j,ispec)
+!         xizl = xiz(i,j,ispec)
+!         gammaxl = gammax(i,j,ispec)
+!         gammazl = gammaz(i,j,ispec)
+!         jacobianl = jacobian(i,j,ispec)
+
+          ! derivatives of displacement
+!         dux_dxl = dux_dxi*xixl + dux_dgamma*gammaxl
+!         dux_dzl = dux_dxi*xizl + dux_dgamma*gammazl
+
+!         duz_dxl = duz_dxi*xixl + duz_dgamma*gammaxl
+!         duz_dzl = duz_dxi*xizl + duz_dgamma*gammazl
+
+          ! compute kinetic energy
+!         kinetic_energy = kinetic_energy  &
+!             + rhol*(veloc_elastic(1,ibool(i,j,ispec))**2  &
+!             + veloc_elastic(3,ibool(i,j,ispec))**2) *wxgll(i)*wzgll(j)*jacobianl / TWO
+
+          ! compute potential energy
+!         potential_energy = potential_energy &
+!             + (lambdaplus2mu_unrelaxed_elastic*dux_dxl**2 &
+!             + lambdaplus2mu_unrelaxed_elastic*duz_dzl**2 &
+!             + two*lambdal_unrelaxed_elastic*dux_dxl*duz_dzl &
+!             + mul_unrelaxed_elastic*(dux_dzl + duz_dxl)**2)*wxgll(i)*wzgll(j)*jacobianl / TWO
+
+!       enddo
+!     enddo
+
+    !---
+    !--- acoustic spectral element
+    !---
+    else if(ispec_is_acoustic(ispec)) then
+
+      ! for the definition of potential energy in an acoustic fluid, see for instance
+      ! equation (23) of M. Maess et al., Journal of Sound and Vibration 296 (2006) 264-276
+
+      ! in case of an acoustic medium, a potential Chi of (density * displacement) is used as in Chaljub and Valette,
+      ! Geophysical Journal International, vol. 158, p. 131-141 (2004) and *NOT* a velocity potential
+      ! as in Komatitsch and Tromp, Geophysical Journal International, vol. 150, p. 303-318 (2002).
+      ! This permits acoustic-elastic coupling based on a non-iterative time scheme.
+      ! Displacement is then: u = grad(Chi) / rho
+      ! Velocity is then: v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
+      ! and pressure is: p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi).
+
+      ! compute pressure in this element
+!     call compute_pressure_one_element(pressure_element,potential_dot_dot_acoustic,displ_elastic, &
+!                 displs_poroelastic,displw_poroelastic,elastic,poroelastic, &
+!                 xix,xiz,gammax,gammaz,ibool,hprime_xx,hprime_zz,NSPEC_AB, &
+!                 nglob_acoustic,nglob_elastic,nglob_poroelastic,assign_external_model, &
+!                 numat,kmato,density,porosity,tortuosity,poroelastcoef,vpext,vsext,rhoext, &
+!                 c11ext,c13ext,c15ext,c33ext,c35ext,c55ext,anisotropic,anisotropy,ispec,e1,e11, &
+!                 ATTENUATION_VISCOELASTIC_SOLID,Mu_nu1,Mu_nu2,N_SLS)
+
+      ! compute velocity vector field in this element
+!     call compute_vector_one_element(vector_field_element,potential_dot_acoustic, &
+!                 veloc_elastic,velocs_poroelastic, &
+!                 elastic,poroelastic,xix,xiz,gammax,gammaz, &
+!                 ibool,hprime_xx,hprime_zz, &
+!                 NSPEC_AB,nglob_acoustic,nglob_elastic,nglob_poroelastic, &
+!                 ispec,numat,kmato,density,rhoext,assign_external_model)
+
+      ! get density of current spectral element
+!     lambdal_unrelaxed_elastic = poroelastcoef(1,1,kmato(ispec))
+!     mul_unrelaxed_elastic = poroelastcoef(2,1,kmato(ispec))
+!     rhol  = density(1,kmato(ispec))
+!     kappal  = lambdal_unrelaxed_elastic + TWO*mul_unrelaxed_elastic/3._CUSTOM_REAL
+!     cpl = sqrt((kappal + 4._CUSTOM_REAL*mul_unrelaxed_elastic/3._CUSTOM_REAL)/rhol)
+
+      ! double loop over GLL points
+!     do j = 1,NGLLZ
+!       do i = 1,NGLLX
+
+          !--- if external medium, get density of current grid point
+!         if(assign_external_model) then
+!           cpl = vpext(i,j,ispec)
+!           rhol = rhoext(i,j,ispec)
+!         endif
+
+!         jacobianl = jacobian(i,j,ispec)
+
+          ! compute kinetic energy
+!         kinetic_energy = kinetic_energy &
+!             + rhol*(vector_field_element(1,i,j)**2 &
+!             + vector_field_element(2,i,j)**2) *wxgll(i)*wzgll(j)*jacobianl / TWO
+
+          ! compute potential energy
+!         potential_energy = potential_energy &
+!             + (pressure_element(i,j)**2)*wxgll(i)*wzgll(j)*jacobianl / (TWO * rhol * cpl**2)
+
+!       enddo
+!     enddo
+
+    else
+
+      call exit_MPI(myrank,'calculation of total energy implemented for acoustic and (visco)elastic elements only for now')
+
+    endif
+
+  enddo
+
+! do a MPI_REDUCE with a MPI_SUM to compute the total
+! from kinetic_energy,potential_energy to kinetic_energy_glob,potential_energy_glob
+! ............. YYYYYYYYYYYYY ...........
+
+! write the total to disk from the master
+! if(myrank == 0) write(IOUT_ENERGY,*) temps, kinetic_energy_glob,potential_energy_glob
+
+  end subroutine it_compute_total_energy
 
 !=====================================================================
 

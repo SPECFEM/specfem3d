@@ -34,7 +34,8 @@
 
 ! determines absorbing boundaries/free-surface, 2D jacobians, face normals for Stacey conditions
 
-  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D
+  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
+                                      STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -510,12 +511,17 @@
     write(IMAIN,*) '     absorbing boundary:'
     write(IMAIN,*) '     total number of free faces = ',itop
     write(IMAIN,*) '     total number of faces = ',iabs
-    if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
-       write(IMAIN,*) '     absorbing boundary includes free surface'
+    if((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
+       (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) then
+       write(IMAIN,*) '     absorbing boundary includes free surface (i.e., top surface converted from free to absorbing)'
     endif
-    if( PML_INSTEAD_OF_FREE_SURFACE .and. itop /= 0 ) then
-       print*,'please check Par_file/free_surface_file and recompile solver'
-       stop 'error: number of free surface faces should be zero when PML_INSTEAD_OF_FREE_SURFACE is set to .true.'
+! when users set PML_CONDITIONS and PML_INSTEAD_OF_FREE_SURFACE to be .true. they should also
+! provide a non-empty free_or_absorbing_surface_file_zmax file, since we need it to determine ibelm_top(),
+! which is the outer boundary of top CPML or Stacey layer.
+    if( ((PML_CONDITIONS .and. PML_INSTEAD_OF_FREE_SURFACE) .or. &
+         (STACEY_ABSORBING_CONDITIONS .and. STACEY_INSTEAD_OF_FREE_SURFACE)) .and. itop == 0 ) then
+       print *,'the free_or_absorbing_surface_file_zmax contains no absorbing element, but Zmax absorption is turned on'
+       stop 'error: number of Zmax absorbing elements cannot be zero in free_or_absorbing_surface_file_zmax in such a case'
     endif
   endif
 

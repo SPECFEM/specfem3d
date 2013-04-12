@@ -34,7 +34,7 @@
                           undef_mat_prop,nundefMat_ext_mesh, &
                           imaterial_id,imaterial_def, &
                           xmesh,ymesh,zmesh, &
-                          rho,vp,vs,iflag_aniso,qmu_atten,idomain_id, &
+                          rho,vp,vs,iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                           rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                           phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
@@ -55,7 +55,7 @@
 
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
-  real(kind=CUSTOM_REAL) :: vp,vs,rho,qmu_atten
+  real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
 
   integer :: iflag_aniso
   integer :: idomain_id
@@ -65,7 +65,7 @@
 
   ! local parameters
   integer :: iflag,flag_below,flag_above
-  integer :: iundef,num_mat
+  integer :: iundef
 
   ! check if the material is known or unknown
   if( imaterial_id > 0 ) then
@@ -77,12 +77,13 @@
 
     select case( idomain_id )
 
-    case( IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC)
-      ! elastic or acoustic
+    case( IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC )
+      ! (visco)elastic or acoustic
 
       ! density
       ! materials_ext_mesh format:
-      ! #index1 = rho #index2 = vp #index3 = vs #index4 = Q_flag #index5 = 0
+      ! #index1 = rho #index2 = vp #index3 = vs #index4 = Q_mu #index5 = iflag_aniso   #index7 = Q_kappa
+      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
       rho = materials_ext_mesh(1,imaterial_id)
 
       ! isotropic values: vp, vs
@@ -90,6 +91,8 @@
       vs = materials_ext_mesh(3,imaterial_id)
 
       ! attenuation
+      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
+      qkappa_atten = materials_ext_mesh(7,imaterial_id)
       qmu_atten = materials_ext_mesh(4,imaterial_id)
 
       ! anisotropy
@@ -125,18 +128,6 @@
 
     end select
 
- else if ( imaterial_id <= -2001 .and. imaterial_id >= -2007 ) then
-
-    do iundef = 1,nundefMat_ext_mesh
-       read(undef_mat_prop(1,iundef),*) num_mat
-       if( num_mat == imaterial_id ) then
-          read(undef_mat_prop(2,iundef),*) rho
-          read(undef_mat_prop(3,iundef),*) vp
-          read(undef_mat_prop(4,iundef),*) vs
-          read(undef_mat_prop(6,iundef),*) idomain_id
-       endif
-    enddo
-
  else if ( imaterial_def == 1 ) then
 
     stop 'material: interface not implemented yet'
@@ -156,6 +147,8 @@
     rho = materials_ext_mesh(1,iflag)
     vp = materials_ext_mesh(2,iflag)
     vs = materials_ext_mesh(3,iflag)
+    ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
+    qkappa_atten = materials_ext_mesh(7,iflag)
     qmu_atten = materials_ext_mesh(4,iflag)
 
     iflag_aniso = nint(materials_ext_mesh(5,iflag))
@@ -166,7 +159,7 @@
     ! material definition undefined, uses definition from tomography model
 
     ! gets model values from tomography file
-    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,imaterial_id)
+    call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id)
 
     ! no anisotropy
     iflag_aniso = 0

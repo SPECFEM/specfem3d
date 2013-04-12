@@ -161,11 +161,14 @@
 ! empirical damping modified factor
   real(kind=CUSTOM_REAL), parameter :: damping_factor = 1.2d0
 
-! absorb boundaries using a PML region
-! (EXPERIMENTAL feature)
-! (only acoustic domains supported...)
-! (user parameters can be specified in PML_init.f90)
-  logical,parameter :: ABSORB_USE_PML = .false.
+! flags for the seven CPML regions
+  integer, parameter :: CPML_X_ONLY = 1
+  integer, parameter :: CPML_Y_ONLY = 2
+  integer, parameter :: CPML_Z_ONLY = 3
+  integer, parameter :: CPML_XY_ONLY = 4
+  integer, parameter :: CPML_XZ_ONLY = 5
+  integer, parameter :: CPML_YZ_ONLY = 6
+  integer, parameter :: CPML_XYZ = 7
 
 !!-----------------------------------------------------------
 !!
@@ -270,6 +273,21 @@
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
 
+!!-----------------------------------------------------------
+!!
+!! adjoint kernel outputs
+!!
+!!-----------------------------------------------------------
+
+! this parameter must be set to .true. to compute anisotropic kernels
+! in crust and mantle (related to the 21 Cij in geographical coordinates)
+! default is .false. to compute isotropic kernels (related to alpha and beta)
+  logical, parameter :: ANISOTROPIC_KL = .false.
+
+! compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
+! rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
+  logical, parameter :: SAVE_TRANSVERSE_KL = .false.
+
 !------------------------------------------------------
 !----------- do not modify anything below -------------
 !------------------------------------------------------
@@ -316,10 +334,6 @@
 ! ATTENUATION_COMP_MAXIMUM:    Maximum Q Value
   integer, parameter :: ATTENUATION_COMP_RESOLUTION = 1
   integer, parameter :: ATTENUATION_COMP_MAXIMUM    = 9000
-
-! add Q_Kappa effect (in addition to Q_mu) to viscoelastic simulation
-  logical, parameter :: FULL_ATTENUATION_SOLID = .false.
-  real(kind=CUSTOM_REAL), parameter :: CONST_Q_KAPPA = 120._CUSTOM_REAL
 
 ! reference frequency for target velocity values in velocity model
 ! arbitrarily set to typical resolution of model (3 sec)

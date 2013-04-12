@@ -26,7 +26,7 @@
 
 ! Deville routine for NGLL == 5 (default)
 
-  subroutine compute_forces_viscoelastic_Dev_5p( iphase ,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_viscoelastic_Dev_5p(iphase,NSPEC_AB,NGLOB_AB, &
                                     displ,veloc,accel, &
                                     xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                                     hprime_xx,hprime_xxT, &
@@ -38,9 +38,7 @@
                                     one_minus_sum_beta_kappa,factor_common_kappa,& !ZN
                                     alphaval,betaval,gammaval,&      !ZN
                                     NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
-!ZN                                    R_xx,R_yy,R_xy,R_xz,R_yz, &
                                     R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  !ZN
-!ZN                                    epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  !ZN
                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                     ANISOTROPY,NSPEC_ANISO, &
@@ -61,8 +59,9 @@
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                       N_SLS,SAVE_MOHO_MESH, &
-                      ONE_THIRD,FOUR_THIRDS,m1,m2,FULL_ATTENUATION_SOLID,CONST_Q_KAPPA,IOUT
+                      ONE_THIRD,FOUR_THIRDS,m1,m2,IOUT
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use specfem_par, only : FULL_ATTENUATION_SOLID
 
   implicit none
 

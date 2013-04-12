@@ -63,7 +63,7 @@
 
   logical :: ATTENUATION,USE_OLSEN_ATTENUATION,APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,SAVE_FORWARD,USE_FORCE_POINT_SOURCE
   logical :: ANISOTROPY,STACEY_ABSORBING_CONDITIONS,SAVE_MESH_FILES,STACEY_INSTEAD_OF_FREE_SURFACE
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
+  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE,FULL_ATTENUATION_SOLID
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
   logical :: MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES
 
@@ -138,8 +138,8 @@
   ! mask of C-PML elements for the global mesh
   logical, dimension(:), allocatable :: CPML_mask_ibool
 
-  ! thickness of C-PML layers
-  real(kind=CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
+  ! thickness of C-PML layers in each direction
+  real(kind=CUSTOM_REAL) :: CPML_width_x,CPML_width_y,CPML_width_z
 
   ! C-PML damping profile arrays
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: d_store_x, d_store_y, d_store_z
@@ -213,7 +213,7 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_ocean_load
 
 ! attenuation
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qmu_attenuation_store
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: qkappa_attenuation_store,qmu_attenuation_store
 
 ! 2D shape functions and their derivatives, weights
   double precision, dimension(:,:,:), allocatable :: shape2D_x,shape2D_y,shape2D_bottom,shape2D_top

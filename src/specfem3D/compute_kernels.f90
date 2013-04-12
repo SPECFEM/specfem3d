@@ -74,6 +74,7 @@
   implicit none
   ! local parameters
   integer :: i,j,k,ispec,iglob
+  real(kind=CUSTOM_REAL),dimension(21) :: prod !, cijkl_kl_local
   real(kind=CUSTOM_REAL), dimension(5) :: epsilondev_loc,b_epsilondev_loc
 
   if( .not. GPU_MODE ) then
@@ -88,21 +89,6 @@
                do i = 1, NGLLX
                   iglob = ibool(i,j,k,ispec)
 
-                  ! isotropic kernels
-                  ! note: takes displacement from backward/reconstructed (forward) field b_displ
-                  !          and acceleration from adjoint field accel (containing adjoint sources)
-                  !
-                  ! note: : time integral summation uses deltat
-                  !
-                  ! compare with Tromp et al. (2005), eq. (14), which takes adjoint displacement
-                  ! and forward acceleration, that is the symmetric form of what is calculated here
-                  ! however, this kernel expression is symmetric with regards
-                  ! to interchange adjoint - forward field
-                  rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
-                       + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
-
-                  ! kernel for shear modulus, see e.g. Tromp et al. (2005), equation (17)
-                  ! note: multiplication with 2*mu(x) will be done after the time loop
                   epsilondev_loc(1) = epsilondev_xx(i,j,k,ispec)
                   epsilondev_loc(2) = epsilondev_yy(i,j,k,ispec)
                   epsilondev_loc(3) = epsilondev_xy(i,j,k,ispec)
@@ -115,18 +101,46 @@
                   b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
                   b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
 
-                  mu_kl(i,j,k,ispec) =  mu_kl(i,j,k,ispec) &
-                       + deltat * (epsilondev_loc(1)*b_epsilondev_loc(1) + epsilondev_loc(2)*b_epsilondev_loc(2) &
-                       + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
-                       + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
-                       epsilondev_loc(5)*b_epsilondev_loc(5)) )
+                  rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
+                    + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
 
-                  ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
-                  ! note: multiplication with kappa(x) will be done after the time loop
-                  kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
-                       + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) &
-                       * b_epsilon_trace_over_3(i,j,k,ispec))
+                  ! For anisotropic kernels
+                  if (ANISOTROPIC_KL) then
 
+                    call compute_strain_product(prod,epsilon_trace_over_3(i,j,k,ispec),epsilondev_loc, &
+                                                    b_epsilon_trace_over_3(i,j,k,ispec),b_epsilondev_loc)
+                    cijkl_kl(:,i,j,k,ispec) = cijkl_kl(:,i,j,k,ispec) + deltat * prod(:)
+
+                  else
+
+                    ! isotropic kernels
+                    ! note: takes displacement from backward/reconstructed (forward) field b_displ
+                    !          and acceleration from adjoint field accel (containing adjoint sources)
+                    !
+                    !          and acceleration from adjoint field accel (containing adjoint sources)
+                    !
+                    ! note: : time integral summation uses deltat
+                    !
+                    ! compare with Tromp et al. (2005), eq. (14), which takes adjoint displacement
+                    ! and forward acceleration, that is the symmetric form of what is calculated here
+                    ! however, this kernel expression is symmetric with regards
+                    ! to interchange adjoint - forward field
+
+                    ! kernel for shear modulus, see e.g. Tromp et al. (2005), equation (17)
+                    ! note: multiplication with 2*mu(x) will be done after the time loop
+
+                    mu_kl(i,j,k,ispec) =  mu_kl(i,j,k,ispec) &
+                         + deltat * (epsilondev_loc(1)*b_epsilondev_loc(1) + epsilondev_loc(2)*b_epsilondev_loc(2) &
+                         + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
+                         + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
+                         epsilondev_loc(5)*b_epsilondev_loc(5)) )
+
+                    ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
+                    ! note: multiplication with kappa(x) will be done after the time loop
+                    kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
+                         + deltat * (9 * epsilon_trace_over_3(i,j,k,ispec) &
+                         * b_epsilon_trace_over_3(i,j,k,ispec))
+                  endif
                enddo
             enddo
          enddo
@@ -426,4 +440,65 @@
 
   end subroutine compute_kernels_hessian
 
+!-------------------------------------------------------------------------------------------------
+!
+! Subroutine to compute the kernels for the 21 elastic coefficients
+! Last modified 19/04/2007
+
+!-------------------------------------------------------------------
+  subroutine compute_strain_product(prod,eps_trace_over_3,epsdev,&
+                          b_eps_trace_over_3,b_epsdev)
+
+  ! Purpose : compute the 21 strain products at a grid point
+  ! (ispec,i,j,k fixed) and at a time t to compute then the kernels cij_kl (Voigt notation)
+  ! (eq. 15 of Tromp et al., 2005)
+  ! prod(1)=eps11*eps11 -> c11, prod(2)=eps11eps22 -> c12, prod(3)=eps11eps33 -> c13, ...
+  ! prod(7)=eps22*eps22 -> c22, prod(8)=eps22eps33 -> c23, prod(9)=eps22eps23 -> c24, ...
+  ! prod(19)=eps13*eps13 -> c55, prod(20)=eps13eps12 -> c56, prod(21)=eps12eps12 -> c66
+  ! This then gives how the 21 kernels are organized
+  ! For crust_mantle
+
+  ! Modif 09/11/2005
+
+  implicit none
+  include  "constants.h"
+
+  real(kind=CUSTOM_REAL),dimension(21) :: prod
+  real(kind=CUSTOM_REAL) :: eps_trace_over_3,b_eps_trace_over_3
+  real(kind=CUSTOM_REAL),dimension(5) :: epsdev,b_epsdev
+  real(kind=CUSTOM_REAL), dimension(6) :: eps,b_eps
+  integer :: p,i,j
+
+  ! Building of the local matrix of the strain tensor
+  ! for the adjoint field and the regular backward field
+  eps(1:2)=epsdev(1:2)+eps_trace_over_3           !eps11 et eps22
+  eps(3)=-(eps(1)+eps(2))+3*eps_trace_over_3     !eps33
+  eps(4)=epsdev(5)                                !eps23
+  eps(5)=epsdev(4)                                !eps13
+  eps(6)=epsdev(3)                                !eps12
+
+  b_eps(1:2)=b_epsdev(1:2)+b_eps_trace_over_3
+  b_eps(3)=-(b_eps(1)+b_eps(2))+3*b_eps_trace_over_3
+  b_eps(4)=b_epsdev(5)
+  b_eps(5)=b_epsdev(4)
+  b_eps(6)=b_epsdev(3)
+
+  ! Computing the 21 strain products without assuming eps(i)*b_eps(j) = eps(j)*b_eps(i)
+  p=1
+  do i=1,6
+       do j=i,6
+       prod(p)=eps(i)*b_eps(j)
+       if(j>i) then
+            prod(p)=prod(p)+eps(j)*b_eps(i)
+            if(j>3 .and. i<4) prod(p)=prod(p)*2
+       endif
+       if(i>3) prod(p)=prod(p)*4
+       p=p+1
+       enddo
+  enddo
+
+  end subroutine compute_strain_product
+
+!
+!-------------------------------------------------------------------------------------------------
 

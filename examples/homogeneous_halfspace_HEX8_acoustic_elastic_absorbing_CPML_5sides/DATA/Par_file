@@ -1,0 +1,121 @@
+# simulation input parameters
+#
+# forward or adjoint simulation
+# 1 = forward, 2 = adjoint, 3 = both simultaneously
+SIMULATION_TYPE                 = 1
+# 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
+NOISE_TOMOGRAPHY                = 0
+SAVE_FORWARD                    = .false.
+
+# UTM projection parameters
+UTM_PROJECTION_ZONE             = 11
+SUPPRESS_UTM_PROJECTION         = .true.
+
+# number of MPI processors
+NPROC                           = 4
+
+# time step parameters
+NSTEP                           = 5000
+DT                              = 0.05
+
+# number of nodes for 2D and 3D shape functions for hexahedra
+# we use either 8-node mesh elements (bricks) or 27-node elements.
+# If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported)
+# CUBIT does not support HEX27 elements either (it can generate them, but they are flat, i.e. identical to HEX8).
+# To generate HEX27 elements with curvature properly taken into account, you can use Gmsh http://geuz.org/gmsh/
+NGNOD                           = 8
+
+# models:
+# available options are:
+#   default (model parameters described by mesh properties)
+# 1D models available are:
+#   1d_prem,1d_socal,1d_cascadia
+# 3D models available are:
+#   aniso,external,gll,salton_trough,tomo
+MODEL                           = default
+
+# parameters describing the model
+APPROXIMATE_OCEAN_LOAD          = .false.
+TOPOGRAPHY                      = .false.
+ATTENUATION                     = .false.
+FULL_ATTENUATION_SOLID          = .false.
+ANISOTROPY                      = .false.
+GRAVITY                         = .false.
+
+# path for external tomographic models files
+TOMOGRAPHY_PATH                 = ../DATA/tomo_files/
+
+# Olsen's constant for Q_mu = constant * v_s attenuation rule
+USE_OLSEN_ATTENUATION           = .false.
+OLSEN_ATTENUATION_RATIO         = 0.05
+
+# C-PML boundary conditions for a regional simulation
+PML_CONDITIONS                  = .true.
+
+# C-PML top surface
+PML_INSTEAD_OF_FREE_SURFACE     = .false.
+
+# C-PML dominant frequency
+f0_FOR_PML                      = 0.05555
+
+# parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
+# ROTATE_PML_ACTIVATE           = .false.
+# ROTATE_PML_ANGLE              = 0.
+
+# absorbing boundary conditions for a regional simulation
+STACEY_ABSORBING_CONDITIONS     = .false.
+
+# absorbing top surface (defined in mesh as 'free_surface_file')
+STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
+
+# save AVS or OpenDX movies
+# MOVIE_TYPE = 1 to show the top surface
+# MOVIE_TYPE = 2 to show all the external faces of the mesh
+CREATE_SHAKEMAP                 = .false.
+MOVIE_SURFACE                   = .false.
+MOVIE_TYPE                      = 1
+MOVIE_VOLUME                    = .false.
+SAVE_DISPLACEMENT               = .false.
+USE_HIGHRES_FOR_MOVIES          = .false.
+NTSTEP_BETWEEN_FRAMES           = 200
+HDUR_MOVIE                      = 0.0
+
+# save AVS or OpenDX mesh files to check the mesh
+SAVE_MESH_FILES                 = .true.
+
+# path to store the local database file on each node
+LOCAL_PATH                      = ../OUTPUT_FILES/DATABASES_MPI
+
+# interval at which we output time step info and max of norm of displacement
+NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+
+# interval in time steps for writing of seismograms
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# interval in time steps for reading adjoint traces
+# 0 = read the whole adjoint sources at the same time
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
+# use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
+# This can be useful e.g. for oil industry foothills simulations or asteroid simulations
+# in which the source is a vertical force, normal force, inclined force, impact etc.
+# If this flag is turned on, the FORCESOLUTION file must be edited by precising:
+# - the corresponding time-shift parameter,
+# - the half duration parameter of the source,
+# - the coordinates of the source,
+# - the magnitude of the force source,
+# - the components of a (non-unitary) direction vector for the force source in the E/N/Z_UP basis.
+# The direction vector is made unitary internally in the code and thus only its direction matters here;
+# its norm is ignored and the norm of the force used is the factor force source times the source time function.
+USE_FORCE_POINT_SOURCE          = .false.
+
+# set to true to use a Ricker source time function instead of the source time functions set by default
+# to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
+USE_RICKER_TIME_FUNCTION        = .false.
+
+# print source time function
+PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+# set to true to use GPUs
+GPU_MODE                        = .false.
+

@@ -703,11 +703,6 @@
     ! local parameters
     integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
-    ! sets thickness of C-PML layers
-    CPML_width_x = CPML_width
-    CPML_width_y = CPML_width
-    CPML_width_z = CPML_width
-
     call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
     ! user output
@@ -833,6 +828,7 @@
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
       mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
       kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+      cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
 
       if ( APPROXIMATE_HESS_KL ) &
         hess_kl(:,:,:,:)   = 0._CUSTOM_REAL

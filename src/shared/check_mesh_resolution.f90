@@ -51,6 +51,9 @@
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
   real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL) :: x_min,x_max,x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL) :: y_min,y_max,y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL) :: z_min,z_max,z_min_glob,z_max_glob
   real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
   real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob,avg_distance
 
@@ -95,6 +98,15 @@
   distance_min_glob = HUGEVAL
   distance_max_glob = -HUGEVAL
 
+  x_min_glob = HUGEVAL
+  x_max_glob = -HUGEVAL
+
+  y_min_glob = HUGEVAL
+  y_max_glob = -HUGEVAL
+
+  z_min_glob = HUGEVAL
+  z_max_glob = -HUGEVAL
+
   elemsize_min_glob = HUGEVAL
   elemsize_max_glob = -HUGEVAL
 
@@ -134,6 +146,15 @@
 
     distance_min_glob = min(distance_min_glob, distance_min)
     distance_max_glob = max(distance_max_glob, distance_max)
+
+    x_min_glob = minval(xstore)
+    x_max_glob = maxval(xstore)
+
+    y_min_glob = minval(ystore)
+    y_max_glob = maxval(ystore)
+
+    z_min_glob = minval(zstore)
+    z_max_glob = maxval(zstore)
 
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
@@ -236,6 +257,22 @@
   call min_all_cr(distance_min,distance_min_glob)
   call max_all_cr(distance_max,distance_max_glob)
 
+  ! min and max dimensions of the model
+  x_min = x_min_glob
+  x_max = x_max_glob
+  call min_all_cr(x_min,x_min_glob)
+  call max_all_cr(x_max,x_max_glob)
+
+  y_min = y_min_glob
+  y_max = y_max_glob
+  call min_all_cr(y_min,y_min_glob)
+  call max_all_cr(y_max,y_max_glob)
+
+  z_min = z_min_glob
+  z_max = z_max_glob
+  call min_all_cr(z_min,z_min_glob)
+  call max_all_cr(z_max,z_max_glob)
+
   ! element size
   elemsize_min = elemsize_min_glob
   elemsize_max = elemsize_max_glob
@@ -301,9 +338,14 @@
     write(IMAIN,*) '*** Verification of simulation parameters ***'
     write(IMAIN,*) '*********************************************'
     write(IMAIN,*)
+    write(IMAIN,*) '*** Xmin and Xmax of the model = ',x_min_glob,x_max_glob
+    write(IMAIN,*) '*** Ymin and Ymax of the model = ',y_min_glob,y_max_glob
+    write(IMAIN,*) '*** Zmin and Zmax of the model = ',z_min_glob,z_max_glob
+    write(IMAIN,*)
     write(IMAIN,*) '*** Max GLL point distance = ',distance_max_glob
     write(IMAIN,*) '*** Min GLL point distance = ',distance_min_glob
     write(IMAIN,*) '*** Max/min ratio = ',distance_max_glob/distance_min_glob
+    write(IMAIN,*)
     write(IMAIN,*) '*** Max element size = ',elemsize_max_glob
     write(IMAIN,*) '*** Min element size = ',elemsize_min_glob
     write(IMAIN,*) '*** Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
@@ -885,8 +927,8 @@
   subroutine get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
-! calculates the min/max distances between neighboring GLL points within
-! the specified element (ispec)
+! calculates the min/max distances between neighboring GLL points within the specified element (ispec);
+! we purposely do not include the distance along the diagonals of the element, only along its three coordinate axes.
 
   implicit none
 
@@ -901,41 +943,54 @@
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: dx,x0,y0,z0
-  integer :: i,j,k,ii,jj,kk,iglob_a,iglob_b
+  real(kind=CUSTOM_REAL) :: dist
+  integer :: i,j,k,iglob_a,iglob_b
 
   ! initializes
   distance_min = HUGEVAL
   distance_max = -HUGEVAL
 
-  ! loops over all GLL points
-  do k=1,NGLLZ-1
-    do j=1,NGLLY-1
+  ! loops over all GLL points along X
+  do k=1,NGLLZ
+    do j=1,NGLLY
       do i=1,NGLLX-1
-        iglob_a = ibool(i,j,k,ispec)
-        x0 = xstore(iglob_a)
-        y0 = ystore(iglob_a)
-        z0 = zstore(iglob_a)
+        iglob_a = ibool(i  ,j,k,ispec)
+        iglob_b = ibool(i+1,j,k,ispec)
+        dist = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
+                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
+                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
+        if( dist < distance_min) distance_min = dist
+        if( dist > distance_max) distance_max = dist
+      enddo
+    enddo
+  enddo
 
-        ! loops over nearest neighbor points
-        ! maybe a faster method could be found...
-        do kk=k-1,k+1
-          do jj=j-1,j+1
-            do ii=i-1,i+1
-              if( ii < 1 .or. jj < 1 .or. kk < 1 ) cycle
-              ! distances between points
-              iglob_b = ibool(ii,jj,kk,ispec)
-              if( iglob_a /= iglob_b) then
-                dx = sqrt( ( x0 - xstore(iglob_b) )**2 &
-                          + ( y0 - ystore(iglob_b) )**2 &
-                          + ( z0 - zstore(iglob_b) )**2 )
-                if( dx < distance_min) distance_min = dx
-                if( dx > distance_max) distance_max = dx
-              endif
-            enddo
-          enddo
-        enddo
+  ! loops over all GLL points along Y
+  do k=1,NGLLZ
+    do i=1,NGLLX
+      do j=1,NGLLY-1
+        iglob_a = ibool(i,j  ,k,ispec)
+        iglob_b = ibool(i,j+1,k,ispec)
+        dist = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
+                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
+                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
+        if( dist < distance_min) distance_min = dist
+        if( dist > distance_max) distance_max = dist
+      enddo
+    enddo
+  enddo
 
+  ! loops over all GLL points along Z
+  do i=1,NGLLX
+    do j=1,NGLLY
+      do k=1,NGLLZ-1
+        iglob_a = ibool(i,j,k  ,ispec)
+        iglob_b = ibool(i,j,k+1,ispec)
+        dist = sqrt( ( xstore(iglob_a) - xstore(iglob_b) )**2 &
+                   + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
+                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 )
+        if( dist < distance_min) distance_min = dist
+        if( dist > distance_max) distance_max = dist
       enddo
     enddo
   enddo
@@ -949,7 +1004,8 @@
   subroutine get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
                           NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
 
-! calculates the min/max size of the specified element (ispec)
+! calculates the min/max size of an edge of the specified element (ispec);
+! we purposely do not include the distance along the diagonals of the element, only the size of its edges.
 
   implicit none
 
@@ -964,49 +1020,56 @@
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: dx,x0,y0,z0
-  integer :: i,j,k,icorner,jcorner,iglob_a,iglob_b
-
-  ! corners indices of reference cube faces
-  ! shapes of arrays below
-  integer,dimension(2),parameter :: corner_shape = (/3,NGNOD_EIGHT_CORNERS/)
-  integer,dimension(3,NGNOD_EIGHT_CORNERS),parameter :: corner_ijk = &
-    reshape((/ 1,1,1, 1,NGLLY,1, 1,NGLLY,NGLLZ, 1,1,NGLLZ, &
-      NGLLX,1,1, NGLLX,NGLLY,1, NGLLX,NGLLY,NGLLZ, NGLLX,1,NGLLZ /),corner_shape)
+  real(kind=CUSTOM_REAL) :: dist
+  integer :: i,j,k
+  integer :: i1,i2,j1,j2,k1,k2,ibool1,ibool2
 
   ! initializes
   elemsize_min = HUGEVAL
   elemsize_max = -HUGEVAL
 
-  ! loops over corners
-  do icorner=1,NGNOD_EIGHT_CORNERS
-    i = corner_ijk(1,icorner)
-    j = corner_ijk(2,icorner)
-    k = corner_ijk(3,icorner)
+  ! loops over the four edges that are along X
+  i1 = 1
+  i2 = NGLLX
+  do j = 1, NGLLY, NGLLY-1
+    do k = 1, NGLLZ, NGLLZ-1
+      ibool1 = ibool(i1,j,k,ispec)
+      ibool2 = ibool(i2,j,k,ispec)
+      dist = sqrt((xstore(ibool1) - xstore(ibool2))**2 &
+                + (ystore(ibool1) - ystore(ibool2))**2 &
+                + (zstore(ibool1) - zstore(ibool2))**2)
+      if(dist < elemsize_min) elemsize_min = dist
+      if(dist > elemsize_max) elemsize_max = dist
+    enddo
+  enddo
 
-    iglob_a = ibool(i,j,k,ispec)
-    x0 = xstore(iglob_a)
-    y0 = ystore(iglob_a)
-    z0 = zstore(iglob_a)
+  ! loops over the four edges that are along Y
+  j1 = 1
+  j2 = NGLLY
+  do i = 1, NGLLX, NGLLX-1
+    do k = 1, NGLLZ, NGLLZ-1
+      ibool1 = ibool(i,j1,k,ispec)
+      ibool2 = ibool(i,j2,k,ispec)
+      dist = sqrt((xstore(ibool1) - xstore(ibool2))**2 &
+                + (ystore(ibool1) - ystore(ibool2))**2 &
+                + (zstore(ibool1) - zstore(ibool2))**2)
+      if(dist < elemsize_min) elemsize_min = dist
+      if(dist > elemsize_max) elemsize_max = dist
+    enddo
+  enddo
 
-    ! loops over all other corners
-    do jcorner = icorner+1,NGNOD_EIGHT_CORNERS
-      i = corner_ijk(1,jcorner)
-      j = corner_ijk(2,jcorner)
-      k = corner_ijk(3,jcorner)
-
-      ! coordinates
-      iglob_b = ibool(i,j,k,ispec)
-
-      ! distances between points
-      if( iglob_a /= iglob_b) then
-        dx = sqrt( ( x0 - xstore(iglob_b) )**2 &
-                  + ( y0 - ystore(iglob_b) )**2 &
-                  + ( z0 - zstore(iglob_b) )**2 )
-        if( dx < elemsize_min) elemsize_min = dx
-        if( dx > elemsize_max) elemsize_max = dx
-      endif
-
+  ! loops over the four edges that are along Z
+  k1 = 1
+  k2 = NGLLZ
+  do i = 1, NGLLX, NGLLX-1
+    do j = 1, NGLLY, NGLLY-1
+      ibool1 = ibool(i,j,k1,ispec)
+      ibool2 = ibool(i,j,k2,ispec)
+      dist = sqrt((xstore(ibool1) - xstore(ibool2))**2 &
+                + (ystore(ibool1) - ystore(ibool2))**2 &
+                + (zstore(ibool1) - zstore(ibool2))**2)
+      if(dist < elemsize_min) elemsize_min = dist
+      if(dist > elemsize_max) elemsize_max = dist
     enddo
   enddo
 

@@ -166,36 +166,13 @@ program model_update
 
   call sync_all()
 
-  ! reads in parameters calling read_parameter_file and checks for some inconsistencies
+  ! reads in parameters and checks for some inconsistencies
   call initialize_simulation()
-
-  ! check
-!  if( myrank == 0 ) then
-!    print*
-!    print*,'  SAVE_MESH_FILES: ',SAVE_MESH_FILES
-!    print*,'  ANISOTROPY: ',ANISOTROPY
-!    print*,'  APPROXIMATE_OCEAN_LOAD: ',APPROXIMATE_OCEAN_LOAD
-!    print*,'  NGLLX, NGLLY, NGLLZ: ',NGLLX, NGLLY, NGLLZ
-!    print*,'  ATTENUATION: ',ATTENUATION
-!    print*,'  USE_OLSEN_ATTENUATION: ',USE_OLSEN_ATTENUATION
-!    print*
-!  endif
 
   call sync_all()
 
   ! reads in external mesh
   call read_mesh_databases()
-
-  !check
-!  if( myrank == 0 ) then
-!     print*,'NSPEC_AB            ', NSPEC_AB
-!     print*,'NGLOB_AB            ', NGLOB_AB
-!     print*,'ACOUSTIC_SIMULATION ', ACOUSTIC_SIMULATION
-!     print*,'ELASTIC_SIMULATION ', ELASTIC_SIMULATION
-!     print*,'max_nibool_interfaces_ext_mesh ',max_nibool_interfaces_ext_mesh
-!    print*
-!  endif
-
 
   !===================================================
   !===================================================
@@ -771,7 +748,6 @@ program model_update
   ! and store NEW model files vp_new.bin vs_new.bin rho_new.bin vp_new.vtk vs_new.vtk rho_new.vtk
   ! calling save_external_bin_m_up with SAVE_MESH_FILES=true
   ! and also write NEW attenuation files attenuation.bin and attenuation.vtk (this should be equal to the old one)
-  ! calling get_attenuation_model
   !---------------------------------------------------------------------------------------------
 
   if( myrank == 0 ) then
@@ -939,7 +915,7 @@ program model_update
 
   call sync_all()
 
-  ! calculate min_resolved_period needed for get_attenuation_model
+  ! calculate min_resolved_period needed for attenuation model
   call check_mesh_resolution(myrank,NSPEC,NGLOB,ibool,&
                             xstore,ystore,zstore, &
                             kappastore_new,mustore_new,rho_vp_new,rho_vs_new, &
@@ -957,7 +933,7 @@ program model_update
   if( ATTENUATION ) then
     call get_attenuation_model(myrank,NSPEC,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                           mustore_new,rho_vs_new,kappastore_new,rho_vp_new,qmu_attenuation_store, & !ZN
-                          ispec_is_elastic,min_resolved_period,prname_new)
+                          ispec_is_elastic,min_resolved_period,prname_new,FULL_ATTENUATION_SOLID)
   endif
 
   !----------------------------

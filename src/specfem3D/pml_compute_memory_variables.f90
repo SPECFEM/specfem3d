@@ -40,7 +40,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic
   use pml_par
-  use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
+                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -87,7 +88,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
             gammazl = gammaz(i,j,k,ispec)
             jacobianl = jacobian(i,j,k,ispec)
 
-            if( CPML_regions(ispec_CPML) == 1 ) then
+            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
 
               !------------------------------------------------------------------------------
               !---------------------------- X-surface C-PML ---------------------------------
@@ -361,7 +362,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
-            else if( CPML_regions(ispec_CPML) == 2 ) then
+            else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- Y-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -633,7 +634,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
-            else if( CPML_regions(ispec_CPML) == 3 ) then
+            else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
 
               !------------------------------------------------------------------------------
               !---------------------------- Z-surface C-PML ---------------------------------
@@ -905,7 +906,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
-            else if( CPML_regions(ispec_CPML) == 4 ) then
+            else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
 
               !------------------------------------------------------------------------------
               !---------------------------- XY-edge C-PML -----------------------------------
@@ -1216,7 +1217,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
-            else if( CPML_regions(ispec_CPML) == 5 ) then
+            else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
 
               !------------------------------------------------------------------------------
               !---------------------------- XZ-edge C-PML -----------------------------------
@@ -1527,7 +1528,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
-            else if( CPML_regions(ispec_CPML) == 6 ) then
+            else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
 
               !------------------------------------------------------------------------------
               !---------------------------- YZ-edge C-PML -----------------------------------
@@ -1837,7 +1838,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
-            else if( CPML_regions(ispec_CPML) == 7 ) then
+            else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
 
               !------------------------------------------------------------------------------
               !---------------------------- XYZ-corner C-PML --------------------------------

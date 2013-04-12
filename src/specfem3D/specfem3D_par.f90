@@ -181,7 +181,7 @@ module specfem_par
             APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,STACEY_ABSORBING_CONDITIONS,ANISOTROPY, &
             STACEY_INSTEAD_OF_FREE_SURFACE
 
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
+  logical :: FULL_ATTENUATION_SOLID,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
 
   logical :: GRAVITY
 
@@ -369,6 +369,9 @@ module specfem_par_elastic
   ! adjoint kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_kl, mu_kl, kappa_kl, &
     rhop_kl, beta_kl, alpha_kl
+
+  ! anisotropic kernels
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl
 
   ! approximate hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
