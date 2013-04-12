@@ -99,7 +99,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   alpha_store = 0._CUSTOM_REAL
 
   if(ELASTIC_SIMULATION .and. .not. ACOUSTIC_SIMULATION)then
-    ALPHA_MAX_PML = PI*f0_FOR_PML  ! from Festa and Vilotte (2005)
+    ALPHA_MAX_PML = PI*f0_FOR_PML*1.0  ! from Festa and Vilotte (2005)
   elseif(ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION)then
     ALPHA_MAX_PML = PI*f0_FOR_PML*2.0
   elseif(ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)then
@@ -278,17 +278,21 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
                        d_x = 0.d0
-                       alpha_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
                        K_x = 1.d0
                     endif
 
@@ -296,20 +300,24 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! gets damping profile at the C-PML grid point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
-                       ! gets damping profile at the C-PML grid point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    if( d_x < 0.d0 ) then
                        d_x = 0.d0
-                       alpha_x = 0.d0
                        K_x = 1.d0
                     endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of CPML-layer x"
                  endif
@@ -336,17 +344,21 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_y < 0.d0 ) then
                        d_y = 0.d0
-                       alpha_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
                        K_y = 1.d0
                     endif
 
@@ -354,19 +366,24 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_y < 0.d0 ) then
                        d_y = 0.d0
-                       alpha_y = 0.d0
                        K_y = 1.d0
                     endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of  CPML-layer y"
 
@@ -395,25 +412,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-                 elseif( zstore(iglob) - z_origin < 0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
-
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -421,11 +419,39 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+                    endif
+                 elseif( zstore(iglob) - z_origin < 0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
                        K_z = 1.d0
                     endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of CPML-layer z"
                  endif
@@ -452,34 +478,42 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
                        d_y = 0.d0
-                       alpha_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
                        K_y = 1.d0
                     endif
 
@@ -487,34 +521,42 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
                        d_y = 0.d0
-                       alpha_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
                        K_y = 1.d0
                     endif
 
@@ -522,34 +564,42 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
                        d_y = 0.d0
-                       alpha_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
                        K_y = 1.d0
                     endif
 
@@ -557,36 +607,45 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = yoriginback - ystore(iglob)
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
                        d_y = 0.d0
-                       alpha_y = 0.d0
                        K_y = 1.d0
                     endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of CPML-layer xy"
                  endif
@@ -615,43 +674,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                       if( abscissa_in_PML_x >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_x / CPML_width_x
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                          alpha_x = ALPHA_MAX_PML / 2.d0
-                          K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_x = 0.d0
-                          alpha_x = 0.d0
-                          K_x = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_z = zstore(iglob) - zorigintop
-
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_x = xstore(iglob) - xoriginright
-
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_x / CPML_width_x
 
@@ -659,16 +681,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML / 2.d0
                        K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -676,9 +692,69 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_x < 0.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( K_x < 1.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                    endif
+
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_x = xstore(iglob) - xoriginright
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
                        K_z = 1.d0
                     endif
 
@@ -687,43 +763,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
-                       if( abscissa_in_PML_x >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_x / CPML_width_x
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                          alpha_x = ALPHA_MAX_PML / 2.d0
-                          K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_x = 0.d0
-                          alpha_x = 0.d0
-                          K_x = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_z = zstore(iglob) - zorigintop
-
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_x = xoriginleft - xstore(iglob)
-
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_x / CPML_width_x
 
@@ -731,16 +770,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML / 2.d0
                        K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -748,11 +781,72 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_x < 0.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( K_x < 1.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                    endif
+
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_x = xoriginleft - xstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
                        K_z = 1.d0
                     endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of CPML-layer xz"
                  endif
@@ -780,34 +874,42 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                       if( abscissa_in_PML_y >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_y / CPML_width_y
+                       ! determines distance to C-PML/mesh interface
+                       dist = abscissa_in_PML_y / CPML_width_y
 
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                          alpha_y = ALPHA_MAX_PML / 2.d0
-                          K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_y = 0.d0
-                          alpha_y = 0.d0
-                          K_y = 1.d0
-                       endif
+                       ! gets damping profile at the C-PML element's GLL point
+                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                       alpha_y = ALPHA_MAX_PML / 2.d0
+                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
+                       ! determines distance to C-PML/mesh interface
+                       dist = abscissa_in_PML_z / CPML_width_z
 
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
+                       ! gets damping profile at the C-PML element's GLL point
+                       d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                       alpha_z = ALPHA_MAX_PML / 2.d0
+                       K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                       if( d_y < 0.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( K_y < 1.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+ 
+                       if( d_z < 0.d0 ) then
                           d_z = 0.d0
-                          alpha_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
                           K_z = 1.d0
                        endif
                     endif
@@ -816,34 +918,42 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_y = 0.d0
-                       alpha_y = 0.d0
-                       K_y = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_z / CPML_width_z
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                       alpha_z = ALPHA_MAX_PML / 2.d0
-                       K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_y < 0.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
                        K_z = 1.d0
                     endif
 
@@ -852,43 +962,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = yoriginback - ystore(iglob)
 
-                       if( abscissa_in_PML_y >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_y / CPML_width_y
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                          alpha_y = ALPHA_MAX_PML / 2.d0
-                          K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_y = 0.d0
-                          alpha_y = 0.d0
-                          K_y = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_z = zstore(iglob) - zorigintop
-
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-
-                 elseif( ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_y = yoriginback - ystore(iglob)
-
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_y / CPML_width_y
 
@@ -896,16 +969,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML / 2.d0
                        K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_y = 0.d0
-                       alpha_y = 0.d0
-                       K_y = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -913,11 +980,72 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_y < 0.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( K_y < 1.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                    endif
+
+                 elseif( ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_y = yoriginback - ystore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_y < 0.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
                        K_z = 1.d0
                     endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of CPML-layer yz"
                  endif
@@ -944,51 +1072,63 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                       if( abscissa_in_PML_x >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_x / CPML_width_x
+                       ! determines distance to C-PML/mesh interface
+                       dist = abscissa_in_PML_x / CPML_width_x
 
-                          ! gets damping profile at the C-PML grid point
-                          d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                          alpha_x = ALPHA_MAX_PML / 2.d0
-                          K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_x = 0.d0
-                          alpha_x = 0.d0
-                          K_x = 1.d0
-                       endif
+                       ! gets damping profile at the C-PML grid point
+                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                       alpha_x = ALPHA_MAX_PML / 2.d0
+                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                       if( abscissa_in_PML_y >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_y / CPML_width_y
+                       ! determines distance to C-PML/mesh interface
+                       dist = abscissa_in_PML_y / CPML_width_y
 
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                          alpha_y = ALPHA_MAX_PML / 2.d0
-                          K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_y = 0.d0
-                          alpha_y = 0.d0
-                          K_y = 1.d0
-                       endif
+                       ! gets damping profile at the C-PML element's GLL point
+                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                       alpha_y = ALPHA_MAX_PML / 2.d0
+                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
+                       ! determines distance to C-PML/mesh interface
+                       dist = abscissa_in_PML_z / CPML_width_z
 
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
+                       ! gets damping profile at the C-PML element's GLL point
+                       d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                       alpha_z = ALPHA_MAX_PML / 2.d0
+                       K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                       if( d_x < 0.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( K_x < 1.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( d_y < 0.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( K_y < 1.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
                           d_z = 0.d0
-                          alpha_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
                           K_z = 1.d0
                        endif
                     endif
@@ -997,113 +1137,72 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_x / CPML_width_x
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
 
-                       ! gets damping profile at the C-PML grid point
-                       d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                       alpha_x = ALPHA_MAX_PML / 2.d0
-                       K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML grid point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_y / CPML_width_y
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                       alpha_y = ALPHA_MAX_PML / 2.d0
-                       K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_y = 0.d0
-                       alpha_y = 0.d0
-                       K_y = 1.d0
-                    endif
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
 
                     ! gets abscissa of current grid point along the damping profile
                     abscissa_in_PML_z = zoriginbottom - zstore(iglob)
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
-                       ! determines distance to C-PML/mesh interface
-                       dist = abscissa_in_PML_z / CPML_width_z
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
 
-                       ! gets damping profile at the C-PML element's GLL point
-                       d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                       alpha_z = ALPHA_MAX_PML / 2.d0
-                       K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
                        K_z = 1.d0
                     endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
 
                  elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin>0.d0 ) then
                     if( PML_INSTEAD_OF_FREE_SURFACE ) then
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xstore(iglob) - xoriginright
 
-                       if( abscissa_in_PML_x >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_x / CPML_width_x
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                          alpha_x = ALPHA_MAX_PML / 2.d0
-                          K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_x = 0.d0
-                          alpha_x = 0.d0
-                          K_x = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_y = yoriginback - ystore(iglob)
-
-                       if( abscissa_in_PML_y >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_y / CPML_width_y
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                          alpha_y = ALPHA_MAX_PML / 2.d0
-                          K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_y = 0.d0
-                          alpha_y = 0.d0
-                          K_y = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_z = zstore(iglob) - zorigintop
-
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-
-                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_x = xstore(iglob) - xoriginright
-
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_x / CPML_width_x
 
@@ -1111,16 +1210,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML / 2.d0
                        K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_y = yoriginback - ystore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_y = yoriginback - ystore(iglob)
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_y / CPML_width_y
 
@@ -1128,16 +1221,11 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML / 2.d0
                        K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_y = 0.d0
-                       alpha_y = 0.d0
-                       K_y = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_z = zstore(iglob) - zorigintop
+
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -1145,9 +1233,102 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_x < 0.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( K_x < 1.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( d_y < 0.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( K_y < 1.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                    endif
+
+                 elseif( xstore(iglob) - x_origin>0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_x = xstore(iglob) - xoriginright
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_y = yoriginback - ystore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
                        K_z = 1.d0
                     endif
 
@@ -1156,60 +1337,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
-                       if( abscissa_in_PML_x >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_x / CPML_width_x
-
-                          ! gets damping profile at the C-PML grid point
-                          d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                          alpha_x = ALPHA_MAX_PML / 2.d0
-                          K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_x = 0.d0
-                          alpha_x = 0.d0
-                          K_x = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_y = ystore(iglob) - yoriginfront
-
-                       if( abscissa_in_PML_y >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_y / CPML_width_y
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                          alpha_y = ALPHA_MAX_PML / 2.d0
-                          K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_y = 0.d0
-                          alpha_y = 0.d0
-                          K_y = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_z = zstore(iglob) - zorigintop
-
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_x = xoriginleft - xstore(iglob)
-
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_x / CPML_width_x
 
@@ -1217,16 +1344,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML / 2.d0
                        K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_y = ystore(iglob) - yoriginfront
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_y = ystore(iglob) - yoriginfront
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_y / CPML_width_y
 
@@ -1234,16 +1355,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML / 2.d0
                        K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_y = 0.d0
-                       alpha_y = 0.d0
-                       K_y = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -1251,9 +1366,100 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_x < 0.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( K_x < 1.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( d_y < 0.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( K_y < 1.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                    endif
+
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin>0.d0 .and. zstore(iglob) - z_origin<0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_x = xoriginleft - xstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
+
+                    ! gets damping profile at the C-PML grid point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_y = ystore(iglob) - yoriginfront
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
                        K_z = 1.d0
                     endif
 
@@ -1262,60 +1468,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        ! gets abscissa of current grid point along the damping profile
                        abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
-                       if( abscissa_in_PML_x >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_x / CPML_width_x
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
-                          alpha_x = ALPHA_MAX_PML / 2.d0
-                          K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_x = 0.d0
-                          alpha_x = 0.d0
-                          K_x = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_y = yoriginback - ystore(iglob)
-
-                       if( abscissa_in_PML_y >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_y / CPML_width_y
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
-                          alpha_y = ALPHA_MAX_PML / 2.d0
-                          K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_y = 0.d0
-                          alpha_y = 0.d0
-                          K_y = 1.d0
-                       endif
-
-                       ! gets abscissa of current grid point along the damping profile
-                       abscissa_in_PML_z = zstore(iglob) - zorigintop
-
-                       if( abscissa_in_PML_z >= -0.1d0 ) then
-                          ! determines distance to C-PML/mesh interface
-                          dist = abscissa_in_PML_z / CPML_width_z
-
-                          ! gets damping profile at the C-PML element's GLL point
-                          d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
-                          alpha_z = ALPHA_MAX_PML / 2.d0
-                          K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                       else
-                          d_z = 0.d0
-                          alpha_z = 0.d0
-                          K_z = 1.d0
-                       endif
-                    endif
-
-                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_x = xoriginleft - xstore(iglob)
-
-                    if( abscissa_in_PML_x >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_x / CPML_width_x
 
@@ -1323,16 +1475,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
                        alpha_x = ALPHA_MAX_PML / 2.d0
                        K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_x = 0.d0
-                       alpha_x = 0.d0
-                       K_x = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_y = yoriginback - ystore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_y = yoriginback - ystore(iglob)
 
-                    if( abscissa_in_PML_y >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_y / CPML_width_y
 
@@ -1340,16 +1486,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
                        alpha_y = ALPHA_MAX_PML / 2.d0
                        K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
-                       d_y = 0.d0
-                       alpha_y = 0.d0
-                       K_y = 1.d0
-                    endif
 
-                    ! gets abscissa of current grid point along the damping profile
-                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+                       ! gets abscissa of current grid point along the damping profile
+                       abscissa_in_PML_z = zstore(iglob) - zorigintop
 
-                    if( abscissa_in_PML_z >= -0.1d0 ) then
                        ! determines distance to C-PML/mesh interface
                        dist = abscissa_in_PML_z / CPML_width_z
 
@@ -1357,11 +1497,103 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                        alpha_z = ALPHA_MAX_PML / 2.d0
                        K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
-                    else
+
+                       if( d_x < 0.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( K_x < 1.d0 ) then
+                          d_x = 0.d0
+                          K_x = 1.d0
+                       endif
+
+                       if( d_y < 0.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( K_y < 1.d0 ) then
+                          d_y = 0.d0
+                          K_y = 1.d0
+                       endif
+
+                       if( d_z < 0.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                       if( K_z < 1.d0 ) then
+                          d_z = 0.d0
+                          K_z = 1.d0
+                       endif
+
+                    endif
+
+                 elseif( xstore(iglob) - x_origin<0.d0 .and. ystore(iglob) - y_origin<0.d0 .and. zstore(iglob) - z_origin < 0.d0 ) then
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_x = xoriginleft - xstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_x / CPML_width_x
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_x = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_x)
+                    alpha_x = ALPHA_MAX_PML / 2.d0
+                    K_x = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_y = yoriginback - ystore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_y / CPML_width_y
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_y = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_y)
+                    alpha_y = ALPHA_MAX_PML / 2.d0
+                    K_y = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    ! gets abscissa of current grid point along the damping profile
+                    abscissa_in_PML_z = zoriginbottom - zstore(iglob)
+
+                    ! determines distance to C-PML/mesh interface
+                    dist = abscissa_in_PML_z / CPML_width_z
+
+                    ! gets damping profile at the C-PML element's GLL point
+                    d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
+                    alpha_z = ALPHA_MAX_PML / 2.d0
+                    K_z = 1.d0 + (K_MAX_PML - 1.d0) * dist**NPOWER
+
+                    if( d_x < 0.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( K_x < 1.d0 ) then
+                       d_x = 0.d0
+                       K_x = 1.d0
+                    endif
+
+                    if( d_y < 0.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( K_y < 1.d0 ) then
+                       d_y = 0.d0
+                       K_y = 1.d0
+                    endif
+
+                    if( d_z < 0.d0 ) then
                        d_z = 0.d0
-                       alpha_z = 0.d0
                        K_z = 1.d0
                     endif
+
+                    if( K_z < 1.d0 ) then
+                       d_z = 0.d0
+                       K_z = 1.d0
+                    endif
+
                  else
                     stop "there is error in mesh of CPML-layer xyz"
                  endif
