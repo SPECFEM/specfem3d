@@ -378,6 +378,18 @@
           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
+
+  if (USE_VADIM) then
+     ! VM for new method
+!! DK DK for Vadim: these two arrays are undeclared, thus I comment them out for now otherwise the code does not compile
+!    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+!    allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+     open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+          action='read',form='unformatted',iostat=ier)
+     open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+          action='read',form='unformatted',iostat=ier)
+  endif
+
   if( num_abs_boundary_faces > 0 ) then
     read(27) abs_boundary_ispec
     read(27) abs_boundary_ijk
@@ -716,8 +728,11 @@
     if( ier /= 0 ) stop 'error allocating array kappa_kl'
 
     ! anisotropic kernels
-    allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+!! DK DK commented this out for now; must be made optional
+!   allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+!   if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+!! DK DK added this for now
+    allocate(cijkl_kl(1,1,1,1,1),stat=ier)
 
     ! derived kernels
     ! density prime kernel

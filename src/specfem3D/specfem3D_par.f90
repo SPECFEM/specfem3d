@@ -194,7 +194,7 @@ module specfem_par
   integer :: NPROC_XI,NPROC_ETA
   double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname
+  character(len=256) OUTPUT_FILES,LOCAL_PATH,TOMOGRAPHY_PATH,prname,dsmname,TRAC_PATH
 
 ! names of the data files for all the processors in MPI
   character(len=256) outputname

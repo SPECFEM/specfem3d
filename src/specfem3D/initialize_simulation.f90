@@ -50,7 +50,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         USE_FORCE_POINT_SOURCE,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         USE_RICKER_TIME_FUNCTION,OLSEN_ATTENUATION_RATIO,PML_CONDITIONS, &
-                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID)
+                        PML_INSTEAD_OF_FREE_SURFACE,f0_FOR_PML,IMODEL,FULL_ATTENUATION_SOLID,TRAC_PATH)
 
 !! DK DK added this for now (March 2013) because CPML is not yet implemented for USE_DEVILLE_PRODUCTS;
 !! DK DK we will soon add it (in a month or so)
@@ -133,8 +133,9 @@
     write(IMAIN,*)
   endif
 
-  ! reads in numbers of spectral elements and points for this process' domain
+  ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
+  if (USE_VADIM) call create_name_database(dsmname,myrank,TRAC_PATH)  !! VM VM
   open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',status='old',&
         action='read',form='unformatted',iostat=ier)
   if( ier /= 0 ) then

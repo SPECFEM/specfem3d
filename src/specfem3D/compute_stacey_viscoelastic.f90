@@ -82,7 +82,25 @@
 ! local parameters
   real(kind=CUSTOM_REAL) vx,vy,vz,nx,ny,nz,tx,ty,tz,vn,jacobianw
   integer :: ispec,iglob,i,j,k,iface,igll
-  !integer:: reclen1,reclen2
+
+! VM VM for new method
+!! DK DK for Vadim: this MUST be declared in the main program (i.e. in the calling program) and sent
+!! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
+!! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
+!! DK DK will be lost between two calls
+  real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+  real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+
+!! DK DK for Vadim: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
+  integer :: it_dsm
+
+  if (USE_VADIM) then
+     if ( phase_is_inner .eqv. .false. ) then
+        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+           call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+        end if
+     end if
+  end if
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -126,7 +144,11 @@
                  vx=veloc(1,iglob)
                  vy=veloc(2,iglob)
                  vz=veloc(3,iglob)
-
+                 if (USE_VADIM) then
+                     vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
+                     vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
+                     vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
+                 end if
                  ! gets associated normal
                  nx = abs_boundary_normal(1,igll,iface)
                  ny = abs_boundary_normal(2,igll,iface)
@@ -139,6 +161,12 @@
                  tx = rho_vp(i,j,k,ispec)*vn*nx + rho_vs(i,j,k,ispec)*(vx-vn*nx)
                  ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
                  tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
+
+                 if (USE_VADIM) then
+                     tx = -Tract_dsm_boundary(1,it_dsm,igll,iface) + tx 
+                     ty = -Tract_dsm_boundary(2,it_dsm,igll,iface) + ty
+                     tz = -Tract_dsm_boundary(3,it_dsm,igll,iface) + tz 
+                 end if
 
                  ! gets associated, weighted jacobian
                  jacobianw = abs_boundary_jacobian2Dw(igll,iface)
@@ -181,4 +209,38 @@
   endif
 
   end subroutine compute_stacey_viscoelastic
+
+!---------------------------------------------------------------------------------------
+
+  subroutine read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces)
+
+   implicit none
+
+   include "constants.h"
+
+   integer igll,it_dsm
+   integer iface,num_abs_boundary_faces,i,j
+   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+
+!! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
+   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,100,5,5)  !!! warning: hardwired
+
+   it_dsm = 1
+   write(*,*) 'read dsm files',it_dsm
+   do iface=1,num_abs_boundary_faces
+      
+      igll = 0
+      do j=1,5  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
+        do i=1,5  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
+           igll = igll + 1
+           read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
+           Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j) 
+           read(IIN_tract_dsm) dsm_boundary_tmp(:,:,i,j)
+           Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j) 
+      enddo
+    enddo
+   enddo
+  
+  end subroutine read_dsm_file
 

@@ -442,3 +442,7 @@
   integer, parameter :: IMODEL_IPATI            = 10
   integer, parameter :: IMODEL_IPATI_WATER      = 11
 
+! Vadim tests
+  logical, parameter :: USE_VADIM = .false.
+  integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
+
