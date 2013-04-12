@@ -37,7 +37,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                                     IMAIN,FOUR_THIRDS,CPML_REGIONS,f0_FOR_PML,PI, &
                                     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
-  use create_regions_mesh_ext_par, only: kappastore,mustore,rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic
+  use create_regions_mesh_ext_par, only: kappastore,mustore,rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic, &
+                                         ELASTIC_SIMULATION, ACOUSTIC_SIMULATION
 
   implicit none
 
@@ -97,8 +98,15 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   alpha_store = 0._CUSTOM_REAL
 
-  ALPHA_MAX_PML = PI*f0_FOR_PML ! ELASTIC from Festa and Vilotte (2005)
-  ALPHA_MAX_PML = PI*f0_FOR_PML*2.0  ! ACOUSTIC from Festa and Vilotte (2005)
+  if(ELASTIC_SIMULATION .and. .not. ACOUSTIC_SIMULATION)then
+    ALPHA_MAX_PML = PI*f0_FOR_PML  ! from Festa and Vilotte (2005)
+  elseif(ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION)then
+    ALPHA_MAX_PML = PI*f0_FOR_PML*2.0
+  elseif(ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)then
+    ALPHA_MAX_PML = PI*f0_FOR_PML*2.0
+  else
+    stop 'Currently PML is not implemented for POROELASTIC_SIMULATION'
+  endif
 
   x_min = minval(xstore(:))
   x_max = maxval(xstore(:))
