@@ -250,7 +250,7 @@
 !                        rhostore(i,j,k,ispec) = rho
 !                        vpstore(i,j,k,ispec) = vp
 !                        vsstore(i,j,k,ispec) = vs
-!                     end if
+!                     endif
 
 !                 kappastore(i,j,k,ispec) = rhostore(i,j,k,ispec)*(vpstore(i,j,k,ispec)*vpstore(i,j,k,ispec) - &
 !                      4.d0*vsstore(i,j,k,ispec)*vsstore(i,j,k,ispec)/3.d0)

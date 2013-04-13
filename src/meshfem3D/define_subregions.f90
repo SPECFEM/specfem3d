@@ -314,9 +314,9 @@
      else
         stop 'Wrong number of doublings'
 
-     end if
+     endif
 
-  end if
+  endif
 
   end subroutine define_mesh_regions
 

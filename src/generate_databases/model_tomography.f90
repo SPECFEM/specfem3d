@@ -131,7 +131,7 @@
         do while(ier == 0)
            read(27,*,iostat=ier)
            if (ier == 0) nlines = nlines + 1
-        end do
+        enddo
 
         if( nlines /= nrec .and. myrank == 0 ) then
            write(6,*) '',trim(tomo_filename)

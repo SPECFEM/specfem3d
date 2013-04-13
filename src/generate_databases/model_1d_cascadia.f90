@@ -82,19 +82,19 @@
     vs = 2890.0
     ! density in kg/m**3
     rho = 2800.0
-  elseif( depth < 6.0 ) then
+  else if( depth < 6.0 ) then
     vp = 6000.0
     vs = 3460.0
     rho = 2800.0
-  elseif( depth < 30.0 ) then
+  else if( depth < 30.0 ) then
     vp = 6700.0
     vs = 3870.0
     rho = 3200.0
-  elseif( depth < 45.0 ) then
+  else if( depth < 45.0 ) then
     vp = 7100.0
     vs = 4100.0
     rho = 3200.0
-  elseif( depth < 65.0 ) then
+  else if( depth < 65.0 ) then
     vp = 7750.0
     vs = 4470.0
     rho = 3200.0

@@ -419,7 +419,7 @@
                   yp(ieoff+ilocnum) = dble(y(i,j))
                   zp(ieoff+ilocnum) = dble(z(i,j))
                   field_display(ieoff+ilocnum) = dble(display(i,j))
-                elseif(ilocnum == 2) then
+                else if(ilocnum == 2) then
 
                   ! accounts for different ordering of square points
                   xp(ieoff+ilocnum) = dble(x(i+1,j+1))
@@ -427,7 +427,7 @@
                   zp(ieoff+ilocnum) = dble(z(i+1,j+1))
                   field_display(ieoff+ilocnum) = dble(display(i+1,j+1))
 
-                elseif(ilocnum == 3) then
+                else if(ilocnum == 3) then
 
                   ! accounts for different ordering of square points
                   xp(ieoff+ilocnum) = dble(x(i+1,j))

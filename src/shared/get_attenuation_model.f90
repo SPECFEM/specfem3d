@@ -1159,7 +1159,7 @@
         demon = 1.0d0 + w**2 * tau_s(j)**2
         A(i) = A(i) + ((1.0d0 + (w**2 * tau_eps(j) * tau_s(j)))/ demon)
         B(i) = B(i) + ((w * (tau_eps(j) - tau_s(j))) / demon)
-     end do
+     enddo
       !     write(*,*)A(i),B(i),10**f(i)
   enddo
 
@@ -1414,7 +1414,7 @@
      itercount = itercount + 1
      if (prnt == 3) then
         write(*,*)itercount, func_evals, fv(1), how
-     elseif (prnt == 4) then
+     else if (prnt == 4) then
         write(*,*)
         write(*,*)'How: ',how
         write(*,*)'v: ',v

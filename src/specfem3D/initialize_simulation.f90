@@ -288,7 +288,7 @@
      if( PML_CONDITIONS ) then
         print*, 'please modify Par_file and recompile solver'
         stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
-     elseif( PML_INSTEAD_OF_FREE_SURFACE ) then
+     else if( PML_INSTEAD_OF_FREE_SURFACE ) then
         print*, 'please modify Par_file and recompile solver'
         stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
      endif
@@ -303,7 +303,7 @@
      if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
         print*, 'please modify Par_file and recompile solver'
         stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
-     elseif( .not. SUPPRESS_UTM_PROJECTION ) then
+     else if( .not. SUPPRESS_UTM_PROJECTION ) then
         print*, 'please modify Par_file and recompile solver'
         stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
      endif

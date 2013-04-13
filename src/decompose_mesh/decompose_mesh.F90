@@ -439,7 +439,7 @@ module decompose_mesh
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                      undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
-       elseif( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+       else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
          ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
                         undef_mat_prop(3,imat),undef_mat_prop(4,imat)
@@ -496,7 +496,7 @@ module decompose_mesh
             if( trim(undef_mat_prop(2,imat)) == 'interface' ) then
               mat(2,ispec) = 1
             ! tomography
-            elseif( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
+            else if( trim(undef_mat_prop(2,imat)) == 'tomography' ) then
               mat(2,ispec) = 2
             else
               ! shouldn't encounter this case
@@ -721,7 +721,7 @@ module decompose_mesh
     if (ANY_FAULT) then
       call save_nodes_coords(nodes_coords,nnodes)
       call close_faults(nodes_coords,nnodes)
-    end if
+    endif
 
   end subroutine read_mesh_files
 

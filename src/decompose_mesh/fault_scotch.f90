@@ -396,8 +396,8 @@ CONTAINS
       if ( part(i) == 0 ) then
         nproc_null = nproc_null + 1
         elem_proc_null(nproc_null) = i
-      end if
-    end do
+      endif
+    enddo
    ! Redistributing proc-0 elements on the rest of processors
     ipart=1
     if (nproc > 1) then
@@ -405,8 +405,8 @@ CONTAINS
         part(elem_proc_null(i)) = ipart
         if ( ipart == nproc-1 ) ipart = 0
         ipart = ipart +1
-      end do
-    end if
+      enddo
+    endif
     deallocate(elem_proc_null)
   endif
 
@@ -425,7 +425,7 @@ CONTAINS
   do i = 0, esize*nelmnts-1
     nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = i/esize
     nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
-  end do
+  enddo
 
   do iflt=1,size(faults)
     do e=1,faults(iflt)%nspec
@@ -440,9 +440,9 @@ CONTAINS
         k2 = k1 + nnodes_elmnts(inode) -1
         part( nodes_elmnts(k1:k2) ) = 0
 
-      end do
-    end do
-  end do
+      enddo
+    enddo
+  enddo
 
   nproc_null_final = count( part == 0 )
   print *, nproc_null_final
@@ -475,8 +475,8 @@ CONTAINS
         proc2 = part(e2)
         part(e1) = min(proc1,proc2)
         part(e2) = part(e1)
-      end do
-    end do
+      enddo
+    enddo
   enddo
 
   end subroutine fault_repartition_parallel
@@ -518,7 +518,7 @@ CONTAINS
       print *, '  ispec2 : ', nspec_fault_2
       print *, 'Fatal error: Number of fault elements do not coincide. Abort.'
       stop
-    end if
+    endif
     !write(IIN_database,*) nspec_fault_1
     write(IIN_database) nspec_fault_1
 
@@ -534,12 +534,12 @@ CONTAINS
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
             if (glob2loc_nodes_parts(j) == iproc ) then
               loc_nodes(k) = glob2loc_nodes(j) + 1
-            end if
-          end do
-        end do
+            endif
+          enddo
+        enddo
         !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
         write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
-      end if
+      endif
     enddo
 
    ! export fault element data, side 2
@@ -551,12 +551,12 @@ CONTAINS
           do j = glob2loc_nodes_nparts(inodes(k)-1), glob2loc_nodes_nparts(inodes(k))-1
             if (glob2loc_nodes_parts(j) == iproc ) then
               loc_nodes(k) = glob2loc_nodes(j)+1
-            end if
-          end do
-        end do
+            endif
+          enddo
+        enddo
         !write(IIN_database,*) glob2loc_elmnts(e-1)+1, loc_nodes
         write(IIN_database) glob2loc_elmnts(e-1)+1, loc_nodes
-      end if
+      endif
     enddo
 
   enddo

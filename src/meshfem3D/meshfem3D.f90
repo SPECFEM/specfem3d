@@ -405,7 +405,7 @@
      write(IMAIN,*) 'Reading interface data from file ',&
       MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE(1:len_trim(INTERFACES_FILE)), &
       ' to count the spectral elements'
-  end if
+  endif
 
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH))//INTERFACES_FILE, &
       status='old')
@@ -531,7 +531,7 @@
     write(IMAIN,*) 'There are ',NER,' elements along Z'
     do ilayer = 1,number_of_layers
        write(IMAIN,*) 'There are ',ner_layer(ilayer),' spectral elements along Z in layer ',ilayer
-    end do
+    enddo
     write(IMAIN,*)
     write(IMAIN,*) 'There are ',NPROC_XI,' slices along xi'
     write(IMAIN,*) 'There are ',NPROC_ETA,' slices along eta'
@@ -622,7 +622,7 @@
           MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
           //INTERFACES_FILE(1:len_trim(INTERFACES_FILE))
     write(IMAIN,*)
-  end if
+  endif
 
   open(unit=IIN,file=MF_IN_DATA_FILES_PATH(1:len_trim(MF_IN_DATA_FILES_PATH)) &
           //INTERFACES_FILE,status='old')
@@ -763,8 +763,8 @@
           zgrid(ir + ioffset,ix,iy) = gamma*z_interface_top + (1.d0 - gamma)*z_interface_bottom
         enddo
 
-      end do
-    end do
+      enddo
+    enddo
 
     ! the top interface becomes the bottom interface before switching to the next layer
     SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION_TOP

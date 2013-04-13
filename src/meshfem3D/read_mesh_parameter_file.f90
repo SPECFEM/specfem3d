@@ -141,7 +141,7 @@ contains
     idoubl = ner_doublings(1)
     ner_doublings(1) = ner_doublings(2)
     ner_doublings(2) = idoubl
-  end if
+  endif
 
 
 
@@ -174,7 +174,7 @@ contains
      material_properties(imat,4) = Q_flag
      material_properties(imat,5) = anisotropy_flag
      material_properties(imat,6) = domain_id
-  end do
+  enddo
 
 ! read number of subregions
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NSUBREGIONS, 'mesher.NSUBREGIONS')
@@ -199,7 +199,7 @@ contains
      subregions(ireg,5) = iz_beg_region
      subregions(ireg,6) = iz_end_region
      subregions(ireg,7) = imaterial_number
-  end do
+  enddo
 
 ! close parameter file
   call close_parameter_file_mesh()
