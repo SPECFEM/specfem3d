@@ -398,6 +398,8 @@
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
+  use pml_par
+
   implicit none
 
 ! integer :: numat
@@ -442,10 +444,13 @@
 ! loop over spectral elements
   do ispec = 1,NSPEC_AB
 
-
-! if element is a CPML then cycle
-! ............. YYYYYYYYYYYYY ...........
-
+! if element is a CPML then do not compute energy in it, since it is non physical;
+! thus, we compute energy in the main domain only, without absorbing elements
+    if(PML_CONDITIONS) then
+      ! do not merge this second line with the first using an ".and." statement
+      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+      if(is_CPML(ispec)) cycle
+    endif
 
     !---
     !--- elastic spectral element

@@ -28,12 +28,11 @@
 
   subroutine finalize_simulation()
 
-  use pml_par
-
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+  use pml_par
 
   implicit none
 
