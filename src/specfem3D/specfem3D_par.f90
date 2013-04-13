@@ -285,7 +285,8 @@ module specfem_par_elastic
 
 ! parameter module for elastic solver
 
-  use constants,only: CUSTOM_REAL,N_SLS
+  use constants,only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
+
   implicit none
 
   ! memory variables and standard linear solids for attenuation
@@ -305,18 +306,6 @@ module specfem_par_elastic
 ! displacement, velocity, acceleration
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ,veloc,accel
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_adj_coupling
-
-! variables needed for OpenMP version
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
-       dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3,&
-       newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3,&
-       tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
-
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: &
-       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
-       tempx1_att,tempx2_att,tempx3_att, &
-       tempy1_att,tempy2_att,tempy3_att, &
-       tempz1_att,tempz2_att,tempz3_att
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
