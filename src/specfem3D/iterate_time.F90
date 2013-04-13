@@ -38,7 +38,7 @@
 
 !----  create a Gnuplot script to display the energy curve in log scale
   if(output_energy .and. myrank == 0) then
-    open(unit=IOUT_ENERGY,file='plot_energy.gnu',status='unknown',action='write')
+    open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
     write(IOUT_ENERGY,*) 'set term wxt'
     write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
     write(IOUT_ENERGY,*) '#set output "energy.ps"'
@@ -53,7 +53,7 @@
   endif
 
 ! open the file in which we will store the energy curve
-  if(output_energy .and. myrank == 0) open(unit=IOUT_ENERGY,file='energy.dat',status='unknown',action='write')
+  if(output_energy .and. myrank == 0) open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'energy.dat',status='unknown',action='write')
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
@@ -431,8 +431,8 @@
 ! jacobian
   real(kind=CUSTOM_REAL) :: xixl,xizl,gammaxl,gammazl,jacobianl
 
-  real(kind=CUSTOM_REAL) :: kinetic_energy,potential_energy
-  real(kind=CUSTOM_REAL) :: kinetic_energy_glob,potential_energy_glob
+  real(kind=CUSTOM_REAL) :: kinetic_energy,potential_energy,total_energy
+  real(kind=CUSTOM_REAL) :: total_energy_glob
   real(kind=CUSTOM_REAL) :: cpl,csl,rhol,mul_unrelaxed_elastic,lambdal_unrelaxed_elastic, &
     lambdaplus2mu_unrelaxed_elastic,kappal
 
@@ -589,11 +589,11 @@
   enddo
 
 ! do a MPI_REDUCE with a MPI_SUM to compute the total
-! from kinetic_energy,potential_energy to kinetic_energy_glob,potential_energy_glob
-! ............. YYYYYYYYYYYYY ...........
+  total_energy = kinetic_energy + potential_energy
+  call max_all_cr(total_energy,total_energy_glob)
 
 ! write the total to disk from the master
-! if(myrank == 0) write(IOUT_ENERGY,*) temps, kinetic_energy_glob,potential_energy_glob
+  if(myrank == 0) write(IOUT_ENERGY,*) it, total_energy_glob
 
   end subroutine it_compute_total_energy
 
