@@ -256,8 +256,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
            enddo
         else if(PML_CONDITIONS) then
            ! do not merge this second line with the first using an ".and." statement
-           ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-           if(CPML_mask_ibool(ispec)) then
+           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+           if(is_CPML(ispec)) then
               do k=1,NGLLZ
                  do j=1,NGLLY
                     do i=1,NGLLX
@@ -342,8 +342,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
           else if(PML_CONDITIONS) then
              ! do not merge this second line with the first using an ".and." statement
-             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-             if(CPML_mask_ibool(ispec)) then
+             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+             if(is_CPML(ispec)) then
                 tempx1_att(i,j,k) = tempx1(i,j,k)
                 tempx2_att(i,j,k) = tempx2(i,j,k)
                 tempx3_att(i,j,k) = tempx3(i,j,k)
@@ -406,8 +406,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               ! stores derivatives of ux, uy and uz with respect to x, y and z
               if (PML_CONDITIONS) then
                  ! do not merge this second line with the first using an ".and." statement
-                 ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-                 if(CPML_mask_ibool(ispec)) then
+                 ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+                 if(is_CPML(ispec)) then
                     ispec_CPML = spec_to_CPML(ispec)
 
                     PML_dux_dxl(i,j,k,ispec_CPML) = duxdxl
@@ -488,8 +488,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
               else if(PML_CONDITIONS) then
                     ! do not merge this second line with the first using an ".and." statement
-                    ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-                    if(CPML_mask_ibool(ispec)) then
+                    ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+                    if(is_CPML(ispec)) then
                        PML_dux_dxl_new(i,j,k,ispec_CPML) = &
                             xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
                        PML_dux_dyl_new(i,j,k,ispec_CPML) = &
@@ -682,8 +682,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !! DK DK shouldn't there be at least a "if (is_CPML(ispec))" test as well here, or something like that?
               if (PML_CONDITIONS) then
                  ! do not merge this second line with the first using an ".and." statement
-                 ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-                 if(.not.CPML_mask_ibool(ispec)) then
+                 ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+                 if(.not.is_CPML(ispec)) then
                     ! define symmetric components of sigma
                     sigma_yx = sigma_xy
                     sigma_zx = sigma_xz
@@ -727,8 +727,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
     if (PML_CONDITIONS) then
        ! do not merge this second line with the first using an ".and." statement
-       ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-       if(CPML_mask_ibool(ispec)) then
+       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+       if(is_CPML(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
           call pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
                tempx3,tempy3,tempz3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
@@ -790,8 +790,8 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
           ! updates acceleration with contribution from each C-PML element
           if (PML_CONDITIONS) then
              ! do not merge this second line with the first using an ".and." statement
-             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-             if(CPML_mask_ibool(ispec)) then
+             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+             if(is_CPML(ispec)) then
                 accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k,ispec_CPML)
                 accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k,ispec_CPML)
                 accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k,ispec_CPML)
@@ -881,7 +881,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
      do ispec2D=1,nspec2D_xmin
         ispec = ibelm_xmin(ispec2D)
 
-        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
            i = 1
 
            do k=1,NGLLZ
@@ -908,7 +908,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
      do ispec2D=1,nspec2D_xmax
         ispec = ibelm_xmax(ispec2D)
 
-        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
            i = NGLLX
 
            do k=1,NGLLZ
@@ -935,7 +935,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
      do ispec2D=1,nspec2D_ymin
         ispec = ibelm_ymin(ispec2D)
 
-        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
            j = 1
 
            do k=1,NGLLZ
@@ -962,7 +962,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
      do ispec2D=1,nspec2D_ymax
         ispec = ibelm_ymax(ispec2D)
 
-        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
            j = NGLLY
 
            do k=1,NGLLZ
@@ -989,7 +989,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
      do ispec2D=1,NSPEC2D_BOTTOM
         ispec = ibelm_bottom(ispec2D)
 
-        if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
            k = 1
 
            do j=1,NGLLY
@@ -1017,7 +1017,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
        do ispec2D=1,NSPEC2D_BOTTOM
           ispec = ibelm_top(ispec2D)
 
-          if(CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec)) then
+          if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
              k = NGLLZ
 
              do j=1,NGLLY

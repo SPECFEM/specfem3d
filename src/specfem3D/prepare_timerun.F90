@@ -733,7 +733,7 @@
     ! defines C-PML spectral elements local indexing
     ispec_CPML = 0
     do ispec=1,NSPEC_AB
-       if( CPML_mask_ibool(ispec) ) then
+       if( is_CPML(ispec) ) then
           ispec_CPML = ispec_CPML + 1
           spec_to_CPML(ispec) = ispec_CPML
        endif

@@ -342,8 +342,8 @@
      if(ier /= 0) stop 'error allocating array CPML_regions'
      allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
      if(ier /= 0) stop 'error allocating array CPML_to_spec'
-     allocate(CPML_mask_ibool(NSPEC_AB),stat=ier)
-     if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
+     allocate(is_CPML(NSPEC_AB),stat=ier)
+     if(ier /= 0) stop 'error allocating array is_CPML'
      allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
      if(ier /= 0) stop 'error allocating array d_store_x'
      allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
@@ -361,7 +361,7 @@
 
      read(27) CPML_regions
      read(27) CPML_to_spec
-     read(27) CPML_mask_ibool
+     read(27) is_CPML
      read(27) d_store_x
      read(27) d_store_y
      read(27) d_store_z

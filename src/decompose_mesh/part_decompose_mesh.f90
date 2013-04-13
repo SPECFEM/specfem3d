@@ -978,7 +978,7 @@ contains
   ! pertaining to iproc partition in the corresponding Database
   !--------------------------------------------------
   subroutine write_cpml_database(IIN_database, iproc, nspec, nspec_cpml, CPML_to_spec, &
-                                 CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
+                                 CPML_regions, is_CPML, glob2loc_elmnts, part)
 
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
@@ -988,7 +988,7 @@ contains
     integer, dimension(nspec_cpml), intent(in) :: CPML_to_spec
     integer, dimension(nspec_cpml), intent(in) :: CPML_regions
 
-    logical, dimension(nspec), intent(in) :: CPML_mask_ibool
+    logical, dimension(nspec), intent(in) :: is_CPML
 
     integer, dimension(:), pointer :: glob2loc_elmnts
 
@@ -1030,7 +1030,7 @@ contains
        ! writes mask of C-PML elements for all elements in this partition
        do i=1,nspec
           if( part(i) == iproc ) then
-             write(IIN_database) CPML_mask_ibool(i)
+             write(IIN_database) is_CPML(i)
           endif
        enddo
     endif

@@ -135,8 +135,8 @@
 
           if (PML_CONDITIONS) then
              ! do not merge this second line with the first using an ".and." statement
-             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-             if(CPML_mask_ibool(ispec)) then
+             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+             if(is_CPML(ispec)) then
                 temp1l_new = temp1l
                 temp2l_new = temp2l
                 temp3l_new = temp3l
@@ -181,8 +181,8 @@
           ! stores derivatives of ux, uy and uz with respect to x, y and z
           if (PML_CONDITIONS) then
              ! do not merge this second line with the first using an ".and." statement
-             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-             if(CPML_mask_ibool(ispec)) then
+             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+             if(is_CPML(ispec)) then
                 ispec_CPML = spec_to_CPML(ispec)
 
                 PML_dpotential_dxl(i,j,k,ispec_CPML) = dpotentialdxl
@@ -216,8 +216,8 @@
 
     if (PML_CONDITIONS) then
        ! do not merge this second line with the first using an ".and." statement
-       ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-       if(CPML_mask_ibool(ispec)) then
+       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+       if(is_CPML(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
           call pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
                tempx3,tempy3,tempz3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
@@ -253,8 +253,8 @@
           ! updates potential_dot_dot_acoustic with contribution from each C-PML element
           if (PML_CONDITIONS) then
              ! do not merge this second line with the first using an ".and." statement
-             ! because array CPML_mask_ibool() is unallocated when PML_CONDITIONS is false
-             if(CPML_mask_ibool(ispec)) then
+             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
+             if(is_CPML(ispec)) then
                 potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
                      potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML)
              endif
