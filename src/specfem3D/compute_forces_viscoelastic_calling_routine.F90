@@ -170,7 +170,7 @@ subroutine compute_forces_viscoelastic()
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
-                        GPU_MODE,Mesh_pointer)
+                        GPU_MODE,Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
     endif
 
 
