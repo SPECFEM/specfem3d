@@ -37,7 +37,7 @@
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                        GPU_MODE,Mesh_pointer)
+                        GPU_MODE,Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
 
   implicit none
 
@@ -88,6 +88,7 @@
 !! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
 !! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
 !! DK DK will be lost between two calls
+!! VM VM I did it 
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
@@ -163,9 +164,9 @@
                  tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
                  if (USE_VADIM) then
-                     tx = -Tract_dsm_boundary(1,it_dsm,igll,iface) + tx
-                     ty = -Tract_dsm_boundary(2,it_dsm,igll,iface) + ty
-                     tz = -Tract_dsm_boundary(3,it_dsm,igll,iface) + tz
+                     tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface) 
+                     ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface) 
+                     tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface) 
                  endif
 
                  ! gets associated, weighted jacobian
@@ -208,11 +209,17 @@
     endif
   endif
 
+  if (USE_VADIM) then
+     if (phase_is_inner .eqv. .true.) then
+        it_dsm = it_dsm + 1
+     end if
+  end if
+  
   end subroutine compute_stacey_viscoelastic
 
 !---------------------------------------------------------------------------------------
 
-  subroutine read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces)
+  subroutine read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
 
    implicit none
 
@@ -224,15 +231,17 @@
    real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
 !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
-   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,100,5,5)  !!! warning: hardwired
+!! VM VM fixed to NGLLX
+   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)  
 
    it_dsm = 1
-   write(*,*) 'read dsm files',it_dsm
+   !write(*,*) 'read dsm files',it_dsm
    do iface=1,num_abs_boundary_faces
 
       igll = 0
-      do j=1,5  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
-        do i=1,5  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
+      do j=1,NGLLY  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
+        do i=1,NGLLX  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
+                      !! VM VM Correction 5->NGLLX or NGLLY
            igll = igll + 1
            read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
            Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
