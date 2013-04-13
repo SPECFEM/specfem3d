@@ -56,7 +56,7 @@ PML_CONDITIONS                  = .false.
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
 
 # C-PML dominant frequency
-f0_FOR_PML                      = 12.7
+f0_FOR_PML                      = 0.05555
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
