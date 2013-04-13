@@ -42,12 +42,17 @@
     write(IOUT_ENERGY,*) 'set term wxt'
     write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
     write(IOUT_ENERGY,*) '#set output "energy.ps"'
-    write(IOUT_ENERGY,*) '# set xrange [0:60]'
     write(IOUT_ENERGY,*) 'set logscale y'
-    write(IOUT_ENERGY,*) 'set xlabel "Time (s)"'
+    write(IOUT_ENERGY,*) 'set xlabel "Time step number"'
     write(IOUT_ENERGY,*) 'set ylabel "Energy (J)"'
-    write(IOUT_ENERGY,'(a150)') &
-      'plot "energy.dat" us 1:4 t ''Total Energy'' w linesp lc 1, "energy.dat" us 1:3 t ''Potential Energy'' w linesp lc 2'
+    write(IOUT_ENERGY,'(a152)') '#plot "energy.dat" us 1:2 t ''Kinetic Energy'' w l lc 1, "energy.dat" us 1:3 &
+                         &t ''Potential Energy'' w l lc 2, "energy.dat" us 1:4 t ''Total Energy'' w l lc 4'
+    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
+    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:2 t ''Kinetic Energy'' w l lc 1'
+    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
+    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:3 t ''Potential Energy'' w l lc 2'
+    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
+    write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:4 t ''Total Energy'' w l lc 4'
     write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
     close(IOUT_ENERGY)
   endif
@@ -87,10 +92,11 @@
   do it = 1,NSTEP
 
     ! simulation status output and stability check
-    if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) then
-      call it_check_stability()
-      if(output_energy) call it_compute_total_energy()
-    endif
+    if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) call it_check_stability()
+
+    ! simulation status output and stability check
+    if(output_energy .and. (mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP)) &
+            call it_compute_total_energy()
 
     ! update displacement using Newmark time scheme
     call it_update_displacement_scheme()
@@ -402,44 +408,43 @@
 
   implicit none
 
-! integer :: numat
-
 ! vector field in an element
-  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLX) :: vector_field_element
+! real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLX) :: vector_field_element
 
 ! pressure in an element
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: pressure_element
-
-  integer :: nglob_acoustic
-
-  logical :: ATTENUATION_VISCOELASTIC_SOLID,p_sv
-
-  logical :: assign_external_model
-! double precision, dimension(2,numat) :: density
-! double precision, dimension(numat) :: porosity,tortuosity
-
-! integer :: nglob_elastic
-! real(kind=CUSTOM_REAL), dimension(3,nglob_elastic) :: displ_elastic,veloc_elastic
+! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: pressure_element
 
 ! local variables
-  integer :: i,j,k,ispec
+  integer :: i,j,k,l,ispec,iglob
 
-! spatial derivatives
-  real(kind=CUSTOM_REAL) :: dux_dxi,dux_dgamma,duz_dxi,duz_dgamma
-  real(kind=CUSTOM_REAL) :: dux_dxl,duz_dxl,dux_dzl,duz_dzl
-  real(kind=CUSTOM_REAL) :: dwx_dxi,dwx_dgamma,dwz_dxi,dwz_dgamma
-  real(kind=CUSTOM_REAL) :: dwx_dxl,dwz_dxl,dwx_dzl,dwz_dzl
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL) :: duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl
 
-! jacobian
-  real(kind=CUSTOM_REAL) :: xixl,xizl,gammaxl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
+  real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
 
-  real(kind=CUSTOM_REAL) :: kinetic_energy,potential_energy,total_energy
-  real(kind=CUSTOM_REAL) :: total_energy_glob
-  real(kind=CUSTOM_REAL) :: cpl,csl,rhol,mul_unrelaxed_elastic,lambdal_unrelaxed_elastic, &
-    lambdaplus2mu_unrelaxed_elastic,kappal
+  real(kind=CUSTOM_REAL) :: epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz,epsilon_yx,epsilon_zx,epsilon_zy
+  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
+
+  real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
+
+  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol
+  real(kind=CUSTOM_REAL) :: kappal
+
+  real(kind=CUSTOM_REAL) :: integration_weight
+  real(kind=CUSTOM_REAL) :: kinetic_energy,potential_energy
+  real(kind=CUSTOM_REAL) :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
+
+! local parameters
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
+    tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
   kinetic_energy = ZERO
   potential_energy = ZERO
+
+  if(ANISOTROPY .or. ATTENUATION) &
+    call exit_MPI(myrank,'calculation of total energy currently implemented only for media with no anisotropy and no attenuation')
 
 ! loop over spectral elements
   do ispec = 1,NSPEC_AB
@@ -457,74 +462,144 @@
     !---
     if(ispec_is_elastic(ispec)) then
 
-      ! get relaxed elastic parameters of current spectral element
-!     lambdal_unrelaxed_elastic = poroelastcoef(1,1,kmato(ispec))
-!     mul_unrelaxed_elastic = poroelastcoef(2,1,kmato(ispec))
-!     lambdaplus2mu_unrelaxed_elastic = poroelastcoef(3,1,kmato(ispec))
-!     rhol  = density(1,kmato(ispec))
+     do k=1,NGLLZ
+       do j=1,NGLLY
+         do i=1,NGLLX
+           iglob = ibool(i,j,k,ispec)
+           dummyx_loc(i,j,k) = displ(1,iglob)
+           dummyy_loc(i,j,k) = displ(2,iglob)
+           dummyz_loc(i,j,k) = displ(3,iglob)
+         enddo
+       enddo
+     enddo
 
-      ! double loop over GLL points
-!     do j = 1,NGLLZ
-!       do i = 1,NGLLX
+     do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
 
-          !--- if external medium, get elastic parameters of current grid point
-!         if(assign_external_model) then
-!           cpl = vpext(i,j,ispec)
-!           csl = vsext(i,j,ispec)
-!           rhol = rhoext(i,j,ispec)
-!           mul_unrelaxed_elastic = rhol*csl*csl
-!           lambdal_unrelaxed_elastic = rhol*cpl*cpl - TWO*mul_unrelaxed_elastic
-!           lambdaplus2mu_unrelaxed_elastic = lambdal_unrelaxed_elastic + TWO*mul_unrelaxed_elastic
-!         endif
+          iglob = ibool(i,j,k,ispec)
 
-          ! derivative along x and along z
-!         dux_dxi = 0._CUSTOM_REAL
-!         duz_dxi = 0._CUSTOM_REAL
+          tempx1(i,j,k) = 0._CUSTOM_REAL
+          tempx2(i,j,k) = 0._CUSTOM_REAL
+          tempx3(i,j,k) = 0._CUSTOM_REAL
 
-!         dux_dgamma = 0._CUSTOM_REAL
-!         duz_dgamma = 0._CUSTOM_REAL
+          tempy1(i,j,k) = 0._CUSTOM_REAL
+          tempy2(i,j,k) = 0._CUSTOM_REAL
+          tempy3(i,j,k) = 0._CUSTOM_REAL
 
-          ! first double loop over GLL points to compute and store gradients
-          ! we can merge the two loops because NGLLX == NGLLZ
-!         do k = 1,NGLLX
-!           dux_dxi = dux_dxi + displ_elastic(1,ibool(k,j,ispec))*hprime_xx(i,k)
-!           duz_dxi = duz_dxi + displ_elastic(3,ibool(k,j,ispec))*hprime_xx(i,k)
-!           dux_dgamma = dux_dgamma + displ_elastic(1,ibool(i,k,ispec))*hprime_zz(j,k)
-!           duz_dgamma = duz_dgamma + displ_elastic(3,ibool(i,k,ispec))*hprime_zz(j,k)
-!         enddo
+          tempz1(i,j,k) = 0._CUSTOM_REAL
+          tempz2(i,j,k) = 0._CUSTOM_REAL
+          tempz3(i,j,k) = 0._CUSTOM_REAL
 
-!         xixl = xix(i,j,ispec)
-!         xizl = xiz(i,j,ispec)
-!         gammaxl = gammax(i,j,ispec)
-!         gammazl = gammaz(i,j,ispec)
-!         jacobianl = jacobian(i,j,ispec)
+          do l=1,NGLLX
+            hp1 = hprime_xx(i,l)
+            tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
+            tempy1(i,j,k) = tempy1(i,j,k) + dummyy_loc(l,j,k)*hp1
+            tempz1(i,j,k) = tempz1(i,j,k) + dummyz_loc(l,j,k)*hp1
 
-          ! derivatives of displacement
-!         dux_dxl = dux_dxi*xixl + dux_dgamma*gammaxl
-!         dux_dzl = dux_dxi*xizl + dux_dgamma*gammazl
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+            hp2 = hprime_yy(j,l)
+            tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
+            tempy2(i,j,k) = tempy2(i,j,k) + dummyy_loc(i,l,k)*hp2
+            tempz2(i,j,k) = tempz2(i,j,k) + dummyz_loc(i,l,k)*hp2
 
-!         duz_dxl = duz_dxi*xixl + duz_dgamma*gammaxl
-!         duz_dzl = duz_dxi*xizl + duz_dgamma*gammazl
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+            hp3 = hprime_zz(k,l)
+            tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
+            tempy3(i,j,k) = tempy3(i,j,k) + dummyy_loc(i,j,l)*hp3
+            tempz3(i,j,k) = tempz3(i,j,k) + dummyz_loc(i,j,l)*hp3
+          enddo
 
-          ! compute kinetic energy
-!         kinetic_energy = kinetic_energy  &
-!             + rhol*(veloc_elastic(1,ibool(i,j,ispec))**2  &
-!             + veloc_elastic(3,ibool(i,j,ispec))**2) *wxgll(i)*wzgll(j)*jacobianl / TWO
+              ! get derivatives of ux, uy and uz with respect to x, y and z
+              xixl = xix(i,j,k,ispec)
+              xiyl = xiy(i,j,k,ispec)
+              xizl = xiz(i,j,k,ispec)
+              etaxl = etax(i,j,k,ispec)
+              etayl = etay(i,j,k,ispec)
+              etazl = etaz(i,j,k,ispec)
+              gammaxl = gammax(i,j,k,ispec)
+              gammayl = gammay(i,j,k,ispec)
+              gammazl = gammaz(i,j,k,ispec)
+              jacobianl = jacobian(i,j,k,ispec)
 
-          ! compute potential energy
-!         potential_energy = potential_energy &
-!             + (lambdaplus2mu_unrelaxed_elastic*dux_dxl**2 &
-!             + lambdaplus2mu_unrelaxed_elastic*duz_dzl**2 &
-!             + two*lambdal_unrelaxed_elastic*dux_dxl*duz_dzl &
-!             + mul_unrelaxed_elastic*(dux_dzl + duz_dxl)**2)*wxgll(i)*wzgll(j)*jacobianl / TWO
+              duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
+              duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
+              duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
 
-!       enddo
-!     enddo
+              duydxl = xixl*tempy1(i,j,k) + etaxl*tempy2(i,j,k) + gammaxl*tempy3(i,j,k)
+              duydyl = xiyl*tempy1(i,j,k) + etayl*tempy2(i,j,k) + gammayl*tempy3(i,j,k)
+              duydzl = xizl*tempy1(i,j,k) + etazl*tempy2(i,j,k) + gammazl*tempy3(i,j,k)
+
+              duzdxl = xixl*tempz1(i,j,k) + etaxl*tempz2(i,j,k) + gammaxl*tempz3(i,j,k)
+              duzdyl = xiyl*tempz1(i,j,k) + etayl*tempz2(i,j,k) + gammayl*tempz3(i,j,k)
+              duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
+
+              ! precompute some sums to save CPU time
+              duxdxl_plus_duydyl = duxdxl + duydyl
+              duxdxl_plus_duzdzl = duxdxl + duzdzl
+              duydyl_plus_duzdzl = duydyl + duzdzl
+              duxdyl_plus_duydxl = duxdyl + duydxl
+              duzdxl_plus_duxdzl = duzdxl + duxdzl
+              duzdyl_plus_duydzl = duzdyl + duydzl
+
+              ! compute the strain
+              epsilon_xx = duxdxl
+              epsilon_yy = duydyl
+              epsilon_zz = duzdzl
+              epsilon_xy = 0.5 * duxdyl_plus_duydxl
+              epsilon_xz = 0.5 * duzdxl_plus_duxdzl
+              epsilon_yz = 0.5 * duzdyl_plus_duydzl
+
+              ! define symmetric components of epsilon
+              epsilon_yx = epsilon_xy
+              epsilon_zx = epsilon_xz
+              epsilon_zy = epsilon_yz
+
+              kappal = kappastore(i,j,k,ispec)
+              mul = mustore(i,j,k,ispec)
+              rhol = rhostore(i,j,k,ispec)
+
+              ! isotropic case
+              lambdalplus2mul = kappal + FOUR_THIRDS * mul
+              lambdal = lambdalplus2mul - 2.*mul
+
+              ! compute stress sigma
+              sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl
+              sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl
+              sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl
+
+              sigma_xy = mul*duxdyl_plus_duydxl
+              sigma_xz = mul*duzdxl_plus_duxdzl
+              sigma_yz = mul*duzdyl_plus_duydzl
+
+              ! define symmetric components of sigma
+              sigma_yx = sigma_xy
+              sigma_zx = sigma_xz
+              sigma_zy = sigma_yz
+
+              integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+
+              ! compute kinetic energy  1/2 rho ||v||^2
+              kinetic_energy = kinetic_energy + integration_weight * rhol*(veloc(1,iglob)**2 + &
+                                   veloc(2,iglob)**2 + veloc(3,iglob)**2) / 2.
+
+              ! compute potential energy 1/2 sigma_ij epsilon_ij
+              potential_energy = potential_energy + integration_weight * &
+                (sigma_xx*epsilon_xx + sigma_xy*epsilon_xy + sigma_xz*epsilon_xz + &
+                 sigma_yx*epsilon_yx + sigma_yy*epsilon_yy + sigma_yz*epsilon_yz + &
+                 sigma_zx*epsilon_zx + sigma_zy*epsilon_zy + sigma_zz*epsilon_zz) / 2.
+
+          enddo
+        enddo
+     enddo
 
     !---
     !--- acoustic spectral element
     !---
     else if(ispec_is_acoustic(ispec)) then
+
+   !!! DK DK added this until this part is written
+      stop 'acoustic energy calculation will be implemented soon'
 
       ! for the definition of potential energy in an acoustic fluid, see for instance
       ! equation (23) of M. Maess et al., Journal of Sound and Vibration 296 (2006) 264-276
@@ -558,7 +633,7 @@
 !     lambdal_unrelaxed_elastic = poroelastcoef(1,1,kmato(ispec))
 !     mul_unrelaxed_elastic = poroelastcoef(2,1,kmato(ispec))
 !     rhol  = density(1,kmato(ispec))
-!     kappal  = lambdal_unrelaxed_elastic + TWO*mul_unrelaxed_elastic/3._CUSTOM_REAL
+!     kappal  = lambdal_unrelaxed_elastic + 2.*mul_unrelaxed_elastic/3._CUSTOM_REAL
 !     cpl = sqrt((kappal + 4._CUSTOM_REAL*mul_unrelaxed_elastic/3._CUSTOM_REAL)/rhol)
 
       ! double loop over GLL points
@@ -576,11 +651,11 @@
           ! compute kinetic energy
 !         kinetic_energy = kinetic_energy &
 !             + rhol*(vector_field_element(1,i,j)**2 &
-!             + vector_field_element(2,i,j)**2) *wxgll(i)*wzgll(j)*jacobianl / TWO
+!             + vector_field_element(2,i,j)**2) *wxgll(i)*wzgll(j)*jacobianl / 2.
 
           ! compute potential energy
 !         potential_energy = potential_energy &
-!             + (pressure_element(i,j)**2)*wxgll(i)*wzgll(j)*jacobianl / (TWO * rhol * cpl**2)
+!             + (pressure_element(i,j)**2)*wxgll(i)*wzgll(j)*jacobianl / (2. * rhol * cpl**2)
 
 !       enddo
 !     enddo
@@ -593,12 +668,17 @@
 
   enddo
 
-! do a MPI_REDUCE with a MPI_SUM to compute the total
-  total_energy = kinetic_energy + potential_energy
-  call max_all_cr(total_energy,total_energy_glob)
+! compute the total using a reduction between all the processors
+  call sum_all_cr(kinetic_energy,kinetic_energy_glob)
+  call sum_all_cr(potential_energy,potential_energy_glob)
+  total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
 ! write the total to disk from the master
-  if(myrank == 0) write(IOUT_ENERGY,*) it, total_energy_glob
+  if(CUSTOM_REAL == SIZE_REAL) then
+    if(myrank == 0) write(IOUT_ENERGY,*) it,kinetic_energy_glob,potential_energy_glob,total_energy_glob
+  else
+    if(myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
+  endif
 
   end subroutine it_compute_total_energy
 
