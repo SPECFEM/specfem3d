@@ -486,22 +486,8 @@ Then, to configure the code, type this:\\
 \noindent
 \texttt{./configure FC=bgxlf90\_r MPIFC=mpixlf90\_r CC=bgxlc\_r LOCAL\_PATH\_IS\_ALSO\_GLOBAL=true}\\
 
-In order for the SCOTCH domain decomposer to compile, on some (but not all) Blue Gene systems after
-running \texttt{configure} you may need to edit file src/decompose\_mesh/scotch/src/Makefile.inc and replace\\
-
-\noindent
-CCS    = bgxlc\_r \\
-\noindent
-CCD    = bgxlc\_r (or similar)\\
-
-with:
-
-\noindent
-CCS    = gcc \\
-\noindent
-CCD    = gcc \\
-
-and then type "make clean" and "make all".
+In order for the SCOTCH domain decomposer to compile, on some (but not all) Blue Gene systems you may need to
+run \texttt{configure} with \texttt{CC=gcc} instead of \texttt{CC=bgxlc\_r}.
 
 
 \noindent
