@@ -395,8 +395,6 @@
 
   subroutine it_compute_total_energy()
 
-! 3333333333333333333333333333333333333333333333333
-
 ! computes kinetic, potential and total energy
 ! in all the slices using an MPI reduction
 ! and output that to an energy file
