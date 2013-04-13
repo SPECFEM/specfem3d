@@ -68,22 +68,9 @@ ptscotch			:	clean
 					libptscotcherr$(LIB)						\
 					libptscotcherrexit$(LIB)
 
-# libscotch replacement text for install line
-$(libdir)/libscotch$(LIB): libscotch$(LIB)
-	-$(CP) libscotch$(LIB) $(libdir)
-$(libdir)/libscotcherr$(LIB): libscotcherr$(LIB)
-	-$(CP) libscotcherr$(LIB) $(libdir)
-$(libdir)/libscotcherrexit$(LIB): libscotcherrexit$(LIB)
-	-$(CP) libscotcherrexit$(LIB) $(libdir)
-$(includedir)/scotch.h: scotch.h
-	-$(CP) scotch.h $(includedir)
-$(includedir)/scotchf.h: scotchf.h
-	-$(CP) scotchf.h $(includedir)
-
-install				: $(libdir)/libscotch$(LIB) $(libdir)/libscotcherr$(LIB) \
-	$(libdir)/libscotcherrexit$(LIB)	\
-	$(includedir)/scotch.h $(includedir)/scotchf.h
-
+install				:
+					-$(CP) scotch.h scotchf.h $(includedir)
+					-$(CP) libscotch$(LIB) libscotcherr*$(LIB) $(libdir)
 
 ptinstall			:
 					-$(CP) scotch.h $(includedir)/ptscotch.h
