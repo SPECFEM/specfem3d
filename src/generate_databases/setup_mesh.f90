@@ -72,12 +72,12 @@
         inode = nodes_ibelm_top(icorner,iface)
         if (nodes_coords_ext_mesh(3,inode) < min_elevation) then
            min_elevation = nodes_coords_ext_mesh(3,inode)
-        end if
+        endif
         if (nodes_coords_ext_mesh(3,inode) > max_elevation) then
            max_elevation = nodes_coords_ext_mesh(3,inode)
-        end if
-     end do
-  end do
+        endif
+     enddo
+  enddo
 
 ! compute the maximum of the maxima for all the slices using an MPI reduction
   call min_all_dp(min_elevation,min_elevation_all)

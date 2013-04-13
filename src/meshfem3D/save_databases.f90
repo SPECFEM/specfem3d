@@ -94,7 +94,7 @@
   write(IIN_database) nglob
   do iglob=1,nglob
      write(IIN_database) iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),nodes_coords(iglob,3)
-  end do
+  enddo
 
   ! Materials properties
    write(IIN_database) NMATERIALS, 0
@@ -104,7 +104,7 @@
       matpropl(1:6) = material_properties(idoubl,1:6)
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
       write(IIN_database) matpropl
-   end do
+   enddo
 
 
   write(IIN_database) nspec
@@ -115,7 +115,7 @@
       write(IIN_database) ispec,true_material_num(ispec),1,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
            ibool(2,2,1,ispec),ibool(1,2,1,ispec),ibool(1,1,2,ispec),&
            ibool(2,1,2,ispec),ibool(2,2,2,ispec),ibool(1,2,2,ispec)
-  end do
+  enddo
 
   ! Boundaries
   write(IIN_database) 1,nspec2D_xmin
@@ -128,27 +128,27 @@
   do i=1,nspec2D_xmin
      write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)),&
           ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
-  end do
+  enddo
   do i=1,nspec2D_xmax
      write(IIN_database) ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), &
           ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
-  end do
+  enddo
   do i=1,nspec2D_ymin
      write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)),&
           ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
-  end do
+  enddo
   do i=1,nspec2D_ymax
      write(IIN_database) ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),ibool(1,NGLLY_M,1,ibelm_ymax(i)), &
           ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
-  end do
+  enddo
   do i=1,NSPEC2D_BOTTOM
      write(IIN_database) ibelm_bottom(i),ibool(1,1,1,ibelm_bottom(i)),ibool(NGLLX_M,1,1,ibelm_bottom(i)), &
           ibool(NGLLX_M,NGLLY_M,1,ibelm_bottom(i)),ibool(1,NGLLY_M,1,ibelm_bottom(i))
-  end do
+  enddo
   do i=1,NSPEC2D_TOP
      write(IIN_database) ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)), &
           ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
-  end do
+  enddo
 
   ! JC JC todo: implement C-PML code in internal mesher
   ! dummy_nspec_cpml is used here to match the read instructions in generate_databases/read_partition_files.f90
@@ -165,36 +165,36 @@
   if(iproc_xi == 0) then
      nb_interfaces =  nb_interfaces -1
      interfaces(W) = .false.
-  end if
+  endif
   if(iproc_xi == NPROC_XI-1) then
      nb_interfaces =  nb_interfaces -1
      interfaces(E) = .false.
-  end if
+  endif
   if(iproc_eta == 0) then
      nb_interfaces =  nb_interfaces -1
      interfaces(S) = .false.
-  end if
+  endif
   if(iproc_eta == NPROC_ETA-1) then
      nb_interfaces =  nb_interfaces -1
      interfaces(N) = .false.
-  end if
+  endif
 
   if((interfaces(W) .eqv. .true.) .and. (interfaces(N) .eqv. .true.)) then
        interfaces(NW) = .true.
        nb_interfaces =  nb_interfaces +1
-  end if
+  endif
   if((interfaces(N) .eqv. .true.) .and. (interfaces(E) .eqv. .true.)) then
        interfaces(NE) = .true.
        nb_interfaces =  nb_interfaces +1
-  end if
+  endif
   if((interfaces(E) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
        interfaces(SE) = .true.
        nb_interfaces =  nb_interfaces +1
-  end if
+  endif
   if((interfaces(W) .eqv. .true.) .and. (interfaces(S) .eqv. .true.)) then
        interfaces(SW) = .true.
        nb_interfaces =  nb_interfaces +1
-  end if
+  endif
 
   nspec_interface(:) = 0
   if(interfaces(W))  nspec_interface(W) = count(iMPIcut_xi(1,:) .eqv. .true.)
@@ -215,74 +215,74 @@
      do ispec = 1,nspec
         if(iMPIcut_xi(1,ispec))  write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(1,2,1,ispec), &
              ibool(1,1,2,ispec),ibool(1,2,2,ispec)
-     end do
-  end if
+     enddo
+  endif
 
   if(interfaces(E)) then
      write(IIN_database) addressing(iproc_xi+1,iproc_eta),nspec_interface(E)
      do ispec = 1,nspec
         if(iMPIcut_xi(2,ispec))  write(IIN_database) ispec,4,ibool(2,1,1,ispec),ibool(2,2,1,ispec), &
              ibool(2,1,2,ispec),ibool(2,2,2,ispec)
-     end do
-  end if
+     enddo
+  endif
 
    if(interfaces(S)) then
      write(IIN_database) addressing(iproc_xi,iproc_eta-1),nspec_interface(S)
      do ispec = 1,nspec
         if(iMPIcut_eta(1,ispec))  write(IIN_database) ispec,4,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
              ibool(1,1,2,ispec),ibool(2,1,2,ispec)
-     end do
-  end if
+     enddo
+  endif
 
   if(interfaces(N)) then
      write(IIN_database) addressing(iproc_xi,iproc_eta+1),nspec_interface(N)
      do ispec = 1,nspec
         if(iMPIcut_eta(2,ispec))  write(IIN_database) ispec,4,ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
              ibool(2,2,2,ispec),ibool(1,2,2,ispec)
-     end do
-  end if
+     enddo
+  endif
 
   if(interfaces(NW)) then
      write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
      do ispec = 1,nspec
         if((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
            write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
-        end if
-     end do
-  end if
+        endif
+     enddo
+  endif
 
   if(interfaces(NE)) then
      write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
      do ispec = 1,nspec
         if((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
            write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
-        end if
-     end do
-  end if
+        endif
+     enddo
+  endif
 
   if(interfaces(SE)) then
      write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
      do ispec = 1,nspec
         if((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
            write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
-        end if
-     end do
-  end if
+        endif
+     enddo
+  endif
 
   if(interfaces(SW)) then
      write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
      do ispec = 1,nspec
         if((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
            write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
-        end if
-     end do
-  end if
+        endif
+     enddo
+  endif
 
   else
 
      write(IIN_database) 0,0
 
-  end if
+  endif
 
   close(IIN_database)
 

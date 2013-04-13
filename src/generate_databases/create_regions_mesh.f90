@@ -110,7 +110,7 @@
     call crm_ext_setup_indexing(ibool, &
                       xstore,ystore,zstore,nspec,nglob,npointot, &
                       nnodes_ext_mesh,nodes_coords_ext_mesh,myrank)
-  end if
+  endif
 
   if (ANY_FAULT) then
    ! recalculate *store with faults closed

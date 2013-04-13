@@ -251,7 +251,7 @@ contains
           nmeshregions = 5
        else
           stop 'Wrong number of mesh regions'
-       end if
+       endif
     endif
 
     do isubregion = 1,nmeshregions
@@ -286,7 +286,7 @@ contains
               ispec = ispec + 1
               if(ispec > nspec) then
                 call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
-              end if
+              endif
 
               ! check if element is on topography
               if((ir == ir2) .and. (isubregion == nmeshregions)) then
@@ -329,7 +329,7 @@ contains
                 ispec = ispec + 1
                 if(ispec > nspec) then
                   call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
-                end if
+                endif
 
                 doubling_index = IFLAG_BASEMENT_TOPO
                 true_material_num(ispec) = material_num(ir,ix,iy)
@@ -344,7 +344,7 @@ contains
                      UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK)
 
               enddo
-            end if
+            endif
 
           ! end of loop on all the mesh points in current subregion
           enddo
@@ -438,7 +438,7 @@ contains
 
       ! stop mesher
       call exit_MPI(myrank,'incorrect global number, please check mesh input parameters')
-    end if
+    endif
 
     ! put in classical format
     allocate(nodes_coords(nglob,3),stat=ier)
@@ -466,7 +466,7 @@ contains
     if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= nglob) then
        print*,'error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
        call exit_MPI(myrank,'incorrect global ibool numbering')
-    end if
+    endif
 
     ! outputs mesh file for visualization
     call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &

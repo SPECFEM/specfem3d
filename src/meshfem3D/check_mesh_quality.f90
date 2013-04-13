@@ -118,7 +118,7 @@
      write(IMAIN,*) '**************************'
      write(IMAIN,*)
      write(IMAIN,*) 'start computing the minimum and maximum edge size'
-  end if
+  endif
 
   ! read the parameter file
   call read_parameter_file(NPROC,NTSTEP_BETWEEN_OUTPUT_SEISMOS,NSTEP,DT,NGNOD,NGNOD2D, &
@@ -221,7 +221,7 @@
   if((myrank == skewness_max_rank) .and. (myrank /= 0)) then
      tmp_ispec_max_skewness(1) = ispec_max_skewness
      call send_i_t(tmp_ispec_max_skewness,1,0)
-  end if
+  endif
 
   if(myrank == 0) then
 
@@ -230,7 +230,7 @@
         ispec_max_skewness_MPI = tmp_ispec_max_skewness_MPI(1)
      else
         ispec_max_skewness_MPI = ispec_max_skewness
-     end if
+     endif
 
   write(IMAIN,*) 'done processing '
 
@@ -290,7 +290,7 @@
 
   ! create statistics about mesh quality
   write(IMAIN,*) 'creating histogram and statistics of mesh quality'
-  end if
+  endif
 
   ! erase histogram of skewness
   classes_skewness(:) = 0
@@ -313,7 +313,7 @@
   ! sum skewness results in all processes
   do iclass = 0,NCLASS-1
      call sum_all_i(classes_skewness(iclass),classes_skewnessMPI(iclass))
-  end do
+  enddo
 
   call sum_all_i(NSPEC,NSPEC_ALL_SLICES)
 
@@ -365,7 +365,7 @@
      stop 'total percentage should be 100%'
   endif
 
-  end if
+  endif
 
   ! debug: for vtk output
   if( CREATE_VTK_FILES ) then

@@ -747,27 +747,27 @@
           CPML_type(ispec_CPML) = 1
 
        ! Y_surface C-PML
-       elseif( CPML_regions(ispec_CPML) == 2 ) then
+       else if( CPML_regions(ispec_CPML) == 2 ) then
           CPML_type(ispec_CPML) = 1
 
        ! Z_surface C-PML
-       elseif( CPML_regions(ispec_CPML) == 3 ) then
+       else if( CPML_regions(ispec_CPML) == 3 ) then
           CPML_type(ispec_CPML) = 1
 
        ! XY_edge C-PML
-       elseif( CPML_regions(ispec_CPML) == 4 ) then
+       else if( CPML_regions(ispec_CPML) == 4 ) then
           CPML_type(ispec_CPML) = 2
 
        ! XZ_edge C-PML
-       elseif( CPML_regions(ispec_CPML) == 5 ) then
+       else if( CPML_regions(ispec_CPML) == 5 ) then
           CPML_type(ispec_CPML) = 2
 
        ! YZ_edge C-PML
-       elseif( CPML_regions(ispec_CPML) == 6 ) then
+       else if( CPML_regions(ispec_CPML) == 6 ) then
           CPML_type(ispec_CPML) = 2
 
        ! XYZ_corner C-PML
-       elseif( CPML_regions(ispec_CPML) == 7 ) then
+       else if( CPML_regions(ispec_CPML) == 7 ) then
           CPML_type(ispec_CPML) = 3
        endif
 

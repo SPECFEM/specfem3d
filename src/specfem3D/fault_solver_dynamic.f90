@@ -123,7 +123,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   if (nbfaults==0) then
     if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
-  elseif (nbfaults==1) then
+  else if (nbfaults==1) then
     if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
     if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
@@ -230,7 +230,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     !WARNING : Quick and dirty free surface condition at z=0
     !  do k=1,bc%nglob
     !    if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) <= SMALLVAL) bc%T0(2,k) = 0
-    !  end do
+    !  enddo
 
     ! Set friction parameters and initialize friction variables
     allocate(bc%MU(bc%nglob))
@@ -467,7 +467,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     !  where (bc%zcoord(:) > - SMALLVAL) T(2,:) = 0
     ! do k=1,bc%nglob
     !   if (abs(bc%zcoord(k)-0.e0_CUSTOM_REAL) < SMALLVAL) T(2,k) = 0.e0_CUSTOM_REAL
-    ! end do
+    ! enddo
 
     ! add initial stress
     T = T + bc%T0
@@ -822,7 +822,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
         b11 = w/(abs(x)-W1-w)
         b12 = w/(abs(x)-W1)
         B1 = HALF * (ONE + tanh(b11 + b12))
-      elseif(abs(x)<=W1) then
+      else if(abs(x)<=W1) then
         B1 = 1._CUSTOM_REAL
       else
         B1 = 0._CUSTOM_REAL
@@ -832,7 +832,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
         b21 = w/(abs(z-hypo_z)-W2-w)
         b22 = w/(abs(z-hypo_z)-W2)
         B2 = HALF * (ONE + tanh(b21 + b22))
-      elseif(abs(z-hypo_z)<=W2) then
+      else if(abs(z-hypo_z)<=W2) then
         B2 = 1._CUSTOM_REAL
       else
         B2 = 0._CUSTOM_REAL
@@ -841,7 +841,7 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
       f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
       f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
 
-    elseif( abs(x)<=W1 .and. abs(z-hypo_z)<=W2 ) then
+    else if( abs(x)<=W1 .and. abs(z-hypo_z)<=W2 ) then
       f%a(i) = 0.008
       f%Vw(i) = 0.1_CUSTOM_REAL
     else
@@ -959,7 +959,7 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
   write(IOUT,*) "j k t"
   do i = 1,size(dataXZ%tRUP)
     write(IOUT,'(3(E15.7))') dataXZ%xcoord(i), -dataXZ%zcoord(i), dataXZ%tRUP(i)
-  end do
+  enddo
 
   close(IOUT)
 
@@ -1319,10 +1319,10 @@ function rtsafe(funcd,x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   if(fl==0.) then
     rtsafe=x2
     return
-  elseif(fh==0.) then
+  else if(fh==0.) then
     rtsafe=x2
     return
-  elseif(fl<0) then
+  else if(fl<0) then
     xl=x1
     xh=x2
   else

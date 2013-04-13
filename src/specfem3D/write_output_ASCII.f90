@@ -69,7 +69,7 @@
      ! ASCII format case
      open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
           sisname(1:len_trim(sisname)),status='unknown')
-  end if
+  endif
 
   ! make sure we never write more than the maximum number of time steps
   ! subtract half duration of the source to make sure travel time is correct
@@ -105,7 +105,7 @@
          ! ASCII format case
          !write(IOUT,*) time_t,' ',seismograms(iorientation,irec_local,isample)
          write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
-      end if
+      endif
 
     else
       call exit_MPI(myrank,'incorrect record label')

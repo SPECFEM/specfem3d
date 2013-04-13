@@ -63,16 +63,16 @@
      do i=1,nglob
 !        write(64,*) i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
          write(64,'(i10,3(a,e15.6))') i,',',nodes_coords(i,1),',',nodes_coords(i,2),',',nodes_coords(i,3)
-     end do
+     enddo
      write(64,'(a31)') '*ELEMENT, TYPE=C3D8R, ELSET=EB1'
      do ispec=1,nspec
         write(64,'(i10,8(a,i10))') ispec,',',ibool(1,1,2,ispec),',',ibool(1,1,1,ispec),',',ibool(1,2,1,ispec), &
              ',',ibool(1,2,2,ispec),',',ibool(2,1,2,ispec),',',ibool(2,1,1,ispec),',',ibool(2,2,1,ispec),',', &
              ibool(2,2,2,ispec)
-     end do
+     enddo
      close(64)
 
-  end if
+  endif
 
 
   if(CREATE_DX_FILES) then
@@ -84,7 +84,7 @@
 
      do ipoin = 1,nglob
         write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
-     end do
+     enddo
 
      ! ************* generate elements ******************
 
@@ -124,7 +124,7 @@
 
      close(66)
 
-  end if
+  endif
 
   if( CREATE_VTK_FILES ) then
     ! vtk file output

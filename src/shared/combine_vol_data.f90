@@ -762,7 +762,7 @@
     else
       call write_integer(nee)
     endif
-  end if
+  endif
 
   ! writes out element indices
   allocate(mask_ibool(NGLOB_AB), &

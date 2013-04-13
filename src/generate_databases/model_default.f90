@@ -174,6 +174,6 @@
 
     stop 'material: not implemented yet'
 
-  end if
+  endif
 
   end subroutine model_default

@@ -90,7 +90,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               if( ispec_is_elastic(ispec) ) then
 
@@ -109,7 +109,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -154,7 +154,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
@@ -164,7 +164,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
+           else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- Y-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -179,7 +179,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               if( ispec_is_elastic(ispec) ) then
 
@@ -198,7 +198,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -243,7 +243,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
@@ -253,7 +253,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
+           else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- Z-surface C-PML ---------------------------------
               !------------------------------------------------------------------------------
@@ -268,7 +268,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               if( ispec_is_elastic(ispec) ) then
 
@@ -287,7 +287,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -332,7 +332,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
@@ -342,7 +342,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
+           else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- XY-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               coef0_2 = coef0_1
               coef1_2 = coef1_1
@@ -386,7 +386,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + displ(3,iglob) * (it-0.0) * deltat * coef2_2
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -409,7 +409,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
                       + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
                       * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
                  A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) + &
                       alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
                       + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
@@ -446,7 +446,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
@@ -456,7 +456,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
+           else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- XZ-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -471,7 +471,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               coef0_2 = coef0_1
               coef1_2 = coef1_1
@@ -500,7 +500,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + displ(3,iglob) * (it-0.0) * deltat * coef2_2
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)= 0.0
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -523,7 +523,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
                       * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
                  A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
@@ -560,7 +560,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
@@ -570,7 +570,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
+           else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- YZ-edge C-PML -----------------------------------
               !------------------------------------------------------------------------------
@@ -585,7 +585,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               coef0_2 = coef0_1
               coef1_2 = coef1_1
@@ -614,7 +614,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + displ(3,iglob) * (it-0.0) * deltat * coef2_2
                  rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)=0.d0
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -637,7 +637,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
                       * (it+0.0) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
                  A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
@@ -674,7 +674,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
@@ -684,7 +684,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
               endif
 
-           elseif( CPML_regions(ispec_CPML) == CPML_XYZ ) then
+           else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
               !------------------------------------------------------------------------------
               !---------------------------- XYZ-corner C-PML --------------------------------
               !------------------------------------------------------------------------------
@@ -699,7 +699,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               else
                  coef1_1 = deltat/2.0d0
                  coef2_1 = deltat/2.0d0
-              end if
+              endif
 
               coef0_2 = coef0_1
               coef1_2 = coef1_1
@@ -738,7 +738,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       + (displ(3,iglob) + deltat * veloc(3,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
                       + displ(3,iglob) * ((it-0.0) * deltat)**2 * coef2_3
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
@@ -788,7 +788,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               if( ispec_is_elastic(ispec) ) then
                  A3 = temp_A3 + (it+0.0) * deltat*temp_A4 !+ ((it+0.0) * deltat)**2*temp_A5
                  A4 = -temp_A4 ! -2.0*(it+0.0) * deltat*temp_A5
-              elseif( ispec_is_acoustic(ispec)) then
+              else if( ispec_is_acoustic(ispec)) then
                  A3 = temp_A3 + (it+0.5)*deltat*temp_A4 !+ ((it+0.5)*deltat)**2*temp_A5
                  A4 = -temp_A4 !-2.0*(it+0.5)*deltat*temp_A5
               endif
@@ -822,7 +822,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
                       )
 
-              elseif( ispec_is_acoustic(ispec) ) then
+              else if( ispec_is_acoustic(ispec) ) then
 
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &

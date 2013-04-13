@@ -545,7 +545,7 @@
        else ! GPU_MODE == .true.
           call add_source_master_rec_noise_cu(Mesh_pointer, myrank, it, irec_master_noise, islice_selected_rec)
        endif
-    elseif ( NOISE_TOMOGRAPHY == 2 ) then
+    else if ( NOISE_TOMOGRAPHY == 2 ) then
        ! second step of noise tomography, i.e., read the surface movie saved at every timestep
        ! use the movie to drive the ensemble forward wavefield
        call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
@@ -562,7 +562,7 @@
         ! note the ensemble forward sources are generally distributed on the surface of the earth
         ! that's to say, the ensemble forward source is kind of a surface force density, not a body force density
         ! therefore, we must add it here, before applying the inverse of mass matrix
-    elseif ( NOISE_TOMOGRAPHY == 3 ) then
+    else if ( NOISE_TOMOGRAPHY == 3 ) then
         ! third step of noise tomography, i.e., read the surface movie saved at every timestep
         ! use the movie to reconstruct the ensemble forward wavefield
         ! the ensemble adjoint wavefield is done as usual

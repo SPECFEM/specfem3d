@@ -80,7 +80,7 @@ subroutine fault_read_input(prname,myrank)
   else
     if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
     close(IIN_PAR)
-  end if
+  endif
 
   ANY_FAULT = (nb>0)
   if (.not. ANY_FAULT)  return

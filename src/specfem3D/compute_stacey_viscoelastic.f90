@@ -98,9 +98,9 @@
      if ( phase_is_inner .eqv. .false. ) then
         if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
            call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
-        end if
-     end if
-  end if
+        endif
+     endif
+  endif
 
   ! checks if anything to do
   if( num_abs_boundary_faces == 0 ) return
@@ -148,7 +148,7 @@
                      vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
                      vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
                      vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
-                 end if
+                 endif
                  ! gets associated normal
                  nx = abs_boundary_normal(1,igll,iface)
                  ny = abs_boundary_normal(2,igll,iface)
@@ -163,10 +163,10 @@
                  tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
                  if (USE_VADIM) then
-                     tx = -Tract_dsm_boundary(1,it_dsm,igll,iface) + tx 
+                     tx = -Tract_dsm_boundary(1,it_dsm,igll,iface) + tx
                      ty = -Tract_dsm_boundary(2,it_dsm,igll,iface) + ty
-                     tz = -Tract_dsm_boundary(3,it_dsm,igll,iface) + tz 
-                 end if
+                     tz = -Tract_dsm_boundary(3,it_dsm,igll,iface) + tz
+                 endif
 
                  ! gets associated, weighted jacobian
                  jacobianw = abs_boundary_jacobian2Dw(igll,iface)
@@ -229,18 +229,18 @@
    it_dsm = 1
    write(*,*) 'read dsm files',it_dsm
    do iface=1,num_abs_boundary_faces
-      
+
       igll = 0
       do j=1,5  !! DK DK why use 5 and not NGLLY here? (I assume 5 means 5 GLL points here?)
         do i=1,5  !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
            igll = igll + 1
            read(IIN_veloc_dsm) dsm_boundary_tmp(:,:,i,j)
-           Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j) 
+           Veloc_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
            read(IIN_tract_dsm) dsm_boundary_tmp(:,:,i,j)
-           Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j) 
+           Tract_dsm_boundary(:,:,igll,iface) = dsm_boundary_tmp(:,:,i,j)
       enddo
     enddo
    enddo
-  
+
   end subroutine read_dsm_file
 

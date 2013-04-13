@@ -239,7 +239,7 @@
           endif
         enddo
       enddo
-    end do
+    enddo
 
     ! if we have not located a target element, the point is not in this slice
     ! therefore use first element only for fictitious iterative search
@@ -269,8 +269,8 @@
             inode = inode + 1
             elevation_node(inode) = zstore(iglob)
             dist_node(inode) = sqrt( (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2 )
-          end do
-        end do
+          enddo
+        enddo
 
         ! weighted elevation
         dist = sum( dist_node(:) )
@@ -291,10 +291,10 @@
           endif
         endif
 
-      end do
-    end do
+      enddo
+    enddo
 
-  end if
+  endif
 
   end subroutine get_topo_elevation_free
 
@@ -398,7 +398,7 @@
           located_target = .true.
         endif
       enddo
-    end do
+    enddo
 
     ! if we have not located a target element, the point is not in this slice
     ! therefore use first element only for fictitious iterative search
@@ -412,7 +412,7 @@
       located_target = .true.
     endif
 
-  end if
+  endif
 
   end subroutine get_topo_elevation_free_closest
 

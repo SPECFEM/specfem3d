@@ -94,7 +94,7 @@
       ! gets spectral element corner indices  (defines all nodes of face/edge)
       do k = 1, NGNOD_EIGHT_CORNERS
          n(k) = knods(k,ispec)
-      end do
+      enddo
 
       ! interface node ids
       e1 = my_interfaces(3,ispec_interface,num_interface)
@@ -120,17 +120,17 @@
               ! adds point to interface
               npoin_interface_ext_mesh = npoin_interface_ext_mesh + 1
               ibool_interfaces_ext_mesh(npoin_interface_ext_mesh,num_interface) = iglob
-            end if
-          end do
-        end do
-      end do
+            endif
+          enddo
+        enddo
+      enddo
 
-    end do
+    enddo
 
     ! stores total number of (global) points on this MPI interface
     nibool_interfaces_ext_mesh(num_interface) = npoin_interface_ext_mesh
 
-  end do
+  enddo
 
   deallocate( mask_ibool_ext_mesh )
 
@@ -175,7 +175,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = 1
       izmin = 1
       izmax = 1
-    end if
+    endif
     if ( e1 == n(2) ) then
       ixmin = NGLLX
       ixmax = NGLLX
@@ -183,7 +183,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = 1
       izmin = 1
       izmax = 1
-    end if
+    endif
     if ( e1 == n(3) ) then
       ixmin = NGLLX
       ixmax = NGLLX
@@ -191,7 +191,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = NGLLY
       izmin = 1
       izmax = 1
-    end if
+    endif
     if ( e1 == n(4) ) then
       ixmin = 1
       ixmax = 1
@@ -199,7 +199,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = NGLLY
       izmin = 1
       izmax = 1
-    end if
+    endif
     if ( e1 == n(5) ) then
       ixmin = 1
       ixmax = 1
@@ -207,7 +207,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = 1
       izmin = NGLLZ
       izmax = NGLLZ
-    end if
+    endif
     if ( e1 == n(6) ) then
       ixmin = NGLLX
       ixmax = NGLLX
@@ -215,7 +215,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = 1
       izmin = NGLLZ
       izmax = NGLLZ
-    end if
+    endif
     if ( e1 == n(7) ) then
       ixmin = NGLLX
       ixmax = NGLLX
@@ -223,7 +223,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = NGLLY
       izmin = NGLLZ
       izmax = NGLLZ
-    end if
+    endif
     if ( e1 == n(8) ) then
       ixmin = 1
       ixmax = 1
@@ -231,7 +231,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
       iymax = NGLLY
       izmin = NGLLZ
       izmax = NGLLZ
-    end if
+    endif
 
   else if ( itype == 2 ) then
 
@@ -245,18 +245,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = NGLLX
           iymax = 1
           izmax = 1
-       end if
+       endif
        if ( e2 == n(4) ) then
           ixmax = 1
           iymax = NGLLY
           izmax = 1
-       end if
+       endif
        if ( e2 == n(5) ) then
           ixmax = 1
           iymax = 1
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(2) ) then
        ixmin = NGLLX
        iymin = 1
@@ -265,18 +265,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = NGLLX
           iymax = NGLLY
           izmax = 1
-       end if
+       endif
        if ( e2 == n(1) ) then
           ixmax = 1
           iymax = 1
           izmax = 1
-       end if
+       endif
        if ( e2 == n(6) ) then
           ixmax = NGLLX
           iymax = 1
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(3) ) then
        ixmin = NGLLX
        iymin = NGLLY
@@ -285,18 +285,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = 1
           iymax = NGLLY
           izmax = 1
-       end if
+       endif
        if ( e2 == n(2) ) then
           ixmax = NGLLX
           iymax = 1
           izmax = 1
-       end if
+       endif
        if ( e2 == n(7) ) then
           ixmax = NGLLX
           iymax = NGLLY
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(4) ) then
        ixmin = 1
        iymin = NGLLY
@@ -305,18 +305,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = 1
           iymax = 1
           izmax = 1
-       end if
+       endif
        if ( e2 == n(3) ) then
           ixmax = NGLLX
           iymax = NGLLY
           izmax = 1
-       end if
+       endif
        if ( e2 == n(8) ) then
           ixmax = 1
           iymax = NGLLY
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(5) ) then
        ixmin = 1
        iymin = 1
@@ -325,18 +325,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = 1
           iymax = 1
           izmax = 1
-       end if
+       endif
        if ( e2 == n(6) ) then
           ixmax = NGLLX
           iymax = 1
           izmax = NGLLZ
-       end if
+       endif
        if ( e2 == n(8) ) then
           ixmax = 1
           iymax = NGLLY
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(6) ) then
        ixmin = NGLLX
        iymin = 1
@@ -345,18 +345,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = NGLLX
           iymax = 1
           izmax = 1
-       end if
+       endif
        if ( e2 == n(7) ) then
           ixmax = NGLLX
           iymax = NGLLY
           izmax = NGLLZ
-       end if
+       endif
        if ( e2 == n(5) ) then
           ixmax = 1
           iymax = 1
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(7) ) then
        ixmin = NGLLX
        iymin = NGLLY
@@ -365,18 +365,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = NGLLX
           iymax = NGLLY
           izmax = 1
-       end if
+       endif
        if ( e2 == n(8) ) then
           ixmax = 1
           iymax = NGLLY
           izmax = NGLLZ
-       end if
+       endif
        if ( e2 == n(6) ) then
           ixmax = NGLLX
           iymax = 1
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
     if ( e1 == n(8) ) then
        ixmin = 1
        iymin = NGLLY
@@ -385,18 +385,18 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
           ixmax = 1
           iymax = NGLLY
           izmax = 1
-       end if
+       endif
        if ( e2 == n(5) ) then
           ixmax = 1
           iymax = 1
           izmax = NGLLZ
-       end if
+       endif
        if ( e2 == n(7) ) then
           ixmax = NGLLX
           iymax = NGLLY
           izmax = NGLLZ
-       end if
-    end if
+       endif
+    endif
 
   else if (itype == 4) then
 
@@ -561,8 +561,8 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
     stop 'ERROR get_edge'
   endif
 
-!     end if
-!  end if
+!     endif
+!  endif
 
 end subroutine get_edge
 

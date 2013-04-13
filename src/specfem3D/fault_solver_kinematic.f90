@@ -85,7 +85,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   if (nbfaults==0) then
     if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
-  elseif (nbfaults==1) then
+  else if (nbfaults==1) then
     if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
     if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'

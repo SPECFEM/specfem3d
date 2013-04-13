@@ -529,7 +529,7 @@
              enddo
 
              ! Y_surface C-PML
-          elseif( CPML_regions(ispec_CPML) == 2 ) then
+          else if( CPML_regions(ispec_CPML) == 2 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -555,7 +555,7 @@
              enddo
 
              ! Z_surface C-PML
-          elseif( CPML_regions(ispec_CPML) == 3 ) then
+          else if( CPML_regions(ispec_CPML) == 3 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -581,7 +581,7 @@
              enddo
 
              ! XY_edge C-PML
-          elseif( CPML_regions(ispec_CPML) == 4 ) then
+          else if( CPML_regions(ispec_CPML) == 4 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -611,7 +611,7 @@
              enddo
 
              ! XZ_edge C-PML
-          elseif( CPML_regions(ispec_CPML) == 5 ) then
+          else if( CPML_regions(ispec_CPML) == 5 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -641,7 +641,7 @@
              enddo
 
              ! YZ_edge C-PML
-          elseif( CPML_regions(ispec_CPML) == 6 ) then
+          else if( CPML_regions(ispec_CPML) == 6 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -671,7 +671,7 @@
              enddo
 
              ! XYZ_corner C-PML
-          elseif( CPML_regions(ispec_CPML) == 7 ) then
+          else if( CPML_regions(ispec_CPML) == 7 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -741,7 +741,7 @@
              enddo
 
              ! Y_surface C-PML
-          elseif( CPML_regions(ispec_CPML) == 2 ) then
+          else if( CPML_regions(ispec_CPML) == 2 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -767,7 +767,7 @@
              enddo
 
              ! Z_surface C-PML
-          elseif( CPML_regions(ispec_CPML) == 3 ) then
+          else if( CPML_regions(ispec_CPML) == 3 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -793,7 +793,7 @@
              enddo
 
              ! XY_edge C-PML
-          elseif( CPML_regions(ispec_CPML) == 4 ) then
+          else if( CPML_regions(ispec_CPML) == 4 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -823,7 +823,7 @@
              enddo
 
              ! XZ_edge C-PML
-          elseif( CPML_regions(ispec_CPML) == 5 ) then
+          else if( CPML_regions(ispec_CPML) == 5 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -853,7 +853,7 @@
              enddo
 
              ! YZ_edge C-PML
-          elseif( CPML_regions(ispec_CPML) == 6 ) then
+          else if( CPML_regions(ispec_CPML) == 6 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
@@ -883,7 +883,7 @@
              enddo
 
              ! XYZ_corner C-PML
-          elseif( CPML_regions(ispec_CPML) == 7 ) then
+          else if( CPML_regions(ispec_CPML) == 7 ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX

@@ -202,7 +202,7 @@
      index_equal_sign = index(string_read,'=')
      if(index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) stop 'incorrect syntax detected in Mesh_Par_file'
      string_read = string_read(index_equal_sign + 1:len_trim(string_read))
-  end if
+  endif
 
 ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk
   string_read = adjustl(string_read)

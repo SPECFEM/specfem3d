@@ -233,7 +233,7 @@
     if(myrank == 0) then
       iproc = minloc(distmin_ele_all)
       altitude_source(1) = elevation_all(iproc(1))
-    end if
+    endif
     call bcast_all_dp(altitude_source,1)
     elevation(isource) = altitude_source(1)
 

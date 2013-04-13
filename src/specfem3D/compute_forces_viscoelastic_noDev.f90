@@ -35,11 +35,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, & 
+                        one_minus_sum_beta_kappa,factor_common_kappa, &
                         alphaval,betaval,gammaval, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, & 
-                        R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, & 
-                        epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,& 
+                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
+                        R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                        epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,&
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                         ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store, &
@@ -91,15 +91,15 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: one_minus_sum_beta_kappa  
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: factor_common_kappa 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: one_minus_sum_beta_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
        R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS) :: R_trace 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS) :: R_trace
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
-       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz 
+       epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa) :: epsilondev_trace
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
@@ -162,7 +162,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   ! local attenuation parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, & 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, &
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
   real(kind=CUSTOM_REAL) :: R_trace_val1,R_xx_val1,R_yy_val1
   real(kind=CUSTOM_REAL) :: R_trace_val2,R_xx_val2,R_yy_val2
@@ -533,7 +533,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               if(ATTENUATION) then
                 ! use unrelaxed parameters if attenuation
                 mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-                if(FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)  
+                if(FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
               endif
 
   ! full anisotropic case, stress calculations
@@ -809,13 +809,13 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 gammaval_loc = gammaval(i_sls)
 
                 if(FULL_ATTENUATION_SOLID) then
-                   ! term in trace  
-                   factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)  
+                   ! term in trace
+                   factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
 
-                   Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)  
-                   Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)  
-                   R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &  
-                        betaval_loc * Sn + gammaval_loc * Snp1  
+                   Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
+                   Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
+                   R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
+                        betaval_loc * Sn + gammaval_loc * Snp1
                 endif
 
                 ! term in xx yy zz xy xz yz
