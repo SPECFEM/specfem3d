@@ -408,12 +408,6 @@
 
   implicit none
 
-! vector field in an element
-! real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLX) :: vector_field_element
-
-! pressure in an element
-! real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: pressure_element
-
 ! local variables
   integer :: i,j,k,l,ispec,iglob
 
@@ -425,10 +419,11 @@
 
   real(kind=CUSTOM_REAL) :: epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz,epsilon_yx,epsilon_zx,epsilon_zy
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
+  real(kind=CUSTOM_REAL) :: vx,vy,vz,pressure
 
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
-  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol
+  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol,cpl
   real(kind=CUSTOM_REAL) :: kappal
 
   real(kind=CUSTOM_REAL) :: integration_weight
@@ -598,9 +593,6 @@
     !---
     else if(ispec_is_acoustic(ispec)) then
 
-   !!! DK DK added this until this part is written
-      stop 'acoustic energy calculation will be implemented soon'
-
       ! for the definition of potential energy in an acoustic fluid, see for instance
       ! equation (23) of M. Maess et al., Journal of Sound and Vibration 296 (2006) 264-276
 
@@ -612,53 +604,77 @@
       ! Velocity is then: v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
       ! and pressure is: p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi).
 
-      ! compute pressure in this element
-!     call compute_pressure_one_element(pressure_element,potential_dot_dot_acoustic,displ_elastic, &
-!                 displs_poroelastic,displw_poroelastic,elastic,poroelastic, &
-!                 xix,xiz,gammax,gammaz,ibool,hprime_xx,hprime_zz,NSPEC_AB, &
-!                 nglob_acoustic,nglob_elastic,nglob_poroelastic,assign_external_model, &
-!                 numat,kmato,density,porosity,tortuosity,poroelastcoef,vpext,vsext,rhoext, &
-!                 c11ext,c13ext,c15ext,c33ext,c35ext,c55ext,anisotropic,anisotropy,ispec,e1,e11, &
-!                 ATTENUATION_VISCOELASTIC_SOLID,Mu_nu1,Mu_nu2,N_SLS)
+     do k=1,NGLLZ
+       do j=1,NGLLY
+         do i=1,NGLLX
+           iglob = ibool(i,j,k,ispec)
+           dummyx_loc(i,j,k) = potential_dot_acoustic(iglob)
+         enddo
+       enddo
+     enddo
 
-      ! compute velocity vector field in this element
-!     call compute_vector_one_element(vector_field_element,potential_dot_acoustic, &
-!                 veloc_elastic,velocs_poroelastic, &
-!                 elastic,poroelastic,xix,xiz,gammax,gammaz, &
-!                 ibool,hprime_xx,hprime_zz, &
-!                 NSPEC_AB,nglob_acoustic,nglob_elastic,nglob_poroelastic, &
-!                 ispec,numat,kmato,density,rhoext,assign_external_model)
+     do k=1,NGLLZ
+        do j=1,NGLLY
+          do i=1,NGLLX
 
-      ! get density of current spectral element
-!     lambdal_unrelaxed_elastic = poroelastcoef(1,1,kmato(ispec))
-!     mul_unrelaxed_elastic = poroelastcoef(2,1,kmato(ispec))
-!     rhol  = density(1,kmato(ispec))
-!     kappal  = lambdal_unrelaxed_elastic + 2.*mul_unrelaxed_elastic/3._CUSTOM_REAL
-!     cpl = sqrt((kappal + 4._CUSTOM_REAL*mul_unrelaxed_elastic/3._CUSTOM_REAL)/rhol)
+          iglob = ibool(i,j,k,ispec)
 
-      ! double loop over GLL points
-!     do j = 1,NGLLZ
-!       do i = 1,NGLLX
+          tempx1(i,j,k) = 0._CUSTOM_REAL
+          tempx2(i,j,k) = 0._CUSTOM_REAL
+          tempx3(i,j,k) = 0._CUSTOM_REAL
 
-          !--- if external medium, get density of current grid point
-!         if(assign_external_model) then
-!           cpl = vpext(i,j,ispec)
-!           rhol = rhoext(i,j,ispec)
-!         endif
+          do l=1,NGLLX
+            hp1 = hprime_xx(i,l)
+            tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
 
-!         jacobianl = jacobian(i,j,ispec)
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+            hp2 = hprime_yy(j,l)
+            tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
 
-          ! compute kinetic energy
-!         kinetic_energy = kinetic_energy &
-!             + rhol*(vector_field_element(1,i,j)**2 &
-!             + vector_field_element(2,i,j)**2) *wxgll(i)*wzgll(j)*jacobianl / 2.
+            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
+            hp3 = hprime_zz(k,l)
+            tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
+          enddo
 
-          ! compute potential energy
-!         potential_energy = potential_energy &
-!             + (pressure_element(i,j)**2)*wxgll(i)*wzgll(j)*jacobianl / (2. * rhol * cpl**2)
+              ! get derivatives of ux, uy and uz with respect to x, y and z
+              xixl = xix(i,j,k,ispec)
+              xiyl = xiy(i,j,k,ispec)
+              xizl = xiz(i,j,k,ispec)
+              etaxl = etax(i,j,k,ispec)
+              etayl = etay(i,j,k,ispec)
+              etazl = etaz(i,j,k,ispec)
+              gammaxl = gammax(i,j,k,ispec)
+              gammayl = gammay(i,j,k,ispec)
+              gammazl = gammaz(i,j,k,ispec)
+              jacobianl = jacobian(i,j,k,ispec)
 
-!       enddo
-!     enddo
+              duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
+              duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
+              duxdzl = xizl*tempx1(i,j,k) + etazl*tempx2(i,j,k) + gammazl*tempx3(i,j,k)
+
+              rhol = rhostore(i,j,k,ispec)
+              kappal = kappastore(i,j,k,ispec)
+              cpl = sqrt(kappal / rhol)
+
+              ! Velocity is v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
+              vx = duxdxl / rhol
+              vy = duxdyl / rhol
+              vz = duxdzl / rhol
+
+              ! pressure is p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi)
+              pressure = - potential_dot_dot_acoustic(iglob)
+
+              integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
+
+              ! compute kinetic energy  1/2 rho ||v||^2
+              kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2) / 2.
+
+              ! compute potential energy 1/2 sigma_ij epsilon_ij
+              potential_energy = potential_energy + integration_weight * pressure**2 / (2. * rhol * cpl**2)
+
+          enddo
+        enddo
+     enddo
 
     else
 
