@@ -136,7 +136,7 @@
   integer, dimension(:), allocatable :: CPML_regions
 
   ! mask of C-PML elements for the global mesh
-  logical, dimension(:), allocatable :: CPML_mask_ibool
+  logical, dimension(:), allocatable :: is_CPML
 
   ! thickness of C-PML layers in each direction
   real(kind=CUSTOM_REAL) :: CPML_width_x,CPML_width_y,CPML_width_z

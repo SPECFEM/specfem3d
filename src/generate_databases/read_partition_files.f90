@@ -249,11 +249,11 @@
      enddo
 
      ! reads mask of C-PML elements for all elements in this partition
-     allocate(CPML_mask_ibool(NSPEC_AB),stat=ier)
-     if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
+     allocate(is_CPML(NSPEC_AB),stat=ier)
+     if(ier /= 0) stop 'error allocating array is_CPML'
 
      do i=1,NSPEC_AB
-        read(IIN) CPML_mask_ibool(i)
+        read(IIN) is_CPML(i)
      enddo
   endif
 

@@ -91,7 +91,7 @@
      ! spec_to_CPML
      memory_size = memory_size + NSPEC_AB*dble(SIZE_INTEGER)
 
-     ! CPML_mask_ibool
+     ! is_CPML
      memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
 
      ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store

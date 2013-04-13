@@ -99,7 +99,7 @@ module decompose_mesh
   integer :: ispec_CPML
   integer :: nspec_cpml
   integer, dimension(:), allocatable :: CPML_to_spec, CPML_regions
-  logical, dimension(:), allocatable :: CPML_mask_ibool
+  logical, dimension(:), allocatable :: is_CPML
 
   ! moho surface (optional)
   integer :: nspec2D_moho
@@ -689,12 +689,12 @@ module decompose_mesh
     if( nspec_cpml > 0 ) print*, '  nspec_cpml = ', nspec_cpml
 
     ! sets mask of C-PML elements for all elements in this partition
-    allocate(CPML_mask_ibool(nspec),stat=ier)
-    if(ier /= 0) stop 'error allocating array CPML_mask_ibool'
-    CPML_mask_ibool(:) = .false.
+    allocate(is_CPML(nspec),stat=ier)
+    if(ier /= 0) stop 'error allocating array is_CPML'
+    is_CPML(:) = .false.
     do ispec_CPML=1,nspec_cpml
        if( (CPML_regions(ispec_CPML)>=1) .and. (CPML_regions(ispec_CPML)<=7) ) then
-          CPML_mask_ibool(CPML_to_spec(ispec_CPML)) = .true.
+          is_CPML(CPML_to_spec(ispec_CPML)) = .true.
        endif
     enddo
 
@@ -1084,7 +1084,7 @@ module decompose_mesh
 
        ! writes out C-PML elements indices, CPML-regions and thickness of C-PML layer
        call write_cpml_database(IIN_database, ipart, nspec, nspec_cpml, CPML_to_spec, &
-            CPML_regions, CPML_mask_ibool, glob2loc_elmnts, part)
+            CPML_regions, is_CPML, glob2loc_elmnts, part)
 
        ! gets number of MPI interfaces
        call Write_interfaces_database(IIN_database, tab_interfaces, tab_size_interfaces, ipart, ninterfaces, &
@@ -1142,7 +1142,7 @@ module decompose_mesh
     ! cleanup
     deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
     deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
-    deallocate(CPML_mask_ibool,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_mask_ibool'
+    deallocate(is_CPML,stat=ier); if( ier /= 0 ) stop 'error deallocating array is_CPML'
 
     print*, 'partitions: '
     print*, '  num = ',nparts

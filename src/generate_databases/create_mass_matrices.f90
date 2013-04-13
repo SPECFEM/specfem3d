@@ -425,7 +425,7 @@
 
   subroutine create_mass_matrices_pml(nspec,ibool)
 
-    use generate_databases_par, only: CPML_mask_ibool,CPML_regions,d_store_x,d_store_y,d_store_z, &
+    use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
                                       K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,DT
 
     use create_regions_mesh_ext_par
@@ -450,7 +450,7 @@
 
     ! loops over physical mesh elements
     do ispec=1,nspec
-       if( .not. CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec) ) then
+       if( .not. is_CPML(ispec) .and. ispec_is_elastic(ispec) ) then
           do k=1,NGLLZ
              do j=1,NGLLY
                 do i=1,NGLLX
@@ -472,7 +472,7 @@
                 enddo
              enddo
           enddo
-       else if( .not. CPML_mask_ibool(ispec) .and. ispec_is_acoustic(ispec) ) then
+       else if( .not. is_CPML(ispec) .and. ispec_is_acoustic(ispec) ) then
           do k=1,NGLLZ
              do j=1,NGLLY
                 do i=1,NGLLX
@@ -501,7 +501,7 @@
     do ispec_CPML=1,nspec_cpml
        ispec = CPML_to_spec(ispec_CPML)
 
-       if( CPML_mask_ibool(ispec) .and. ispec_is_elastic(ispec) ) then
+       if( is_CPML(ispec) .and. ispec_is_elastic(ispec) ) then
           ! X_surface C-PML
           if( CPML_regions(ispec_CPML) == 1 ) then
              do k=1,NGLLZ
@@ -713,7 +713,7 @@
     do ispec_CPML=1,nspec_cpml
        ispec = CPML_to_spec(ispec_CPML)
 
-       if( CPML_mask_ibool(ispec) .and. ispec_is_acoustic(ispec) ) then
+       if( is_CPML(ispec) .and. ispec_is_acoustic(ispec) ) then
           ! X_surface C-PML
           if( CPML_regions(ispec_CPML) == 1 ) then
              do k=1,NGLLZ

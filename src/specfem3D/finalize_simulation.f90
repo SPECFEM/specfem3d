@@ -174,7 +174,7 @@
      ! deallocates C_PML arrays
      deallocate(CPML_regions)
      deallocate(CPML_to_spec)
-     deallocate(CPML_mask_ibool)
+     deallocate(is_CPML)
      deallocate(d_store_x)
      deallocate(d_store_y)
      deallocate(d_store_z)

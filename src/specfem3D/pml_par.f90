@@ -50,7 +50,7 @@ module pml_par
   integer, dimension(:), allocatable :: CPML_type
 
   ! mask of C-PML elements for the global mesh
-  logical, dimension(:), allocatable :: CPML_mask_ibool
+  logical, dimension(:), allocatable :: is_CPML
 
   ! thickness of C-PML layers
 !ZN  real(CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z

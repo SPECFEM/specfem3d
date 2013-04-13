@@ -33,7 +33,7 @@
                     SAVE_MESH_FILES,ANISOTROPY)
 
   use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec,&
-                                    CPML_regions,CPML_mask_ibool,nspec_cpml_tot, &
+                                    CPML_regions,is_CPML,nspec_cpml_tot, &
                                     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,alpha_store, &
                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS
@@ -138,7 +138,7 @@
   if( nspec_cpml > 0 ) then
      write(IOUT) CPML_regions
      write(IOUT) CPML_to_spec
-     write(IOUT) CPML_mask_ibool
+     write(IOUT) is_CPML
      write(IOUT) d_store_x
      write(IOUT) d_store_y
      write(IOUT) d_store_z
@@ -316,7 +316,7 @@
   if( nspec_cpml_tot > 0 ) then
      deallocate(CPML_to_spec,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_to_spec'
      deallocate(CPML_regions,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_regions'
-     deallocate(CPML_mask_ibool,stat=ier); if( ier /= 0 ) stop 'error deallocating array CPML_mask_ibool'
+     deallocate(is_CPML,stat=ier); if( ier /= 0 ) stop 'error deallocating array is_CPML'
   endif
 
   if( PML_CONDITIONS ) then
