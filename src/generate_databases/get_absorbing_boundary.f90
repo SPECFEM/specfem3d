@@ -442,55 +442,110 @@
     enddo
 
     ! stores surface infos
-    if( .not. STACEY_INSTEAD_OF_FREE_SURFACE ) then
-      ! stores free surface
-      ! sets face infos
-      ifree = ifree + 1
-      free_surface_ispec(ifree) = ispec
+    if(STACEY_ABSORBING_CONDITIONS)then
+       if( .not. STACEY_INSTEAD_OF_FREE_SURFACE ) then
+         ! stores free surface
+         ! sets face infos
+         ifree = ifree + 1
+         free_surface_ispec(ifree) = ispec
+  
+         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         igllfree = 0
+         do j=1,NGLLY
+           do i=1,NGLLX
+             igllfree = igllfree+1
+             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+           enddo
+         enddo
 
-      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-      igllfree = 0
-      do j=1,NGLLY
-        do i=1,NGLLX
-          igllfree = igllfree+1
-          free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-          free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-          free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-        enddo
-      enddo
+       else
 
-    else
+         ! stores free surface and adds it also to absorbing boundaries
+         ! sets face infos
+         ifree = ifree + 1
+         free_surface_ispec(ifree) = ispec
 
-      ! stores free surface and adds it also to absorbing boundaries
-      ! sets face infos
-      ifree = ifree + 1
-      free_surface_ispec(ifree) = ispec
+         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         igllfree = 0
+         do j=1,NGLLY
+           do i=1,NGLLX
+             igllfree = igllfree+1
+             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+           enddo
+         enddo
 
-      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-      igllfree = 0
-      do j=1,NGLLY
-        do i=1,NGLLX
-          igllfree = igllfree+1
-          free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-          free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-          free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-        enddo
-      enddo
+         ! adds face infos to absorbing boundary surface
+         iabs = iabs + 1
+         abs_boundary_ispec(iabs) = ispec
 
-      ! adds face infos to absorbing boundary surface
-      iabs = iabs + 1
-      abs_boundary_ispec(iabs) = ispec
+         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         igll = 0
+         do j=1,NGLLY
+           do i=1,NGLLX
+             igll = igll+1
+             abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+           enddo
+         enddo
+       endif
+    endif
 
-      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-      igll = 0
-      do j=1,NGLLY
-        do i=1,NGLLX
-          igll = igll+1
-          abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
-          abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
-          abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
-        enddo
-      enddo
+    if(PML_CONDITIONS)then
+       if( .not. PML_INSTEAD_OF_FREE_SURFACE ) then
+         ! stores free surface
+         ! sets face infos
+         ifree = ifree + 1
+         free_surface_ispec(ifree) = ispec
+  
+         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         igllfree = 0
+         do j=1,NGLLY
+           do i=1,NGLLX
+             igllfree = igllfree+1
+             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+           enddo
+         enddo
+
+       else
+
+         ! stores free surface and adds it also to absorbing boundaries
+         ! sets face infos
+         ifree = ifree + 1
+         free_surface_ispec(ifree) = ispec
+
+         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         igllfree = 0
+         do j=1,NGLLY
+           do i=1,NGLLX
+             igllfree = igllfree+1
+             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+           enddo
+         enddo
+
+         ! adds face infos to absorbing boundary surface
+         iabs = iabs + 1
+         abs_boundary_ispec(iabs) = ispec
+
+         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         igll = 0
+         do j=1,NGLLY
+           do i=1,NGLLX
+             igll = igll+1
+             abs_boundary_ijk(:,igll,iabs) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabs) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabs) = normal_face(:,i,j)
+           enddo
+         enddo
+       endif
     endif
   enddo
 
