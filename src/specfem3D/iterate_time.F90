@@ -425,16 +425,16 @@
   real(kind=CUSTOM_REAL) :: kappal
 
   real(kind=CUSTOM_REAL) :: integration_weight
-  real(kind=CUSTOM_REAL) :: kinetic_energy,potential_energy
-  real(kind=CUSTOM_REAL) :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
+  double precision :: kinetic_energy,potential_energy
+  double precision :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
 
 ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
     tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
 
-  kinetic_energy = ZERO
-  potential_energy = ZERO
+  kinetic_energy = 0.d0
+  potential_energy = 0.d0
 
   if(ANISOTROPY .or. ATTENUATION) &
     call exit_MPI(myrank,'calculation of total energy currently implemented only for media with no anisotropy and no attenuation')
@@ -683,16 +683,12 @@
   enddo
 
 ! compute the total using a reduction between all the processors
-  call sum_all_cr(kinetic_energy,kinetic_energy_glob)
-  call sum_all_cr(potential_energy,potential_energy_glob)
+  call sum_all_dp(kinetic_energy,kinetic_energy_glob)
+  call sum_all_dp(potential_energy,potential_energy_glob)
   total_energy_glob = kinetic_energy_glob + potential_energy_glob
 
 ! write the total to disk from the master
-  if(CUSTOM_REAL == SIZE_REAL) then
-    if(myrank == 0) write(IOUT_ENERGY,*) it,kinetic_energy_glob,potential_energy_glob,total_energy_glob
-  else
-    if(myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
-  endif
+  if(myrank == 0) write(IOUT_ENERGY,*) it,sngl(kinetic_energy_glob),sngl(potential_energy_glob),sngl(total_energy_glob)
 
   end subroutine it_compute_total_energy
 
