@@ -189,9 +189,9 @@
             epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if( ier /= 0 ) stop 'error allocating array epsilondev_xx etc.'
 
-    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),& !ZN
-             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)  !ZN
-    if( ier /= 0 ) stop 'error allocating array R_trace etc.'  !ZN
+    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),& 
+             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)  
+    if( ier /= 0 ) stop 'error allocating array R_trace etc.'  
 
     ! note: needed for argument of deville routine
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
@@ -202,9 +202,9 @@
             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta etc.'
 
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), & !ZN
-             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier) !ZN
-    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta_kappa etc.'  !ZN
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), & 
+             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier) 
+    if( ier /= 0 ) stop 'error allocating array one_minus_sum_beta_kappa etc.'  
 
     ! reads mass matrices
     read(27,iostat=ier) rmass
@@ -394,21 +394,30 @@
      allocate(Tract_dsm_boundary(1,1,1,1))
   endif
 
-  if( num_abs_boundary_faces > 0 ) then
-    read(27) abs_boundary_ispec
-    read(27) abs_boundary_ijk
-    read(27) abs_boundary_jacobian2Dw
-    read(27) abs_boundary_normal
-    ! reads mass matrix contributions on boundaries
-    if( ELASTIC_SIMULATION ) then
-      read(27) rmassx
-      read(27) rmassy
-      read(27) rmassz
-    endif
-    if( ACOUSTIC_SIMULATION ) then
-      read(27) rmassz_acoustic
-    endif
-  endif
+  if(PML_CONDITIONS)then 
+     if( num_abs_boundary_faces > 0 ) then 
+       read(27) abs_boundary_ispec 
+       read(27) abs_boundary_ijk 
+       read(27) abs_boundary_jacobian2Dw 
+       read(27) abs_boundary_normal 
+     endif
+  else
+     if( num_abs_boundary_faces > 0 ) then 
+       read(27) abs_boundary_ispec 
+       read(27) abs_boundary_ijk 
+       read(27) abs_boundary_jacobian2Dw 
+       read(27) abs_boundary_normal 
+       ! store mass matrix contributions 
+       if(ELASTIC_SIMULATION) then 
+         read(27) rmassx 
+         read(27) rmassy 
+         read(27) rmassz 
+       endif
+       if(ACOUSTIC_SIMULATION) then 
+         read(27) rmassz_acoustic 
+       endif 
+     endif 
+  endif 
 
   read(27) nspec2D_xmin
   read(27) nspec2D_xmax
@@ -791,9 +800,9 @@
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if( ier /= 0 ) stop 'error allocating array b_epsilon_trace_over_3'
 
-    ! allocates attenuation solids for considering kappa  !ZN
-    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&    !ZN
-             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)    !ZN
+    ! allocates attenuation solids for considering kappa  
+    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&    
+             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)    
     if( ier /= 0 ) stop 'error allocating array b_R_trace etc.'
 
   else

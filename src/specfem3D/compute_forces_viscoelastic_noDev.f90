@@ -31,9 +31,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat,PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+                        ATTENUATION,deltat,PML_CONDITIONS, & 
                         one_minus_sum_beta,factor_common, &
                         one_minus_sum_beta_kappa,factor_common_kappa, &
                         alphaval,betaval,gammaval, &
@@ -52,9 +50,10 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,ispec_is_elastic)
+                        phase_ispec_inner_elastic,ispec_is_elastic,&
+                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec) 
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,IOUT
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,IOUT,NGLLSQUARE 
   use pml_par
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
@@ -127,20 +126,13 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! C-PML absorbing boundary conditions
-  logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
-  integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP
-  integer, dimension(nspec2D_xmin) :: ibelm_xmin
-  integer, dimension(nspec2D_xmax) :: ibelm_xmax
-  integer, dimension(nspec2D_ymin) :: ibelm_ymin
-  integer, dimension(nspec2D_ymax) :: ibelm_ymax
-  integer, dimension(NSPEC2D_BOTTOM) :: ibelm_bottom
-  integer, dimension(NSPEC2D_TOP) :: ibelm_top
+  logical :: PML_CONDITIONS 
 
-   logical, dimension(NSPEC_AB) :: ispec_is_elastic
+  logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
 ! local parameters
   integer :: i_SLS,imodulo_N_SLS
-  integer :: ispec,ispec2D,iglob,ispec_p,num_elements
+  integer :: ispec,iglob,ispec_p,num_elements
   integer :: i,j,k,l
 
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
@@ -188,6 +180,16 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
+
+! communication overlap  
+  logical, dimension(NSPEC_AB) :: ispec_is_inner  
+  logical :: phase_is_inner  
+
+! outer boundary of CPML  
+  integer :: num_abs_boundary_faces  
+  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)  
+  integer :: abs_boundary_ispec(num_abs_boundary_faces)  
+  integer :: igll,iface  
 
   imodulo_N_SLS = mod(N_SLS,3)
 
@@ -876,172 +878,35 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !! DK DK or something like that
 
   ! C-PML boundary
-  if( PML_CONDITIONS ) then
-     ! xmin
-     do ispec2D=1,nspec2D_xmin
-        ispec = ibelm_xmin(ispec2D)
+    if(PML_CONDITIONS)then
+       do iface=1,num_abs_boundary_faces
 
-        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-           i = 1
+           ispec = abs_boundary_ispec(iface)
 
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 iglob = ibool(i,j,k,ispec)
+           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+  
+              if( ispec_is_elastic(ispec) ) then
 
-                 accel(1,iglob) = 0._CUSTOM_REAL
-                 accel(2,iglob) = 0._CUSTOM_REAL
-                 accel(3,iglob) = 0._CUSTOM_REAL
+                 ! reference gll points on boundary face
+                 do igll = 1,NGLLSQUARE
 
-                 veloc(1,iglob) = 0._CUSTOM_REAL
-                 veloc(2,iglob) = 0._CUSTOM_REAL
-                 veloc(3,iglob) = 0._CUSTOM_REAL
+                    ! gets local indices for GLL point
+                    i = abs_boundary_ijk(1,igll,iface)
+                    j = abs_boundary_ijk(2,igll,iface)
+                    k = abs_boundary_ijk(3,igll,iface)
 
-                 displ(1,iglob) = 0._CUSTOM_REAL
-                 displ(2,iglob) = 0._CUSTOM_REAL
-                 displ(3,iglob) = 0._CUSTOM_REAL
-              enddo
-           enddo
-        endif
-     enddo
+                    iglob=ibool(i,j,k,ispec)
 
-     ! xmax
-     do ispec2D=1,nspec2D_xmax
-        ispec = ibelm_xmax(ispec2D)
+                    accel(:,iglob) = 0.0
+                    veloc(:,iglob) = 0.0
+                    displ(:,iglob) = 0.0
 
-        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-           i = NGLLX
+                 enddo
+             endif ! ispec_is_elastic
+           endif ! ispec_is_inner
+        enddo
+      endif
 
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 iglob = ibool(i,j,k,ispec)
-
-                 accel(1,iglob) = 0._CUSTOM_REAL
-                 accel(2,iglob) = 0._CUSTOM_REAL
-                 accel(3,iglob) = 0._CUSTOM_REAL
-
-                 veloc(1,iglob) = 0._CUSTOM_REAL
-                 veloc(2,iglob) = 0._CUSTOM_REAL
-                 veloc(3,iglob) = 0._CUSTOM_REAL
-
-                 displ(1,iglob) = 0._CUSTOM_REAL
-                 displ(2,iglob) = 0._CUSTOM_REAL
-                 displ(3,iglob) = 0._CUSTOM_REAL
-              enddo
-           enddo
-        endif
-     enddo
-
-     ! ymin
-     do ispec2D=1,nspec2D_ymin
-        ispec = ibelm_ymin(ispec2D)
-
-        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-           j = 1
-
-           do k=1,NGLLZ
-              do i=1,NGLLX
-                 iglob = ibool(i,j,k,ispec)
-
-                 accel(1,iglob) = 0._CUSTOM_REAL
-                 accel(2,iglob) = 0._CUSTOM_REAL
-                 accel(3,iglob) = 0._CUSTOM_REAL
-
-                 veloc(1,iglob) = 0._CUSTOM_REAL
-                 veloc(2,iglob) = 0._CUSTOM_REAL
-                 veloc(3,iglob) = 0._CUSTOM_REAL
-
-                 displ(1,iglob) = 0._CUSTOM_REAL
-                 displ(2,iglob) = 0._CUSTOM_REAL
-                 displ(3,iglob) = 0._CUSTOM_REAL
-              enddo
-           enddo
-        endif
-     enddo
-
-     ! ymax
-     do ispec2D=1,nspec2D_ymax
-        ispec = ibelm_ymax(ispec2D)
-
-        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-           j = NGLLY
-
-           do k=1,NGLLZ
-              do i=1,NGLLX
-                 iglob = ibool(i,j,k,ispec)
-
-                 accel(1,iglob) = 0._CUSTOM_REAL
-                 accel(2,iglob) = 0._CUSTOM_REAL
-                 accel(3,iglob) = 0._CUSTOM_REAL
-
-                 veloc(1,iglob) = 0._CUSTOM_REAL
-                 veloc(2,iglob) = 0._CUSTOM_REAL
-                 veloc(3,iglob) = 0._CUSTOM_REAL
-
-                 displ(1,iglob) = 0._CUSTOM_REAL
-                 displ(2,iglob) = 0._CUSTOM_REAL
-                 displ(3,iglob) = 0._CUSTOM_REAL
-              enddo
-           enddo
-        endif
-     enddo
-
-     ! bottom (zmin)
-     do ispec2D=1,NSPEC2D_BOTTOM
-        ispec = ibelm_bottom(ispec2D)
-
-        if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-           k = 1
-
-           do j=1,NGLLY
-              do i=1,NGLLX
-                 iglob = ibool(i,j,k,ispec)
-
-                 accel(1,iglob) = 0._CUSTOM_REAL
-                 accel(2,iglob) = 0._CUSTOM_REAL
-                 accel(3,iglob) = 0._CUSTOM_REAL
-
-                 veloc(1,iglob) = 0._CUSTOM_REAL
-                 veloc(2,iglob) = 0._CUSTOM_REAL
-                 veloc(3,iglob) = 0._CUSTOM_REAL
-
-                 displ(1,iglob) = 0._CUSTOM_REAL
-                 displ(2,iglob) = 0._CUSTOM_REAL
-                 displ(3,iglob) = 0._CUSTOM_REAL
-              enddo
-           enddo
-        endif
-     enddo
-
-     ! top (zmax)
-     if(PML_INSTEAD_OF_FREE_SURFACE)then
-       do ispec2D=1,NSPEC2D_BOTTOM
-          ispec = ibelm_top(ispec2D)
-
-          if(is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
-             k = NGLLZ
-
-             do j=1,NGLLY
-                do i=1,NGLLX
-                   iglob = ibool(i,j,k,ispec)
-
-                   accel(1,iglob) = 0._CUSTOM_REAL
-                   accel(2,iglob) = 0._CUSTOM_REAL
-                   accel(3,iglob) = 0._CUSTOM_REAL
-
-                   veloc(1,iglob) = 0._CUSTOM_REAL
-                   veloc(2,iglob) = 0._CUSTOM_REAL
-                   veloc(3,iglob) = 0._CUSTOM_REAL
-
-                   displ(1,iglob) = 0._CUSTOM_REAL
-                   displ(2,iglob) = 0._CUSTOM_REAL
-                   displ(3,iglob) = 0._CUSTOM_REAL
-                enddo
-             enddo
-          endif
-       enddo
-     endif
-
-  endif ! if( PML_CONDITIONS )
 
 end subroutine compute_forces_viscoelastic_noDev
 

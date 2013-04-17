@@ -1642,7 +1642,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   ! gets damping profile
   if( NPOWER >= 1 ) then
      ! INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
-     pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (2.d0 * delta) * damping_factor) * dist**NPOWER
+     pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (2.d0 * delta)) * dist**(1.2*NPOWER)
   else
      call exit_mpi(myrank,'C-PML error: NPOWER must be greater than or equal to 1')
   endif
