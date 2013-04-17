@@ -786,11 +786,11 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
               !                  A5 = temp_A5
 
               if( ispec_is_elastic(ispec) ) then
-                 A3 = temp_A3 + (it+0.0) * deltat*temp_A4 !+ ((it+0.0) * deltat)**2*temp_A5
-                 A4 = -temp_A4 ! -2.0*(it+0.0) * deltat*temp_A5
+                 A3 = temp_A3 !+ (it+0.0) * deltat*temp_A4 !+ ((it+0.0) * deltat)**2*temp_A5
+                 A4 = 0.0 !-temp_A4 ! -2.0*(it+0.0) * deltat*temp_A5
               else if( ispec_is_acoustic(ispec)) then
-                 A3 = temp_A3 + (it+0.5)*deltat*temp_A4 !+ ((it+0.5)*deltat)**2*temp_A5
-                 A4 = -temp_A4 !-2.0*(it+0.5)*deltat*temp_A5
+                 A3 = temp_A3 !+ (it+0.5)*deltat*temp_A4 !+ ((it+0.5)*deltat)**2*temp_A5
+                 A4 = 0.0 !-temp_A4 !-2.0*(it+0.5)*deltat*temp_A5
               endif
               A5 = 0.0 ! temp_A5
 

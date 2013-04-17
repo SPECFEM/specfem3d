@@ -150,21 +150,30 @@
 
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
-  if( num_abs_boundary_faces > 0 ) then
-    write(IOUT) abs_boundary_ispec
-    write(IOUT) abs_boundary_ijk
-    write(IOUT) abs_boundary_jacobian2Dw
-    write(IOUT) abs_boundary_normal
-    ! store mass matrix contributions
-    if(ELASTIC_SIMULATION) then
-     write(IOUT) rmassx
-     write(IOUT) rmassy
-     write(IOUT) rmassz
-    endif
-    if(ACOUSTIC_SIMULATION) then
-      write(IOUT) rmassz_acoustic
-    endif
-  endif
+  if(PML_CONDITIONS)then 
+     if( num_abs_boundary_faces > 0 ) then 
+       write(IOUT) abs_boundary_ispec 
+       write(IOUT) abs_boundary_ijk 
+       write(IOUT) abs_boundary_jacobian2Dw 
+       write(IOUT) abs_boundary_normal 
+     endif
+  else
+     if( num_abs_boundary_faces > 0 ) then 
+       write(IOUT) abs_boundary_ispec 
+       write(IOUT) abs_boundary_ijk 
+       write(IOUT) abs_boundary_jacobian2Dw 
+       write(IOUT) abs_boundary_normal 
+       ! store mass matrix contributions 
+       if(ELASTIC_SIMULATION) then 
+         write(IOUT) rmassx 
+         write(IOUT) rmassy 
+         write(IOUT) rmassz 
+       endif
+       if(ACOUSTIC_SIMULATION) then 
+         write(IOUT) rmassz_acoustic 
+       endif 
+     endif 
+  endif 
 
   write(IOUT) nspec2D_xmin
   write(IOUT) nspec2D_xmax

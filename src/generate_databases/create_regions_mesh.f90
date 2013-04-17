@@ -40,7 +40,7 @@
     my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
     my_interfaces_ext_mesh, &
     ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
-    nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
+    STACEY_ABSORBING_CONDITIONS, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, &
     NSPEC2D_BOTTOM, NSPEC2D_TOP,&
     ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,&
@@ -228,7 +228,7 @@
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
   endif
-  call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS)
+  call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
 
 ! saves the binary mesh files
   call sync_all()
@@ -293,14 +293,26 @@
     deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
   endif
 
-  if( ELASTIC_SIMULATION ) then
-    deallocate(rmass)
-    deallocate(rmassx,rmassy,rmassz)
-  endif
-  if( ACOUSTIC_SIMULATION) then
-    deallocate(rmass_acoustic)
-    deallocate(rmassz_acoustic)
-  endif
+  if(STACEY_ABSORBING_CONDITIONS)then 
+     if( ELASTIC_SIMULATION ) then 
+       deallocate(rmass) 
+       deallocate(rmassx,rmassy,rmassz) 
+     endif 
+     if( ACOUSTIC_SIMULATION) then 
+       deallocate(rmass_acoustic) 
+       deallocate(rmassz_acoustic) 
+     endif 
+  endif 
+
+  if(PML_CONDITIONS)then 
+     if( ELASTIC_SIMULATION ) then 
+       deallocate(rmass) 
+     endif 
+     if( ACOUSTIC_SIMULATION) then 
+       deallocate(rmass_acoustic) 
+     endif 
+  endif 
+
   if( POROELASTIC_SIMULATION) then
     deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
   endif
@@ -315,7 +327,8 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
-  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D
+  use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D,& 
+                                    PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE 
   use create_regions_mesh_ext_par
 
   implicit none
@@ -416,8 +429,9 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   ! absorbing faces
   num_abs_boundary_faces = nspec2D_xmin + nspec2D_xmax + nspec2D_ymin + nspec2D_ymax + nspec2D_bottom
   ! adds faces of free surface if it also absorbs
-  if( STACEY_INSTEAD_OF_FREE_SURFACE ) num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
-
+  if( STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE)then
+     num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
+  endif
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( abs_boundary_ispec(num_abs_boundary_faces), &
             abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &

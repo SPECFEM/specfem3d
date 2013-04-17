@@ -24,7 +24,7 @@
 !
 !=====================================================================
 
-  subroutine create_mass_matrices(nglob,nspec,ibool,PML_CONDITIONS)
+  subroutine create_mass_matrices(nglob,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
 
 ! returns precomputed mass matrix in rmass array
 
@@ -41,6 +41,9 @@
 
 ! C-PML flag
   logical :: PML_CONDITIONS
+
+! Stacey boundary condition flag 
+  logical :: STACEY_ABSORBING_CONDITIONS 
 
 ! local parameters
   double precision :: weight
@@ -169,8 +172,8 @@
   endif
 
   ! Stacey absorbing conditions (adds C*deltat/2 contribution to the mass matrices on Stacey edges)
-  call create_mass_matrices_Stacey(nglob,nspec,ibool)
-
+  if(STACEY_ABSORBING_CONDITIONS)call create_mass_matrices_Stacey(nglob,nspec,ibool)
+  
   ! ocean load mass matrix
   call create_mass_matrices_ocean_load(nglob,nspec,ibool)
 
