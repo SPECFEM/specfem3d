@@ -27,7 +27,7 @@
 ! United States and French Government Sponsorship Acknowledged.
 
 subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-                                    tempx3,tempy3,tempz3,NSPEC_AB,xix,xiy,xiz, &
+                                    tempx3,tempy3,tempz3,temp1,temp2,temp3,NSPEC_AB,xix,xiy,xiz, & !ZN
                                     etax,etay,etaz,gammax,gammay,gammaz,jacobian)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -36,7 +36,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: it,kappastore,mustore
+  use specfem_par, only: it,kappastore,mustore,rhostore,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz !ZN
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic
   use pml_par
@@ -56,12 +56,13 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempx1,tempx2,tempx3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempy1,tempy2,tempy3
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: tempz1,tempz2,tempz3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: temp1,temp2,temp3
 
   ! local parameters
   integer :: i,j,k
 
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
-  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,kappal
+  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,kappal,rho_invl !ZN
   real(kind=CUSTOM_REAL) :: duxdxl_x,duxdyl_x,duxdzl_x,duydxl_x,duydyl_x,duzdxl_x,duzdzl_x
   real(kind=CUSTOM_REAL) :: duxdxl_y,duxdyl_y,duydxl_y,duydyl_y,duydzl_y,duzdyl_y,duzdzl_y
   real(kind=CUSTOM_REAL) :: duxdxl_z,duxdzl_z,duydyl_z,duydzl_z,duzdxl_z,duzdyl_z,duzdzl_z
@@ -362,6 +363,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
+              if( ispec_is_acoustic(ispec) ) then !ZN
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+              endif
+
             else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
               !---------------------------- Y-surface C-PML ---------------------------------
@@ -632,6 +643,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
                  tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+
+              if( ispec_is_acoustic(ispec) ) then  !ZN
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
               endif
 
             else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
@@ -906,6 +927,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
+              if( ispec_is_acoustic(ispec) ) then !ZN
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+              endif
+
             else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
 
               !------------------------------------------------------------------------------
@@ -1020,7 +1051,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
               else if( ispec_is_acoustic(ispec) ) then
                  A13 = d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
                       + d_store_y(i,j,k,ispec_CPML)*k_store_x(i,j,k,ispec_CPML) &
-                      + (it+0.5)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)
+                      + (it+0.0)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)
               endif
               A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
 
@@ -1072,8 +1103,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) &
                       + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_1
                  rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
-                      + PML_dpotential_dzl_new(i,j,k,ispec_CPML) *(it+0.5)*deltat * coef1_2 &
-                      + PML_dpotential_dzl(i,j,k,ispec_CPML) *(it-0.5)*deltat * coef2_2
+                      + PML_dpotential_dzl_new(i,j,k,ispec_CPML) *(it+0.0)*deltat * coef1_2 &
+                      + PML_dpotential_dzl(i,j,k,ispec_CPML) *(it-0.0)*deltat * coef2_2
 
                  dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
                       + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
@@ -1217,6 +1248,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
+              if( ispec_is_acoustic(ispec) ) then !ZN
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+              endif
+
             else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
 
               !------------------------------------------------------------------------------
@@ -1281,7 +1322,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
               else if( ispec_is_acoustic(ispec) ) then
                  A10 = d_store_x(i,j,k,ispec_CPML)*k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML)*k_store_x(i,j,k,ispec_CPML) &
-                      + (it+0.5)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)
+                      + (it+0.0)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)
               endif
               A11 = - d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
@@ -1334,8 +1375,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) &
                       + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_1
                  rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
-                      + PML_dpotential_dyl_new(i,j,k,ispec_CPML) *(it+0.5)*deltat* coef1_2 &
-                      + PML_dpotential_dyl(i,j,k,ispec_CPML) *(it-0.5)*deltat* coef2_2
+                      + PML_dpotential_dyl_new(i,j,k,ispec_CPML) *(it+0.0)*deltat* coef1_2 &
+                      + PML_dpotential_dyl(i,j,k,ispec_CPML) *(it-0.0)*deltat* coef2_2
 
                  dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
                       + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
@@ -1528,6 +1569,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
+              if( ispec_is_acoustic(ispec) ) then !ZN
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+              endif
+
             else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
 
               !------------------------------------------------------------------------------
@@ -1543,7 +1594,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
               else if( ispec_is_acoustic(ispec) ) then
                  A7 = d_store_y(i,j,k,ispec_CPML)*k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
-                      + (it+0.5)*deltat*d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)
+                      + (it+0.0)*deltat*d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)
               endif
               A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
@@ -1595,8 +1646,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) &
                       + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_1
                  rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
-                      + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * (it+0.5)*deltat* coef1_2 &
-                      + PML_dpotential_dxl(i,j,k,ispec_CPML) *(it-0.5)*deltat* coef2_2
+                      + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * (it+0.0)*deltat* coef1_2 &
+                      + PML_dpotential_dxl(i,j,k,ispec_CPML) *(it-0.0)*deltat* coef2_2
 
                  dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
                       + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
@@ -1838,6 +1889,16 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
               endif
 
+              if( ispec_is_acoustic(ispec) ) then !ZN
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+              endif
+
             else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
 
               !------------------------------------------------------------------------------
@@ -1863,7 +1924,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                     A7 = (d_store_z(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML)+ &
                          d_store_y(i,j,k,ispec_CPML)*k_store_z(i,j,k,ispec_CPML)) / &
                          k_store_x(i,j,k,ispec_CPML) + &
-                         (it+0.5)*deltat*d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_x(i,j,k,ispec_CPML)
+                         (it+0.0)*deltat*d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_x(i,j,k,ispec_CPML)
                  endif
                  A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) / k_store_x(i,j,k,ispec_CPML)
               endif
@@ -1938,8 +1999,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                          + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_2
                  else
                     rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
-                         + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * (it+0.5)*deltat* coef1_2 &
-                         + PML_dpotential_dxl(i,j,k,ispec_CPML) * (it-0.5)*deltat* coef2_2
+                         + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * (it+0.0)*deltat* coef1_2 &
+                         + PML_dpotential_dxl(i,j,k,ispec_CPML) * (it-0.0)*deltat* coef2_2
                  endif
 
                  dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
@@ -1966,7 +2027,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                     A10 = (d_store_z(i,j,k,ispec_CPML)*k_store_x(i,j,k,ispec_CPML) &
                          +d_store_x(i,j,k,ispec_CPML)*k_store_z(i,j,k,ispec_CPML)) / &
                          k_store_y(i,j,k,ispec_CPML) + &
-                         (it+0.5)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_y(i,j,k,ispec_CPML)
+                         (it+0.0)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_y(i,j,k,ispec_CPML)
                  endif
                  A11 = - d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
               endif
@@ -2039,8 +2100,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                          + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_2
                  else
                     rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
-                         + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * (it+0.5)*deltat* coef1_2 &
-                         + PML_dpotential_dyl(i,j,k,ispec_CPML) * (it-0.5)*deltat* coef2_2
+                         + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * (it+0.0)*deltat* coef1_2 &
+                         + PML_dpotential_dyl(i,j,k,ispec_CPML) * (it-0.0)*deltat* coef2_2
                  endif
 
                  dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
@@ -2066,7 +2127,7 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                     A13 = (d_store_y(i,j,k,ispec_CPML)*k_store_x(i,j,k,ispec_CPML)&
                          +d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML)) / &
                          k_store_z(i,j,k,ispec_CPML) + &
-                         (it+0.5)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)/k_store_z(i,j,k,ispec_CPML)
+                         (it+0.0)*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)/k_store_z(i,j,k,ispec_CPML)
                  endif
                  A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
               endif
@@ -2140,8 +2201,8 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                          + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_2
                  else
                     rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
-                         + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * (it+0.5)*deltat* coef1_2 &
-                         + PML_dpotential_dzl(i,j,k,ispec_CPML) * (it-0.5)*deltat* coef2_2
+                         + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * (it+0.0)*deltat* coef1_2 &
+                         + PML_dpotential_dzl(i,j,k,ispec_CPML) * (it-0.0)*deltat* coef2_2
                  endif
 
                  dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
@@ -2300,6 +2361,17 @@ subroutine pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,te
                  tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
                  tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
                  tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+              endif
+
+              if( ispec_is_acoustic(ispec) ) then !ZN
+
+                 rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                 temp1(i,j,k) = rho_invl * wgllwgll_yz(j,k) * jacobianl* &
+                                (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                 temp2(i,j,k) = rho_invl * wgllwgll_xz(i,k) * jacobianl* &
+                                (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                 temp3(i,j,k) = rho_invl * wgllwgll_xy(i,j) * jacobianl* &
+                                (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
               endif
 
             else

@@ -447,7 +447,7 @@ subroutine pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacob
                       )
 
               else if( ispec_is_acoustic(ispec) ) then
-
+   
                  potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
                       ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
