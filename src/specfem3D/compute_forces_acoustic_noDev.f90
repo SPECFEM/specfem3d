@@ -220,7 +220,7 @@
        if(is_CPML(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
           call pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-               tempx3,tempy3,tempz3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
+               tempx3,tempy3,tempz3,temp1,temp2,temp3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
 
           ! calculates contribution from each C-PML element to update acceleration
           call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacobian,potential_dot_dot_acoustic_CPML)

@@ -101,9 +101,9 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   if(ELASTIC_SIMULATION .and. .not. ACOUSTIC_SIMULATION)then
     ALPHA_MAX_PML = PI*f0_FOR_PML*1.0  ! from Festa and Vilotte (2005)
   else if(ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION)then
-    ALPHA_MAX_PML = PI*f0_FOR_PML*2.0
+    ALPHA_MAX_PML = PI*f0_FOR_PML*1.0
   else if(ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)then
-    ALPHA_MAX_PML = PI*f0_FOR_PML*2.0
+    ALPHA_MAX_PML = PI*f0_FOR_PML*1.0
   else
     stop 'Currently PML is not implemented for POROELASTIC_SIMULATION'
   endif
