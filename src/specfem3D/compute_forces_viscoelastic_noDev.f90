@@ -31,7 +31,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat,PML_CONDITIONS, & 
+                        ATTENUATION,deltat,PML_CONDITIONS, &
                         one_minus_sum_beta,factor_common, &
                         one_minus_sum_beta_kappa,factor_common_kappa, &
                         alphaval,betaval,gammaval, &
@@ -51,9 +51,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,ispec_is_elastic,&
-                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec) 
+                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec)
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,IOUT,NGLLSQUARE 
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,IOUT,NGLLSQUARE
   use pml_par
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
@@ -126,7 +126,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   integer :: ispec2D_moho_top, ispec2D_moho_bot
 
 ! C-PML absorbing boundary conditions
-  logical :: PML_CONDITIONS 
+  logical :: PML_CONDITIONS
 
   logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
@@ -182,15 +182,15 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
 
-! communication overlap  
-  logical, dimension(NSPEC_AB) :: ispec_is_inner  
-  logical :: phase_is_inner  
+! communication overlap
+  logical, dimension(NSPEC_AB) :: ispec_is_inner
+  logical :: phase_is_inner
 
-! outer boundary of CPML  
-  integer :: num_abs_boundary_faces  
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)  
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)  
-  integer :: igll,iface  
+! outer boundary of CPML
+  integer :: num_abs_boundary_faces
+  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer :: igll,iface
 
   imodulo_N_SLS = mod(N_SLS,3)
 
@@ -885,7 +885,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
            ispec = abs_boundary_ispec(iface)
 
            if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-  
+
               if( ispec_is_elastic(ispec) ) then
 
                  ! reference gll points on boundary face

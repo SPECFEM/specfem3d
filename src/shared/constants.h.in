@@ -216,16 +216,16 @@
   double precision, parameter :: USER_T0 = 0.0d0
 
 ! the receivers can be located inside the model
-  logical, parameter :: RECVS_CAN_BE_BURIED_EXT_MESH = .true.
-  logical, parameter :: SOURCES_CAN_BE_BURIED_EXT_MESH = .true.
+  logical, parameter :: RECEIVERS_CAN_BE_BURIED = .true.
+  logical, parameter :: SOURCES_CAN_BE_BURIED = .true.
 
 ! sources and receivers Z coordinates given directly instead of with depth
-  logical, parameter :: USE_SOURCES_RECVS_Z = .false.
+  logical, parameter :: USE_SOURCES_RECEIVERS_Z = .false.
 
 ! the seismograms are normal to surface
 ! Z record corresponds to the normal, while E and N are two tangent vectors
 ! that completes an orthonormal.
-  logical, parameter :: EXT_MESH_RECV_NORMAL = .false.
+  logical, parameter :: EXTERNAL_MESH_RECEIVERS_NORMAL = .false.
 
 
 !!-----------------------------------------------------------

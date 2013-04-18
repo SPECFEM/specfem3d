@@ -41,7 +41,7 @@
   if( ier /= 0 ) stop 'error allocating array for mesh surface'
 
 ! determines model surface
-  if (.not. RECVS_CAN_BE_BURIED_EXT_MESH .or. MOVIE_TYPE == 2) then
+  if (.not. RECEIVERS_CAN_BE_BURIED .or. MOVIE_TYPE == 2) then
 
     ! returns surface points/elements
     ! in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh and
