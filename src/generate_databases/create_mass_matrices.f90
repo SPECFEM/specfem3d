@@ -59,7 +59,7 @@
 
      ! returns elastic mass matrix
      if( PML_CONDITIONS ) then
-        call create_mass_matrices_pml(nspec,ibool)
+        call create_mass_matrices_pml_elastic(nspec,ibool)
      else
         do ispec=1,nspec
            if( ispec_is_elastic(ispec) ) then
@@ -94,7 +94,7 @@
 
      ! returns acoustic mass matrix
      if( PML_CONDITIONS ) then
-        call create_mass_matrices_pml(nspec,ibool)
+        call create_mass_matrices_pml_acoustic(nspec,ibool)
      else
         do ispec=1,nspec
            if( ispec_is_acoustic(ispec) ) then
@@ -426,7 +426,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine create_mass_matrices_pml(nspec,ibool)
+  subroutine create_mass_matrices_pml_elastic(nspec,ibool)
 
     use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
                                       K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,DT
@@ -470,28 +470,6 @@
                            sngl( dble(jacobianl) * weight * dble(mat_coef) )
                    else
                       rmass(iglob) = rmass(iglob) + &
-                           jacobianl * weight * mat_coef
-                   endif
-                enddo
-             enddo
-          enddo
-       else if( .not. is_CPML(ispec) .and. ispec_is_acoustic(ispec) ) then
-          do k=1,NGLLZ
-             do j=1,NGLLY
-                do i=1,NGLLX
-                   ! defines the material coefficient associated to the domain
-                   mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
-                   iglob = ibool(i,j,k,ispec)
-
-                   weight = wxgll(i)*wygll(j)*wzgll(k)
-                   jacobianl = jacobianstore(i,j,k,ispec)
-
-                   if(CUSTOM_REAL == SIZE_REAL) then
-                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                           sngl( dble(jacobianl) * weight * dble(mat_coef) )
-                   else
-                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                            jacobianl * weight * mat_coef
                    endif
                 enddo
@@ -712,6 +690,64 @@
        endif
     enddo ! do ispec_CPML=1,nspec_cpml
 
+  end subroutine create_mass_matrices_pml_elastic
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine create_mass_matrices_pml_acoustic(nspec,ibool)
+
+    use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
+                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,DT
+
+    use create_regions_mesh_ext_par
+
+    implicit none
+
+    integer, intent(in) :: nspec
+
+    integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
+
+    ! local parameters
+    double precision :: weight
+    real(kind=CUSTOM_REAL) :: jacobianl,deltat,mat_coef
+    integer :: ispec,iglob,i,j,k,ispec_CPML
+
+    ! use the non-dimensional time step to make the mass matrix correction
+    if(CUSTOM_REAL == SIZE_REAL) then
+       deltat = sngl(DT)
+    else
+       deltat = DT
+    endif
+
+    ! loops over physical mesh elements
+    do ispec=1,nspec
+       if( .not. is_CPML(ispec) .and. ispec_is_acoustic(ispec) ) then
+          do k=1,NGLLZ
+             do j=1,NGLLY
+                do i=1,NGLLX
+                   ! defines the material coefficient associated to the domain
+                   mat_coef = 1.d0 / kappastore(i,j,k,ispec)
+
+                   iglob = ibool(i,j,k,ispec)
+
+                   weight = wxgll(i)*wygll(j)*wzgll(k)
+                   jacobianl = jacobianstore(i,j,k,ispec)
+
+                   if(CUSTOM_REAL == SIZE_REAL) then
+                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                           sngl( dble(jacobianl) * weight * dble(mat_coef) )
+                   else
+                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                           jacobianl * weight * mat_coef
+                   endif
+                enddo
+             enddo
+          enddo
+       endif
+    enddo
+
     ! loops over C-PML elements
     do ispec_CPML=1,nspec_cpml
        ispec = CPML_to_spec(ispec_CPML)
@@ -924,4 +960,6 @@
        endif
     enddo ! do ispec_CPML=1,nspec_cpml
 
-  end subroutine create_mass_matrices_pml
+  end subroutine create_mass_matrices_pml_acoustic
+
+
