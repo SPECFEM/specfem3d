@@ -456,7 +456,7 @@
               do j = jmin_temp,jmax_temp
                 do i = imin_temp,imax_temp
                   iglob = ibool(i,j,k,ispec)
-                  ! for comparison purpose, we don't have to do "dsqrt", which is expensive
+                  ! for comparison purpose, we do not have to do "dsqrt", which is expensive
                   dist = ((x_target(irec)-dble(xstore(iglob)))**2 &
                         + (y_target(irec)-dble(ystore(iglob)))**2 &
                         + (z_target(irec)-dble(zstore(iglob)))**2)
