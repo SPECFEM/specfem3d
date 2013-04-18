@@ -88,7 +88,7 @@
 !! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
 !! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
 !! DK DK will be lost between two calls
-!! VM VM I did it 
+!! VM VM I did it
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
@@ -164,9 +164,9 @@
                  tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
                  if (USE_VADIM) then
-                     tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface) 
-                     ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface) 
-                     tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface) 
+                     tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
+                     ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
+                     tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
                  endif
 
                  ! gets associated, weighted jacobian
@@ -212,9 +212,9 @@
   if (USE_VADIM) then
      if (phase_is_inner .eqv. .true.) then
         it_dsm = it_dsm + 1
-     end if
-  end if
-  
+     endif
+  endif
+
   end subroutine compute_stacey_viscoelastic
 
 !---------------------------------------------------------------------------------------
@@ -232,7 +232,7 @@
 
 !! DK DK why use 5 and not NGLLX here? (I assume 5 means 5 GLL points here?)
 !! VM VM fixed to NGLLX
-   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)  
+   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)
 
    it_dsm = 1
    !write(*,*) 'read dsm files',it_dsm

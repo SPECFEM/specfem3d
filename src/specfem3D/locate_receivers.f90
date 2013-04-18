@@ -348,7 +348,7 @@
     y_target(irec) = stutm_y(irec)
 
     ! receiver's Z coordinate
-    if( USE_SOURCES_RECVS_Z ) then
+    if( USE_SOURCES_RECEIVERS_Z ) then
       ! alternative: burial depth is given as z value directly
       z_target(irec) = stbur(irec)
     else
@@ -389,7 +389,7 @@
 
               iglob = ibool(i,j,k,ispec)
 
-              if (.not. RECVS_CAN_BE_BURIED_EXT_MESH) then
+              if (.not. RECEIVERS_CAN_BE_BURIED) then
                 if ((.not. iglob_is_surface_external_mesh(iglob)) &
                   .or. (.not. ispec_is_surface_external_mesh(ispec))) then
                   cycle
@@ -493,7 +493,7 @@
     endif
 
     ! get normal to the face of the hexaedra if receiver is on the surface
-    if ((.not. RECVS_CAN_BE_BURIED_EXT_MESH) .and. &
+    if ((.not. RECEIVERS_CAN_BE_BURIED) .and. &
        .not. (ispec_selected_rec(irec) == 1)) then
       pt0_ix = -1
       pt0_iy = -1
@@ -612,7 +612,7 @@
       v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
 
       ! build rotation matrice nu for seismograms
-      if (EXT_MESH_RECV_NORMAL) then
+      if (EXTERNAL_MESH_RECEIVERS_NORMAL) then
         !     East (u)
         nu(1,1,irec) = u_vector(1)
         nu(1,2,irec) = v_vector(1)
@@ -644,7 +644,7 @@
         nu(3,3,irec) = 1.d0
       endif
 
-    endif ! of if (.not. RECVS_CAN_BE_BURIED_EXT_MESH)
+    endif ! of if (.not. RECEIVERS_CAN_BE_BURIED)
 
   ! end of loop on all the stations
   enddo
@@ -842,7 +842,7 @@
         write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
         write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))
       endif
-      if( USE_SOURCES_RECVS_Z ) then
+      if( USE_SOURCES_RECEIVERS_Z ) then
         write(IMAIN,*) '     original z: ',sngl(stbur(irec))
       else
         write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'
@@ -872,7 +872,7 @@
         write(IMAIN,*) '     UTM x: ',x_found(irec)
         write(IMAIN,*) '     UTM y: ',y_found(irec)
       endif
-      if( USE_SOURCES_RECVS_Z ) then
+      if( USE_SOURCES_RECEIVERS_Z ) then
         write(IMAIN,*) '     z: ',z_found(irec)
       else
         write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'

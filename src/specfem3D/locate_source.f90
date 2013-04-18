@@ -187,7 +187,7 @@
       write(IMAIN,*) 'UTM projection:'
       write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
     endif
-    if( USE_SOURCES_RECVS_Z ) then
+    if( USE_SOURCES_RECEIVERS_Z ) then
       write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
     endif
   endif
@@ -255,7 +255,7 @@
     y_target_source = utm_y_source(isource)
 
     ! source Z coordinate
-    if( USE_SOURCES_RECVS_Z ) then
+    if( USE_SOURCES_RECEIVERS_Z ) then
       ! alternative: depth is given as z value directly
       z_target_source = depth(isource)
     else
@@ -302,7 +302,7 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            if (.not. SOURCES_CAN_BE_BURIED_EXT_MESH) then
+            if (.not. SOURCES_CAN_BE_BURIED) then
               if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
                 cycle
               endif
@@ -359,7 +359,7 @@
     endif
 
     ! get normal to the face of the hexahedra if receiver is on the surface
-    if ((.not. SOURCES_CAN_BE_BURIED_EXT_MESH) .and. &
+    if ((.not. SOURCES_CAN_BE_BURIED) .and. &
        .not. (ispec_selected_source(isource) == 0)) then
 
       ! note: at this point, xi_source,.. are in range [1.0d0,NGLLX/Y/Z] for point sources only,
@@ -498,7 +498,7 @@
       nu_source(3,2,isource) = v_vector(3)
       nu_source(3,3,isource) = w_vector(3)
 
-    endif ! of if (.not. SOURCES_CAN_BE_BURIED_EXT_MESH)
+    endif ! of if (.not. SOURCES_CAN_BE_BURIED)
 
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source
@@ -786,7 +786,7 @@
           write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
           write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
         endif
-        if( USE_SOURCES_RECVS_Z ) then
+        if( USE_SOURCES_RECEIVERS_Z ) then
           write(IMAIN,*) '         z: ',depth(isource),' km'
         else
           write(IMAIN,*) '         depth: ',depth(isource),' km'
@@ -803,7 +803,7 @@
           write(IMAIN,*) '         UTM x: ',x_found_source(isource)
           write(IMAIN,*) '         UTM y: ',y_found_source(isource)
         endif
-        if( USE_SOURCES_RECVS_Z ) then
+        if( USE_SOURCES_RECEIVERS_Z ) then
           write(IMAIN,*) '             z: ',z_found_source(isource)
         else
           write(IMAIN,*) '         depth: ',dabs(z_found_source(isource) - elevation(isource))/1000.,' km'

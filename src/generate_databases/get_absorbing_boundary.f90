@@ -448,7 +448,7 @@
          ! sets face infos
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
-  
+
          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
@@ -501,7 +501,7 @@
          ! sets face infos
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
-  
+
          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
