@@ -34,14 +34,16 @@
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic)
+                        phase_ispec_inner_acoustic,&
+                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec)
 
 ! computes forces for acoustic elements
 !
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,NGLLSQUARE
+  use specfem_par_acoustic, only : ispec_is_acoustic
   use pml_par
 
   implicit none
@@ -76,9 +78,6 @@
   integer, dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
 
 ! local variables
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
-       tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3
-
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
@@ -95,6 +94,16 @@
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
+
+! communication overlap
+  logical, dimension(NSPEC_AB) :: ispec_is_inner
+  logical :: phase_is_inner
+
+! outer boundary of CPML
+  integer :: num_abs_boundary_faces
+  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+  integer :: igll,iface
 
   if( iphase == 1 ) then
     num_elements = nspec_outer_acoustic
@@ -219,8 +228,8 @@
        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
        if(is_CPML(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-          call pml_compute_memory_variables(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-               tempx3,tempy3,tempz3,temp1,temp2,temp3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
+          call pml_compute_memory_variables_acoustic(ispec,ispec_CPML,deltat,temp1,temp2,temp3, &
+                                                     NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
 
           ! calculates contribution from each C-PML element to update acceleration
           call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec_AB,jacobian)
@@ -271,6 +280,31 @@
 ! Thus, there is nothing to enforce explicitly here.
 ! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
 ! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
+  ! C-PML boundary
+    if(PML_CONDITIONS)then
+       do iface=1,num_abs_boundary_faces
+           ispec = abs_boundary_ispec(iface)
+           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+              if( ispec_is_acoustic(ispec) ) then
+                 ! reference gll points on boundary face
+                 do igll = 1,NGLLSQUARE
+
+                    ! gets local indices for GLL point
+                    i = abs_boundary_ijk(1,igll,iface)
+                    j = abs_boundary_ijk(2,igll,iface)
+                    k = abs_boundary_ijk(3,igll,iface)
+
+                    iglob=ibool(i,j,k,ispec)
+
+                    potential_dot_dot_acoustic(iglob) = 0.0
+                    potential_dot_acoustic(iglob) = 0.0
+                    potential_acoustic(iglob) = 0.0
+
+                 enddo
+             endif ! ispec_is_acoustic
+            endif
+        enddo
+      endif
 
   end subroutine compute_forces_acoustic_noDev
 

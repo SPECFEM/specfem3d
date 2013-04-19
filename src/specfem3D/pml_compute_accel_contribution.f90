@@ -61,11 +61,8 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
-           if( ispec_is_elastic(ispec) ) then
-              rhol = rhostore(i,j,k,ispec)
-              jacobianl = jacobian(i,j,k,ispec)
-           endif
-
+           rhol = rhostore(i,j,k,ispec)
+           jacobianl = jacobian(i,j,k,ispec)
            iglob = ibool(i,j,k,ispec)
 
            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
@@ -85,24 +82,20 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
                  coef2_1 = deltat/2.0d0
               endif
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML)
@@ -117,30 +110,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
-
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
@@ -159,24 +148,20 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
                  coef2_1 = deltat/2.0d0
               endif
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_y(i,j,k,ispec_CPML)
@@ -191,30 +176,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
-
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
               !------------------------------------------------------------------------------
@@ -233,24 +214,20 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
                  coef2_1 = deltat/2.0d0
               endif
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = 0.0
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_z(i,j,k,ispec_CPML)
@@ -265,30 +242,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
-
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
               !------------------------------------------------------------------------------
@@ -311,30 +284,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               coef1_2 = coef1_1
               coef2_2 = coef2_1
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(1,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(1,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(2,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(2,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = 0.0
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(3,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(3,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = 0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -343,12 +312,10 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               A2 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
-              if( ispec_is_elastic(ispec) ) then
-                 A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
-                      + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                      + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              endif
+              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
+                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+                   + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
+                   * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               A5 = 0.0
 
@@ -357,30 +324,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
-
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
               !------------------------------------------------------------------------------
@@ -403,30 +366,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               coef1_2 = coef1_1
               coef2_2 = coef2_1
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(1,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)= 0.0
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(1,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)= 0.0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(2,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)= 0.0
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(2,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)= 0.0
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(3,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)= 0.0
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(3,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)= 0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -449,30 +408,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
-
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
               !------------------------------------------------------------------------------
@@ -495,30 +450,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               coef1_2 = coef1_1
               coef2_2 = coef2_1
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(1,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)=0.d0
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(1,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)=0.d0
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(2,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)=0.d0
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(2,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)=0.d0
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(3,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)=0.d0
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(3,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)=0.d0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -527,12 +478,10 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               A2 = d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              if( ispec_is_elastic(ispec) ) then
-                 A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                      + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                      + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.0) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              endif
+              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
+                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+                   + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
+                   * (it+0.0) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A5 = 0.0
 
@@ -541,30 +490,26 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
-
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
               !------------------------------------------------------------------------------
@@ -591,36 +536,32 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               coef1_3 = coef1_1
               coef2_3 = coef2_1
 
-              if( ispec_is_elastic(ispec) ) then
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(1,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
+                   + (displ(1,iglob) + deltat * veloc(1,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
+                   + displ(1,iglob) * ((it-0.0) * deltat)**2 * coef2_3
 
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + displ(1,iglob) * coef2_1
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(1,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3) &
-                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
-                      + displ(1,iglob) * ((it-0.0) * deltat)**2 * coef2_3
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(2,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) &
+                   + (displ(2,iglob) + deltat * veloc(2,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
+                   + displ(2,iglob) * ((it-0.0) * deltat)**2 * coef2_3
 
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + displ(2,iglob) * coef2_1
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(2,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3) &
-                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
-                      + displ(2,iglob) * ((it-0.0) * deltat)**2 * coef2_3
-
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
-                      + displ(3,iglob) * (it-0.0) * deltat * coef2_2
-                 rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
-                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
-                      + displ(3,iglob) * ((it-0.0) * deltat)**2 * coef2_3
-
-              endif
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) = coef0_1 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + displ(3,iglob) * coef2_1
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) = coef0_2 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * (it+0.0) * deltat * coef1_2 &
+                   + displ(3,iglob) * (it-0.0) * deltat * coef2_2
+              rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
+                   + (displ(3,iglob) + deltat * veloc(3,iglob)) * ((it+0.0) * deltat)**2 * coef1_3 &
+                   + displ(3,iglob) * ((it-0.0) * deltat)**2 * coef2_3
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -656,10 +597,8 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               !                  A4 = -temp_A4-2.0*(it+0.0) * deltat*temp_A5
               !                  A5 = temp_A5
 
-              if( ispec_is_elastic(ispec) ) then
-                 A3 = temp_A3 !+ (it+0.0) * deltat*temp_A4 !+ ((it+0.0) * deltat)**2*temp_A5
-                 A4 = 0.0 !-temp_A4 ! -2.0*(it+0.0) * deltat*temp_A5
-              endif
+              A3 = temp_A3 !+ (it+0.0) * deltat*temp_A4 !+ ((it+0.0) * deltat)**2*temp_A5
+              A4 = 0.0 !-temp_A4 ! -2.0*(it+0.0) * deltat*temp_A5
               A5 = 0.0 ! temp_A5
 
               fac1 = wgllwgll_yz(j,k)
@@ -667,30 +606,27 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
               fac3 = wgllwgll_xy(i,j)
               fac4 = sqrt(fac1 * fac2 * fac3)
 
-              if( ispec_is_elastic(ispec) ) then
+              accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
+                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
-                      A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
+                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
-                      A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
-                      )
+              accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+                   ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
+                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
+                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
+                   A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
+                   )
 
-                 accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
-                      ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
-                      A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
-                      A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
-                      A5 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3)  &
-                      )
-
-              endif
            endif
         enddo
      enddo
@@ -738,11 +674,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
-           if( ispec_is_acoustic(ispec) ) then
-              kappal = kappastore(i,j,k,ispec)
-              jacobianl = jacobian(i,j,k,ispec)
-           endif
-
+           kappal = kappastore(i,j,k,ispec)
+           jacobianl = jacobian(i,j,k,ispec)
            iglob = ibool(i,j,k,ispec)
 
            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
@@ -919,8 +852,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
                       + potential_acoustic(iglob) * coef2_1
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.5)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.5)*deltat * coef2_2
+                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
+                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
               endif
 
@@ -935,7 +868,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                  A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) + &
                       alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
                       + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.5) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+                      * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               endif
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               A5 = 0.0
@@ -982,8 +915,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
                       + potential_acoustic(iglob) * coef2_1
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.5)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.5)*deltat * coef2_2
+                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
+                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,3)= 0.0
               endif
 
@@ -998,7 +931,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                  A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.5) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+                      * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               endif
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A5 = 0.0
@@ -1045,8 +978,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
                       + potential_acoustic(iglob) * coef2_1
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.5)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.5)*deltat * coef2_2
+                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
+                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.d0
               endif
 
@@ -1061,7 +994,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                  A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                       + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                       + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.5) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+                      * (it+0.0) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               endif
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A5 = 0.0
@@ -1112,11 +1045,11 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                       + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
                       + potential_acoustic(iglob) * coef2_1
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.5)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.5)*deltat * coef2_2
+                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
+                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
                  rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=coef0_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * ((it+0.5)*deltat)**2 * coef1_3 &
-                      + potential_acoustic(iglob) * ((it-0.5)*deltat)**2 * coef2_3
+                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * ((it+0.0)*deltat)**2 * coef1_3 &
+                      + potential_acoustic(iglob) * ((it-0.0)*deltat)**2 * coef2_3
               endif
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
@@ -1150,8 +1083,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
               if( ispec_is_acoustic(ispec)) then
-                 A3 = temp_A3 !+ (it+0.5)*deltat*temp_A4 !+ ((it+0.5)*deltat)**2*temp_A5
-                 A4 = 0.0 !-temp_A4 !-2.0*(it+0.5)*deltat*temp_A5
+                 A3 = temp_A3 !+ (it+0.0)*deltat*temp_A4 !+ ((it+0.0)*deltat)**2*temp_A5
+                 A4 = 0.0 !-temp_A4 !-2.0*(it+0.0)*deltat*temp_A5
               endif
               A5 = 0.0 ! temp_A5
 
