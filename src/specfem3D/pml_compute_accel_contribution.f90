@@ -701,7 +701,7 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 !=====================================================================
 !
-! United States and French Government Sponsorship Acknowledged.
+! 
 
 subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec_AB,jacobian)
 
