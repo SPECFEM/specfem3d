@@ -737,7 +737,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                tempx3,tempy3,tempz3,temp1,temp2,temp3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
 
           ! calculates contribution from each C-PML element to update acceleration
-          call pml_compute_accel_contribution(ispec,ispec_CPML,deltat,nspec_AB,jacobian,accel_elastic_CPML)
+          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_AB,jacobian)
        endif
     endif
 
