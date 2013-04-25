@@ -98,15 +98,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   alpha_store = 0._CUSTOM_REAL
 
-  if(ELASTIC_SIMULATION .and. .not. ACOUSTIC_SIMULATION)then
-    ALPHA_MAX_PML = PI*f0_FOR_PML*1.0  ! from Festa and Vilotte (2005)
-  else if(ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION)then
-    ALPHA_MAX_PML = PI*f0_FOR_PML*1.0
-  else if(ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)then
-    ALPHA_MAX_PML = PI*f0_FOR_PML*1.0
-  else
-    stop 'Currently PML is not implemented for POROELASTIC_SIMULATION'
-  endif
+! from Festa and Vilotte (2005)
+  ALPHA_MAX_PML = PI*f0_FOR_PML
 
   x_min = minval(xstore(:))
   x_max = maxval(xstore(:))
@@ -1657,7 +1650,9 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
 
   ! gets damping profile
   if( NPOWER >= 1 ) then
-     ! INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
+     ! In INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
+     ! pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (2.d0 * delta)) * dist**(NPOWER)
+     ! due to tests it is more accurate to use following definition in case NPOWER = 1 defined in constants.h.in 
      pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (2.d0 * delta)) * dist**(1.2*NPOWER)
   else
      call exit_mpi(myrank,'C-PML error: NPOWER must be greater than or equal to 1')
