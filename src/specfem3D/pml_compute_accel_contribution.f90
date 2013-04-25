@@ -37,8 +37,9 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
 
   use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,it,kappastore,rhostore
   use specfem_par_elastic, only: displ,veloc,ispec_is_elastic
-  use pml_par, only: NSPEC_CPML,rmemory_displ_elastic,CPML_regions,spec_to_CPML,alpha_store, &
-                     d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,accel_elastic_CPML
+  use pml_par, only: NSPEC_CPML,CPML_regions,spec_to_CPML, &
+                     d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,alpha_store,&
+                     rmemory_displ_elastic,accel_elastic_CPML
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -593,13 +594,16 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_
                    )
               temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
-              !                  A3 = temp_A3 + (it+0.0) * deltat*temp_A4 + ((it+0.0) * deltat)**2*temp_A5
-              !                  A4 = -temp_A4-2.0*(it+0.0) * deltat*temp_A5
-              !                  A5 = temp_A5
+!             A3 = temp_A3 + (it+0.0)*deltat*temp_A4 + ((it+0.0)*deltat)**2*temp_A5
+!             A4 = -temp_A4 -2.0*(it+0.0)*deltat*temp_A5
+!             A5 = temp_A5
 
-              A3 = temp_A3 !+ (it+0.0) * deltat*temp_A4 !+ ((it+0.0) * deltat)**2*temp_A5
-              A4 = 0.0 !-temp_A4 ! -2.0*(it+0.0) * deltat*temp_A5
-              A5 = 0.0 ! temp_A5
+!ZN the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
+!ZN exprssion of A3,A4,A5 in order to stabilized the code. 
+
+              A3 = temp_A3
+              A4 = 0.0
+              A5 = 0.0
 
               fac1 = wgllwgll_yz(j,k)
               fac2 = wgllwgll_xz(i,k)
@@ -639,7 +643,7 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 ! 
 
-subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec_AB,jacobian)
+subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -648,24 +652,20 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,it,kappastore,rhostore
-  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,ispec_is_acoustic
-  use pml_par, only: NSPEC_CPML,rmemory_potential_acoustic,CPML_regions,spec_to_CPML,alpha_store, &
-                     d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,potential_dot_dot_acoustic_CPML
+  use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,jacobian,it,deltat,kappastore,rhostore
+  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+  use pml_par, only: NSPEC_CPML,CPML_regions,spec_to_CPML, &
+                     d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,alpha_store,&
+                     rmemory_potential_acoustic, potential_dot_dot_acoustic_CPML
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
-  integer, intent(in) :: ispec,ispec_CPML,nspec_AB
-
-  real(kind=CUSTOM_REAL), intent(in) :: deltat
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec_AB), intent(in) :: jacobian
+  integer, intent(in) :: ispec,ispec_CPML
 
   ! local parameters
   integer :: i,j,k,iglob
-
   real(kind=CUSTOM_REAL) :: fac1,fac2,fac3,fac4,kappal,jacobianl
   real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
   real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5 ! for convolution of acceleration
@@ -677,6 +677,10 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
            kappal = kappastore(i,j,k,ispec)
            jacobianl = jacobian(i,j,k,ispec)
            iglob = ibool(i,j,k,ispec)
+           fac1 = wgllwgll_yz(j,k)
+           fac2 = wgllwgll_xz(i,k)
+           fac3 = wgllwgll_xy(i,j)
+           fac4 = sqrt(fac1 * fac2 * fac3)
 
            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
               !------------------------------------------------------------------------------
@@ -695,14 +699,11 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                  coef2_1 = deltat/2.0d0
               endif
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                   + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                   + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML)
@@ -712,20 +713,12 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               A4 = 0.d0
               A5 = 0.d0
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
-
-              if( ispec_is_acoustic(ispec) ) then
-
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
-                      A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
-                      A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
-                      A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                   ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+                     A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
+                     A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
+                     A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
@@ -744,14 +737,11 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                  coef2_1 = deltat/2.0d0
               endif
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                    + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_y(i,j,k,ispec_CPML)
@@ -761,20 +751,12 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               A4 = 0.d0
               A5 = 0.d0
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
-
-              if( ispec_is_acoustic(ispec) ) then
-
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
-                      A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
-                      A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
-                      A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                   ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+                     A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
+                     A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
+                     A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
+                   )
 
            else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
               !------------------------------------------------------------------------------
@@ -793,14 +775,11 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                  coef2_1 = deltat/2.0d0
               endif
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                    + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=0.0
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_z(i,j,k,ispec_CPML)
@@ -810,20 +789,12 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               A4 = 0.d0
               A5 = 0.d0
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
-
-              if( ispec_is_acoustic(ispec) ) then
-
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                    ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+                    )
 
            else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
               !------------------------------------------------------------------------------
@@ -846,16 +817,13 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               coef1_2 = coef1_1
               coef2_2 = coef2_1
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                    + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
+                    + potential_acoustic(iglob) * it*deltat * coef2_2
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -864,29 +832,19 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               A2 = d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML)
-              if( ispec_is_acoustic(ispec) ) then
-                 A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) + &
-                      alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
-                      + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
-              endif
+              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) + &
+                   alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) &
+                   + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
+                   * it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
               A5 = 0.0
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
-
-              if( ispec_is_acoustic(ispec) ) then
-
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                    ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+                    )
 
            else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
               !------------------------------------------------------------------------------
@@ -909,16 +867,13 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               coef1_2 = coef1_1
               coef2_2 = coef2_1
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)= 0.0
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                    + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
+                    + potential_acoustic(iglob) * it*deltat * coef2_2
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)= 0.0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -927,29 +882,19 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               A2 = d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              if( ispec_is_acoustic(ispec) ) then
-                 A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                      + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                      + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.0) * deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              endif
+              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
+                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+                   + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
+                   * it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A5 = 0.0
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
-
-              if( ispec_is_acoustic(ispec) ) then
-
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                    ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+                    )
 
            else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
               !------------------------------------------------------------------------------
@@ -972,16 +917,13 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               coef1_2 = coef1_1
               coef2_2 = coef2_1
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.d0
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                    + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
+                    + potential_acoustic(iglob) * it*deltat * coef2_2
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=0.d0
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -990,29 +932,19 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               A2 = d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
                    - alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
-              if( ispec_is_acoustic(ispec) ) then
-                 A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
-                      + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
-                      + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
-                      * (it+0.0) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
-              endif
+              A3 = -2.0 * alpha_store(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) &
+                   + alpha_store(i,j,k,ispec_CPML)**2 * ( d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+                   + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) ) + alpha_store(i,j,k,ispec_CPML)**2 &
+                   * it*deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A4 = -alpha_store(i,j,k,ispec_CPML)**2 * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A5 = 0.0
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
-
-              if( ispec_is_acoustic(ispec) ) then
-
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                    ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+                    )
 
            else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
               !------------------------------------------------------------------------------
@@ -1039,18 +971,15 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
               coef1_3 = coef1_1
               coef2_3 = coef2_1
 
-              if( ispec_is_acoustic(ispec) ) then
-
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
-                      + potential_acoustic(iglob) * coef2_1
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it+0.0)*deltat * coef1_2 &
-                      + potential_acoustic(iglob) * (it-0.0)*deltat * coef2_2
-                 rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=coef0_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
-                      + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * ((it+0.0)*deltat)**2 * coef1_3 &
-                      + potential_acoustic(iglob) * ((it-0.0)*deltat)**2 * coef2_3
-              endif
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,1)=coef0_1 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * coef1_1 &
+                    + potential_acoustic(iglob) * coef2_1
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,2)=coef0_2 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
+                    + potential_acoustic(iglob) * it*deltat * coef2_2
+              rmemory_potential_acoustic(i,j,k,ispec_CPML,3)=coef0_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
+                    + (potential_acoustic(iglob) + deltat*potential_dot_acoustic(iglob)) * (it*deltat)**2 * coef1_3 &
+                    + potential_acoustic(iglob) * (it*deltat)**2 * coef2_3
 
               !---------------------- A0, A1, A2, A3, A4 and A5 --------------------------
               A0 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -1082,26 +1011,23 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,deltat,nspec
                    )
               temp_A5 = 0.5 * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
-              if( ispec_is_acoustic(ispec)) then
-                 A3 = temp_A3 !+ (it+0.0)*deltat*temp_A4 !+ ((it+0.0)*deltat)**2*temp_A5
-                 A4 = 0.0 !-temp_A4 !-2.0*(it+0.0)*deltat*temp_A5
-              endif
-              A5 = 0.0 ! temp_A5
+!             A3 = temp_A3 + it*deltat*temp_A4 + (it*deltat)**2*temp_A5
+!             A4 = -temp_A4 -2.0*it*deltat*temp_A5
+!             A5 = temp_A5
 
-              fac1 = wgllwgll_yz(j,k)
-              fac2 = wgllwgll_xz(i,k)
-              fac3 = wgllwgll_xy(i,j)
-              fac4 = sqrt(fac1 * fac2 * fac3)
+!ZN the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
+!ZN exprssion of A3,A4,A5 in order to stabilized the code. 
 
-              if( ispec_is_acoustic(ispec) ) then
+              A3 = temp_A3
+              A4 = 0.0
+              A5 = 0.0
 
-                 potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
-                      ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
+              potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+                    ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                       A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                       A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &
                       A5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3)  &
-                      )
-              endif
+                    )
            endif
         enddo
      enddo
