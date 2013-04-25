@@ -151,19 +151,19 @@
                 temp3l_new = temp3l
 
                 do l=1,NGLLX
-                   hp1 = hprime_xx(l,i)
+                   hp1 = hprime_xx(i,l)
                    iglob = ibool(l,j,k,ispec)
                    temp1l_new = temp1l_new + deltat*potential_dot_acoustic(iglob)*hp1
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLY
-                   hp2 = hprime_yy(l,j)
+                   hp2 = hprime_yy(j,l)
                    iglob = ibool(i,l,k,ispec)
                    temp2l_new = temp2l_new + deltat*potential_dot_acoustic(iglob)*hp2
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          enddo
 
 !!! can merge these loops because NGLLX = NGLLY = NGLLZ          do l=1,NGLLZ
-                   hp3 = hprime_zz(l,k)
+                   hp3 = hprime_zz(k,l)
                    iglob = ibool(i,j,l,ispec)
                    temp3l_new = temp3l_new + deltat*potential_dot_acoustic(iglob)*hp3
                 enddo
