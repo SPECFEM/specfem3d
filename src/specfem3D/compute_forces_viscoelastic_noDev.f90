@@ -732,11 +732,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
        if(is_CPML(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-          call pml_compute_memory_variables_elastic(ispec,ispec_CPML,deltat,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-               tempx3,tempy3,tempz3,NSPEC_AB,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian)
+          call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
+                                                    tempx3,tempy3,tempz3)
 
           ! calculates contribution from each C-PML element to update acceleration
-          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,deltat,nspec_AB,jacobian)
+          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
        endif
     endif
 
