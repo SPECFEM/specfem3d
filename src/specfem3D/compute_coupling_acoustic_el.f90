@@ -32,7 +32,8 @@
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+                        ispec_is_inner,phase_is_inner,& 
+                        PML_CONDITIONS,spec_to_CPML,is_CPML) 
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
@@ -42,7 +43,7 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement and pressure
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ 
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
 
 ! global indexing
@@ -59,12 +60,15 @@
   logical, dimension(NSPEC_AB) :: ispec_is_inner
   logical :: phase_is_inner
 
+! CPML 
+  logical :: PML_CONDITIONS 
+  integer :: spec_to_CPML(NSPEC_AB) 
+  logical :: is_CPML(NSPEC_AB)  
+
 ! local parameters
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z,displ_n
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
-
-  integer :: iface,igll,ispec,iglob
-  integer :: i,j,k
+  integer :: iface,igll,ispec,iglob,ispec_CPML,i,j,k
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
@@ -87,9 +91,21 @@
         iglob = ibool(i,j,k,ispec)
 
         ! elastic displacement on global point
-        displ_x = displ(1,iglob)
-        displ_y = displ(2,iglob)
-        displ_z = displ(3,iglob)
+        if(PML_CONDITIONS)then  
+           if(is_CPML(ispec))then
+              ispec_CPML = spec_to_CPML(ispec)
+              call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
+                                                                 displ_x,displ_y,displ_z)
+           else
+              displ_x = displ(1,iglob)
+              displ_y = displ(2,iglob)
+              displ_z = displ(3,iglob)
+           endif
+        else
+           displ_x = displ(1,iglob)
+           displ_y = displ(2,iglob)
+           displ_z = displ(3,iglob)
+        endif
 
         ! gets associated normal on GLL point
         ! (note convention: pointing outwards of acoustic element)

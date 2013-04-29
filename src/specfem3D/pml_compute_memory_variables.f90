@@ -113,14 +113,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_2
 
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
-
-
               !---------------------- A9, A10 and A11 --------------------------
               A9  = k_store_x(i,j,k,ispec_CPML)
               A10 = d_store_x(i,j,k,ispec_CPML)
@@ -148,14 +140,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) &
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
-
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML)
@@ -185,13 +169,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = k_store_x(i,j,k,ispec_CPML)
               A16 = d_store_x(i,j,k,ispec_CPML)
@@ -215,11 +192,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -227,12 +199,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
-
 
               !---------------------- A17 and A18 --------------------------
               A17 = 1.d0
@@ -244,22 +210,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
-
 
               !---------------------- A19 and A20 --------------------------
               A19 = 1.d0
@@ -271,21 +226,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
@@ -320,13 +265,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
 
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = 1.d0/k_store_y(i,j,k,ispec_CPML)
               A10 = 0.d0
@@ -354,13 +292,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_2
-
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_y(i,j,k,ispec_CPML)
@@ -390,13 +321,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = 1.d0
               A16 = 0.d0
@@ -407,21 +331,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A17 and A18 --------------------------
               A17 = k_store_y(i,j,k,ispec_CPML)
@@ -446,11 +360,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -458,12 +367,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
-
 
               !---------------------- A19 and A20--------------------------
               A19 = 1.d0
@@ -475,21 +378,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
 
@@ -525,13 +418,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
 
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_z(i,j,k,ispec_CPML)
               A10 = d_store_z(i,j,k,ispec_CPML)
@@ -559,13 +445,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) &
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                      + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = 1.0 / k_store_z(i,j,k,ispec_CPML)
@@ -595,13 +474,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dzl(i,j,k,ispec_CPML) * coef2_2
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = 1.d0
               A16 = 0.d0
@@ -612,21 +484,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A17 and A18 --------------------------
               A17 = 1.d0
@@ -638,21 +500,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A19 and A20 --------------------------
               A19 = k_store_z(i,j,k,ispec_CPML)
@@ -677,11 +529,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duy_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
@@ -689,11 +536,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
 
@@ -730,13 +572,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_2
 
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
-
 
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_x(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
@@ -766,13 +601,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_2
-
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -814,13 +642,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dzl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
                    + PML_duz_dzl(i,j,k,ispec_CPML) * it*deltat * coef2_2
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = k_store_x(i,j,k,ispec_CPML)
               A16 = d_store_x(i,j,k,ispec_CPML)
@@ -844,11 +665,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -856,11 +672,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A17 and A18 --------------------------
               A17 = k_store_y(i,j,k,ispec_CPML)
@@ -885,11 +696,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -897,11 +703,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A19 and A20--------------------------
               A19 = 1.d0
@@ -913,21 +714,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
 
@@ -963,13 +754,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_2
-
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -1011,13 +795,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
                    + PML_duz_dyl(i,j,k,ispec_CPML) * it*deltat * coef2_2
 
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
               A13 = 0.d0
@@ -1047,13 +824,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dzl(i,j,k,ispec_CPML) * coef2_2
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = k_store_x(i,j,k,ispec_CPML)
               A16 = d_store_x(i,j,k,ispec_CPML)
@@ -1077,11 +847,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -1089,11 +854,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A17 and A18 --------------------------
               A17 = 1.0d0
@@ -1105,21 +865,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A19 and A20 --------------------------
               A19 = k_store_z(i,j,k,ispec_CPML)
@@ -1144,11 +894,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duy_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
@@ -1156,11 +901,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
 
@@ -1172,7 +912,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               A6 = k_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
               A7 = d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
                    + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
-                   + (it+0.0) * deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+                   + it*deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
               A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
 
               bb = alpha_store(i,j,k,ispec_CPML)
@@ -1208,13 +948,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
                    + PML_duz_dxl(i,j,k,ispec_CPML) * it*deltat * coef2_2
 
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
               A10 = 0.d0
@@ -1243,13 +976,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_2
-
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
@@ -1280,13 +1006,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2) &
                    + PML_duz_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_duz_dzl(i,j,k,ispec_CPML) * coef2_2
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = 1.0d0
               A16 = 0.0d0
@@ -1297,21 +1016,11 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
 
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A17 and A18 --------------------------
               A17 = k_store_y(i,j,k,ispec_CPML)
@@ -1336,11 +1045,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -1348,11 +1052,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A19 and A20--------------------------
               A19 = k_store_z(i,j,k,ispec_CPML)
@@ -1377,11 +1076,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duy_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
@@ -1389,11 +1083,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
 
@@ -1414,7 +1103,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                  A7 = ( d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) + &
                       d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) ) / &
                       k_store_x(i,j,k,ispec_CPML) + &
-                      it*deltat*d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_x(i,j,k,ispec_CPML)
+                      it*deltat * d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_x(i,j,k,ispec_CPML)
                  A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) / k_store_x(i,j,k,ispec_CPML)
               endif
 
@@ -1466,14 +1155,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                       + PML_duz_dxl(i,j,k,ispec_CPML) * it*deltat * coef2_2
               endif
 
-              duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
-              duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
-              duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
-
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
               if( abs(d_store_y(i,j,k,ispec_CPML)) > 1.d-5 ) then
@@ -1487,7 +1168,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                  A10 = ( d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
                        + d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) ) / &
                        k_store_y(i,j,k,ispec_CPML) + &
-                       it*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_y(i,j,k,ispec_CPML)
+                       it*deltat * d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_y(i,j,k,ispec_CPML)
                  A11 = - d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
               endif
 
@@ -1539,13 +1220,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                       + PML_duz_dyl(i,j,k,ispec_CPML) * it*deltat * coef2_2
               endif
 
-              duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
-              duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
-              duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
               if( abs(d_store_z(i,j,k,ispec_CPML)) > 1.d-5 ) then
@@ -1559,7 +1233,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                  A13 = ( d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
                        + d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML) ) / &
                        k_store_z(i,j,k,ispec_CPML) + &
-                       it*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)/k_store_z(i,j,k,ispec_CPML)
+                       it*deltat * d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)/k_store_z(i,j,k,ispec_CPML)
                  A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
               endif
 
@@ -1612,13 +1286,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                       + PML_duz_dzl(i,j,k,ispec_CPML) * it*deltat * coef2_2
               endif
 
-              duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
-              duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
-              duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
-
               !---------------------- A15 and A16 --------------------------
               A15 = k_store_x(i,j,k,ispec_CPML)
               A16 = d_store_x(i,j,k,ispec_CPML)
@@ -1642,11 +1309,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
-              duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
-
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -1654,11 +1316,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) &
                    + PML_duy_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dyl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
-              duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A17 and A18 --------------------------
               A17 = k_store_y(i,j,k,ispec_CPML)
@@ -1683,11 +1340,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duz_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duz_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duz_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
-              duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dzl_z(i,j,k,ispec_CPML,2) = 0.d0
@@ -1695,11 +1347,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) &
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_z(i,j,k,ispec_CPML,2) = 0.d0
-
-              duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
-              duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
 
               !---------------------- A19 and A20 --------------------------
               A19 = k_store_z(i,j,k,ispec_CPML)
@@ -1724,11 +1371,6 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_duy_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_duy_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_duy_dxl_x(i,j,k,ispec_CPML,2) = 0.d0
 
-              duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
-              duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
-
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) &
                    + PML_dux_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dyl_y(i,j,k,ispec_CPML,2) = 0.d0
@@ -1737,14 +1379,54 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                    + PML_dux_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dux_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dux_dxl_y(i,j,k,ispec_CPML,2) = 0.d0
 
-              duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
-              duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
-                   + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
-
             else
               stop 'wrong PML flag in PML memory variable calculation routine'
             endif
+
+            duxdxl_x = A6 * PML_dux_dxl(i,j,k,ispec_CPML)  &
+                 + A7 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) + A8 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,2)
+            duxdyl_x = A9 * PML_dux_dyl(i,j,k,ispec_CPML)  &
+                 + A10 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) + A11 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,2)
+            duxdzl_x = A12 * PML_dux_dzl(i,j,k,ispec_CPML)  &
+                 + A13 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) + A14 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,2)
+            duzdzl_x = A17 * PML_duz_dzl(i,j,k,ispec_CPML)  &
+                 + A18 * rmemory_duz_dzl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_x(i,j,k,ispec_CPML,2)
+            duzdxl_x = A17 * PML_duz_dxl(i,j,k,ispec_CPML)  &
+                 + A18 * rmemory_duz_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duz_dxl_x(i,j,k,ispec_CPML,2)
+            duydyl_x = A19 * PML_duy_dyl(i,j,k,ispec_CPML)  &
+                 + A20 * rmemory_duy_dyl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_x(i,j,k,ispec_CPML,2)
+            duydxl_x = A19 * PML_duy_dxl(i,j,k,ispec_CPML)  &
+                 + A20 * rmemory_duy_dxl_x(i,j,k,ispec_CPML,1) + rmemory_duy_dxl_x(i,j,k,ispec_CPML,2)
+
+            duydxl_y = A6 * PML_duy_dxl(i,j,k,ispec_CPML)  &
+                 + A7 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,1) + A8 * rmemory_duy_dxl_y(i,j,k,ispec_CPML,2)
+            duydyl_y = A9 * PML_duy_dyl(i,j,k,ispec_CPML)  &
+                 + A10 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,1) + A11 * rmemory_duy_dyl_y(i,j,k,ispec_CPML,2)
+            duydzl_y = A12 * PML_duy_dzl(i,j,k,ispec_CPML)  &
+                 + A13 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,1) + A14 * rmemory_duy_dzl_y(i,j,k,ispec_CPML,2)
+            duzdzl_y = A15 * PML_duz_dzl(i,j,k,ispec_CPML)  &
+                 + A16 * rmemory_duz_dzl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dzl_y(i,j,k,ispec_CPML,2)
+            duzdyl_y = A15 * PML_duz_dyl(i,j,k,ispec_CPML)  &
+                 + A16 * rmemory_duz_dyl_y(i,j,k,ispec_CPML,1) + rmemory_duz_dyl_y(i,j,k,ispec_CPML,2)
+            duxdyl_y = A19 * PML_dux_dyl(i,j,k,ispec_CPML)  &
+                 + A20 * rmemory_dux_dyl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dyl_y(i,j,k,ispec_CPML,2)
+            duxdxl_y = A19 * PML_dux_dxl(i,j,k,ispec_CPML)  &
+                 + A20 * rmemory_dux_dxl_y(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_y(i,j,k,ispec_CPML,2)
+
+            duzdxl_z = A6 * PML_duz_dxl(i,j,k,ispec_CPML)  &
+                 + A7 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,1) + A8 * rmemory_duz_dxl_z(i,j,k,ispec_CPML,2)
+            duzdyl_z = A9 * PML_duz_dyl(i,j,k,ispec_CPML)  &
+                 + A10 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,1) + A11 * rmemory_duz_dyl_z(i,j,k,ispec_CPML,2)
+            duzdzl_z = A12 * PML_duz_dzl(i,j,k,ispec_CPML)  &
+                 + A13 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,1) + A14 * rmemory_duz_dzl_z(i,j,k,ispec_CPML,2)
+            duydzl_z = A15 * PML_duy_dzl(i,j,k,ispec_CPML)  &
+                 + A16 * rmemory_duy_dzl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dzl_z(i,j,k,ispec_CPML,2)
+            duydyl_z = A15 * PML_duy_dyl(i,j,k,ispec_CPML)  &
+                 + A16 * rmemory_duy_dyl_z(i,j,k,ispec_CPML,1) + rmemory_duy_dyl_z(i,j,k,ispec_CPML,2)
+            duxdzl_z = A17 * PML_dux_dzl(i,j,k,ispec_CPML)  &
+                 + A18 * rmemory_dux_dzl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dzl_z(i,j,k,ispec_CPML,2)
+            duxdxl_z = A17 * PML_dux_dxl(i,j,k,ispec_CPML)  &
+                 + A18 * rmemory_dux_dxl_z(i,j,k,ispec_CPML,1) + rmemory_dux_dxl_z(i,j,k,ispec_CPML,2)
 
             ! compute stress sigma
             sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
@@ -1856,9 +1538,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_2
 
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9  = k_store_x(i,j,k,ispec_CPML)
               A10 = d_store_x(i,j,k,ispec_CPML)
@@ -1879,9 +1558,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                    + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = 0.d0
 
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
-
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML)
               A13 = d_store_x(i,j,k,ispec_CPML)
@@ -1901,9 +1577,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) &
                    + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = 0.d0
-
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
               !------------------------------------------------------------------------------
@@ -1930,9 +1603,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                    + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = 0.d0
 
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = 1.d0/k_store_y(i,j,k,ispec_CPML)
               A10 = 0.d0
@@ -1953,9 +1623,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_2
 
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
-
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_y(i,j,k,ispec_CPML)
               A13 = d_store_y(i,j,k,ispec_CPML)
@@ -1975,9 +1642,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) &
                    + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = 0.d0
-
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
 
@@ -2005,9 +1669,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                    + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = 0.d0
 
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_z(i,j,k,ispec_CPML)
               A10 = d_store_z(i,j,k,ispec_CPML)
@@ -2028,9 +1689,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                    + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = 0.d0
 
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
-
               !---------------------- A12, A13 and A14 --------------------------
               A12 = 1.0 / k_store_z(i,j,k,ispec_CPML)
               A13 = 0.d0
@@ -2050,9 +1708,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_2
-
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
 
             else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
 
@@ -2081,9 +1736,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_2
 
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_x(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
               A10 = 0.d0
@@ -2104,9 +1756,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_2
-
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -2133,11 +1782,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) &
                    + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
-                   + PML_dpotential_dzl_new(i,j,k,ispec_CPML) *it*deltat * coef1_2 &
-                   + PML_dpotential_dzl(i,j,k,ispec_CPML) *it*deltat * coef2_2
-
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
+                   + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
+                   + PML_dpotential_dzl(i,j,k,ispec_CPML) * it*deltat * coef2_2
 
             else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
 
@@ -2166,9 +1812,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_2
 
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
-
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
               A10 = d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
@@ -2194,11 +1837,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) &
                    + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
-                   + PML_dpotential_dyl_new(i,j,k,ispec_CPML) *it*deltat* coef1_2 &
-                   + PML_dpotential_dyl(i,j,k,ispec_CPML) *it*deltat* coef2_2
-
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
+                   + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
+                   + PML_dpotential_dyl(i,j,k,ispec_CPML) * it*deltat * coef2_2
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
@@ -2220,10 +1860,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = 0.d0
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_2
-
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
-
 
             else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
 
@@ -2256,11 +1892,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) &
                    + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_1 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_1
               rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
-                   + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * it*deltat* coef1_2 &
-                   + PML_dpotential_dxl(i,j,k,ispec_CPML) *it*deltat* coef2_2
-
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
+                   + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
+                   + PML_dpotential_dxl(i,j,k,ispec_CPML) * it*deltat * coef2_2
 
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
@@ -2283,9 +1916,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_2
 
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
-
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
               A13 = 0.d0
@@ -2307,9 +1937,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
               rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
                    + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_2
 
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
-
             else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
 
               !------------------------------------------------------------------------------
@@ -2329,7 +1956,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                  A7 = (d_store_z(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML)+ &
                       d_store_y(i,j,k,ispec_CPML)*k_store_z(i,j,k,ispec_CPML)) / &
                       k_store_x(i,j,k,ispec_CPML) + &
-                      it*deltat*d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_x(i,j,k,ispec_CPML)
+                      it*deltat * d_store_y(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_x(i,j,k,ispec_CPML)
                  A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) / k_store_x(i,j,k,ispec_CPML)
               endif
 
@@ -2363,12 +1990,9 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                       + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dxl(i,j,k,ispec_CPML) * coef2_2
               else
                  rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) &
-                      + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * it*deltat* coef1_2 &
-                      + PML_dpotential_dxl(i,j,k,ispec_CPML) * it*deltat* coef2_2
+                      + PML_dpotential_dxl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
+                      + PML_dpotential_dxl(i,j,k,ispec_CPML) * it*deltat * coef2_2
               endif
-
-              dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
-                   + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
 
               !---------------------- A9, A10 and A11 --------------------------
               A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
@@ -2383,7 +2007,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                  A10 = (d_store_z(i,j,k,ispec_CPML)*k_store_x(i,j,k,ispec_CPML) &
                        +d_store_x(i,j,k,ispec_CPML)*k_store_z(i,j,k,ispec_CPML)) / &
                        k_store_y(i,j,k,ispec_CPML) + &
-                       it*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_y(i,j,k,ispec_CPML)
+                       it*deltat * d_store_x(i,j,k,ispec_CPML)*d_store_z(i,j,k,ispec_CPML)/k_store_y(i,j,k,ispec_CPML)
                  A11 = - d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML) / k_store_y(i,j,k,ispec_CPML)
               endif
 
@@ -2417,12 +2041,9 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                       + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dyl(i,j,k,ispec_CPML) * coef2_2
               else
                  rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) &
-                      + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * it*deltat* coef1_2 &
-                      + PML_dpotential_dyl(i,j,k,ispec_CPML) * it*deltat* coef2_2
+                      + PML_dpotential_dyl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
+                      + PML_dpotential_dyl(i,j,k,ispec_CPML) * it*deltat * coef2_2
               endif
-
-              dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
-                   + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
 
               !---------------------- A12, A13 and A14 --------------------------
               A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
@@ -2437,7 +2058,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                  A13 = (d_store_y(i,j,k,ispec_CPML)*k_store_x(i,j,k,ispec_CPML)&
                        +d_store_x(i,j,k,ispec_CPML)*k_store_y(i,j,k,ispec_CPML)) / &
                        k_store_z(i,j,k,ispec_CPML) + &
-                       it*deltat*d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)/k_store_z(i,j,k,ispec_CPML)
+                       it*deltat * d_store_x(i,j,k,ispec_CPML)*d_store_y(i,j,k,ispec_CPML)/k_store_z(i,j,k,ispec_CPML)
                  A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML) / k_store_z(i,j,k,ispec_CPML)
               endif
 
@@ -2471,17 +2092,20 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                       + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * coef1_2 + PML_dpotential_dzl(i,j,k,ispec_CPML) * coef2_2
               else
                  rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) &
-                      + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * it*deltat* coef1_2 &
-                      + PML_dpotential_dzl(i,j,k,ispec_CPML) * it*deltat* coef2_2
+                      + PML_dpotential_dzl_new(i,j,k,ispec_CPML) * it*deltat * coef1_2 &
+                      + PML_dpotential_dzl(i,j,k,ispec_CPML) * it*deltat * coef2_2
               endif
-
-              dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
-                   + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
 
             else
               stop 'wrong PML flag in PML memory variable calculation routine'
             endif
 
+            dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k,ispec_CPML)  &
+                 + A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2)
+            dpotentialdyl = A9 * PML_dpotential_dyl(i,j,k,ispec_CPML)  &
+                 + A10 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2)
+            dpotentialdzl = A12 * PML_dpotential_dzl(i,j,k,ispec_CPML)  &
+                 + A13 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + A14 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2)
             temp1(i,j,k) = rhoin_jacob_jk * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
             temp2(i,j,k) = rhoin_jacob_ik * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
             temp3(i,j,k) = rhoin_jacob_ij * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
@@ -2491,4 +2115,583 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   enddo
 
 end subroutine pml_compute_memory_variables_acoustic
+
+!
+!=====================================================================
+!
+!
+
+subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
+                                                         displ_x,displ_y,displ_z)
+  ! calculates C-PML elastic memory variables and computes stress sigma
+
+  ! second-order accurate convolution term calculation from equation (21) of
+  ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
+  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
+
+  use specfem_par, only: it,deltat
+  use specfem_par_elastic, only: displ,veloc
+  use pml_par
+  use constants, only: CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,NDIM
+
+  implicit none
+
+  integer, intent(in) :: ispec_CPML,iface,iglob
+
+  ! local parameters
+  integer :: i,j,k
+  real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2
+  real(kind=CUSTOM_REAL) :: A6,A7,A8,A9,A10,A11,A12,A13,A14
+  real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z
+
+
+  if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- X-surface C-PML ---------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_x
+    A6 = 1.d0
+    A7 = 0.d0
+    A8 = 0.d0
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = 0.d0
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)  
+
+    ! displ_y
+    A9 = k_store_x(i,j,k,ispec_CPML)
+    A10 = d_store_x(i,j,k,ispec_CPML)
+    A11 = 0.d0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + (displ(2,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML)
+    A14 = 0.d0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
+                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + (displ(3,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
+    !------------------------------------------------------------------------------
+    !---------------------------- Y-surface C-PML ---------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_x
+    A6 = k_store_y(i,j,k,ispec_CPML)
+    A7 = d_store_y(i,j,k,ispec_CPML)
+    A8 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + (displ(1,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)  
+
+    ! displ_y
+    A9 = 1.d0
+    A10 = 0.d0
+    A11 = 0.d0
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = 0.d0
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_y(i,j,k,ispec_CPML)
+    A14 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
+                      + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + (displ(3,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- Z-surface C-PML ---------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_x
+    A6 = k_store_z(i,j,k,ispec_CPML)
+    A7 = d_store_z(i,j,k,ispec_CPML)
+    A8 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + (displ(1,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)  
+
+    ! displ_y
+    A9 = k_store_z(i,j,k,ispec_CPML)
+    A10 = d_store_z(i,j,k,ispec_CPML)
+    A11 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + (displ(2,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = 1.d0
+    A13 = 0.d0
+    A14 = 0.d0
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = 0.d0
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- XY-edge C-PML -----------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_x
+    A6 = k_store_y(i,j,k,ispec_CPML)
+    A7 = d_store_y(i,j,k,ispec_CPML)
+    A8 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
+                      + (displ(1,iglob) +  deltat * veloc(1,iglob)) * coef1_1 + (displ(1,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+
+    ! displ_y
+    A9 = k_store_x(i,j,k,ispec_CPML)
+    A10 = d_store_x(i,j,k,ispec_CPML)
+    A11 = 0.d0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + (displ(2,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+          + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
+          + it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+    A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
+         + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + (displ(3,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) &
+         + (displ(3,iglob) + deltat * veloc(3,iglob)) * it*deltat * coef1_2 &
+         + (displ(3,iglob)) * it*deltat * coef2_2
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- XZ-edge C-PML -----------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_x
+    A6 = k_store_z(i,j,k,ispec_CPML)
+    A7 = d_store_z(i,j,k,ispec_CPML)
+    A8 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + (displ(1,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+
+    ! displ_y
+    A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
+    A10 = d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+          + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
+          + it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+    A11 = - d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + (displ(2,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * it*deltat * coef1_2 &
+                      + (displ(2,iglob)) * it*deltat * coef2_2
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML)
+    A14 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
+         + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + (displ(3,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- YZ-edge C-PML -----------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_x
+    A6 = k_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
+    A7 = d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+         + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+         + it*deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+    A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + (displ(1,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_2 + (displ(1,iglob)) * coef2_2
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+
+    ! displ_y
+    A9 = k_store_z(i,j,k,ispec_CPML)
+    A10 = d_store_z(i,j,k,ispec_CPML)
+    A11 = 0.d0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + (displ(2,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_y(i,j,k,ispec_CPML)
+    A14 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
+         + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + (displ(3,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- XYZ-corner C-PML --------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_x
+    A6 = k_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
+    A7 = d_store_y(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+         + d_store_z(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+         + it*deltat * d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+    A8 = - d_store_y(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_1 + (displ(1,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) &
+                      + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_2 + (displ(1,iglob)) * coef2_2
+
+    displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+
+    ! displ_y
+    A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
+    A10 = d_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML) &
+         + d_store_z(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
+         + it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+    A11 = - d_store_x(i,j,k,ispec_CPML) * d_store_z(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * coef1_1 + (displ(2,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) &
+                      + (displ(2,iglob) + deltat * veloc(2,iglob)) * it*deltat * coef1_2 &
+                      + (displ(2,iglob)) * it*deltat * coef2_2
+
+    displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+          + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
+          + it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+    A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
+         + (displ(3,iglob) + deltat * veloc(3,iglob)) * coef1_1 + (displ(3,iglob)) * coef2_1
+    rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) &
+         + (displ(3,iglob) + deltat * veloc(3,iglob)) * it*deltat * coef1_2 &
+         + (displ(3,iglob)) * it*deltat * coef2_2
+
+    displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
+  else
+    stop 'wrong PML flag in PML memory variable calculation routine'
+  endif
+
+end subroutine pml_compute_memory_variables_acoustic_elastic
 

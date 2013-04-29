@@ -31,6 +31,8 @@ subroutine pml_allocate_arrays()
   use pml_par
   use specfem_par, only: NSPEC_AB
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,num_coupling_ac_el_faces
+  use specfem_par_elastic, only: ELASTIC_SIMULATION  
 
   implicit none
 
@@ -168,6 +170,12 @@ subroutine pml_allocate_arrays()
   allocate(potential_dot_dot_acoustic_CPML(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
   if(ier /= 0) stop 'error allocating potential_dot_dot_acoustic_CPML array'
 
+  ! stores C-PML contribution on elastic/acoustic interface
+  if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then 
+     allocate(rmemory_coupling_ac_el_displ(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)   
+     if(ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'  
+  endif 
+
   spec_to_CPML(:) = 0
 
   CPML_type(:) = 0
@@ -235,5 +243,9 @@ subroutine pml_allocate_arrays()
   accel_elastic_CPML(:,:,:,:,:) = 0._CUSTOM_REAL
 
   potential_dot_dot_acoustic_CPML(:,:,:,:) = 0._CUSTOM_REAL
+
+  if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then 
+     rmemory_coupling_ac_el_displ(:,:,:,:,:,:) = 0._CUSTOM_REAL 
+  endif 
 
 end subroutine pml_allocate_arrays

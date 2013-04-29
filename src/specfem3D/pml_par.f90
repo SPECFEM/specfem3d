@@ -53,7 +53,6 @@ module pml_par
   logical, dimension(:), allocatable :: is_CPML
 
   ! thickness of C-PML layers
-!ZN  real(CUSTOM_REAL) :: CPML_width,CPML_width_x,CPML_width_y,CPML_width_z
   real(CUSTOM_REAL) :: CPML_width_x,CPML_width_y,CPML_width_z
 
   ! C-PML damping profile arrays
@@ -105,5 +104,8 @@ module pml_par
 
   ! C-PML contribution to update the second derivative of the potential to the global mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: potential_dot_dot_acoustic_CPML
+
+  ! C-PML contribution to update displacement on elastic/acoustic interface
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ
 
 end module pml_par
