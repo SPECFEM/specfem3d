@@ -57,6 +57,7 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use pml_par,only: spec_to_CPML,is_CPML
 
   implicit none
 
@@ -177,7 +178,8 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner)
+                              ispec_is_inner,phase_is_inner,& 
+                              PML_CONDITIONS,spec_to_CPML,is_CPML) 
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
@@ -187,7 +189,8 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner)
+                              ispec_is_inner,phase_is_inner,& 
+                              PML_CONDITIONS,spec_to_CPML,is_CPML) 
           endif
           ! adjoint/kernel simulations
           if( SIMULATION_TYPE == 3 ) &
@@ -197,7 +200,8 @@ subroutine compute_forces_acoustic()
                             coupling_ac_el_ispec,coupling_ac_el_ijk, &
                             coupling_ac_el_normal, &
                             coupling_ac_el_jacobian2Dw, &
-                            ispec_is_inner,phase_is_inner)
+                            ispec_is_inner,phase_is_inner,& 
+                            PML_CONDITIONS,spec_to_CPML,is_CPML) 
 
         else
           ! on GPU
