@@ -284,7 +284,7 @@
        do iface=1,num_abs_boundary_faces
            ispec = abs_boundary_ispec(iface)
            if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-              if( ispec_is_acoustic(ispec) ) then
+              if( ispec_is_acoustic(ispec) .and. is_CPML(ispec) ) then
                  ! reference gll points on boundary face
                  do igll = 1,NGLLSQUARE
 
