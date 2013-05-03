@@ -35,13 +35,12 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,jacobian,it,deltat,kappastore,rhostore
+  use specfem_par, only: it,deltat,wgll_cube,jacobian,ibool,rhostore
   use specfem_par_elastic, only: displ,veloc
-  use pml_par, only: NSPEC_CPML,CPML_regions,spec_to_CPML, &
-                     d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,alpha_store,&
-                     rmemory_displ_elastic,accel_elastic_CPML
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
+                     alpha_store,rmemory_displ_elastic,accel_elastic_CPML                    
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -49,7 +48,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
 
   ! local parameters
   integer :: i,j,k,iglob
-  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3,fac4,rhol,jacobianl
+  real(kind=CUSTOM_REAL) :: wgllcube,rhol,jacobianl
   real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
   real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5,temp_A3! for convolution of acceleration
 
@@ -59,10 +58,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
            rhol = rhostore(i,j,k,ispec)
            jacobianl = jacobian(i,j,k,ispec)
            iglob = ibool(i,j,k,ispec)
-           fac1 = wgllwgll_yz(j,k)
-           fac2 = wgllwgll_xz(i,k)
-           fac3 = wgllwgll_xy(i,j)
-           fac4 = sqrt(fac1 * fac2 * fac3)
+           wgllcube = wgll_cube(i,j,k)
 
            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
               !------------------------------------------------------------------------------
@@ -438,21 +434,21 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
 
            endif
 
-           accel_elastic_CPML(1,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+           accel_elastic_CPML(1,i,j,k,ispec_CPML) =  wgllcube * rhol * jacobianl * &
                 ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
                 )
 
-           accel_elastic_CPML(2,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+           accel_elastic_CPML(2,i,j,k,ispec_CPML) =  wgllcube * rhol * jacobianl * &
                 ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
                 )
 
-           accel_elastic_CPML(3,i,j,k,ispec_CPML) =  fac4 * rhol * jacobianl * &
+           accel_elastic_CPML(3,i,j,k,ispec_CPML) =  wgllcube * rhol * jacobianl * &
                 ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
@@ -478,13 +474,12 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: ibool,wgllwgll_yz,wgllwgll_xz,wgllwgll_xy,jacobian,it,deltat,kappastore,rhostore
-  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
-  use pml_par, only: NSPEC_CPML,CPML_regions,spec_to_CPML, &
-                     d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,alpha_store,&
-                     rmemory_potential_acoustic, potential_dot_dot_acoustic_CPML
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
-                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use specfem_par, only: it,deltat,wgll_cube,jacobian,ibool,kappastore
+  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic
+  use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
+                     alpha_store,rmemory_potential_acoustic, potential_dot_dot_acoustic_CPML
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
@@ -492,20 +487,17 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
 
   ! local parameters
   integer :: i,j,k,iglob
-  real(kind=CUSTOM_REAL) :: fac1,fac2,fac3,fac4,kappal,jacobianl
+  real(kind=CUSTOM_REAL) :: wgllcube,kappal_inv,jacobianl
   real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,coef0_3,coef1_3,coef2_3
   real(kind=CUSTOM_REAL) :: A0,A1,A2,A3,A4,A5,temp_A3 ! for convolution of acceleration
 
   do k=1,NGLLZ
      do j=1,NGLLY
         do i=1,NGLLX
-           kappal = kappastore(i,j,k,ispec)
+           kappal_inv = 1.d0 / kappastore(i,j,k,ispec)
            jacobianl = jacobian(i,j,k,ispec)
            iglob = ibool(i,j,k,ispec)
-           fac1 = wgllwgll_yz(j,k)
-           fac2 = wgllwgll_xz(i,k)
-           fac3 = wgllwgll_xy(i,j)
-           fac4 = sqrt(fac1 * fac2 * fac3)
+           wgllcube = wgll_cube(i,j,k)
 
            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
               !------------------------------------------------------------------------------
@@ -799,7 +791,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
 
            endif
 
-           potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  fac4 * 1.0/kappal *jacobianl * &
+           potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  wgllcube * kappal_inv *jacobianl * &
                  ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                    A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                    A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &

@@ -37,7 +37,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
 
   use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,it,deltat, &
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-                         kappastore,mustore,rhostore
+                         kappastore,mustore
   use pml_par
   use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
