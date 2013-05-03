@@ -237,7 +237,7 @@
 
     ! second double-loop over GLL to compute all the terms
     do k = 1,NGLLZ
-      do j = 1,NGLLZ
+      do j = 1,NGLLY
         do i = 1,NGLLX
 
           ! along x,y,z direction

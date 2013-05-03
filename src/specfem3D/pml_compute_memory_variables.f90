@@ -67,7 +67,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
             kappal = kappastore(i,j,k,ispec)
             mul = mustore(i,j,k,ispec)
             lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2.*mul
+            lambdal = lambdalplus2mul - 2.0d0*mul
             xixl = xix(i,j,k,ispec)
             xiyl = xiy(i,j,k,ispec)
             xizl = xiz(i,j,k,ispec)
@@ -1475,7 +1475,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
 
   use specfem_par, only: NSPEC_AB,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
-                         it,deltat,kappastore,rhostore
+                         it,deltat,rhostore
   use pml_par
   use constants, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -1488,7 +1488,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   ! local parameters
   integer :: i,j,k
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
-  real(kind=CUSTOM_REAL) :: kappal,rho_invl_jacob,rhoin_jacob_jk,rhoin_jacob_ik,rhoin_jacob_ij
+  real(kind=CUSTOM_REAL) :: rho_invl_jacob,rhoin_jacob_jk,rhoin_jacob_ik,rhoin_jacob_ij
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
   real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2
   real(kind=CUSTOM_REAL) :: A6,A7,A8,A9,A10,A11,A12,A13,A14
@@ -1496,7 +1496,6 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   do k=1,NGLLZ
      do j=1,NGLLY
          do i=1,NGLLX
-            kappal = kappastore(i,j,k,ispec)
             xixl = xix(i,j,k,ispec)
             xiyl = xiy(i,j,k,ispec)
             xizl = xiz(i,j,k,ispec)
