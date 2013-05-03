@@ -34,16 +34,14 @@
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic,&
-                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec)
+                        phase_ispec_inner_acoustic)
 
 ! computes forces for acoustic elements
 !
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,NGLLSQUARE
-  use specfem_par_acoustic, only : ispec_is_acoustic
+  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS
   use pml_par
 
   implicit none
@@ -95,15 +93,6 @@
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
 
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
-
-! outer boundary of CPML
-  integer :: num_abs_boundary_faces
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
-  integer :: igll,iface
 
   if( iphase == 1 ) then
     num_elements = nspec_outer_acoustic
@@ -279,31 +268,6 @@
 ! Thus, there is nothing to enforce explicitly here.
 ! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
 ! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
-  ! C-PML boundary
-    if(PML_CONDITIONS)then
-       do iface=1,num_abs_boundary_faces
-           ispec = abs_boundary_ispec(iface)
-           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-              if( ispec_is_acoustic(ispec) .and. is_CPML(ispec) ) then
-                 ! reference gll points on boundary face
-                 do igll = 1,NGLLSQUARE
-
-                    ! gets local indices for GLL point
-                    i = abs_boundary_ijk(1,igll,iface)
-                    j = abs_boundary_ijk(2,igll,iface)
-                    k = abs_boundary_ijk(3,igll,iface)
-
-                    iglob=ibool(i,j,k,ispec)
-
-                    potential_dot_dot_acoustic(iglob) = 0.0
-                    potential_dot_acoustic(iglob) = 0.0
-                    potential_acoustic(iglob) = 0.0
-
-                 enddo
-             endif ! ispec_is_acoustic
-            endif
-        enddo
-      endif
 
   end subroutine compute_forces_acoustic_noDev
 
