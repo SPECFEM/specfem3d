@@ -151,7 +151,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
            do i=1,NGLLX
             iglob = ibool(i,j,k,ispec)
             if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
-              if(xstore(iglob) - x_origin > 0.d0)then
+             if(xstore(iglob) - x_origin > 0.d0)then
                 if(xstore(iglob) - x_origin <= CPML_x_right - x_origin )then
                    CPML_x_right = xstore(iglob)
                 endif

@@ -428,15 +428,16 @@
 
   subroutine create_mass_matrices_pml_elastic(nspec,ibool)
 
-    use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
-                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,DT
-
-    use create_regions_mesh_ext_par
+    use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL,DT,&
+                                      is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
+                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,&                                      
+                                      CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                                      CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+    use create_regions_mesh_ext_par,only : rmass,rhostore,jacobianstore,wxgll,wygll,wzgll,ispec_is_elastic
 
     implicit none
 
     integer, intent(in) :: nspec
-
     integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
 
     ! local parameters
@@ -459,9 +460,7 @@
                 do i=1,NGLLX
                    ! defines the material coefficient associated to the domain
                    mat_coef = rhostore(i,j,k,ispec)
-
                    iglob = ibool(i,j,k,ispec)
-
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -484,15 +483,13 @@
 
        if( is_CPML(ispec) .and. ispec_is_elastic(ispec) ) then
           ! X_surface C-PML
-          if( CPML_regions(ispec_CPML) == 1 ) then
+          if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -510,15 +507,13 @@
              enddo
 
              ! Y_surface C-PML
-          else if( CPML_regions(ispec_CPML) == 2 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -536,15 +531,13 @@
              enddo
 
              ! Z_surface C-PML
-          else if( CPML_regions(ispec_CPML) == 3 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -562,15 +555,13 @@
              enddo
 
              ! XY_edge C-PML
-          else if( CPML_regions(ispec_CPML) == 4 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -592,15 +583,13 @@
              enddo
 
              ! XZ_edge C-PML
-          else if( CPML_regions(ispec_CPML) == 5 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -622,15 +611,13 @@
              enddo
 
              ! YZ_edge C-PML
-          else if( CPML_regions(ispec_CPML) == 6 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -652,15 +639,13 @@
              enddo
 
              ! XYZ_corner C-PML
-          else if( CPML_regions(ispec_CPML) == 7 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = rhostore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -686,6 +671,8 @@
                    enddo
                 enddo
              enddo
+          else
+             stop 'error in PML mesh file'
           endif
        endif
     enddo ! do ispec_CPML=1,nspec_cpml
@@ -698,15 +685,16 @@
 
   subroutine create_mass_matrices_pml_acoustic(nspec,ibool)
 
-    use generate_databases_par, only: is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
-                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,DT
-
-    use create_regions_mesh_ext_par
+    use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL,DT,&
+                                      is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
+                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,&                                      
+                                      CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                                      CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+    use create_regions_mesh_ext_par,only : rmass_acoustic,kappastore,jacobianstore,wxgll,wygll,wzgll,ispec_is_acoustic
 
     implicit none
 
     integer, intent(in) :: nspec
-
     integer, dimension(NGLLX,NGLLY,NGLLZ,nspec), intent(in) :: ibool
 
     ! local parameters
@@ -729,9 +717,7 @@
                 do i=1,NGLLX
                    ! defines the material coefficient associated to the domain
                    mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                    iglob = ibool(i,j,k,ispec)
-
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -754,15 +740,13 @@
 
        if( is_CPML(ispec) .and. ispec_is_acoustic(ispec) ) then
           ! X_surface C-PML
-          if( CPML_regions(ispec_CPML) == 1 ) then
+          if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -780,15 +764,13 @@
              enddo
 
              ! Y_surface C-PML
-          else if( CPML_regions(ispec_CPML) == 2 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -806,15 +788,13 @@
              enddo
 
              ! Z_surface C-PML
-          else if( CPML_regions(ispec_CPML) == 3 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -832,15 +812,13 @@
              enddo
 
              ! XY_edge C-PML
-          else if( CPML_regions(ispec_CPML) == 4 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -862,15 +840,13 @@
              enddo
 
              ! XZ_edge C-PML
-          else if( CPML_regions(ispec_CPML) == 5 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -892,15 +868,13 @@
              enddo
 
              ! YZ_edge C-PML
-          else if( CPML_regions(ispec_CPML) == 6 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -922,15 +896,13 @@
              enddo
 
              ! XYZ_corner C-PML
-          else if( CPML_regions(ispec_CPML) == 7 ) then
+          else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
                    do i=1,NGLLX
                       ! defines the material coefficient associated to the domain
                       mat_coef = 1.d0 / kappastore(i,j,k,ispec)
-
                       iglob = ibool(i,j,k,ispec)
-
                       weight = wxgll(i)*wygll(j)*wzgll(k)
                       jacobianl = jacobianstore(i,j,k,ispec)
 
@@ -956,10 +928,10 @@
                    enddo
                 enddo
              enddo
-          endif
+          else
+             stop 'error in PML mesh file'
+          endif          
        endif
     enddo ! do ispec_CPML=1,nspec_cpml
 
   end subroutine create_mass_matrices_pml_acoustic
-
-
