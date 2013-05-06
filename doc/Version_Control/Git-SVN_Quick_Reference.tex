@@ -50,6 +50,28 @@ Switching to a remote branch. It is mandatory, else the commit will be done in t
   $ git checkout -b local/SPECFEM3D_GLOBE_ADIOS SPECFEM3D_GLOBE_ADIOS
 \end{verbatim}
 
+Merging a development branch into the trunk. The master branch should be merged
+beforehand into your development branch. This way the conflicts will only
+occure in the developement branch. This also helps to contribute with
+up-to-date modifications. Therefore, the following steps should be followed:
+\begin{enumerate}
+  \item \verb|git checkout master| -- Switch to the \texttt{master}.
+  \item \verb|git svn rebase| -- The \texttt{master} is now up-to-date with the repository.
+  \item \verb|git checkout mybranch| -- Switch to the branch you want to merge.
+  \item \verb|git merge master| -- Update \texttt{mybranch} with the
+\texttt{master}. When using git only \verb|--squash| is an option to bundle
+multiple modifications in a single one. When using git-svn, it is important to
+use the \verb|--no-ff| option, otherwise git will loose branch information.
+  \item \verb|git mergetool| -- If there is any conflict to solve.
+  \item \verb|git commit| -- Commit the merge.
+  \item \verb|git checkout master| -- Switch to the \texttt{master}.
+  \item \verb|git merge [--no-ff] branch| -- Update the \texttt{master} with \texttt{mybranch}.
+  \item \verb|git commit| -- Commit the merge.
+  \item \verb|git svn dcommit| -- Send the merge to the svn repository.
+\end{enumerate}
+
+
+
 \subsection*{Git -- Checking the status of the file}
 Before doing any modification it is mandatory to know which files are tracked, have been modified or deleted.
 
