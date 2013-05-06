@@ -2481,7 +2481,37 @@ also saved in the \texttt{LOCAL\_PATH} with the names \texttt{proc??????\_rho(al
 where \texttt{proc??????} represents the processor number, \texttt{rho(alpha,beta)}
 are the different types of kernels.
 \end{itemize}
+
+\item \textbf{Run the anisotropic kernel simulation}
+
+Instead of the kernels for the isotropic wave speeds, you can also
+compute the kernels for the 21 independent components $C_{IJ},\, I,J=1,...,6$
+(using Voigt's notation) of the elastic tensor in the cartesian coordinate system. 
+This is done by setting \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} 
+in \texttt{constants.h} before compiling the package. The definition of the parameters 
+$C_{IJ}$ in terms of the corresponding components $c_{ijkl},ijkl,i,j,k,l=1,2,3$ of 
+the elastic tensor in cartesian coordinates follows \citet{ChTr07}. The 21 anisotropic 
+kernels are saved in the \texttt{LOCAL\_PATH} in one file with the name of 
+\texttt{proc??????\_cijkl\_kernel.bin} (with \texttt{proc??????} 
+the processor number). The output kernels correspond to absolute perturbations 
+$\delta C_{IJ}$ of the elastic parameters and their unit is in $s/GPa/km^{3}$. 
+For consistency, the output density kernels with this option turned on 
+are for a perturbation $\delta\rho$ (and not $\frac{\delta\rho}{\rho}$) and their unit
+is in s / (kg/m$^{3}$) / km$^{3}$. These `primary' anisotropic kernels
+can then be combined to obtain the kernels for different parameterizations of anisotropy. 
+This can be done, for example, when combining the kernel files from slices into one mesh file 
+(see Section~\ref{sec:Finite-Frequency-Kernels}).
+
+If \texttt{ANISOTROPIC\_KL} \texttt{=} \texttt{.true.} by additionally setting \texttt{ANISOTROPIC\_KL} 
+\texttt{=} \texttt{.true.} in \texttt{constants.h} the package will save anisotropic kernels paramterized
+as velocities related to transverse isotropy based on the the Chen and Tromp parameters \citet{ChTr07}.
+The kernels are saved as relative perturbations for horizontal and vertical P and S velocities, $\alpha_{v},
+\alpha_{h}, \beta_{v}, \beta_{h}$. Explicit relations can be found in appendix B. of \citet{SiLiTrTr07b}
+
+The anisotropic kernels are only currently available for CPU mode.  
+
 \end{enumerate}
+
 In general, the three steps need to be run sequentially to assure
 proper access to the necessary files. If the simulations are run through
 some cluster scheduling system (e.g., LSF), and the forward simulation
