@@ -741,11 +741,13 @@
     if( ier /= 0 ) stop 'error allocating array kappa_kl'
 
     ! anisotropic kernels
-!! DK DK commented this out for now; must be made optional
-!   allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-!   if( ier /= 0 ) stop 'error allocating array cijkl_kl'
-!! DK DK added this for now
-    allocate(cijkl_kl(1,1,1,1,1),stat=ier)
+    if ( ANISOTROPIC_KL ) then 
+      allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+    else 
+      allocate(cijkl_kl(1,1,1,1,1),stat=ier)
+      if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+    endif    
 
     ! derived kernels
     ! density prime kernel
