@@ -223,11 +223,12 @@ and \url{www.sc-conference.org/sc2003/nr_finalaward.html}).
 It was a finalist again in 2008 for a run at 0.16 petaflops (sustained) on 149,784 processors of the `Jaguar' Cray XT5 system at Oak Ridge National Laboratories (USA) \citep{CaKoLaTiMiLeSnTr08}.
 It also won the BULL Joseph Fourier supercomputing award in 2010.\\
 
-This new release of the code (version 2.1) includes support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.\\
-
-The next release of the code will include support Convolution or Auxiliary Differential Equation Perfectly Matched absorbing Layers
+This new release of the code (version 2.1)
+includes Convolution or Auxiliary Differential Equation Perfectly Matched absorbing Layers
 (C-PML or ADE-PML) \citep{MaKoEz08,MaKoGe08,MaKo09,MaKoGeBr10,KoMa07}.
-It will also use the PT-SCOTCH parallel and threaded version of SCOTCH for mesh partitioning instead of the serial version.\\
+It also includes support for GPU graphics card acceleration \citep{KoMiEr09,KoErGoMi10,MiKo10,Kom11}.\\
+
+The next release of the code will use the PT-SCOTCH parallel and threaded version of SCOTCH for mesh partitioning instead of the serial version.\\
 
 SPECFEM3D Cartesian includes coupled fluid-solid domains and
 adjoint capabilities, which enables one to address seismological inverse problems, but for linear rheologies only so far.
@@ -696,6 +697,10 @@ a SMALLER value otherwise this code will miss some CPML elements.
 Note: in a future release we will remove the constraint of having CPML layers aligned with the
 coordinate axes; we will allow for meshes that are titled by any constant angle in the horizontal plane.
 However this is not implemented yet.
+
+Note: in the case of fluid-solid layers in contact, the fluid-solid interface currently needs to be flat and horizontal
+inside the CPML layer (i.e., bathymetry should become flat and horizontal when entering the CPML); this (small) constraint
+will probably remain in the code for a while because it makes fluid-solid matching inside the CPML much easier.
 
 \item [materials\_file] Contains the material associations for each element. The format is:
 \begin{lyxcode}
