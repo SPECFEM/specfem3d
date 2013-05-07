@@ -32,7 +32,8 @@
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+                        ispec_is_inner,phase_is_inner,&
+                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface)
 
 ! returns the updated acceleration array: accel
 
@@ -43,7 +44,8 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,&
+                                                 potential_dot_dot_acoustic_interface
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -66,6 +68,10 @@
   integer :: iface,igll,ispec,iglob
   integer :: i,j,k
 
+! CPML 
+  logical :: PML_CONDITIONS 
+  logical :: is_CPML(NSPEC_AB)  
+
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
 
@@ -87,7 +93,15 @@
         iglob = ibool(i,j,k,ispec)
 
         ! acoustic pressure on global point
-        pressure = - potential_dot_dot_acoustic(iglob)
+        if(PML_CONDITIONS)then  
+           if(is_CPML(ispec))then
+              pressure = - potential_dot_dot_acoustic_interface(iglob)
+           else
+              pressure = - potential_dot_dot_acoustic(iglob)
+           endif
+        else
+           pressure = - potential_dot_dot_acoustic(iglob)
+        endif
 
         ! gets associated normal on GLL point
         ! (note convention: pointing outwards of acoustic element)

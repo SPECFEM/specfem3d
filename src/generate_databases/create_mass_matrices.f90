@@ -92,9 +92,36 @@
      allocate(rmass_acoustic(nglob),stat=ier); if(ier /= 0) stop 'error allocating array rmass_acoustic'
      rmass_acoustic(:) = 0._CUSTOM_REAL
 
+     allocate(rmass_acoustic_interface(nglob),stat=ier); if(ier /= 0) stop 'error allocating array rmass_acoustic' 
+     rmass_acoustic_interface(:) = 0._CUSTOM_REAL 
+
      ! returns acoustic mass matrix
      if( PML_CONDITIONS ) then
         call create_mass_matrices_pml_acoustic(nspec,ibool)
+
+        do ispec=1,nspec    
+         if( ispec_is_acoustic(ispec) ) then
+             do k=1,NGLLZ
+                do j=1,NGLLY
+                   do i=1,NGLLX
+                      iglob = ibool(i,j,k,ispec)
+
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
+
+                      ! distinguish between single and double precision for reals
+                      if(CUSTOM_REAL == SIZE_REAL) then
+                         rmass_acoustic_interface(iglob) = rmass_acoustic_interface(iglob) + &
+                              sngl( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) )
+                      else
+                         rmass_acoustic_interface(iglob) = rmass_acoustic_interface(iglob) + &
+                              jacobianl * weight / kappastore(i,j,k,ispec)
+                      endif
+                   enddo
+                enddo
+             enddo
+          endif
+        enddo
      else
         do ispec=1,nspec
            if( ispec_is_acoustic(ispec) ) then

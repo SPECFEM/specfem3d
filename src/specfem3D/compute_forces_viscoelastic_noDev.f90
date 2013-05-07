@@ -50,10 +50,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,ispec_is_elastic,&
-                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec)
+                        phase_ispec_inner_elastic)
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS,IOUT,NGLLSQUARE
+  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
   use pml_par
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
@@ -128,8 +127,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 ! C-PML absorbing boundary conditions
   logical :: PML_CONDITIONS
 
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
-
 ! local parameters
   integer :: i_SLS,imodulo_N_SLS
   integer :: ispec,iglob,ispec_p,num_elements
@@ -180,16 +177,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
-
-! outer boundary of CPML
-  integer :: num_abs_boundary_faces
-  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
-  integer :: abs_boundary_ispec(num_abs_boundary_faces)
-  integer :: igll,iface
 
   imodulo_N_SLS = mod(N_SLS,3)
 
@@ -868,40 +855,6 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         endif
 
   enddo  ! spectral element loop
-
-!! DK DK to Jo, to debug CPML, 22 March 2013:
-
-!! DK DK I think that there is an error in the loops below, you should also check if ispec is a CPML element,
-!! DK DK and also if ispec is an elastic or viscoelastic element (and NOT for instance an acoustic element)
-!! DK DK
-!! DK DK thus test something like:   if (is_CPML(ispec) .and. elastic(ispec)) then
-!! DK DK or something like that
-
-  ! C-PML boundary
-    if(PML_CONDITIONS)then
-       do iface=1,num_abs_boundary_faces
-           ispec = abs_boundary_ispec(iface)
-           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-              if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
-                 ! reference gll points on boundary face
-                 do igll = 1,NGLLSQUARE
-
-                    ! gets local indices for GLL point
-                    i = abs_boundary_ijk(1,igll,iface)
-                    j = abs_boundary_ijk(2,igll,iface)
-                    k = abs_boundary_ijk(3,igll,iface)
-
-                    iglob=ibool(i,j,k,ispec)
-
-                    accel(:,iglob) = 0.0
-                    veloc(:,iglob) = 0.0
-                    displ(:,iglob) = 0.0
-
-                 enddo
-             endif ! ispec_is_elastic
-           endif
-        enddo
-      endif
 
 
 end subroutine compute_forces_viscoelastic_noDev

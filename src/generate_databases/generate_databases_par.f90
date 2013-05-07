@@ -203,6 +203,9 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
 
+! mass matrix for interface !ZN
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface !ZN
+
 ! mass matrix contributions
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic

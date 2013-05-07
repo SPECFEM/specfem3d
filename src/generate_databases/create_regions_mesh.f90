@@ -300,6 +300,7 @@
      endif
      if( ACOUSTIC_SIMULATION) then
        deallocate(rmass_acoustic)
+       deallocate(rmass_acoustic_interface) !ZN
        deallocate(rmassz_acoustic)
      endif
   endif

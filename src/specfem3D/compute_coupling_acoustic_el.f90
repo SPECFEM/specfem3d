@@ -33,7 +33,7 @@
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,& 
-                        PML_CONDITIONS,spec_to_CPML,is_CPML) 
+                        PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
@@ -44,7 +44,8 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ 
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,&
+                                                 potential_dot_dot_acoustic_interface
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -130,6 +131,8 @@
         !          it also means you have to calculate and update this here first before
         !          calculating the coupling on the elastic side for the acceleration...
         potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
+        potential_dot_dot_acoustic_interface(iglob) = potential_dot_dot_acoustic_interface(iglob) &
+                                                      + jacobianw*displ_n
 
       enddo ! igll
 

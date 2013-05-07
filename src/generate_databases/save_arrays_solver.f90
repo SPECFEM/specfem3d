@@ -98,6 +98,7 @@
 ! acoustic
   if( ACOUSTIC_SIMULATION ) then
     write(IOUT) rmass_acoustic
+    write(IOUT) rmass_acoustic_interface !ZN
   endif
 
 ! this array is needed for acoustic simulations but also for elastic simulations with CPML,

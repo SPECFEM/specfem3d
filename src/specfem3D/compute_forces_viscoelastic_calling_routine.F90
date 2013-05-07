@@ -32,6 +32,7 @@ subroutine compute_forces_viscoelastic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use pml_par
   use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
   use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
@@ -39,6 +40,7 @@ subroutine compute_forces_viscoelastic()
 
   integer:: iphase
   logical:: phase_is_inner
+  integer:: iface,ispec,igll,i,j,k,iglob
 
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
@@ -88,8 +90,7 @@ subroutine compute_forces_viscoelastic()
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,ispec_is_elastic,&
-                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec)
+                        phase_ispec_inner_elastic)
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
@@ -119,8 +120,7 @@ subroutine compute_forces_viscoelastic()
                         b_dsdx_top,b_dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,ispec_is_elastic,&
-                        abs_boundary_ijk,num_abs_boundary_faces,phase_is_inner,ispec_is_inner,abs_boundary_ispec)
+                        phase_ispec_inner_elastic)
 
       endif
 
@@ -184,7 +184,8 @@ subroutine compute_forces_viscoelastic()
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+                        ispec_is_inner,phase_is_inner,& 
+                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adoint definition: pressure^\dagger=potential^\dagger
@@ -194,7 +195,8 @@ subroutine compute_forces_viscoelastic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner)
+                              ispec_is_inner,phase_is_inner,& 
+                              PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
           endif
 
         ! adjoint simulations
@@ -205,7 +207,8 @@ subroutine compute_forces_viscoelastic()
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+                        ispec_is_inner,phase_is_inner,& 
+                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
 
         else
           ! on GPU
@@ -366,6 +369,32 @@ subroutine compute_forces_viscoelastic()
       call compute_coupling_ocean_cuda(Mesh_pointer)
     endif
   endif
+
+  ! C-PML boundary
+    if(PML_CONDITIONS)then
+       do iface=1,num_abs_boundary_faces
+           ispec = abs_boundary_ispec(iface)
+           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+              if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
+                 ! reference gll points on boundary face
+                 do igll = 1,NGLLSQUARE
+
+                    ! gets local indices for GLL point
+                    i = abs_boundary_ijk(1,igll,iface)
+                    j = abs_boundary_ijk(2,igll,iface)
+                    k = abs_boundary_ijk(3,igll,iface)
+
+                    iglob=ibool(i,j,k,ispec)
+
+                    accel(:,iglob) = 0.0
+                    veloc(:,iglob) = 0.0
+                    displ(:,iglob) = 0.0
+
+                 enddo
+             endif ! ispec_is_elastic
+           endif
+        enddo
+      endif
 
 ! updates velocities
 ! Newmark finite-difference time scheme with elastic domains:

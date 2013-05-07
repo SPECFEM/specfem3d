@@ -62,7 +62,7 @@ subroutine compute_forces_acoustic()
   implicit none
 
   ! local parameters
-  integer:: iphase
+  integer:: iphase,iface,ispec,iglob,igll,i,j,k 
   logical:: phase_is_inner
 
   ! enforces free surface (zeroes potentials at free surface)
@@ -116,7 +116,7 @@ subroutine compute_forces_acoustic()
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic)
+                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,potential_dot_dot_acoustic_interface)
       endif
 
       ! adjoint simulations
@@ -140,7 +140,7 @@ subroutine compute_forces_acoustic()
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic)
+                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,potential_dot_dot_acoustic_interface)
         endif
       endif
 
@@ -177,7 +177,7 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
-                              PML_CONDITIONS,spec_to_CPML,is_CPML) 
+                              PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
@@ -188,7 +188,7 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
-                              PML_CONDITIONS,spec_to_CPML,is_CPML) 
+                              PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
           endif
           ! adjoint/kernel simulations
           if( SIMULATION_TYPE == 3 ) &
@@ -199,7 +199,7 @@ subroutine compute_forces_acoustic()
                             coupling_ac_el_normal, &
                             coupling_ac_el_jacobian2Dw, &
                             ispec_is_inner,phase_is_inner,& 
-                            PML_CONDITIONS,spec_to_CPML,is_CPML) 
+                            PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
 
         else
           ! on GPU
@@ -346,6 +346,13 @@ subroutine compute_forces_acoustic()
   if(.NOT. GPU_MODE) then
     ! divides pressure with mass matrix
     potential_dot_dot_acoustic(:) = potential_dot_dot_acoustic(:) * rmass_acoustic(:)
+    
+    if(PML_CONDITIONS)then
+      if(ELASTIC_SIMULATION ) then
+        potential_dot_dot_acoustic_interface(:) = potential_dot_dot_acoustic_interface(:) * & 
+                                                  rmass_acoustic_interface(:) 
+      endif
+    endif
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) &
@@ -354,6 +361,44 @@ subroutine compute_forces_acoustic()
     ! on GPU
     call kernel_3_a_acoustic_cuda(Mesh_pointer,NGLOB_AB)
   endif
+
+! The outer boundary condition to use for PML elements in fluid layers is Neumann for the potential
+! because we need Dirichlet conditions for the displacement vector, which means Neumann for the potential.
+! Thus, there is nothing to enforce explicitly here.
+! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
+! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
+
+! However, enforcing explicitly potential_dot_dot_acoustic, potential_dot_acoustic, potential_acoustic
+! to be zero on outer boundary of PML help to improve the accuracy of absorbing low-frequency wave components 
+! in case of long-time simulation
+
+  ! C-PML boundary
+    if(PML_CONDITIONS)then
+       do iface=1,num_abs_boundary_faces
+           ispec = abs_boundary_ispec(iface)
+           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+              if( ispec_is_acoustic(ispec) .and. is_CPML(ispec) ) then
+                 ! reference gll points on boundary face
+                 do igll = 1,NGLLSQUARE
+
+                    ! gets local indices for GLL point
+                    i = abs_boundary_ijk(1,igll,iface)
+                    j = abs_boundary_ijk(2,igll,iface)
+                    k = abs_boundary_ijk(3,igll,iface)
+
+                    iglob=ibool(i,j,k,ispec)
+
+                    potential_dot_dot_acoustic(iglob) = 0.0
+                    potential_dot_acoustic(iglob) = 0.0
+                    potential_acoustic(iglob) = 0.0
+                    if(ELASTIC_SIMULATION ) then  
+                         potential_dot_dot_acoustic_interface(iglob) = 0.0
+                    endif
+                 enddo
+             endif ! ispec_is_acoustic
+            endif
+        enddo
+     endif
 
 ! update velocity
 ! note: Newmark finite-difference time scheme with acoustic domains:
@@ -365,7 +410,6 @@ subroutine compute_forces_acoustic()
 !
 ! where
 !   chi, chi_dot, chi_dot_dot are acoustic (fluid) potentials ( dotted with respect to time)
-!   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term
 !   f denotes a source term
 !

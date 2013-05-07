@@ -34,7 +34,7 @@
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic)
+                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,potential_dot_dot_acoustic_interface) 
 
 ! computes forces for acoustic elements
 !
@@ -50,7 +50,7 @@
 
   ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
-        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic 
 
 ! time step
   real(kind=CUSTOM_REAL) :: deltat
@@ -75,6 +75,10 @@
   integer :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
   integer, dimension(num_phase_ispec_acoustic,2) :: phase_ispec_inner_acoustic
 
+!CPML fluid-solid interface
+  logical :: ELASTIC_SIMULATION
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic_interface 
+
 ! local variables
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
@@ -92,7 +96,6 @@
 
   ! local C-PML absorbing boundary conditions parameters
   integer :: ispec_CPML
-
 
   if( iphase == 1 ) then
     num_elements = nspec_outer_acoustic
@@ -252,6 +255,9 @@
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then
+                if(ELASTIC_SIMULATION)then
+                   potential_dot_dot_acoustic_interface(iglob) = potential_dot_dot_acoustic(iglob)
+                endif
                 potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - &
                      potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML)
              endif
@@ -263,11 +269,6 @@
 
   enddo ! end of loop over all spectral elements
 
-! The outer boundary condition to use for PML elements in fluid layers is Neumann for the potential
-! because we need Dirichlet conditions for the displacement vector, which means Neumann for the potential.
-! Thus, there is nothing to enforce explicitly here.
-! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
-! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
 
   end subroutine compute_forces_acoustic_noDev
 

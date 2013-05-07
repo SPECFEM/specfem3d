@@ -92,6 +92,8 @@
     if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
+    allocate(potential_dot_dot_acoustic_interface(NGLOB_AB),stat=ier) 
+    if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic_interface' 
     if( SIMULATION_TYPE /= 1 ) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
@@ -99,7 +101,10 @@
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
+    allocate(rmass_acoustic_interface(NGLOB_AB),stat=ier)  
+    if( ier /= 0 ) stop 'error allocating array rmass_acoustic_interface' 
     read(27) rmass_acoustic
+    read(27) rmass_acoustic_interface  
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
@@ -741,13 +746,11 @@
     if( ier /= 0 ) stop 'error allocating array kappa_kl'
 
     ! anisotropic kernels
-    if ( ANISOTROPIC_KL ) then 
-      allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array cijkl_kl'
-    else 
-      allocate(cijkl_kl(1,1,1,1,1),stat=ier)
-      if( ier /= 0 ) stop 'error allocating array cijkl_kl'
-    endif    
+!! DK DK commented this out for now; must be made optional
+!   allocate(cijkl_kl(21,NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+!   if( ier /= 0 ) stop 'error allocating array cijkl_kl'
+!! DK DK added this for now
+    allocate(cijkl_kl(1,1,1,1,1),stat=ier)
 
     ! derived kernels
     ! density prime kernel
