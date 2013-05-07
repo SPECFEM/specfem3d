@@ -277,9 +277,6 @@
   if( .not. GPU_MODE .and. GRAVITY ) &
     stop 'GRAVITY only supported in GPU mode'
 
-  if(STACEY_ABSORBING_CONDITIONS .and. PML_CONDITIONS) &
-    stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are mutually exclusive but are both set to .true.'
-
   ! absorbing surfaces
   if( STACEY_ABSORBING_CONDITIONS ) then
      ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
@@ -288,23 +285,26 @@
      ! just to be sure for now..
      if( NGLLX /= NGLLY .and. NGLLY /= NGLLZ ) &
           stop 'STACEY_ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
-     if( PML_INSTEAD_OF_FREE_SURFACE ) then
-        print*, 'please modify Par_file'
+     if( PML_CONDITIONS ) then
+        print*, 'please modify Par_file and recompile solver'
+        stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
+     else if( PML_INSTEAD_OF_FREE_SURFACE ) then
+        print*, 'please modify Par_file and recompile solver'
         stop 'PML_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with STACEY_ABSORBING_CONDITIONS = .true.'
      endif
   else
      if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
-        print*, 'please modify Par_file'
+        print*, 'please modify Par_file and recompile solver'
         stop 'STACEY_ABSORBING_CONDITIONS must be activated when STACEY_INSTEAD_OF_FREE_SURFACE is set to .true.'
      endif
   endif
 
   if( PML_CONDITIONS ) then
      if( STACEY_INSTEAD_OF_FREE_SURFACE ) then
-        print*, 'please modify Par_file'
+        print*, 'please modify Par_file and recompile solver'
         stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
      else if( .not. SUPPRESS_UTM_PROJECTION ) then
-        print*, 'please modify Par_file'
+        print*, 'please modify Par_file and recompile solver'
         stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
      endif
   else
@@ -313,13 +313,13 @@
   endif
 
   if( STACEY_INSTEAD_OF_FREE_SURFACE .and. PML_INSTEAD_OF_FREE_SURFACE ) then
-     print*, 'please modify Par_file'
+     print*, 'please modify Par_file and recompile solver'
      stop 'error: STACEY_INSTEAD_OF_FREE_SURFACE and PML_INSTEAD_OF_FREE_SURFACE are both set to .true.'
   endif
 
   ! checks the MOVIE_TYPE parameter
   if( MOVIE_TYPE /= 1 .and. MOVIE_TYPE /= 2 ) then
-     stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file'
+     stop 'error: MOVIE_TYPE must be either 1 or 2! Please modify Par_file and recompile solver'
   endif
 
   ! check that the code has been compiled with the right values

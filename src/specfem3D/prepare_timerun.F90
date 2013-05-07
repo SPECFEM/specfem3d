@@ -243,7 +243,12 @@
       deallocate(rmassz_acoustic)
     endif
 
-    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic, &
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic,&
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        my_neighbours_ext_mesh)
+
+    call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_acoustic_interface, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh)
@@ -251,6 +256,9 @@
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
     rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
+
+    where(rmass_acoustic_interface <= 0._CUSTOM_REAL) rmass_acoustic_interface = 1._CUSTOM_REAL 
+    rmass_acoustic_interface(:) = 1._CUSTOM_REAL / rmass_acoustic_interface(:) 
   endif
 
   if(ELASTIC_SIMULATION) then
@@ -462,7 +470,7 @@
   double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
   real(kind=CUSTOM_REAL):: scale_factorl
   integer :: i,j,k,ispec,ier
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor,scale_factor_kappa !ZN
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor,scale_factor_kappa 
 
   ! if attenuation is on, shift shear moduli to center frequency of absorption period band, i.e.
   ! rescale mu to average (central) frequency for attenuation
@@ -476,12 +484,11 @@
     if( ier /= 0 ) call exit_mpi(myrank,'error allocation scale_factor')
     scale_factor(:,:,:,:) = 1._CUSTOM_REAL
 
-    one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL  !ZN
-    factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL  !ZN
-    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)  !ZN
-    if( ier /= 0 ) call exit_mpi(myrank,'error allocation scale_factor_kappa')  !ZN
-    scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL  !ZN
-
+    one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL  
+    factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL  
+    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)  
+    if( ier /= 0 ) call exit_mpi(myrank,'error allocation scale_factor_kappa')  
+    scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL  
 
     ! reads in attenuation arrays
     open(unit=27, file=prname(1:len_trim(prname))//'attenuation.bin', &
@@ -500,11 +507,11 @@
     read(27) factor_common
     read(27) scale_factor
 
-    if(FULL_ATTENUATION_SOLID)then  !ZN
-      read(27) one_minus_sum_beta_kappa !ZN
-      read(27) factor_common_kappa !ZN
-      read(27) scale_factor_kappa !ZN
-    endif !ZN
+    if(FULL_ATTENUATION_SOLID)then  
+      read(27) one_minus_sum_beta_kappa 
+      read(27) factor_common_kappa 
+      read(27) scale_factor_kappa 
+    endif 
 
     close(27)
 
@@ -538,11 +545,11 @@
             scale_factorl = scale_factor(i,j,k,ispec)
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
-            if(FULL_ATTENUATION_SOLID)then  !ZN
+            if(FULL_ATTENUATION_SOLID)then  
               ! scales kappa moduli
               scale_factorl = scale_factor_kappa(i,j,k,ispec)
               kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
-            endif  !ZN
+            endif  
 
           enddo
         enddo
@@ -550,7 +557,7 @@
     enddo
 
     deallocate(scale_factor)
-    deallocate(scale_factor_kappa) !ZN
+    deallocate(scale_factor_kappa) 
 
     ! statistics
     ! user output
@@ -567,14 +574,14 @@
 
     ! clear memory variables if attenuation
     ! initialize memory variables for attenuation
-    epsilondev_trace(:,:,:,:) = 0._CUSTOM_REAL !ZN
+    epsilondev_trace(:,:,:,:) = 0._CUSTOM_REAL 
     epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
     epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
 
-    R_trace(:,:,:,:,:) = 0._CUSTOM_REAL !ZN
+    R_trace(:,:,:,:,:) = 0._CUSTOM_REAL 
     R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
     R_yy(:,:,:,:,:) = 0._CUSTOM_REAL
     R_xy(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -582,7 +589,7 @@
     R_yz(:,:,:,:,:) = 0._CUSTOM_REAL
 
     if(FIX_UNDERFLOW_PROBLEM) then
-      R_trace(:,:,:,:,:) = VERYSMALLVAL !ZN
+      R_trace(:,:,:,:,:) = VERYSMALLVAL 
       R_xx(:,:,:,:,:) = VERYSMALLVAL
       R_yy(:,:,:,:,:) = VERYSMALLVAL
       R_xy(:,:,:,:,:) = VERYSMALLVAL
@@ -841,13 +848,13 @@
 
       ! memory variables if attenuation
       if( ATTENUATION ) then
-         b_R_trace = 0._CUSTOM_REAL !ZN
+         b_R_trace = 0._CUSTOM_REAL 
          b_R_xx = 0._CUSTOM_REAL
          b_R_yy = 0._CUSTOM_REAL
          b_R_xy = 0._CUSTOM_REAL
          b_R_xz = 0._CUSTOM_REAL
          b_R_yz = 0._CUSTOM_REAL
-         b_epsilondev_trace = 0._CUSTOM_REAL !ZN
+         b_epsilondev_trace = 0._CUSTOM_REAL 
          b_epsilondev_xx = 0._CUSTOM_REAL
          b_epsilondev_yy = 0._CUSTOM_REAL
          b_epsilondev_xy = 0._CUSTOM_REAL
