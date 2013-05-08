@@ -1435,17 +1435,17 @@ is the time in the first column of the output seismogram.
 %
 \begin{figure}
 \noindent \begin{centering}
-%%%\includegraphics[width=3in]{figures/gauss_vs_triangle_mod.eps}
 \includegraphics[width=2.5in]{figures/gauss_vs_triangle_mod.pdf}
 \par\end{centering}
-
-\caption{Comparison of the shape of a triangle and the Gaussian function actually
-used.}
-
-
+\caption{Comparison of the shape of a triangle and the Gaussian function actually used.}
 \label{fig:gauss.vs.triangle}
 \end{figure}
 
+If you know the earthquake source in strike/dip/rake format rather than in \texttt{CMTSOLUTION} format,
+use the C code \texttt{SPECFEM3D\_GLOBE/utils/strike\_dip\_rake\_to\_CMTSOLUTION.c} to convert it.
+The conversion formulas are given for instance in \cite{AkRi80}.
+Note that the \cite{AkRi80} convention is slightly different from the Harvard \texttt{CMTSOLUTION} convention
+(the sign of some components is different). The C code outputs both.
 
 Centroid latitude and longitude should be provided in geographical
 coordinates. The code converts these coordinates to geocentric coordinates~\citep{DaTr98}.
