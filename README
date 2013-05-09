@@ -8,10 +8,9 @@ This folder contains several examples with increasing complexities.
 To familiarize yourself with the package and CUBIT support, 
 we suggest to start with:
 
-- homogeneous_halfspace/: a model with a single constant material description.
+- homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/: a model with a single constant material description.
 
-  please follow the homogeneous_halfspace/README for detailed instructions
-  how to run a simulation.
+  Use the script "process.sh" in that directory to run the simulation.
 
 More complex examples are provided in:
 
