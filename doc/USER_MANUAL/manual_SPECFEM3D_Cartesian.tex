@@ -319,7 +319,8 @@ Then, to configure the software for your system, run the
 \texttt{configure} shell script. This script will attempt to guess
 the appropriate configuration values for your system. However, at
 a minimum, it is recommended that you explicitly specify the appropriate
-command names for your Fortran compiler and MPI package:
+command names for your Fortran compiler and MPI package (another option is to define FC, CC and MPIF90 in your .bash\_profile 
+or your .cshrc file):
 
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90
