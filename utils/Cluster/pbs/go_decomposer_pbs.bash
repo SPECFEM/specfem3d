@@ -37,7 +37,7 @@ mkdir -p OUTPUT_FILES/
 cp go_decomposer_pbs.bash OUTPUT_FILES/
 
 # USER CHANGE MESH DIRECTORY
-MESHDIR=examples/homogeneous_halfspace_HEX8/MESH
+MESHDIR=examples/homogeneous_halfspace/MESH
 
 cd bin/
 mkdir -p $LOCALPATH
