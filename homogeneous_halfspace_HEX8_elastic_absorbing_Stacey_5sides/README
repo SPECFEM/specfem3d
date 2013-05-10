@@ -23,12 +23,13 @@ step-by-step tutorial:
    - From the SPECFEM3D root directory SPECFEM3D/
      configure the package, e.g. using intel's ifort compiler:
      > cd SPECFEM3D
-     > ./configure F90=ifort --with-scotch-dir=/my_path_to_scotch
+     > ./configure FC=ifort MPIFC=mpif90
 
      If successful, this will generate the files in src/shared/:
      Makefile, constants.h, and precision.h, among others
 
-     note: the same compiler used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
+     note: If SCOTCH is installed separately, then the same compiler
+           used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
 
    - copy run scripts from utils/Cluster/ into SPECFEM3D/, e.g.,
      pbs/go_decomposer_pbs.bash
@@ -38,17 +39,17 @@ step-by-step tutorial:
      > cp utils/Cluster/pbs/*.bash .
 
      note: you may need to adjust the commands (e.g., -q or -l)
-
+     note: in this example you do not need go_mesher_pbs.bash and valgrind_go_solver_pbs.bash
 
 2. copy three input files from examples directory into SPECFEM3D/DATA/
 
-     > cd examples/homogeneous_halfspace_HEX8/DATA/
+     > cd examples/homogeneous_halfspace/DATA/
      > cp * ../../../DATA/
 
 
 3. create mesh:
 
-   - from the directory SPECFEM3D/examples/homogeneous_halfspace_HEX8,
+   - from the directory SPECFEM3D/examples/homogeneous_halfspace,
      open the cubit GUI:
 
      > claro (or cubit)
@@ -122,23 +123,23 @@ step-by-step tutorial:
              and you can track the progress with the timestamp files
              generated in OUTPUT_FILES/
 
-   - the job should take a couple minutes
+   - the job should take about 30 minutes
    - when the job is complete, you should have 3 sets (semd,semv,sema)
      of 18 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
      as well as 3 timestamp****** files
 
 
 7. check with 6 reference seismograms in
-      SPECFEM3D/examples/homogeneous_halfspace_HEX8/REF_SEIS/
+      SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS/
 
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
 
-     > xmgrace examples/homogeneous_halfspace_HEX8/REF_SEIS/*Z.semd &
+     > xmgrace examples/homogeneous_halfspace/REF_SEIS/*Z.semd &
      > xmgrace OUTPUT_FILES/*Z.semd &
 
    - option 2: generate ps files using gnuplot:
 
-     > cd SPECFEM3D/examples/homogeneous_halfspace_HEX8/REF_SEIS
+     > cd SPECFEM3D/examples/homogeneous_halfspace/REF_SEIS
      > gnuplot
 
          gnuplot> load "X1-50.BXZ.gnuplot"
