@@ -4,6 +4,15 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 42:
+----------------
+if the material property of element adjacent to PML changed, make sure we also need to change
+the material property of elements inside PML adjacent to this elment correspondingly.
+
+- suggestion 41:
+----------------
+avoid receivers located in PML region when using PML in adjoint simulation
+
 - suggestion 40:
 ----------------
 Currently, the way of PML implemented for acoustic/solid simulation is memory consuming. we should
