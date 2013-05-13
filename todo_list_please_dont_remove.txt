@@ -4,6 +4,20 @@ To-do list for the different flavors of SPECFEM:
 
 (items listed in no particular order)
 
+- suggestion 40:
+----------------
+Currently, the way of PML implemented for acoustic/solid simulation is memory consuming. we should
+in future reduce the memory usage in following way:
+1: replace the rmass_acoustic_interface(nglob_acoustic)  with rmass_acoustic_interface(nglob_acoustic_solid_interface)
+2: replace the potential_dot_dot_acoustic_interface(nglob_acoustic)  with potential_dot_dot_acoustic_interface(nglob_acoustic_solid_interface)
+where nglob_acoustic denotes the whole point set inside acoustic region, nglob_acoustic_solid_interface denotes the point set on acoustic_solid_interface
+
+- suggestion 39:
+----------------
+Currently, the way of PML implemented for fluid/solid simualtion is memeory consuming. we should
+in future reduce the memeory usage in following way.
+1: replace the rmass_acoustic_interface(nglob_acoustic)  with rmass_acoustic_interface(nglob_acoustic_solid_interface)
+2: replace the potential_dot_dot_acoustic_interface(nglob_acoustic)  with potential_dot_dot_acoustic_interface(nglob_acoustic_solid_interface)
 
 - suggestion 35:
 ----------------
