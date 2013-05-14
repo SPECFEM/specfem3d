@@ -148,6 +148,11 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store
 
+  ! array recording the points on interface shared by PML and interior computational domain
+  logical, dimension(:), allocatable :: mask_ibool_interior_domain
+  integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic
+  integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic
+
 ! moho (optional)
   integer :: nspec2D_moho_ext
   integer, dimension(:), allocatable  :: ibelm_moho
