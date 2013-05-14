@@ -36,7 +36,11 @@
                                     CPML_regions,is_CPML,nspec_cpml_tot, &
                                     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,alpha_store, &
                                     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                                    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS
+                                    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS,&
+                                    !for adjoint tomography
+                                    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
+                                    nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic
   use create_regions_mesh_ext_par
 
   implicit none
@@ -98,7 +102,7 @@
 ! acoustic
   if( ACOUSTIC_SIMULATION ) then
     write(IOUT) rmass_acoustic
-    write(IOUT) rmass_acoustic_interface !ZN
+    write(IOUT) rmass_acoustic_interface
   endif
 
 ! this array is needed for acoustic simulations but also for elastic simulations with CPML,
@@ -147,6 +151,16 @@
      write(IOUT) k_store_y
      write(IOUT) k_store_z
      write(IOUT) alpha_store
+     ! --------------------------------------------------------------------------------------------
+     ! for adjoint tomography
+     ! save the array stored the points on interface between PML and interior computational domain
+     ! --------------------------------------------------------------------------------------------
+     if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then 
+       write(IOUT) nglob_interface_PML_acoustic
+       write(IOUT) nglob_interface_PML_elastic
+       if(nglob_interface_PML_acoustic > 0) write(IOUT) points_interface_PML_acoustic
+       if(nglob_interface_PML_elastic > 0)  write(IOUT) points_interface_PML_elastic
+     endif
   endif
 
 ! absorbing boundary surface
@@ -337,6 +351,20 @@
      deallocate(k_store_y,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_y'
      deallocate(k_store_z,stat=ier); if( ier /= 0 ) stop 'error deallocating array d_store_z'
      deallocate(alpha_store,stat=ier); if( ier /= 0 ) stop 'error deallocating array alpha_store'
+     if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+       deallocate(mask_ibool_interior_domain,stat=ier)
+       if(ier /= 0) stop 'error deallocating array mask_ibool_interior_domain'
+
+       if(nglob_interface_PML_acoustic > 0) then
+         deallocate(points_interface_PML_acoustic,stat=ier)
+         if( ier /= 0 ) stop 'error deallocating array points_interface_PML_acoustic'
+       endif
+
+       if(nglob_interface_PML_elastic > 0) then
+         deallocate(points_interface_PML_elastic,stat=ier)
+         if( ier /= 0 ) stop 'error deallocating array points_interface_PML_elastic'
+       endif
+     endif
   endif
 
   end subroutine save_arrays_solver_ext_mesh

@@ -374,6 +374,22 @@
      read(27) k_store_y
      read(27) k_store_z
      read(27) alpha_store
+
+     if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then 
+       read(27) nglob_interface_PML_acoustic
+       read(27) nglob_interface_PML_elastic
+       if(nglob_interface_PML_acoustic > 0) then
+         allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
+         if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
+         read(27) points_interface_PML_acoustic
+       endif
+
+       if(nglob_interface_PML_elastic > 0) then
+         allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
+         if(ier /= 0) stop 'error allocating array points_interface_PML_elastic'
+         read(27) points_interface_PML_elastic
+       endif
+     endif
   endif
 
   ! absorbing boundary surface

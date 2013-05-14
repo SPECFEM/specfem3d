@@ -35,7 +35,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                                     CPML_width_x,CPML_width_y,CPML_width_z,NPOWER,K_MAX_PML, &
                                     CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
                                     IMAIN,FOUR_THIRDS,CPML_REGIONS,f0_FOR_PML,PI, &
-                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,&
+                                    SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML,&
+                                    mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic
 
   use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic, &
                                          ELASTIC_SIMULATION, ACOUSTIC_SIMULATION
@@ -255,7 +258,6 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   call max_all_all_cr(vp_max,vp_max_all)
 
-
   ! user output
   if( myrank == 0 ) then
      write(IMAIN,*)
@@ -322,15 +324,9 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_x = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    ! avoid d_x to be less than zero due to 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    ! avoid d_x to be less than zero
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob) - x_origin < 0._CUSTOM_REAL ) then
@@ -345,14 +341,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_x = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_x = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
                  else
@@ -389,14 +379,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_y = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
                  else if( ystore(iglob) - y_origin < 0._CUSTOM_REAL ) then
@@ -411,14 +395,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_y = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
                  else
@@ -457,15 +435,10 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
 
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
                     endif
                  else if( zstore(iglob) - z_origin < 0._CUSTOM_REAL ) then
                     ! gets abscissa of current grid point along the damping profile
@@ -479,14 +452,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else
@@ -534,24 +501,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_y = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob) - x_origin>0._CUSTOM_REAL .and. ystore(iglob) - y_origin<0._CUSTOM_REAL ) then
@@ -577,28 +532,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_y = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. ystore(iglob) - y_origin>0._CUSTOM_REAL ) then
-                    ! gets abscissa of current grid point along the damping profile
+                    ! gets abscissa of current grid point along the damping profilenspec
                     abscissa_in_PML_x = xoriginleft - xstore(iglob)
 
                     ! determines distance to C-PML/mesh interface
@@ -620,24 +563,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_y = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob)  - x_origin <0._CUSTOM_REAL .and. ystore(iglob)  - y_origin <0._CUSTOM_REAL ) then
@@ -663,24 +594,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_y = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_y = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
                  else
@@ -730,26 +649,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_x < 0._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                          d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                        endif
 
-                       if( K_x < 1._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
                     endif
 
                  else if( xstore(iglob) - x_origin>0._CUSTOM_REAL .and. zstore(iglob) - z_origin<0._CUSTOM_REAL ) then
@@ -775,24 +681,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. zstore(iglob) - z_origin>0._CUSTOM_REAL ) then
@@ -819,26 +713,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_x < 0._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                          d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                        endif
 
-                       if( K_x < 1._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. zstore(iglob) - z_origin<0._CUSTOM_REAL ) then
@@ -864,26 +745,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
                  else
                     stop "there is error in mesh of CPML-layer xz"
                  endif
@@ -930,24 +798,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_y < 0._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
+                       if( d_y < 0._CUSTOM_REAL  .or. K_y < 1._CUSTOM_REAL ) then
+                          d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                        endif
 
-                       if( K_y < 1._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
-                       endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL  .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
                     endif
 
@@ -974,24 +830,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else if( ystore(iglob) - y_origin<0._CUSTOM_REAL .and. zstore(iglob) - z_origin>0._CUSTOM_REAL ) then
@@ -1018,26 +862,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_y < 0._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
+                       if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                          d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                        endif
 
-                       if( K_y < 1._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
                     endif
 
                  else if( ystore(iglob) - y_origin<0._CUSTOM_REAL .and. zstore(iglob) - z_origin<0._CUSTOM_REAL ) then
@@ -1063,24 +894,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else
@@ -1141,34 +960,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_x < 0._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                          d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                        endif
 
-                       if( K_x < 1._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                          d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                        endif
 
-                       if( d_y < 0._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_y < 1._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
-                       endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
                     endif
 
@@ -1208,36 +1009,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
 
                  else if( xstore(iglob) - x_origin>0._CUSTOM_REAL .and. &
                           ystore(iglob) - y_origin<0._CUSTOM_REAL .and. &
@@ -1277,36 +1059,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_x < 0._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                          d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                        endif
 
-                       if( K_x < 1._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                          d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                        endif
 
-                       if( d_y < 0._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
-
-                       if( K_y < 1._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
-                       endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
                     endif
 
                  else if( xstore(iglob) - x_origin>0._CUSTOM_REAL .and. &
@@ -1347,34 +1110,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. &
@@ -1414,36 +1159,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_x < 0._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                          d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                        endif
 
-                       if( K_x < 1._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                          d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                        endif
 
-                       if( d_y < 0._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
-
-                       if( K_y < 1._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
-                       endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. &
@@ -1482,34 +1208,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. &
@@ -1549,36 +1257,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                        alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                        K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                       if( d_x < 0._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                          d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                        endif
 
-                       if( K_x < 1._CUSTOM_REAL ) then
-                          d_x = 0._CUSTOM_REAL
-                          K_x = 1._CUSTOM_REAL
+                       if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                          d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                        endif
 
-                       if( d_y < 0._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
+                       if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                          d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                        endif
-
-                       if( K_y < 1._CUSTOM_REAL ) then
-                          d_y = 0._CUSTOM_REAL
-                          K_y = 1._CUSTOM_REAL
-                       endif
-
-                       if( d_z < 0._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
-                       if( K_z < 1._CUSTOM_REAL ) then
-                          d_z = 0._CUSTOM_REAL
-                          K_z = 1._CUSTOM_REAL
-                       endif
-
                     endif
 
                  else if( xstore(iglob) - x_origin<0._CUSTOM_REAL .and. &
@@ -1617,34 +1306,16 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                     alpha_z = ALPHA_MAX_PML / 2._CUSTOM_REAL
                     K_z = 1._CUSTOM_REAL + (K_MAX_PML - 1._CUSTOM_REAL) * dist**NPOWER
 
-                    if( d_x < 0._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_x < 0._CUSTOM_REAL .or. K_x < 1._CUSTOM_REAL ) then
+                       d_x = 0._CUSTOM_REAL; K_x = 1._CUSTOM_REAL
                     endif
 
-                    if( K_x < 1._CUSTOM_REAL ) then
-                       d_x = 0._CUSTOM_REAL
-                       K_x = 1._CUSTOM_REAL
+                    if( d_y < 0._CUSTOM_REAL .or. K_y < 1._CUSTOM_REAL ) then
+                       d_y = 0._CUSTOM_REAL; K_y = 1._CUSTOM_REAL
                     endif
 
-                    if( d_y < 0._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_y < 1._CUSTOM_REAL ) then
-                       d_y = 0._CUSTOM_REAL
-                       K_y = 1._CUSTOM_REAL
-                    endif
-
-                    if( d_z < 0._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
-                    endif
-
-                    if( K_z < 1._CUSTOM_REAL ) then
-                       d_z = 0._CUSTOM_REAL
-                       K_z = 1._CUSTOM_REAL
+                    if( d_z < 0._CUSTOM_REAL .or. K_z < 1._CUSTOM_REAL ) then
+                       d_z = 0._CUSTOM_REAL; K_z = 1._CUSTOM_REAL
                     endif
 
                  else
@@ -1669,6 +1340,103 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
      enddo
   enddo !ispec_CPML
 
+! --------------------------------------------------------------------------------------------
+! for adjoint tomography
+! create the array store the points on interface between PML and interior computational domain
+! --------------------------------------------------------------------------------------------
+
+  if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+
+    !mask all points belong interior computational domain
+    allocate(mask_ibool_interior_domain(NGLOB_AB),stat=ier)
+    if(ier /= 0) stop 'error allocating array mask_ibool_interior_domain'
+    mask_ibool_interior_domain = .false.
+    do ispec=1,nspec
+      if(.not. is_CPML(ispec)) then
+        do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+          mask_ibool_interior_domain(ibool(i,j,k,ispec))=.true.
+        enddo; enddo; enddo
+     endif 
+    enddo
+
+    !------------------------------------------------------
+    !  begin of acoustic domain
+    !------------------------------------------------------
+    nglob_interface_PML_acoustic = 0
+
+    if(ACOUSTIC_SIMULATION) then  
+
+      do ispec=1,nspec
+        if( ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
+          do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+            if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+              nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1 
+            endif
+          enddo; enddo; enddo
+        endif
+      enddo
+
+      if(nglob_interface_PML_acoustic > 0)then
+        allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
+        if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
+        points_interface_PML_acoustic = 0
+        nglob_interface_PML_acoustic = 0 
+        do ispec=1,nspec
+          if( ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
+            do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+              if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+                nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1 
+                points_interface_PML_acoustic(nglob_interface_PML_acoustic) = ibool(i,j,k,ispec)
+              endif
+            enddo; enddo; enddo
+          endif
+        enddo      
+      endif
+
+    endif
+    !------------------------------------------------------
+    ! end of acoustic domains
+    !------------------------------------------------------
+
+    !------------------------------------------------------
+    ! begin of elastic domains
+    !------------------------------------------------------
+    nglob_interface_PML_elastic = 0
+
+    if(ELASTIC_SIMULATION) then  
+
+      do ispec=1,nspec
+        if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
+          do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+            if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+              nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1 
+            endif
+          enddo; enddo; enddo
+        endif
+      enddo
+
+      if(nglob_interface_PML_elastic > 0)then
+        allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
+        if(ier /= 0) stop 'error allocating array points_interface_PML_elastic'
+        points_interface_PML_elastic = 0
+        nglob_interface_PML_elastic = 0
+        do ispec=1,nspec
+          if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
+            do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+              if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
+                nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1 
+                points_interface_PML_elastic(nglob_interface_PML_elastic) = ibool(i,j,k,ispec)
+              endif
+            enddo; enddo; enddo
+          endif
+        enddo      
+      endif
+
+    endif
+    !------------------------------------------------------
+    ! end of elastic domains
+    !------------------------------------------------------
+  endif
 end subroutine pml_set_local_dampingcoeff
 
 !

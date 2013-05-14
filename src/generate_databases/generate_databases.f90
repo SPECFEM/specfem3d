@@ -389,10 +389,14 @@
     endif
 
     write(IMAIN,*)
-    if(STACEY_ABSORBING_CONDITIONS) then
-      write(IMAIN,*) 'incorporating absorbing conditions'
+    if(STACEY_ABSORBING_CONDITIONS) then 
+      write(IMAIN,*) 'incorporating Stacey absorbing conditions'
     else
-      write(IMAIN,*) 'no absorbing condition'
+      if(PML_CONDITIONS) then  
+        write(IMAIN,*) 'incorporating absorbing conditions of perfectly matched layer'  
+      else  
+        write(IMAIN,*) 'no absorbing condition'  
+      endif  
     endif
 
     write(IMAIN,*)
