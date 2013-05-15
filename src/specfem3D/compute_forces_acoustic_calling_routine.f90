@@ -372,33 +372,32 @@ subroutine compute_forces_acoustic()
 ! to be zero on outer boundary of PML help to improve the accuracy of absorbing low-frequency wave components 
 ! in case of long-time simulation
 
-  ! C-PML boundary
-    if(PML_CONDITIONS)then
-       do iface=1,num_abs_boundary_faces
-           ispec = abs_boundary_ispec(iface)
-           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-              if( ispec_is_acoustic(ispec) .and. is_CPML(ispec) ) then
-                 ! reference gll points on boundary face
-                 do igll = 1,NGLLSQUARE
+! C-PML boundary
+  if(PML_CONDITIONS)then
+    do iface=1,num_abs_boundary_faces
+      ispec = abs_boundary_ispec(iface)
+      if(ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if(ispec_is_acoustic(ispec) .and. is_CPML(ispec) ) then
+          ! reference gll points on boundary face
+          do igll = 1,NGLLSQUARE
+            ! gets local indices for GLL point
+            i = abs_boundary_ijk(1,igll,iface)
+            j = abs_boundary_ijk(2,igll,iface)
+            k = abs_boundary_ijk(3,igll,iface)
 
-                    ! gets local indices for GLL point
-                    i = abs_boundary_ijk(1,igll,iface)
-                    j = abs_boundary_ijk(2,igll,iface)
-                    k = abs_boundary_ijk(3,igll,iface)
+            iglob=ibool(i,j,k,ispec)
 
-                    iglob=ibool(i,j,k,ispec)
-
-                    potential_dot_dot_acoustic(iglob) = 0.0
-                    potential_dot_acoustic(iglob) = 0.0
-                    potential_acoustic(iglob) = 0.0
-                    if(ELASTIC_SIMULATION ) then  
-                         potential_dot_dot_acoustic_interface(iglob) = 0.0
-                    endif
-                 enddo
-             endif ! ispec_is_acoustic
+            potential_dot_dot_acoustic(iglob) = 0.0
+            potential_dot_acoustic(iglob) = 0.0
+            potential_acoustic(iglob) = 0.0
+            if(ELASTIC_SIMULATION ) then  
+              potential_dot_dot_acoustic_interface(iglob) = 0.0
             endif
-        enddo
-     endif
+          enddo
+        endif ! ispec_is_acoustic
+      endif
+    enddo
+  endif
 
 ! update velocity
 ! note: Newmark finite-difference time scheme with acoustic domains:
