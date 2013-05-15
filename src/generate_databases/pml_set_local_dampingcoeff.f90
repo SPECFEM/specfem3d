@@ -161,49 +161,44 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   do ispec_CPML=1,nspec_cpml
      ispec = CPML_to_spec(ispec_CPML)
-     do k=1,NGLLZ
-        do j=1,NGLLY
-           do i=1,NGLLX
-            iglob = ibool(i,j,k,ispec)
-            if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
-             if(xstore(iglob) - x_origin > 0._CUSTOM_REAL)then
-                if(xstore(iglob) - x_origin <= CPML_x_right - x_origin )then
-                   CPML_x_right = xstore(iglob)
-                endif
-              else
-                if(abs(xstore(iglob) - x_origin) <= abs(CPML_x_left-x_origin))then
-                   CPML_x_left = xstore(iglob)
-                endif
+     do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+        iglob = ibool(i,j,k,ispec)
+        if(CPML_regions(ispec_CPML) == CPML_X_ONLY) then
+           if(xstore(iglob) - x_origin > 0._CUSTOM_REAL)then
+              if(xstore(iglob) - x_origin <= CPML_x_right - x_origin)then
+                 CPML_x_right = xstore(iglob)
               endif
-             endif
-
-            if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
-              if(ystore(iglob) - y_origin > 0._CUSTOM_REAL)then
-                if(ystore(iglob) - y_origin <= CPML_y_front - y_origin )then
-                   CPML_y_front = ystore(iglob)
-                endif
-              else
-                if(abs(ystore(iglob) - y_origin) <= abs(CPML_y_back-y_origin))then
-                   CPML_y_back = ystore(iglob)
-                endif
+           else
+              if(abs(xstore(iglob) - x_origin) <= abs(CPML_x_left-x_origin))then
+                 CPML_x_left = xstore(iglob)
               endif
-             endif
+           endif
+        endif
 
-            if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
-              if(zstore(iglob) - z_origin > 0._CUSTOM_REAL)then
-                if(zstore(iglob) - z_origin <= CPML_z_top - z_origin )then
-                   CPML_z_top = zstore(iglob)
-                endif
-              else
-                if(abs(zstore(iglob) - z_origin) <= abs(CPML_z_bottom-z_origin))then
-                   CPML_z_bottom = zstore(iglob)
-                endif
+        if(CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
+           if(ystore(iglob) - y_origin > 0._CUSTOM_REAL)then
+              if(ystore(iglob) - y_origin <= CPML_y_front - y_origin)then
+                 CPML_y_front = ystore(iglob)
               endif
-             endif
+           else
+              if(abs(ystore(iglob) - y_origin) <= abs(CPML_y_back-y_origin))then
+                 CPML_y_back = ystore(iglob)
+              endif
+           endif
+        endif
 
-            enddo
-         enddo
-      enddo
+        if(CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
+           if(zstore(iglob) - z_origin > 0._CUSTOM_REAL)then
+              if(zstore(iglob) - z_origin <= CPML_z_top - z_origin)then
+                 CPML_z_top = zstore(iglob)
+              endif
+           else
+              if(abs(zstore(iglob) - z_origin) <= abs(CPML_z_bottom-z_origin))then
+                 CPML_z_bottom = zstore(iglob)
+              endif
+           endif
+        endif
+     enddo; enddo; enddo
   enddo
 
   CPML_width_x_right = x_max_all - CPML_x_right
@@ -238,22 +233,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   vp_max = 0._CUSTOM_REAL
   do ispec_CPML=1,nspec_cpml
      ispec = CPML_to_spec(ispec_CPML)
-     do k=1,NGLLZ
-        do j=1,NGLLY
-           do i=1,NGLLX
-              vp_elastic = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
-              vp_acoustic = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
+     do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+        vp_elastic = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
+        vp_acoustic = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
 
-              if(vp_acoustic .ge. vp_max)then
-                 vp_max = vp_acoustic
-              endif
-              if(vp_elastic .ge. vp_max)then
-                 vp_max = vp_acoustic
-              endif
-
-           enddo
-        enddo
-     enddo
+        if(vp_acoustic .ge. vp_max)then
+           vp_max = vp_acoustic
+        endif
+        if(vp_elastic .ge. vp_max)then
+           vp_max = vp_acoustic
+        endif
+     enddo; enddo; enddo
   enddo
 
   call max_all_all_cr(vp_max,vp_max_all)
@@ -278,6 +268,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
      write(IMAIN,*) 'CPML_width_z: ',CPML_width_z
      write(IMAIN,*)
   endif
+
   call sync_all()
 
   ! loops over all C-PML elements
