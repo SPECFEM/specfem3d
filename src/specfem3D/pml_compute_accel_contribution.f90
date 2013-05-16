@@ -26,7 +26,7 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
+subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -35,16 +35,17 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: it,deltat,wgll_cube,jacobian,ibool,rhostore
-  use specfem_par_elastic, only: displ,veloc
+  use specfem_par, only: NGLOB_AB,it,deltat,wgll_cube,jacobian,ibool,rhostore
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
-                     alpha_store,rmemory_displ_elastic,accel_elastic_CPML                    
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                     alpha_store,NSPEC_CPML,accel_elastic_CPML                 
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ,veloc
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_displ_elastic
 
   ! local parameters
   integer :: i,j,k,iglob
@@ -434,21 +435,21 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
 
            endif
 
-           accel_elastic_CPML(1,i,j,k,ispec_CPML) =  wgllcube * rhol * jacobianl * &
+           accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
                 ( A1 * veloc(1,iglob) + A2 * displ(1,iglob) + &
                   A3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
                   A4 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,2) + &
                   A5 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,3)  &
                 )
 
-           accel_elastic_CPML(2,i,j,k,ispec_CPML) =  wgllcube * rhol * jacobianl * &
+           accel_elastic_CPML(2,i,j,k) =  wgllcube * rhol * jacobianl * &
                 ( A1 * veloc(2,iglob) + A2 * displ(2,iglob) + &
                   A3 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,1) + &
                   A4 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,2) + &
                   A5 * rmemory_displ_elastic(2,i,j,k,ispec_CPML,3)  &
                 )
 
-           accel_elastic_CPML(3,i,j,k,ispec_CPML) =  wgllcube * rhol * jacobianl * &
+           accel_elastic_CPML(3,i,j,k) =  wgllcube * rhol * jacobianl * &
                 ( A1 * veloc(3,iglob) + A2 * displ(3,iglob) + &
                   A3 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,1) + &
                   A4 * rmemory_displ_elastic(3,i,j,k,ispec_CPML,2) + &
@@ -465,7 +466,8 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 ! 
 
-subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
+subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
+                                                   potential_dot_acoustic,rmemory_potential_acoustic)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -474,16 +476,18 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: it,deltat,wgll_cube,jacobian,ibool,kappastore
-  use specfem_par_acoustic, only: potential_acoustic,potential_dot_acoustic
-  use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
-                     alpha_store,rmemory_potential_acoustic, potential_dot_dot_acoustic_CPML
+  use specfem_par, only: NGLOB_AB,it,deltat,wgll_cube,jacobian,ibool,kappastore
+  use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
+                     alpha_store, potential_dot_dot_acoustic_CPML
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_potential_acoustic
+
 
   ! local parameters
   integer :: i,j,k,iglob
@@ -791,7 +795,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML)
 
            endif
 
-           potential_dot_dot_acoustic_CPML(i,j,k,ispec_CPML) =  wgllcube * kappal_inv *jacobianl * &
+           potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv *jacobianl * &
                  ( A1 * potential_dot_acoustic(iglob) + A2 * potential_acoustic(iglob) + &
                    A3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1)+ &
                    A4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2)+ &

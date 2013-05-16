@@ -63,18 +63,18 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store
 
   ! derivatives of ux, uy and uz with respect to x, y and z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_dux_dxl,PML_dux_dyl,PML_dux_dzl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_duy_dxl,PML_duy_dyl,PML_duy_dzl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_duz_dxl,PML_duz_dyl,PML_duz_dzl
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl,PML_dux_dyl,PML_dux_dzl
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl,PML_duy_dyl,PML_duy_dzl
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl,PML_duz_dyl,PML_duz_dzl
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dux_dxl_new,PML_dux_dyl_new,PML_dux_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duy_dxl_new,PML_duy_dyl_new,PML_duy_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
 
   ! derivatives of potential with respect to x, y and z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x
@@ -100,10 +100,10 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_potential_acoustic
 
   ! C-PML contribution to update acceleration to the global mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: accel_elastic_CPML
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: accel_elastic_CPML
 
   ! C-PML contribution to update the second derivative of the potential to the global mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: potential_dot_dot_acoustic_CPML
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: potential_dot_dot_acoustic_CPML
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ
