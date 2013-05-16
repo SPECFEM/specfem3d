@@ -57,7 +57,8 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: spec_to_CPML,is_CPML
+  use pml_par,only: spec_to_CPML,is_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
+                    rmemory_potential_acoustic,rmemory_coupling_ac_el_displ
 
   implicit none
 
@@ -116,7 +117,9 @@ subroutine compute_forces_acoustic()
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,potential_dot_dot_acoustic_interface)
+                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
+                        rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
+                        rmemory_potential_acoustic,potential_dot_dot_acoustic_interface) 
       endif
 
       ! adjoint simulations
@@ -140,7 +143,9 @@ subroutine compute_forces_acoustic()
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,potential_dot_dot_acoustic_interface)
+                        phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
+                        rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
+                        rmemory_potential_acoustic,potential_dot_dot_acoustic_interface) 
         endif
       endif
 
@@ -177,7 +182,9 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
-                              PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
+                              PML_CONDITIONS,spec_to_CPML,is_CPML,&
+                              potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ)
+
           else
             ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
             ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
@@ -188,7 +195,8 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
-                              PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
+                              PML_CONDITIONS,spec_to_CPML,is_CPML,&
+                              potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ)
           endif
           ! adjoint/kernel simulations
           if( SIMULATION_TYPE == 3 ) &
@@ -199,7 +207,8 @@ subroutine compute_forces_acoustic()
                             coupling_ac_el_normal, &
                             coupling_ac_el_jacobian2Dw, &
                             ispec_is_inner,phase_is_inner,& 
-                            PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
+                            PML_CONDITIONS,spec_to_CPML,is_CPML,&
+                            potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ) 
 
         else
           ! on GPU

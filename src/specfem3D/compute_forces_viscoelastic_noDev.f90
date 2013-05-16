@@ -50,10 +50,23 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic)
+                        phase_ispec_inner_elastic, &
+                        rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                        rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                        rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                        rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                        rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                        rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
+                        rmemory_displ_elastic)
 
-  use constants, only: NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
-  use pml_par
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
+  use pml_par, only: NSPEC_CPML,is_CPML, spec_to_CPML, accel_elastic_CPML, &
+                     k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,alpha_store, &
+                     PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
+                     PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
+                     PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
+                     PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
+                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
 
@@ -126,6 +139,14 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 ! C-PML absorbing boundary conditions
   logical :: PML_CONDITIONS
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,2) ::  &
+                          rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                          rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                          rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                          rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                          rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                          rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_displ_elastic
 
 ! local parameters
   integer :: i_SLS,imodulo_N_SLS
@@ -399,17 +420,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  if(is_CPML(ispec)) then
                     ispec_CPML = spec_to_CPML(ispec)
 
-                    PML_dux_dxl(i,j,k,ispec_CPML) = duxdxl
-                    PML_dux_dyl(i,j,k,ispec_CPML) = duxdyl
-                    PML_dux_dzl(i,j,k,ispec_CPML) = duxdzl
+                    PML_dux_dxl(i,j,k) = duxdxl
+                    PML_dux_dyl(i,j,k) = duxdyl
+                    PML_dux_dzl(i,j,k) = duxdzl
 
-                    PML_duy_dxl(i,j,k,ispec_CPML) = duydxl
-                    PML_duy_dyl(i,j,k,ispec_CPML) = duydyl
-                    PML_duy_dzl(i,j,k,ispec_CPML) = duydzl
+                    PML_duy_dxl(i,j,k) = duydxl
+                    PML_duy_dyl(i,j,k) = duydyl
+                    PML_duy_dzl(i,j,k) = duydzl
 
-                    PML_duz_dxl(i,j,k,ispec_CPML) = duzdxl
-                    PML_duz_dyl(i,j,k,ispec_CPML) = duzdyl
-                    PML_duz_dzl(i,j,k,ispec_CPML) = duzdzl
+                    PML_duz_dxl(i,j,k) = duzdxl
+                    PML_duz_dyl(i,j,k) = duzdyl
+                    PML_duz_dzl(i,j,k) = duzdzl
                  endif
               endif
 
@@ -479,25 +500,25 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                     ! do not merge this second line with the first using an ".and." statement
                     ! because array is_CPML() is unallocated when PML_CONDITIONS is false
                     if(is_CPML(ispec)) then
-                       PML_dux_dxl_new(i,j,k,ispec_CPML) = &
+                       PML_dux_dxl_new(i,j,k) = &
                             xixl*tempx1_att(i,j,k) + etaxl*tempx2_att(i,j,k) + gammaxl*tempx3_att(i,j,k)
-                       PML_dux_dyl_new(i,j,k,ispec_CPML) = &
+                       PML_dux_dyl_new(i,j,k) = &
                             xiyl*tempx1_att(i,j,k) + etayl*tempx2_att(i,j,k) + gammayl*tempx3_att(i,j,k)
-                       PML_dux_dzl_new(i,j,k,ispec_CPML) = &
+                       PML_dux_dzl_new(i,j,k) = &
                             xizl*tempx1_att(i,j,k) + etazl*tempx2_att(i,j,k) + gammazl*tempx3_att(i,j,k)
 
-                       PML_duy_dxl_new(i,j,k,ispec_CPML) = &
+                       PML_duy_dxl_new(i,j,k) = &
                             xixl*tempy1_att(i,j,k) + etaxl*tempy2_att(i,j,k) + gammaxl*tempy3_att(i,j,k)
-                       PML_duy_dyl_new(i,j,k,ispec_CPML) = &
+                       PML_duy_dyl_new(i,j,k) = &
                             xiyl*tempy1_att(i,j,k) + etayl*tempy2_att(i,j,k) + gammayl*tempy3_att(i,j,k)
-                       PML_duy_dzl_new(i,j,k,ispec_CPML) = &
+                       PML_duy_dzl_new(i,j,k) = &
                             xizl*tempy1_att(i,j,k) + etazl*tempy2_att(i,j,k) + gammazl*tempy3_att(i,j,k)
 
-                       PML_duz_dxl_new(i,j,k,ispec_CPML) = &
+                       PML_duz_dxl_new(i,j,k) = &
                             xixl*tempz1_att(i,j,k) + etaxl*tempz2_att(i,j,k) + gammaxl*tempz3_att(i,j,k)
-                       PML_duz_dyl_new(i,j,k,ispec_CPML) = &
+                       PML_duz_dyl_new(i,j,k) = &
                             xiyl*tempz1_att(i,j,k) + etayl*tempz2_att(i,j,k) + gammayl*tempz3_att(i,j,k)
-                       PML_duz_dzl_new(i,j,k,ispec_CPML) = &
+                       PML_duz_dzl_new(i,j,k) = &
                             xizl*tempz1_att(i,j,k) + etazl*tempz2_att(i,j,k) + gammazl*tempz3_att(i,j,k)
                     endif
 
@@ -719,11 +740,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
        if(is_CPML(ispec)) then
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
-          call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, &
-                                                    tempx3,tempy3,tempz3)
+          call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1,tempx2,tempy2,tempz2, & 
+                                    tempx3,tempy3,tempz3, &
+                                    rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                                    rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                                    rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                                    rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                                    rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                                    rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z)
 
           ! calculates contribution from each C-PML element to update acceleration
-          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML)
+          call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
        endif
     endif
 
@@ -781,9 +808,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then
-                accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k,ispec_CPML)
-                accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k,ispec_CPML)
-                accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k,ispec_CPML)
+                accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k)
+                accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k)
+                accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k)
              endif
           endif
 

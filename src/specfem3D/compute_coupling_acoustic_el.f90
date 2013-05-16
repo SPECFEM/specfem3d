@@ -33,7 +33,8 @@
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,& 
-                        PML_CONDITIONS,spec_to_CPML,is_CPML,potential_dot_dot_acoustic_interface) 
+                        PML_CONDITIONS,spec_to_CPML,is_CPML,&
+                        potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ) 
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
@@ -43,9 +44,10 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement and pressure
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ 
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,&
                                                  potential_dot_dot_acoustic_interface
+  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: rmemory_coupling_ac_el_displ
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -96,7 +98,8 @@
            if(is_CPML(ispec))then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                                 displ_x,displ_y,displ_z)
+                                                                 displ_x,displ_y,displ_z,displ,veloc,&
+                                                                 num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
            else
               displ_x = displ(1,iglob)
               displ_y = displ(2,iglob)
