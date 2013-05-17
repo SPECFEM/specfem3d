@@ -416,9 +416,16 @@ class mesh(object,mesh_tools):
                             if q < 0 :
                               print 'error, q value invalid:', q
                               break
-                            if nattrib == 6:
-                              #anisotropy_flag
-                              ani=cubit.get_block_attribute_value(block,5)
+			    if nattrib >= 6:
+                               #Q_kappa
+                               q2=cubit.get_block_attribute_value(block,5)
+                               # for q to be valid: it must be positive
+                               if q2 < 0 :
+                                  print 'error, q value invalid:', q2
+                                  break
+                               if nattrib == 7:
+                                  #anisotropy_flag
+                                  ani=cubit.get_block_attribute_value(block,6)
                     elif flag < 0:
                         # velocity model
                         vel=name
@@ -431,11 +438,11 @@ class mesh(object,mesh_tools):
                             kind='tomography'
                 else:
                     flag=block
-                    vel,vs,rho,q,ani=(name,0,0,0,0)
+                    vel,vs,rho,q,q2,ani=(name,0,0,0,0,0)
                 block_flag.append(int(flag))
                 block_mat.append(block)
                 if flag > 0:
-                    par=tuple([imaterial,flag,vel,vs,rho,q,ani])
+                    par=tuple([imaterial,flag,vel,vs,rho,q,q2,ani])
                 elif flag < 0:
                     if kind=='interface':
                         par=tuple([imaterial,flag,kind,name,flag_down,flag_up])
@@ -514,8 +521,8 @@ class mesh(object,mesh_tools):
             elif type(vel) != str:
                 # velocity model given as vp,vs,rho,..
                 #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_mu #anisotropy_flag
-                txt='%1i %3i %20f %20f %20f %20f %2i\n' % (properties[0],properties[1],properties[4], \
-                         properties[2],properties[3],properties[5],properties[6])
+                txt='%1i %3i %20f %20f %20f %20f %20f %2i\n' % (properties[0],properties[1],properties[4], \
+                         properties[2],properties[3],properties[5],properties[6],properties[7])
             else:
                 txt='%1i %3i %s \n' % (properties[0],properties[1],properties[2])
         elif flag < 0:
