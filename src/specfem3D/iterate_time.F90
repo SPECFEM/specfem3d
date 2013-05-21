@@ -729,6 +729,7 @@
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
+  use pml_par
 
   implicit none
 
@@ -788,6 +789,12 @@
   if (SIMULATION_TYPE == 3 .and. .NOT. GPU_MODE) then
     ! acoustic backward fields
     if( ACOUSTIC_SIMULATION ) then
+      if(PML_CONDITIONS)then  !ZN
+        if(nglob_interface_PML_acoustic > 0)then
+          call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
+                                               nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+        endif
+      endif
       b_potential_acoustic(:) = b_potential_acoustic(:) &
                               + b_deltat * b_potential_dot_acoustic(:) &
                               + b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
@@ -798,6 +805,12 @@
 
     ! elastic backward fields
     if( ELASTIC_SIMULATION ) then
+      if(PML_CONDITIONS)then  !ZN
+        if(nglob_interface_PML_elastic > 0)then
+          call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
+                                           b_PML_field,b_reclen_PML_field)
+        endif
+      endif
       b_displ(:,:) = b_displ(:,:) + b_deltat*b_veloc(:,:) + b_deltatsqover2*b_accel(:,:)
       b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
       b_accel(:,:) = 0._CUSTOM_REAL
@@ -876,13 +889,13 @@
 
     ! memory variables if attenuation
     if( ATTENUATION ) then
-      if(FULL_ATTENUATION_SOLID) read(27) b_R_trace  !ZN
+      if(FULL_ATTENUATION_SOLID) read(27) b_R_trace
       read(27) b_R_xx
       read(27) b_R_yy
       read(27) b_R_xy
       read(27) b_R_xz
       read(27) b_R_yz
-      if(FULL_ATTENUATION_SOLID) read(27) b_epsilondev_trace !ZN
+      if(FULL_ATTENUATION_SOLID) read(27) b_epsilondev_trace
       read(27) b_epsilondev_xx
       read(27) b_epsilondev_yy
       read(27) b_epsilondev_xy
@@ -952,13 +965,13 @@
           ! wavefields
           call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel, Mesh_pointer)
         endif
-        if(FULL_ATTENUATION_SOLID) read(27) b_R_trace !ZN
+        if(FULL_ATTENUATION_SOLID) read(27) b_R_trace
         read(27) b_R_xx
         read(27) b_R_yy
         read(27) b_R_xy
         read(27) b_R_xz
         read(27) b_R_yz
-        if(FULL_ATTENUATION_SOLID) read(27) b_epsilondev_trace !ZN
+        if(FULL_ATTENUATION_SOLID) read(27) b_epsilondev_trace
         read(27) b_epsilondev_xx
         read(27) b_epsilondev_yy
         read(27) b_epsilondev_xy
@@ -1016,13 +1029,13 @@
                      size(epsilondev_xx))
         endif
 
-        if(FULL_ATTENUATION_SOLID) write(27) R_trace  !ZN
+        if(FULL_ATTENUATION_SOLID) write(27) R_trace 
         write(27) R_xx
         write(27) R_yy
         write(27) R_xy
         write(27) R_xz
         write(27) R_yz
-        if(FULL_ATTENUATION_SOLID) write(27) epsilondev_trace !ZN
+        if(FULL_ATTENUATION_SOLID) write(27) epsilondev_trace 
         write(27) epsilondev_xx
         write(27) epsilondev_yy
         write(27) epsilondev_xy

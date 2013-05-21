@@ -50,14 +50,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic, &
-                        rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
-                        rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
-                        rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
-                        rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
-                        rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
-                        rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
-                        rmemory_displ_elastic)
+                        phase_ispec_inner_elastic,backward_simulation)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
   use pml_par, only: NSPEC_CPML,is_CPML, spec_to_CPML, accel_elastic_CPML, &
@@ -66,7 +59,14 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
                      PML_dux_dxl_new, PML_dux_dyl_new, PML_dux_dzl_new, &
                      PML_duy_dxl_new, PML_duy_dyl_new, PML_duy_dzl_new, &
-                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new
+                     PML_duz_dxl_new, PML_duz_dyl_new, PML_duz_dzl_new, &
+                     rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
+                     rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
+                     rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
+                     rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
+                     rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
+                     rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
+                     rmemory_displ_elastic
   use fault_solver_dynamic, only : Kelvin_Voigt_eta
   use specfem_par, only : FULL_ATTENUATION_SOLID
 
@@ -139,14 +139,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 ! C-PML absorbing boundary conditions
   logical :: PML_CONDITIONS
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,2) ::  &
-                          rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
-                          rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
-                          rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
-                          rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
-                          rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
-                          rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_displ_elastic
+
+! CPML adjoint
+  logical :: backward_simulation
 
 ! local parameters
   integer :: i_SLS,imodulo_N_SLS
@@ -264,7 +259,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  enddo
               enddo
            enddo
-        else if(PML_CONDITIONS) then
+        else if(PML_CONDITIONS .and. (.not. backward_simulation)) then
            ! do not merge this second line with the first using an ".and." statement
            ! because array is_CPML() is unallocated when PML_CONDITIONS is false
            if(is_CPML(ispec)) then
@@ -350,7 +345,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 tempz3_att(i,j,k) = tempz3_att(i,j,k) + dummyz_loc_att(i,j,l)*hp3
              enddo
 
-          else if(PML_CONDITIONS) then
+          else if(PML_CONDITIONS .and. (.not. backward_simulation)) then
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then
@@ -414,7 +409,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               duzdzl = xizl*tempz1(i,j,k) + etazl*tempz2(i,j,k) + gammazl*tempz3(i,j,k)
 
               ! stores derivatives of ux, uy and uz with respect to x, y and z
-              if (PML_CONDITIONS) then
+              if (PML_CONDITIONS .and. (.not. backward_simulation)) then
                  ! do not merge this second line with the first using an ".and." statement
                  ! because array is_CPML() is unallocated when PML_CONDITIONS is false
                  if(is_CPML(ispec)) then
@@ -496,7 +491,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                  epsilondev_xz_loc(i,j,k) = 0.5 * duzdxl_plus_duxdzl_att
                  epsilondev_yz_loc(i,j,k) = 0.5 * duzdyl_plus_duydzl_att
 
-              else if(PML_CONDITIONS) then
+              else if(PML_CONDITIONS .and. (.not. backward_simulation)) then
                     ! do not merge this second line with the first using an ".and." statement
                     ! because array is_CPML() is unallocated when PML_CONDITIONS is false
                     if(is_CPML(ispec)) then
@@ -690,7 +685,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 !! DK DK that when PML_CONDITIONS is on then you do not compute the tempx, tempy, tempz arrays
 !! DK DK (even in non-PML elements!!), even though such arrays are needed below;
 !! DK DK shouldn't there be at least a "if (is_CPML(ispec))" test as well here, or something like that?
-              if (PML_CONDITIONS) then
+              if (PML_CONDITIONS .and. (.not. backward_simulation)) then
                  ! do not merge this second line with the first using an ".and." statement
                  ! because array is_CPML() is unallocated when PML_CONDITIONS is false
                  if(.not.is_CPML(ispec)) then
@@ -735,7 +730,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
       enddo
     enddo
 
-    if (PML_CONDITIONS) then
+    if (PML_CONDITIONS .and. (.not. backward_simulation)) then
        ! do not merge this second line with the first using an ".and." statement
        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
        if(is_CPML(ispec)) then
@@ -804,7 +799,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                                 fac2*newtempz2(i,j,k) - fac3*newtempz3(i,j,k)
 
           ! updates acceleration with contribution from each C-PML element
-          if (PML_CONDITIONS) then
+          if (PML_CONDITIONS .and. (.not. backward_simulation)) then
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then

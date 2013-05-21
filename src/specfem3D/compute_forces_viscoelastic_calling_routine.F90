@@ -90,14 +90,7 @@ subroutine compute_forces_viscoelastic()
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic, &
-                        rmemory_dux_dxl_x, rmemory_duy_dyl_x, rmemory_duz_dzl_x, &
-                        rmemory_dux_dyl_x, rmemory_dux_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
-                        rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duy_dyl_y, &
-                        rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
-                        rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
-                        rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
-                        rmemory_displ_elastic)
+                        phase_ispec_inner_elastic,.false.)
 
         ! adjoint simulations: backward/reconstructed wavefield
         if( SIMULATION_TYPE == 3 ) &
@@ -134,7 +127,7 @@ subroutine compute_forces_viscoelastic()
                         rmemory_duy_dxl_y, rmemory_duy_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                         rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duz_dzl_z, &
                         rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z, &
-                        rmemory_displ_elastic)
+                        rmemory_displ_elastic,.true.)
 
       endif
 
@@ -388,7 +381,8 @@ subroutine compute_forces_viscoelastic()
     if(PML_CONDITIONS)then
        do iface=1,num_abs_boundary_faces
            ispec = abs_boundary_ispec(iface)
-           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+!ZN It is better to move this into do iphase=1,2 loop
+!ZN        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
               if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
                  ! reference gll points on boundary face
                  do igll = 1,NGLLSQUARE
@@ -406,7 +400,7 @@ subroutine compute_forces_viscoelastic()
 
                  enddo
              endif ! ispec_is_elastic
-           endif
+!ZN        endif
         enddo
       endif
 
@@ -435,6 +429,14 @@ subroutine compute_forces_viscoelastic()
     if( APPROXIMATE_OCEAN_LOAD ) call kernel_3_b_cuda(Mesh_pointer, NGLOB_AB, deltatover2,b_deltatover2)
   endif
 
+  if(PML_CONDITIONS)then  !ZN
+    if(SIMULATION_TYPE == 1 .and. SAVE_FORWARD)then
+      if(nglob_interface_PML_elastic > 0)then
+        call save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
+                                         b_PML_field,b_reclen_PML_field)
+      endif
+    endif
+  endif
 
 end subroutine compute_forces_viscoelastic
 
