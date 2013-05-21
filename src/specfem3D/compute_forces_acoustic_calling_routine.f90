@@ -58,8 +58,8 @@ subroutine compute_forces_acoustic()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par,only: spec_to_CPML,is_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
-                    rmemory_potential_acoustic,rmemory_coupling_ac_el_displ
-
+                    rmemory_potential_acoustic,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,& !ZN
+                    b_PML_potential,b_reclen_PML_potential !ZN
   implicit none
 
   ! local parameters
@@ -118,8 +118,7 @@ subroutine compute_forces_acoustic()
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
-                        rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
-                        rmemory_potential_acoustic,potential_dot_dot_acoustic_interface) 
+                        .false.,potential_dot_dot_acoustic_interface)  
       endif
 
       ! adjoint simulations
@@ -144,8 +143,7 @@ subroutine compute_forces_acoustic()
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
-                        rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
-                        rmemory_potential_acoustic,potential_dot_dot_acoustic_interface) 
+                        .true.,potential_dot_dot_acoustic_interface) 
         endif
       endif
 
@@ -385,7 +383,8 @@ subroutine compute_forces_acoustic()
   if(PML_CONDITIONS)then
     do iface=1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
-      if(ispec_is_inner(ispec) .eqv. phase_is_inner) then
+!ZN It is better to move this into do iphase=1,2 loop
+!ZN   if(ispec_is_inner(ispec) .eqv. phase_is_inner) then
         if(ispec_is_acoustic(ispec) .and. is_CPML(ispec) ) then
           ! reference gll points on boundary face
           do igll = 1,NGLLSQUARE
@@ -404,7 +403,7 @@ subroutine compute_forces_acoustic()
             endif
           enddo
         endif ! ispec_is_acoustic
-      endif
+!ZN   endif
     enddo
   endif
 
@@ -458,6 +457,15 @@ subroutine compute_forces_acoustic()
   else
     ! on GPU
     call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
+  endif
+
+  if(PML_CONDITIONS)then  !ZN
+    if(SIMULATION_TYPE == 1 .and. SAVE_FORWARD)then
+      if(nglob_interface_PML_acoustic > 0)then
+        call save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
+                                             nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+      endif
+    endif
   endif
 
 end subroutine compute_forces_acoustic

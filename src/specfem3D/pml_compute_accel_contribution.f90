@@ -806,3 +806,129 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   enddo
 
 end subroutine pml_compute_accel_contribution_acoustic
+!
+!=====================================================================
+!
+subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
+                                       b_PML_field,b_reclen_PML_field)
+  use specfem_par, only: NGLOB_AB,it
+  use constants, only: CUSTOM_REAL,NDIM
+  integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ,veloc,accel
+  real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
+
+  integer :: iglob
+
+  do iglob = 1, nglob_interface_PML_elastic
+     b_PML_field(1,iglob) = displ(1,iglob) 
+     b_PML_field(2,iglob) = displ(2,iglob) 
+     b_PML_field(3,iglob) = displ(3,iglob)
+
+     b_PML_field(4,iglob) = veloc(1,iglob) 
+     b_PML_field(5,iglob) = veloc(2,iglob) 
+     b_PML_field(6,iglob) = veloc(3,iglob) 
+
+     b_PML_field(7,iglob) = accel(1,iglob)
+     b_PML_field(8,iglob) = accel(2,iglob) 
+     b_PML_field(9,iglob) = accel(3,iglob)   
+  enddo
+
+  call write_abs(0,b_PML_field,b_reclen_PML_field,it)
+
+end subroutine save_field_on_pml_interface
+!
+!=====================================================================
+!
+subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
+                                       b_PML_field,b_reclen_PML_field)
+  use specfem_par, only: NGLOB_AB,NSPEC_AB,ibool,NSTEP,it
+  use pml_par, only: NSPEC_CPML,CPML_to_spec
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: b_displ,b_veloc,b_accel
+  real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
+
+  integer :: iglob,ispec,ispec_pml,i,j,k
+
+  do ispec_pml = 1, NSPEC_CPML
+     ispec = CPML_to_spec(ispec_pml)
+     do i = 1, NGLLX; do j = 1, NGLLY; do k = 1, NGLLZ
+        iglob = ibool(i,j,k,ispec)
+        b_displ(:,iglob) = 0._CUSTOM_REAL
+        b_veloc(:,iglob) = 0._CUSTOM_REAL 
+        b_accel(:,iglob) = 0._CUSTOM_REAL
+     enddo; enddo; enddo
+  enddo  
+
+  call read_abs(0,b_PML_field,b_reclen_PML_field,NSTEP-it+1)
+
+  do iglob = 1, nglob_interface_PML_elastic
+     b_displ(1,iglob) = b_PML_field(1,iglob)  
+     b_displ(2,iglob) = b_PML_field(2,iglob) 
+     b_displ(3,iglob) = b_PML_field(3,iglob)
+
+     b_veloc(1,iglob) = b_PML_field(4,iglob) 
+     b_veloc(2,iglob) = b_PML_field(5,iglob) 
+     b_veloc(3,iglob) = b_PML_field(6,iglob) 
+
+     b_accel(1,iglob) = b_PML_field(7,iglob)
+     b_accel(2,iglob) = b_PML_field(8,iglob) 
+     b_accel(3,iglob) = b_PML_field(9,iglob)   
+  enddo
+
+end subroutine read_field_on_pml_interface
+!
+!=====================================================================
+!
+subroutine save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
+                                           nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+  use specfem_par, only: NGLOB_AB,it
+  use constants, only: CUSTOM_REAL
+  integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
+
+  integer :: iglob
+          
+  do iglob = 1, nglob_interface_PML_acoustic
+     b_PML_potential(1,iglob) = potential_acoustic(iglob)
+     b_PML_potential(2,iglob) = potential_dot_acoustic(iglob) 
+     b_PML_potential(3,iglob) = potential_dot_dot_acoustic(iglob)  
+  enddo
+
+  call write_abs(1,b_PML_potential,b_reclen_PML_potential,it)
+
+end subroutine save_potential_on_pml_interface
+!
+!=====================================================================
+!
+subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
+                                           nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+  use specfem_par, only: NGLOB_AB,NSPEC_AB,ibool,NSTEP,it
+  use pml_par, only: NSPEC_CPML,CPML_to_spec
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
+
+  integer :: iglob,ispec,ispec_pml,i,j,k
+
+  do ispec_pml = 1, NSPEC_CPML
+     ispec = CPML_to_spec(ispec_pml)
+     do i = 1, NGLLX; do j = 1, NGLLY; do k = 1, NGLLZ
+        iglob = ibool(i,j,k,ispec)
+        b_potential_acoustic(iglob) = 0._CUSTOM_REAL
+        b_potential_dot_acoustic(iglob) = 0._CUSTOM_REAL 
+        b_potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL      
+     enddo; enddo; enddo
+  enddo  
+
+  call read_abs(1,b_PML_potential,b_reclen_PML_potential,NSTEP-it+1)
+
+  do iglob = 1, nglob_interface_PML_acoustic
+     b_potential_acoustic(iglob) = b_PML_potential(1,iglob)  
+     b_potential_dot_acoustic(iglob) = b_PML_potential(2,iglob) 
+     b_potential_dot_dot_acoustic(iglob) = b_PML_potential(3,iglob)   
+  enddo
+
+end subroutine read_potential_on_pml_interface
