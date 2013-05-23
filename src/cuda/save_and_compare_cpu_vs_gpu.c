@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <string.h>
 
 #ifdef WITH_MPI
 #include <mpi.h>
@@ -111,6 +112,7 @@ void get_max_from_surface_file_(int* nodes_per_iterationf,int* NSTEP) {
   float* vector = (float*)malloc(nodes_per_iteration*sizeof(float));
   float max_val;
   int i;
+  max_val = 0.0;
   for(it=0;it<*NSTEP;it++) {
     int pos = (sizeof(float)*nodes_per_iteration)*(it);
     fseek(fp,pos,SEEK_SET);
