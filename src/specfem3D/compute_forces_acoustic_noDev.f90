@@ -44,7 +44,7 @@
 !
   use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,TINYVAL_SNGL,&
                         STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS
-  use pml_par, only: ELASTIC_SIMULATION,NSPEC_CPML,is_CPML, spec_to_CPML, &
+  use pml_par, only: NSPEC_CPML,is_CPML, spec_to_CPML, &
                      k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,alpha_store,&
                      PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
                      PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new,&
