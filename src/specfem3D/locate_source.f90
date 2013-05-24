@@ -857,6 +857,7 @@
         write(IMAIN,*) ' using sources ',NSOURCES
         write(IMAIN,*) '*************************************'
         write(IMAIN,*)
+        call flush_IMAIN()
     endif
 
     if(PRINT_SOURCE_TIME_FUNCTION) then
@@ -868,6 +869,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'maximum error in location of the sources: ',sngl(maxval(final_distance_source)),' m'
     write(IMAIN,*)
+    call flush_IMAIN()
 
     ! sets new utm coordinates for best locations
     utm_x_source(:) = x_found_source(:)
@@ -892,6 +894,8 @@
     write(IMAIN,*)
     write(IMAIN,*) 'End of source detection - done'
     write(IMAIN,*)
+    call flush_IMAIN()
+
     ! output source information to a file so that we can load it and write to SU headers later
     open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
     do isource=1,NSOURCES

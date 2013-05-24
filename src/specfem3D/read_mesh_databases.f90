@@ -640,6 +640,7 @@
   call sum_all_i(count(ispec_is_poroelastic(:)),inum)
   if( myrank == 0 ) then
     write(IMAIN,*) 'total poroelastic elements :',inum
+    call flush_IMAIN()
   endif
 
   ! debug
