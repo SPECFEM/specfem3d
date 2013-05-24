@@ -72,6 +72,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Starting time iteration loop...'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! create an empty file to monitor the start of the simulation

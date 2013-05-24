@@ -163,6 +163,7 @@
     write(IMAIN,*)
     write(IMAIN,'(1x,a,a,a)') 'reading receiver information from ', trim(rec_filename), ' file'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! dimension of model in current proc
@@ -207,7 +208,10 @@
         open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
               status='old',action='read',form='unformatted',iostat=ios)
         if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
+
         write(IMAIN,*) 'station details from SU_stations_info.bin'
+        call flush_IMAIN()
+
         allocate(x_found(nrec),y_found(nrec),z_found(nrec))
         ! reads in station infos
         read(IOUT_SU) islice_selected_rec,ispec_selected_rec
@@ -245,6 +249,7 @@
         write(IMAIN,*)
         write(IMAIN,*) 'End of receiver detection - done'
         write(IMAIN,*)
+        call flush_IMAIN()
       endif
       ! everything done
       return
@@ -889,7 +894,6 @@
       endif
 
       write(IMAIN,*)
-
       endif
 
     enddo
@@ -943,7 +947,7 @@
     write(IMAIN,*)
     write(IMAIN,*) 'End of receiver detection - done'
     write(IMAIN,*)
-
+    call flush_IMAIN()
   endif    ! end of section executed by main process only
 
   ! main process broadcasts the results to all the slices

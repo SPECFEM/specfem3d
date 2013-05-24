@@ -68,6 +68,7 @@
   if( myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '  ...allocating arrays '
+    call flush_IMAIN()
   endif
   call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
@@ -82,6 +83,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up jacobian '
+    call flush_IMAIN()
   endif
   if (ANY_FAULT_IN_THIS_PROC) then
    ! compute jacobians with fault open and *store needed for ibool.
@@ -101,6 +103,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...indexing global points'
+    call flush_IMAIN()
   endif
   if (ANY_FAULT_IN_THIS_PROC) then
     call crm_ext_setup_indexing(ibool, &
@@ -115,7 +118,10 @@
   if (ANY_FAULT) then
    ! recalculate *store with faults closed
     call sync_all()
-    if (myrank == 0) write(IMAIN,*) '  ... resetting up jacobian in fault domains'
+    if (myrank == 0) then
+      write(IMAIN,*) '  ... resetting up jacobian in fault domains'
+      call flush_IMAIN()
+    endif
     if (ANY_FAULT_IN_THIS_PROC) call crm_ext_setup_jacobian(myrank, &
                            xstore,ystore,zstore,nspec, &
                            nodes_coords_ext_mesh,nnodes_ext_mesh,&
@@ -131,6 +137,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...preparing MPI interfaces '
+    call flush_IMAIN()
   endif
   call get_MPI(myrank,nglob_dummy,nspec,ibool, &
               nelmnts_ext_mesh,elmnts_ext_mesh, &
@@ -155,6 +162,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...setting up absorbing boundaries '
+    call flush_IMAIN()
   endif
   call get_absorbing_boundary(myrank,nspec,ibool, &
                             nodes_coords_ext_mesh,nnodes_ext_mesh, &
@@ -169,6 +177,7 @@
     call sync_all()
     if( myrank == 0) then
       write(IMAIN,*) '  ...setting up Moho surface'
+      call flush_IMAIN()
     endif
     call crm_setup_moho(myrank,nspec, &
                       nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
@@ -179,6 +188,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...determining velocity model'
+    call flush_IMAIN()
   endif
   call get_model(myrank)
 
@@ -186,6 +196,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
+    call flush_IMAIN()
   endif
   call get_coupling_surfaces(myrank, &
                         nspec,ibool,NPROC, &
@@ -197,6 +208,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element inner/outer separation '
+    call flush_IMAIN()
   endif
   call crm_setup_inner_outer_elemnts(myrank,nspec, &
                                     num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
@@ -207,6 +219,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...element mesh coloring '
+    call flush_IMAIN()
   endif
   call setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
@@ -219,6 +232,7 @@
   if( PML_CONDITIONS ) then
      if( myrank == 0) then
         write(IMAIN,*) '  ...creating C-PML damping profiles '
+        call flush_IMAIN()
      endif
      call pml_set_local_dampingcoeff(myrank,xstore_dummy,ystore_dummy,zstore_dummy)
   endif
@@ -227,6 +241,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...creating mass matrix '
+    call flush_IMAIN()
   endif
   call create_mass_matrices(nglob_dummy,nspec,ibool,PML_CONDITIONS,STACEY_ABSORBING_CONDITIONS)
 
@@ -234,6 +249,7 @@
   call sync_all()
   if( myrank == 0) then
     write(IMAIN,*) '  ...saving databases'
+    call flush_IMAIN()
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
   call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
@@ -968,6 +984,7 @@ subroutine crm_ext_setup_indexing(ibool, &
     write(IMAIN,*) '    top elements   :',imoho_top_all
     write(IMAIN,*) '    bottom elements:',imoho_bot_all
     write(IMAIN,*) '********'
+    call flush_IMAIN()
   endif
 
   deallocate(iglob_is_surface)
@@ -1221,6 +1238,7 @@ subroutine crm_ext_setup_indexing(ibool, &
     write(IMAIN,*) '     for overlapping of communications with calculations:'
     write(IMAIN,*) '     percentage of   edge elements ',100. -percentage_edge,'%'
     write(IMAIN,*) '     percentage of volume elements ',percentage_edge,'%'
+    call flush_IMAIN()
   endif
 
   end subroutine crm_setup_inner_outer_elemnts

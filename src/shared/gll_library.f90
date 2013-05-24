@@ -184,6 +184,7 @@
   double precision alpha,beta
   double precision xjac(np)
 
+  ! local parameters
   integer k,j,i,jmin,jm,n
   double precision xlast,dth,x,x1,x2,recsum,delx,xmin,swap
   double precision p,pd,pm1,pdm1,pm2,pdm2
@@ -201,7 +202,7 @@
   dth = 4.d0*datan(1.d0)/(2.d0*dble(n)+2.d0)
   p = 0.d0
   pd = 0.d0
-  jmin = 0
+
   do j=1,np
    if(j == 1) then
       x = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
@@ -210,6 +211,7 @@
       x2 = xlast
       x  = (x1+x2)/2.d0
    endif
+
    do k=1,K_MAX_ITER
       call jacobf (p,pd,pm1,pdm1,pm2,pdm2,np,alpha,beta,x)
       recsum = 0.d0
@@ -219,25 +221,47 @@
       enddo
       delx = -p/(pd-recsum*p)
       x    = x+delx
-      if(abs(delx) < eps) goto 31
+
+      ! exits loop if increment too small
+      if(abs(delx) < eps) exit
+
    enddo
- 31      continue
+
+   ! checks bounds
+   if( np-j+1 < 1 .or. np-j+1 > np ) stop 'error np-j+1-index in jacg'
+
    xjac(np-j+1) = x
    xlast        = x
   enddo
+
+  jmin = 0
+
+  ! orders xjac array in increasing values
   do i=1,np
    xmin = 2.d0
+   jmin = i
+
+   ! looks for index with minimum value
    do j=i,np
-      if(xjac(j) < xmin) then
-         xmin = xjac(j)
+      ! note: some compilers (cray) might be too aggressive in optimizing this loop, 
+      !       thus we need this temporary array value x to store and compare values
+      x = xjac(j)
+
+      if( x < xmin) then
+         xmin = x
          jmin = j
       endif
    enddo
+
+   ! checks bounds
+   if(jmin < 1 .or. jmin > np ) stop 'error j-index in jacg'
+
    if(jmin /= i) then
       swap = xjac(i)
       xjac(i) = xjac(jmin)
       xjac(jmin) = swap
    endif
+
   enddo
 
   end subroutine jacg
@@ -440,6 +464,7 @@
   double precision z(np),w(np)
   double precision alpha,beta
 
+  ! local paraeters
   integer n,np1,np2,i
   double precision p,pd,pm1,pdm1,pm2,pdm2
   double precision apb,dnp1,dnp2,fac1,fac2,fac3,fnorm,rcoef
@@ -510,6 +535,7 @@
   double precision alpha,beta
   double precision z(np), w(np)
 
+  ! local parameters
   integer n,nm1,i
   double precision p,pd,pm1,pdm1,pm2,pdm2
   double precision alpg,betg
@@ -535,7 +561,7 @@
   if (nm1 > 0) then
     alpg  = alpha+one
     betg  = beta+one
-    call zwgjd(z(2),w(2),nm1,alpg,betg)
+    call zwgjd(z(2:n),w(2:n),nm1,alpg,betg)
   endif
 
   z(1)  = - one
@@ -547,6 +573,7 @@
 
   call jacobf(p,pd,pm1,pdm1,pm2,pdm2,n,alpha,beta,z(1))
   w(1)  = endw1(n,alpha,beta)/(two*pd)
+
   call jacobf(p,pd,pm1,pdm1,pm2,pdm2,n,alpha,beta,z(np))
   w(np) = endw2(n,alpha,beta)/(two*pd)
 

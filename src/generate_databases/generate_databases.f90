@@ -215,6 +215,7 @@
     write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
     write(IMAIN,*) '******************************************'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! read the parameter file
@@ -229,6 +230,7 @@
     write(IMAIN,*) 'creating mesh in the model'
     write(IMAIN,*) '**************************'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! reads Databases files
@@ -419,7 +421,7 @@
           write(IMAIN,*)
        endif
     endif
-
+    call flush_IMAIN()
   endif
 
 ! makes sure processes are synchronized
@@ -452,6 +454,7 @@
       write(IMAIN,*)
       write(IMAIN,*) 'regional topography file read ranges in m from ',minval(itopo_bathy),' to ',maxval(itopo_bathy)
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
   else
     NX_TOPO = 1

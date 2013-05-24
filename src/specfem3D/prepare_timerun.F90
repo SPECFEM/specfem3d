@@ -213,7 +213,7 @@
 
     write(IMAIN,*)
     write(IMAIN,*)
-
+    call flush_IMAIN()
   endif
 
   end subroutine prepare_timerun_user_output
@@ -570,6 +570,7 @@
       write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
                     " frequency: ",sngl(f_c_source)
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
     ! clear memory variables if attenuation
@@ -714,15 +715,16 @@
 
     ! user output
     if( myrank == 0 ) then
-       write(IMAIN,*)
-       write(IMAIN,*) 'incorporating C-PML  '
-       write(IMAIN,*)
-       write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
-       write(IMAIN,*)
-       write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
-       write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
-       write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
-       write(IMAIN,*)
+      write(IMAIN,*)
+      write(IMAIN,*) 'incorporating C-PML  '
+      write(IMAIN,*)
+      write(IMAIN,*) 'number of C-PML spectral elements in the global mesh: ', NSPEC_CPML_GLOBAL
+      write(IMAIN,*)
+      write(IMAIN,*) 'thickness of C-PML layer in X direction: ', CPML_width_x
+      write(IMAIN,*) 'thickness of C-PML layer in Y direction: ', CPML_width_y
+      write(IMAIN,*) 'thickness of C-PML layer in Z direction: ', CPML_width_z
+      write(IMAIN,*)
+      call flush_IMAIN()
     endif
     call sync_all()
 
@@ -1221,6 +1223,7 @@
   if(myrank == 0 ) then
     write(IMAIN,*)
     write(IMAIN,*) "GPU Preparing Fields and Constants on Device."
+    call flush_IMAIN()
   endif
 
   ! prepares general fields on GPU
@@ -1386,6 +1389,7 @@
     write(IMAIN,*) "           used  =",used_mb," MB",nint(used_mb/total_mb*100.0),"%"
     write(IMAIN,*) "           total =",total_mb," MB",nint(total_mb/total_mb*100.0),"%"
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   end subroutine prepare_timerun_GPU
@@ -1418,6 +1422,7 @@
       write(IMAIN,*)
       write(IMAIN,*) 'Using:',NUM_THREADS, ' OpenMP threads'
       write(IMAIN,*)
+      call flush_IMAIN()
     endif
 
     ! allocate cfe_Dev_openmp local arrays for OpenMP version

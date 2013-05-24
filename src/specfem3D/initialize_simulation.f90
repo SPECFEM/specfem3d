@@ -131,6 +131,7 @@
     end select
 
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
@@ -426,6 +427,7 @@
   if(myrank == 0 ) then
     write(IMAIN,*)
     write(IMAIN,*) "GPU_MODE Active."
+    call flush_IMAIN()
   endif
 
   ! check for GPU runs
@@ -455,6 +457,7 @@
     write(IMAIN,*) "GPU number of devices per node: min =",ncuda_devices_min
     write(IMAIN,*) "                                max =",ncuda_devices_max
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   end subroutine initialize_GPU
