@@ -400,10 +400,10 @@
           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if( ier /= 0 ) stop 'error allocating array abs_boundary_ispec etc.'
 
-  if (USE_VADIM) then
+  if (OLD_TEST_TO_FIX_ONE_DAY) then
      ! VM for new method
-!! DK DK for Vadim: these two arrays are undeclared, thus I comment them out for now otherwise the code does not compile
-!! VM VM : I already decalred these 2 array in specfem_par module
+!! DK DK for VM VM: these two arrays are undeclared, thus I comment them out for now otherwise the code does not compile
+!! VM VM : I already declared these two array in the specfem_par module
      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &

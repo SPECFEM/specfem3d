@@ -84,7 +84,7 @@
   integer :: ispec,iglob,i,j,k,iface,igll
 
 ! VM VM for new method
-!! DK DK for Vadim: this MUST be declared in the main program (i.e. in the calling program) and sent
+!! DK DK for VM VM: this MUST be declared in the main program (i.e. in the calling program) and sent
 !! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
 !! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
 !! DK DK will be lost between two calls
@@ -92,10 +92,10 @@
   real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
   real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
 
-!! DK DK for Vadim: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
+!! DK DK for VM VM: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
   integer :: it_dsm
 
-  if (USE_VADIM) then
+  if (OLD_TEST_TO_FIX_ONE_DAY) then
      if ( phase_is_inner .eqv. .false. ) then
         if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
            call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
@@ -145,7 +145,7 @@
                  vx=veloc(1,iglob)
                  vy=veloc(2,iglob)
                  vz=veloc(3,iglob)
-                 if (USE_VADIM) then
+                 if (OLD_TEST_TO_FIX_ONE_DAY) then
                      vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
                      vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
                      vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
@@ -163,7 +163,7 @@
                  ty = rho_vp(i,j,k,ispec)*vn*ny + rho_vs(i,j,k,ispec)*(vy-vn*ny)
                  tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
-                 if (USE_VADIM) then
+                 if (OLD_TEST_TO_FIX_ONE_DAY) then
                      tx = tx -Tract_dsm_boundary(1,it_dsm,igll,iface)
                      ty = ty -Tract_dsm_boundary(2,it_dsm,igll,iface)
                      tz = tz -Tract_dsm_boundary(3,it_dsm,igll,iface)
@@ -209,7 +209,7 @@
     endif
   endif
 
-  if (USE_VADIM) then
+  if (OLD_TEST_TO_FIX_ONE_DAY) then
      if (phase_is_inner .eqv. .true.) then
         it_dsm = it_dsm + 1
      endif
