@@ -443,7 +443,7 @@
   integer, parameter :: IMODEL_IPATI            = 10
   integer, parameter :: IMODEL_IPATI_WATER      = 11
 
-! Vadim tests
-  logical, parameter :: USE_VADIM = .false.
+! some old tests (currently unstable; do not remove them though, we might fix this one day)
+  logical, parameter :: OLD_TEST_TO_FIX_ONE_DAY = .false.
   integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
 

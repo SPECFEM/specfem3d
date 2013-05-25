@@ -243,7 +243,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
 ! adds source term (single-force/moment-tensor solution)
-    if (.not. USE_VADIM) call compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
+    if (.not. OLD_TEST_TO_FIX_ONE_DAY) call compute_add_sources_viscoelastic( NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
