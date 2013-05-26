@@ -638,6 +638,27 @@
 !----
 !
 
+  subroutine sum_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+! standard include of the MPI library
+  include 'mpif.h'
+  include "constants.h"
+  include "precision.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+  integer ier
+
+  call MPI_ALLREDUCE(sendbuf,recvbuf,1,CUSTOM_MPI_TYPE, &
+                  MPI_SUM,MPI_COMM_WORLD,ier)
+
+  end subroutine sum_all_all_cr
+
+!
+!----
+!
+
   subroutine sum_all_i(sendbuf, recvbuf)
 
   implicit none

@@ -33,10 +33,14 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   use pml_par
+  use gravity_perturbation, only : gravity_output, GRAVITY_SIMULATION
 
   implicit none
 
   integer :: irec_local
+
+  ! write gravity perturbations
+  if (GRAVITY_SIMULATION) call gravity_output()
 
   ! save last frame
 
