@@ -35,6 +35,7 @@
   use specfem_par_movie
   use fault_solver_dynamic, only : BC_DYNFLT_init
   use fault_solver_kinematic, only : BC_KINFLT_init
+  use gravity_perturbation, only : gravity_init
 
   implicit none
 
@@ -57,6 +58,9 @@
   call BC_DYNFLT_init(prname,DT,myrank)
 
   call BC_KINFLT_init(prname,DT,myrank)
+
+  ! sets up arrays for gravity field
+  call gravity_init()
 
   ! sets up time increments
   call prepare_timerun_constants()

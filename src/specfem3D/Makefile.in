@@ -175,6 +175,7 @@ SOLVER_ARRAY_OBJECTS = \
 	$O/fault_solver_common.o \
 	$O/fault_solver_dynamic.o \
 	$O/fault_solver_kinematic.o \
+        $O/gravity_perturbation.o \
 	$O/compute_add_sources_acoustic.o \
 	$O/compute_add_sources_viscoelastic.o \
 	$O/compute_add_sources_poroelastic.o \

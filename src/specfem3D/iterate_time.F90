@@ -33,6 +33,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+  use gravity_perturbation, only : gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none
 
@@ -123,6 +124,9 @@
     if (nrec_local > 0 .or. ( WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0 ) ) then
       call write_seismograms()
     endif
+
+    ! calculating gravity field at current timestep
+    if (GRAVITY_SIMULATION) call gravity_timeseries()
 
     ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
     if (ATTENUATION ) then
