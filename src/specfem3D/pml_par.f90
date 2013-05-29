@@ -78,15 +78,15 @@ module pml_par
 
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duy_dxl_x,rmemory_duy_dyl_x
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dxl_x,rmemory_duz_dzl_x
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_duy_dxl_x,rmemory_duy_dyl_x
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_duz_dxl_x,rmemory_duz_dzl_x
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_y,rmemory_dux_dyl_y
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_dux_dxl_y,rmemory_dux_dyl_y
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duy_dxl_y,rmemory_duy_dyl_y,rmemory_duy_dzl_y
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dzl_y,rmemory_duz_dyl_y
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_duz_dzl_y,rmemory_duz_dyl_y
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_z,rmemory_dux_dzl_z
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duy_dyl_z,rmemory_duy_dzl_z
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_dux_dxl_z,rmemory_dux_dzl_z
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rmemory_duy_dyl_z,rmemory_duy_dzl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dxl
