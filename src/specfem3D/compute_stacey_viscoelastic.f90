@@ -253,3 +253,95 @@
 
   end subroutine read_dsm_file
 
+!
+!=====================================================================
+! for elastic solver on GPU
+
+! absorbing boundary term for elastic media (Stacey conditions)
+
+  subroutine compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
+                        SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
+                        Mesh_pointer,it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
+
+  implicit none
+
+  include "constants.h"
+
+! communication overlap
+  logical :: phase_is_inner
+
+! absorbing boundary surface
+  integer :: num_abs_boundary_faces
+
+! adjoint simulations
+  integer:: SIMULATION_TYPE
+  integer:: NSTEP,it
+  integer:: b_num_abs_boundary_faces,b_reclen_field
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
+
+  logical:: SAVE_FORWARD
+
+  ! GPU_MODE variables
+  integer(kind=8) :: Mesh_pointer
+
+! VM VM for new method
+!! DK DK for VM VM: this MUST be declared in the main program (i.e. in the calling program) and sent
+!! DK DK to this subroutine as an argument, otherwise it is allocated and deallocated every time the code
+!! DK DK enters this subroutine, thus this will be extremely slow, and also what the array contains
+!! DK DK will be lost between two calls
+!! VM VM I did it
+  real(kind=CUSTOM_REAL) :: Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+  real(kind=CUSTOM_REAL) :: Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)
+
+!! DK DK for VM VM: I had to add this missing declaration; but then of course now it is declared but undefined / unassigned
+  integer :: it_dsm
+
+  if (OLD_TEST_TO_FIX_ONE_DAY) then
+     if ( phase_is_inner .eqv. .false. ) then
+        if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
+           call read_dsm_file(Veloc_dsm_boundary,Tract_dsm_boundary,num_abs_boundary_faces,it_dsm)
+        endif
+     endif
+  endif
+
+  ! checks if anything to do
+  if( num_abs_boundary_faces == 0 ) return
+
+! adjoint simulations:
+  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+    ! reads in absorbing boundary array when first phase is running
+    if( phase_is_inner .eqv. .false. ) then
+      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+      ! uses fortran routine
+      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
+      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
+      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
+      ! uses c routine for faster reading
+      call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+    endif
+  endif !adjoint
+
+  if( num_abs_boundary_faces > 0 ) &
+    call compute_stacey_viscoelastic_cuda(Mesh_pointer,phase_is_inner, &
+                                          SAVE_FORWARD,b_absorb_field)
+
+  ! adjoint simulations: stores absorbed wavefield part
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+    ! writes out absorbing boundary value only when second phase is running
+    if( phase_is_inner .eqv. .true. ) then
+      ! uses fortran routine
+      !write(IOABS,rec=it) b_reclen_field,b_absorb_field,b_reclen_field
+      ! uses c routine
+      call write_abs(0,b_absorb_field,b_reclen_field,it)
+    endif
+  endif
+
+  if (OLD_TEST_TO_FIX_ONE_DAY) then
+     if (phase_is_inner .eqv. .true.) then
+        it_dsm = it_dsm + 1
+     endif
+  endif
+
+  end subroutine compute_stacey_viscoelastic_GPU
+
