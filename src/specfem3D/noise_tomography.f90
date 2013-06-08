@@ -696,7 +696,6 @@ end module user_noise_distribution
 ! read surface movie (displacement) at every time steps, injected as the source of "ensemble forward wavefield"
 ! in step 2, call noise_read_add_surface_movie(..., NSTEP-it+1 ,...)
 ! in step 3, call noise_read_add_surface_movie(..., it ,...)
-
   subroutine noise_read_add_surface_movie(nmovie_points, &
                   accel, &
                   normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
@@ -784,6 +783,48 @@ end module user_noise_distribution
   endif
 
   end subroutine noise_read_add_surface_movie
+
+! =============================================================================================================
+! =============================================================================================================
+! =============================================================================================================
+! On GPU
+! step 2/3: calculate/reconstruct the "ensemble forward wavefield"
+! read surface movie (displacement) at every time steps, injected as the source of "ensemble forward wavefield"
+! in step 2, call noise_read_add_surface_movie_GPU(..., NSTEP-it+1 ,...)
+! in step 3, call noise_read_add_surface_movie(..., it ,...)
+  subroutine noise_read_add_surface_movie_GPU(noise_surface_movie,it,num_free_surface_faces, &
+                                              Mesh_pointer,NOISE_TOMOGRAPHY)
+  implicit none
+  include "constants.h"
+  ! input parameters
+  integer :: it,num_free_surface_faces
+
+  ! from global code...
+  !integer :: nspec_top ! equals num_free_surface_faces
+  !integer :: NSPEC2D_TOP_VAL ! equal num_free_surface_faces
+  !integer, dimension(NSPEC2D_TOP_VAL) :: ibelm_top ! equals free_surface_ispec
+  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NSPEC2D_TOP_VAL) :: jacobian2D_top
+                    ! equals to:                   free_surface_jacobian2Dw including weights wgllwgll
+  !real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
+
+  ! local parameters
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
+
+  ! GPU_MODE parameters
+  integer(kind=8) :: Mesh_pointer
+  integer :: NOISE_TOMOGRAPHY
+
+  ! reads in ensemble noise sources at surface
+  if( num_free_surface_faces > 0 ) then
+
+    ! read surface movie
+    call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
+
+    call noise_read_add_surface_movie_cu(Mesh_pointer, noise_surface_movie,NOISE_TOMOGRAPHY)
+
+  endif
+
+  end subroutine noise_read_add_surface_movie_GPU
 
 
 ! =============================================================================================================
