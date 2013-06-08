@@ -163,3 +163,68 @@
   endif
 
   end subroutine compute_stacey_acoustic
+!
+!=====================================================================
+! for acoustic solver on GPU
+
+  subroutine compute_stacey_acoustic_GPU(phase_is_inner,num_abs_boundary_faces,&
+                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it,NGLOB_ADJOINT, &
+                            b_reclen_potential,b_absorb_potential, &
+                            b_num_abs_boundary_faces,Mesh_pointer)
+
+  implicit none
+
+  include "constants.h"
+
+! potentials
+
+! communication overlap
+  logical :: phase_is_inner
+
+! absorbing boundary surface
+  integer :: num_abs_boundary_faces
+
+! adjoint simulations
+  integer:: SIMULATION_TYPE
+  integer:: NSTEP,it,NGLOB_ADJOINT
+  integer:: b_num_abs_boundary_faces,b_reclen_potential
+  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_potential
+  logical:: SAVE_FORWARD
+
+  ! GPU_MODE variables
+  integer(kind=8) :: Mesh_pointer
+
+  ! checks if anything to do
+  if( num_abs_boundary_faces == 0 ) return
+
+  ! adjoint simulations:
+  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+    ! reads in absorbing boundary array when first phase is running
+    if( phase_is_inner .eqv. .false. ) then
+      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+      ! uses fortran routine
+      !read(IOABS_AC,rec=NSTEP-it+1) reclen1,b_absorb_potential,reclen2
+      !if (reclen1 /= b_reclen_potential .or. reclen1 /= reclen2) &
+      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_potential')
+      ! uses c routine for faster reading
+      call read_abs(1,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+    endif
+  endif !adjoint
+
+  ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
+  if( num_abs_boundary_faces > 0 ) &
+    call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner, &
+                                      SAVE_FORWARD,b_absorb_potential)
+
+  ! adjoint simulations: stores absorbed wavefield part
+  if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD .and. num_abs_boundary_faces > 0 ) then
+    ! writes out absorbing boundary value only when second phase is running
+    if( phase_is_inner .eqv. .true. ) then
+      ! uses fortran routine
+      !write(IOABS_AC,rec=it) b_reclen_potential,b_absorb_potential,b_reclen_potential
+      ! uses c routine
+      call write_abs(1,b_absorb_potential,b_reclen_potential,it)
+    endif
+  endif
+
+  end subroutine compute_stacey_acoustic_GPU
