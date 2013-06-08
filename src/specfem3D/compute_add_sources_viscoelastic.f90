@@ -33,7 +33,7 @@
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays,b_accel, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,GPU_MODE,Mesh_pointer  )
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
@@ -76,8 +76,6 @@
 
 !adjoint simulations
   integer:: SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT
-  logical:: GPU_MODE
-  integer(kind=8) :: Mesh_pointer
   integer:: nrec
   integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   integer:: nadj_rec_local
@@ -91,8 +89,6 @@
   double precision :: stf
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
-  ! for GPU_MODE
-  double precision, dimension(NSOURCES) :: stf_pre_compute
   integer :: isource,iglob,i,j,k,ispec
   integer :: irec_local,irec, ier
 
@@ -117,116 +113,82 @@
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
 
-    if(GPU_MODE) then
-       if( NSOURCES > 0 ) then
-          do isource = 1,NSOURCES
-             ! precomputes source time function factor
-             if(USE_FORCE_POINT_SOURCE) then
-                if( USE_RICKER_TIME_FUNCTION ) then
-                   stf_pre_compute(isource) = &
-                        comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-                else
-                   stf_pre_compute(isource) = &
-                        comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-                endif
-             else
-                if( USE_RICKER_TIME_FUNCTION ) then
-                   stf_pre_compute(isource) = &
-                        comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-                else
-                   stf_pre_compute(isource) = &
-                        comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-                endif
-             endif
-          enddo
-          ! only implements SIMTYPE=1 and NOISE_TOM=0
-          ! write(*,*) "fortran dt = ", dt
-          ! change dt -> DT
-          call compute_add_sources_el_cuda(Mesh_pointer, phase_is_inner, &
-                                          NSOURCES, stf_pre_compute, myrank)
+    do isource = 1,NSOURCES
 
-       endif
+       !   add the source (only if this proc carries the source)
+       if(myrank == islice_selected_source(isource)) then
 
-    else ! .NOT. GPU_MODE
+          ispec = ispec_selected_source(isource)
 
-      do isource = 1,NSOURCES
+          if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-         !   add the source (only if this proc carries the source)
-         if(myrank == islice_selected_source(isource)) then
+             if( ispec_is_elastic(ispec) ) then
 
-            ispec = ispec_selected_source(isource)
+                if(USE_FORCE_POINT_SOURCE) then
 
-            if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+                  !f0 = hdur(isource) !! using hdur as a FREQUENCY
+                  !if (it == 1 .and. myrank == 0) then
+                  !  write(IMAIN,*) 'using a source of dominant frequency ',f0
+                  !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+                  !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+                  !endif
 
-               if( ispec_is_elastic(ispec) ) then
-
-                  if(USE_FORCE_POINT_SOURCE) then
-
-                    !f0 = hdur(isource) !! using hdur as a FREQUENCY
-                    !if (it == 1 .and. myrank == 0) then
-                    !  write(IMAIN,*) 'using a source of dominant frequency ',f0
-                    !  write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                    !  write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-                    !endif
-
-                    if( USE_RICKER_TIME_FUNCTION) then
-                       stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-                    else
-                       stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-                    endif
-
-                    ! add the inclined force source array
-                    ! distinguish between single and double precision for reals
-                    if(CUSTOM_REAL == SIZE_REAL) then
-                       stf_used = sngl(stf)
-                    else
-                       stf_used = stf
-                    endif
-
-                    do k=1,NGLLZ
-                       do j=1,NGLLY
-                          do i=1,NGLLX
-                             iglob = ibool(i,j,k,ispec)
-                             accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-                          enddo
-                       enddo
-                    enddo
-
+                  if( USE_RICKER_TIME_FUNCTION) then
+                     stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
                   else
+                     stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                  endif
 
-                    if( USE_RICKER_TIME_FUNCTION) then
-                      stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-                    else
-                      stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-                    endif
+                  ! add the inclined force source array
+                  ! distinguish between single and double precision for reals
+                  if(CUSTOM_REAL == SIZE_REAL) then
+                     stf_used = sngl(stf)
+                  else
+                     stf_used = stf
+                  endif
 
-                    !     distinguish between single and double precision for reals
-                    if(CUSTOM_REAL == SIZE_REAL) then
-                      stf_used = sngl(stf)
-                    else
-                      stf_used = stf
-                    endif
-
-                    !     add source array
-                    do k=1,NGLLZ
-                      do j=1,NGLLY
+                  do k=1,NGLLZ
+                     do j=1,NGLLY
                         do i=1,NGLLX
-                          iglob = ibool(i,j,k,ispec)
-                          accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
+                           iglob = ibool(i,j,k,ispec)
+                           accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
                         enddo
+                     enddo
+                  enddo
+
+                else
+
+                  if( USE_RICKER_TIME_FUNCTION) then
+                    stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                  else
+                    stf = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                  endif
+
+                  !     distinguish between single and double precision for reals
+                  if(CUSTOM_REAL == SIZE_REAL) then
+                    stf_used = sngl(stf)
+                  else
+                    stf_used = stf
+                  endif
+
+                  !     add source array
+                  do k=1,NGLLZ
+                    do j=1,NGLLY
+                      do i=1,NGLLX
+                        iglob = ibool(i,j,k,ispec)
+                        accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
                       enddo
                     enddo
+                  enddo
 
-                  endif ! USE_FORCE_POINT_SOURCE
+                endif ! USE_FORCE_POINT_SOURCE
 
-                  stf_used_total = stf_used_total + stf_used
+                stf_used_total = stf_used_total + stf_used
 
-               endif ! ispec_is_elastic
-            endif ! ispec_is_inner
-         endif ! myrank
-
-      enddo ! NSOURCES
-    endif ! GPU_MODE
+             endif ! ispec_is_elastic
+          endif ! ispec_is_inner
+       endif ! myrank
+    enddo ! NSOURCES
   endif ! forward
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -352,51 +314,40 @@
 
 
       if( it < NSTEP ) then
+        ! receivers act as sources
+        irec_local = 0
+        do irec = 1,nrec
 
-        if(.NOT. GPU_MODE) then
+          ! add the source (only if this proc carries the source)
+          if (myrank == islice_selected_rec(irec)) then
+            irec_local = irec_local + 1
 
-          ! receivers act as sources
-          irec_local = 0
-          do irec = 1,nrec
+            ispec = ispec_selected_rec(irec)
+            if( ispec_is_elastic(ispec) ) then
 
-            ! add the source (only if this proc carries the source)
-            if (myrank == islice_selected_rec(irec)) then
-              irec_local = irec_local + 1
+              ! checks if element is in phase_is_inner run
+              if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
 
-              ispec = ispec_selected_rec(irec)
-              if( ispec_is_elastic(ispec) ) then
+                ! adds source array
+                do k = 1,NGLLZ
+                  do j = 1,NGLLY
+                    do i = 1,NGLLX
+                      iglob = ibool(i,j,k,ispec_selected_rec(irec))
 
-                ! checks if element is in phase_is_inner run
-                if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
-
-                  ! adds source array
-                  do k = 1,NGLLZ
-                    do j = 1,NGLLY
-                      do i = 1,NGLLX
-                        iglob = ibool(i,j,k,ispec_selected_rec(irec))
-
-                        accel(:,iglob) = accel(:,iglob)  &
-                                  + adj_sourcearrays(irec_local, &
-                                  NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                                  :,i,j,k)
-                      enddo
+                      accel(:,iglob) = accel(:,iglob)  &
+                                + adj_sourcearrays(irec_local, &
+                                NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                                :,i,j,k)
                     enddo
                   enddo
-                endif ! phase_is_inner
-              endif ! ispec_is_elastic
-            endif
-          enddo ! nrec
-        else ! GPU_MODE == .true.
-          call add_sources_el_sim_type_2_or_3(Mesh_pointer,adj_sourcearrays,phase_is_inner, &
-                                            ispec_is_inner,ispec_is_elastic, &
-                                            ispec_selected_rec,myrank,nrec, &
-                                            NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                                            islice_selected_rec,nadj_rec_local, &
-                                            NTSTEP_BETWEEN_READ_ADJSRC)
-        endif ! GPU_MODE
-      endif ! it
-    endif ! nadj_rec_local
-  endif !adjoint
+                enddo
+              endif ! phase_is_inner
+            endif ! ispec_is_elastic
+          endif
+        enddo ! nrec
+    endif ! it
+  endif ! nadj_rec_local
+endif !adjoint
 
 ! note:  b_displ() is read in after Newmark time scheme, thus
 !           b_displ(it=1) corresponds to -t0 + (NSTEP-1)*DT.
@@ -405,118 +356,86 @@
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
 
-     if(GPU_MODE) then
-        if( NSOURCES > 0 ) then
-           do isource = 1,NSOURCES
-              ! precomputes source time function factors
-              if(USE_FORCE_POINT_SOURCE) then
-                 if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = &
-                         comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-                 else
-                    stf_pre_compute(isource) = &
-                         comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-                 endif
-              else
-                 if( USE_RICKER_TIME_FUNCTION ) then
-                    stf_pre_compute(isource) = &
-                         comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-                 else
-                    stf_pre_compute(isource) = &
-                         comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-                 endif
-              endif
-           enddo
-           ! only implements SIMTYPE=3
-           call compute_add_sources_el_s3_cuda(Mesh_pointer,stf_pre_compute, &
-                NSOURCES,phase_is_inner,myrank)
+    ! backward source reconstruction
+    do isource = 1,NSOURCES
 
-        endif
+       ! add the source (only if this proc carries the source)
+       if(myrank == islice_selected_source(isource)) then
 
-    else ! .NOT. GPU_MODE
+          ispec = ispec_selected_source(isource)
 
-      ! backward source reconstruction
-      do isource = 1,NSOURCES
+          if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-         ! add the source (only if this proc carries the source)
-         if(myrank == islice_selected_source(isource)) then
+             if( ispec_is_elastic(ispec) ) then
 
-            ispec = ispec_selected_source(isource)
+                if(USE_FORCE_POINT_SOURCE) then
 
-            if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+                   !f0 = hdur(isource) !! using hdur as a FREQUENCY
+                   !if (it == 1 .and. myrank == 0) then
+                   !   write(IMAIN,*) 'using a source of dominant frequency ',f0
+                   !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+                   !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
+                   !endif
 
-               if( ispec_is_elastic(ispec) ) then
+                   if( USE_RICKER_TIME_FUNCTION ) then
+                      stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                   else
+                      stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                   endif
 
-                  if(USE_FORCE_POINT_SOURCE) then
+                   ! add the inclined force source array
+                   ! distinguish between single and double precision for reals
+                   if(CUSTOM_REAL == SIZE_REAL) then
+                      stf_used = sngl(stf)
+                   else
+                      stf_used = stf
+                   endif
 
-                     !f0 = hdur(isource) !! using hdur as a FREQUENCY
-                     !if (it == 1 .and. myrank == 0) then
-                     !   write(IMAIN,*) 'using a source of dominant frequency ',f0
-                     !   write(IMAIN,*) 'lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-                     !   write(IMAIN,*) 'lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-                     !endif
+                   do k=1,NGLLZ
+                      do j=1,NGLLY
+                         do i=1,NGLLX
+                            iglob = ibool(i,j,k,ispec)
+                            b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
+                         enddo
+                      enddo
+                   enddo
 
-                     if( USE_RICKER_TIME_FUNCTION ) then
-                        stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-                     else
-                        stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
-                     endif
+                else
 
-                    ! add the inclined force source array
-                    ! distinguish between single and double precision for reals
-                     if(CUSTOM_REAL == SIZE_REAL) then
-                        stf_used = sngl(stf)
-                     else
-                        stf_used = stf
-                     endif
+                   ! see note above: time step corresponds now to NSTEP-it
+                   ! (also compare to it-1 for forward simulation)
+                   if( USE_RICKER_TIME_FUNCTION ) then
+                     stf = comp_source_time_function_rickr( &
+                                    dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                   else
+                     stf = comp_source_time_function( &
+                                    dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
+                   endif
 
-                     do k=1,NGLLZ
-                        do j=1,NGLLY
-                           do i=1,NGLLX
-                              iglob = ibool(i,j,k,ispec)
-                              b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
-                           enddo
-                        enddo
-                     enddo
+                   ! distinguish between single and double precision for reals
+                   if(CUSTOM_REAL == SIZE_REAL) then
+                      stf_used = sngl(stf)
+                   else
+                      stf_used = stf
+                   endif
 
-                  else
+                   !  add source array
+                   do k=1,NGLLZ
+                      do j=1,NGLLY
+                         do i=1,NGLLX
+                            iglob = ibool(i,j,k,ispec_selected_source(isource))
+                            b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
+                         enddo
+                      enddo
+                   enddo
+                endif ! USE_FORCE_POINT_SOURCE
 
-                     ! see note above: time step corresponds now to NSTEP-it
-                     ! (also compare to it-1 for forward simulation)
-                     if( USE_RICKER_TIME_FUNCTION ) then
-                       stf = comp_source_time_function_rickr( &
-                                      dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-                     else
-                       stf = comp_source_time_function( &
-                                      dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-                     endif
+                stf_used_total = stf_used_total + stf_used
 
-                     ! distinguish between single and double precision for reals
-                     if(CUSTOM_REAL == SIZE_REAL) then
-                        stf_used = sngl(stf)
-                     else
-                        stf_used = stf
-                     endif
-
-                     !  add source array
-                     do k=1,NGLLZ
-                        do j=1,NGLLY
-                           do i=1,NGLLX
-                              iglob = ibool(i,j,k,ispec_selected_source(isource))
-                              b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-                           enddo
-                        enddo
-                     enddo
-                  endif ! USE_FORCE_POINT_SOURCE
-
-                  stf_used_total = stf_used_total + stf_used
-
-               endif ! elastic
-            endif ! phase_inner
-         endif ! myrank
-
-      enddo ! NSOURCES
-    endif ! GPU_MODE
+             endif ! elastic
+          endif ! phase_inner
+       endif ! myrank
+    enddo ! NSOURCES
   endif ! adjoint
 
   ! master prints out source time function to file
@@ -536,27 +455,19 @@
        ! hence, instead of a moment tensor 'sourcearrays', a 'noise_sourcearray' for a point force is needed.
        ! furthermore, the CMTSOLUTION needs to be zero, i.e., no earthquakes.
        ! now this must be manually set in DATA/CMTSOLUTION, by USERS.
-       if(.NOT. GPU_MODE) then
-          call add_source_master_rec_noise(myrank,nrec, &
+        call add_source_master_rec_noise(myrank,nrec, &
                NSTEP,accel,noise_sourcearray, &
                ibool,islice_selected_rec,ispec_selected_rec, &
                it,irec_master_noise, &
                NSPEC_AB,NGLOB_AB)
-       else ! GPU_MODE == .true.
-          call add_source_master_rec_noise_cu(Mesh_pointer, myrank, it, irec_master_noise, islice_selected_rec)
-       endif
     else if ( NOISE_TOMOGRAPHY == 2 ) then
        ! second step of noise tomography, i.e., read the surface movie saved at every timestep
        ! use the movie to drive the ensemble forward wavefield
-       call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
-                              accel, &
+       call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              ibool,noise_surface_movie, &
-                              NSTEP-it+1, &
-                              NSPEC_AB,NGLOB_AB, &
+                              ibool,noise_surface_movie,NSTEP-it+1,NSPEC_AB,NGLOB_AB, &
                               num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                              free_surface_jacobian2Dw,&
-                              Mesh_pointer,GPU_MODE,NOISE_TOMOGRAPHY)
+                              free_surface_jacobian2Dw)
         ! be careful, since ensemble forward sources are reversals of generating wavefield "eta"
         ! hence the "NSTEP-it+1", i.e., start reading from the last timestep
         ! note the ensemble forward sources are generally distributed on the surface of the earth
@@ -567,15 +478,11 @@
         ! use the movie to reconstruct the ensemble forward wavefield
         ! the ensemble adjoint wavefield is done as usual
         ! note instead of "NSTEP-it+1", now we us "it", since reconstruction is a reversal of reversal
-        call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces, &
-                              b_accel, &
+        call noise_read_add_surface_movie(NGLLSQUARE*num_free_surface_faces,b_accel, &
                               normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                              ibool,noise_surface_movie, &
-                              it, &
-                              NSPEC_AB,NGLOB_AB, &
+                              ibool,noise_surface_movie,it,NSPEC_AB,NGLOB_AB, &
                               num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                              free_surface_jacobian2Dw,&
-                               Mesh_pointer,GPU_MODE,NOISE_TOMOGRAPHY)
+                              free_surface_jacobian2Dw)
     endif
   endif
 

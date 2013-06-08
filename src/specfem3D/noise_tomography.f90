@@ -696,16 +696,11 @@ end module user_noise_distribution
 ! read surface movie (displacement) at every time steps, injected as the source of "ensemble forward wavefield"
 ! in step 2, call noise_read_add_surface_movie(..., NSTEP-it+1 ,...)
 ! in step 3, call noise_read_add_surface_movie(..., it ,...)
-  subroutine noise_read_add_surface_movie(nmovie_points, &
-                  accel, &
+  subroutine noise_read_add_surface_movie(nmovie_points,accel, &
                   normal_x_noise,normal_y_noise,normal_z_noise,mask_noise, &
-                  ibool, &
-                  noise_surface_movie, &
-                  it, &
-                  NSPEC_AB_VAL,NGLOB_AB_VAL, &
+                  ibool,noise_surface_movie,it,NSPEC_AB_VAL,NGLOB_AB_VAL, &
                   num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
-                  free_surface_jacobian2Dw, &
-                  Mesh_pointer,GPU_MODE,NOISE_TOMOGRAPHY)
+                  free_surface_jacobian2Dw)
   implicit none
   include "constants.h"
   ! input parameters
@@ -733,53 +728,41 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL) :: eta
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLSQUARE,num_free_surface_faces) :: noise_surface_movie
 
-  ! GPU_MODE parameters
-  integer(kind=8) :: Mesh_pointer
-  logical :: GPU_MODE
-  integer :: NOISE_TOMOGRAPHY
-
   ! reads in ensemble noise sources at surface
   if( num_free_surface_faces > 0 ) then
 
     ! read surface movie
     call read_abs(2,noise_surface_movie,CUSTOM_REAL*NDIM*NGLLSQUARE*num_free_surface_faces,it)
 
-    if(GPU_MODE) then
-       call noise_read_add_surface_movie_cu(Mesh_pointer, noise_surface_movie,NOISE_TOMOGRAPHY)
-    else ! GPU_MODE==0
+    ! get coordinates of surface mesh and surface displacement
+    ipoin = 0
 
-       ! get coordinates of surface mesh and surface displacement
-       ipoin = 0
+    ! loops over surface points
+    ! puts noise distrubution and direction onto the surface points
+    do iface = 1, num_free_surface_faces
 
-       ! loops over surface points
-       ! puts noise distrubution and direction onto the surface points
-       do iface = 1, num_free_surface_faces
+       ispec = free_surface_ispec(iface)
 
-          ispec = free_surface_ispec(iface)
+       do igll = 1, NGLLSQUARE
+          i = free_surface_ijk(1,igll,iface)
+          j = free_surface_ijk(2,igll,iface)
+          k = free_surface_ijk(3,igll,iface)
 
-          do igll = 1, NGLLSQUARE
-             i = free_surface_ijk(1,igll,iface)
-             j = free_surface_ijk(2,igll,iface)
-             k = free_surface_ijk(3,igll,iface)
+          ipoin = ipoin + 1
+          iglob = ibool(i,j,k,ispec)
 
-             ipoin = ipoin + 1
-             iglob = ibool(i,j,k,ispec)
+          eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
+                noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
+                noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
 
-             eta = noise_surface_movie(1,igll,iface) * normal_x_noise(ipoin) + &
-                  noise_surface_movie(2,igll,iface) * normal_y_noise(ipoin) + &
-                  noise_surface_movie(3,igll,iface) * normal_z_noise(ipoin)
-
-             accel(1,iglob) = accel(1,iglob) + eta * mask_noise(ipoin) * normal_x_noise(ipoin) &
+          accel(1,iglob) = accel(1,iglob) + eta * mask_noise(ipoin) * normal_x_noise(ipoin) &
                   * free_surface_jacobian2Dw(igll,iface)
-             accel(2,iglob) = accel(2,iglob) + eta * mask_noise(ipoin) * normal_y_noise(ipoin) &
+          accel(2,iglob) = accel(2,iglob) + eta * mask_noise(ipoin) * normal_y_noise(ipoin) &
                   * free_surface_jacobian2Dw(igll,iface)
-             accel(3,iglob) = accel(3,iglob) + eta * mask_noise(ipoin) * normal_z_noise(ipoin) &
+          accel(3,iglob) = accel(3,iglob) + eta * mask_noise(ipoin) * normal_z_noise(ipoin) &
                   * free_surface_jacobian2Dw(igll,iface) ! wgllwgll_xy(i,j) * jacobian2D_top(i,j,iface)
-          enddo
-
        enddo
-    endif ! GPU_MODE
-
+    enddo
   endif
 
   end subroutine noise_read_add_surface_movie
