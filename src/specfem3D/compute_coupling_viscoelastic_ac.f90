@@ -172,8 +172,6 @@ end subroutine compute_coupling_viscoelastic_ac
   integer :: i,j,k,ispec,iglob
   integer :: igll,iface
   logical,dimension(NGLOB_AB) :: updated_dof_ocean_load
-  ! adjoint locals
-  real(kind=CUSTOM_REAL) :: b_force_normal_comp
 
   !   initialize the updates
   updated_dof_ocean_load(:) = .false.
