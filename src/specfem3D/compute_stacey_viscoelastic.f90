@@ -68,7 +68,7 @@
 
 ! adjoint simulations
   integer:: SIMULATION_TYPE
-  integer:: NSTEP,it,NGLOB_ADJOINT
+  integer:: NSTEP,it
   integer:: b_num_abs_boundary_faces,b_reclen_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
@@ -218,7 +218,7 @@
 
   include "constants.h"
 
-  integer :: NSPEC_AB,NGLOB_AB
+  integer :: NSPEC_AB
 
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
