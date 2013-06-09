@@ -104,13 +104,30 @@
     call it_update_displacement_scheme()
 
     if(.not. GPU_MODE)then
-       ! acoustic solver
-       ! (needs to be done first, before elastic one)
-       if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
-       ! elastic solver
-       ! (needs to be done first, before poroelastic one)
-       if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
+       if(SIMULATION_TYPE == 3)then
+          if(ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION)then
+            if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
+            if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
+          else
+            if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
+            if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
+          endif
+       else
+          if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic()
+          if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic()
+       endif
+
+       if(SIMULATION_TYPE == 3)then
+          ! acoustic solver
+          ! (needs to be done after elastic one)
+          if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic_bpwf()
+          ! elastic solver
+          ! (needs to be done first, before poroelastic one)
+          if( ELASTIC_SIMULATION ) call compute_forces_viscoelastic_bpwf()
+       endif
     else
+       ! acoustic solver
+       ! (needs to be done after elastic one)
        if( ACOUSTIC_SIMULATION ) call compute_forces_acoustic_GPU()
        ! elastic solver
        ! (needs to be done first, before poroelastic one)
@@ -917,10 +934,10 @@
       if(GPU_MODE) &
           call transfer_b_fields_att_to_device(Mesh_pointer, &
                     b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
-!ZN                 b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &  ! please change the above line with this
+!!!                 b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &  ! please change the above line with this
                     b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-!ZN                 b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-!ZN                 ! please change the above line with this
+!!!                 b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+!!!                 ! please change the above line with this
                     size(b_epsilondev_xx))
     endif
 
@@ -994,9 +1011,9 @@
           ! attenuation arrays
           call transfer_b_fields_att_to_device(Mesh_pointer, &
                   b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
-!ZN               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
+!!!               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,size(b_R_xx), &
                   b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
-!ZN               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
+!!!               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz, &
                   size(b_epsilondev_xx))
         endif
       endif
@@ -1034,9 +1051,9 @@
           ! attenuation arrays
           call transfer_fields_att_from_device(Mesh_pointer, &
                      R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-!ZN                  R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+!!!                  R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
                      epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-!ZN                  epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+!!!                  epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                      size(epsilondev_xx))
         endif
 
@@ -1124,9 +1141,9 @@
       if (ATTENUATION) &
         call transfer_fields_att_from_device(Mesh_pointer, &
                     R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
-!ZN                 R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
+!!!                 R_trace,R_xx,R_yy,R_xy,R_xz,R_yz,size(R_xx), &
                     epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-!ZN                 epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
+!!!                 epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                     size(epsilondev_xx))
 
     endif

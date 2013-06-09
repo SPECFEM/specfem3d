@@ -32,10 +32,9 @@
                                   xi_source,eta_source,gamma_source, &
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
-                                  SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
+                                  SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
-                                  nadj_rec_local,adj_sourcearrays,b_potential_dot_dot_acoustic, &
-                                  NTSTEP_BETWEEN_READ_ADJSRC)
+                                  nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
@@ -74,11 +73,10 @@
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
 !adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT
+  integer:: SIMULATION_TYPE,NSTEP
   integer:: nrec
   integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
   integer:: nadj_rec_local
-  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
   logical :: ibool_read_adj_arrays
   integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: &
@@ -359,6 +357,104 @@
   endif ! nadj_rec_local > 0
 endif
 
+  ! master prints out source time function to file
+  if(PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+    time_source = (it-1)*DT - t0
+    call sum_all_cr(stf_used_total,stf_used_total_all)
+    if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
+  endif
+
+  end subroutine compute_add_sources_acoustic
+
+!
+!=====================================================================
+! for acoustic solver for back propagation wave field
+
+  subroutine compute_add_sources_acoustic_bpwf(NSPEC_AB, &
+                                  ibool,ispec_is_inner,phase_is_inner, &
+                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                                  xi_source,eta_source,gamma_source, &
+                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
+                                  sourcearrays,kappastore,ispec_is_acoustic,&
+                                  SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
+                                  b_potential_dot_dot_acoustic)
+
+  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
+                        xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+                        station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
+                        pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
+                        USE_RICKER_TIME_FUNCTION,factor_force_source
+  implicit none
+
+  include "constants.h"
+
+  integer :: NSPEC_AB
+
+! arrays with mesh parameters per slice
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore
+
+! communication overlap
+  logical, dimension(NSPEC_AB) :: ispec_is_inner
+  logical :: phase_is_inner
+
+! source
+  integer :: NSOURCES,myrank,it
+  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
+  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
+  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
+  double precision :: dt,t0
+  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
+
+  double precision, external :: comp_source_time_function,comp_source_time_function_rickr,&
+   comp_source_time_function_gauss
+
+  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
+
+!adjoint simulations
+  integer:: SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT
+  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
+
+! local parameters
+  double precision :: f0
+  double precision :: stf
+  real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+  integer :: isource,iglob,ispec,i,j,k
+
+! adjoint sources in SU format
+  integer,parameter :: nheader=240      ! 240 bytes
+
+! plotting source time function
+  if(PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner ) then
+    ! initializes total
+    stf_used_total = 0.0_CUSTOM_REAL
+  endif
+
+! NOTE: adjoint sources and backward wavefield timing:
+!             idea is to start with the backward field b_potential,.. at time (T)
+!             and convolve with the adjoint field at time (T-t)
+!
+! backward/reconstructed wavefields:
+!       time for b_potential( it ) would correspond to (NSTEP - it - 1 )*DT - t0
+!       if we read in saved wavefields b_potential() before Newmark time scheme
+!       (see sources for simulation_type 1 and seismograms)
+!       since at the beginning of the time loop, the numerical Newmark time scheme updates
+!       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
+!
+!       b_potential is now read in after Newmark time scheme:
+!       we read the backward/reconstructed wavefield at the end of the first time loop,
+!       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       assuming that until that end the backward/reconstructed wavefield and adjoint fields
+!       have a zero contribution to adjoint kernels.
+!       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
+!
+! adjoint wavefields:
+!       since the adjoint source traces were derived from the seismograms,
+!       it follows that for the adjoint wavefield, the time equivalent to ( T - t ) uses the time-reversed
+!       adjoint source traces which start at -t0 and end at time (NSTEP-1)*DT - t0
+!       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
+
 ! note:  b_potential() is read in after Newmark time scheme, thus
 !           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
@@ -470,7 +566,7 @@ endif
     if( myrank == 0 ) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
-  end subroutine compute_add_sources_acoustic
+  end subroutine compute_add_sources_acoustic_bpwf
 
 !
 !=====================================================================
