@@ -142,8 +142,7 @@ end subroutine compute_coupling_viscoelastic_ac
                                     ibool,rmassx,rmassy,rmassz, &
                                     rmass_ocean_load,accel, &
                                     free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                                    num_free_surface_faces,SIMULATION_TYPE, &
-                                    NGLOB_ADJOINT,b_accel)
+                                    num_free_surface_faces)
 
 ! updates acceleration with ocean load term:
 ! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
@@ -166,10 +165,6 @@ end subroutine compute_coupling_viscoelastic_ac
   real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
   integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
   integer :: free_surface_ispec(num_free_surface_faces)
-
-  ! adjoint simulations
-  integer :: SIMULATION_TYPE,NGLOB_ADJOINT
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: nx,ny,nz
@@ -217,6 +212,85 @@ end subroutine compute_coupling_viscoelastic_ac
         accel(3,iglob) = accel(3,iglob) &
           + (rmass_ocean_load(iglob) - rmassz(iglob)) * force_normal_comp * nz
 
+        ! done with this point
+        updated_dof_ocean_load(iglob) = .true.
+
+      endif
+
+    enddo ! igll
+  enddo ! iface
+
+  end subroutine compute_coupling_ocean
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
+                                    ibool,rmassx,rmassy,rmassz,rmass_ocean_load, &
+                                    free_surface_normal,free_surface_ijk,free_surface_ispec, &
+                                    num_free_surface_faces,SIMULATION_TYPE, &
+                                    NGLOB_ADJOINT,b_accel)
+
+! updates acceleration with ocean load term:
+! approximates ocean-bottom continuity of pressure & displacement for longer period waves (> ~20s ),
+! assuming incompressible fluid column above bathymetry ocean bottom
+
+  implicit none
+
+  include 'constants.h'
+
+  integer :: NSPEC_AB,NGLOB_AB
+
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: rmassx,rmassy,rmassz
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: rmass_ocean_load
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+
+  ! free surface
+  integer :: num_free_surface_faces
+  real(kind=CUSTOM_REAL) :: free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces)
+  integer :: free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces)
+  integer :: free_surface_ispec(num_free_surface_faces)
+
+  ! adjoint simulations
+  integer :: SIMULATION_TYPE,NGLOB_ADJOINT
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
+
+! local parameters
+  real(kind=CUSTOM_REAL) :: nx,ny,nz
+  integer :: i,j,k,ispec,iglob
+  integer :: igll,iface
+  logical,dimension(NGLOB_AB) :: updated_dof_ocean_load
+  ! adjoint locals
+  real(kind=CUSTOM_REAL) :: b_force_normal_comp
+
+  !   initialize the updates
+  updated_dof_ocean_load(:) = .false.
+
+  ! for surface elements exactly at the top of the model (ocean bottom)
+  do iface = 1,num_free_surface_faces
+
+    ispec = free_surface_ispec(iface)
+    do igll = 1, NGLLSQUARE
+      i = free_surface_ijk(1,igll,iface)
+      j = free_surface_ijk(2,igll,iface)
+      k = free_surface_ijk(3,igll,iface)
+
+      ! get global point number
+      iglob = ibool(i,j,k,ispec)
+
+      ! only update once
+      if(.not. updated_dof_ocean_load(iglob)) then
+
+        ! get normal
+        nx = free_surface_normal(1,igll,iface)
+        ny = free_surface_normal(2,igll,iface)
+        nz = free_surface_normal(3,igll,iface)
+
+        ! make updated component of right-hand side
+        ! we divide by rmass() which is 1 / M
+        ! we use the total force which includes the Coriolis term above
+
         ! adjoint simulations
         if (SIMULATION_TYPE == 3) then
           b_force_normal_comp = b_accel(1,iglob)*nx / rmassx(iglob) &
@@ -239,5 +313,6 @@ end subroutine compute_coupling_viscoelastic_ac
     enddo ! igll
   enddo ! iface
 
-  end subroutine compute_coupling_ocean
+  end subroutine compute_coupling_ocean_bpwf
+
 

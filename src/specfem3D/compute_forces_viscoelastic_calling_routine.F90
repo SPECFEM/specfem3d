@@ -52,14 +52,10 @@ subroutine compute_forces_viscoelastic()
       phase_is_inner = .true.
     endif
 
-
-! elastic term
+    ! elastic term
     if(USE_DEVILLE_PRODUCTS) then
       ! uses Deville (2002) optimizations
       call compute_forces_viscoelastic_Dev_sim1(iphase)
-
-      ! adjoint simulations: backward/reconstructed wavefield
-      if( SIMULATION_TYPE == 3 ) call compute_forces_viscoelastic_Dev_sim3(iphase)
 
     else
       ! no optimizations used
@@ -90,36 +86,6 @@ subroutine compute_forces_viscoelastic()
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.false.)
 
-      ! adjoint simulations: backward/reconstructed wavefield
-      if( SIMULATION_TYPE == 3 ) &
-        call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
-                        b_displ,b_veloc,b_accel, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat,PML_CONDITIONS, &
-                        one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, &
-                        b_alphaval,b_betaval,b_gammaval, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
-                        b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
-                        is_moho_top,is_moho_bot, &
-                        b_dsdx_top,b_dsdx_bot, &
-                        ispec2D_moho_top,ispec2D_moho_bot, &
-                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,.true.)
-
     endif
 
 
@@ -132,7 +98,7 @@ subroutine compute_forces_viscoelastic()
                         num_abs_boundary_faces, &
                         veloc,rho_vp,rho_vs, &
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                        NSTEP,it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field,&
                         it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
     endif
@@ -155,7 +121,7 @@ subroutine compute_forces_viscoelastic()
            ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
            ! adoint definition: pressure^\dagger=potential^\dagger
            call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                              ibool,accel,-potential_acoustic_adj_coupling, &
+                              ibool,accel,-potential_acoustic, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
@@ -163,17 +129,6 @@ subroutine compute_forces_viscoelastic()
                               ispec_is_inner,phase_is_inner,& 
                               PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
          endif
-
-         ! adjoint simulations
-         if( SIMULATION_TYPE == 3 ) &
-           call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                        ibool,b_accel,b_potential_dot_dot_acoustic, &
-                        num_coupling_ac_el_faces, &
-                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                        coupling_ac_el_normal, &
-                        coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,& 
-                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
 
       endif ! num_coupling_ac_el_faces
     endif
@@ -207,9 +162,9 @@ subroutine compute_forces_viscoelastic()
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
-                        ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
+                        ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays,b_accel, &
+                        nadj_rec_local,adj_sourcearrays, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
     ! assemble all the contributions between slices using MPI
@@ -222,16 +177,6 @@ subroutine compute_forces_viscoelastic()
                my_neighbours_ext_mesh, &
                request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-       ! adjoint simulations
-       if( SIMULATION_TYPE == 3 ) then
-          call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_ADJOINT,b_accel, &
-                  b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
-                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
-                  my_neighbours_ext_mesh, &
-                  b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
-       endif !adjoint
-
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_vector_ext_mesh_w_ordered(NPROC,NGLOB_AB,accel, &
@@ -240,16 +185,6 @@ subroutine compute_forces_viscoelastic()
                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                             my_neighbours_ext_mesh,myrank)
-      ! adjoint simulations
-      if( SIMULATION_TYPE == 3 ) then
-         call assemble_MPI_vector_ext_mesh_w_ordered(NPROC,NGLOB_ADJOINT,b_accel, &
-                             b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
-                             max_nibool_interfaces_ext_mesh, &
-                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
-                             my_neighbours_ext_mesh,myrank)
-      endif !adjoint
-
     endif
 
  enddo
@@ -264,12 +199,6 @@ subroutine compute_forces_viscoelastic()
   accel(1,:) = accel(1,:)*rmassx(:)
   accel(2,:) = accel(2,:)*rmassy(:)
   accel(3,:) = accel(3,:)*rmassz(:)
-  ! adjoint simulations
-  if (SIMULATION_TYPE == 3) then
-     b_accel(1,:) = b_accel(1,:)*rmassx(:)
-     b_accel(2,:) = b_accel(2,:)*rmassy(:)
-     b_accel(3,:) = b_accel(3,:)*rmassz(:)
-  endif !adjoint
 
 ! updates acceleration with ocean load term
   if(APPROXIMATE_OCEAN_LOAD) then
@@ -277,8 +206,7 @@ subroutine compute_forces_viscoelastic()
                                 ibool,rmassx,rmassy,rmassz, &
                                 rmass_ocean_load,accel, &
                                 free_surface_normal,free_surface_ijk,free_surface_ispec, &
-                                num_free_surface_faces,SIMULATION_TYPE, &
-                                NGLOB_ADJOINT,b_accel)
+                                num_free_surface_faces)
   endif
 
   ! C-PML boundary
@@ -325,8 +253,6 @@ subroutine compute_forces_viscoelastic()
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
   veloc(:,:) = veloc(:,:) + deltatover2*accel(:,:)
-  ! adjoint simulations
-  if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
   if(PML_CONDITIONS)then
     if(SIMULATION_TYPE == 1 .and. SAVE_FORWARD)then
@@ -338,6 +264,187 @@ subroutine compute_forces_viscoelastic()
   endif
 
 end subroutine compute_forces_viscoelastic
+!
+!=====================================================================
+
+! elastic solver for back 
+
+subroutine compute_forces_viscoelastic_bpwf()
+
+  use specfem_par
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+  use pml_par
+  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
+  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
+
+  implicit none
+
+  integer:: iphase
+  logical:: phase_is_inner
+
+! distinguishes two runs: for points on MPI interfaces, and points within the partitions
+  do iphase=1,2
+
+    !first for points on MPI interfaces
+    if( iphase == 1 ) then
+      phase_is_inner = .false.
+    else
+      phase_is_inner = .true.
+    endif
+
+
+! elastic term
+    if(USE_DEVILLE_PRODUCTS) then
+
+      ! adjoint simulations: backward/reconstructed wavefield
+      if( SIMULATION_TYPE == 3 ) call compute_forces_viscoelastic_Dev_sim3(iphase)
+
+    else
+      ! no optimizations used
+      ! adjoint simulations: backward/reconstructed wavefield
+      if( SIMULATION_TYPE == 3 ) &
+        call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+                        b_displ,b_veloc,b_accel, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        kappastore,mustore,jacobian,ibool, &
+                        ATTENUATION,deltat,PML_CONDITIONS, &
+                        one_minus_sum_beta,factor_common, &
+                        one_minus_sum_beta_kappa,factor_common_kappa, &
+                        b_alphaval,b_betaval,b_gammaval, &
+                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
+                        b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                        b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                        b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
+                        ANISOTROPY,NSPEC_ANISO, &
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
+                        c55store,c56store,c66store, &
+                        SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
+                        is_moho_top,is_moho_bot, &
+                        b_dsdx_top,b_dsdx_bot, &
+                        ispec2D_moho_top,ispec2D_moho_bot, &
+                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
+                        phase_ispec_inner_elastic,.true.)
+
+    endif
+
+
+! adds elastic absorbing boundary term to acceleration (Stacey conditions)
+    if( STACEY_ABSORBING_CONDITIONS ) then
+       call compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces, &
+                        ispec_is_elastic,SIMULATION_TYPE, &
+                        NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+    endif
+
+
+! acoustic coupling
+    if( ACOUSTIC_SIMULATION ) then
+      if( num_coupling_ac_el_faces > 0 ) then
+         ! adjoint simulations
+         if( SIMULATION_TYPE == 3 ) &
+           call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                        ibool,b_accel,b_potential_dot_dot_acoustic, &
+                        num_coupling_ac_el_faces, &
+                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                        coupling_ac_el_normal, &
+                        coupling_ac_el_jacobian2Dw, &
+                        ispec_is_inner,phase_is_inner,& 
+                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
+      endif ! num_coupling_ac_el_faces
+    endif
+
+
+! poroelastic coupling
+    if( POROELASTIC_SIMULATION ) then
+        stop 'poroelastic-elastic coupling error'
+    endif
+
+! adds source term (single-force/moment-tensor solution)
+    if (.not. OLD_TEST_TO_FIX_ONE_DAY) call compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
+                        b_accel,NOISE_TOMOGRAPHY)
+
+    ! assemble all the contributions between slices using MPI
+    if( phase_is_inner .eqv. .false. ) then
+       ! sends accel values to corresponding MPI interface neighbors
+       ! adjoint simulations
+       if( SIMULATION_TYPE == 3 ) then
+          call assemble_MPI_vector_ext_mesh_s(NPROC,NGLOB_ADJOINT,b_accel, &
+                  b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
+                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                  my_neighbours_ext_mesh, &
+                  b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
+       endif !adjoint
+
+    else
+      ! waits for send/receive requests to be completed and assembles values
+      ! adjoint simulations
+      if( SIMULATION_TYPE == 3 ) then
+         call assemble_MPI_vector_ext_mesh_w_ordered(NPROC,NGLOB_ADJOINT,b_accel, &
+                             b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+                             max_nibool_interfaces_ext_mesh, &
+                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                             b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
+                             my_neighbours_ext_mesh,myrank)
+      endif !adjoint
+
+    endif
+
+  enddo
+
+  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
+  ! adjoint simulations
+  if (SIMULATION_TYPE == 3) then
+     b_accel(1,:) = b_accel(1,:)*rmassx(:)
+     b_accel(2,:) = b_accel(2,:)*rmassy(:)
+     b_accel(3,:) = b_accel(3,:)*rmassz(:)
+  endif !adjoint
+
+! updates acceleration with ocean load term
+  if(APPROXIMATE_OCEAN_LOAD) then
+    call compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
+                                     ibool,rmassx,rmassy,rmassz,rmass_ocean_load, &
+                                     free_surface_normal,free_surface_ijk,free_surface_ispec, &
+                                     num_free_surface_faces,SIMULATION_TYPE, &
+                                     NGLOB_ADJOINT,b_accel)
+  endif
+
+
+! updates velocities
+! Newmark finite-difference time scheme with elastic domains:
+! (see e.g. Hughes, 1987; Chaljub et al., 2003)
+!
+! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
+! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
+! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
+!
+! where
+!   u, v, a are displacement,velocity & acceleration
+!   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
+!   f denotes a source term (acoustic/elastic)
+!   chi_dot_dot is acoustic (fluid) potential ( dotted twice with respect to time)
+!
+! corrector:
+!   updates the velocity term which requires a(t+delta)
+  ! adjoint simulations
+  if (SIMULATION_TYPE == 3) b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
+
+end subroutine compute_forces_viscoelastic_bpwf
 !
 !-------------------------------------------------------------------------------------------------
 !

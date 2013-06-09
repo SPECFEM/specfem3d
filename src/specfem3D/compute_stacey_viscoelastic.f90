@@ -35,7 +35,7 @@
                         num_abs_boundary_faces, &
                         veloc,rho_vp,rho_vs, &
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                        NSTEP,it, &
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
                         it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary)
 
@@ -72,7 +72,6 @@
   integer:: b_num_abs_boundary_faces,b_reclen_field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
 
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
   logical:: SAVE_FORWARD
 
 ! local parameters
@@ -171,9 +170,7 @@
               accel(3,iglob) = accel(3,iglob) - tz*jacobianw
 
               ! adjoint simulations
-              if (SIMULATION_TYPE == 3) then
-                 b_accel(:,iglob) = b_accel(:,iglob) - b_absorb_field(:,igll,iface)
-              else if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+              if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
                  b_absorb_field(1,igll,iface) = tx*jacobianw
                  b_absorb_field(2,igll,iface) = ty*jacobianw
                  b_absorb_field(3,igll,iface) = tz*jacobianw
@@ -202,6 +199,99 @@
   endif
 
   end subroutine compute_stacey_viscoelastic
+!
+!=====================================================================
+
+! for elastic solver
+
+! absorbing boundary term for elastic media (Stacey conditions)
+
+  subroutine compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
+                        ibool,ispec_is_inner,phase_is_inner, &
+                        abs_boundary_ijk,abs_boundary_ispec, &
+                        num_abs_boundary_faces, &
+                        ispec_is_elastic,SIMULATION_TYPE, &
+                        NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+
+  implicit none
+
+  include "constants.h"
+
+  integer :: NSPEC_AB,NGLOB_AB
+
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
+
+! communication overlap
+  logical, dimension(NSPEC_AB) :: ispec_is_inner
+  logical :: phase_is_inner
+
+  logical, dimension(NSPEC_AB) :: ispec_is_elastic
+
+! absorbing boundary surface
+  integer :: num_abs_boundary_faces
+  integer :: abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces)
+  integer :: abs_boundary_ispec(num_abs_boundary_faces)
+
+! adjoint simulations
+  integer:: SIMULATION_TYPE
+  integer:: NSTEP,it,NGLOB_ADJOINT
+  integer:: b_num_abs_boundary_faces,b_reclen_field
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_field
+
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
+
+! local parameters
+  integer :: ispec,iglob,i,j,k,iface,igll
+
+  ! checks if anything to do
+  if( num_abs_boundary_faces == 0 ) return
+
+! adjoint simulations:
+  if (SIMULATION_TYPE == 3 .and. num_abs_boundary_faces > 0)  then
+    ! reads in absorbing boundary array when first phase is running
+    if( phase_is_inner .eqv. .false. ) then
+      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+      ! uses fortran routine
+      !read(IOABS,rec=NSTEP-it+1) reclen1,b_absorb_field,reclen2
+      !if (reclen1 /= b_reclen_field .or. reclen1 /= reclen2) &
+      !  call exit_mpi(0,'Error reading absorbing contribution b_absorb_field')
+      ! uses c routine for faster reading
+      call read_abs(0,b_absorb_field,b_reclen_field,NSTEP-it+1)
+    endif
+  endif !adjoint
+
+  ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
+  do iface=1,num_abs_boundary_faces
+
+     ispec = abs_boundary_ispec(iface)
+
+     if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+
+        if( ispec_is_elastic(ispec) ) then
+
+           ! reference gll points on boundary face
+           do igll = 1,NGLLSQUARE
+
+              ! gets local indices for GLL point
+              i = abs_boundary_ijk(1,igll,iface)
+              j = abs_boundary_ijk(2,igll,iface)
+              k = abs_boundary_ijk(3,igll,iface)
+
+              ! gets velocity
+              iglob=ibool(i,j,k,ispec)
+
+              ! adjoint simulations
+              if (SIMULATION_TYPE == 3) then
+                 b_accel(:,iglob) = b_accel(:,iglob) - b_absorb_field(:,igll,iface)
+              endif !adjoint
+
+           enddo
+        endif ! ispec_is_elastic
+     endif ! ispec_is_inner
+  enddo
+
+  end subroutine compute_stacey_viscoelastic_bpwf
 
 !---------------------------------------------------------------------------------------
 
