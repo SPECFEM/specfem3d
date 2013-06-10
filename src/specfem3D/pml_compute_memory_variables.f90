@@ -2586,3 +2586,255 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
 end subroutine pml_compute_memory_variables_acoustic_elastic
 
+!
+!=====================================================================
+!
+subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
+                                                         pressure,potential_acoustic,potential_dot_acoustic,&
+                                                         num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
+  ! calculates C-PML elastic memory variables and computes stress sigma
+
+  ! second-order accurate convolution term calculation from equation (21) of
+  ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
+  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
+
+  use specfem_par, only: NGLOB_AB,it,deltat
+  use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,alpha_store
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
+                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+
+  implicit none
+
+  integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
+  real(kind=CUSTOM_REAL) :: pressure
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: & 
+                                    rmemory_coupling_el_ac_potential
+
+  ! local parameters
+  integer :: i,j,k
+  real(kind=CUSTOM_REAL) :: bb,coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2
+  real(kind=CUSTOM_REAL) :: A12,A13,A14
+
+
+  if( CPML_regions(ispec_CPML) == CPML_X_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- X-surface C-PML ---------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML)
+    A14 = 0.d0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                      + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * coef1_1 &
+                      + (potential_acoustic(iglob)) * coef2_1
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
+    !------------------------------------------------------------------------------
+    !---------------------------- Y-surface C-PML ---------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_z
+    A12 = k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_y(i,j,k,ispec_CPML)
+    A14 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                      + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * coef1_1 &
+                      + (potential_acoustic(iglob)) * coef2_1
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)  
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- Z-surface C-PML ---------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_z
+    A12 = 1.d0
+    A13 = 0.d0
+    A14 = 0.d0
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = 0.d0
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- XY-edge C-PML -----------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+          + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
+          + it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+    A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+         + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * coef1_1 &
+         + (potential_acoustic(iglob)) * coef2_1
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = coef0_2 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) &
+         + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
+         + (potential_acoustic(iglob)) * it*deltat * coef2_2
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- XZ-edge C-PML -----------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML)
+    A14 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+         + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * coef1_1 &
+         + (potential_acoustic(iglob)) * coef2_1
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- YZ-edge C-PML -----------------------------------
+    !------------------------------------------------------------------------------
+
+    ! displ_z
+    A12 = k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_y(i,j,k,ispec_CPML)
+    A14 = 0.0
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+         + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * coef1_1 &
+         + (potential_acoustic(iglob)) * coef2_1
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+
+
+  else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
+
+    !------------------------------------------------------------------------------
+    !---------------------------- XYZ-corner C-PML --------------------------------
+    !------------------------------------------------------------------------------
+    ! displ_z
+    A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
+    A13 = d_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML) &
+          + d_store_y(i,j,k,ispec_CPML) * k_store_x(i,j,k,ispec_CPML) &
+          + it*deltat * d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+    A14 = - d_store_x(i,j,k,ispec_CPML) * d_store_y(i,j,k,ispec_CPML)
+
+    bb = alpha_store(i,j,k,ispec_CPML)
+    coef0_1 = exp(-bb * deltat)
+
+    if( abs(bb) > 1.d-5 ) then
+       coef1_1 = (1.d0 - exp(-bb * deltat/2.d0)) / bb
+       coef2_1 = (1.d0 - exp(-bb * deltat/2.d0)) * exp(-bb * deltat/2.d0) / bb
+    else
+       coef1_1 = deltat/2.0d0
+       coef2_1 = deltat/2.0d0
+    endif
+
+    coef0_2 = coef0_1
+    coef1_2 = coef1_1
+    coef2_2 = coef2_1
+
+    rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+         + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * coef1_1 &
+         + (potential_acoustic(iglob)) * coef2_1
+    rmemory_coupling_el_ac_potential(i,j,k,iface,2) = coef0_2 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) &
+         + (potential_acoustic(iglob) + deltat * potential_dot_acoustic(iglob)) * it*deltat * coef1_2 &
+         + (potential_acoustic(iglob)) * it*deltat * coef2_2
+
+    pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+  else
+    stop 'wrong PML flag in PML memory variable calculation routine'
+  endif
+
+end subroutine pml_compute_memory_variables_elastic_acoustic
+

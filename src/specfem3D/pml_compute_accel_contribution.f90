@@ -426,8 +426,8 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 !             A3 = temp_A3 + (it+0.0)*deltat*temp_A4 + ((it+0.0)*deltat)**2*temp_A5
 !             A4 = -temp_A4 -2.0*(it+0.0)*deltat*temp_A5
 !             A5 = temp_A5
-!ZN the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
-!ZN exprssion of A3,A4,A5 in order to stabilized the code. 
+!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
+!!! exprssion of A3,A4,A5 in order to stabilized the code. 
 
               A3 = temp_A3
               A4 = 0.0
@@ -786,8 +786,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 !             A4 = -temp_A4 -2.0*it*deltat*temp_A5
 !             A5 = temp_A5
 
-!ZN the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
-!ZN exprssion of A3,A4,A5 in order to stabilized the code. 
+!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
+!!! exprssion of A3,A4,A5 in order to stabilized the code. 
 
               A3 = temp_A3
               A4 = 0.0

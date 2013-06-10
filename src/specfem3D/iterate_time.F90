@@ -817,7 +817,7 @@
   if (SIMULATION_TYPE == 3 .and. .NOT. GPU_MODE) then
     ! acoustic backward fields
     if( ACOUSTIC_SIMULATION ) then
-      if(PML_CONDITIONS)then  !ZN
+      if(PML_CONDITIONS)then  
         if(nglob_interface_PML_acoustic > 0)then
           call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
                                                nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
@@ -833,7 +833,7 @@
 
     ! elastic backward fields
     if( ELASTIC_SIMULATION ) then
-      if(PML_CONDITIONS)then  !ZN
+      if(PML_CONDITIONS)then  
         if(nglob_interface_PML_elastic > 0)then
           call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
                                            b_PML_field,b_reclen_PML_field)

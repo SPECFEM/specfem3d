@@ -59,6 +59,29 @@
 
      ! returns elastic mass matrix
      if( PML_CONDITIONS ) then
+        if(ACOUSTIC_SIMULATION)then
+          allocate(rmass_elastic_interface(nglob),stat=ier)
+          if(ier /= 0) stop 'error allocating array rmass'
+          rmass_elastic_interface(:) = 0._CUSTOM_REAL
+          do ispec=1,nspec
+            if( ispec_is_elastic(ispec) ) then
+              do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
+                 iglob = ibool(i,j,k,ispec)
+                 weight = wxgll(i)*wygll(j)*wzgll(k)
+                 jacobianl = jacobianstore(i,j,k,ispec)
+
+                 if(CUSTOM_REAL == SIZE_REAL) then
+                    rmass_elastic_interface(iglob) = rmass_elastic_interface(iglob) + &
+                       sngl( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)) )
+                 else
+                    rmass_elastic_interface(iglob) = rmass_elastic_interface(iglob) + &
+                       jacobianl * weight * rhostore(i,j,k,ispec)
+                 endif
+              enddo;enddo;enddo
+            endif
+          enddo
+        endif
+
         call create_mass_matrices_pml_elastic(nspec,ibool)
      else
         do ispec=1,nspec

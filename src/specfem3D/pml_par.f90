@@ -108,6 +108,9 @@ module pml_par
   ! C-PML contribution to update displacement on elastic/acoustic interface
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ
 
+  ! C-PML contribution to update displacement on elastic/acoustic interface
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential
+
   ! --------------------------------------------------------------------------------------------
   ! for adjoint tomography
   ! need the array stored the points on interface between PML and interior computational domain
@@ -115,7 +118,7 @@ module pml_par
   integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic 
   integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic 
 
-  integer :: b_reclen_PML_field,b_reclen_PML_potential !ZN
+  integer :: b_reclen_PML_field,b_reclen_PML_potential 
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_PML_field,b_PML_potential
 
 end module pml_par

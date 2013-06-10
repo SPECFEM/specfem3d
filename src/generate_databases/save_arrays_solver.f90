@@ -112,6 +112,11 @@
 ! elastic
   if( ELASTIC_SIMULATION ) then
     write(IOUT) rmass
+    if(PML_CONDITIONS)then
+       if(ACOUSTIC_SIMULATION)then
+          write(IOUT)rmass_elastic_interface
+       endif
+    endif
     if( APPROXIMATE_OCEAN_LOAD) then
       write(IOUT) rmass_ocean_load
     endif

@@ -139,6 +139,18 @@
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
+    if(PML_CONDITIONS)then !ZN
+       if(ACOUSTIC_SIMULATION)then !ZN
+          allocate(rmass_elastic_interface(NGLOB_AB),stat=ier) !ZN          
+          if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface' !ZN
+          rmass_elastic_interface(:) = 0._CUSTOM_REAL
+          if(SIMULATION_TYPE == 3)then
+            allocate(accel_interface(NDIM,NGLOB_AB),stat=ier) !ZN
+            if( ier /= 0 ) stop 'error allocating array accel_interface'
+            accel_interface(:,:) = 0._CUSTOM_REAL
+          endif
+       endif !ZN
+    endif !ZN
     if( ier /= 0 ) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB), &
@@ -214,6 +226,12 @@
     ! reads mass matrices
     read(27,iostat=ier) rmass
     if( ier /= 0 ) stop 'error reading in array rmass'
+    if(PML_CONDITIONS)then !ZN
+       if(ACOUSTIC_SIMULATION)then !ZN        
+          read(27,iostat=ier) rmass_elastic_interface !ZN 
+          if( ier /= 0 ) stop 'error reading in array rmass_elastic_interface' !ZN 
+       endif !ZN
+    endif !ZN
 
     if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix
