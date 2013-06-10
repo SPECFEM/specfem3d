@@ -324,6 +324,11 @@
   if(PML_CONDITIONS)then
      if( ELASTIC_SIMULATION ) then
        deallocate(rmass)
+       if(PML_CONDITIONS)then
+         if(ACOUSTIC_SIMULATION)then
+            write(IOUT)rmass_elastic_interface
+         endif
+       endif
      endif
      if( ACOUSTIC_SIMULATION) then
        deallocate(rmass_acoustic)

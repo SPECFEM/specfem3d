@@ -316,6 +316,10 @@ module specfem_par_elastic
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
+! PML on fluid-solid interface
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_interface 
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface 
+
 ! Stacey
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vp,rho_vs

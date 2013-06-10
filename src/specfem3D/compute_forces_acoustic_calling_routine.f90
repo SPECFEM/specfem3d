@@ -72,6 +72,12 @@ subroutine compute_forces_acoustic()
                         ibool,free_surface_ijk,free_surface_ispec, &
                         num_free_surface_faces,ispec_is_acoustic)
 
+  if(PML_CONDITIONS)then
+    if(ELASTIC_SIMULATION ) then
+      potential_dot_dot_acoustic_interface = 0.0
+    endif
+  endif
+
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
   do iphase=1,2
 
@@ -130,7 +136,8 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
                               PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                              potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ)
+                              potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
+                              SIMULATION_TYPE,.false.,accel_interface) 
 
         else
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
@@ -143,7 +150,8 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
                               PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                              potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ)
+                              potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
+                              SIMULATION_TYPE,.false.,accel_interface) 
         endif
       endif
     endif
@@ -171,7 +179,7 @@ subroutine compute_forces_acoustic()
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         xi_source,eta_source,gamma_source, &
-                        hdur,hdur_gaussian,tshift_src,dt,t0, &
+                        hdur,hdur_gaussian,tshift_src,dt,t0, & 
                         sourcearrays,kappastore,ispec_is_acoustic,&
                         SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -186,7 +194,6 @@ subroutine compute_forces_acoustic()
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
                         my_neighbours_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
-
     else
 
       ! waits for send/receive requests to be completed and assembles values
@@ -195,7 +202,6 @@ subroutine compute_forces_acoustic()
                         max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
-
     endif !phase_is_inner
 
   enddo
@@ -401,7 +407,8 @@ subroutine compute_forces_acoustic_bpwf()
                             coupling_ac_el_jacobian2Dw, &
                             ispec_is_inner,phase_is_inner,& 
                             PML_CONDITIONS,spec_to_CPML,is_CPML,&
-                            potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ) 
+                            potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
+                            SIMULATION_TYPE,.true.,accel_interface)  
       endif
     endif
 

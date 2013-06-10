@@ -84,7 +84,7 @@ subroutine compute_forces_viscoelastic()
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,.false.)
+                        phase_ispec_inner_elastic,.false.,accel_interface,ACOUSTIC_SIMULATION)
 
     endif
 
@@ -116,7 +116,12 @@ subroutine compute_forces_viscoelastic()
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,& 
-                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
+                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
+                        SIMULATION_TYPE,.false.,accel_interface,&
+                        rmemory_coupling_el_ac_potential,spec_to_CPML,&
+                        potential_acoustic,potential_dot_acoustic) 
+ 
+
          else
            ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
            ! adoint definition: pressure^\dagger=potential^\dagger
@@ -127,7 +132,11 @@ subroutine compute_forces_viscoelastic()
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
                               ispec_is_inner,phase_is_inner,& 
-                              PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
+                              PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
+                              SIMULATION_TYPE,.false.,accel_interface,&
+                              rmemory_coupling_el_ac_potential,spec_to_CPML,&
+                              potential_acoustic,potential_dot_acoustic) 
+  
          endif
 
       endif ! num_coupling_ac_el_faces
@@ -200,6 +209,16 @@ subroutine compute_forces_viscoelastic()
   accel(2,:) = accel(2,:)*rmassy(:)
   accel(3,:) = accel(3,:)*rmassz(:)
 
+  if(SIMULATION_TYPE == 3)then
+    if(PML_CONDITIONS)then
+      if(ACOUSTIC_SIMULATION)then
+        accel_interface(1,:) = accel_interface(1,:)*rmass_elastic_interface(:)
+        accel_interface(2,:) = accel_interface(2,:)*rmass_elastic_interface(:)
+        accel_interface(3,:) = accel_interface(3,:)*rmass_elastic_interface(:)
+      endif
+    endif
+  endif
+
 ! updates acceleration with ocean load term
   if(APPROXIMATE_OCEAN_LOAD) then
     call compute_coupling_ocean(NSPEC_AB,NGLOB_AB, &
@@ -229,6 +248,12 @@ subroutine compute_forces_viscoelastic()
                     accel(:,iglob) = 0.0
                     veloc(:,iglob) = 0.0
                     displ(:,iglob) = 0.0
+
+                   if(SIMULATION_TYPE ==3)then
+                     if(ACOUSTIC_SIMULATION)then
+                       accel_interface(:,iglob) = 0.0
+                     endif
+                   endif
 
                  enddo
              endif ! ispec_is_elastic
@@ -331,7 +356,7 @@ subroutine compute_forces_viscoelastic_bpwf()
                         b_dsdx_top,b_dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,.true.)
+                        phase_ispec_inner_elastic,.true.,accel_interface,ACOUSTIC_SIMULATION)
 
     endif
 
@@ -360,7 +385,11 @@ subroutine compute_forces_viscoelastic_bpwf()
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner,& 
-                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface) 
+                        PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
+                        SIMULATION_TYPE,.true.,accel_interface,&
+                        rmemory_coupling_el_ac_potential,spec_to_CPML,&
+                        potential_acoustic,potential_dot_acoustic) 
+  
       endif ! num_coupling_ac_el_faces
     endif
 

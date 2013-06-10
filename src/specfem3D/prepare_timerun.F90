@@ -302,6 +302,17 @@
     rmassy(:) = 1._CUSTOM_REAL / rmassy(:)
     rmassz(:) = 1._CUSTOM_REAL / rmassz(:)
 
+    if(PML_CONDITIONS)then
+      if(ACOUSTIC_SIMULATION)then      
+        call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_elastic_interface, &  
+                        num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &  
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &  
+                        my_neighbours_ext_mesh)
+        where(rmass_elastic_interface <= 0._CUSTOM_REAL) rmass_elastic_interface = 1._CUSTOM_REAL
+        rmass_elastic_interface(:) = 1._CUSTOM_REAL / rmass_elastic_interface(:)
+      endif  
+    endif
+
     ! ocean load
     if(APPROXIMATE_OCEAN_LOAD ) then
       call assemble_MPI_scalar_ext_mesh(NPROC,NGLOB_AB,rmass_ocean_load, &
@@ -1292,14 +1303,14 @@
                                   SAVE_FORWARD, &
                                   COMPUTE_AND_STORE_STRAIN, &
                                   epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!ZN                               epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
+!!!                               epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                   epsilondev_xz,epsilondev_yz, &
                                   ATTENUATION, &
                                   size(R_xx), &
                                   R_xx,R_yy,R_xy,R_xz,R_yz, &
-!ZN                               R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+!!!                               R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
                                   one_minus_sum_beta,factor_common, &
-!ZN                                  one_minus_sum_beta_kappa,factor_commonkappa, &
+!!!                                  one_minus_sum_beta_kappa,factor_commonkappa, &
                                   alphaval,betaval,gammaval, &
                                   APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
                                   NOISE_TOMOGRAPHY, &
@@ -1319,12 +1330,12 @@
                                   COMPUTE_AND_STORE_STRAIN, &
                                   epsilon_trace_over_3, &
                                   b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-!ZN                               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+!!!                               b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                                   b_epsilondev_xz,b_epsilondev_yz, &
                                   b_epsilon_trace_over_3, &
                                   ATTENUATION,size(R_xx), &
                                   b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-!ZN                               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+!!!                               b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
                                   b_alphaval,b_betaval,b_gammaval, &
                                   APPROXIMATE_HESS_KL)
 

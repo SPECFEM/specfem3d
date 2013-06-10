@@ -50,7 +50,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,backward_simulation)
+                        phase_ispec_inner_elastic,backward_simulation,accel_interface,ACOUSTIC_SIMULATION)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,N_SLS,SAVE_MOHO_MESH,ONE_THIRD,FOUR_THIRDS
   use pml_par, only: NSPEC_CPML,is_CPML, spec_to_CPML, accel_elastic_CPML, &
@@ -73,6 +73,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
+  logical :: ACOUSTIC_SIMULATION
 
 ! displacement, velocity and acceleration
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
@@ -139,6 +140,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 ! C-PML absorbing boundary conditions
   logical :: PML_CONDITIONS
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel_interface
 
 ! CPML adjoint
   logical :: backward_simulation
@@ -803,6 +805,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
              ! do not merge this second line with the first using an ".and." statement
              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
              if(is_CPML(ispec)) then
+                if(SIMULATION_TYPE == 3)then
+                  if(ACOUSTIC_SIMULATION)then
+                    accel_interface(:,iglob) = accel(:,iglob)
+                  endif
+                endif
                 accel(1,iglob) = accel(1,iglob) - accel_elastic_CPML(1,i,j,k)
                 accel(2,iglob) = accel(2,iglob) - accel_elastic_CPML(2,i,j,k)
                 accel(3,iglob) = accel(3,iglob) - accel_elastic_CPML(3,i,j,k)

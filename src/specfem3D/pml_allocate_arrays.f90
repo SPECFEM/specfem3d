@@ -182,6 +182,13 @@ subroutine pml_allocate_arrays()
      if(ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'  
   endif 
 
+  if(SIMULATION_TYPE == 3)then
+    if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then   
+       allocate(rmemory_coupling_el_ac_potential(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)     
+       if(ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential array'    
+    endif   
+  endif
+
   spec_to_CPML(:) = 0
 
   CPML_type(:) = 0
@@ -255,6 +262,12 @@ subroutine pml_allocate_arrays()
   if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then 
      rmemory_coupling_ac_el_displ(:,:,:,:,:,:) = 0._CUSTOM_REAL 
   endif 
+
+  if(SIMULATION_TYPE == 3)then
+    if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then   
+      rmemory_coupling_el_ac_potential(:,:,:,:,:) = 0._CUSTOM_REAL   
+    endif   
+  endif
 
 ! fields on PML interface will be reconstructed for adjoint simulations
 ! using snapshot files of wavefields
