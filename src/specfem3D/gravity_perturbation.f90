@@ -1,7 +1,8 @@
 ! This module outputs gravity field at required locations
 !
 ! Authors:
-! Surendra Somala
+! Surendra Somala (Caltech) surendra@caltech.edu - 2013
+! with advice from Jan Harms and Pablo Ampuero (ampuero@gps.caltech.edu)
 
 module gravity_perturbation
 
@@ -11,17 +12,14 @@ module gravity_perturbation
 
   private
 
-  real(kind=CUSTOM_REAL) :: G_const = 6.674e-11_CUSTOM_REAL
   integer nstat,ntimgap,nstat_local
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstat,ystat,zstat
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accE,accN,accZ
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rho0,wm
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
-  integer, dimension(:), allocatable :: iglobs
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rho0_wm
 
   logical, save :: GRAVITY_SIMULATION = .false.
 
-  public :: gravity_init, gravity_timeseries, gravity_output, GRAVITY_SIMULATION
+  public :: gravity_init, gravity_timeseries, gravity_output, GRAVITY_SIMULATION, ntimgap
 
 contains
 
@@ -29,7 +27,11 @@ contains
 
 subroutine gravity_init()
 
-  use specfem_par, only : NGLOB_AB, NSTEP, NSPEC_AB, mustore, xstore, ystore, zstore, ibool, wxgll, wygll, wzgll, ngnod, myrank
+  use specfem_par, only : NGLOB_AB, NSTEP, NSPEC_AB, mustore, &
+       xstore, ystore, zstore, &
+       xigll, yigll, zigll, &
+       wxgll, wygll, wzgll, &
+       ngnod, ibool, myrank
   use specfem_par_elastic, only : rho_vs
   implicit none
 
@@ -42,6 +44,7 @@ subroutine gravity_init()
   double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
   integer ia,iax,iay,iaz
   integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
+  integer nstep_grav
 
   open(unit=IIN_G,file='DATA/gravity_stations',status='old',iostat=ier)
   if( ier /= 0 ) then
@@ -60,20 +63,17 @@ subroutine gravity_init()
   enddo
   close(IIN_G)
 
-  allocate(accE(NSTEP,nstat))
-  allocate(accN(NSTEP,nstat))
-  allocate(accZ(NSTEP,nstat))
+  nstep_grav = floor(dble(NSTEP/ntimgap))
+  allocate(accE(nstep_grav,nstat))
+  allocate(accN(nstep_grav,nstat))
+  allocate(accZ(nstep_grav,nstat))
 
   accE = 0._CUSTOM_REAL
   accN = 0._CUSTOM_REAL
   accZ = 0._CUSTOM_REAL
 
-  allocate(rho0(NGLOB_AB))
-  allocate(wm(NGLOB_AB))
-  wm = 0._CUSTOM_REAL
-  rho0 = 0._CUSTOM_REAL
-  allocate(Rg(NGLOB_AB))
-  allocate(dotP(NGLOB_AB))
+  allocate(rho0_wm(NGLOB_AB))
+  rho0_wm = 0._CUSTOM_REAL
 
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -85,7 +85,6 @@ subroutine gravity_init()
      endwhere
 
      rho_elem = rho_vs(:,:,:,ispec)/vs_elem
-
 
      ! define coordinates of the control points of the element
      do ia=1,NGNOD
@@ -131,10 +130,8 @@ subroutine gravity_init()
         do j = 1,NGLLY
            do i = 1,NGLLX
               iglob = ibool(i,j,k,ispec)
-              rho0(iglob) = rho_elem(i,j,k)
-              call recompute_jacobian_gravity(xelm,yelm,zelm,dble(i),dble(j),dble(k),Jac3D)
-              wm(iglob) = wm(iglob) + Jac3D * wxgll(i) * wygll(j) * wzgll(k)
-
+              call recompute_jacobian_gravity(xelm,yelm,zelm,xigll(i),yigll(j),zigll(k),Jac3D)
+              rho0_wm(iglob) = rho0_wm(iglob) + Jac3D * wxgll(i) * wygll(j) * wzgll(k) * rho_elem(i,j,k)
            enddo
         enddo
      enddo
@@ -178,8 +175,8 @@ subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 ! recompute jacobian for any (xi,eta,gamma) point, not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 8 .and. NGNOD /= 27) &
-       stop 'elements should have 8 or 27 control nodes'
+  if(NGNOD /= 8 ) &
+       stop 'elements should have 8  control nodes'
 !  if(NGNOD == 8) then
 
 ! ***
@@ -279,28 +276,34 @@ subroutine gravity_timeseries()
   use specfem_par_elastic, only : displ
   implicit none
 
+  real(kind=CUSTOM_REAL) :: G_const = 6.674e-11_CUSTOM_REAL
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: accEdV,accNdV,accZdV
   real(kind=CUSTOM_REAL) :: E_local,N_local,Z_local,E_all,N_all,Z_all
-  integer istat
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
+  integer :: istat, it_grav
+
+  it_grav = nint(dble(it/ntimgap))
+  allocate(Rg(NGLOB_AB))
+  allocate(dotP(NGLOB_AB))
 
   do istat=1,nstat
      Rg = sqrt((xstore-xstat(istat))**2+(ystore-ystat(istat))**2+(zstore-zstat(istat))**2)
      dotP = (xstore-xstat(istat))*displ(1,:)+(ystore-ystat(istat))*displ(2,:)+(zstore-zstat(istat))*displ(3,:)
 
-     accEdV = G_const*rho0/Rg**3*(displ(1,:)-3._CUSTOM_REAL*(dotP*(xstore-xstat(istat)))/Rg**2)*wm
+     accEdV = G_const*rho0_wm/Rg**3*(displ(1,:)-3._CUSTOM_REAL*(dotP*(xstore-xstat(istat)))/Rg**2)
      E_local = sum(accEdV(:))
      call sum_all_all_cr(E_local,E_all)
-     accE(it,istat) = E_all
+     accE(it_grav,istat) = E_all
 
-     accNdV = G_const*rho0/Rg**3*(displ(2,:)-3._CUSTOM_REAL*(dotP*(ystore-ystat(istat)))/Rg**2)*wm
+     accNdV = G_const*rho0_wm/Rg**3*(displ(2,:)-3._CUSTOM_REAL*(dotP*(ystore-ystat(istat)))/Rg**2)
      N_local = sum(accNdV(:))
      call sum_all_all_cr(N_local,N_all)
-     accN(it,istat) = N_all
+     accN(it_grav,istat) = N_all
 
-     accZdV = G_const*rho0/Rg**3*(displ(3,:)-3._CUSTOM_REAL*(dotP*(zstore-zstat(istat)))/Rg**2)*wm
+     accZdV = G_const*rho0_wm/Rg**3*(displ(3,:)-3._CUSTOM_REAL*(dotP*(zstore-zstat(istat)))/Rg**2)
      Z_local = sum(accZdV(:))
      call sum_all_all_cr(Z_local,Z_all)
-     accZ(it,istat) = Z_all
+     accZ(it_grav,istat) = Z_all
   enddo
 
 end subroutine gravity_timeseries
@@ -312,16 +315,17 @@ subroutine gravity_output()
   use specfem_par, only : myrank,NPROC,NSTEP
   implicit none
 
-  integer :: isample,istat
+  integer :: isample,istat,nstep_grav
   character(len=150) sisname
 
+  nstep_grav = floor(dble(NSTEP/ntimgap))
   nstat_local = nint(dble(nstat/NPROC))
 
   do istat=1,nstat
      if(istat < myrank*nstat_local+1 .or. istat > (myrank+1)*nstat_local) cycle
      write(sisname,"('OUTPUT_FILES/stat',I0,'.grav')") istat
      open(unit=IOUT,file=sisname,status='replace')
-     do isample = ntimgap,NSTEP,ntimgap
+     do isample = 1,nstep_grav
         write(IOUT,*) accE(isample,istat),accN(isample,istat),accZ(isample,istat)
      enddo
      close(IOUT)
@@ -331,19 +335,12 @@ subroutine gravity_output()
      do istat=NPROC*nstat_local,nstat
         write(sisname,"('OUTPUT_FILES/stat',I0,'.grav')") istat
         open(unit=IOUT,file=sisname,status='replace')
-        do isample = ntimgap,NSTEP,ntimgap
+        do isample = 1,nstep_grav
            write(IOUT,*) accE(isample,istat),accN(isample,istat),accZ(isample,istat)
         enddo
         close(IOUT)
      enddo
   endif
-
-  !SNSomala : Other way to output would be to let all files written by proc 0. 
-!!$if(myrank==0) then
-!!$  do istat=1,nstat
-!!$     print*,xstat(istat),ystat(istat),zstat(istat)
-!!$  enddo
-!!$endif
 
 end subroutine gravity_output
 
