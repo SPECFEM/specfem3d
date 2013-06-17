@@ -19,7 +19,7 @@ module gravity_perturbation
 
   logical, save :: GRAVITY_SIMULATION = .false.
 
-  public :: gravity_init, gravity_timeseries, gravity_output, GRAVITY_SIMULATION, ntimgap
+  public :: gravity_init, gravity_timeseries, gravity_output, GRAVITY_SIMULATION
 
 contains
 
@@ -282,29 +282,31 @@ subroutine gravity_timeseries()
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
   integer :: istat, it_grav
 
-  it_grav = nint(dble(it/ntimgap))
-  allocate(Rg(NGLOB_AB))
-  allocate(dotP(NGLOB_AB))
+  if( mod(it,ntimgap)==0 ) then
+     it_grav = nint(dble(it/ntimgap))
+     allocate(Rg(NGLOB_AB))
+     allocate(dotP(NGLOB_AB))
 
-  do istat=1,nstat
-     Rg = sqrt((xstore-xstat(istat))**2+(ystore-ystat(istat))**2+(zstore-zstat(istat))**2)
-     dotP = (xstore-xstat(istat))*displ(1,:)+(ystore-ystat(istat))*displ(2,:)+(zstore-zstat(istat))*displ(3,:)
+     do istat=1,nstat
+        Rg = sqrt((xstore-xstat(istat))**2+(ystore-ystat(istat))**2+(zstore-zstat(istat))**2)
+        dotP = (xstore-xstat(istat))*displ(1,:)+(ystore-ystat(istat))*displ(2,:)+(zstore-zstat(istat))*displ(3,:)
 
-     accEdV = G_const*rho0_wm/Rg**3*(displ(1,:)-3._CUSTOM_REAL*(dotP*(xstore-xstat(istat)))/Rg**2)
-     E_local = sum(accEdV(:))
-     call sum_all_all_cr(E_local,E_all)
-     accE(it_grav,istat) = E_all
+        accEdV = G_const*rho0_wm/Rg**3*(displ(1,:)-3._CUSTOM_REAL*(dotP*(xstore-xstat(istat)))/Rg**2)
+        E_local = sum(accEdV(:))
+        call sum_all_all_cr(E_local,E_all)
+        accE(it_grav,istat) = E_all
 
-     accNdV = G_const*rho0_wm/Rg**3*(displ(2,:)-3._CUSTOM_REAL*(dotP*(ystore-ystat(istat)))/Rg**2)
-     N_local = sum(accNdV(:))
-     call sum_all_all_cr(N_local,N_all)
-     accN(it_grav,istat) = N_all
+        accNdV = G_const*rho0_wm/Rg**3*(displ(2,:)-3._CUSTOM_REAL*(dotP*(ystore-ystat(istat)))/Rg**2)
+        N_local = sum(accNdV(:))
+        call sum_all_all_cr(N_local,N_all)
+        accN(it_grav,istat) = N_all
 
-     accZdV = G_const*rho0_wm/Rg**3*(displ(3,:)-3._CUSTOM_REAL*(dotP*(zstore-zstat(istat)))/Rg**2)
-     Z_local = sum(accZdV(:))
-     call sum_all_all_cr(Z_local,Z_all)
-     accZ(it_grav,istat) = Z_all
-  enddo
+        accZdV = G_const*rho0_wm/Rg**3*(displ(3,:)-3._CUSTOM_REAL*(dotP*(zstore-zstat(istat)))/Rg**2)
+        Z_local = sum(accZdV(:))
+        call sum_all_all_cr(Z_local,Z_all)
+        accZ(it_grav,istat) = Z_all
+     enddo
+  endif
 
 end subroutine gravity_timeseries
 
