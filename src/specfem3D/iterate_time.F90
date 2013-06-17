@@ -33,7 +33,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use gravity_perturbation, only : gravity_timeseries, GRAVITY_SIMULATION, ntimgap
+  use gravity_perturbation, only : gravity_timeseries, GRAVITY_SIMULATION
 
   implicit none
 
@@ -149,7 +149,7 @@
     endif
 
     ! calculating gravity field at current timestep
-    if (GRAVITY_SIMULATION .and. mod(it,ntimgap)==0 ) call gravity_timeseries()
+    if (GRAVITY_SIMULATION) call gravity_timeseries()
 
     ! resetting d/v/a/R/eps for the backward reconstruction with attenuation
     if (ATTENUATION ) then
