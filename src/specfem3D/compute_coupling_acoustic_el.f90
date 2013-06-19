@@ -51,7 +51,6 @@
   integer :: SIMULATION_TYPE
   logical :: backward_simulation
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel_interface
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: rmemory_coupling_ac_el_displ
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -62,6 +61,7 @@
   real(kind=CUSTOM_REAL) :: coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces)
   integer :: coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces)
   integer :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: rmemory_coupling_ac_el_displ
 
 ! communication overlap
   logical, dimension(NSPEC_AB) :: ispec_is_inner
