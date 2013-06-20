@@ -31,7 +31,7 @@ subroutine gravity_init()
        xstore, ystore, zstore, &
        xigll, yigll, zigll, &
        wxgll, wygll, wzgll, &
-       ngnod, ibool, myrank
+       NGNOD, ibool, myrank
   use specfem_par_elastic, only : rho_vs
   implicit none
 
@@ -46,7 +46,7 @@ subroutine gravity_init()
   integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
   integer nstep_grav
 
-  open(unit=IIN_G,file='DATA/gravity_stations',status='old',iostat=ier)
+  open(unit=IIN_G,file='../DATA/gravity_stations',status='old',iostat=ier)
   if( ier /= 0 ) then
      write(6,*) 'No Gravity stations to compute:  assume not a gravity simulation'
      return
@@ -75,7 +75,7 @@ subroutine gravity_init()
   allocate(rho0_wm(NGLOB_AB))
   rho0_wm = 0._CUSTOM_REAL
 
-  call usual_hex_nodes(iaddx,iaddy,iaddz)
+  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
   do ispec=1,NSPEC_AB
      where( rho_vs(:,:,:,ispec) > TINYVAL )
@@ -325,7 +325,7 @@ subroutine gravity_output()
 
   do istat=1,nstat
      if(istat < myrank*nstat_local+1 .or. istat > (myrank+1)*nstat_local) cycle
-     write(sisname,"('OUTPUT_FILES/stat',I0,'.grav')") istat
+     write(sisname,"('../OUTPUT_FILES/stat',I0,'.grav')") istat
      open(unit=IOUT,file=sisname,status='replace')
      do isample = 1,nstep_grav
         write(IOUT,*) accE(isample,istat),accN(isample,istat),accZ(isample,istat)
@@ -335,7 +335,7 @@ subroutine gravity_output()
 
   if(myrank==0) then !left-over stations
      do istat=NPROC*nstat_local,nstat
-        write(sisname,"('OUTPUT_FILES/stat',I0,'.grav')") istat
+        write(sisname,"('../OUTPUT_FILES/stat',I0,'.grav')") istat
         open(unit=IOUT,file=sisname,status='replace')
         do isample = 1,nstep_grav
            write(IOUT,*) accE(isample,istat),accN(isample,istat),accZ(isample,istat)
