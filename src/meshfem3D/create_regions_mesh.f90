@@ -425,7 +425,7 @@ contains
       write(66,*)
       ! type: hexahedrons
       write(66,'(a,i12)') "CELL_TYPES ",nspec
-      write(66,*) (12,ispec=1,nspec)
+      write(66,'(6i12)') (12,ispec=1,nspec)
       write(66,*)
       write(66,'(a,i12)') "CELL_DATA ",nspec
       write(66,'(a)') "SCALARS elem_val float"
