@@ -6,7 +6,7 @@
 
 module gravity_perturbation
 
-  implicit none  
+  implicit none
 
   include 'constants.h'
 
@@ -157,12 +157,12 @@ end subroutine gravity_init
 !=====================================================================
 
 ! recompute 3D jacobian at a given point for a 8-node element : modified from recompute_jacobian
-    
+
 subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 
-  use specfem_par, only : NGNOD    
+  use specfem_par, only : NGNOD
   implicit none
-    
+
   include "constants.h"
 
   double precision x,y,z
