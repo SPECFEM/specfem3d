@@ -60,6 +60,9 @@ cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
+# get the number of processors
+NPROC=`grep NPROC DATA/Par_file | cut -d = -f 2`
+
 # decomposes mesh
 echo
 echo "  decomposing mesh..."
@@ -69,13 +72,13 @@ cd bin/
 
 # runs database generation
 echo
-echo "  running database generation..."
+echo "  running database generation on $NPROC processors..."
 echo
 mpirun -np $NPROC ./xgenerate_databases
 
 # runs simulation
 echo
-echo "  running solver..."
+echo "  running solver on $NPROC processors..."
 echo
 mpirun -np $NPROC ./xspecfem3D
 cd ../
