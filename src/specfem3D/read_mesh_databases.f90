@@ -226,6 +226,7 @@
     ! reads mass matrices
     read(27,iostat=ier) rmass
     if( ier /= 0 ) stop 'error reading in array rmass'
+
     if(PML_CONDITIONS)then !ZN
        if(ACOUSTIC_SIMULATION)then !ZN        
           read(27,iostat=ier) rmass_elastic_interface !ZN 
@@ -356,58 +357,60 @@
   endif
 
   ! C-PML absorbing boundary conditions
-  read(27) NSPEC_CPML
-  read(27) CPML_width_x
-  read(27) CPML_width_y
-  read(27) CPML_width_z
-  if( PML_CONDITIONS .and. NSPEC_CPML > 0 ) then
-     allocate(CPML_regions(NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array CPML_regions'
-     allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array CPML_to_spec'
-     allocate(is_CPML(NSPEC_AB),stat=ier)
-     if(ier /= 0) stop 'error allocating array is_CPML'
-     allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array d_store_x'
-     allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array d_store_y'
-     allocate(d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array d_store_z'
-     allocate(K_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array K_store_x'
-     allocate(K_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array K_store_y'
-     allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array K_store_z'
-     allocate(alpha_store(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-     if(ier /= 0) stop 'error allocating array alpha_store'
+  NSPEC_CPML = 0
+  if( PML_CONDITIONS ) then
+    read(27) NSPEC_CPML
+    read(27) CPML_width_x
+    read(27) CPML_width_y
+    read(27) CPML_width_z
+    if( NSPEC_CPML > 0 ) then
+      allocate(CPML_regions(NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array CPML_regions'
+      allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array CPML_to_spec'
+      allocate(is_CPML(NSPEC_AB),stat=ier)
+      if(ier /= 0) stop 'error allocating array is_CPML'
+      allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array d_store_x'
+      allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array d_store_y'
+      allocate(d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array d_store_z'
+      allocate(K_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array K_store_x'
+      allocate(K_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array K_store_y'
+      allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array K_store_z'
+      allocate(alpha_store(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if(ier /= 0) stop 'error allocating array alpha_store'
 
-     read(27) CPML_regions
-     read(27) CPML_to_spec
-     read(27) is_CPML
-     read(27) d_store_x
-     read(27) d_store_y
-     read(27) d_store_z
-     read(27) k_store_x
-     read(27) k_store_y
-     read(27) k_store_z
-     read(27) alpha_store
+      read(27) CPML_regions
+      read(27) CPML_to_spec
+      read(27) is_CPML
+      read(27) d_store_x
+      read(27) d_store_y
+      read(27) d_store_z
+      read(27) k_store_x
+      read(27) k_store_y
+      read(27) k_store_z
+      read(27) alpha_store
 
-     if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then 
-       read(27) nglob_interface_PML_acoustic
-       read(27) nglob_interface_PML_elastic
-       if(nglob_interface_PML_acoustic > 0) then
-         allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
-         if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
-         read(27) points_interface_PML_acoustic
-       endif
-
-       if(nglob_interface_PML_elastic > 0) then
-         allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
-         if(ier /= 0) stop 'error allocating array points_interface_PML_elastic'
-         read(27) points_interface_PML_elastic
-       endif
-     endif
+      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+        read(27) nglob_interface_PML_acoustic
+        read(27) nglob_interface_PML_elastic
+        if(nglob_interface_PML_acoustic > 0) then
+          allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
+          if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
+          read(27) points_interface_PML_acoustic
+        endif
+        if(nglob_interface_PML_elastic > 0) then
+          allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
+          if(ier /= 0) stop 'error allocating array points_interface_PML_elastic'
+          read(27) points_interface_PML_elastic
+        endif
+      endif
+    endif
   endif
 
   ! absorbing boundary surface
@@ -446,14 +449,16 @@
        read(27) abs_boundary_ijk
        read(27) abs_boundary_jacobian2Dw
        read(27) abs_boundary_normal
-       ! store mass matrix contributions
-       if(ELASTIC_SIMULATION) then
-         read(27) rmassx
-         read(27) rmassy
-         read(27) rmassz
-       endif
-       if(ACOUSTIC_SIMULATION) then
-         read(27) rmassz_acoustic
+       if( STACEY_ABSORBING_CONDITIONS ) then
+          ! store mass matrix contributions
+          if(ELASTIC_SIMULATION) then
+           read(27) rmassx
+           read(27) rmassy
+           read(27) rmassz
+          endif
+          if(ACOUSTIC_SIMULATION) then
+           read(27) rmassz_acoustic
+          endif
        endif
      endif
   endif
@@ -464,6 +469,7 @@
   read(27) nspec2D_ymax
   read(27) NSPEC2D_BOTTOM
   read(27) NSPEC2D_TOP
+
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
        ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
        ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)

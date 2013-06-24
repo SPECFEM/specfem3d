@@ -40,7 +40,8 @@
                                     !for adjoint tomography
                                     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
                                     nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
-                                    nglob_interface_PML_elastic,points_interface_PML_elastic
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic, &
+                                    STACEY_ABSORBING_CONDITIONS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -141,58 +142,62 @@
   endif
 
 ! C-PML absorbing boundary conditions
-  write(IOUT) nspec_cpml
-  write(IOUT) CPML_width_x
-  write(IOUT) CPML_width_y
-  write(IOUT) CPML_width_z
-  if( nspec_cpml > 0 ) then
-     write(IOUT) CPML_regions
-     write(IOUT) CPML_to_spec
-     write(IOUT) is_CPML
-     write(IOUT) d_store_x
-     write(IOUT) d_store_y
-     write(IOUT) d_store_z
-     write(IOUT) k_store_x
-     write(IOUT) k_store_y
-     write(IOUT) k_store_z
-     write(IOUT) alpha_store
-     ! --------------------------------------------------------------------------------------------
-     ! for adjoint tomography
-     ! save the array stored the points on interface between PML and interior computational domain
-     ! --------------------------------------------------------------------------------------------
-     if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then 
-       write(IOUT) nglob_interface_PML_acoustic
-       write(IOUT) nglob_interface_PML_elastic
-       if(nglob_interface_PML_acoustic > 0) write(IOUT) points_interface_PML_acoustic
-       if(nglob_interface_PML_elastic > 0)  write(IOUT) points_interface_PML_elastic
-     endif
+  if( PML_CONDITIONS ) then
+    write(IOUT) nspec_cpml
+    write(IOUT) CPML_width_x
+    write(IOUT) CPML_width_y
+    write(IOUT) CPML_width_z
+    if( nspec_cpml > 0 ) then
+      write(IOUT) CPML_regions
+      write(IOUT) CPML_to_spec
+      write(IOUT) is_CPML
+      write(IOUT) d_store_x
+      write(IOUT) d_store_y
+      write(IOUT) d_store_z
+      write(IOUT) k_store_x
+      write(IOUT) k_store_y
+      write(IOUT) k_store_z
+      write(IOUT) alpha_store
+      ! --------------------------------------------------------------------------------------------
+      ! for adjoint tomography
+      ! save the array stored the points on interface between PML and interior computational domain
+      ! --------------------------------------------------------------------------------------------
+      if((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
+        write(IOUT) nglob_interface_PML_acoustic
+        write(IOUT) nglob_interface_PML_elastic
+        if(nglob_interface_PML_acoustic > 0) write(IOUT) points_interface_PML_acoustic
+        if(nglob_interface_PML_elastic > 0)  write(IOUT) points_interface_PML_elastic
+      endif
+    endif
   endif
 
 ! absorbing boundary surface
   write(IOUT) num_abs_boundary_faces
   if(PML_CONDITIONS)then
-     if( num_abs_boundary_faces > 0 ) then
-       write(IOUT) abs_boundary_ispec
-       write(IOUT) abs_boundary_ijk
-       write(IOUT) abs_boundary_jacobian2Dw
-       write(IOUT) abs_boundary_normal
-     endif
+    if( num_abs_boundary_faces > 0 ) then
+      write(IOUT) abs_boundary_ispec
+      write(IOUT) abs_boundary_ijk
+      write(IOUT) abs_boundary_jacobian2Dw
+      write(IOUT) abs_boundary_normal
+    endif
   else
-     if( num_abs_boundary_faces > 0 ) then
-       write(IOUT) abs_boundary_ispec
-       write(IOUT) abs_boundary_ijk
-       write(IOUT) abs_boundary_jacobian2Dw
-       write(IOUT) abs_boundary_normal
-       ! store mass matrix contributions
-       if(ELASTIC_SIMULATION) then
-         write(IOUT) rmassx
-         write(IOUT) rmassy
-         write(IOUT) rmassz
-       endif
-       if(ACOUSTIC_SIMULATION) then
-         write(IOUT) rmassz_acoustic
-       endif
-     endif
+    if( num_abs_boundary_faces > 0 ) then
+      write(IOUT) abs_boundary_ispec
+      write(IOUT) abs_boundary_ijk
+      write(IOUT) abs_boundary_jacobian2Dw
+      write(IOUT) abs_boundary_normal
+      if( STACEY_ABSORBING_CONDITIONS ) then
+        ! store mass matrix contributions
+        if(ELASTIC_SIMULATION ) then
+          write(IOUT) rmassx
+          write(IOUT) rmassy
+          write(IOUT) rmassz
+        endif
+        if(ACOUSTIC_SIMULATION) then
+          write(IOUT) rmassz_acoustic
+        endif
+      endif
+    endif
   endif
 
   write(IOUT) nspec2D_xmin
