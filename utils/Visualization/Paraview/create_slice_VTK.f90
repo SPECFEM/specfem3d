@@ -257,7 +257,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   ! writes out gll-data (velocity) for each element point

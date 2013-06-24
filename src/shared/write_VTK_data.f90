@@ -78,7 +78,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
@@ -151,7 +151,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
@@ -227,7 +227,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   ! iflag field on global nodeset
@@ -318,7 +318,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   ! iflag field on global nodeset
@@ -462,7 +462,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   ! vector data for each cell
@@ -531,7 +531,7 @@
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
-  write(IOVTK,*) (12,ispec=1,nspec)
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
   write(IOVTK,*) ""
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec

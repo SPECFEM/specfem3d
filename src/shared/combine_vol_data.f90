@@ -350,7 +350,7 @@
   if( USE_VTK_OUTPUT) then
     ! type: hexahedrons
     write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
-    write(IOVTK,*) (12,it=1,nee)
+    write(IOVTK,'(6i12)') (12,it=1,nee)
     write(IOVTK,*) ""
 
     write(IOVTK,'(a,i12)') "POINT_DATA ",npp
