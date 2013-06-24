@@ -31,7 +31,7 @@ subroutine gravity_init()
        xstore, ystore, zstore, &
        xigll, yigll, zigll, &
        wxgll, wygll, wzgll, &
-       NGNOD, ibool, myrank
+       NGNOD, ibool, myrank, IMAIN
   use specfem_par_elastic, only : rho_vs
   implicit none
 
@@ -48,13 +48,28 @@ subroutine gravity_init()
 
   open(unit=IIN_G,file='../DATA/gravity_stations',status='old',iostat=ier)
   if( ier /= 0 ) then
-     write(6,*) 'No Gravity stations to compute:  assume not a gravity simulation'
-     return
+    ! user output
+    if( myrank == 0 ) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'no gravity simulation'
+      write(IMAIN,*)
+    endif
+
+    return
   endif
 
   GRAVITY_SIMULATION = .true.
 
   read(IIN_G,*) nstat,ntimgap
+
+  ! user output
+  if( myrank == 0 ) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'incorporating gravity simulation'
+    write(IMAIN,*) '    gravity stations: ',nstat
+    write(IMAIN,*)
+  endif
+
   allocate(xstat(nstat))
   allocate(ystat(nstat))
   allocate(zstat(nstat))
