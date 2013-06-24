@@ -209,6 +209,9 @@
   call sync_all()
 
   ! reads number of C-PML elements in the global mesh
+  nspec_cpml_tot = 0
+  nspec_cpml = 0
+
   read(IIN) nspec_cpml_tot
   if(myrank == 0) then
      write(IMAIN,*) ' total number of C-PML elements in the global mesh: ',nspec_cpml_tot
