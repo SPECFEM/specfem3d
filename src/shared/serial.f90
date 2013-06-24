@@ -433,6 +433,22 @@
 !----
 !
 
+  subroutine sum_all_all_cr(sendbuf, recvbuf)
+
+  implicit none
+
+  include "constants.h"
+
+  real(kind=CUSTOM_REAL) sendbuf, recvbuf
+
+  recvbuf = sendbuf
+
+  end subroutine sum_all_all_cr
+
+!
+!----
+!
+
   subroutine sum_all_i(sendbuf, recvbuf)
 
   implicit none
