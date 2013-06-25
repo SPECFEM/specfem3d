@@ -5,13 +5,6 @@
 # can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
 # to the disk for one MPI slice after the other, and to make the solver do the same thing when reading the files back from disk.
 
-# Use AC_CANONICAL_BUILD (and package config.guess, etc.) in the future?
-if test x"$UNAME_MS" = x; then
-    UNAME_MACHINE=`(uname -m) 2>/dev/null` || UNAME_MACHINE=unknown
-    UNAME_SYSTEM=`(uname -s) 2>/dev/null`  || UNAME_SYSTEM=unknown
-    UNAME_MS="${UNAME_MACHINE}:${UNAME_SYSTEM}"
-fi
-
 case $FC in
     ftn|*/ftn|crayftn|*/crayftn)
         #
@@ -58,21 +51,25 @@ case $FC in
         DEF_FFLAGS="-O"
         ;;
     f90|*/f90)
-        case $UNAME_MS in
-            i*86:Linux | x86_64:Linux)
+        case $host_os in
+            Linux)
                 #
                 # AbSoft
                 #
-                DEF_FFLAGS="-W132 -s -O3 -cpu:p7 -v -YDEALLOC=ALL"
+                case $host_cpu in
+                    i*86 | x86_64)
+                        DEF_FFLAGS="-W132 -s -O3 -cpu:p7 -v -YDEALLOC=ALL"
+                    ;;
+                esac
                 ;;
-            *:IRIX*)
+            irix)
                 ################ SGI Irix #################
                 DEF_MPIFC=$FC
                 DEF_FMPILIBS="-lmpi -lfastm -lfpe"
                 DEF_FFLAGS="-ansi -u -64 -O3 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4"
                 #   -check_bounds
                 ;;
-            SX-*:SUPER-UX | ES:ESOS)
+            superux*)
                 ################## NEC SX ##################
                 DEF_MPIFC=$FC
                 DEF_FFLAGS="-C hopt -R2 -Wf\" -L nostdout noinclist mrgmsg noeject -msg b -pvctl loopcnt=14000000 expand=10 fullmsg vecthreshold=20 -s\" -pi auto line=100 exp=swap_all,rank"
@@ -139,8 +136,8 @@ case $FC in
 
 esac
 
-case $UNAME_MS in
-    *:IRIX*)
+case $build_os in
+    irix)
         ################ SGI Irix #################
         ##
         ##  CAUTION: always define setenv TRAP_FPE OFF on SGI before compiling

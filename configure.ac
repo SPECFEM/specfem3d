@@ -13,6 +13,7 @@ AC_CONFIG_SRCDIR([README])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_CANONICAL_HOST
 
 # 'configure' options
 
