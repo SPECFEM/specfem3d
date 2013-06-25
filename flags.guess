@@ -17,20 +17,16 @@ case $FC in
         #
         # Cray Fortran
         #
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -DFORCE_VECTORIZATION" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
+        DEF_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2 -DFORCE_VECTORIZATION" # turn on optimization; -Oaggress -Oipa4 would make it even more aggressive
         # -eC -eD -ec -en -eI -ea -g -G0  # turn on full debugging and range checking
-        fi
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90)
         #
         # Portland PGI
         #
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -DFORCE_VECTORIZATION" # -mcmodel=medium
+        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -DFORCE_VECTORIZATION" # -mcmodel=medium
         # -Mbounds
         # -fastsse -tp amd64e -Msmart
-        fi
         ;;
     ifort|*/ifort)
         #
@@ -41,9 +37,7 @@ case $FC in
 # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
 # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
 # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -check nobounds -DFORCE_VECTORIZATION -xHost -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
-        fi
+        DEF_FFLAGS="-O3 -check nobounds -DFORCE_VECTORIZATION -xHost -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage" # -mcmodel=medium -shared-intel
         # useful for debugging...
         # for debugging: change "-O3 -check nobounds -DFORCE_VECTORIZATION" to  "-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
         #
@@ -54,18 +48,14 @@ case $FC in
         #
         # GNU gfortran
         #
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow " # -mcmodel=medium
-        fi
+        DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -O2 -DFORCE_VECTORIZATION -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow " # -mcmodel=medium
         # useful for debugging... -fbacktrace -fbounds-check, and suppress -DFORCE_VECTORIZATION
         ;;
     g95|*/g95)
         #
         # g95 (free f95 compiler from http://www.g95.org)
         #
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O"
-        fi
+        DEF_FFLAGS="-O"
         ;;
     f90|*/f90)
         case $UNAME_MS in
@@ -73,31 +63,19 @@ case $FC in
                 #
                 # AbSoft
                 #
-                if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-W132 -s -O3 -cpu:p7 -v -YDEALLOC=ALL"
-                fi
+                DEF_FFLAGS="-W132 -s -O3 -cpu:p7 -v -YDEALLOC=ALL"
                 ;;
             *:IRIX*)
                 ################ SGI Irix #################
-                if test x"$MPIFC" = x; then
-                    MPIFC=$FC
-                    if test x"$MPILIBS" = x; then
-                        MPILIBS="-lmpi -lfastm -lfpe"
-                    fi
-                fi
-                if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-ansi -u -64 -O3 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4"
+                DEF_MPIFC=$FC
+                DEF_FMPILIBS="-lmpi -lfastm -lfpe"
+                DEF_FFLAGS="-ansi -u -64 -O3 -OPT:Olimit=0 -OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -r10000 -mips4"
                 #   -check_bounds
-                fi
                 ;;
             SX-*:SUPER-UX | ES:ESOS)
                 ################## NEC SX ##################
-                if test x"$MPIFC" = x; then
-                    MPIFC=$FC
-                fi
-                if test x"$FLAGS_CHECK" = x; then
-                    FLAGS_CHECK="-C hopt -R2 -Wf\" -L nostdout noinclist mrgmsg noeject -msg b -pvctl loopcnt=14000000 expand=10 fullmsg vecthreshold=20 -s\" -pi auto line=100 exp=swap_all,rank"
-                fi
+                DEF_MPIFC=$FC
+                DEF_FFLAGS="-C hopt -R2 -Wf\" -L nostdout noinclist mrgmsg noeject -msg b -pvctl loopcnt=14000000 expand=10 fullmsg vecthreshold=20 -s\" -pi auto line=100 exp=swap_all,rank"
                 ;;
         esac
         ;;
@@ -105,16 +83,12 @@ case $FC in
         #
         # Lahey f90
         #
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="--warn --wo --tpp --f95 --dal -O"
+        DEF_FFLAGS="--warn --wo --tpp --f95 --dal -O"
         #    --chk
-        fi
         ;;
     ######## IBM ######
     mpxlf*|*/mpxlf*)
-        if test x"$MPIFC" = x; then
-            MPIFC=$FC
-        fi
+        DEF_MPIFC=$FC
         ;;
     *xlf*|*/*xlf*)
         #
@@ -143,16 +117,14 @@ case $FC in
         # one should also use additional flags:
         # CFLAGS = -Wl,-relax
         #
-        if test x"$FLAGS_CHECK" = x; then
 # deleted -qxflag=dvz because it requires handler function __xl_dzx and thus linking will fail 
-            FLAGS_CHECK="-O4 -qnostrict -qsimd=auto -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax -WF,-DFORCE_VECTORIZATION"
+        DEF_FFLAGS="-O4 -qnostrict -qsimd=auto -qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036 -Q -Q+rank,swap_all -Wl,-relax -WF,-DFORCE_VECTORIZATION"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         # On IBM BlueGene at IDRIS (France) use:
         # -qtune=auto -qarch=450d -qsave     instead of -qtune=auto -qarch=auto
         #
         # to debug with IBM xlf, one can add this: -g -O0 -C -qddim -qfullpath -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF
         #
-        fi
         ;;
     pathf90|*/pathf90)
         #
@@ -162,9 +134,7 @@ case $FC in
         # CC = pathcc
         # CFLAGS = -O2
         #
-        if test x"$FLAGS_CHECK" = x; then
-            FLAGS_CHECK="-O3 -OPT:Ofast -fno-math-errno -ffast-math -LNO:fusion=2 -LNO:simd=2 -LNO:simd_verbose=ON -msse3 -march=auto -fno-second-underscore -align64"
-        fi
+        DEF_FFLAGS="-O3 -OPT:Ofast -fno-math-errno -ffast-math -LNO:fusion=2 -LNO:simd=2 -LNO:simd_verbose=ON -msse3 -march=auto -fno-second-underscore -align64"
         ;;
 
 esac
@@ -178,6 +148,16 @@ case $UNAME_MS in
         FCENV="TRAP_FPE=OFF"
         ;;
 esac
+
+if test "x$FLAGS_CHECK" = "x"; then
+    FLAGS_CHECK="$DEF_FFLAGS"
+fi
+if test "x$MPIFC" = "x"; then
+    MPIFC="$DEF_MPIFC"
+    if test "x$MPILIBS" = "x"; then
+        MPILIBS="$DEF_MPILIBS"
+    fi
+fi
 
 echo MPIFC=\"$MPIFC\" | sed 's/\$/\\\$/g'
 echo MPILIBS=\"$MPILIBS\" | sed 's/\$/\\\$/g'
