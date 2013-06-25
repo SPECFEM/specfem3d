@@ -493,9 +493,8 @@
            enddo
          enddo
        endif
-    endif
 
-    if(PML_CONDITIONS)then
+    else if(PML_CONDITIONS)then
        if( .not. PML_INSTEAD_OF_FREE_SURFACE ) then
          ! stores free surface
          ! sets face infos
@@ -546,7 +545,25 @@
            enddo
          enddo
        endif
+
+    else
+      ! stores free surface
+      ! sets face infos
+      ifree = ifree + 1
+      free_surface_ispec(ifree) = ispec
+
+      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+      igllfree = 0
+      do j=1,NGLLY
+       do i=1,NGLLX
+         igllfree = igllfree+1
+         free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+         free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+         free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+       enddo
+      enddo
     endif
+
   enddo
 
   ! checks counters

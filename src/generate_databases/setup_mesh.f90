@@ -84,9 +84,10 @@
   call max_all_dp(max_elevation,max_elevation_all)
 
   if(myrank == 0) then
-     write(IMAIN,*)
-     write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
-     write(IMAIN,*)
+    write(IMAIN,*)
+    write(IMAIN,*) 'min and max of topography included in mesh in m is ',min_elevation_all,' ',max_elevation_all
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
 ! clean-up

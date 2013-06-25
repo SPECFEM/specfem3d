@@ -384,6 +384,7 @@
 !
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
+  use generate_databases_par, only: myrank
   use create_regions_mesh_ext_par
 
   implicit none
@@ -400,7 +401,12 @@
   integer :: j,inum
   character(len=256) :: filename
 
-  logical,parameter :: DEBUG = .true.
+  logical,parameter :: DEBUG = .false.
+
+  if( myrank == 0) then
+    write(IMAIN,*) '     saving mesh files for AVS, OpenDX, Paraview'
+    call flush_IMAIN()
+  endif
 
   ! mesh arrays used for example in combine_vol_data.f90
   !--- x coordinate
@@ -491,6 +497,12 @@
 
   ! VTK file output
   if( DEBUG ) then
+
+    call sync_all()
+    if( myrank == 0) then
+      write(IMAIN,*) '     saving debugging mesh files'
+      call flush_IMAIN()
+    endif
 
     ! saves free surface points
     if( num_free_surface_faces > 0 ) then
