@@ -18,21 +18,21 @@ AC_CANONICAL_HOST
 # 'configure' options
 
 AC_ARG_WITH([pyre],
-    [AC_HELP_STRING([--with-pyre],
+    [AS_HELP_STRING([--with-pyre],
         [build Pyrized version @<:@default=no@:>@])],
     [want_pyre="$withval"],
     [want_pyre=no])
 AM_CONDITIONAL([COND_PYRE], [test "$want_pyre" = yes])
 
 AC_ARG_WITH([mpi],
-    [AC_HELP_STRING([--with-mpi],
+    [AS_HELP_STRING([--with-mpi],
         [build parallel version @<:@default=yes@:>@])],
     [want_mpi="$withval"],
     [want_mpi=yes])
 AM_CONDITIONAL([COND_MPI], [test "$want_mpi" = yes])
 
 AC_ARG_ENABLE([double-precision],
-    [AC_HELP_STRING([--enable-double-precision],
+    [AS_HELP_STRING([--enable-double-precision],
         [solver in double precision @<:@default=no@:>@])],
     [want_double_precision="$enableval"],
     [want_double_precision=no])
@@ -47,7 +47,7 @@ AC_SUBST([CUSTOM_REAL])
 AC_SUBST([CUSTOM_MPI_TYPE])
 
 AC_ARG_WITH([cuda],
-    [AC_HELP_STRING([--with-cuda],
+    [AS_HELP_STRING([--with-cuda],
         [build CUDA GPU enabled version @<:@default=no@:>@])],
     [want_cuda="$withval"],
     [want_cuda=no])
@@ -56,7 +56,7 @@ AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
 AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
 
 AC_ARG_WITH([openmp],
-    [AC_HELP_STRING([--with-openmp],
+    [AS_HELP_STRING([--with-openmp],
         [build OpenMP enabled version @<:@default=no@:>@])],
     [want_openmp="$withval"],
     [want_openmp=no])
@@ -112,19 +112,19 @@ export SCOTCH_INCLUDEDIR
 export USE_BUNDLED_SCOTCH
 
 AC_ARG_WITH([scotch-dir],
-AC_HELP_STRING([--with-scotch-dir],[define the root path to Scotch (e.g. /opt/scotch/)]),
+AS_HELP_STRING([--with-scotch-dir],[define the root path to Scotch (e.g. /opt/scotch/)]),
 [
  ac_scotch_dir="$withval";
 ])
 
 AC_ARG_WITH([scotch-includedir],
-AC_HELP_STRING([--with-scotch-includedir],[define the path to the Scotch headers (e.g. /opt/scotch/include)]),
+AS_HELP_STRING([--with-scotch-includedir],[define the path to the Scotch headers (e.g. /opt/scotch/include)]),
 [
  ac_scotch_include_dir="$withval";
 ])
 
 AC_ARG_WITH([scotch-libdir],
-AC_HELP_STRING([--with-scotch-libdir],[define the path to the Scotch libraries (e.g. /opt/scotch/lib)]),
+AS_HELP_STRING([--with-scotch-libdir],[define the path to the Scotch libraries (e.g. /opt/scotch/lib)]),
 [
  ac_scotch_lib_dir="$withval";
 ])
