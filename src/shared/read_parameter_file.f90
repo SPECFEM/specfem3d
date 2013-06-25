@@ -340,6 +340,17 @@
          stop 'error: please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
   endif
 
+
+  ! absorbing conditions
+  ! stacey absorbing free surface must have also stacey turned on
+  if( STACEY_INSTEAD_OF_FREE_SURFACE ) STACEY_ABSORBING_CONDITIONS = .true.
+
+  ! only one absorbing condition is possible
+  if( PML_CONDITIONS ) then
+    if( STACEY_ABSORBING_CONDITIONS )&
+      stop 'error: please set STACEY_ABSORBING_CONDITIONS and STACEY_INSTEAD_OF_FREE_SURFACE to .false. in Par_file for PML'
+  endif
+
   end subroutine read_parameter_file
 
 !

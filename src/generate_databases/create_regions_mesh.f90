@@ -257,11 +257,24 @@
                         max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                         SAVE_MESH_FILES,ANISOTROPY)
 
-!  call fault_save_arrays_test(prname)  ! for debugging
-  call fault_save_arrays(prname)
+! saves faults
+  if( ANY_FAULT ) then
+    call sync_all()
+    if( myrank == 0) then
+      write(IMAIN,*) '  ...saving fault databases'
+      call flush_IMAIN()
+    endif
+    !  call fault_save_arrays_test(prname)  ! for debugging
+    call fault_save_arrays(prname)
+  endif
 
 ! saves moho surface
   if( SAVE_MOHO_MESH ) then
+    call sync_all()
+    if( myrank == 0) then
+      write(IMAIN,*) '  ...saving Moho surfaces'
+      call flush_IMAIN()
+    endif
     call crm_save_moho()
   endif
 
@@ -273,6 +286,10 @@
 
 ! checks the mesh, stability and resolved period
   call sync_all()
+  if( myrank == 0) then
+    write(IMAIN,*) '  ...checking mesh resolution'
+    call flush_IMAIN()
+  endif
 
   if( POROELASTIC_SIMULATION ) then
     !chris: check for poro: At the moment cpI & cpII are for eta=0
@@ -291,6 +308,11 @@
 
 ! saves binary mesh files for attenuation
   if( ATTENUATION ) then
+    call sync_all()
+    if( myrank == 0) then
+      write(IMAIN,*) '  ...saving attenuation databases'
+      call flush_IMAIN()
+    endif
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                               mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
                               ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
@@ -309,35 +331,38 @@
     deallocate(xstore_dummy,ystore_dummy,zstore_dummy)
   endif
 
+  if( ACOUSTIC_SIMULATION) then
+    deallocate(rmass_acoustic)
+    deallocate(rmass_acoustic_interface)
+  endif
+
+  if( ELASTIC_SIMULATION ) then
+    deallocate(rmass)
+  endif
+
+  if( POROELASTIC_SIMULATION) then
+    deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
+  endif
+
   if(STACEY_ABSORBING_CONDITIONS)then
      if( ELASTIC_SIMULATION ) then
-       deallocate(rmass)
        deallocate(rmassx,rmassy,rmassz)
      endif
      if( ACOUSTIC_SIMULATION) then
-       deallocate(rmass_acoustic)
-       deallocate(rmass_acoustic_interface)
        deallocate(rmassz_acoustic)
      endif
   endif
 
   if(PML_CONDITIONS)then
      if( ELASTIC_SIMULATION ) then
-       deallocate(rmass)
        if(PML_CONDITIONS)then
          if(ACOUSTIC_SIMULATION)then
             write(IOUT)rmass_elastic_interface
          endif
        endif
      endif
-     if( ACOUSTIC_SIMULATION) then
-       deallocate(rmass_acoustic)
-     endif
   endif
 
-  if( POROELASTIC_SIMULATION) then
-    deallocate(rmass_solid_poroelastic,rmass_fluid_poroelastic)
-  endif
 
 end subroutine create_regions_mesh
 
