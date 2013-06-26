@@ -449,7 +449,6 @@ fi
 AC_CONFIG_FILES([
 	Makefile
 	src/meshfem3D/Makefile
-	src/meshfem3D/precision.h
 	src/decompose_mesh/Makefile
 	src/specfem3D/Makefile
 	src/generate_databases/Makefile
