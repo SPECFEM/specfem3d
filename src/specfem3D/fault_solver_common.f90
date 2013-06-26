@@ -92,7 +92,7 @@ contains
 subroutine initialize_fault (bc,IIN_BIN)
 
   use specfem_par
-  use specfem_par_elastic, only : rmassx,rmassy,rmassz
+  use specfem_par_elastic, only : rmassx !,rmassy,rmassz
 
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -471,7 +471,7 @@ end subroutine init_dataT
 !---------------------------------------------------------------
 subroutine store_dataT(dataT,d,v,t,itime)
 
-  use specfem_par, only : myrank
+  !use specfem_par, only : myrank
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t
