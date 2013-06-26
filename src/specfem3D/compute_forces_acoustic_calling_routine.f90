@@ -57,8 +57,7 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: spec_to_CPML,is_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
-                    rmemory_potential_acoustic,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,&
+  use pml_par,only: spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,&
                     b_PML_potential,b_reclen_PML_potential
   implicit none
 
@@ -331,9 +330,7 @@ subroutine compute_forces_acoustic_bpwf()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: spec_to_CPML,is_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl,&
-                    rmemory_potential_acoustic,rmemory_coupling_ac_el_displ,nglob_interface_PML_acoustic,&
-                    b_PML_potential,b_reclen_PML_potential
+  use pml_par,only: spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
   implicit none
 
   ! local parameters

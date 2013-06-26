@@ -41,7 +41,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,it,deltat, &
+  use specfem_par, only: it,deltat, &
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                          kappastore,mustore
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
@@ -1356,7 +1356,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: NSPEC_AB,wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+  use specfem_par, only: wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
                          it,deltat,rhostore
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
@@ -2600,7 +2600,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,it,deltat
-  use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,alpha_store
+  use pml_par,only : CPML_regions,k_store_x,k_store_y,d_store_x,d_store_y,alpha_store
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 

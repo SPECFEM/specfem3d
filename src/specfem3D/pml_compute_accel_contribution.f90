@@ -811,8 +811,11 @@ end subroutine pml_compute_accel_contribution_acoustic
 !
 subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
                                        b_PML_field,b_reclen_PML_field)
+
   use specfem_par, only: NGLOB_AB,it
   use constants, only: CUSTOM_REAL,NDIM
+  implicit none
+
   integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ,veloc,accel
   real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
@@ -841,9 +844,12 @@ end subroutine save_field_on_pml_interface
 !
 subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
                                        b_PML_field,b_reclen_PML_field)
-  use specfem_par, only: NGLOB_AB,NSPEC_AB,ibool,NSTEP,it
+
+  use specfem_par, only: NGLOB_AB,ibool,NSTEP,it
   use pml_par, only: NSPEC_CPML,CPML_to_spec
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  implicit none
+
   integer, intent(in) :: nglob_interface_PML_elastic,b_reclen_PML_field
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: b_displ,b_veloc,b_accel
   real(kind=CUSTOM_REAL), dimension(9,nglob_interface_PML_elastic) :: b_PML_field
@@ -882,8 +888,11 @@ end subroutine read_field_on_pml_interface
 !
 subroutine save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
                                            nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+
   use specfem_par, only: NGLOB_AB,it
   use constants, only: CUSTOM_REAL
+  implicit none
+
   integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
@@ -904,9 +913,12 @@ end subroutine save_potential_on_pml_interface
 !
 subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
                                            nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
-  use specfem_par, only: NGLOB_AB,NSPEC_AB,ibool,NSTEP,it
+
+  use specfem_par, only: NGLOB_AB,ibool,NSTEP,it
   use pml_par, only: NSPEC_CPML,CPML_to_spec
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ
+  implicit none
+
   integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic
   real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential

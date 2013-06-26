@@ -301,8 +301,8 @@ subroutine compute_forces_viscoelastic_bpwf()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
-  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
+  use fault_solver_dynamic, only : bc_dynflt_set3d_all
+  use fault_solver_kinematic, only : bc_kinflt_set_all
 
   implicit none
 

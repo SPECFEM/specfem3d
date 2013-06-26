@@ -34,9 +34,7 @@
     npointot,myrank,LOCAL_PATH, &
     nnodes_ext_mesh,nelmnts_ext_mesh, &
     nodes_coords_ext_mesh, elmnts_ext_mesh, &
-    max_memory_size, mat_ext_mesh, materials_ext_mesh, &
-    nmat_ext_mesh, undef_mat_prop, nundefMat_ext_mesh, &
-    num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
+    max_memory_size,num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
     my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
     my_interfaces_ext_mesh, &
     ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
@@ -375,7 +373,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,NGNOD,NGNOD2D,&
-                                    PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
+                                    PML_INSTEAD_OF_FREE_SURFACE
   use create_regions_mesh_ext_par
 
   implicit none

@@ -718,7 +718,7 @@
   subroutine prepare_timerun_pml()
 
     use pml_par
-    use specfem_par, only: NSPEC_AB,NGNOD,ibool,myrank
+    use specfem_par, only: NSPEC_AB,NGNOD,myrank
     use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
     implicit none

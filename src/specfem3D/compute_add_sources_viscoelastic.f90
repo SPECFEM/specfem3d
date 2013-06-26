@@ -399,14 +399,10 @@ endif !adjoint
                         b_accel,NOISE_TOMOGRAPHY)
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
-                        xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
-                        station_name,network_name,adj_source_file, &
                         num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw, &
-                        noise_sourcearray,irec_master_noise, &
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
-                        nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION
 
@@ -605,11 +601,8 @@ endif !adjoint
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
-                        num_free_surface_faces,free_surface_ispec, &
-                        free_surface_ijk,free_surface_jacobian2Dw, &
-                        noise_sourcearray,irec_master_noise, &
-                        normal_x_noise,normal_y_noise,normal_z_noise, &
-                        mask_noise,noise_surface_movie, &
+                        num_free_surface_faces, &
+                        irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION

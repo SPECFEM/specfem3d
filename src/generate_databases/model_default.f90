@@ -40,7 +40,7 @@
 
 ! takes model values specified by mesh properties
 
-  use generate_databases_par, only: myrank
+  !use generate_databases_par, only: myrank
   use create_regions_mesh_ext_par
 
   implicit none
