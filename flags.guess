@@ -5,8 +5,40 @@
 # can add -DUSE_SERIAL_CASCADE_FOR_IOs to the compiler options to make the mesher output mesh data
 # to the disk for one MPI slice after the other, and to make the solver do the same thing when reading the files back from disk.
 
+# First find the "real" compiler
+# e.g., Cray provides a Programming Environment that wraps around compilers,
+# but the command-line options are still compiler-specific.
 case $FC in
-    ftn|*/ftn|crayftn|*/crayftn)
+    ftn|*/ftn)
+        case $PE_ENV in
+            CRAY)
+                my_FC=crayftn
+                ;;
+            GNU)
+                my_FC=gfortran
+                ;;
+            INTEL)
+                my_FC=ifort
+                ;;
+            PATHSCALE)
+                my_FC=pathf90
+                ;;
+            PGI)
+                my_FC=pgf90
+                ;;
+            *)
+                # Unrecognized (this will not set any default flags)
+                my_FC="$FC"
+                ;;
+        esac
+        ;;
+    *)
+        my_FC="$FC"
+        ;;
+esac
+
+case $my_FC in
+    crayftn|*/crayftn)
         #
         # Cray Fortran
         #
