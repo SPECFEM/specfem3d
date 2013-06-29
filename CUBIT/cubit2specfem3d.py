@@ -102,7 +102,7 @@
 #        ....
 #
 #__________________________________________________________________________________________
-##freename='free_surface_file' -> file with the hex on the free surface (usually the topography)
+##freename='free_or_absorbing_surface_file_zmax' -> file with the hex on the free surface (usually the topography)
 #    format:
 #        number of faces
 #        id_(element containg the face) id_node1_face id_node2_face id_node3_face id_node4_face
@@ -345,7 +345,7 @@ class mesh(object,mesh_tools):
         self.material_name='materials_file'
         self.nummaterial_name='nummaterial_velocity_file'
         self.absname='absorbing_surface_file'
-        self.freename='free_surface_file'
+        self.freename='free_or_absorbing_surface_file_zmax'
         self.recname='STATIONS'
         self.face='QUAD4'
         self.face2='SHELL4'
