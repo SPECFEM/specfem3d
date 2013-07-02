@@ -429,7 +429,9 @@ fi
 # Checks for header files.
 
 if test "$want_mpi" = yes; then
-    CIT_FC_MPI_HEADER([$MPIFC], [$FLAGS_CHECK])
+    CIT_FC_MPI_MODULE([mpif.h], [$MPIFC], [$FLAGS_CHECK], [:], [
+        AC_MSG_FAILURE([cannot compile a trivial MPI program using $MPIFC])
+    ])
 fi
 
 # Checks for typedefs, structures, and compiler characteristics.

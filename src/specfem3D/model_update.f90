@@ -27,13 +27,13 @@
 
 program model_update
 
+  use :: mpi
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
   implicit none
 
-  include 'mpif.h'
   include 'precision.h'
 
   ! ======================================================

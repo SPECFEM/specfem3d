@@ -60,9 +60,10 @@ program smooth_vol_data
 ! NOTE:  smoothing can be different in vertical & horizontal directions; mesh is in Cartesian geometry.
 !              algorithm uses vertical as Z, horizontal as X/Y direction
 
+  use :: mpi
+
   implicit none
   include "constants.h"
-  include 'mpif.h'
   include "precision.h"
 
  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
