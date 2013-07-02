@@ -89,10 +89,10 @@ end module sum_par
 
 program sum_kernels
 
+  use :: mpi
   use sum_par
   implicit none
 
-  include 'mpif.h'
   include 'precision.h'
 
 
@@ -269,10 +269,10 @@ end program sum_kernels
 
 subroutine sum_kernel_pre(kernel_name,kernel_list,nker,myrank)
 
+  use :: mpi
   use sum_par
   implicit none
 
-  include 'mpif.h'
   include 'precision.h'
 
   real(kind=CUSTOM_REAL) :: norm,norm_sum
@@ -440,10 +440,10 @@ subroutine invert_hess( myrank,hess_matrix )
 ! H_nn = \frac{ \partial^2 \chi }{ \partial \rho_n \partial \rho_n }
 ! on all GLL points, which are indexed (i,j,k,ispec)
 
+  use :: mpi
   use sum_par
   implicit none
 
-  include 'mpif.h'
   include 'precision.h'
 
   integer :: myrank
