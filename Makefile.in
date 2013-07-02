@@ -128,46 +128,45 @@ reqche :
 	(cd obj; mkdir -p che)
 
 xmeshfem3D:  required reqmesh
-	     (cd src/meshfem3D; make)
+	$(MAKE) -C src/meshfem3D
 
 xspecfem3D:  required reqspec
-	     (cd src/specfem3D; make specfem3D)
+	$(MAKE) -C src/specfem3D specfem3D
 
 xgenerate_databases:  required reqgen
-	     (cd src/generate_databases ; make generate_databases)
+	$(MAKE) -C src/generate_databases generate_databases
 
 xdecompose_mesh:  required reqdec
-	     (cd src/decompose_mesh ; make)
+	$(MAKE) -C src/decompose_mesh
 
 xcreate_movie_shakemap_AVS_DX_GMT: required
-	(cd src/specfem3D ; make xcreate_movie_shakemap_AVS_DX_GMT)
+	$(MAKE) -C src/specfem3D xcreate_movie_shakemap_AVS_DX_GMT
 
 xcombine_vol_data: required reqspec
-	(cd src/specfem3D ; make xcombine_vol_data)
+	$(MAKE) -C src/specfem3D xcombine_vol_data
 
 xcombine_surf_data: required
-	(cd src/specfem3D ; make xcombine_surf_data)
+	$(MAKE) -C src/specfem3D xcombine_surf_data
 
 xconvolve_source_timefunction: required
-	(cd src/specfem3D ; make xconvolve_source_timefunction)
+	$(MAKE) -C src/specfem3D xconvolve_source_timefunction
 
 xsmooth_vol_data: required reqspec
-	(cd src/specfem3D ; make xsmooth_vol_data)
+	$(MAKE) -C src/specfem3D xsmooth_vol_data
 
 xsum_kernels: required reqspec
-	(cd src/specfem3D ; make xsum_kernels)
+	$(MAKE) -C src/specfem3D xsum_kernels
 
 xmodel_update: required reqspec xspecfem3D
-	(cd src/specfem3D ; make xmodel_update)
-
+	$(MAKE) -C src/specfem3D xmodel_update
 
 xcheck_mesh_quality_CUBIT_Abaqus: required reqche
-	(cd src/check_mesh_quality_CUBIT_Abaqus ; make)
+	$(MAKE) -C src/check_mesh_quality_CUBIT_Abaqus
 
 
 clean: required
-	(rm -rf bin lib obj src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod ; cd src/decompose_mesh/scotch/src ; make realclean)
-
+	rm -rf bin lib obj src/meshfem3D/*.mod src/decompose_mesh/*.mod src/generate_databases/*.mod src/specfem3D/*.mod
+	$(MAKE) -C src/decompose_mesh/scotch/src realclean
 
 help:
 	@echo "usage: make [executable]"
