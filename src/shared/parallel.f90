@@ -944,11 +944,8 @@
   integer :: tag = 100
   integer, dimension(sendcount) :: sendbuf
 
-  ! MPI status of messages to be received
-  integer msg_status(MPI_STATUS_SIZE)
-
   call MPI_SEND(sendbuf,sendcount,MPI_INTEGER,dest,tag, &
-       MPI_COMM_WORLD,msg_status,ier)
+       MPI_COMM_WORLD,ier)
 
   end subroutine send_i_t
 
@@ -992,11 +989,8 @@
 !  integer :: tag = 100
 !  double precision, dimension(sendcount) :: sendbuf
 !
-!  ! MPI status of messages to be received
-!  integer msg_status(MPI_STATUS_SIZE)
-!
 !  call MPI_SEND(sendbuf,sendcount,MPI_DOUBLE_PRECISION,dest,tag, &
-!       MPI_COMM_WORLD,msg_status,ier)
+!       MPI_COMM_WORLD,ier)
 !
 !  end subroutine send_dp_t
 !
