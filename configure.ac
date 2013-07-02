@@ -298,7 +298,7 @@ install				: \$(bindir)/acpl\$(EXE) \$(bindir)/amk_ccc\$(EXE) \\
 
 _ACEOF
 
-  # avoids lines between 98 to 101, containig install lines, and replaces them
+  # avoids lines between 98 to 101, containing install lines, and replaces them
   awk '{if(NR<98)print $0}' src/scotch/Makefile.org > src/scotch/Makefile
   cat conftmp.scotch.cmd >> src/scotch/Makefile
   awk '{if(NR>101)print $0}' src/scotch/Makefile.org >> src/scotch/Makefile
@@ -324,7 +324,7 @@ install				: \$(libdir)/libscotch\$(LIB) \$(libdir)/libscotcherr\$(LIB) \\
 
 _ACEOF
 
-  # avoids lines between 71 to 73, containig install lines, and replaces them
+  # avoids lines between 71 to 73, containing install lines, and replaces them
   awk '{if(NR<71)print $0}' src/libscotch/Makefile.org > src/libscotch/Makefile
   cat conftmp.libscotch.cmd >> src/libscotch/Makefile
   awk '{if(NR>73)print $0}' src/libscotch/Makefile.org >> src/libscotch/Makefile
@@ -332,11 +332,14 @@ _ACEOF
 
   # replaces single scotch line in Makefiles
   # src/scotch/
-  sed -i "s/^scotch.*clean/scotch     : /" src/scotch/Makefile
+  sed "s/^scotch.*clean/scotch     : /" src/scotch/Makefile > conftmp.libscotch.mk
+  mv conftmp.libscotch.mk src/scotch/Makefile
   # src/libscotch/
-  sed -i "s/^scotch.*clean/scotch     : /" src/libscotch/Makefile
+  sed "s/^scotch.*clean/scotch     : /" src/libscotch/Makefile > conftmp.libscotch.mk
+  mv conftmp.libscotch.mk src/libscotch/Makefile
   # src/libscotchmetis/
-  sed -i "s/^scotch.*clean/scotch     : /" src/libscotchmetis/Makefile
+  sed "s/^scotch.*clean/scotch     : /" src/libscotchmetis/Makefile > conftmp.libscotch.mk
+  mv conftmp.libscotch.mk src/libscotchmetis/Makefile
 
  cd $builddir
 
