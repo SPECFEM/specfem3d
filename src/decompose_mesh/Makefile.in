@@ -104,10 +104,10 @@ DEC_OBJECTS = \
 
 xscotch:
 ifeq (@USE_BUNDLED_SCOTCH@,1)
-	(echo "Using bundled Scotch")
-	(cd @SCOTCH_DIR@/src; make)
+	echo "Using bundled Scotch"
+	$(MAKE) -C @SCOTCH_DIR@/src
 else
-	(echo "Not using bundled Scotch")
+	echo "Not using bundled Scotch"
 endif
 
 
