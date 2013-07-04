@@ -284,47 +284,24 @@
             izmin = minval( free_surface_ijk(3,:,iface) )
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
-            if( .not. USE_FORCE_POINT_SOURCE ) then
-              ! xmin face
-              if(ixmin==1 .and. ixmax==1) then
-                if( xi_source(isource) < -0.99d0) is_on = .true.
-              ! xmax face
-              else if(ixmin==NGLLX .and. ixmax==NGLLX) then
-                if( xi_source(isource) > 0.99d0) is_on = .true.
-              ! ymin face
-              else if(iymin==1 .and. iymax==1) then
-                if( eta_source(isource) < -0.99d0) is_on = .true.
-              ! ymax face
-              else if(iymin==NGLLY .and. iymax==NGLLY) then
-                if( eta_source(isource) > 0.99d0) is_on = .true.
-              ! zmin face
-              else if(izmin==1 .and. izmax==1 ) then
-                if( gamma_source(isource) < -0.99d0) is_on = .true.
-              ! zmax face
-              else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
-                if( gamma_source(isource) > 0.99d0) is_on = .true.
-              endif
-            else
-              ! note: for use_force_point_source xi/eta/gamma_source values are in the range [1,NGLL*]
-              ! xmin face
-              if(ixmin==1 .and. ixmax==1) then
-                if( nint(xi_source(isource)) == 1) is_on = .true.
-              ! xmax face
-              else if(ixmin==NGLLX .and. ixmax==NGLLX) then
-                if( nint(xi_source(isource)) == NGLLX) is_on = .true.
-              ! ymin face
-              else if(iymin==1 .and. iymax==1) then
-                if( nint(eta_source(isource)) == 1) is_on = .true.
-              ! ymax face
-              else if(iymin==NGLLY .and. iymax==NGLLY) then
-                if( nint(eta_source(isource)) == NGLLY) is_on = .true.
-              ! zmin face
-              else if(izmin==1 .and. izmax==1 ) then
-                if( nint(gamma_source(isource)) == 1) is_on = .true.
-              ! zmax face
-              else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
-                if( nint(gamma_source(isource)) ==NGLLZ) is_on = .true.
-              endif
+            ! xmin face
+            if(ixmin==1 .and. ixmax==1) then
+              if( xi_source(isource) < -0.99d0) is_on = .true.
+            ! xmax face
+            else if(ixmin==NGLLX .and. ixmax==NGLLX) then
+              if( xi_source(isource) > 0.99d0) is_on = .true.
+            ! ymin face
+            else if(iymin==1 .and. iymax==1) then
+              if( eta_source(isource) < -0.99d0) is_on = .true.
+            ! ymax face
+            else if(iymin==NGLLY .and. iymax==NGLLY) then
+              if( eta_source(isource) > 0.99d0) is_on = .true.
+            ! zmin face
+            else if(izmin==1 .and. izmax==1 ) then
+              if( gamma_source(isource) < -0.99d0) is_on = .true.
+            ! zmax face
+            else if(izmin==NGLLZ .and. izmax==NGLLZ ) then
+              if( gamma_source(isource) > 0.99d0) is_on = .true.
             endif
 
           endif ! free_surface_ispec
@@ -543,26 +520,22 @@
   integer :: irec
   integer :: i,j,k
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
+!  integer :: iglob
 
   character(len=3),dimension(NDIM) :: comp
   character(len=256) :: filename
 
-  double precision :: hlagrange
-
-  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
 
-  double precision, dimension(:,:), allocatable :: hxis_store,hetas_store,hgammas_store
+  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
+  double precision :: hlagrange
 
   ! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
-            sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ), &
-            hxis_store(NSOURCES,NGLLX), &
-            hetas_store(NSOURCES,NGLLY), &
-            hgammas_store(NSOURCES,NGLLZ), stat=ier)
+            sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if( ier /= 0 ) stop 'error allocating array sourcearray'
 
     ! compute source arrays
@@ -582,51 +555,53 @@
         call lagrange_any(eta_source(isource),NGLLY,yigll,hetas,hpetas)
         call lagrange_any(gamma_source(isource),NGLLZ,zigll,hgammas,hpgammas)
 
-        hxis_store(isource,:) = hxis(:)
-        hetas_store(isource,:) = hetas(:)
-        hgammas_store(isource,:) = hgammas(:)
-
         if (USE_FORCE_POINT_SOURCE) then ! use of FORCESOLUTION files
 
-           ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
+          ! note: for use_force_point_source xi/eta/gamma are also in the range [-1,1], for exact positioning
 
-           ! initializes source array
-           sourcearray(:,:,:,:) = 0._CUSTOM_REAL
-           sourcearrayd(:,:,:,:) = 0.d0
+          ! initializes source array
+          sourcearrayd(:,:,:,:) = 0.0d0
 
-           ! calculates source array for interpolated location
-           do k=1,NGLLZ
-              do j=1,NGLLY
-                 do i=1,NGLLX
-                    hlagrange = hxis_store(isource,i) * hetas_store(isource,j) * hgammas_store(isource,k)
+          ! calculates source array for interpolated location
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                hlagrange = hxis(i) * hetas(j) * hgammas(k)
 
-                    ! acoustic source
-                    ! identical source array components in x,y,z-direction
-                    if( ispec_is_acoustic(ispec) ) then
-                       sourcearrayd(:,i,j,k) = hlagrange
-                    endif
+                ! acoustic source
+                ! identical source array components in x,y,z-direction
+                if( ispec_is_acoustic(ispec) ) then
+                  sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange
+                endif
 
-                    ! elastic source
-                    if( ispec_is_elastic(ispec) ) then
-                       ! we use an inclined force defined by its magnitude and the projections
-                       ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
-                       sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
-                            ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
-                            nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
-                            nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / &
-                            sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
-                            comp_dir_vect_source_Z_UP(isource)**2 )
-                    endif
-                 enddo
+                ! elastic source
+                if( ispec_is_elastic(ispec) ) then
+                  ! checks norm of component vector
+                  if( sqrt( comp_dir_vect_source_E(isource)**2 &
+                          + comp_dir_vect_source_N(isource)**2 &
+                          + comp_dir_vect_source_Z_UP(isource)**2 ) < TINYVAL ) then
+                    call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
+                  endif
+
+                  ! we use an inclined force defined by its magnitude and the projections
+                  ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis:
+                  sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
+                                          ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
+                                            nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
+                                            nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / &
+                                          sqrt( comp_dir_vect_source_E(isource)**2 + comp_dir_vect_source_N(isource)**2 + &
+                                                comp_dir_vect_source_Z_UP(isource)**2 )
+                endif
               enddo
-           enddo
+            enddo
+          enddo
 
-           ! distinguish between single and double precision for reals
-           if(CUSTOM_REAL == SIZE_REAL) then
-              sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
-           else
-              sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
-           endif
+          ! distinguish between single and double precision for reals
+          if(CUSTOM_REAL == SIZE_REAL) then
+            sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
+          else
+            sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
+          endif
 
         else ! use of CMTSOLUTION files
 
@@ -661,6 +636,7 @@
            endif
 
         endif
+
         ! stores source excitations
         sourcearrays(isource,:,:,:,:) = sourcearray(:,:,:,:)
 

@@ -161,6 +161,15 @@
   integer, dimension(NSOURCES) :: idomain
   integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
+  !-----------------------------------------------------------------------------------
+
+  ! interpolates position to find best possible location closest to target position (default)
+  ! note: this can be turned off to speedup location search 
+  !       and position source at closest GLL point
+  logical, parameter :: USE_BEST_LOCATION = .true.
+
+  !-----------------------------------------------------------------------------------
+
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
@@ -267,9 +276,9 @@
     distmin = HUGEVAL
 
     ispec_selected_source(isource) = 0
-    ix_initial_guess_source = 0
-    iy_initial_guess_source = 0
-    iz_initial_guess_source = 0
+    ix_initial_guess_source = 1
+    iy_initial_guess_source = 1
+    iz_initial_guess_source = 1
     do ispec=1,NSPEC_AB
 
       ! define the interval in which we look for points
@@ -320,8 +329,7 @@
               iz_initial_guess_source = k
 
               ! store xi,eta,gamma and x,y,z of point found
-              ! note: they have range [1.0d0,NGLLX/Y/Z], used for point sources
-              !          see e.g. in compute_add_source_elastic.f90
+              ! note: here they have range [1.0d0,NGLLX/Y/Z]
               xi_source(isource) = dble(ix_initial_guess_source)
               eta_source(isource) = dble(iy_initial_guess_source)
               gamma_source(isource) = dble(iz_initial_guess_source)
@@ -504,9 +512,8 @@
 ! find the best (xi,eta,gamma) for the source
 ! *******************************************
 
-    ! for point sources, the location will be exactly at a GLL point
-    ! otherwise this tries to find best location
-    if(.not. USE_FORCE_POINT_SOURCE) then
+    ! this tries to find best location
+    if( USE_BEST_LOCATION ) then
 
       ! uses actual location interpolators, in range [-1,1]
       xi = xigll(ix_initial_guess_source)
@@ -597,6 +604,7 @@
       xi_source(isource) = xi
       eta_source(isource) = eta
       gamma_source(isource) = gamma
+
       x_found_source(isource) = x
       y_found_source(isource) = y
       z_found_source(isource) = z
@@ -604,8 +612,15 @@
       ! compute final distance between asked and found (converted to km)
       final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
         (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
+    else
 
-    endif ! of if (.not. USE_FORCE_POINT_SOURCE)
+      ! takes initial GLL point guess and uses actual location interpolators, in range [-1,1]
+      ! note: xi/eta/gamma will be in range [-1,1]
+      xi_source(isource) = xigll(ix_initial_guess_source)
+      eta_source(isource) = yigll(iy_initial_guess_source)
+      gamma_source(isource) = zigll(iz_initial_guess_source)
+
+    endif ! USE_BEST_LOCATION
 
   ! end of loop on all the sources
   enddo
@@ -733,9 +748,11 @@
 
         write(IMAIN,*)
         if(USE_FORCE_POINT_SOURCE) then
-          write(IMAIN,*) '  i index of source in that element: ',nint(xi_source(isource))
-          write(IMAIN,*) '  j index of source in that element: ',nint(eta_source(isource))
-          write(IMAIN,*) '  k index of source in that element: ',nint(gamma_source(isource))
+          write(IMAIN,*) 'using force point source: '
+          write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
+          write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
+          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+
           write(IMAIN,*)
           write(IMAIN,*) '  component of direction vector in East direction: ',comp_dir_vect_source_E(isource)
           write(IMAIN,*) '  component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
@@ -760,6 +777,7 @@
           write(IMAIN,*)
           write(IMAIN,*) '  half duration -> frequency: ',hdur(isource),' seconds**(-1)'
         else
+          write(IMAIN,*) 'using moment tensor source: '
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
           write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
