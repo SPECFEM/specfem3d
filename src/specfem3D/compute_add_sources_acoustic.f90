@@ -29,7 +29,6 @@
   subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  xi_source,eta_source,gamma_source, &
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP, &
@@ -40,7 +39,7 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,factor_force_source
+                        USE_RICKER_TIME_FUNCTION
   implicit none
 
   include "constants.h"
@@ -62,7 +61,6 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
@@ -126,12 +124,6 @@
 
                  if(USE_FORCE_POINT_SOURCE) then
 
-                    ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-                    iglob = ibool(nint(xi_source(isource)), &
-                                  nint(eta_source(isource)), &
-                                  nint(gamma_source(isource)), &
-                                  ispec)
-
                     f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
                     !if (it == 1 .and. myrank == 0) then
@@ -141,11 +133,9 @@
                     !endif
 
                     if( USE_RICKER_TIME_FUNCTION ) then
-                       stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
-                            comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
+                       stf_used = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
                     else
-                       stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
-                            comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                       stf_used = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                     endif
 
                     ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
@@ -154,10 +144,15 @@
                        
                     ! acoustic source for pressure gets divided by kappa
                     ! source contribution
-                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                            - stf_used / kappastore(nint(xi_source(isource)), &
-                                                    nint(eta_source(isource)), &
-                                                    nint(gamma_source(isource)),ispec)
+                    do k=1,NGLLZ
+                      do j=1,NGLLY
+                        do i=1,NGLLX
+                          iglob = ibool(i,j,k,ispec)
+                          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                                  - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                        enddo
+                      enddo
+                    enddo
 
                  else
 
@@ -373,7 +368,6 @@ endif
   subroutine compute_add_sources_acoustic_bpwf(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  xi_source,eta_source,gamma_source, &
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
@@ -381,7 +375,7 @@ endif
 
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,factor_force_source
+                        USE_RICKER_TIME_FUNCTION
   implicit none
 
   include "constants.h"
@@ -400,7 +394,6 @@ endif
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,hdur_tiny,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
@@ -474,13 +467,7 @@ endif
 
                  if(USE_FORCE_POINT_SOURCE) then
 
-                    ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-                    iglob = ibool(nint(xi_source(isource)), &
-                                  nint(eta_source(isource)), &
-                                  nint(gamma_source(isource)), &
-                                  ispec)
-
-                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
+                    f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing FORCESOLUTION file format
 
                     !if (it == 1 .and. myrank == 0) then
                     !  write(IMAIN,*) 'using a source of dominant frequency ',f0
@@ -489,23 +476,28 @@ endif
                     !endif
 
                     if( USE_RICKER_TIME_FUNCTION ) then
-                       stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
-                            comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+                       stf_used = comp_source_time_function_rickr( &
+                                  dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
                     else
-                       stf_used = factor_force_source(isource) * sourcearrays(isource,1,i,j,k) * &
-                            comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
+                       stf_used = comp_source_time_function_gauss( &
+                                  dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_tiny(isource))
                     endif
 
                     ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
                     ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
                     ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
-
+                       
                     ! acoustic source for pressure gets divided by kappa
                     ! source contribution
-                    b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                               - stf_used / kappastore(nint(xi_source(isource)), &
-                                                                       nint(eta_source(isource)), &
-                                                                       nint(gamma_source(isource)),ispec)
+                    do k=1,NGLLZ
+                      do j=1,NGLLY
+                        do i=1,NGLLX
+                          iglob = ibool(i,j,k,ispec)
+                          b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                                  - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                        enddo
+                      enddo
+                    enddo
 
                  else
                     if( USE_RICKER_TIME_FUNCTION ) then

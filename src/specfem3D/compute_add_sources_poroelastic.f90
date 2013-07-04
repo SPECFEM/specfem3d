@@ -32,7 +32,6 @@
                         rhoarraystore,phistore,tortstore,&
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        xi_source,eta_source,gamma_source, &
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
                         ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -66,7 +65,6 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: xi_source,eta_source,gamma_source
   double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
   double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
@@ -118,31 +116,6 @@
 
             if(USE_FORCE_POINT_SOURCE) then
 
-              ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-              iglob = ibool(nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-
-              ! get poroelastic parameters of current local GLL
-              phil = phistore(nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              tortl = tortstore(nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              rhol_s = rhoarraystore(1,nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              rhol_f = rhoarraystore(2,nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-
               !f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
               !t0 = 1.2d0/f0
 
@@ -170,17 +143,23 @@
               endif
 
               do k=1,NGLLZ
-                 do j=1,NGLLY
-                    do i=1,NGLLX
-                       iglob = ibool(i,j,k,ispec)
-! solid phase
-                       accels(:,iglob) = accels(:,iglob)  + &
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    ! get poroelastic parameters of current local GLL
+                    phil = phistore(i,j,k,ispec)
+                    tortl = tortstore(i,j,k,ispec)
+                    rhol_s = rhoarraystore(1,i,j,k,ispec)
+                    rhol_f = rhoarraystore(2,i,j,k,ispec)
+                    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                    ! solid phase
+                    accels(:,iglob) = accels(:,iglob)  + &
                             (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
-! fluid phase
-                       accelw(:,iglob) = accelw(:,iglob)  + &
+                    ! fluid phase
+                    accelw(:,iglob) = accelw(:,iglob)  + &
                             (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used
-                    enddo
-                 enddo
+                  enddo
+                enddo
               enddo
 
             else
@@ -190,36 +169,36 @@
               !stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
               stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
-               !     distinguish between single and double precision for reals
-               if(CUSTOM_REAL == SIZE_REAL) then
-                  stf_used = sngl(stf)
-               else
-                  stf_used = stf
-               endif
+              !     distinguish between single and double precision for reals
+              if(CUSTOM_REAL == SIZE_REAL) then
+                stf_used = sngl(stf)
+              else
+                stf_used = stf
+              endif
 
-               !     add source array
-               do k=1,NGLLZ
-                  do j=1,NGLLY
-                     do i=1,NGLLX
-                        iglob = ibool(i,j,k,ispec)
-              ! get poroelastic parameters of current local GLL
-              phil = phistore(i,j,k,ispec)
-              tortl = tortstore(i,j,k,ispec)
-              rhol_s = rhoarraystore(1,i,j,k,ispec)
-              rhol_f = rhoarraystore(2,i,j,k,ispec)
-              rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-! source in the solid phase only
-! solid phase
-                        accels(:,iglob) = accels(:,iglob) &
+              !     add source array
+              do k=1,NGLLZ
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    ! get poroelastic parameters of current local GLL
+                    phil = phistore(i,j,k,ispec)
+                    tortl = tortstore(i,j,k,ispec)
+                    rhol_s = rhoarraystore(1,i,j,k,ispec)
+                    rhol_f = rhoarraystore(2,i,j,k,ispec)
+                    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                    ! source in the solid phase only
+                    ! solid phase
+                    accels(:,iglob) = accels(:,iglob) &
                                  + sourcearrays(isource,:,i,j,k)*stf_used
 !                                 + (1._CUSTOM_REAL - phil/tortl)*sourcearrays(isource,:,i,j,k)*stf_used
-! fluid phase
-                        accelw(:,iglob) = accelw(:,iglob) &
+                    ! fluid phase
+                    accelw(:,iglob) = accelw(:,iglob) &
                                  - rhol_f/rhol_bar*sourcearrays(isource,:,i,j,k)*stf_used
 !                                 + (1._CUSTOM_REAL - rhol_f/rhol_bar)*sourcearrays(isource,:,i,j,k)*stf_used
-                     enddo
                   enddo
-               enddo
+                enddo
+              enddo
 
             endif ! USE_FORCE_POINT_SOURCE
 
@@ -382,31 +361,6 @@
 
             if(USE_FORCE_POINT_SOURCE) then
 
-               ! note: for use_force_point_source xi/eta/gamma are in the range [1,NGLL*]
-               iglob = ibool(nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-
-              ! get poroelastic parameters of current local GLL
-              phil = phistore(nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              tortl = tortstore(nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              rhol_s = rhoarraystore(1,nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              rhol_f = rhoarraystore(2,nint(xi_source(isource)), &
-                             nint(eta_source(isource)), &
-                             nint(gamma_source(isource)), &
-                             ispec_selected_source(isource))
-              rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-
                !f0 = hdur(isource) !! using hdur as a FREQUENCY just to avoid changing CMTSOLUTION file format
                !if (it == 1 .and. myrank == 0) then
                !   write(IMAIN,*) 'using a source of dominant frequency ',f0
@@ -432,17 +386,23 @@
                endif
 
                do k=1,NGLLZ
-                  do j=1,NGLLY
-                     do i=1,NGLLX
-                        iglob = ibool(i,j,k,ispec_selected_source(isource))
-! solid phase
-                        b_accels(:,iglob) = b_accels(:,iglob)  + &
+                 do j=1,NGLLY
+                   do i=1,NGLLX
+                     iglob = ibool(i,j,k,ispec)
+                     ! get poroelastic parameters of current local GLL
+                     phil = phistore(i,j,k,ispec)
+                     tortl = tortstore(i,j,k,ispec)
+                     rhol_s = rhoarraystore(1,i,j,k,ispec)
+                     rhol_f = rhoarraystore(2,i,j,k,ispec)
+                     rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                     ! solid phase
+                     b_accels(:,iglob) = b_accels(:,iglob)  + &
                              (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
-! fluid phase
-                        b_accelw(:,iglob) = b_accelw(:,iglob)  + &
+                     ! fluid phase
+                     b_accelw(:,iglob) = b_accelw(:,iglob)  + &
                              (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used
-                     enddo
-                  enddo
+                   enddo
+                 enddo
                enddo
 
             else
@@ -465,20 +425,20 @@
               do k=1,NGLLZ
                 do j=1,NGLLY
                   do i=1,NGLLX
-                    iglob = ibool(i,j,k,ispec_selected_source(isource))
-              ! get poroelastic parameters of current local GLL
-              phil = phistore(i,j,k,ispec_selected_source(isource))
-              tortl = tortstore(i,j,k,ispec_selected_source(isource))
-              rhol_s = rhoarraystore(1,i,j,k,ispec_selected_source(isource))
-              rhol_f = rhoarraystore(2,i,j,k,ispec_selected_source(isource))
-              rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-! source in the solid phase only
-! solid phase
-                        b_accels(:,iglob) = b_accels(:,iglob) &
+                    iglob = ibool(i,j,k,ispec)
+                    ! get poroelastic parameters of current local GLL
+                    phil = phistore(i,j,k,ispec)
+                    tortl = tortstore(i,j,k,ispec)
+                    rhol_s = rhoarraystore(1,i,j,k,ispec)
+                    rhol_f = rhoarraystore(2,i,j,k,ispec)
+                    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                    ! source in the solid phase only
+                    ! solid phase
+                    b_accels(:,iglob) = b_accels(:,iglob) &
                                  + sourcearrays(isource,:,i,j,k)*stf_used
 !                                 + (1._CUSTOM_REAL - phil/tortl)*sourcearrays(isource,:,i,j,k)*stf_used
-! fluid phase
-                        b_accelw(:,iglob) = b_accelw(:,iglob) &
+                    ! fluid phase
+                    b_accelw(:,iglob) = b_accelw(:,iglob) &
                                  - rhol_f/rhol_bar*sourcearrays(isource,:,i,j,k)*stf_used
 !                                 + (1._CUSTOM_REAL - rhol_f/rhol_bar)*sourcearrays(isource,:,i,j,k)*stf_used
                   enddo
