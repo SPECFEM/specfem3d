@@ -6,8 +6,15 @@ To-do list for the different flavors of SPECFEM:
 
 - suggestion 42:
 ----------------
+To make the three codes (2D, 3D_Cartesian, 3D_GLOBE) conform strictly to the Fortran standard,
+we should replace all "call system(...)" statements with "call execute_command_line(...)", which is the
+new standard way in Fortran2008. However, this intrinsic subroutine is currently (July 2013) not supported 
+for instance by Intel ifort and thus we purposely do not do it yet, but around 2015 or so we should do it.
+
+- suggestion 42:
+----------------
 if the material property of element adjacent to PML changed, make sure we also need to change
-the material property of elements inside PML adjacent to this elment correspondingly.
+the material property of elements inside PML adjacent to this element correspondingly.
 
 - suggestion 41:
 ----------------
@@ -15,16 +22,16 @@ avoid receivers located in PML region when using PML in adjoint simulation
 
 - suggestion 40:
 ----------------
-Currently, the way of PML implemented for acoustic/solid simulation is memory consuming. we should
-in future reduce the memory usage in following way:
+Currently, the way of PML implemented for acoustic/solid simulation is memory consuming.
+We should in the future reduce the memory usage in the following way:
 1: replace the rmass_acoustic_interface(nglob_acoustic)  with rmass_acoustic_interface(nglob_acoustic_solid_interface)
 2: replace the potential_dot_dot_acoustic_interface(nglob_acoustic)  with potential_dot_dot_acoustic_interface(nglob_acoustic_solid_interface)
 where nglob_acoustic denotes the whole point set inside acoustic region, nglob_acoustic_solid_interface denotes the point set on acoustic_solid_interface
 
 - suggestion 39:
 ----------------
-Currently, the way of PML implemented for fluid/solid simualtion is memeory consuming. we should
-in future reduce the memeory usage in following way.
+Currently, the way of PML implemented for fluid/solid simualtion is memory consuming.
+We should in the future reduce the memory usage in the following way:
 1: replace the rmass_acoustic_interface(nglob_acoustic)  with rmass_acoustic_interface(nglob_acoustic_solid_interface)
 2: replace the potential_dot_dot_acoustic_interface(nglob_acoustic)  with potential_dot_dot_acoustic_interface(nglob_acoustic_solid_interface)
 
