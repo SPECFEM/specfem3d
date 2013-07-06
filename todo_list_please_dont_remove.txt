@@ -18,7 +18,8 @@ the material property of elements inside PML adjacent to this element correspond
 
 - suggestion 41:
 ----------------
-avoid receivers located in PML region when using PML in adjoint simulation
+make sure users avoid receivers located in PML region when using PML in adjoint simulation (i.e. add a stop statement if a receiver
+is detected inside a PML element)
 
 - suggestion 40:
 ----------------
@@ -38,7 +39,7 @@ We should in the future reduce the memory usage in the following way:
 - suggestion 35:
 ----------------
 
-Add full viscoelastic kernels, undoing full attenuation
+Add full viscoelastic kernels in 3D_Cartesian, undoing full attenuation (already done in 3D_GLOBE in July 2013)
 
 - suggestion 38:
 ----------------
@@ -53,8 +54,8 @@ The changes to make are straightforward, and reduce total wall clock-time by abo
 - suggestion 39:
 ----------------
 
-doublecheck carefully file memory_eval.f90 in both SPECFEM3D_Cartesian and SPECFEM3D_Globe
-(in particular now that C-PML has been implemented in SPECFEM3D_Cartesian), as both codes have undergone lots of changes in the past few months
+doublecheck carefully file memory_eval.f90 in SPECFEM3D_Cartesian (already done and fixed for SPECFEM3D_Globe by Dimitri in July 2013).
+(in particular now that C-PML has been implemented in SPECFEM3D_Cartesian), as the code has undergone lots of changes in the past few months
 and thus new big arrays have been used, in particular for C-PML (but only in the CPML layers for these arrays, not in the rest of the model);
 Thus we should make sure that all these arrays are taken into account in the memory estimate computed in memory_eval.f90.
 
@@ -62,7 +63,6 @@ Thus we should make sure that all these arrays are taken into account in the mem
 ------------------------------------------------
 CPML :
 ------------------------------------------------
-
 
 - suggestion 19:
 ----------------
