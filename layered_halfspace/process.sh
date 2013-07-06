@@ -36,15 +36,15 @@ rm -rf OUTPUT_FILES/DATABASES_MPI/*
 # compiles executables in root directory
 cd ../../
 make clean
-make > $currentdir/tmp.log
+make > $currentdir/compile.log
 cd $currentdir
 
 # links executables
 cd bin/
 rm -f ./x*
-cp ../../../bin/xdecompose_mesh ./
-cp ../../../bin/xgenerate_databases ./
-cp ../../../bin/xspecfem3D ./
+ln -s ../../../bin/xdecompose_mesh 
+ln -s ../../../bin/xgenerate_databases 
+ln -s ../../../bin/xspecfem3D 
 cd ../
 
 # stores setup
@@ -52,18 +52,20 @@ cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
 
-# decomposes mesh
+# decomposes mesh (THIS WILL NOT WORK UNLESS IN THE bin/ DIR!)
 echo
 echo "  decomposing mesh..."
 echo
-./bin/xdecompose_mesh $NPROC MESH/ OUTPUT_FILES/DATABASES_MPI/
+cd bin/
+./xdecompose_mesh $NPROC ../MESH/ ../OUTPUT_FILES/DATABASES_MPI/
+cd ..
 
 # runs database generation
 echo
 echo "  running database generation..."
 echo
 cd bin/
-mpirun -np $NPROC ./xgenerate_databases
+mpiexec -np $NPROC ./xgenerate_databases
 cd ../
 
 # runs simulation
@@ -71,7 +73,7 @@ echo
 echo "  running solver..."
 echo
 cd bin/
-mpirun -np $NPROC ./xspecfem3D
+mpiexec -np $NPROC ./xspecfem3D
 cd ../
 
 echo

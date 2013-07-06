@@ -9,13 +9,25 @@ using a 2-layer model as shown in their Figure 8, left.
 
 step-by-step tutorial:
 
-0. run the example in the directory homogeneous_halfspace
+0. bash run this example in the directory examples/layered_halfspace/
+   
+     > ./process.sh
 
-1. copy three input files from examples directory into SPECFEM3D/DATA/:
+which basically goes through the following steps:
 
-     > cd examples/layered_halfspace/DATA/
-     > cp CMTSOLUTION Par_file STATIONS ../../../DATA/
+1. recompile and link all executables 
 
+     > cd ../.. # to the root directory of the package
+     > make clean
+     > make 
+     > cd -
+     > cd bin
+     > rm -f ./x*
+     > ln -s ../../../bin/xdecompose_mesh 
+     > ln -s ../../../bin/xgenerate_databases 
+     > ln -s ../../../bin/xspecfem3D 
+     > cd ..
+Note three input files (CMTSOLUTION, Par_file, STATIONS) are already in the DATA/ directory.
 
 2. create mesh:
 
@@ -29,7 +41,10 @@ step-by-step tutorial:
 
      (or select: "2lay_mesh_boundary_fig8-nodoubling.py" for regular mesh without doubling layer)
 
-     this creates all the mesh files in subdirectory MESH/
+     this creates all the mesh files in subdirectory MESH/ through the cubit2specfem3d.py script, including:
+      nodes_coords_file, nummaterial_velocity_file,
+      materials_file, mesh_file,
+      absorb_surface_file_bottom/xmin/xmax/ymin/ymax, free_surface_file
 
 
    - optional: check mesh quality using check_mesh_quality_CUBIT_Abaqus.f90
@@ -78,38 +93,45 @@ step-by-step tutorial:
 
 3. decompose mesh files:
 
+    - to run directly without scheduler, first enter bin/ directory (important!)
+        > ./xdecompose_mesh $NPROC ../MESH/ ../OUTPUT_FILES/DATABASES_MPI/
+
+    or copy utils/Cluster/pbs/go_decomposer_pbs.bash to example run directory:
+
     - set mesh directory in go_decomposer_pbs.bash to:
-      MESHDIR=examples/layered_halfspace/MESH/
+        MESHDIR=MESH/
 
     - run decomposer:
       > qsub go_decomposer_pbs.bash
 
-      which creates mesh partitions "proc0000***_Database" in directory "DATABASES_MPI".
-      you can then specify "../OUTPUT_FILES/DATABASES_MPI" in "Par_file" for your "LOCAL_PATH"
+      which creates mesh partitions "proc0000***_Database" in directory "OUTPUT_FILES/DATABASES_MPI".
+      as specified for LOCAL_PATH in  DATA/Par_file 
 
 
 4. generate databases:
-
-    - compile generate_databases:
-      > make xgenerate_databases
+    - to run without scheduler, enter bin/
+       > mpiexec -np 4 ./xgenerate_databases
+    
+    or copy utils/Cluster/pbs/go_generate_databases_pbs.bash to example run directory:
 
     - submit job script:
       > qsub go_generate_databases_pbs.bash
 
-      this will create binary mesh files, e.g. "proc000***_external_mesh.bin"
-      in directory OUTPUT_FILES/DATABASES_MPI/.
+      this will create binary mesh files in directory OUTPUT_FILES/DATABASES_MPI/, including:
+      proc000***_external_mesh,attenuation,ibool,rho,vp,vs,x,y,z.bin
+      if SAVE_MESH_FILES=.true., one also gets proc000***_vp,vs.vtk which can be loaded into paraview
+      to view model, mesh, and partitioning
+
       (note: if execution fails due to memory shortage - most likely fails when calling routine to
            create regional mesh - then try to increase process memory stack size: ulimit -s 2000000  (2GB) )
 
-      optional: load a set of .vtk files into paraview to view model, mesh, and partitioning
-      (note: must have Par_file option SAVE_MESH_FILES = .true.)
-
 
 5. run simulation:
-
-    - compile and run specfem3D:
-      > make xspecfem3D
-      > qsub go_solver_pbs.bash
+    - without scheduler (in bin/)
+      > mpiexec -np 4 ./xspecfem3D 
+ 
+    - with scheduler
+      > qsub go_solver_pbs.bash  # copied from utils/Cluster/pbs
 
     note: simulation will take about 25 minutes and generate
     3 sets (semd,semv,sema) of 6 seismogram files in OUTPUT_FILES,
