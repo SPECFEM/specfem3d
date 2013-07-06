@@ -775,7 +775,7 @@ blocks above, e.g. 'face\_abs\_xmin'.
 
 After the block definitions are done, you export the mesh using the
 script \texttt{cubit2specfem3d.py} provided in each of the example
-directories. If the export was successful, you should find the following
+directories (linked to the common script \texttt{CUBIT/cubit2specfem3d.py}). If the export was successful, you should find the following
 files in a subdirectory \texttt{MESH/}:
 \begin{description}
 \item [{absorbing\_cpml\_file}] \textbf{(only needed in case of C-PML absorbing
@@ -1044,7 +1044,7 @@ If all paths and flags have been set correctly, the executable \texttt{bin/xdeco
 should be produced.
 
 The partitioning is done in serial for now (in the next release we
-will provide a parallel version of that code), the synopsis is: 
+will provide a parallel version of that code). It needs to be run in the \texttt{bin/} directory because it expects the \texttt{../DATA/Par\_file}. The synopsis is: 
 \begin{lyxcode}
 ./xdecompose\_mesh~nparts~input\_directory~output\_directory
 \end{lyxcode}
@@ -1367,25 +1367,17 @@ properly taken into account, you can use \texttt{Gmsh} \url{http://geuz.org/gmsh
 \item [{\texttt{default}}] Uses model parameters as defined by meshing
 procedures described in the previous Chapter~\ref{cha:Mesh-Generation}. 
 \end{description}
-\end{description}
-\end{description}
 
-\begin{description}
 \item [{\textmd{1D~models~with~real~structure:}}] ~ 
 
 \begin{description}
 \item [{\texttt{1D\_prem}}] Isotropic version of the spherically symmetric
 Preliminary Reference Earth Model (PREM) \citep{DzAn81}. 
-
-\begin{description}
 \item [{\texttt{1D\_socal}}] A standard isotropic 1D model for Southern
 California. 
 \item [{\texttt{1D\_cascadia}}] Isotropic 1D profile for the Cascadia region. 
 \end{description}
-\end{description}
-\end{description}
 
-\begin{description}
 \item [{\textmd{Fully~3D~models:}}] ~ 
 
 \begin{description}
@@ -1394,7 +1386,6 @@ Parameters are set up in routines located in file \texttt{model\_aniso.f90}
 in directory \texttt{src/generate\_databases/}. See Chapter~\ref{cha:-Changing-the}
 for a discussion on how to specify your own 3D model. 
 
-\begin{description}
 \item [{\texttt{external}}] For a user-specified isotropic model which
 uses externally defined model parameters. Uses external model definitions
 set up in routines located in file \texttt{model\_external\_values.f90}
@@ -2452,7 +2443,7 @@ scripts to generate figures specific to each example.
 \chapter{\label{cha:Adjoint-Simulations}Adjoint Simulations}
 
 Adjoint simulations are generally performed for two distinct applications.
-First, they can be used for earthquake source inversions, especially
+First, they can be used in point source moment-tensor inversions, or source imaging for
 earthquakes with large ruptures such as the Lander's earthquake \citep{WaHe94}.
 Second, they can be used to generate finite-frequency sensitivity
 kernels that are a critical part of tomographic inversions based upon
@@ -2471,11 +2462,11 @@ parameters in the \texttt{Par\_file} are \texttt{SIMULATION\_TYPE}
 \section{\label{sec:Adjoint-simulation-sources}Adjoint Simulations for Sources
 Only (not for the Model)}
 
-In the case where a specific misfit function is minimized to invert
-for the earthquake source parameters, the gradient of the misfit function
+When a specific misfit function between data and synthetics is minimized to invert
+for earthquake source parameters, the gradient of the misfit function
 with respect to these source parameters can be computed by placing
-time-reversed seismograms at the receivers and using them as sources
-in an adjoint simulation, and then the value of the gradient is obtained
+time-reversed seismograms at the receivers as virtual sources
+in an adjoint simulation. Then the value of the gradient is obtained
 from the adjoint seismograms recorded at the original earthquake location.
 \begin{enumerate}
 \item \textbf{Prepare the adjoint sources} \label{enu:Prepare-the-adjoint}
