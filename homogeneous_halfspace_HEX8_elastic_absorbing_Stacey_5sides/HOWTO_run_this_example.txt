@@ -3,7 +3,7 @@ To run this example on 4 processor cores for instance, type this (replace "4" wi
 
 cd bin/
 
-./bin/xdecompose_mesh 4 DATA/MESH-default/ OUTPUT_FILES/DATABASES_MPI/
+./xdecompose_mesh 4 ../DATA/MESH-default/ ../OUTPUT_FILES/DATABASES_MPI/
 
 mpirun -np 4 ./xgenerate_databases
 

@@ -57,19 +57,20 @@ step-by-step kernel tutorial:
            within a time window between 10 - 25 seconds and on the Z-component only.
 
    - make designated directory for adjoint sources:
-     > mkdir OUTPUT_FILES/SEM/
-     > mv OUTPUT_FILES/*.adj OUTPUT_FILES/SEM/
-     > cd OUTPUT_FILES/SEM/
+     > mkdir SEM/
+     > mv OUTPUT_FILES/*.adj SEM/
+     > cd SEM/
      > rename .semd.adj .adj *.adj
+(on some linux machines, the last line may be rename 's/.semd.adj/.adj/' *.adj)
 
      this should create the files:
-          OUTPUT_FILES/SEM/X20.DB.BXX.adj
-          OUTPUT_FILES/SEM/X20.DB.BXY.adj
-          OUTPUT_FILES/SEM/X20.DB.BXZ.adj
+          SEM/X20.DB.BXX.adj
+          SEM/X20.DB.BXY.adj
+          SEM/X20.DB.BXZ.adj
 
    - setup adjoint stations file STATIONS_ADJOINT containing the receiver stations locations
-     which will have adjoint source files in OUTPUT_FILES/SEM/:
-     > cd /SPECFEM3D
+     which will have adjoint source files in SEM/:
+     > cd SPECFEM3D
      > cp examples/homogeneous_halfspace/DATA/STATIONS_ADJOINT DATA/
 
 
@@ -106,8 +107,24 @@ step-by-step kernel tutorial:
      where we use the partitions with id 0 to 3 to include all 4 processor partitions.
      By default, this will produce the vtk file /SPECFEM3D/OUTPUT_FILES/alpha_kernel.vtk
      This file can be visualized using Paraview (see image alpha_kernel.png for reference).
+ 
+   -- Visualize kernels in Paraview
 
-     OPTIONAL:
+   in the run directory, open up paraview gui
+
+   > paraview
+ 
+   On the top menu, click File -> Open, and choose the alpha_kernel.vtk file and click 'Apply'. Go to 'Display' tab, in the 'Style' section, choose Representation -> 'Surface', and then in the 'Color' section, choose 'Color by' -> alpha_kernel. Now the model block can be rotated by the left button of the mouse, translated by the middle button and zoomed in/out by the right button.
+
+   Similarly import 'sr.vtk' file to visualize the source/receiver locatioins. File -> Open, choose sr.vtk and click 'Apply'. While it is highlighted in the 'Pipeline Browser', select menu Filters -> Alphabetical -> Glyph, and click 'Apply'. In the 'Properties' tab, select 'Glyph Type' -> Sphere, and hit 'Apply' again. The little sphere representing the receiver will appear on the surface. To see both the source and receiver, click on the eye-like icon in front of `alpha_kernel.vtk' in the Pipeline Browser to hide the kernel view. You will find the source sphere at the center of the block.
+
+  Now reactivate 'alpha_kernel.vtk', and while it is highlighted, choose menu Filters -> Alphebetical -> Clip, and in the Properties tab, type in the Normal of a y-plane [0,1,0] (the default origin is fine), click 'Apply' to accept, and choose in the 'Display' tab, Representation -> Surface, Color by -> 'alpha_kernel'. Then click on 'Edit color map' button to work with the 'Color Scale Editor' pop-up menu. In this window, 'Choose Preset' -> Red to blue HSV -> OK (note it is possible to import your own favourite color scales). Unclick 'Automatically Rescale to Fit Data Range', then click 'Rescale Range' to choose minimum of -1e-12 and maximum 1e-12, and click 'Rescale'. You may then click the 'Color Legend' tab and choose to 'Show Color Legend'. Close the popup window, and now the P sensitivity kernel linking the source and receiver can be nicely seen. The visualization results can be saved by menu File -> Save screenshot, which will produce an png file that is similar to the 'homogeneous_halfspace_P_kernel.png' file given in the example directory.
+
+  Note The rescaling of colorbar is necessary because the values of the kernel is very large at the source and receiver locations due to unrealistic assumption of point sources. To be able to see better the kernel itself, it is sometimes necessary to reduce the maximum value for color scales by four orders of magitude. This is also why it is necessary to smooth these kernels and get rid of the spuriously large values at the sources and receivers before using them in tomographic inversions.
+   
+
+
+====  OPTIONAL (obsolete) ====
      To convert the mesh format to VTK, you can use utils/Visualization/Paraview/mesh2vtu:
       > cd utils/Visualization/Paraview/mesh2vtu
      Modify the Makefile according to your library paths and compile mesh2vtu:
@@ -116,6 +133,4 @@ step-by-step kernel tutorial:
      and run:
       > mesh2vtu.pl -i OUTPUT_FILES/alpha_kernel.mesh -o OUTPUT_FILES/alpha_kernel.vtu
 
-     which creates the *.vtu file:  Paraview -> Menu File -> Open ...
-                                       (and choose the alpha_kernel.vtu)
-
+     which creates the *.vtu file to be viewed in Paraview  
