@@ -125,6 +125,10 @@
 !!
 !!-----------------------------------------------------------
 
+! interpolates position to find best possible location closest to target position (default)
+! note: this can be turned off to speedup location search and locate the source at the closest GLL point instead
+  logical, parameter :: USE_BEST_LOCATION = .true.
+
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
 
