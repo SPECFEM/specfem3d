@@ -99,7 +99,7 @@
 \thispagestyle{empty}\vspace*{-1.8truecm} %
 \makebox[1\textwidth]{%
 \includegraphics[width=0.83\paperwidth]{figures/specfem_3d_Cartesian-cover} %
-} 
+}
 \par\end{center}
 
 
@@ -107,8 +107,7 @@
  \textbf{User Manual}}
 
 
-\author{$\copyright$ Princeton University (USA),\\
-CNRS and University of Marseille (France),\\
+\author{$\copyright$ Princeton University (USA), CNRS and University of Marseille (France),\\
 and ETH Z\"urich (Switzerland)\\
 Version 2.1}
 
@@ -334,7 +333,7 @@ Marie Curie program.
 \chapter{\label{cha:Getting-Started}Getting Started}
 
 The SPECFEM3D Cartesian software package comes in a gzipped tar ball.
-In the directory in which you want to install the package, type 
+In the directory in which you want to install the package, type
 \begin{lyxcode}
 {\small tar~-zxvf~SPECFEM3D\_V2.1.0\_Cartesian.tar.gz}{\small \par}
 \end{lyxcode}
@@ -363,14 +362,14 @@ compiler options for your system. Known issues or things to check
 are:
 \begin{description}
 \item [{\texttt{Intel ifort compiler}}] See if you need to add \texttt{-assume
-byterecl} for your machine. 
+byterecl} for your machine.
 \item [{\texttt{IBM compiler}}] See if you need to add \texttt{-qsave}
-or \texttt{-qnosave} for your machine. 
+or \texttt{-qnosave} for your machine.
 \item [{\texttt{Mac OS}}] You will probably need to install \texttt{XCODE}.
 In addition, the \texttt{clock\_gettime} routine, which is used by
 the \texttt{SCOTCH} library that we use, does not exist in Mac OS.
 You will need to replace it with \texttt{clock\_get\_time} if you
-want to use \texttt{SCOTCH}. 
+want to use \texttt{SCOTCH}.
 \end{description}
 When compiling on an IBM machine with the \texttt{xlf} and \texttt{xlc}
 compilers, we suggest running the \texttt{configure} script with the
@@ -428,12 +427,12 @@ France, downloadable from the web page \url{https://gforge.inria.fr/projects/sco
 In case no SCOTCH libraries can be found on the system, the configuration
 will bundle the version provided with the source code for compilation.
 The path to an existing SCOTCH installation can to be set explicitly
-with the option \texttt{-{}-with-scotch-dir}. Just as an example: 
+with the option \texttt{-{}-with-scotch-dir}. Just as an example:
 \begin{lyxcode}
 ./configure~FC=ifort~MPIFC=mpif90~-{}-with-scotch-dir=/opt/scotch
 \end{lyxcode}
 If you use the Intel ifort compiler to compile the code, we recommend
-that you use the Intel icc C compiler to compile Scotch, i.e., use: 
+that you use the Intel icc C compiler to compile Scotch, i.e., use:
 \begin{lyxcode}
 ./configure~CC=icc~FC=ifort~MPIFC=mpif90
 \end{lyxcode}
@@ -444,11 +443,11 @@ MPI.
 
 A summary of the most important configuration variables follows.
 \begin{description}
-\item [{\texttt{F90}}] Path to the Fortran compiler. 
-\item [{\texttt{MPIF90}}] Path to MPI Fortran. 
+\item [{\texttt{F90}}] Path to the Fortran compiler.
+\item [{\texttt{MPIF90}}] Path to MPI Fortran.
 \item [{\texttt{MPI\_FLAGS}}] Some systems require this flag to link to
-MPI libraries. 
-\item [{\texttt{FLAGS\_CHECK}}] Compiler flags. 
+MPI libraries.
+\item [{\texttt{FLAGS\_CHECK}}] Compiler flags.
 \end{description}
 The configuration script automatically creates for each executable
 a corresponding \texttt{Makefile} in the \texttt{src/} subdirectoy.
@@ -476,7 +475,7 @@ have no local disks, e.g., BlueGene or the Earth Simulator, and other
 systems have a fast parallel file system, in which case this flag
 should be set to \texttt{.true.}. Note that this flag is not used
 by the database generator or the solver; it is only used for some
-of the post-processing. 
+of the post-processing.
 \end{description}
 The package can run either in single or in double precision mode.
 The default is single precision because for almost all calculations
@@ -487,12 +486,12 @@ as much memory. Select your preference by selecting the appropriate
 setting in the \texttt{constants.h} file:
 \begin{description}
 \item [{\texttt{CUSTOM\_REAL}}] Set to \texttt{SIZE\_REAL} for single precision
-and \texttt{SIZE\_DOUBLE} for double precision. 
+and \texttt{SIZE\_DOUBLE} for double precision.
 \end{description}
 In the \texttt{precision.h} file:
 \begin{description}
 \item [{\texttt{CUSTOM\_MPI\_TYPE}}] Set to \texttt{MPI\_REAL} for single
-precision and \texttt{MPI\_DOUBLE\_PRECISION} for double precision. 
+precision and \texttt{MPI\_DOUBLE\_PRECISION} for double precision.
 \end{description}
 On many current processors (e.g., Intel, AMD, IBM Power), single precision
 calculations are significantly faster; the difference can typically
@@ -648,7 +647,7 @@ geophysical models with increasing complexity.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=0.6\textwidth]{figures/mount-cubit} 
+\includegraphics[width=0.6\textwidth]{figures/mount-cubit}
 \par\end{centering}
 
 \caption{Example of the graphical user interface of CUBIT. The hexahedral mesh
@@ -656,18 +655,18 @@ shown in the main display consists of a hexahedral discretization
 of a single volume with topography.}
 
 
-\label{fig:mount.cubit} 
+\label{fig:mount.cubit}
 \end{figure}
 
 
 The basic steps in creating a load-balanced, partitioned mesh with
-CUBIT are: 
+CUBIT are:
 \begin{description}
-\item [{1.}] setting up a hexahedral mesh with CUBIT, 
+\item [{1.}] setting up a hexahedral mesh with CUBIT,
 \item [{2.}] exporting the CUBIT mesh into a SPECFEM3D Cartesian file format
-and 
+and
 \item [{3.}] partitioning the SPECFEM3D Cartesian mesh files for a chosen
-number of cores. 
+number of cores.
 \end{description}
 Examples are provided in the SPECFEM3D Cartesian package in the subdirectory
 \texttt{examples/}. We strongly encourage you to contribute your own
@@ -681,26 +680,26 @@ For the installation and handling of the CUBIT meshing tool suite,
 please refer to the CUBIT user manual and documentation. In order
 to give you a basic understanding of how to use CUBIT for our purposes,
 examples are provided in the SPECFEM3D Cartesian package in the subdirectory
-\texttt{examples/}: 
+\texttt{examples/}:
 \begin{description}
 \item [{\texttt{homogeneous\_halfspace}}] Creates a single block model
-and assigns elastic material parameters. 
+and assigns elastic material parameters.
 \item [{\texttt{layered\_halfspace}}] Combines two different, elastic material
 volumes and creates a refinement layer between the two. This example
 can be compared for validation against the solutions provided in subdirectory
 ~\\
- \texttt{VALIDATION\_3D\_SEM\_SIMPLER\_LAYER\_SOURCE\_DEPTH/}. 
+ \texttt{VALIDATION\_3D\_SEM\_SIMPLER\_LAYER\_SOURCE\_DEPTH/}.
 \item [{\texttt{waterlayered\_halfspace}}] Combines an acoustic and elastic
-material volume as in a schematic marine survey example. 
+material volume as in a schematic marine survey example.
 \item [{\texttt{tomographic\_model}}] Creates a single block model whose
 material properties will have to be read in from a tomographic model
-file during the databases creation by \texttt{xgenerate\_databases}. 
+file during the databases creation by \texttt{xgenerate\_databases}.
 \end{description}
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.45\textwidth]{figures/example-homogeneous}
 \includegraphics[width=0.45\textwidth]{figures/example-2layers} \\
- \includegraphics[width=0.45\textwidth]{figures/example-water} \includegraphics[width=0.45\textwidth]{figures/example-tomo} 
+ \includegraphics[width=0.45\textwidth]{figures/example-water} \includegraphics[width=0.45\textwidth]{figures/example-tomo}
 \par\end{centering}
 
 \caption{Screenshots of the CUBIT examples provided in subdirectory \texttt{examples/}:
@@ -708,7 +707,7 @@ homogeneous halfspace (top-left), layered halfspace (top-right), water
 layered halfspace (bottom-left) and tomographic model (bottom-right).}
 
 
-\label{fig:examples.cubit} 
+\label{fig:examples.cubit}
 \end{figure}
 
 
@@ -737,24 +736,24 @@ unique identifier, e.g. 'elastic 1', 'elastic 2', etc. The additional
 attributes to the block define the material description.
 
 
-For an elastic material: 
+For an elastic material:
 \begin{description}
-\item [{material\_id}] An integer value which is unique for this material. 
-\item [{Vp}] P-wave speed of the material (given in m/s). 
-\item [{Vs}] S-wave speed of the material (given in m/s). 
-\item [{rho}] density of the material (given in kg/m$^{3}$). 
+\item [{material\_id}] An integer value which is unique for this material.
+\item [{Vp}] P-wave speed of the material (given in m/s).
+\item [{Vs}] S-wave speed of the material (given in m/s).
+\item [{rho}] density of the material (given in kg/m$^{3}$).
 \item [{Q}] quality factor to use in case of a simulation with attenuation
 turned on. It should be between 1 and 9000. In case no attenuation
 information is available, it can be set to zero. Please note that
 your Vp- and Vs-speeds are given for a reference frequency. To change
 this reference frequency, you change the value of \texttt{ATTENUATION\_f0\_REFERENCE}
 in the main constants file \texttt{constants.h} found in subdirectory
-\texttt{src/shared/}. 
+\texttt{src/shared/}.
 \item [{anisotropic\_flag}] Flag describing the anisotropic model to use
 in case an anisotropic simulation should be conducted. See the file
 \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/}
 for an implementation of the anisotropic models. In case no anisotropy
-is available, it can be set to zero. 
+is available, it can be set to zero.
 \end{description}
 
 Note that this material block has to be defined using all the volumes
@@ -762,31 +761,31 @@ which belong to this elastic material. For volumes belonging to another,
 different material, you will need to define a new material block.
 
 
-For an acoustic material: 
+For an acoustic material:
 \begin{description}
-\item [{material\_id}] An integer value which is unique for this material. 
-\item [{Vp}] P-wave speed of the material (given in m/s). 
-\item [{0}] S-wave speed of the material is ignored. 
-\item [{rho}] density of the material (given in kg/m$^{3}$). 
+\item [{material\_id}] An integer value which is unique for this material.
+\item [{Vp}] P-wave speed of the material (given in m/s).
+\item [{0}] S-wave speed of the material is ignored.
+\item [{rho}] density of the material (given in kg/m$^{3}$).
 \end{description}
 \item [{face\_topo}] Block definition for the surface which defines the
 free surface (which can have topography). The name of this block must
 be 'face\_topo', the block has to be defined using all the surfaces
 which constitute the complete free surface of the model.
 \item [{face\_abs\_xmin}] Block definition for the faces on the absorbing
-boundaries, one block for each surface with x=Xmin. 
+boundaries, one block for each surface with x=Xmin.
 \item [{face\_abs\_xmax}] Block definition for the faces on the absorbing
-boundaries, one block for each surface with x=Xmax. 
+boundaries, one block for each surface with x=Xmax.
 \item [{face\_abs\_ymin}] Block definition for the faces on the absorbing
-boundaries, one block for each surface with y=Ymin. 
+boundaries, one block for each surface with y=Ymin.
 \item [{face\_abs\_ymax}] Block definition for the faces on the absorbing
-boundaries, one block for each surface with y=Ymax. 
+boundaries, one block for each surface with y=Ymax.
 \item [{face\_abs\_bottom}] Block definition for the faces on the absorbing
-boundaries, one block for each surface with z=bottom. 
+boundaries, one block for each surface with z=bottom.
 \end{description}
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=0.45\textwidth]{figures/mount-surface} \includegraphics[width=0.45\textwidth]{figures/mount-abs} 
+\includegraphics[width=0.45\textwidth]{figures/mount-surface} \includegraphics[width=0.45\textwidth]{figures/mount-abs}
 \par\end{centering}
 
 \caption{Example of the block definitions for the free surface 'face\_topo'
@@ -794,7 +793,7 @@ boundaries, one block for each surface with z=bottom.
 (right) in CUBIT.}
 
 
-\label{fig:mount.abs} 
+\label{fig:mount.abs}
 \end{figure}
 
 
@@ -817,19 +816,19 @@ C-PML layer(s) that element belongs, according to the following convention:
 
 \begin{itemize}
 \item Flag = 1 : element belongs to a X CPML layer only (either in Xmin
-or in Xmax), 
+or in Xmax),
 \item Flag = 2 : element belongs to a Y CPML layer only (either in Ymin
-or in Ymax), 
+or in Ymax),
 \item Flag = 3 : element belongs to a Z CPML layer only (either in Zmin
-or in Zmax), 
+or in Zmax),
 \item Flag = 4 : element belongs to a X CPML layer and also to a Y CPML
-layer, 
+layer,
 \item Flag = 5 : element belongs to a X CPML layer and also to a Z CPML
-layer, 
+layer,
 \item Flag = 6 : element belongs to a Y CPML layer and also to a Z CPML
-layer, 
+layer,
 \item Flag = 7 : element belongs to a X, to a Y and to a Z CPML layer, i.e.,
-it belongs to a CPML corner. 
+it belongs to a CPML corner.
 \end{itemize}
 
 Note that it does not matter whether an element belongs to a Xmin
@@ -879,7 +878,7 @@ for a while because it makes fluid-solid matching inside the CPML
 much easier.
 
 \item [{materials\_file}] Contains the material associations for each element.
-The format is: 
+The format is:
 
 \begin{lyxcode}
 element\_ID~material\_ID
@@ -895,12 +894,12 @@ for instance in the case of tomographic models; in such a case, material
 properties can vary inside each spectral element, i.e. be different
 at each of its Gauss-Lobatto-Legendre grid points).
 
-\item [{nummaterial\_velocity\_file}] Defines the material properties. 
+\item [{nummaterial\_velocity\_file}] Defines the material properties.
 
 \begin{itemize}
 \item For classical materials (i.e., spectral elements for which the velocity
 and density model will not be assigned by calling an external function
-to define for instance a tomographic model), the format is: 
+to define for instance a tomographic model), the format is:
 
 \begin{lyxcode}
 domain\_ID~material\_ID~rho~vp~vs~Qkappa~Qmu~anisotropy\_flag
@@ -924,16 +923,16 @@ the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here. %%magnoni
 
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the}
 and Section \ref{sec:Using-tomographic} `Using external tomographic
-Earth models' for further details. 
+Earth models' for further details.
 \end{itemize}
 \item [{nodes\_coords\_file}] Contains the point locations in Cartesian
-coordinates of the mesh element corners. 
+coordinates of the mesh element corners.
 \item [{mesh\_file}] Contains the mesh element connectivity. The hexahedral
 elements can have 8 or 27 nodes.\\
  See picture doc/mesh\_numbering\_convention/numbering\_convention\_27\_nodes.jpg
 to see\\
  in which (standard) order the points must be cited. In the case of
-8 nodes, just include the first 8 points. 
+8 nodes, just include the first 8 points.
 \item [{free\_or\_absorbing\_surface\_file\_zmax}] Contains the free surface
 connectivity or \\
  the surface connectivity of the absorbing boundary surface at the
@@ -942,32 +941,32 @@ top (Zmax), \\
 (\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE} in \texttt{DATA/Par\_file}). \\
  You should put both the surface of acoustic regions and of elastic
 regions in that file; that is, list all the element faces that constitute
-the surface of the model in that file. 
+the surface of the model in that file.
 \item [{absorbing\_surface\_file\_xmax}] Contains the surface connectivity
 of the absorbing boundary surface at Xmax \\
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
-edge). 
+edge).
 \item [{absorbing\_surface\_file\_xmin}] Contains the surface connectivity
 of the absorbing boundary surface at Xmin \\
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
-edge). 
+edge).
 \item [{absorbing\_surface\_file\_ymax}] Contains the surface connectivity
 of the absorbing boundary surface at Ymax \\
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
-edge). 
+edge).
 \item [{absorbing\_surface\_file\_ymin}] Contains the surface connectivity
 of the absorbing boundary surface at Ymin \\
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
-edge). 
+edge).
 \item [{absorbing\_surface\_file\_bottom}] Contains the surface connectivity
 of the absorbing boundary surface at the bottom (Zmin) \\
 (also needed in the case of C-PML absorbing conditions, in order for
 the code to be able to impose Dirichlet conditions on their outer
-edge). 
+edge).
 \end{description}
 These mesh files are needed as input files for the partitioner \texttt{xdecompose\_mesh}
 to load-balance the mesh. Please see the next section for further
@@ -988,11 +987,11 @@ block IDs belonging to volumes in order to check the quality of the
 hexahedral elements. You also have to determine a number of parameters
 of your mesh, such as the number of nodes and number of elements and
 modify the header of the \texttt{check\_mesh\_quality\_CUBIT\_Abaqus.f90}
-source file. Then, in the main directory, type 
+source file. Then, in the main directory, type
 \begin{lyxcode}
 {\small make~xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
-and use 
+and use
 \begin{lyxcode}
 {\small ./bin/xcheck\_mesh\_quality\_CUBIT\_Abaqus}{\small \par}
 \end{lyxcode}
@@ -1052,7 +1051,7 @@ at \url{http://www.labri.fr/perso/pelegrin/scotch/scotch_en.html}
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.45\textwidth]{figures/mount-partitions}
-\includegraphics[width=0.45\textwidth]{figures/mount-partitions2} 
+\includegraphics[width=0.45\textwidth]{figures/mount-partitions2}
 \par\end{centering}
 
 \caption{Example of a mesh partitioning onto four cores. Each single core partition
@@ -1062,11 +1061,11 @@ decomposition is explained in detail in \citet{MaKoBlLe08}, and excellent
 scaling up to 150,000 processor cores in shown for instance in \citet{CaKoLaTiMiLeSnTr08,KoLaMi08a,MaKoBlLe08,KoErGoMi10,Kom11}.}
 
 
-\label{fig:mount.partitions} 
+\label{fig:mount.partitions}
 \end{figure}
 
 
-When you are ready to compile, in the main directory type 
+When you are ready to compile, in the main directory type
 \begin{lyxcode}
 {\small make~xdecompose\_mesh}{\small \par}
 \end{lyxcode}
@@ -1074,25 +1073,25 @@ If all paths and flags have been set correctly, the executable \texttt{bin/xdeco
 should be produced.
 
 The partitioning is done in serial for now (in the next release we
-will provide a parallel version of that code). It needs to be run in the \texttt{bin/} directory because it expects the \texttt{../DATA/Par\_file}. The synopsis is: 
+will provide a parallel version of that code). It needs to be run in the \texttt{bin/} directory because it expects the \texttt{../DATA/Par\_file}. The synopsis is:
 \begin{lyxcode}
 ./xdecompose\_mesh~nparts~input\_directory~output\_directory
 \end{lyxcode}
-where 
+where
 \begin{itemize}
 \item \texttt{nparts} is the number of partitions, i.e., the number of cores
-for the parallel simulations, 
+for the parallel simulations,
 \item \texttt{input\_directory} is the directory which holds all the files
 generated by the Python script \texttt{cubit2specfem3d.py} explained
 in the previous Section~\ref{subsec:Exporting-the-Mesh}, e.g. \texttt{MESH/},
-and 
+and
 \item \texttt{output\_directory} is the directory for the output of this
 partitioner which stores ACII-format files named like \texttt{proc{*}{*}{*}{*}{*}{*}\_Database}
 for each partition. These files will be needed for creating the distributed
 databases, and have to reside in the directory \texttt{LOCAL\_PATH}
 specified in the main \texttt{Par\_file}, e.g. in directory \texttt{OUTPUT\_FILES/DATABASES\_MPI}.
 Please see Chapter~\ref{cha:Creating-Distributed-Databases} for
-further details. 
+further details.
 \end{itemize}
 Note that all the files generated by the Python script \texttt{cubit2specfem3d.py}
 must be placed in the \texttt{input\_directory} folder before running
@@ -1109,7 +1108,7 @@ is provided in this version of the package.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[scale=0.5]{figures/socal_map_mpi} 
+\includegraphics[scale=0.5]{figures/socal_map_mpi}
 \par\end{centering}
 
 \caption{\label{fig:For-parallel-computing}For parallel computing purposes,
@@ -1118,7 +1117,7 @@ of elements. In this example we use $5^{2}=25$ processors. }
 \end{figure}
 
 
-In the main directory, type 
+In the main directory, type
 \begin{lyxcode}
 {\small make~xmeshfem3D}{\small \par}
 \end{lyxcode}
@@ -1147,20 +1146,20 @@ mesher for a global simulation, the following parameters need to be
 set in the }\texttt{\small Mesh\_Par\_file}{\small :}{\small \par}
 \begin{description}
 \item [{\texttt{LATITUDE\_MIN}}] Minimum latitude in the block (negative
-for South). 
-\item [{\texttt{LATITUDE\_MAX}}] Maximum latitude in the block. 
+for South).
+\item [{\texttt{LATITUDE\_MAX}}] Maximum latitude in the block.
 \item [{\texttt{LONGITUDE\_MIN}}] Minimum longitude in the block (negative
-for West). 
-\item [{\texttt{LONGITUDE\_MAX}}] Maximum longitude in the block. 
-\item [{\texttt{DEPTH\_BLOCK\_KM}}] Depth of bottom of mesh in kilometers. 
+for West).
+\item [{\texttt{LONGITUDE\_MAX}}] Maximum longitude in the block.
+\item [{\texttt{DEPTH\_BLOCK\_KM}}] Depth of bottom of mesh in kilometers.
 \item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
 which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
- \texttt{PROJECTION} is \texttt{.false.}. 
+ \texttt{PROJECTION} is \texttt{.false.}.
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in geographical coordinates, and
 needs to be \texttt{.true.} when your model is specified in Cartesian
 coordinates. \noun{UTM projection zone in which your simulation region
-resides.} 
+resides.}
 \item [{\texttt{INTERFACES\_FILE }}] File which contains the description
 of the topography and of the interfaces between the different layers
 of the model, if any. The number of spectral elements in the vertical
@@ -1180,38 +1179,38 @@ the simulation will be accurate to a shortest period determined by
 element, i.e., the number of Gauss-Lobatto-Legendre points, is determined
 by \texttt{NGLLX} in the \texttt{constants.h} file. We generally use
 $\mbox{\texttt{NGLLX\/}}=5$, for a total of $5^{3}=125$ points per
-elements. We suggest not to change this value. 
+elements. We suggest not to change this value.
 \item [{$\nexeta$}] The number of spectral elements along the other side
 of the block. This number \textit{must} be 8~$\times$~a multiple
-of $\nproceta$ defined below. 
+of $\nproceta$ defined below.
 \item [{$\nprocxi$}] The number of processors or slices along one side
 of the block (see Figure~\ref{fig:For-parallel-computing}); we must
 have $\nexxi=8\times c\times\nprocxi$, where $c\ge1$ is a positive
-integer. 
+integer.
 \item [{$\nproceta$}] The number of processors or slices along the other
 side of the block; we must have $\nexeta=8\times c\times\nproceta$,
-where $c\ge1$ is a positive integer. 
+where $c\ge1$ is a positive integer.
 \item [{\texttt{USE\_REGULAR\_MESH}}] set to be \texttt{.true.} if you
 want a perfectly regular mesh or \texttt{.false.} if you want to add
 doubling horizontal layers to coarsen the mesh. In this case, you
 also need to provide additional information by setting up the next
-three parameters. 
+three parameters.
 \item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers.
 Must be set to \texttt{1} or \texttt{2} if \texttt{USE\_REGULAR\_MESH}
-is set to \texttt{.true.}. 
+is set to \texttt{.true.}.
 \item [{\texttt{NZ\_DOUBLING\_1}}] The position of the first doubling layer
-(only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}). 
+(only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}).
 \item [{\texttt{NZ\_DOUBLING\_2}}] The position of the second doubling
 layer (only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}
-and if \texttt{NDOUBLINGS} is set to \texttt{2}). 
+and if \texttt{NDOUBLINGS} is set to \texttt{2}).
 \item [{\texttt{CREATE\_ABAQUS\_FILES}}] Set this flag to \texttt{.true.}
 to save Abaqus FEA \urlwithparentheses{www.simulia.com} mesh files
 for subsequent viewing. Turning the flag on generates files in the
 \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
-for a discussion of mesh viewing features. 
+for a discussion of mesh viewing features.
 \item [{\texttt{CREATE\_DX\_FILES}}] Set this flag to \texttt{.true.} to
 save OpenDX \urlwithparentheses{www.opendx.org} mesh files for subsequent
-viewing. 
+viewing.
 \item [{\texttt{LOCAL\_PATH}}] Directory in which the partitions generated
 by the mesher will be written. Generally one uses a directory on the
 local disk of the compute nodes, although on some machines these partitions
@@ -1226,25 +1225,25 @@ generated by the mesher. These files will be needed for creating the
 distributed databases, and have to reside in the directory \texttt{LOCAL\_PATH}
 specified in the main \texttt{Par\_file}, e.g. in directory \texttt{OUTPUT\_FILES/DATABASES\_MPI}.
 Please see Chapter~\ref{cha:Creating-Distributed-Databases} for
-further details. 
+further details.
 \item [{\texttt{NMATERIALS}}] The number of different materials in your
 model. In the following lines, each material needs to be defined as
-: 
+:
 
 \begin{lyxcode}
 material\_ID~rho~vp~vs~Q~anisotropy\_flag~domain\_ID
 \end{lyxcode}
 
-where 
+where
 \begin{itemize}
-\item \texttt{Q} : quality factor (0=no attenuation) 
+\item \texttt{Q} : quality factor (0=no attenuation)
 \item \texttt{anisotropy\_flag} : 0=no anisotropy / 1,2,.. check with implementation
-in \texttt{aniso\_model.f90} 
-\item \texttt{domain\_id} : 1=acoustic / 2=elastic 
+in \texttt{aniso\_model.f90}
+\item \texttt{domain\_id} : 1=acoustic / 2=elastic
 \end{itemize}
 \item [{\texttt{NREGIONS}}] The number of regions in the mesh. In the following
 lines, because the mesh is regular or 'almost regular', each region
-is defined as : 
+is defined as :
 
 \begin{lyxcode}
 NEX\_XI\_BEGIN~NEX\_XI\_END~NEX\_ETA\_BEGIN~NEX\_ETA\_END~NZ\_BEGIN~NZ\_END~material\_ID
@@ -1255,18 +1254,18 @@ defines the file which contains the settings of the topography grid
 and of the interfaces grids. Topography is defined as a set of elevation
 values on a regular 2D grid. It is also possible to define interfaces
 between the layers of the model in the same way. The file needs to
-define several parameters: 
+define several parameters:
 \begin{itemize}
 \item The number of interfaces, including the topography. This needs to
 be set at the first line. Then, from the bottom to the top of the
-model, you need to define the grids with: 
-\item \texttt{SUPPRESS\_UTM\_PROJECTION} flag as described previously, 
-\item number of points along $x$ and $y$ direction (NXI and NETA), 
-\item minimal $x$ and $y$ coordinates (LONG\_MIN and LAT\_MIN), 
+model, you need to define the grids with:
+\item \texttt{SUPPRESS\_UTM\_PROJECTION} flag as described previously,
+\item number of points along $x$ and $y$ direction (NXI and NETA),
+\item minimal $x$ and $y$ coordinates (LONG\_MIN and LAT\_MIN),
 \item spacing between points along $x$ and $y$ (SPACING\_XI and SPACING\_ETA)
-and 
+and
 \item the name of the file which contains the elevation values (in $y$.$x$
-increasing order). 
+increasing order).
 \end{itemize}
 At the end of this file, you simply need to set the number of spectral
 elements in the vertical direction for each layer. We provide a few
@@ -1300,7 +1299,7 @@ a time step \texttt{DT} to run the solver with. The mesher output
 file also contains a table about the quality of the mesh to indicate
 possible problems with the distortions of elements. Alternatively,
 output can be directed to the screen instead by uncommenting a line
-in \texttt{constants.h}: 
+in \texttt{constants.h}:
 \begin{lyxcode}
 !~uncomment~this~to~write~messages~to~the~screen~
 
@@ -1325,7 +1324,7 @@ information needed by the SEM solver.
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=0.6\textwidth]{figures/workflow} 
+\includegraphics[width=0.6\textwidth]{figures/workflow}
 \par\end{centering}
 
 \caption{Schematic workflow for a SPECFEM3D Cartesian simulation. The executable
@@ -1333,11 +1332,11 @@ information needed by the SEM solver.
 specific model parameters.}
 
 
-\label{fig:workflow.databases} 
+\label{fig:workflow.databases}
 \end{figure}
 
 
-In the main directory, type 
+In the main directory, type
 \begin{lyxcode}
 {\small make~xgenerate\_databases}{\small \par}
 \end{lyxcode}
@@ -1355,85 +1354,85 @@ the subdirectory \texttt{DATA}:
 \begin{description}
 \item [{\texttt{SIMULATION\_TYPE}}] is set to 1 for forward simulations,
 2 for adjoint simulations (see Section \ref{sec:Adjoint-simulation-finite})
-and 3 for kernel simulations (see Section \ref{sec:Finite-Frequency-Kernels}). 
+and 3 for kernel simulations (see Section \ref{sec:Finite-Frequency-Kernels}).
 \item [{\texttt{SAVE\_FORWARD}}] is only set to \texttt{.true.} for a forward
 simulation with the last frame of the simulation saved, as part of
 the finite-frequency kernel calculations (see Section \ref{sec:Finite-Frequency-Kernels}).
 For a regular forward simulation, leave \texttt{SIMULATION\_TYPE}
-and \texttt{SAVE\_FORWARD} at their default values. 
+and \texttt{SAVE\_FORWARD} at their default values.
 \item [{\texttt{\noun{UTM\_PROJECTION\_ZONE}}}] UTM projection zone in
 which your model resides, only valid when \texttt{SUPPRESS\_UTM\_}~\\
- \texttt{PROJECTION} is \texttt{.false.}. 
+ \texttt{PROJECTION} is \texttt{.false.}.
 \item [{\texttt{SUPPRESS\_UTM\_PROJECTION}}] set to be \texttt{.false.}
 when your model range is specified in the geographical coordinates,
 and needs to be \texttt{.true.} when your model is specified in a
 cartesian coordinates. \noun{UTM projection zone in which your simulation
-region resides.} 
+region resides.}
 \item [{\texttt{NPROC}}] The number of MPI processors, each one is assigned
-one slice of the whole mesh. 
+one slice of the whole mesh.
 \item [{\texttt{NSTEP}}] The number of time steps of the simulation. This
 controls the length of the numerical simulation, i.e., twice the number
 of time steps requires twice as much CPU time. This feature is not
 used at the time of generating the distributed databases but is required
 for the solver, i.e., you may change this parameter after running
-\texttt{xgenerate\_databases}. 
+\texttt{xgenerate\_databases}.
 \item [{\texttt{DT}}] The length of each time step in seconds. This feature
 is not used at the time of generating the distributed databases but
 is required for the solver. Please see also Section~\ref{sec:Choosing-the-Time-Step}
-for further details. 
+for further details.
 \item [{\texttt{NGNOD}}] The number of nodes for 2D and 3D shape functions
 for hexahedra. We use either 8-node mesh elements (bricks) or 27-node
 elements. If you use the internal mesher, the only option is 8-node
 bricks (27-node elements are not supported). \texttt{CUBIT} does not
 support HEX27 elements either (it can generate them, but they are
 flat, i.e. identical to HEX8). To generate HEX27 elements with curvature
-properly taken into account, you can use \texttt{Gmsh} \url{http://geuz.org/gmsh/} 
-\item [{\texttt{MODEL}}] Must be set to one of the following: 
+properly taken into account, you can use \texttt{Gmsh} \url{http://geuz.org/gmsh/}
+\item [{\texttt{MODEL}}] Must be set to one of the following:
 
 \begin{description}
-\item [{\textmd{Models defined by mesh parameters:}}] ~ 
+\item [{\textmd{Models defined by mesh parameters:}}] ~
 
 \begin{description}
 \item [{\texttt{default}}] Uses model parameters as defined by meshing
-procedures described in the previous Chapter~\ref{cha:Mesh-Generation}. 
+procedures described in the previous Chapter~\ref{cha:Mesh-Generation}.
 \end{description}
 
-\item [{\textmd{1D~models~with~real~structure:}}] ~ 
+\item [{\textmd{1D~models~with~real~structure:}}] ~
 
 \begin{description}
 \item [{\texttt{1D\_prem}}] Isotropic version of the spherically symmetric
-Preliminary Reference Earth Model (PREM) \citep{DzAn81}. 
+Preliminary Reference Earth Model (PREM) \citep{DzAn81}.
 \item [{\texttt{1D\_socal}}] A standard isotropic 1D model for Southern
-California. 
-\item [{\texttt{1D\_cascadia}}] Isotropic 1D profile for the Cascadia region. 
+California.
+\item [{\texttt{1D\_cascadia}}] Isotropic 1D profile for the Cascadia region.
 \end{description}
 
-\item [{\textmd{Fully~3D~models:}}] ~ 
+\item [{\textmd{Fully~3D~models:}}] ~
 
 \begin{description}
 \item [{\texttt{aniso}}] For a user-specified fully anisotropic model.
 Parameters are set up in routines located in file \texttt{model\_aniso.f90}
 in directory \texttt{src/generate\_databases/}. See Chapter~\ref{cha:-Changing-the}
-for a discussion on how to specify your own 3D model. 
+for a discussion on how to specify your own 3D model.
 
 \item [{\texttt{external}}] For a user-specified isotropic model which
 uses externally defined model parameters. Uses external model definitions
 set up in routines located in file \texttt{model\_external\_values.f90}
 in directory \texttt{src/generate\_databases/}. Please modify these
-generic template routines to use your own model definitions. 
+generic template routines to use your own model definitions.
 \item [{\texttt{gll}}] For a user-specified isotropic model which uses
 external binary files for $v_{p}$, $v_{s}$ and $\rho$. Binary files
 are given in the same format as when outputted by the \texttt{xgenerate\_databases}
 executable when using option \texttt{SAVE\_MESH\_FILES}. These binary
 files define the model parameters on all GLL points which can be used
-for iterative inversion procedures. 
+for iterative inversion procedures.
 \item [{\texttt{salton\_trough}}] A 3D $V_{p}$ model for Southern California.
 Users must provide the corresponding data file \texttt{regrid3\_vel\_p.bin}
-in directory \texttt{DATA/st\_3D\_block\_harvard/}. 
+in directory \texttt{DATA/st\_3D\_block\_harvard/}.
 \item [{\texttt{tomo}}] For a user-specified 3D isotropic model which uses
 a tomographic model file \texttt{tomographic\_model.xyz} in directory
 \texttt{DATA}. See Section \ref{sec:Using-tomographic}, for a discussion
-on how to specify your own 3D tomographic model. 
+on how to specify your own 3D tomographic model.
 \end{description}
 \end{description}
 \item [{\texttt{APPROXIMATE\_OCEAN\_LOAD}}] Set to \texttt{.true.} if the
@@ -1446,13 +1445,13 @@ of water phases/reverberations is not taken into account, even when
 the flag is on. If you want to model the effect of a fluid-solid model
 at short periods, then set this flag to \texttt{.false.} and mesh
 the fluid layer explicitly in your mesher, so that it is computed
-accurately and without this approximation. 
+accurately and without this approximation.
 \item [{\texttt{TOPOGRAPHY}}] This feature is only effective if \texttt{APPROXIMATE\_OCEAN\_LOAD}
 is set to \texttt{.true.}. Set to \texttt{.true.} if topography and
 bathymetry should be read in based upon the topography file specified
 in the main constants file \texttt{constants.h} found in subdirectory
 \texttt{src/shared/} to evaluate elevations. If not set, elevations
-will be read from the numerical mesh. 
+will be read from the numerical mesh.
 \item [{\texttt{ATTENUATION}}] Set to \texttt{.true.} if attenuation should
 be incorporated. Turning this feature on increases the memory requirements
 significantly (roughly by a factor of~1.5), and is numerically fairly
@@ -1461,86 +1460,86 @@ of attenuation based upon standard linear solids. Please note that
 the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
 of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
-\texttt{constants.h} found in subdirectory \texttt{src/shared/}. 
+\texttt{constants.h} found in subdirectory \texttt{src/shared/}.
 \item [{\texttt{FULL\_ATTENUATION\_SOLID}}] Set to \texttt{.true.} to add
 $Q_{\kappa}$ attenuation to the simulations in addition to $Q_{\mu}$
 attenuation when the \texttt{ATTENUATION} flag above is on. Should
 be off in almost all cases for seismic wave propagation, since $Q_{\kappa}$
 is almost always negligible in Earth models. However, this parameter
 can be useful for instance for ocean acoustics simulations, when $Q_{\kappa}$
-is not negligible in the solid layer at the sea bottom. 
+is not negligible in the solid layer at the sea bottom.
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
 an anisotropy model. Please see the file \texttt{model\_aniso.f90}
 in subdirectory \texttt{src/generate\_databases/} for the current
-implementation of anisotropic models. 
+implementation of anisotropic models.
 \item [{\texttt{TOMOGRAPHY\_PATH}}] Directory in which the tomography files
 are stored for using external tomographic Earth models (please read
 Chapter \ref{cha:-Changing-the} and Section \ref{sec:Using-tomographic}
-`Using external tomographic Earth models' for further details.). 
+`Using external tomographic Earth models' for further details.).
 \item [{\texttt{USE\_OLSEN\_ATTENUATION}}] Set to \texttt{.true.} if you
 want to use the attenuation model that scaled from the S-wave speed
-model using Olsen's empirical relation (see \citet{OlDaBr03}). 
+model using Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{OLSEN\_ATTENUATION\_RATIO}}] Determines the Olsen's constant
-in Olsen's empirical relation (see \citet{OlDaBr03}). 
+in Olsen's empirical relation (see \citet{OlDaBr03}).
 \item [{\texttt{PML\_CONDITIONS}}] Set to \texttt{.true.} to turn on C-PML
 boundary conditions for a regional simulation. Both fluids and elastic
-solids are supported. 
+solids are supported.
 \item [{\texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on C-PML boundary conditions on the top surface instead of
-the usual free surface. 
+the usual free surface.
 \item [{\texttt{f0\_FOR\_PML}}] Determines the dominant frequency that
 will be used in the calculation of PML damping profiles; this should
 be set to the same (or similar) dominant frequency as that of the
 source that you will use in your simulation. If you plan to use a
 Dirac source, then use the dominant frequency of the source wavelet
-with which you plan to convolve your seismograms later on in post-processing. 
+with which you plan to convolve your seismograms later on in post-processing.
 \item [{\texttt{STACEY\_ABSORBING\_CONDITIONS}}] Set to \texttt{.true.}
 to turn on Clayton-Enquist absorbing boundary conditions (see \citet{KoTr99}).
 In almost all cases it is much better to use CPML absorbing layers
-(see the options above) and leave this flag to \texttt{.false.}. 
+(see the options above) and leave this flag to \texttt{.false.}.
 \item [{\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on absorbing boundary conditions on the top surface which
-by default constitutes a free surface of the model. 
+by default constitutes a free surface of the model.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered{}, i.e., a peak ground velocity map
 of the maximum absolute value of the two horizontal components of
-the velocity vector. 
+the velocity vector.
 \item [{\texttt{MOVIE\_SURFACE}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation on the Earth's surface.
 Turning this option on generates large output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only
-relevant for the solver. 
+relevant for the solver.
 \item [{\texttt{MOVIE\_TYPE}}] Set this flag to 1 to show the top surface
 (tomography + oceans) only, to 2 to show all external faces of the
 mesh (i.e. topography + vertical edges + bottom) in shakemaps and
-surface movies. 
+surface movies.
 \item [{\texttt{MOVIE\_VOLUME}}] Set to \texttt{.false.}, unless you want
 to create a movie of seismic wave propagation in the Earth's interior.
 Turning this option on generates huge output files. See Section~\ref{sec:Movies}
 for a discussion on the generation of movies. This feature is only
-relevant for the solver. 
+relevant for the solver.
 \item [{\texttt{SAVE\_DISPLACEMENT}}] Set this flag to \texttt{.true.}
 if you want to save the displacement instead of velocity for the movie
-frames. 
+frames.
 \item [{\texttt{USE\_HIGHRES\_FOR\_MOVIES}}] Set this flag to \texttt{.true.}
 if you want to save the values at all the NGLL grid points for the
-movie frames. 
+movie frames.
 \item [{\texttt{NTSTEP\_BETWEEN\_FRAMES}}] Determines the number of timesteps
 between movie frames. Typically you want to save a snapshot every
 100 timesteps. The smaller you make this number the more output will
 be generated! See Section~\ref{sec:Movies} for a discussion on the
-generation of movies. This feature is only relevant for the solver. 
+generation of movies. This feature is only relevant for the solver.
 \item [{\texttt{HDUR\_MOVIE}}] Determines the half duration of the source
 time function for the movie simulations. When this parameter is set
 to be 0, a default half duration that corresponds to the accuracy
 of the simulation is provided. Otherwise, it adds this half duration
 to the half duration specified in the source file \texttt{CMTSOLUTION},
-thus simulates longer periods to make the movie images look smoother. 
+thus simulates longer periods to make the movie images look smoother.
 \item [{\texttt{SAVE\_MESH\_FILES}}] Set this flag to \texttt{.true.} to
 save ParaView \urlwithparentheses{www.paraview.org} mesh files for
 subsequent viewing. Turning the flag on generates large (distributed)
 files in the \texttt{LOCAL\_PATH} directory. See Section~\ref{sec:Mesh-graphics}
-for a discussion of mesh viewing features. 
+for a discussion of mesh viewing features.
 \item [{\texttt{LOCAL\_PATH}}] Directory in which the distributed databases
 will be written. Generally one uses a directory on the local disk
 of the compute nodes, although on some machines these databases are
@@ -1554,7 +1553,7 @@ nodes and view the contents of the \texttt{LOCAL\_PATH} directory
 to see the (many) files generated by \texttt{xgenerate\_databases}.
 Please note that the \texttt{LOCAL\_PATH} directory should already
 contain the output files of the partitioner, i.e. from \texttt{xdecompose\_mesh}
-or \texttt{xmeshfem3D}. 
+or \texttt{xmeshfem3D}.
 \item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}}] This parameter specifies
 the interval at which basic information about a run is written to
 the file system (\texttt{timestamp{*}} files in the \texttt{OUTPUT\_FILES}
@@ -1563,14 +1562,14 @@ to a relatively high value (e.g., at least 100, or even 1000 or more)
 to avoid writing output text files too often. This feature is not
 used at the time of meshing. One can set this parameter to a larger
 value than the number of time steps to avoid writing output during
-the run. 
+the run.
 \item [{\texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS}}] This parameter specifies
 the interval at which synthetic seismograms are written in the \texttt{LOCAL\_PATH}
 directory. If a run crashes, you may still find usable (but shorter
 than requested) seismograms in this directory. On a fast machine set
 \texttt{NTSTEP\_BETWEEN\_OUTPUT\_SEISMOS} to a relatively high value
 to avoid writing to the seismograms too often. This feature is only
-relevant for the solver. 
+relevant for the solver.
 \item [{\texttt{USE\_FORCE\_POINT\_SOURCE}}] Turn this flag on to use a
 (tilted) \texttt{FORCESOLUTION} force point source instead of a \texttt{CMTSOLUTION}
 moment-tensor source. When the force source does not fall exactly
@@ -1584,7 +1583,7 @@ thus refer to Appendix~\ref{cha:Coordinates} for the orientation
 of the reference frame. This vector is made unitary internally in
 the solver and thus only its direction matters here; its norm is ignored
 and the norm of the force used is the factor force source times the
-source time function. 
+source time function.
 When using this option, by default the code can locate the force source
 anywhere between mesh points in order to honor its exact location; this
 is more precise than using the closest GLL mesh point, but it is also a bit slower.
@@ -1602,11 +1601,11 @@ in the acoustic case a Gaussian source time function with a similarly
 short half duration is defined to physically describe actions within
 the fluid. Otherwise, if a \texttt{FORCESOLUTION} force source is
 used, a (pseudo) Dirac delta source time function is defined by default.
-Any other source-time function may then be obtained by convolution. 
+Any other source-time function may then be obtained by convolution.
 \item [{\texttt{PRINT\_SOURCE\_TIME\_FUNCTION}}] Turn this flag on to print
 information about the source time function in the file \texttt{OUTPUT\_FILES/plot\_source\_time\_function.txt}.
-This feature is only relevant for the solver. 
-\item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs. 
+This feature is only relevant for the solver.
+\item [{\texttt{GPU\_MODE}}] Turn this flag on to use GPUs.
 \end{description}
 If you use PML, the mesh elements that belong to the PML layers can
 be acoustic or elastic, but not viscoelastic nor poroelastic. Then,
@@ -1638,7 +1637,7 @@ from its values along the inner PML edge.
 %%
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=3in]{figures/how_to_use_PML_when_a_tomographic_velocity_model_is_used} 
+\includegraphics[width=3in]{figures/how_to_use_PML_when_a_tomographic_velocity_model_is_used}
 \par\end{centering}
 
 \caption{How to modify your external 3D velocity and density model in order
@@ -1646,7 +1645,7 @@ to use PML. Such a modification is not needed when using Stacey absorbing
 boundary conditions (but such conditions are significantly less efficient).}
 
 
-\label{fig:modify_external_velocity_model_to_use_PML} 
+\label{fig:modify_external_velocity_model_to_use_PML}
 \end{figure}
 
 
@@ -1691,7 +1690,7 @@ aware of this restriction when constructing your mesh in Chapter~\ref{cha:Mesh-G
 \chapter{\label{cha:Running-the-Solver}Running the Solver \texttt{xspecfem3D}}
 
 Now that you have successfully generated the databases, you are ready
-to compile the solver. In the main directory, type 
+to compile the solver. In the main directory, type
 \begin{lyxcode}
 {\small make~xspecfem3D}{\small \par}
 \end{lyxcode}
@@ -1699,32 +1698,32 @@ Please note that \texttt{xspecfem3D} must be called directly from
 the \texttt{bin/} directory, as most of the binaries of the package.
 
 The solver needs three input files in the \texttt{DATA} directory
-to run: 
+to run:
 \begin{description}
 \item [{\texttt{Par\_file}}] the main parameter file which was discussed
-in detail in the previous Chapter~\ref{cha:Creating-Distributed-Databases}, 
+in detail in the previous Chapter~\ref{cha:Creating-Distributed-Databases},
 \item [{\texttt{CMTSOLUTION}} or {\texttt{FORCESOLUTION}}] the earthquake
-source parameter file or the force source parameter file, and 
-\item [{\texttt{STATIONS}}] the stations file. 
+source parameter file or the force source parameter file, and
+\item [{\texttt{STATIONS}}] the stations file.
 \end{description}
 Most parameters in the \texttt{Par\_file} should be set prior to running
 the databases generation. Only the following parameters may be changed
 after running \texttt{xgenerate\_databases}:
 \begin{itemize}
 \item the simulation type control parameters: \texttt{SIMULATION\_TYPE}
-and \texttt{SAVE\_FORWARD} 
-\item the time step parameters \texttt{NSTEP} and \texttt{DT} 
+and \texttt{SAVE\_FORWARD}
+\item the time step parameters \texttt{NSTEP} and \texttt{DT}
 \item the absorbing boundary control parameter \texttt{PML\_CONDITIONS}
 on condition that the\\
  \texttt{PML\_INSTEAD\_OF\_FREE\_SURFACE} flag remains unmodified
-after running the databases generation. 
+after running the databases generation.
 \item the movie control parameters \texttt{MOVIE\_SURFACE}, \texttt{MOVIE\_VOLUME},
-and \texttt{NTSTEPS\_BETWEEN\_FRAMES} 
-\item the ShakeMap\textregistered{}option \texttt{CREATE\_SHAKEMAP} 
+and \texttt{NTSTEPS\_BETWEEN\_FRAMES}
+\item the ShakeMap\textregistered{}option \texttt{CREATE\_SHAKEMAP}
 \item the output information parameters \texttt{MOVIE\_TYPE}, \texttt{NTSTEP\_BETWEEN\_OUTPUT\_INFO}
 and \texttt{NTSTEP\_BETWEEN\_OUTPUT\_}~\\
- \texttt{SEISMOS} 
-\item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags 
+ \texttt{SEISMOS}
+\item the \texttt{PRINT\_SOURCE\_TIME\_FUNCTION} flags
 \end{itemize}
 Any other change to the \texttt{Par\_file} implies rerunning both
 the database generator \texttt{xgenerate\_databases} and the solver
@@ -1738,7 +1737,7 @@ It looks like this:
 \begin{figure}[H]
 \noindent \begin{centering}
 {\small \includegraphics[width=1\textwidth]{figures/Hollywood_CMT}
-} 
+}
 \par\end{centering}
 
 
@@ -1757,7 +1756,7 @@ The \texttt{CMTSOLUTION} file should be edited in the following way:
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
-in the post-processing (see Section \ref{sec:Process-data-and-syn}). 
+in the post-processing (see Section \ref{sec:Process-data-and-syn}).
 \item For point-source simulations (see finite sources, page \pageref{To-simulate-a})
 we recommend setting the source half-duration parameter \texttt{half
 duration} equal to zero, which corresponds to simulating a step source-time
@@ -1776,7 +1775,7 @@ with the desired source time function and/or low-pass filtering. Use
 the serial code \texttt{convolve\_source\_timefunction.f90} and the
 script \texttt{convolve\_source\_timefunction.csh} for this purpose,
 or alternatively use signal-processing software packages such as SAC
-\urlwithparentheses{www.llnl.gov/sac}. Type 
+\urlwithparentheses{www.llnl.gov/sac}. Type
 
 \begin{lyxcode}
 {\small make~xconvolve\_source\_timefunction}{\small \par}
@@ -1803,14 +1802,14 @@ is the time in the first column of the output seismogram.
 \end{itemize}
 \begin{figure}
 \noindent \begin{centering}
-\includegraphics[width=2.5in]{figures/gauss_vs_triangle_mod} 
+\includegraphics[width=2.5in]{figures/gauss_vs_triangle_mod}
 \par\end{centering}
 
 \caption{Comparison of the shape of a triangle and the Gaussian function actually
 used.}
 
 
-\label{fig:gauss.vs.triangle} 
+\label{fig:gauss.vs.triangle}
 \end{figure}
 
 
@@ -1866,18 +1865,18 @@ following way:
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
-in the post-processing (see Section \ref{sec:Process-data-and-syn}). 
+in the post-processing (see Section \ref{sec:Process-data-and-syn}).
 \item Set the \texttt{half duration} parameter of the Ricker source time
 function when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
 in the main parameter file {\texttt{Par\_file}}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
 a force point source, a very short \texttt{half duration} parameter
-(hdur = 5 {*} DT) is automatically set by default. 
-\item Set the latitude, longitude, depth of the source in geographical coordinates. 
-\item Set the magnitude of the force source. 
+(hdur = 5 {*} DT) is automatically set by default.
+\item Set the latitude, longitude, depth of the source in geographical coordinates.
+\item Set the magnitude of the force source.
 \item Set the components of a (non-unitary) direction vector for the force
 source in the East/North/Vertical basis (see Appendix A for the orientation
-of the reference frame). 
+of the reference frame).
 \end{itemize}
 \noindent Where necessary, set a \texttt{FORCESOLUTION} file in the
 same way you configure a \texttt{CMTSOLUTION} file with $N_{\mathrm{sources}}$
@@ -1890,7 +1889,7 @@ shift}. Each subevent can have its own half latitude, longitude, depth,
 
 \begin{figure}[H]
 \noindent \begin{centering}
-{\small \includegraphics[width=5in]{figures/source_timing} } 
+{\small \includegraphics[width=5in]{figures/source_timing} }
 \par\end{centering}
 
 
@@ -1903,7 +1902,7 @@ would be t1(=0), t2, t3 in this case, and the parameter \texttt{half
 duration} would be hdur1, hdur2, hdur3 for the sources 1, 2, 3 respectively.}
 
 
-{\small \label{fig:source_timing} } 
+{\small \label{fig:source_timing} }
 \end{figure}
 
 
@@ -1916,7 +1915,7 @@ which looks like this:
 
 \begin{figure}[H]
 \noindent \begin{centering}
-{\small \includegraphics{figures/STATIONS_basin_explained} } 
+{\small \includegraphics{figures/STATIONS_basin_explained} }
 \par\end{centering}
 
 
@@ -2012,7 +2011,7 @@ since this does not add to the cost of the simulation.
 \chapter{\label{cha:Fault-Kinematics-Dynamics}Kinematic and dynamic fault
 sources}
 
-SPECFEM3D can handle finite fault sources of two kinds: 
+SPECFEM3D can handle finite fault sources of two kinds:
 \begin{enumerate}
 \item \emph{Kinematic}: the spatio-temporal distribution of slip rate is
 prescribed along the fault surface
@@ -2060,7 +2059,7 @@ for a buried vertical strike-slip fault:
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[scale=0.3]{figures/faultmesh} \\
- \includegraphics[scale=0.3]{figures/surf168} \includegraphics[scale=0.3]{figures/splitnodes} 
+ \includegraphics[scale=0.3]{figures/surf168} \includegraphics[scale=0.3]{figures/splitnodes}
 \par\end{centering}
 
 \caption{Screenshots of the CUBIT example for the embedded fault with split
@@ -2071,7 +2070,7 @@ Note that only interior nodes of the fault are split while those on
 the edges of the fault surface are touching each other.}
 
 
-\label{fig:examples.splitnodes} 
+\label{fig:examples.splitnodes}
 \end{figure}
 
 \begin{lyxcode}
@@ -2080,7 +2079,7 @@ the edges of the fault surface are touching each other.}
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[scale=0.55]{figures/splitnodes_surfacetrace} \\
- 
+
 \par\end{centering}
 
 \caption{Screenshots of a CUBIT example showing split nodes for a fault reaching
@@ -2089,7 +2088,7 @@ the edges of the fault are not split while the interior nodes are
 offset by a small distance on either side of the fault}
 
 
-\label{fig:examples.splitnodes-surfacetrace} 
+\label{fig:examples.splitnodes-surfacetrace}
 \end{figure}
 
 
@@ -2104,7 +2103,7 @@ using the $\mathtt{APREPRO}$ language built in CUBIT.\\
 
 
 Note that you should avoid gaps in the list of indices of mesh objects
-with the following CUBIT command: 
+with the following CUBIT command:
 \begin{lyxcode}
 $\mathtt{compress\: ids\: hex\: face\: edge\: node}$
 \end{lyxcode}
@@ -2116,14 +2115,14 @@ $\mathtt{compress\: ids\: hex\: face\: edge\: node}$
 The mesh generated in CUBIT needs to be processed and exported in
 a format compatible with SPECFEM3D. This is achieved in the Python
 scripts by calling the Python-CUBIT interface functions defined in
-the CUBIT directory: 
+the CUBIT directory:
 \begin{enumerate}
 \item Function $\mathtt{define\_bc}$ (or $\mathtt{boundary\_definition.py}$)
-must be called to set up the absorbing boundaries database 
+must be called to set up the absorbing boundaries database
 \item Function $\mathtt{fault\_input}$ must be called once for each fault
-to set up the fault database 
+to set up the fault database
 \item Function $\mathtt{cubit2specfem3d.export2SESAME}$ must be called
-at the very end of the script to export the mesh in a SPECFEM3D format. 
+at the very end of the script to export the mesh in a SPECFEM3D format.
 \end{enumerate}
 The functions in \#1 and \#3 are for the bulk and are documented in
 Section \ref{subsec:Exporting-the-Mesh}. We focus here on \#2:
@@ -2135,9 +2134,9 @@ file
 \item [{Inputs:}]~\end{description}
 \begin{itemize}
 \item id\_fault integer index assigned to the fault. (The user must number
-all the faults, starting at 1, with unit increments) 
+all the faults, starting at 1, with unit increments)
 \item ids\_surf\_1 list of CUBIT ids of all surfaces that form side 1 of
-the fault. 
+the fault.
 \item ids\_surf\_2 list of CUBIT ids of all surfaces that form side 2 of
 the fault. (The user must decide which side of the fault is side 1.
 This choice affects the sign conventions of fault quantities as explained
@@ -2156,13 +2155,13 @@ $\hphantom{}$fault\_input(1,A1,A2)
 
 \section{Examples}
 
-The package includes examples, the SCEC benchmark problems: 
+The package includes examples, the SCEC benchmark problems:
 \begin{itemize}
-\item TPV5, a planar vertical strike-slip fault 
-\item TPV14 and TPV15, vertical strike-slip fault system with a fault branch 
-\item TPV102 and TPV103, rate-and-state benchmarks 
-\item TPV22 and TPV23, step-over benchmarks 
-\item TPV16, heterogenous initial stress 
+\item TPV5, a planar vertical strike-slip fault
+\item TPV14 and TPV15, vertical strike-slip fault system with a fault branch
+\item TPV102 and TPV103, rate-and-state benchmarks
+\item TPV22 and TPV23, step-over benchmarks
+\item TPV16, heterogenous initial stress
 \end{itemize}
 and
 \begin{itemize}
@@ -2172,7 +2171,7 @@ and
 Read the documents in the directory $\mathtt{examples/*/description}$.
 They contain a description of the example and additional instructions
 to run it. Visualize the results with the Matlab scripts in the directory
-$\mathtt{examples/*/post}$ 
+$\mathtt{examples/*/post}$
 
 
 \section{\label{sec:Sign-Convention-for}Sign Convention for Fault Quantities}
@@ -2216,22 +2215,22 @@ If the former does not exist, the code assumes that there are no faults.\\
 The first part of this file has a strict format:
 
 \begin{description}
-\item [{Line}] 1: Number of faults (NF) 
+\item [{Line}] 1: Number of faults (NF)
 \item [{Lines}] 2 to NF+1: Kelvin Voigt damping (in seconds) for each fault.
-(See below how to set this parameter) 
-\item [{Line}] NF+2: Type of simulation (1=dynamic , 2 = kinematic) 
+(See below how to set this parameter)
+\item [{Line}] NF+2: Type of simulation (1=dynamic , 2 = kinematic)
 \item [{Line}] NF+3: Number of time steps between updates of the time series
 outputs at selected fault points (see DATA/FAULT\_STATIONS), usually
 a large number (100s or 1000s). Note that the sampling rate of the
-time series is usually much higher. 
+time series is usually much higher.
 \item [{Line}] NF+4: Number of time steps between fault snapshot outputs
 (quantities at every fault point exported at regular times), usually
-a large number (100s or 1000s). 
+a large number (100s or 1000s).
 \item [{Line}] NF+5: Slip velocity threshold below which frictional healing
 is set (friction coefficient is reset to its static value). If this
-value is negative healing is disabled. 
+value is negative healing is disabled.
 \item [{Line}] NF+6: Slip velocity threshold to define the rupture front.
-Only used for outputs. 
+Only used for outputs.
 \end{description}
 
 The rest of this file is made of namelist input blocks (see \textquotedbl{}namelist\textquotedbl{}
@@ -2347,7 +2346,7 @@ the index of appearance in the faults list after line 2 of Par\_file\_faults
 
 \begin{lyxlist}{00.00.0000}
 \item [{\textbf{DATA/input\_file.txt}}] Heterogeneous stresses and friction
-parameters are documented in page 10 of 
+parameters are documented in page 10 of
 
 \begin{lyxlist}{00.00.0000}
 \item [{$\mathtt{examples/tpv16/description/TPV16\_17\_Description\_v03.pdf}$}]~
@@ -2365,34 +2364,34 @@ The purpose of the Kelvin-Voigt viscosity in the dynamic fault solver
 is to damp spurious oscillations generated by the fault slip at frequencies
 that are too high to be resolved by the mesh. The viscosity $\mathtt{eta}$
 (in seconds) depends on the size of the elements on the fault. Here
-is how to set it: 
+is how to set it:
 \begin{enumerate}
 \item Determine the average linear size of the elements on the fault plane,
 $\mathtt{h\_fault}$. Usually this value is prescribed by the user
 during mesh generation. Otherwise it can be found by inspection of
-the mesh inside the CUBIT GUI. 
+the mesh inside the CUBIT GUI.
 \item Use the Matlab function $\mathtt{utils/critical\_timestep.m}$ to
 compute\\
  $\mathtt{dtc\_fault}=\mathtt{critical\_timestep\left(c_{p},h\_fault,ngll\right)}$.
 \\
 This is the critical time step in an elastic medium for a hypothetical
-element of cubic shape with size equal to $\mathtt{h\_fault}$. 
+element of cubic shape with size equal to $\mathtt{h\_fault}$.
 \item Set $\mathtt{eta}$ in $\mathtt{Par\_file\_faults}$ to (0.1 to 0.3)$\ensuremath{\times}\mathtt{dtc\_fault}$.
 A larger $\mathtt{eta}$ damps high-frequencies more aggressively
-but it might also affect lower frequencies and rupture speed. 
+but it might also affect lower frequencies and rupture speed.
 \end{enumerate}
 Viscosity reduces numerical stability: the critical timestep in a
 simulation with Kelvin-Voigt damping needs to be smaller than that
 in a purely elastic simulation. Here is how to set the time step accordingly:
 \begin{enumerate}
 \item Run a test simulation without viscosity ($\mathtt{eta}$=0 and only
-a few time steps) 
+a few time steps)
 \item Look for the \textquotedbl{}maximum suggested time step\textquotedbl{}
 in $\mathtt{OUTPUT\_FILES/output\_mesher.txt}$. This is the critical
-timestep of a purely elastic simulation, $\mathtt{dtc\_bulk}$. 
+timestep of a purely elastic simulation, $\mathtt{dtc\_bulk}$.
 \item Reset the timestep of the simulation with a Kelvin-Voigt material
 to a value smaller than\\
- $\mathtt{dtc\_kv}=\mathtt{eta}\left(\sqrt{1+\mathtt{dtc\_bulk^{2}}/\mathtt{eta^{2}}}-1\right)$ 
+ $\mathtt{dtc\_kv}=\mathtt{eta}\left(\sqrt{1+\mathtt{dtc\_bulk^{2}}/\mathtt{eta^{2}}}-1\right)$
 \end{enumerate}
 Note that in general $\mathtt{dtc\_bulk}$ is smaller than $\mathtt{dtc\_fault}$,
 because elements off the fault might be smaller or more distorted
@@ -2441,7 +2440,7 @@ convention controls their sign, but not their amplitude). Slip is
 defined as displacement of the hanging wall relative to the footwall.
 
 \item Seismograms at stations in the bulk (out of the fault plane) given
-in $\mathtt{DATA/STATIONS}$. 
+in $\mathtt{DATA/STATIONS}$.
 \item Rupture time files are named $\mathtt{Rupture\_time\_FAULT}$-$\mathtt{id}$.
 One file is generated for each fault. The files are ascii and start
 with a header (12 lines long) followed by a data block with the following
@@ -2459,7 +2458,7 @@ Column 3 = rupture time (s)
 \item Fault quantities (slip, slip rate, stresses, etc) at regular times
 are stored in binary data files called $\mathtt{Snapshot\#it\#.bin}$,
 where \#it\# is the timestep number. These can be read in Matlab with
-the function $\mathtt{utils/FSEM3D\_snapshot.m}$ 
+the function $\mathtt{utils/FSEM3D\_snapshot.m}$
 \end{enumerate}
 
 \section{Post-processing and Visualization }
@@ -2534,26 +2533,26 @@ directory with the format \texttt{STA.NT.BX?.adj}, where \texttt{STA},
 file, and \texttt{BX?} represents the component name of a particular
 adjoint seismogram. Please note that the band code can change depending
 on your sampling rate (see Appendix~\ref{cha:channel-codes} for
-further details). 
+further details).
 \item The adjoint seismograms are in the same format as the original seismogram
 (\texttt{STA.NT.BX?.sem?}), with the same start time, time interval
-and record length. 
+and record length.
 \end{itemize}
 \item Notice that even if you choose to time reverse only one component
 from one specific station, you still need to supply all three components
 because the code is expecting them (you can set the other two components
-to be zero). 
+to be zero).
 \item Also note that since time-reversal is done in the code itself, no
 explicit time-reversing is needed for the preparation of the adjoint
 sources, i.e., the adjoint sources are in the same forward time sense
-as the original recorded seismograms. 
+as the original recorded seismograms.
 \end{enumerate}
 \item \textbf{Set the related parameters and run the adjoint simulation}\\
  In the \texttt{DATA/Par\_file}, set the two related parameters to
 be \texttt{SIMULATION\_TYPE = 2} and \texttt{SAVE\_FORWARD = .false.}.
 More conveniently, use the scripts \texttt{utils/change\_simulation\_type.pl}
 to modify the \texttt{Par\_file} automatically (\texttt{change\_simulation\_type.pl
--a}). Then run the solver to launch the adjoint simulation. 
+-a}). Then run the solver to launch the adjoint simulation.
 \item \textbf{Collect the seismograms at the original source location}
 
 
@@ -2566,12 +2565,12 @@ have names of the form \texttt{S?????.NT.S??.sem} for the six-component
 strain tensor (\texttt{SNN,SEE,SZZ,SNE,SNZ,SEZ}) at these locations,
 and ~\\
  \texttt{S?????.NT.BX?.sem} for the three-component displacements
-(\texttt{BXN,BXE,BXZ}) recorded at these locations. 
+(\texttt{BXN,BXE,BXZ}) recorded at these locations.
 \item \texttt{S?????} denotes the source number; for example, if the original
 \texttt{CMTSOLUTION} provides only a point source, then the seismograms
-collected will start with \texttt{S00001}. 
+collected will start with \texttt{S00001}.
 \item These adjoint seismograms provide critical information for the computation
-of the gradient of the misfit function. 
+of the gradient of the misfit function.
 \end{itemize}
 \end{enumerate}
 
@@ -2595,12 +2594,12 @@ solver.}{\small \par}
 \begin{itemize}
 \item Notice that attenuation is not implemented yet for the computation
 of finite-frequency kernels; therefore set \texttt{ATTENUATION = .false.}
-in the \texttt{Par\_file}. 
+in the \texttt{Par\_file}.
 \item We also suggest you modify the half duration of the \texttt{CMTSOLUTION}
 to be similar to the accuracy of the simulation (see Equation \ref{eq:shortest_period})
 to avoid too much high-frequency noise in the forward wavefield, although
 theoretically the high-frequency noise should be eliminated when convolved
-with an adjoint wavefield with the proper frequency content. 
+with an adjoint wavefield with the proper frequency content.
 \item This forward simulation differs from the regular simulations (\texttt{\small SIMULATION\_TYPE}{\small {}
 }\texttt{\small =}{\small {} }\texttt{\small 1}{\small{} and }\texttt{\small SAVE\_FORWARD}{\small {}
 }\texttt{\small =}{\small {} }\texttt{\small .false.}{\small ) described
@@ -2610,7 +2609,7 @@ velocity, acceleration, etc., are saved to the }\texttt{\small LOCAL\_PATH}{\sma
 to be used for the subsequent simulation. }{\small \par}
 \item For regional simulations, the files recording the absorbing boundary
 contribution are also written to the \texttt{LOCAL\_PATH} when \texttt{SAVE\_FORWARD
-= .true.}. 
+= .true.}.
 \end{itemize}
 \item \textbf{Prepare the adjoint sources}
 
@@ -2624,7 +2623,7 @@ in the \texttt{STATIONS\_ADJOINT} list, we supply a sample program
 in \texttt{utils/adjoint\_sources/traveltime/xcreate\_adjsrc\_traveltime}
 to cut a certain portion of the original displacement seismograms
 and convert it into the proper adjoint source to compute the finite-frequency
-kernel. 
+kernel.
 
 \begin{lyxcode}
 xcreate\_adjsrc\_traveltime~t1~t2~ifile{[}0-5{]}~E/N/Z-ascii-files~{[}baz{]}
@@ -2641,7 +2640,7 @@ when \texttt{ifile} = 4 or 5.
 
 \item Similarly, a sample program to compute adjoint sources for amplitude
 finite-frequency kernels may be found in \texttt{utils/adjoint\_sources/amplitude}
-and used in the same way as described for traveltime measurements 
+and used in the same way as described for traveltime measurements
 
 \begin{lyxcode}
 xcreate\_adjsrc\_amplitude~t1~t2~ifile{[}0-5{]}~E/N/Z-ascii-files~{[}baz{]}.
@@ -2660,17 +2659,17 @@ solver.
 of the original forward wavefield from the state variables saved from
 the previous forward simulation, and the finite-frequency kernels
 are computed by the interaction of the reconstructed forward wavefield
-and the adjoint wavefield. 
+and the adjoint wavefield.
 \item The back-reconstructed seismograms at the original station locations
 are saved to the \texttt{LOCAL\_PATH} at the end of the kernel simulations,
-and can be collected to the local disk. 
+and can be collected to the local disk.
 \item These back-constructed seismograms can be compared with the time-reversed
 original seismograms to assess the accuracy of the backward reconstruction,
-and they should match very well. 
+and they should match very well.
 \item The arrays for density, P-wave speed and S-wave speed kernels are
 also saved in the \texttt{LOCAL\_PATH} with the names \texttt{proc??????\_rho(alpha,beta)\_kernel.bin},
 where \texttt{proc??????} represents the processor number, \texttt{rho(alpha,beta)}
-are the different types of kernels. 
+are the different types of kernels.
 \end{itemize}
 \item \textbf{Run the anisotropic kernel simulation}
 
@@ -3031,7 +3030,7 @@ and MPI partition (slices).
 
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=0.49\textwidth]{figures/vtk_mesh_vp} \includegraphics[width=0.49\textwidth]{figures/vtk_mesh_vs} 
+\includegraphics[width=0.49\textwidth]{figures/vtk_mesh_vp} \includegraphics[width=0.49\textwidth]{figures/vtk_mesh_vs}
 \par\end{centering}
 
 \caption{Visualization using Paraview of VTK files created by \texttt{xgenerate\_databases}
@@ -3039,7 +3038,7 @@ showing P- and S-wave velocities assigned to the mesh points. The
 mesh was created by \texttt{xmeshfem3D} for 4 processors.}
 
 
-\label{fig:vtk.mesh} 
+\label{fig:vtk.mesh}
 \end{figure}
 
 
@@ -3081,7 +3080,7 @@ usual, for a point source one can set \texttt{half duration} in the
 in the \texttt{Par\_file} to get the highest frequencies resolved
 by the simulation, but for a finite source one would keep all the
 \texttt{half durations} as prescribed by the finite source model and
-set \texttt{HDUR\_MOVIE} = 0.0. 
+set \texttt{HDUR\_MOVIE} = 0.0.
 \end{quote}
 
 \subsection{Movie Surface}
@@ -3099,13 +3098,13 @@ to output additionally shakemaps, you would set the parameter }\texttt{\small CR
 to }\texttt{\small .true.}{\small .}{\small \par}
 
 The files are in a fairly complicated binary format, but there is
-a program provided to convert the output into more user friendly formats: 
+a program provided to convert the output into more user friendly formats:
 \begin{description}
 \item [{\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}}] From \texttt{create\_movie\_shakemap\_AVS\_DX\_GMT.f90},
 it outputs data in ASCII, OpenDX, or AVS format (also readable in
 ParaView). Before compiling the code, make sure you have the file
 \texttt{surface\_from\_mesher.h} in the \texttt{OUTPUT\_FILES/} directory.
-This file will be created by the solver run. Then type 
+This file will be created by the solver run. Then type
 
 \begin{lyxcode}
 {\footnotesize make~xcreate\_movie\_shakemap\_AVS\_DX\_GMT}{\footnotesize \par}
@@ -3120,7 +3119,7 @@ parameters.
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.32\textwidth]{figures/movie_surf_1} \includegraphics[width=0.32\textwidth]{figures/movie_surf_2}
-\includegraphics[width=0.32\textwidth]{figures/movie_surf_3} 
+\includegraphics[width=0.32\textwidth]{figures/movie_surf_3}
 \par\end{centering}
 
 \caption{Visualization using AVS files created by \texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}
@@ -3128,7 +3127,7 @@ showing movie snapshots of vertical velocity components at different
 times.}
 
 
-\label{fig:movie.surf} 
+\label{fig:movie.surf}
 \end{figure}
 
 
@@ -3165,7 +3164,7 @@ flag (see also Appendix~\ref{cha:Coordinates} and \ref{cha:channel-codes}).}{\sm
 \begin{figure}[htbp]
 \noindent \begin{centering}
 \includegraphics[width=0.32\textwidth]{figures/movie_volume_1} \includegraphics[width=0.32\textwidth]{figures/movie_volume_2}
-\includegraphics[width=0.32\textwidth]{figures/movie_volume_3} 
+\includegraphics[width=0.32\textwidth]{figures/movie_volume_3}
 \par\end{centering}
 
 \caption{Paraview visualization using movie volume files (converted by \texttt{xcombine\_vol\_data}
@@ -3173,20 +3172,20 @@ and \texttt{mesh2vtu.pl}) and showing snapshots of vertical velocity
 components at different times.}
 
 
-\label{fig:movie.volume} 
+\label{fig:movie.volume}
 \end{figure}
 
 
 To visualize these files, we use an auxilliary program \texttt{combine\_vol\_data.f90}
 to combine the data from all slices into one mesh file. To compile
-it in the root directory, type: 
+it in the root directory, type:
 \begin{lyxcode}
 {\footnotesize make~xcombine\_vol\_data~}{\footnotesize \par}
 \end{lyxcode}
 which will create the executable \texttt{xcombine\_vol\_data} in the
 directory \texttt{bin/}. To output the usage of this executable, type
 `./bin/xcombine\_vol\_data` without arguments. As an example, to run
-the executable you would use 
+the executable you would use
 \begin{lyxcode}
 {\footnotesize cd~bin/~}{\footnotesize \par}
 
@@ -3197,7 +3196,7 @@ the name \texttt{velocity\_Z\_it000400.mesh}. We next convert the
 \texttt{.mesh} file into the VTU (Unstructured grid file) format which
 can be viewed in ParaView. For this task, you can use and modify the
 script \texttt{mesh2vtu.pl} located in directory \texttt{utils/Visualization/Paraview/},
-for example: 
+for example:
 \begin{lyxcode}
 {\footnotesize mesh2vtu.pl~-i~velocity\_Z\_it000400.mesh~-o~velocity\_Z\_it000400.vtu}{\footnotesize \par}
 \end{lyxcode}
@@ -3243,7 +3242,7 @@ and \texttt{output\_solver} files, and run:
 which will generate a \texttt{slices\_file}.
 
 \item For cases with multiple sources and multiple receivers, you need to
-provide a slice file before proceeding to the next step. 
+provide a slice file before proceeding to the next step.
 \end{enumerate}
 \item \textbf{Collect the kernel files}
 
@@ -3267,7 +3266,7 @@ where all the kernel files are stored.}{\small \par}
 
 \item After executing this script, all the necessary mesh topology files
 as well as the kernel array files are collected to the local directory
-of the front end. 
+of the front end.
 \end{enumerate}
 \item \textbf{Combine kernel files into one mesh file}
 
@@ -3289,8 +3288,8 @@ file will be written.
 
 \item Use 1 for a high-resolution mesh, outputting all the GLL points to
 the mesh file, or use 0 for low resolution, outputting only the corner
-points of the elements to the mesh file. 
-\item The output mesh file will have the name \texttt{filename\_rho(alpha,beta).mesh} 
+points of the elements to the mesh file.
+\item The output mesh file will have the name \texttt{filename\_rho(alpha,beta).mesh}
 \end{enumerate}
 \item \textbf{Convert mesh files into .vtu files}
 
@@ -3307,7 +3306,7 @@ directory \texttt{utils/Visualization/Paraview/}, for example:
 \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
 uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library
 for its execution. Therefore, make sure you have them properly set
-in the script according to your system. 
+in the script according to your system.
 \end{enumerate}
 \item \textbf{Copy over the source and receiver .vtk file}
 
@@ -3322,37 +3321,37 @@ also be viewed in Paraview in the next step.
 
 Finally, we can view the mesh in ParaView \urlwithparentheses{www.paraview.org}.
 \begin{enumerate}
-\item Open ParaView. 
+\item Open ParaView.
 \item From the top menu, \textsf{File} $\rightarrow$\textsf{Open data},
 select \texttt{file.vtu}, and click the \textsf{Accept} button.
 
 \begin{itemize}
 \item If the mesh file is of moderate size, it shows up on the screen; otherwise,
-only the bounding box is shown. 
+only the bounding box is shown.
 \end{itemize}
 \item Click \textsf{Display Tab} $\rightarrow$ \textsf{Display Style} $\rightarrow$
 \textsf{Representation} and select \textsf{wireframe of surface} to
-display it. 
+display it.
 \item To create a cross-section of the volumetric mesh, choose \textsf{Filter}
 $\rightarrow$ \textsf{cut}, and under \textsf{Parameters Tab}, choose
-\textsf{Cut Function} $\rightarrow$ \textsf{plane}. 
+\textsf{Cut Function} $\rightarrow$ \textsf{plane}.
 \item Fill in center and normal information given by the \texttt{global\_slice\_number.pl}
 script (either from the standard output or from \texttt{normal\_plane.txt}
-file). 
+file).
 \item To change the color scale, go to \textsf{Display Tab} $\rightarrow$
 \textsf{Color} $\rightarrow$ \textsf{Edit Color Map} and reselect
-lower and upper limits, or change the color scheme. 
+lower and upper limits, or change the color scheme.
 \item Now load in the source and receiver location file by \textsf{File}
 $\rightarrow$ \textsf{Open data}, select \texttt{sr.vt}k, and click
 the \textsf{Accept} button. Choose \textsf{Filter} $\rightarrow$
-\textsf{Glyph}, and represent the points by `\textsf{spheres}'. 
+\textsf{Glyph}, and represent the points by `\textsf{spheres}'.
 \item For more information about ParaView, see the ParaView Users Guide
-\urlwithparentheses{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}. 
+\urlwithparentheses{www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}.
 \end{enumerate}
 \end{enumerate}
 \begin{figure}[H]
 \noindent \begin{centering}
-\includegraphics[scale=0.6]{figures/3D-S-Kernel} 
+\includegraphics[scale=0.6]{figures/3D-S-Kernel}
 \par\end{centering}
 
 \caption{(a) Top Panel: Vertical source-receiver cross-section of the S-wave
@@ -3364,7 +3363,7 @@ of the 3D S-wave speed model used for the spectral-element simulations
 an epicentral distance of 165 km \citep{LiTr06}.}
 
 
-\label{figure:P-wave-speed-finite-frequency} 
+\label{figure:P-wave-speed-finite-frequency}
 \end{figure}
 
 
@@ -3383,16 +3382,16 @@ by the scheduler, based on availability. Therefore, in order for the
 (or between successive runs of the solver) to have access to the same
 database files (if they are stored on hard drives local to the nodes
 on which the code is run), they must be launched in sequence as a
-single job. 
+single job.
 \item On some systems, the nodes to which running jobs are assigned are
 not configured for compilation. It may therefore be necessary to pre-compile
 both the \texttt{xgenerate\_databases} and the \texttt{xspecfem3D}
-executables. 
+executables.
 \item One feature of schedulers/queuing systems is that they allow submission
 of multiple jobs in a ``launch and forget'' mode. In order to take
 advantage of this property, care needs to be taken that output and
 intermediate files from separate jobs do not overwrite each other,
-or otherwise interfere with other running jobs. 
+or otherwise interfere with other running jobs.
 \end{itemize}
 Examples of job scripts can be found in the \texttt{\small utils/Cluster/}{\small{}
 directory and can straightforwardly be modified and adapted to meet
@@ -3508,7 +3507,7 @@ in parallel. }\texttt{\small shmux}{\small{} is available from Shmux
 }\texttt{\small LOCAL\_PATH}{\small{} parameter in }\texttt{\small DATA/Par\_file}{\small{}
 is also set properly. }{\small \par}
 \item The next portion of the script launches the mesher, database generator
-and then the solver using \texttt{run\_lsf.bash}. 
+and then the solver using \texttt{run\_lsf.bash}.
 \item The final portion of the script collects the seismograms and performs
 clean up on the nodes, using the Perl scripts \texttt{collect\_seismo\_lsf\_multi.pl}
 and \texttt{cleanmulti.pl}. \end{enumerate}
@@ -3594,7 +3593,7 @@ options:\\
 = default}, define the negative \texttt{material\_ID} identifier for
 each element in the file \texttt{MESH/materials\_file} and use the
 following format in the file \texttt{MESH/nummaterial\_velocity\_file}
-when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}): 
+when using CUBIT to construct your mesh (see also section \ref{subsec:Exporting-the-Mesh}):
 \begin{lyxcode}
 domain\_ID~material\_ID~tomography~elastic~file\_name~1
 \end{lyxcode}
@@ -3617,31 +3616,31 @@ each spatial direction x, y and z. The ASCII file \texttt{file\_name}
 that describe the tomography should be located in the \texttt{TOMOGRAPHY\_PATH}
 directory, set in the \texttt{Par\_file}. The format of the file,
 as read from \texttt{model\_tomography.f90} located in the \texttt{src/generate\_databases}
-directory, looks like Figure \ref{fig:tomography_file}, where 
+directory, looks like Figure \ref{fig:tomography_file}, where
 \begin{description}
 \item [{\texttt{ORIG\_X}, \texttt{END\_X}}] are, respectively, the coordinates
 of the initial and final tomographic grid points along the x direction
-(in the mesh units, e.g., $m$); 
+(in the mesh units, e.g., $m$);
 \item [{\texttt{ORIG\_Y}, \texttt{END\_Y}}] respectively the coordinates
 of the initial and final tomographic grid points along the y direction
-(in the mesh units, e.g., $m$); 
+(in the mesh units, e.g., $m$);
 \item [{\texttt{ORIG\_Z}, \texttt{END\_Z}}] respectively the coordinates
 of the initial and final tomographic grid points along the z direction
-(in the mesh units, e.g., $m$); 
+(in the mesh units, e.g., $m$);
 \item [{\texttt{SPACING\_X}, \texttt{SPACING\_Y}, \texttt{SPACING\_Z}}] the
 spacing between the tomographic grid points along the x, y and z directions,
-respectively (in the mesh units, e.g., $m$); 
+respectively (in the mesh units, e.g., $m$);
 \item [{\texttt{NX}, \texttt{NY}, \texttt{NZ}}] the number of grid points
 along the spatial directions x, y and z, respectively; \texttt{NX}
 is given by {[}(\texttt{END\_X} - \texttt{ORIG\_X})/\texttt{SPACING\_X}{]}+1;
 \texttt{NY} and \texttt{NZ} are the same as \texttt{NX}, but for the
-y and z directions, respectively; 
+y and z directions, respectively;
 \item [{\texttt{VP\_MIN}, \texttt{VP\_MAX}, \texttt{VS\_MIN}, \texttt{VS\_MAX}, \texttt{RHO\_MIN}, \texttt{RHO\_MAX}}] the
 minimum and maximum values of the wave speed \texttt{vp} and \texttt{vs}
 (in $m\, s^{-1}$) and of the density \texttt{rho} (in $kg\, m^{-3}$);
 these values could be the actual limits of the tomographic parameters
 in the grid or the minimum and maximum values to which we force the
-cut of velocity and density in the model. 
+cut of velocity and density in the model.
 \end{description}
 After the first four lines, in the file \texttt{file\_name} the tomographic
 grid points are listed with the corresponding values of \texttt{vp},
@@ -3652,7 +3651,7 @@ of \texttt{SPACING\_Y}) and each given z (from \texttt{ORIG\_Z} to
 \texttt{END\_Z}, with step of \texttt{SPACING\_Z}). %fig
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=1\textwidth]{figures/tomo_file} 
+\includegraphics[width=1\textwidth]{figures/tomo_file}
 \par\end{centering}
 
 \caption{Tomography file \texttt{file\_name} that describes an external Earth
@@ -3662,7 +3661,7 @@ SPACING\_Y, SPACING\_Z should be in the units of the constructed mesh
 (e.g., UTM coordinates in meters).}
 
 
-\label{fig:tomography_file} 
+\label{fig:tomography_file}
 \end{figure}
 
 
@@ -3686,20 +3685,20 @@ this routine would be as follows
 call~model\_external\_values(xmesh,~ymesh,~zmesh,~~\&~~\\
 ~~~~~~~~~~~rho,~vp,~vs,~qmu\_atten,~iflag\_aniso,~idomain\_id)
 \end{lyxcode}
-Input to this routine consists of: 
+Input to this routine consists of:
 \begin{description}
-\item [{\texttt{xmesh,ymesh,zmesh}}] location of mesh point 
+\item [{\texttt{xmesh,ymesh,zmesh}}] location of mesh point
 \end{description}
-Output to this routine consists of: 
+Output to this routine consists of:
 \begin{description}
 \item [{\texttt{rho,vp,vs}}] isotropic model parameters for density $\rho$
-($kg/m^{3}$), $v_{p}$ ($m/s$) and $v_{s}$ ($m/s$) 
-\item [{\texttt{qmu\_atten}}] Shear wave quality factor: $0<Q_{\mu}<9000$ 
+($kg/m^{3}$), $v_{p}$ ($m/s$) and $v_{s}$ ($m/s$)
+\item [{\texttt{qmu\_atten}}] Shear wave quality factor: $0<Q_{\mu}<9000$
 \item [{\texttt{iflag\_aniso}}] anisotropic model flag, $0$ indicating
 no anisotropy or $1$ using anisotropic model parameters as defined
-in routine file \texttt{model\_aniso.f90} 
+in routine file \texttt{model\_aniso.f90}
 \item [{\texttt{idomain\_id}}] domain identifier, $1$ for acoustic, $2$
-for elastic, $3$ for poroelastic materials. 
+for elastic, $3$ for poroelastic materials.
 \end{description}
 Note that the resolution and maximum value of anelastic models are
 truncated. This speeds the construction of the standard linear solids
@@ -3721,19 +3720,19 @@ call~model\_aniso(iflag\_aniso,~rho,~vp,~vs,~\&~~\\
 ~~~~~~~~~~~c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,~\&~~\\
 ~~~~~~~~~~~c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)~
 \end{lyxcode}
-Input to this routine consists of: 
+Input to this routine consists of:
 \begin{description}
 \item [{\texttt{iflag\_aniso}}] flag indicating the type of the anisotropic
 model, i.e. $0$ for no superimposed anisotropy, $1$ or $2$ for
-generic pre-defined anisotropic models. 
+generic pre-defined anisotropic models.
 \item [{\texttt{rho,vp,vs}}] reference isotropic model parameters for density
-$\rho$, $v_{p}$ and $v_{s}$. 
+$\rho$, $v_{p}$ and $v_{s}$.
 \end{description}
 Output from the routine consists of the following non-dimensional
-model parameters: 
+model parameters:
 \begin{description}
 \item [{\texttt{c11},}] \textbf{$\cdots$,} \texttt{\textbf{c66}} 21~dimensionalized
-anisotropic elastic parameters. 
+anisotropic elastic parameters.
 \end{description}
 You can replace the \texttt{model\_aniso.f90} file by your own version
 \textit{provided you do not change the call structure of the routine},
@@ -3763,19 +3762,19 @@ made.
 For such comparisons, the following steps are recommended:
 \begin{enumerate}
 \item Make sure that both synthetic and observed seismograms have the correct
-station/event and timing information. 
+station/event and timing information.
 \item Convolve synthetic seismograms with a source time function with the
 half duration specified in the \texttt{CMTSOLUTION} file, provided,
-as recommended, you used a zero half duration in the SEM simulations. 
+as recommended, you used a zero half duration in the SEM simulations.
 \item Resample both observed and synthetic seismograms to a common sampling
-rate. 
-\item Cut the records using the same window. 
-\item Remove the trend and mean from the records and taper them. 
+rate.
+\item Cut the records using the same window.
+\item Remove the trend and mean from the records and taper them.
 \item Remove the instrument response from the observed seismograms (recommended)
-or convolve the synthetic seismograms with the instrument response. 
+or convolve the synthetic seismograms with the instrument response.
 \item Make sure that you apply the same filters to both observed and synthetic
-seismograms. Preferably, avoid filtering your records more than once. 
-\item Now, you are ready to compare your synthetic and observed seismograms. 
+seismograms. Preferably, avoid filtering your records more than once.
+\item Now, you are ready to compare your synthetic and observed seismograms.
 \end{enumerate}
 \noindent We generally use the following scripts provided in the \texttt{utils/seis\_process/}
 directory:
@@ -3807,7 +3806,7 @@ these scripts.
 
 This script converts the synthetic output from the SEM code from ASCII
 to SAC format, and performs similar operations as `\texttt{process\_data.pl}'.
-An example of the usage of the script: 
+An example of the usage of the script:
 \begin{lyxcode}
 {\footnotesize process\_syn.pl~-m~CMTSOLUTION~-h~-a~STATIONS~-s~1.0~-l~0/4000~-f~-t~40/500~-p~-x~bp~SEM/{*}.BX?.semd}~
 \end{lyxcode}
@@ -3867,14 +3866,14 @@ to Section \ref{sec:Adjoint-simulation-finite} for further details.
 
 You do have further options to change this default output behavior,
 given in the main constants file \texttt{constants.h} located in \texttt{src/shared/}
-directory: 
+directory:
 \begin{description}
 \item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
-written out in binary format. 
+written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.}
 to have only the master process writing out seismograms. This can
 be useful on a cluster, where only the master process node has access
-to the output directory. 
+to the output directory.
 \item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to
 have the seismograms output to \texttt{LOCAL\_PATH} directory specified
 in the main parameter file \texttt{DATA/Par\_file}. In this case,
@@ -3947,7 +3946,7 @@ velocity, and \texttt{3} for acceleration.
 A sample program \texttt{remap\_database} is provided to map the local
 database from a set of machines to another set of machines. This is
 especially useful when you want to run mesher and solver, or different
-types of solvers separately through a scheduler (refer to Chapter~\ref{cha:Scheduler}). 
+types of solvers separately through a scheduler (refer to Chapter~\ref{cha:Scheduler}).
 \begin{lyxcode}
 run\_lsf.bash~-{}-gm-no-shmem~-{}-gm-copy-env~remap\_database~old\_machines~150
 \end{lyxcode}
@@ -4010,7 +4009,7 @@ e-mail to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-
 or Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu}, and/or
 use our online bug tracking system Roundup \urlwithparentheses{www.geodynamics.org/roundup}.
 
-\addcontentsline{toc}{chapter}{Notes \& Acknowledgments} 
+\addcontentsline{toc}{chapter}{Notes \& Acknowledgments}
 
 
 \chapter*{Notes \& Acknowledgments}
@@ -4037,7 +4036,7 @@ Please e-mail your feedback, questions, comments, and suggestions
 to Jeroen Tromp \urlwithparentheses{jtromp-AT-princeton.edu} or
 to the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
 
-\addcontentsline{toc}{chapter}{Copyright} 
+\addcontentsline{toc}{chapter}{Copyright}
 
 
 \chapter*{Copyright}
@@ -4112,23 +4111,23 @@ Connection Machine Fortran.\\
 The code uses the following convention for the Cartesian reference
 frame:
 \begin{itemize}
-\item the $x$ axis points East 
-\item the $y$ axis points North 
-\item the $z$ axis points up 
+\item the $x$ axis points East
+\item the $y$ axis points North
+\item the $z$ axis points up
 \end{itemize}
 Note that this convention is different from both the \citet{AkRi80}
 convention and the Harvard Centroid-Moment Tensor (CMT) convention.
 The Aki \& Richards convention is
 \begin{itemize}
-\item the $x$ axis points North 
-\item the $y$ axis points East 
-\item the $z$ axis points down 
+\item the $x$ axis points North
+\item the $y$ axis points East
+\item the $z$ axis points down
 \end{itemize}
 and the Harvard CMT convention is
 \begin{itemize}
-\item the $x$ axis points South 
-\item the $y$ axis points East 
-\item the $z$ axis points up 
+\item the $x$ axis points South
+\item the $y$ axis points East
+\item the $z$ axis points up
 \end{itemize}
 
 \subsection*{Source and receiver locations}
@@ -4170,47 +4169,47 @@ are somewhat arbitrary orthogonal directions along the surface.
 
 For the labeling of the seismogram channels, see Appendix~\ref{cha:channel-codes}.
 Additionally, we add labels to the synthetics using the following
-convention: For a receiver station located in an 
+convention: For a receiver station located in an
 \begin{description}
 \item [{elastic domain:}] ~\\
- 
+
 
 \begin{itemize}
-\item \texttt{semd} for the displacement vector 
-\item \texttt{semv} for the velocity vector 
-\item \texttt{sema} for the acceleration vector 
+\item \texttt{semd} for the displacement vector
+\item \texttt{semv} for the velocity vector
+\item \texttt{sema} for the acceleration vector
 \end{itemize}
 \item [{acoustic domain:}] ~\\
  (please note that receiver stations in acoustic domains must be buried.
 This is due to the free surface condition which enforces a zero pressure
-at the surface.) 
+at the surface.)
 
 \begin{itemize}
-\item \texttt{semd} for the displacement vector 
-\item \texttt{semv} for the velocity vector 
+\item \texttt{semd} for the displacement vector
+\item \texttt{semv} for the velocity vector
 \item \texttt{sema} for pressure which will be stored in the vertical component
 \texttt{Z}. Note that pressure in the acoustic media is isotropic
 and thus the pressure record would be the same in the other two component
 directions. We therefore use the other two seismogram components to
 store the acoustic potential in component \texttt{X} (or \texttt{N})
 and the first time derivative of the acoustic potential in component
-\texttt{Y} (or \texttt{E}). 
+\texttt{Y} (or \texttt{E}).
 \end{itemize}
 \end{description}
 The seismograms are by default written out in ASCII-format to the
 \texttt{OUTPUT\_FILES/} subdirectory by each parallel process. You
 can change this behavior by changing the following flags in the \texttt{constants.h}
-file located in the \texttt{src/shared/} subdirectory: 
+file located in the \texttt{src/shared/} subdirectory:
 \begin{description}
 \item [{\texttt{SEISMOGRAMS\_BINARY}}] set to \texttt{.true.} to have seismograms
-written out in binary format. 
+written out in binary format.
 \item [{\texttt{WRITE\_SEISMOGRAMS\_BY\_MASTER}}] Set to \texttt{.true.}
 to have only the master process writing out seismograms. This can
 be useful on a cluster, where only the master process node has access
-to the output directory. 
+to the output directory.
 \item [{\texttt{USE\_OUTPUT\_FILES\_PATH}}] Set to \texttt{.false.} to
 have the seismograms output to \texttt{LOCAL\_PATH} directory specified
-in the main parameter file \texttt{DATA/Par\_file}. 
+in the main parameter file \texttt{DATA/Par\_file}.
 \end{description}
 
 \chapter{\label{cha:channel-codes}Channel Codes of Seismograms}
@@ -4254,7 +4253,7 @@ by red color in the figure.\\
 
 \begin{figure}[ht]
 \noindent \begin{centering}
-\includegraphics[scale=0.6]{figures/IRIS_band_codes} 
+\includegraphics[scale=0.6]{figures/IRIS_band_codes}
 \par\end{centering}
 
 \caption{The band code convention is based on the sampling rate and the response
@@ -4264,7 +4263,7 @@ in SPECFEM3D Cartesian, and the band codes used to name SEM seismograms
 are denoted in red.}
 
 
-\label{fig:IRIS_band_codes} 
+\label{fig:IRIS_band_codes}
 \end{figure}
 
 
@@ -4324,7 +4323,7 @@ program~main~~~\\
 ~end
 \end{lyxcode}
 \item [{compilation fails stating:}] ~\\
- 
+
 
 \begin{lyxcode}
 ...~~~\\
@@ -4346,7 +4345,7 @@ fix: e.g. specify > ./configure FC=gfortran MPIF90=/usr/local/openmpi-gfortran/b
 
 \item [{after executing \texttt{xmeshfem3D} I've got elements with skewness of 81\% percent, what does this mean:}] Look
 at the skewness table printed in the \texttt{output\_mesher.txt} file
-after executing \texttt{xmeshfem3D} for the example given in \texttt{examples/meshfem3D\_examples/simple\_model/}: 
+after executing \texttt{xmeshfem3D} for the example given in \texttt{examples/meshfem3D\_examples/simple\_model/}:
 
 \begin{lyxcode}
 ...~~\\
@@ -4361,7 +4360,7 @@ The first line means that you have 27,648 elements with a skewness
 value between 0 and 0.05 (which means the element is basically not
 skewed, just plain regular hexahedral element). The total number of
 elements you have in this mesh is (see in the \texttt{output\_mesher.txt}
-file a bit further down): 
+file a bit further down):
 \begin{lyxcode}
 ...~~\\
 ~total~number~of~elements~in~entire~mesh:~33792~~~\\
@@ -4374,7 +4373,7 @@ are not skewed, i.e. regular elements. a fantastic value :)
 
 
 The histogram lists for this mesh also some stronger skewed elements,
-for example the worst ones belong to: 
+for example the worst ones belong to:
 \begin{lyxcode}
 ...~~\\
 ~0.6000000~-~0.6500000~2048~6.060606~\%~~~\\
@@ -4394,17 +4393,17 @@ are tolerable, above that you should consider remeshing...
 
 To give you an idea why some of the elements are distorted, see the
 following figure \ref{fig:mesh.vp} of the mesh you obtain in the
-example \texttt{examples/meshfem3D\_examples/simple\_model/}. 
+example \texttt{examples/meshfem3D\_examples/simple\_model/}.
 \begin{figure}[htbp]
 \noindent \begin{centering}
-\includegraphics[width=0.9\textwidth]{figures/mesh_vp} 
+\includegraphics[width=0.9\textwidth]{figures/mesh_vp}
 \par\end{centering}
 
 \caption{Paraview visualization using the mesh vtk-files for the example given
 in \texttt{examples/meshfem3D\_examples/simple\_model/}.}
 
 
-\label{fig:mesh.vp} 
+\label{fig:mesh.vp}
 \end{figure}
 
 
@@ -4425,7 +4424,7 @@ from latitude/longitude to x/y/z coordinates.
 
 
 In such cases, try to change your \texttt{DATA/Par\_file} and set
-e.g.: 
+e.g.:
 \begin{lyxcode}
 SUPPRESS\_UTM\_PROJECTION~=~.false.~~~\\
 
@@ -4456,7 +4455,7 @@ and \texttt{xspecfem3D} to make sure that your simulation works fine.
 most cases this means that your time step size \texttt{DT} is chosen
 too big. Look at your files \texttt{output\_mesher.txt} or \texttt{output\_solver.txt}
 created in the folder \texttt{OUTPUT\_FILES}. In these output files,
-find the section: 
+find the section:
 
 \begin{lyxcode}
 ...~~~\\
@@ -4521,9 +4520,9 @@ code. And you must show them these terms so they know their rights.
 
 We protect your rights with two steps:
 \begin{enumerate}
-\item Copyright the software, and 
+\item Copyright the software, and
 \item Offer you this license which gives you legal permission to copy, distribute
-and/or modify the software. 
+and/or modify the software.
 \end{enumerate}
 Also, for each author's protection and ours, we want to make certain
 that everyone understands that there is no warranty for this free
@@ -4581,11 +4580,11 @@ that you also meet all of these conditions:
 
 \begin{enumerate}
 \item You must cause the modified files to carry prominent notices stating
-that you changed the files and the date of any change. 
+that you changed the files and the date of any change.
 \item You must cause any work that you distribute or publish, that in whole
 or in part contains or is derived from the Program or any part thereof,
 to be licensed as a whole at no charge to all third parties under
-the terms of this License. 
+the terms of this License.
 \item If the modified program normally reads commands interactively when
 run, you must cause it, when started running for such interactive
 use in the most ordinary way, to print or display an announcement
@@ -4594,7 +4593,7 @@ is no warranty (or else, saying that you provide a warranty) and that
 users may redistribute the program under these conditions, and telling
 the user how to view a copy of this License. (Exception: if the Program
 itself is interactive but does not normally print such an announcement,
-your work based on the Program is not required to print an announcement.) 
+your work based on the Program is not required to print an announcement.)
 \end{enumerate}
 
 These requirements apply to the modified work as a whole. If identifiable
@@ -4626,18 +4625,18 @@ Section 2) in object code or executable form under the terms of Sections
 \begin{enumerate}
 \item Accompany it with the complete corresponding machine-readable source
 code, which must be distributed under the terms of Sections 1 and
-2 above on a medium customarily used for software interchange; or, 
+2 above on a medium customarily used for software interchange; or,
 \item Accompany it with a written offer, valid for at least three years,
 to give any third party, for a charge no more than your cost of physically
 performing source distribution, a complete machine-readable copy of
 the corresponding source code, to be distributed under the terms of
 Sections 1 and 2 above on a medium customarily used for software interchange;
-or, 
+or,
 \item Accompany it with the information you received as to the offer to
 distribute corresponding source code. (This alternative is allowed
 only for noncommercial distribution and only if you received the program
 in object code or executable form with such an offer, in accord with
-Subsection b above.) 
+Subsection b above.)
 \end{enumerate}
 
 The source code for a work means the preferred form of the work for
@@ -4664,7 +4663,7 @@ copy, modify, sublicense or distribute the Program is void, and will
 automatically terminate your rights under this License. However, parties
 who have received copies, or rights, from you under this License will
 not have their licenses terminated so long as such parties remain
-in full compliance. 
+in full compliance.
 \item You are not required to accept this License, since you have not signed
 it. However, nothing else grants you permission to modify or distribute
 the Program or its derivative works. These actions are prohibited
@@ -4672,13 +4671,13 @@ by law if you do not accept this License. Therefore, by modifying
 or distributing the Program (or any work based on the Program), you
 indicate your acceptance of this License to do so, and all its terms
 and conditions for copying, distributing or modifying the Program
-or works based on it. 
+or works based on it.
 \item Each time you redistribute the Program (or any work based on the Program),
 the recipient automatically receives a license from the original licensor
 to copy, distribute or modify the Program subject to these terms and
 conditions. You may not impose any further restrictions on the recipients'
 exercise of the rights granted herein. You are not responsible for
-enforcing compliance by third parties to this License. 
+enforcing compliance by third parties to this License.
 \item If, as a consequence of a court judgment or allegation of patent infringement
 or for any other reason (not limited to patent issues), conditions
 are imposed on you (whether by court order, agreement or otherwise)
@@ -4719,7 +4718,7 @@ copyright holder who places the Program under this License may add
 an explicit geographical distribution limitation excluding those countries,
 so that distribution is permitted only in or among countries not thus
 excluded. In such case, this License incorporates the limitation as
-if written in the body of this License. 
+if written in the body of this License.
 \item The Free Software Foundation may publish revised and/or new versions
 of the General Public License from time to time. Such new versions
 will be similar in spirit to the present version, but may differ in
@@ -4740,7 +4739,7 @@ ask for permission. For software which is copyrighted by the Free
 Software Foundation, write to the Free Software Foundation; we sometimes
 make exceptions for this. Our decision will be guided by the two goals
 of preserving the free status of all derivatives of our free software
-and of promoting the sharing and reuse of software generally. 
+and of promoting the sharing and reuse of software generally.
 \end{enumerate}
 
 \subsection*{NO WARRANTY }
@@ -4796,7 +4795,7 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software Foundation,
-Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 \end{quote}
 Also add information on how to contact you by electronic and paper
 mail.
@@ -4807,7 +4806,7 @@ this when it starts in an interactive mode:
 Gnomovision version 69, Copyright $\copyright$ year name of author
 Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show
 w'. This is free software, and you are welcome to redistribute it
-under certain conditions; type `show c' for details. 
+under certain conditions; type `show c' for details.
 \end{quote}
 The hypothetical commands `show w' and `show c' should show the appropriate
 parts of the General Public License. Of course, the commands you use
@@ -4823,11 +4822,11 @@ Yoyodyne, Inc., hereby disclaims all copyright interest in the program
 
 (signature of Ty Coon)\\
  1 April 1989 \\
- Ty Coon, President of Vice 
+ Ty Coon, President of Vice
 \end{quote}
 This General Public License does not permit incorporating your program
 into proprietary programs. If your program is a subroutine library,
 you may consider it more useful to permit linking proprietary applications
 with the library. If this is what you want to do, use the GNU Library
-General Public License instead of this License. 
+General Public License instead of this License.
 \end{document}
