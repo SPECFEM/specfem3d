@@ -163,13 +163,6 @@
 
   !-----------------------------------------------------------------------------------
 
-  ! interpolates position to find best possible location closest to target position (default)
-  ! note: this can be turned off to speedup location search 
-  !       and position source at closest GLL point
-  logical, parameter :: USE_BEST_LOCATION = .true.
-
-  !-----------------------------------------------------------------------------------
-
   ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
 
