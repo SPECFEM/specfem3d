@@ -750,8 +750,6 @@
     ! allocates and initializes C-PML arrays
     if( NSPEC_CPML > 0 ) then
        call pml_allocate_arrays()
-    else
-       stop 'error: the number of C-PML elements in partition is invalid'
     endif
 
     ! defines C-PML spectral elements local indexing

@@ -139,18 +139,25 @@
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
-    if(PML_CONDITIONS)then !ZN
-       if(ACOUSTIC_SIMULATION)then !ZN
-          allocate(rmass_elastic_interface(NGLOB_AB),stat=ier) !ZN          
-          if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface' !ZN
+    if(PML_CONDITIONS)then ! need to be optimized
+       if(ACOUSTIC_SIMULATION)then  
+          allocate(rmass_elastic_interface(NGLOB_AB),stat=ier)            
+          if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface'  
           rmass_elastic_interface(:) = 0._CUSTOM_REAL
           if(SIMULATION_TYPE == 3)then
-            allocate(accel_interface(NDIM,NGLOB_AB),stat=ier) !ZN
+            allocate(accel_interface(NDIM,NGLOB_AB),stat=ier)  
+            if( ier /= 0 ) stop 'error allocating array accel_interface'
+            accel_interface(:,:) = 0._CUSTOM_REAL
+          else
+            allocate(accel_interface(NDIM,1),stat=ier)  
             if( ier /= 0 ) stop 'error allocating array accel_interface'
             accel_interface(:,:) = 0._CUSTOM_REAL
           endif
-       endif !ZN
-    endif !ZN
+       else
+          allocate(rmass_elastic_interface(1),stat=ier)
+          allocate(accel_interface(NDIM,1),stat=ier)
+       endif  
+    endif 
     if( ier /= 0 ) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB), &
@@ -227,12 +234,12 @@
     read(27,iostat=ier) rmass
     if( ier /= 0 ) stop 'error reading in array rmass'
 
-    if(PML_CONDITIONS)then !ZN
-       if(ACOUSTIC_SIMULATION)then !ZN        
-          read(27,iostat=ier) rmass_elastic_interface !ZN 
-          if( ier /= 0 ) stop 'error reading in array rmass_elastic_interface' !ZN 
-       endif !ZN
-    endif !ZN
+    if(PML_CONDITIONS)then !need to be optimized
+       if(ACOUSTIC_SIMULATION)then 
+          read(27,iostat=ier) rmass_elastic_interface   
+          if( ier /= 0 ) stop 'error reading in array rmass_elastic_interface'   
+       endif  
+    endif  
 
     if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix
@@ -363,13 +370,13 @@
     read(27) CPML_width_x
     read(27) CPML_width_y
     read(27) CPML_width_z
+    allocate(is_CPML(NSPEC_AB),stat=ier) !need to be optimized
+    if(ier /= 0) stop 'error allocating array is_CPML'
     if( NSPEC_CPML > 0 ) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
       if(ier /= 0) stop 'error allocating array CPML_regions'
       allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
       if(ier /= 0) stop 'error allocating array CPML_to_spec'
-      allocate(is_CPML(NSPEC_AB),stat=ier)
-      if(ier /= 0) stop 'error allocating array is_CPML'
       allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
       if(ier /= 0) stop 'error allocating array d_store_x'
       allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
