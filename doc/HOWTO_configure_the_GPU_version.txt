@@ -1,0 +1,15 @@
+
+From: Daniel Peter
+Date: 07/23/2013 03:39 PM
+
+The svn trunk of SPECFEM3D_Cartesian contains the most current GPU routines.
+
+You have to configure the package with the additional CUDA option:
+
+./configure --with-cuda         ...        when using CUDA version 4.x
+./configure --with-cuda=cuda5   ...        when using CUDA version 5.x
+
+Once the compilation is successful, the examples run on GPUs when setting the flag GPU_MODE to .true. in DATA/Par_file.
+
+Daniel.
+
