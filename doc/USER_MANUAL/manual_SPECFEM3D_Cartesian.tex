@@ -502,9 +502,13 @@ your system and compare the seismograms. If they are identical (and
 in most cases they will), you can select single precision for your
 future runs.\\
 
-
+If your compiler has problems with the \texttt{use mpi} statements that are used in the code, use the script called 
+\texttt{replace\_use\_mpi\_with\_include\_mpif\_dot\_h.pl} in the root directory to replace all of them with \texttt{include 'mpif.h'} automatically.
 
 \section{Adding OpenMP support in addition to MPI}
+
+NOTE FROM JULY 2013: OpenMP support is maybe / probably not maintained any more.
+Thus the section below is maybe obsolete.
 
 OpenMP support can be enabled in addition to MPI. However, in many
 cases performance will not improve because our pure MPI implementation
