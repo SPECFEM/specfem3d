@@ -49,7 +49,7 @@ case $my_FC in
         #
         # Portland PGI
         #
-        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -DFORCE_VECTORIZATION" # -mcmodel=medium
+        DEF_FFLAGS="-fast -Mnobounds -Minline -Mneginfo -Mdclchk -Knoieee -Minform=warn -Mdaz -Mflushz -Mvect -DFORCE_VECTORIZATION" # -mcmodel=medium
         # -Mbounds
         # -fastsse -tp amd64e -Msmart
         ;;
