@@ -208,9 +208,9 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
 
-! mass matrix for interface 
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface 
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface 
+! mass matrix for interface
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface
 
 ! mass matrix contributions
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz

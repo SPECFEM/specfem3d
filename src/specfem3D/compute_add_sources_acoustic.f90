@@ -141,7 +141,7 @@
                     ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
                     ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
                     ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
-                       
+
                     ! acoustic source for pressure gets divided by kappa
                     ! source contribution
                     do k=1,NGLLZ
@@ -486,7 +486,7 @@ endif
                     ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
                     ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
                     ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
-                       
+
                     ! acoustic source for pressure gets divided by kappa
                     ! source contribution
                     do k=1,NGLLZ

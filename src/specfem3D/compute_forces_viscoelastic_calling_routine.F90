@@ -115,12 +115,12 @@ subroutine compute_forces_viscoelastic()
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,& 
+                        ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
                         SIMULATION_TYPE,.false.,accel_interface,&
                         rmemory_coupling_el_ac_potential,spec_to_CPML,&
-                        potential_acoustic,potential_dot_acoustic) 
- 
+                        potential_acoustic,potential_dot_acoustic)
+
 
          else
            ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
@@ -131,12 +131,12 @@ subroutine compute_forces_viscoelastic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner,& 
+                              ispec_is_inner,phase_is_inner,&
                               PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
                               SIMULATION_TYPE,.false.,accel_interface,&
                               rmemory_coupling_el_ac_potential,spec_to_CPML,&
-                              potential_acoustic,potential_dot_acoustic) 
-  
+                              potential_acoustic,potential_dot_acoustic)
+
          endif
 
       endif ! num_coupling_ac_el_faces
@@ -292,7 +292,7 @@ end subroutine compute_forces_viscoelastic
 !
 !=====================================================================
 
-! elastic solver for back 
+! elastic solver for back
 
 subroutine compute_forces_viscoelastic_bpwf()
 
@@ -384,12 +384,12 @@ subroutine compute_forces_viscoelastic_bpwf()
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,& 
+                        ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
                         SIMULATION_TYPE,.true.,accel_interface,&
                         rmemory_coupling_el_ac_potential,spec_to_CPML,&
-                        potential_acoustic,potential_dot_acoustic) 
-  
+                        potential_acoustic,potential_dot_acoustic)
+
       endif ! num_coupling_ac_el_faces
     endif
 

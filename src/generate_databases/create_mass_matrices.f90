@@ -115,14 +115,14 @@
      allocate(rmass_acoustic(nglob),stat=ier); if(ier /= 0) stop 'error allocating array rmass_acoustic'
      rmass_acoustic(:) = 0._CUSTOM_REAL
 
-     allocate(rmass_acoustic_interface(nglob),stat=ier); if(ier /= 0) stop 'error allocating array rmass_acoustic' 
-     rmass_acoustic_interface(:) = 0._CUSTOM_REAL 
+     allocate(rmass_acoustic_interface(nglob),stat=ier); if(ier /= 0) stop 'error allocating array rmass_acoustic'
+     rmass_acoustic_interface(:) = 0._CUSTOM_REAL
 
      ! returns acoustic mass matrix
      if( PML_CONDITIONS ) then
         call create_mass_matrices_pml_acoustic(nspec,ibool)
 
-        do ispec=1,nspec    
+        do ispec=1,nspec
          if( ispec_is_acoustic(ispec) ) then
              do k=1,NGLLZ
                 do j=1,NGLLY
@@ -480,7 +480,7 @@
 
     use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL,DT,&
                                       is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
-                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,&                                      
+                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,&
                                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
     use create_regions_mesh_ext_par,only : rmass,rhostore,jacobianstore,wxgll,wygll,wzgll,ispec_is_elastic
@@ -737,7 +737,7 @@
 
     use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,SIZE_REAL,CUSTOM_REAL,DT,&
                                       is_CPML,CPML_regions,d_store_x,d_store_y,d_store_z, &
-                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,&                                      
+                                      K_store_x,K_store_y,K_store_z,nspec_cpml,CPML_to_spec,&
                                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
     use create_regions_mesh_ext_par,only : rmass_acoustic,kappastore,jacobianstore,wxgll,wygll,wzgll,ispec_is_acoustic
@@ -980,7 +980,7 @@
              enddo
           else
              stop 'error in PML mesh file'
-          endif          
+          endif
        endif
     enddo ! do ispec_CPML=1,nspec_cpml
 

@@ -243,7 +243,7 @@
 
    ! looks for index with minimum value
    do j=i,np
-      ! note: some compilers (cray) might be too aggressive in optimizing this loop, 
+      ! note: some compilers (cray) might be too aggressive in optimizing this loop,
       !       thus we need this temporary array value x to store and compare values
       x = xjac(j)
 

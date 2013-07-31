@@ -35,11 +35,11 @@
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,deltat, &
                                     one_minus_sum_beta,factor_common,&
-                                    one_minus_sum_beta_kappa,factor_common_kappa,& 
-                                    alphaval,betaval,gammaval,&      
+                                    one_minus_sum_beta_kappa,factor_common_kappa,&
+                                    alphaval,betaval,gammaval,&
                                     NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
-                                    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &  
-                                    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &  
+                                    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                                    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                     ANISOTROPY,NSPEC_ANISO, &
                                     c11store,c12store,c13store,c14store,c15store,c16store,&
@@ -94,17 +94,17 @@
   integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: one_minus_sum_beta_kappa   
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa  
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: one_minus_sum_beta_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
       R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace  
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
        epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace  
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
 ! anisotropy
@@ -198,10 +198,10 @@
   equivalence(tempz3_att,C3_mxm_m2_m1_5points_att)
 
   ! local attenuation parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc,epsilondev_xx_loc, & 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc,epsilondev_xx_loc, &
        epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, & 
-                         R_trace_val1,R_trace_val2,R_trace_val3 
+  real(kind=CUSTOM_REAL) R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, &
+                         R_trace_val1,R_trace_val2,R_trace_val3
   real(kind=CUSTOM_REAL) factor_loc,alphaval_loc,betaval_loc,gammaval_loc
   real(kind=CUSTOM_REAL) Sn,Snp1
   real(kind=CUSTOM_REAL) templ
@@ -563,7 +563,7 @@
               if(ATTENUATION) then
                 ! use unrelaxed parameters if attenuation
                 mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-                if(FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)  
+                if(FULL_ATTENUATION_SOLID) kappal  = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
               endif
 
   ! full anisotropic case, stress calculations
@@ -823,13 +823,13 @@
                     gammaval_loc = gammaval(i_sls)
 
                     if(FULL_ATTENUATION_SOLID) then
-                      ! term in trace  
-                      factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)  
+                      ! term in trace
+                      factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
 
-                      Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)  
-                      Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)  
-                      R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &  
-                                        betaval_loc * Sn + gammaval_loc * Snp1  
+                      Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
+                      Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
+                      R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
+                                        betaval_loc * Sn + gammaval_loc * Snp1
                     endif
 
                     ! term in xx yy zz xy xz yz

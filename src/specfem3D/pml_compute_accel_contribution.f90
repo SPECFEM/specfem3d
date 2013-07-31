@@ -37,7 +37,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 
   use specfem_par, only: NGLOB_AB,it,deltat,wgll_cube,jacobian,ibool,rhostore
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
-                     alpha_store,NSPEC_CPML,accel_elastic_CPML                 
+                     alpha_store,NSPEC_CPML,accel_elastic_CPML
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -426,8 +426,8 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 !             A3 = temp_A3 + (it+0.0)*deltat*temp_A4 + ((it+0.0)*deltat)**2*temp_A5
 !             A4 = -temp_A4 -2.0*(it+0.0)*deltat*temp_A5
 !             A5 = temp_A5
-!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
-!!! exprssion of A3,A4,A5 in order to stabilized the code. 
+!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced
+!!! exprssion of A3,A4,A5 in order to stabilized the code.
 
               A3 = temp_A3
               A4 = 0.0
@@ -464,7 +464,7 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 !=====================================================================
 !
-! 
+!
 
 subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
                                                    potential_dot_acoustic,rmemory_potential_acoustic)
@@ -485,7 +485,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic 
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_potential_acoustic
 
 
@@ -786,8 +786,8 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 !             A4 = -temp_A4 -2.0*it*deltat*temp_A5
 !             A5 = temp_A5
 
-!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced 
-!!! exprssion of A3,A4,A5 in order to stabilized the code. 
+!!! the full experssion of A3,A4,A5 are given by above equation, here we use reduced
+!!! exprssion of A3,A4,A5 in order to stabilized the code.
 
               A3 = temp_A3
               A4 = 0.0
@@ -823,17 +823,17 @@ subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_ela
   integer :: iglob
 
   do iglob = 1, nglob_interface_PML_elastic
-     b_PML_field(1,iglob) = displ(1,iglob) 
-     b_PML_field(2,iglob) = displ(2,iglob) 
+     b_PML_field(1,iglob) = displ(1,iglob)
+     b_PML_field(2,iglob) = displ(2,iglob)
      b_PML_field(3,iglob) = displ(3,iglob)
 
-     b_PML_field(4,iglob) = veloc(1,iglob) 
-     b_PML_field(5,iglob) = veloc(2,iglob) 
-     b_PML_field(6,iglob) = veloc(3,iglob) 
+     b_PML_field(4,iglob) = veloc(1,iglob)
+     b_PML_field(5,iglob) = veloc(2,iglob)
+     b_PML_field(6,iglob) = veloc(3,iglob)
 
      b_PML_field(7,iglob) = accel(1,iglob)
-     b_PML_field(8,iglob) = accel(2,iglob) 
-     b_PML_field(9,iglob) = accel(3,iglob)   
+     b_PML_field(8,iglob) = accel(2,iglob)
+     b_PML_field(9,iglob) = accel(3,iglob)
   enddo
 
   call write_abs(0,b_PML_field,b_reclen_PML_field,it)
@@ -861,25 +861,25 @@ subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_P
      do i = 1, NGLLX; do j = 1, NGLLY; do k = 1, NGLLZ
         iglob = ibool(i,j,k,ispec)
         b_displ(:,iglob) = 0._CUSTOM_REAL
-        b_veloc(:,iglob) = 0._CUSTOM_REAL 
+        b_veloc(:,iglob) = 0._CUSTOM_REAL
         b_accel(:,iglob) = 0._CUSTOM_REAL
      enddo; enddo; enddo
-  enddo  
+  enddo
 
   call read_abs(0,b_PML_field,b_reclen_PML_field,NSTEP-it+1)
 
   do iglob = 1, nglob_interface_PML_elastic
-     b_displ(1,iglob) = b_PML_field(1,iglob)  
-     b_displ(2,iglob) = b_PML_field(2,iglob) 
+     b_displ(1,iglob) = b_PML_field(1,iglob)
+     b_displ(2,iglob) = b_PML_field(2,iglob)
      b_displ(3,iglob) = b_PML_field(3,iglob)
 
-     b_veloc(1,iglob) = b_PML_field(4,iglob) 
-     b_veloc(2,iglob) = b_PML_field(5,iglob) 
-     b_veloc(3,iglob) = b_PML_field(6,iglob) 
+     b_veloc(1,iglob) = b_PML_field(4,iglob)
+     b_veloc(2,iglob) = b_PML_field(5,iglob)
+     b_veloc(3,iglob) = b_PML_field(6,iglob)
 
      b_accel(1,iglob) = b_PML_field(7,iglob)
-     b_accel(2,iglob) = b_PML_field(8,iglob) 
-     b_accel(3,iglob) = b_PML_field(9,iglob)   
+     b_accel(2,iglob) = b_PML_field(8,iglob)
+     b_accel(3,iglob) = b_PML_field(9,iglob)
   enddo
 
 end subroutine read_field_on_pml_interface
@@ -898,11 +898,11 @@ subroutine save_potential_on_pml_interface(potential_acoustic,potential_dot_acou
   real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
 
   integer :: iglob
-          
+
   do iglob = 1, nglob_interface_PML_acoustic
      b_PML_potential(1,iglob) = potential_acoustic(iglob)
-     b_PML_potential(2,iglob) = potential_dot_acoustic(iglob) 
-     b_PML_potential(3,iglob) = potential_dot_dot_acoustic(iglob)  
+     b_PML_potential(2,iglob) = potential_dot_acoustic(iglob)
+     b_PML_potential(3,iglob) = potential_dot_dot_acoustic(iglob)
   enddo
 
   call write_abs(1,b_PML_potential,b_reclen_PML_potential,it)
@@ -930,17 +930,17 @@ subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potent
      do i = 1, NGLLX; do j = 1, NGLLY; do k = 1, NGLLZ
         iglob = ibool(i,j,k,ispec)
         b_potential_acoustic(iglob) = 0._CUSTOM_REAL
-        b_potential_dot_acoustic(iglob) = 0._CUSTOM_REAL 
-        b_potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL      
+        b_potential_dot_acoustic(iglob) = 0._CUSTOM_REAL
+        b_potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
      enddo; enddo; enddo
-  enddo  
+  enddo
 
   call read_abs(1,b_PML_potential,b_reclen_PML_potential,NSTEP-it+1)
 
   do iglob = 1, nglob_interface_PML_acoustic
-     b_potential_acoustic(iglob) = b_PML_potential(1,iglob)  
-     b_potential_dot_acoustic(iglob) = b_PML_potential(2,iglob) 
-     b_potential_dot_dot_acoustic(iglob) = b_PML_potential(3,iglob)   
+     b_potential_acoustic(iglob) = b_PML_potential(1,iglob)
+     b_potential_dot_acoustic(iglob) = b_PML_potential(2,iglob)
+     b_potential_dot_dot_acoustic(iglob) = b_PML_potential(3,iglob)
   enddo
 
 end subroutine read_potential_on_pml_interface

@@ -32,10 +32,10 @@
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,& 
+                        ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,spec_to_CPML,is_CPML,&
                         potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
-                        SIMULATION_TYPE,backward_simulation,accel_interface) 
+                        SIMULATION_TYPE,backward_simulation,accel_interface)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
@@ -67,10 +67,10 @@
   logical, dimension(NSPEC_AB) :: ispec_is_inner
   logical :: phase_is_inner
 
-! CPML 
-  logical :: PML_CONDITIONS 
-  integer :: spec_to_CPML(NSPEC_AB) 
-  logical :: is_CPML(NSPEC_AB)  
+! CPML
+  logical :: PML_CONDITIONS
+  integer :: spec_to_CPML(NSPEC_AB)
+  logical :: is_CPML(NSPEC_AB)
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z,displ_n
@@ -98,7 +98,7 @@
         iglob = ibool(i,j,k,ispec)
 
         ! elastic displacement on global point
-        if(PML_CONDITIONS)then  
+        if(PML_CONDITIONS)then
            if(.not. backward_simulation)then
                if(is_CPML(ispec))then
                   if(SIMULATION_TYPE == 1)then
@@ -120,8 +120,8 @@
                   displ_z = displ(3,iglob)
                endif
            else
-              if(is_CPML(ispec))then  
-! left blank, since no operation needed           
+              if(is_CPML(ispec))then
+! left blank, since no operation needed
               else
                 displ_x = displ(1,iglob)
                 displ_y = displ(2,iglob)
@@ -158,8 +158,8 @@
         !          calculating the coupling on the elastic side for the acceleration...
         potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
 
-        if(PML_CONDITIONS)then 
-          if(is_CPML(ispec))then  
+        if(PML_CONDITIONS)then
+          if(is_CPML(ispec))then
             potential_dot_dot_acoustic_interface(iglob) = potential_dot_dot_acoustic_interface(iglob) &
                                                       + jacobianw*displ_n
           endif

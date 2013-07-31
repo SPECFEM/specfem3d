@@ -56,7 +56,7 @@
 
   ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: &
-        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic 
+        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
 ! time step
   real(kind=CUSTOM_REAL) :: deltat
@@ -83,7 +83,7 @@
 
 ! CPML fluid-solid interface
   logical :: ELASTIC_SIMULATION
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic_interface 
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic_interface
 
 ! CPML adjoint
   logical :: backward_simulation
