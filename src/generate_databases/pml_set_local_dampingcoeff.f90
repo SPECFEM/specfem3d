@@ -70,8 +70,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                             CPML_z_top,CPML_z_bottom,&
                             CPML_width_x_left_max_all, CPML_width_x_right_max_all,&
                             CPML_width_y_front_max_all,CPML_width_y_back_max_all,&
-                            CPML_width_z_top_max_all,CPML_width_z_bottom_max_all,&  
-                            vp_max,vp_max_all  
+                            CPML_width_z_top_max_all,CPML_width_z_bottom_max_all,&
+                            vp_max,vp_max_all
 
   ! stores damping profiles
   allocate(d_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
@@ -235,7 +235,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
      ispec = CPML_to_spec(ispec_CPML)
      do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
         vp = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
-        if(vp .ge. vp_max)then
+        if(vp >= vp_max)then
            vp_max = vp
         endif
      enddo; enddo; enddo
@@ -276,12 +276,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
               ! calculates P-velocity
               if( ispec_is_acoustic(ispec) ) then
 !                vp = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
-! For convenience only, when computing the damping profile inside PML, 
+! For convenience only, when computing the damping profile inside PML,
 ! we set the required variable "vp" to be constant and equal to "vp_max_all"
                  vp = vp_max_all
               else if( ispec_is_elastic(ispec) ) then
 !                vp = rho_vp(i,j,k,ispec)/rhostore(i,j,k,ispec)
-! For convenience only, when computing the damping profile inside PML, 
+! For convenience only, when computing the damping profile inside PML,
 ! we set the required variable "vp" to be constant and equal to "vp_max_all"
                  vp = vp_max_all
               else
@@ -1342,7 +1342,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
           mask_ibool_interior_domain(ibool(i,j,k,ispec))=.true.
         enddo; enddo; enddo
-     endif 
+     endif
     enddo
 
     !------------------------------------------------------
@@ -1350,13 +1350,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
     !------------------------------------------------------
     nglob_interface_PML_acoustic = 0
 
-    if(ACOUSTIC_SIMULATION) then  
+    if(ACOUSTIC_SIMULATION) then
 
       do ispec=1,nspec
         if( ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
           do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
             if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
-              nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1 
+              nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1
             endif
           enddo; enddo; enddo
         endif
@@ -1366,17 +1366,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
         if(ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
         points_interface_PML_acoustic = 0
-        nglob_interface_PML_acoustic = 0 
+        nglob_interface_PML_acoustic = 0
         do ispec=1,nspec
           if( ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
             do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
               if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
-                nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1 
+                nglob_interface_PML_acoustic = nglob_interface_PML_acoustic + 1
                 points_interface_PML_acoustic(nglob_interface_PML_acoustic) = ibool(i,j,k,ispec)
               endif
             enddo; enddo; enddo
           endif
-        enddo      
+        enddo
       endif
 
     endif
@@ -1389,13 +1389,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
     !------------------------------------------------------
     nglob_interface_PML_elastic = 0
 
-    if(ELASTIC_SIMULATION) then  
+    if(ELASTIC_SIMULATION) then
 
       do ispec=1,nspec
         if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
           do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
             if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
-              nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1 
+              nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1
             endif
           enddo; enddo; enddo
         endif
@@ -1410,12 +1410,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
           if( ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
             do k=1,NGLLZ; do j=1,NGLLY; do i=1,NGLLX
               if(mask_ibool_interior_domain(ibool(i,j,k,ispec)))then
-                nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1 
+                nglob_interface_PML_elastic = nglob_interface_PML_elastic + 1
                 points_interface_PML_elastic(nglob_interface_PML_elastic) = ibool(i,j,k,ispec)
               endif
             enddo; enddo; enddo
           endif
-        enddo      
+        enddo
       endif
 
     endif
@@ -1450,7 +1450,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   if( NPOWER >= 1 ) then
      ! In INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
      ! pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (2._CUSTOM_REAL * delta)) * dist**(NPOWER)
-     ! due to tests it is more accurate to use following definition in case NPOWER = 1 defined in constants.h.in 
+     ! due to tests it is more accurate to use following definition in case NPOWER = 1 defined in constants.h.in
      pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (2._CUSTOM_REAL * delta)) &
                              * dist**(1.2_CUSTOM_REAL*NPOWER)
   else

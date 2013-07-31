@@ -63,7 +63,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,2) ::  &
                           rmemory_dux_dxl_x, rmemory_dux_dyl_x, rmemory_dux_dzl_x, &
                           rmemory_duy_dxl_y, rmemory_duy_dyl_y, rmemory_duy_dzl_y, &
-                          rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duz_dzl_z  
+                          rmemory_duz_dxl_z, rmemory_duz_dyl_z, rmemory_duz_dzl_z
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML) ::  &
                           rmemory_duy_dyl_x, rmemory_duz_dzl_x, rmemory_duz_dxl_x, rmemory_duy_dxl_x, &
@@ -2028,7 +2028,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB), intent(in) :: displ,veloc
-  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: & 
+  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: &
                                     rmemory_coupling_ac_el_displ
 
   ! local parameters
@@ -2052,7 +2052,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)  
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = k_store_x(i,j,k,ispec_CPML)
@@ -2075,7 +2075,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = k_store_x(i,j,k,ispec_CPML)
@@ -2098,7 +2098,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
 
     displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
-                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) 
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
@@ -2127,7 +2127,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)  
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = 1.d0
@@ -2138,7 +2138,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = k_store_y(i,j,k,ispec_CPML)
@@ -2162,7 +2162,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = 0.d0
 
     displ_z = A12 * displ(3,iglob) + A13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) &
-                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) 
+                                   + A14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
@@ -2192,7 +2192,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)  
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = k_store_z(i,j,k,ispec_CPML)
@@ -2216,7 +2216,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = 1.d0
@@ -2256,7 +2256,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = k_store_x(i,j,k,ispec_CPML)
@@ -2279,7 +2279,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -2341,7 +2341,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = 0.d0
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -2373,7 +2373,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                       + (displ(2,iglob)) * it*deltat * coef2_2
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = k_store_x(i,j,k,ispec_CPML)
@@ -2434,7 +2434,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                       + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_2 + (displ(1,iglob)) * coef2_2
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = k_store_z(i,j,k,ispec_CPML)
@@ -2457,7 +2457,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
     rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = 0.d0
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = k_store_y(i,j,k,ispec_CPML)
@@ -2516,7 +2516,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                       + (displ(1,iglob) + deltat * veloc(1,iglob)) * coef1_2 + (displ(1,iglob)) * coef2_2
 
     displ_x = A6 * displ(1,iglob) + A7 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) &
-                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) 
+                                  + A8 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
     ! displ_y
     A9 = k_store_x(i,j,k,ispec_CPML) * k_store_z(i,j,k,ispec_CPML)
@@ -2548,7 +2548,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                       + (displ(2,iglob)) * it*deltat * coef2_2
 
     displ_y = A9 * displ(2,iglob) + A10 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) &
-                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) 
+                                  + A11 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
     ! displ_z
     A12 = k_store_x(i,j,k,ispec_CPML) * k_store_y(i,j,k,ispec_CPML)
@@ -2609,7 +2609,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
   real(kind=CUSTOM_REAL) :: pressure
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: & 
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: &
                                     rmemory_coupling_el_ac_potential
 
   ! local parameters
@@ -2646,7 +2646,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
     rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_Y_ONLY ) then
@@ -2676,7 +2676,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
     rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)  
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_Z_ONLY ) then
@@ -2693,7 +2693,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
     rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_XY_ONLY ) then
@@ -2731,7 +2731,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
          + (potential_acoustic(iglob)) * it*deltat * coef2_2
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_XZ_ONLY ) then
@@ -2762,7 +2762,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
     rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_YZ_ONLY ) then
@@ -2793,7 +2793,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
     rmemory_coupling_el_ac_potential(i,j,k,iface,2) = 0.d0
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
 
 
   else if( CPML_regions(ispec_CPML) == CPML_XYZ ) then
@@ -2831,7 +2831,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
          + (potential_acoustic(iglob)) * it*deltat * coef2_2
 
     pressure = A12 * potential_acoustic(iglob) + A13 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) &
-                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) 
+                                               + A14 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
   else
     stop 'wrong PML flag in PML memory variable calculation routine'
   endif

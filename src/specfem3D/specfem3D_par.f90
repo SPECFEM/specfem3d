@@ -90,7 +90,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary,Tract_dsm_boundary
 
 ! attenuation
-  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa 
+  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
   character(len=256) prname_Q
 
 ! additional mass matrix for ocean load
@@ -296,17 +296,17 @@ module specfem_par_elastic
   implicit none
 
   ! memory variables and standard linear solids for attenuation
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta,one_minus_sum_beta_kappa 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common,factor_common_kappa 
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta,one_minus_sum_beta_kappa
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common,factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL) :: min_resolved_period
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     alphaval,betaval,gammaval
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz  
+    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz 
+    epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
 
 ! displacement, velocity, acceleration
@@ -317,8 +317,8 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass
 
 ! PML on fluid-solid interface
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_interface 
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface 
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: accel_interface
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_elastic_interface
 
 ! Stacey
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassx,rmassy,rmassz
@@ -357,9 +357,9 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     b_alphaval, b_betaval, b_gammaval
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz 
+    b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-    b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz 
+    b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,b_epsilondev_xz,b_epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: b_epsilon_trace_over_3
 
   ! adjoint kernels
@@ -401,12 +401,12 @@ module specfem_par_acoustic
 
 ! potential
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic,potential_dot_acoustic, &
-                                    potential_dot_dot_acoustic,potential_dot_dot_acoustic_interface 
+                                    potential_dot_dot_acoustic,potential_dot_dot_acoustic_interface
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface 
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic_interface
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmassz_acoustic
 
 ! acoustic-elastic coupling surface

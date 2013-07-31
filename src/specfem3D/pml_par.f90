@@ -115,10 +115,10 @@ module pml_par
   ! for adjoint tomography
   ! need the array stored the points on interface between PML and interior computational domain
   ! --------------------------------------------------------------------------------------------
-  integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic 
-  integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic 
+  integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic
+  integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic
 
-  integer :: b_reclen_PML_field,b_reclen_PML_potential 
+  integer :: b_reclen_PML_field,b_reclen_PML_potential
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_PML_field,b_PML_potential
 
 end module pml_par

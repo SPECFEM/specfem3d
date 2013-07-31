@@ -62,7 +62,7 @@ subroutine compute_forces_acoustic()
   implicit none
 
   ! local parameters
-  integer:: iphase,iface,ispec,iglob,igll,i,j,k 
+  integer:: iphase,iface,ispec,iglob,igll,i,j,k
   logical:: phase_is_inner
 
   ! enforces free surface (zeroes potentials at free surface)
@@ -108,7 +108,7 @@ subroutine compute_forces_acoustic()
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
-                        .false.,potential_dot_dot_acoustic_interface)  
+                        .false.,potential_dot_dot_acoustic_interface)
     endif
 
     ! ! Stacey absorbing boundary conditions
@@ -133,10 +133,10 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner,& 
+                              ispec_is_inner,phase_is_inner,&
                               PML_CONDITIONS,spec_to_CPML,is_CPML,&
                               potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
-                              SIMULATION_TYPE,.false.,accel_interface) 
+                              SIMULATION_TYPE,.false.,accel_interface)
 
         else
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
@@ -147,10 +147,10 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner,& 
+                              ispec_is_inner,phase_is_inner,&
                               PML_CONDITIONS,spec_to_CPML,is_CPML,&
                               potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
-                              SIMULATION_TYPE,.false.,accel_interface) 
+                              SIMULATION_TYPE,.false.,accel_interface)
         endif
       endif
     endif
@@ -206,11 +206,11 @@ subroutine compute_forces_acoustic()
 
   ! divides pressure with mass matrix
   potential_dot_dot_acoustic(:) = potential_dot_dot_acoustic(:) * rmass_acoustic(:)
-    
+
   if(PML_CONDITIONS)then
     if(ELASTIC_SIMULATION ) then
-      potential_dot_dot_acoustic_interface(:) = potential_dot_dot_acoustic_interface(:) * & 
-                                                  rmass_acoustic_interface(:) 
+      potential_dot_dot_acoustic_interface(:) = potential_dot_dot_acoustic_interface(:) * &
+                                                  rmass_acoustic_interface(:)
     endif
   endif
 
@@ -221,7 +221,7 @@ subroutine compute_forces_acoustic()
 ! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
 
 ! However, enforcing explicitly potential_dot_dot_acoustic, potential_dot_acoustic, potential_acoustic
-! to be zero on outer boundary of PML help to improve the accuracy of absorbing low-frequency wave components 
+! to be zero on outer boundary of PML help to improve the accuracy of absorbing low-frequency wave components
 ! in case of long-time simulation
 
 ! C-PML boundary
@@ -243,7 +243,7 @@ subroutine compute_forces_acoustic()
             potential_dot_dot_acoustic(iglob) = 0.0
             potential_dot_acoustic(iglob) = 0.0
             potential_acoustic(iglob) = 0.0
-            if(ELASTIC_SIMULATION ) then  
+            if(ELASTIC_SIMULATION ) then
               potential_dot_dot_acoustic_interface(iglob) = 0.0
             endif
           enddo
@@ -375,7 +375,7 @@ subroutine compute_forces_acoustic_bpwf()
                         rhostore,jacobian,ibool,deltat, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic,ELASTIC_SIMULATION,&
-                        .true.,potential_dot_dot_acoustic_interface) 
+                        .true.,potential_dot_dot_acoustic_interface)
       endif
     endif
 
@@ -401,10 +401,10 @@ subroutine compute_forces_acoustic_bpwf()
                             coupling_ac_el_ispec,coupling_ac_el_ijk, &
                             coupling_ac_el_normal, &
                             coupling_ac_el_jacobian2Dw, &
-                            ispec_is_inner,phase_is_inner,& 
+                            ispec_is_inner,phase_is_inner,&
                             PML_CONDITIONS,spec_to_CPML,is_CPML,&
                             potential_dot_dot_acoustic_interface,veloc,rmemory_coupling_ac_el_displ,&
-                            SIMULATION_TYPE,.true.,accel_interface)  
+                            SIMULATION_TYPE,.true.,accel_interface)
       endif
     endif
 

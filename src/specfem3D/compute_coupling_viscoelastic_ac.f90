@@ -36,14 +36,14 @@
                         PML_CONDITIONS,is_CPML,potential_dot_dot_acoustic_interface,&
                         SIMULATION_TYPE,backward_simulation,accel_interface,&
                         rmemory_coupling_el_ac_potential,spec_to_CPML, &
-                        potential_acoustic,potential_dot_acoustic) 
+                        potential_acoustic,potential_dot_acoustic)
 
 ! returns the updated acceleration array: accel
 
   implicit none
   include 'constants.h'
 
-  integer :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE 
+  integer :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
   logical :: backward_simulation
 
 ! displacement and pressure
@@ -72,15 +72,15 @@
   integer :: iface,igll,ispec,iglob
   integer :: i,j,k
 
-! CPML 
+! CPML
   integer :: ispec_CPML
   integer :: spec_to_CPML(NSPEC_AB)
-  logical :: PML_CONDITIONS 
-  logical :: is_CPML(NSPEC_AB)  
+  logical :: PML_CONDITIONS
+  logical :: is_CPML(NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel_interface
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: rmemory_coupling_el_ac_potential
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic_interface
- 
+
 
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
@@ -103,7 +103,7 @@
         iglob = ibool(i,j,k,ispec)
 
         ! acoustic pressure on global point
-        if(PML_CONDITIONS)then 
+        if(PML_CONDITIONS)then
           if(.not. backward_simulation)then
             if(is_CPML(ispec))then
               if(SIMULATION_TYPE == 1)then
@@ -111,17 +111,17 @@
               endif
 
               if(SIMULATION_TYPE == 3)then
-                ispec_CPML = spec_to_CPML(ispec) 
-                call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&  
-                                                pressure,potential_acoustic,potential_dot_acoustic,&  
-                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)  
+                ispec_CPML = spec_to_CPML(ispec)
+                call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
+                                                pressure,potential_acoustic,potential_dot_acoustic,&
+                                                num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
               endif
             else
               pressure = - potential_dot_dot_acoustic(iglob)
             endif
           else
             if(is_CPML(ispec))then
-! left blank, since no operation needed 
+! left blank, since no operation needed
             else
               pressure = - potential_dot_dot_acoustic(iglob)
             endif

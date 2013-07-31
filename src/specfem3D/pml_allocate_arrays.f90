@@ -32,7 +32,7 @@ subroutine pml_allocate_arrays()
   use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname !
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,num_coupling_ac_el_faces
-  use specfem_par_elastic, only: ELASTIC_SIMULATION  
+  use specfem_par_elastic, only: ELASTIC_SIMULATION
 
   implicit none
 
@@ -177,16 +177,16 @@ subroutine pml_allocate_arrays()
   endif
 
   ! stores C-PML contribution on elastic/acoustic interface
-  if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then 
-     allocate(rmemory_coupling_ac_el_displ(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)   
-     if(ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'  
-  endif 
+  if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then
+     allocate(rmemory_coupling_ac_el_displ(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
+     if(ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'
+  endif
 
   if(SIMULATION_TYPE == 3)then
-    if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then   
-       allocate(rmemory_coupling_el_ac_potential(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)     
-       if(ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential array'    
-    endif   
+    if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then
+       allocate(rmemory_coupling_el_ac_potential(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
+       if(ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential array'
+    endif
   endif
 
   spec_to_CPML(:) = 0
@@ -259,14 +259,14 @@ subroutine pml_allocate_arrays()
      potential_dot_dot_acoustic_CPML(:,:,:) = 0._CUSTOM_REAL
   endif
 
-  if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then 
-     rmemory_coupling_ac_el_displ(:,:,:,:,:,:) = 0._CUSTOM_REAL 
-  endif 
+  if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then
+     rmemory_coupling_ac_el_displ(:,:,:,:,:,:) = 0._CUSTOM_REAL
+  endif
 
   if(SIMULATION_TYPE == 3)then
-    if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then   
-      rmemory_coupling_el_ac_potential(:,:,:,:,:) = 0._CUSTOM_REAL   
-    endif   
+    if(ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION)then
+      rmemory_coupling_el_ac_potential(:,:,:,:,:) = 0._CUSTOM_REAL
+    endif
   endif
 
 ! fields on PML interface will be reconstructed for adjoint simulations

@@ -187,7 +187,7 @@
      deallocate(alpha_store)
      deallocate(spec_to_CPML)
      deallocate(CPML_type)
-  
+
      if( ELASTIC_SIMULATION ) then
        deallocate(PML_dux_dxl)
        deallocate(PML_dux_dyl)

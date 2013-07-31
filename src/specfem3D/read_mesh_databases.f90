@@ -92,8 +92,8 @@
     if( ier /= 0 ) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic'
-    allocate(potential_dot_dot_acoustic_interface(NGLOB_AB),stat=ier) 
-    if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic_interface' 
+    allocate(potential_dot_dot_acoustic_interface(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array potential_dot_dot_acoustic_interface'
     if( SIMULATION_TYPE /= 1 ) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
       if( ier /= 0 ) stop 'error allocating array potential_acoustic_adj_coupling'
@@ -101,10 +101,10 @@
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
     if( ier /= 0 ) stop 'error allocating array rmass_acoustic'
-    allocate(rmass_acoustic_interface(NGLOB_AB),stat=ier)  
-    if( ier /= 0 ) stop 'error allocating array rmass_acoustic_interface' 
+    allocate(rmass_acoustic_interface(NGLOB_AB),stat=ier)
+    if( ier /= 0 ) stop 'error allocating array rmass_acoustic_interface'
     read(27) rmass_acoustic
-    read(27) rmass_acoustic_interface  
+    read(27) rmass_acoustic_interface
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
@@ -140,24 +140,24 @@
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
     if(PML_CONDITIONS)then ! need to be optimized
-       if(ACOUSTIC_SIMULATION)then  
-          allocate(rmass_elastic_interface(NGLOB_AB),stat=ier)            
-          if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface'  
+       if(ACOUSTIC_SIMULATION)then
+          allocate(rmass_elastic_interface(NGLOB_AB),stat=ier)
+          if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface'
           rmass_elastic_interface(:) = 0._CUSTOM_REAL
           if(SIMULATION_TYPE == 3)then
-            allocate(accel_interface(NDIM,NGLOB_AB),stat=ier)  
+            allocate(accel_interface(NDIM,NGLOB_AB),stat=ier)
             if( ier /= 0 ) stop 'error allocating array accel_interface'
             accel_interface(:,:) = 0._CUSTOM_REAL
           else
-            allocate(accel_interface(NDIM,1),stat=ier)  
+            allocate(accel_interface(NDIM,1),stat=ier)
             if( ier /= 0 ) stop 'error allocating array accel_interface'
             accel_interface(:,:) = 0._CUSTOM_REAL
           endif
        else
           allocate(rmass_elastic_interface(1),stat=ier)
           allocate(accel_interface(NDIM,1),stat=ier)
-       endif  
-    endif 
+       endif
+    endif
     if( ier /= 0 ) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB), &
@@ -235,11 +235,11 @@
     if( ier /= 0 ) stop 'error reading in array rmass'
 
     if(PML_CONDITIONS)then !need to be optimized
-       if(ACOUSTIC_SIMULATION)then 
-          read(27,iostat=ier) rmass_elastic_interface   
-          if( ier /= 0 ) stop 'error reading in array rmass_elastic_interface'   
-       endif  
-    endif  
+       if(ACOUSTIC_SIMULATION)then
+          read(27,iostat=ier) rmass_elastic_interface
+          if( ier /= 0 ) stop 'error reading in array rmass_elastic_interface'
+       endif
+    endif
 
     if( APPROXIMATE_OCEAN_LOAD ) then
       ! ocean mass matrix

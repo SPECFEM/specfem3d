@@ -1004,7 +1004,7 @@
         iglob_b = ibool(i,j+1,k,ispec)
         dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
                    + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 
+                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
         if( dist < distance_min) distance_min = dist
         if( dist > distance_max) distance_max = dist
       enddo
@@ -1019,7 +1019,7 @@
         iglob_b = ibool(i,j,k+1,ispec)
         dist =       ( xstore(iglob_a) - xstore(iglob_b) )**2 &
                    + ( ystore(iglob_a) - ystore(iglob_b) )**2 &
-                   + ( zstore(iglob_a) - zstore(iglob_b) )**2 
+                   + ( zstore(iglob_a) - zstore(iglob_b) )**2
         if( dist < distance_min) distance_min = dist
         if( dist > distance_max) distance_max = dist
       enddo
