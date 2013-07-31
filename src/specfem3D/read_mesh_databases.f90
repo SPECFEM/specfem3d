@@ -370,8 +370,14 @@
     read(27) CPML_width_x
     read(27) CPML_width_y
     read(27) CPML_width_z
+
     allocate(is_CPML(NSPEC_AB),stat=ier) !need to be optimized
     if(ier /= 0) stop 'error allocating array is_CPML'
+
+! make sure there are no PMLs by default,
+! and then below if NSPEC_CPML > 0 we will need the real flags for this mesh from the disk
+    is_CPML(:) = .false.
+
     if( NSPEC_CPML > 0 ) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
       if(ier /= 0) stop 'error allocating array CPML_regions'
