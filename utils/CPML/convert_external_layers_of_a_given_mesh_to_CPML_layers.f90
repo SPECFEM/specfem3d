@@ -15,20 +15,22 @@
   integer :: nspec,npoin
   integer :: ispec,ipoin
   integer :: ipoin_read,ispec_loop,iflag
-  integer :: i1,i2,i3,i4,i5,i6,i7,i8,number_of_CPML_elements
+  integer :: i1,i2,i3,i4,i5,i6,i7,i8,number_of_CPML_elements,count_faces_found
 
   real, dimension(:), allocatable :: x,y,z
 
   logical, dimension(:), allocatable :: is_X_CPML,is_Y_CPML,is_Z_CPML
 
-  real :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit
+  real :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,size_of_model
 
-  logical :: ALSO_ADD_ON_THE_TOP_SURFACE
+  logical :: ALSO_ADD_ON_THE_TOP_SURFACE,already_found_a_face
 
-  real :: THICKNESS_OF_X_PML, THICKNESS_OF_Y_PML, THICKNESS_OF_Z_PML
+  real :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
 
-! to make sure coordinate roundoff problems do not occur, use a tolerance of 1.5%
-  real, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.015
+! to make sure coordinate roundoff problems do not occur, use a tolerance of 0.5%
+  real, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005
+
+  real, parameter :: SMALL_RELATIVE_VALUE = 0.5e-3
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -200,40 +202,675 @@
 
 ! ************* generate the CPML database file *************
 
-  open(unit=23,file='absorbing_cpml_file',status='unknown',action='write')
+  open(unit=24,file='absorbing_cpml_file',status='unknown',action='write')
 
 ! write the total number of unique CPML elements
-  write(23,*) number_of_CPML_elements
+  write(24,*) number_of_CPML_elements
 
 ! write the CPML flag for each CPML element
   do ispec=1,nspec
     if(is_X_CPML(ispec) .and. is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
-      write(23,*) ispec,CPML_XYZ
+      write(24,*) ispec,CPML_XYZ
 
     else if(is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
-      write(23,*) ispec,CPML_YZ_ONLY
+      write(24,*) ispec,CPML_YZ_ONLY
 
     else if(is_X_CPML(ispec) .and. is_Z_CPML(ispec)) then
-      write(23,*) ispec,CPML_XZ_ONLY
+      write(24,*) ispec,CPML_XZ_ONLY
 
     else if(is_X_CPML(ispec) .and. is_Y_CPML(ispec)) then
-      write(23,*) ispec,CPML_XY_ONLY
+      write(24,*) ispec,CPML_XY_ONLY
 
     else if(is_Z_CPML(ispec)) then
-      write(23,*) ispec,CPML_Z_ONLY
+      write(24,*) ispec,CPML_Z_ONLY
 
     else if(is_Y_CPML(ispec)) then
-      write(23,*) ispec,CPML_Y_ONLY
+      write(24,*) ispec,CPML_Y_ONLY
 
     else if(is_X_CPML(ispec)) then
-      write(23,*) ispec,CPML_X_ONLY
+      write(24,*) ispec,CPML_X_ONLY
     endif
 
   enddo
-  close(23)
+  close(24)
 
   print *
   print *,'CPML absorbing layer file "absorbing_cpml_file" has been successfully created'
+  print *
+
+! ************* generate "absorbing_surface_file_xmin" *************
+
+! first count the number of faces that are along that edge
+
+  count_faces_found = 0
+
+! Xmin CPML
+  size_of_model = xmax - xmin
+  limit = xmin + SMALL_RELATIVE_VALUE*size_of_model
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  read(23,*) nspec
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_X_CPML(ispec)) then
+
+      already_found_a_face = .false.
+
+! test face 1 (bottom)
+      if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) then
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 2 (top)
+      if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 3 (left)
+      if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 4 (right)
+      if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 5 (front)
+      if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 6 (back)
+      if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+    endif
+
+  enddo
+
+  close(23)
+
+  print *,'found ',count_faces_found,' full faces on PML face Xmin'
+
+!-----------------------------
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  open(unit=24,file='absorbing_surface_file_xmin',status='unknown',action='write')
+
+  read(23,*) nspec
+
+! write the total number of face elements
+  write(24,*) count_faces_found
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_X_CPML(ispec)) then
+
+! for the six faces below it is important to make sure we write the four points
+! in an order for which the normal to the face points outwards
+
+! test face 1 (bottom)
+      if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) &
+        write(24,*) ispec,i4,i3,i2,i1
+
+! test face 2 (top)
+      if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) &
+        write(24,*) ispec,i5,i6,i7,i8
+
+! test face 3 (left)
+      if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) &
+        write(24,*) ispec,i1,i5,i8,i4
+
+! test face 4 (right)
+      if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) &
+        write(24,*) ispec,i2,i3,i7,i6
+
+! test face 5 (front)
+      if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) &
+        write(24,*) ispec,i1,i2,i6,i5
+
+! test face 6 (back)
+      if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) &
+        write(24,*) ispec,i3,i4,i8,i7
+
+    endif
+
+  enddo
+
+  close(23)
+  close(24)
+
+  print *,'CPML file "absorbing_surface_file_xmin" has been successfully created'
+  print *
+
+! ************* generate "absorbing_surface_file_xmax" *************
+
+! first count the number of faces that are along that edge
+
+  count_faces_found = 0
+
+! Xmax CPML
+  size_of_model = xmax - xmin
+  limit = xmax - SMALL_RELATIVE_VALUE*size_of_model
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  read(23,*) nspec
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_X_CPML(ispec)) then
+
+      already_found_a_face = .false.
+
+! test face 1 (bottom)
+      if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) then
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 2 (top)
+      if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 3 (left)
+      if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 4 (right)
+      if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 5 (front)
+      if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 6 (back)
+      if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+    endif
+
+  enddo
+
+  close(23)
+
+  print *,'found ',count_faces_found,' full faces on PML face Xmax'
+
+!-----------------------------
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  open(unit=24,file='absorbing_surface_file_xmax',status='unknown',action='write')
+
+  read(23,*) nspec
+
+! write the total number of face elements
+  write(24,*) count_faces_found
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_X_CPML(ispec)) then
+
+! for the six faces below it is important to make sure we write the four points
+! in an order for which the normal to the face points outwards
+
+! test face 1 (bottom)
+      if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) &
+        write(24,*) ispec,i4,i3,i2,i1
+
+! test face 2 (top)
+      if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+        write(24,*) ispec,i5,i6,i7,i8
+
+! test face 3 (left)
+      if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) &
+        write(24,*) ispec,i1,i5,i8,i4
+
+! test face 4 (right)
+      if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) &
+        write(24,*) ispec,i2,i3,i7,i6
+
+! test face 5 (front)
+      if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) &
+        write(24,*) ispec,i1,i2,i6,i5
+
+! test face 6 (back)
+      if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+        write(24,*) ispec,i3,i4,i8,i7
+
+    endif
+
+  enddo
+
+  close(23)
+  close(24)
+
+  print *,'CPML file "absorbing_surface_file_xmax" has been successfully created'
+  print *
+
+! ************* generate "absorbing_surface_file_ymin" *************
+
+! first count the number of faces that are along that edge
+
+  count_faces_found = 0
+
+! Ymin CPML
+  size_of_model = ymax - ymin
+  limit = ymin + SMALL_RELATIVE_VALUE*size_of_model
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  read(23,*) nspec
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_Y_CPML(ispec)) then
+
+      already_found_a_face = .false.
+
+! test face 1 (bottom)
+      if(y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) then
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 2 (top)
+      if(y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 3 (left)
+      if(y(i1) < limit .and. y(i4) < limit .and. y(i5) < limit .and. y(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 4 (right)
+      if(y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 5 (front)
+      if(y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 6 (back)
+      if(y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+    endif
+
+  enddo
+
+  close(23)
+
+  print *,'found ',count_faces_found,' full faces on PML face Ymin'
+
+!-----------------------------
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  open(unit=24,file='absorbing_surface_file_ymin',status='unknown',action='write')
+
+  read(23,*) nspec
+
+! write the total number of face elements
+  write(24,*) count_faces_found
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_Y_CPML(ispec)) then
+
+! for the six faces below it is important to make sure we write the four points
+! in an order for which the normal to the face points outwards
+
+! test face 1 (bottom)
+      if(y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) &
+        write(24,*) ispec,i4,i3,i2,i1
+
+! test face 2 (top)
+      if(y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) &
+        write(24,*) ispec,i5,i6,i7,i8
+
+! test face 3 (left)
+      if(y(i1) < limit .and. y(i4) < limit .and. y(i5) < limit .and. y(i8) < limit) &
+        write(24,*) ispec,i1,i5,i8,i4
+
+! test face 4 (right)
+      if(y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) &
+        write(24,*) ispec,i2,i3,i7,i6
+
+! test face 5 (front)
+      if(y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) &
+        write(24,*) ispec,i1,i2,i6,i5
+
+! test face 6 (back)
+      if(y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) &
+        write(24,*) ispec,i3,i4,i8,i7
+
+    endif
+
+  enddo
+
+  close(23)
+  close(24)
+
+  print *,'CPML file "absorbing_surface_file_ymin" has been successfully created'
+  print *
+
+! ************* generate "absorbing_surface_file_ymax" *************
+
+! first count the number of faces that are along that edge
+
+  count_faces_found = 0
+
+! Ymax CPML
+  size_of_model = ymax - ymin
+  limit = ymax - SMALL_RELATIVE_VALUE*size_of_model
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  read(23,*) nspec
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_Y_CPML(ispec)) then
+
+      already_found_a_face = .false.
+
+! test face 1 (bottom)
+      if(y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) then
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 2 (top)
+      if(y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 3 (left)
+      if(y(i1) > limit .and. y(i4) > limit .and. y(i5) > limit .and. y(i8) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 4 (right)
+      if(y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 5 (front)
+      if(y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 6 (back)
+      if(y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+    endif
+
+  enddo
+
+  close(23)
+
+  print *,'found ',count_faces_found,' full faces on PML face Ymax'
+
+!-----------------------------
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  open(unit=24,file='absorbing_surface_file_ymax',status='unknown',action='write')
+
+  read(23,*) nspec
+
+! write the total number of face elements
+  write(24,*) count_faces_found
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_Y_CPML(ispec)) then
+
+! for the six faces below it is important to make sure we write the four points
+! in an order for which the normal to the face points outwards
+
+! test face 1 (bottom)
+      if(y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) &
+        write(24,*) ispec,i4,i3,i2,i1
+
+! test face 2 (top)
+      if(y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) &
+        write(24,*) ispec,i5,i6,i7,i8
+
+! test face 3 (left)
+      if(y(i1) > limit .and. y(i4) > limit .and. y(i5) > limit .and. y(i8) > limit) &
+        write(24,*) ispec,i1,i5,i8,i4
+
+! test face 4 (right)
+      if(y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) &
+        write(24,*) ispec,i2,i3,i7,i6
+
+! test face 5 (front)
+      if(y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) &
+        write(24,*) ispec,i1,i2,i6,i5
+
+! test face 6 (back)
+      if(y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) &
+        write(24,*) ispec,i3,i4,i8,i7
+
+    endif
+
+  enddo
+
+  close(23)
+  close(24)
+
+  print *,'CPML file "absorbing_surface_file_ymax" has been successfully created'
+  print *
+
+! ************* generate "absorbing_surface_file_bottom" *************
+
+! first count the number of faces that are along that edge
+
+  count_faces_found = 0
+
+! Zmin CPML
+  size_of_model = zmax - zmin
+  limit = zmin + SMALL_RELATIVE_VALUE*size_of_model
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  read(23,*) nspec
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_Z_CPML(ispec)) then
+
+      already_found_a_face = .false.
+
+! test face 1 (bottom)
+      if(z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) then
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 2 (top)
+      if(z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 3 (left)
+      if(z(i1) < limit .and. z(i4) < limit .and. z(i5) < limit .and. z(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 4 (right)
+      if(z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 5 (front)
+      if(z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 6 (back)
+      if(z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) then
+        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+    endif
+
+  enddo
+
+  close(23)
+
+  print *,'found ',count_faces_found,' full faces on PML face Zmin'
+
+!-----------------------------
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  open(unit=24,file='absorbing_surface_file_bottom',status='unknown',action='write')
+
+  read(23,*) nspec
+
+! write the total number of face elements
+  write(24,*) count_faces_found
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+    if(is_Z_CPML(ispec)) then
+
+! for the six faces below it is important to make sure we write the four points
+! in an order for which the normal to the face points outwards
+
+! test face 1 (bottom)
+      if(z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) &
+        write(24,*) ispec,i4,i3,i2,i1
+
+! test face 2 (top)
+      if(z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) &
+        write(24,*) ispec,i5,i6,i7,i8
+
+! test face 3 (left)
+      if(z(i1) < limit .and. z(i4) < limit .and. z(i5) < limit .and. z(i8) < limit) &
+        write(24,*) ispec,i1,i5,i8,i4
+
+! test face 4 (right)
+      if(z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) &
+        write(24,*) ispec,i2,i3,i7,i6
+
+! test face 5 (front)
+      if(z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) &
+        write(24,*) ispec,i1,i2,i6,i5
+
+! test face 6 (back)
+      if(z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) &
+        write(24,*) ispec,i3,i4,i8,i7
+
+    endif
+
+  enddo
+
+  close(23)
+  close(24)
+
+  print *,'CPML file "absorbing_surface_file_bottom" has been successfully created'
   print *
 
   end program convert_mesh_to_CPML
