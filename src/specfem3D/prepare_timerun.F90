@@ -80,10 +80,10 @@
     else
        call prepare_timerun_pml()
     endif
-  else
-! dummy allocation with a size of 1 in order to be able to use the array as argument in subroutine calls
-    call pml_allocate_arrays_dummy()
   endif
+  ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
+  ! in order to be able to use these arrays as arguments in subroutine calls
+  call pml_allocate_arrays_dummy()
 
   ! prepares ADJOINT simulations
   call prepare_timerun_adjoint()
@@ -751,12 +751,10 @@
          stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
 
     ! allocates and initializes C-PML arrays
-    if( NSPEC_CPML > 0 ) then
-      call pml_allocate_arrays()
-    else
-    ! dummy allocation with a size of 1 in order to be able to use the array as argument in subroutine calls
-      call pml_allocate_arrays_dummy()
-    endif
+    if( NSPEC_CPML > 0 ) call pml_allocate_arrays()
+    ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
+    ! in order to be able to use these arrays as arguments in subroutine calls
+    call pml_allocate_arrays_dummy()
 
     ! defines C-PML spectral elements local indexing
     ispec_CPML = 0
