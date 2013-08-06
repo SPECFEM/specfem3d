@@ -139,7 +139,8 @@
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
-    if(PML_CONDITIONS)then ! need to be optimized
+
+    if(PML_CONDITIONS)then
        if(ACOUSTIC_SIMULATION)then
           allocate(rmass_elastic_interface(NGLOB_AB),stat=ier)
           if( ier /= 0 ) stop 'error allocating array rmass_elastic_interface'
@@ -157,7 +158,11 @@
           allocate(rmass_elastic_interface(1),stat=ier)
           allocate(accel_interface(NDIM,1),stat=ier)
        endif
+    else
+      allocate(rmass_elastic_interface(1),stat=ier)
+      allocate(accel_interface(NDIM,1),stat=ier)
     endif
+
     if( ier /= 0 ) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
     allocate(rmassx(NGLOB_AB), &
@@ -371,7 +376,7 @@
     read(27) CPML_width_y
     read(27) CPML_width_z
 
-    allocate(is_CPML(NSPEC_AB),stat=ier) !need to be optimized
+    allocate(is_CPML(NSPEC_AB),stat=ier)
     if(ier /= 0) stop 'error allocating array is_CPML'
 
 ! make sure there are no PMLs by default,
@@ -424,6 +429,9 @@
         endif
       endif
     endif
+  else
+    ! allocate with a dummy size of zero just to be able to use this array as argument in subroutine calls
+    allocate(is_CPML(0),stat=ier)
   endif
 
   ! absorbing boundary surface
