@@ -42,8 +42,8 @@ cp -fr DATA/* ../../DATA/.
 
 cd ../../
 
-make clean
 ./configure
+make clean
 make all > $currentdir/tmp.log
 cd $currentdir
 
