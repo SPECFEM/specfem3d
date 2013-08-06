@@ -384,3 +384,82 @@ subroutine pml_allocate_arrays()
   endif
 
 end subroutine pml_allocate_arrays
+
+!=====================================================================
+
+subroutine pml_allocate_arrays_dummy()
+
+  use pml_par
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+
+     allocate(spec_to_CPML(1),stat=ier)
+     allocate(CPML_type(1),stat=ier)
+     allocate(PML_dux_dxl(1,1,1),stat=ier)
+     allocate(PML_dux_dyl(1,1,1),stat=ier)
+     allocate(PML_dux_dzl(1,1,1),stat=ier)
+     allocate(PML_duy_dxl(1,1,1),stat=ier)
+     allocate(PML_duy_dyl(1,1,1),stat=ier)
+     allocate(PML_duy_dzl(1,1,1),stat=ier)
+     allocate(PML_duz_dxl(1,1,1),stat=ier)
+     allocate(PML_duz_dyl(1,1,1),stat=ier)
+     allocate(PML_duz_dzl(1,1,1),stat=ier)
+     allocate(PML_dux_dxl_new(1,1,1),stat=ier)
+     allocate(PML_dux_dyl_new(1,1,1),stat=ier)
+     allocate(PML_dux_dzl_new(1,1,1),stat=ier)
+     allocate(PML_duy_dxl_new(1,1,1),stat=ier)
+     allocate(PML_duy_dyl_new(1,1,1),stat=ier)
+     allocate(PML_duy_dzl_new(1,1,1),stat=ier)
+     allocate(PML_duz_dxl_new(1,1,1),stat=ier)
+     allocate(PML_duz_dyl_new(1,1,1),stat=ier)
+     allocate(PML_duz_dzl_new(1,1,1),stat=ier)
+     allocate(rmemory_dux_dxl_x(1,1,1,1,2),stat=ier)
+     allocate(rmemory_dux_dyl_x(1,1,1,1,2),stat=ier)
+     allocate(rmemory_dux_dzl_x(1,1,1,1,2),stat=ier)
+     allocate(rmemory_duy_dxl_x(1,1,1,1),stat=ier)
+     allocate(rmemory_duy_dyl_x(1,1,1,1),stat=ier)
+     allocate(rmemory_duz_dxl_x(1,1,1,1),stat=ier)
+     allocate(rmemory_duz_dzl_x(1,1,1,1),stat=ier)
+     allocate(rmemory_dux_dxl_y(1,1,1,1),stat=ier)
+     allocate(rmemory_dux_dyl_y(1,1,1,1),stat=ier)
+     allocate(rmemory_duy_dxl_y(1,1,1,1,2),stat=ier)
+     allocate(rmemory_duy_dyl_y(1,1,1,1,2),stat=ier)
+     allocate(rmemory_duy_dzl_y(1,1,1,1,2),stat=ier)
+     allocate(rmemory_duz_dyl_y(1,1,1,1),stat=ier)
+     allocate(rmemory_duz_dzl_y(1,1,1,1),stat=ier)
+     allocate(rmemory_dux_dxl_z(1,1,1,1),stat=ier)
+     allocate(rmemory_dux_dzl_z(1,1,1,1),stat=ier)
+     allocate(rmemory_duy_dyl_z(1,1,1,1),stat=ier)
+     allocate(rmemory_duy_dzl_z(1,1,1,1),stat=ier)
+     allocate(rmemory_duz_dxl_z(1,1,1,1,2),stat=ier)
+     allocate(rmemory_duz_dyl_z(1,1,1,1,2),stat=ier)
+     allocate(rmemory_duz_dzl_z(1,1,1,1,2),stat=ier)
+     allocate(rmemory_displ_elastic(1,1,1,1,1,3),stat=ier)
+     allocate(accel_elastic_CPML(1,1,1,1),stat=ier)
+     allocate(PML_dpotential_dxl(1,1,1),stat=ier)
+     allocate(PML_dpotential_dyl(1,1,1),stat=ier)
+     allocate(PML_dpotential_dzl(1,1,1),stat=ier)
+     allocate(PML_dpotential_dxl_new(1,1,1),stat=ier)
+     allocate(PML_dpotential_dyl_new(1,1,1),stat=ier)
+     allocate(PML_dpotential_dzl_new(1,1,1),stat=ier)
+     allocate(rmemory_dpotential_dxl(1,1,1,1,2),stat=ier)
+     allocate(rmemory_dpotential_dyl(1,1,1,1,2),stat=ier)
+     allocate(rmemory_dpotential_dzl(1,1,1,1,2),stat=ier)
+     allocate(rmemory_potential_acoustic(1,1,1,1,3),stat=ier)
+     allocate(potential_dot_dot_acoustic_CPML(1,1,1),stat=ier)
+     allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2),stat=ier)
+     allocate(rmemory_coupling_el_ac_potential(1,1,1,1,2),stat=ier)
+     ! allocates wavefield
+     allocate(b_PML_field(9,1),stat=ier)
+     allocate(b_PML_field(9,1),stat=ier)
+     allocate(b_PML_field(9,1),stat=ier)
+     ! allocates wavefield
+     allocate(b_PML_potential(3,1),stat=ier)
+     allocate(b_PML_potential(3,1),stat=ier)
+     allocate(b_PML_potential(3,1),stat=ier)
+
+end subroutine pml_allocate_arrays_dummy
+

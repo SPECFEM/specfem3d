@@ -80,6 +80,9 @@
     else
        call prepare_timerun_pml()
     endif
+  else
+! dummy allocation with a size of 1 in order to be able to use the array as argument in subroutine calls
+    call pml_allocate_arrays_dummy()
   endif
 
   ! prepares ADJOINT simulations
@@ -749,7 +752,10 @@
 
     ! allocates and initializes C-PML arrays
     if( NSPEC_CPML > 0 ) then
-       call pml_allocate_arrays()
+      call pml_allocate_arrays()
+    else
+    ! dummy allocation with a size of 1 in order to be able to use the array as argument in subroutine calls
+      call pml_allocate_arrays_dummy()
     endif
 
     ! defines C-PML spectral elements local indexing
